@@ -16,3 +16,6 @@ tahoe_preview.csv
 __pycache__/
 *.pyc
 .venv/
+
+# Temporary git worktrees made by Claude Code sessions
+.claude/worktrees/
