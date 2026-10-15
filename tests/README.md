@@ -45,7 +45,7 @@ What ends up in DIR:
 | `small/` | Outputs of `01_preview_parquet.py`, `02_find_mtap_gankyrin.py` and `old_drug_effect_uncorrected.py`. |
 | `mtap_gankyrin/` | Output of `tahoe_mtap_gankyrin.py all` and `coreg`. |
 | `atlas/` | Output of `tahoe_atlas.py` `check`, `compute`, `lookup` x4, `agents --dry-run` and `bundle`. |
-| `gene_panel/` | Output of `tahoe_gene_panel.py`, once that script exists. Until then the `panel` stage is skipped. |
+| `gene_panel/` | Output of `tahoe_gene_panel.py` `check`, `all` (extract + analyze + bundle; it reads `mtap_gankyrin/` as the earlier run), `agents --dry-run` and `bundle`. |
 | `logs/<stage>_<step>.log` | The full output of every command. |
 | `smoke_results.json` | Every check (stage, name, PASS/FAIL/WARN/SKIP, detail) and every command (argv, exit code, seconds, log). |
 
@@ -62,11 +62,13 @@ Each stage starts from an empty output folder. The scripts run from `DIR/scratch
 | small | ~3 s |
 | mtap | ~11 s |
 | atlas | ~25 s |
-| Whole run | ~1.5 min |
+| panel | ~60 s |
+| Whole run | ~2.5 min |
 
 **Adding a stage:** write one function decorated with `@stage("name")` in `run_smoke.py`, using
-`ctx.run_ok(...)` for commands and `ctx.check(name, fn)` for checks. `stage_panel` is the template for the future
-`tahoe_gene_panel.py` (`extract` and `analyze` into `DIR/gene_panel`). Its ground-truth checks can read `ctx.gt`.
+`ctx.run_ok(...)` for commands and `ctx.check(name, fn)` for checks; ground-truth checks read `ctx.gt` (see
+`stage_panel`). The `panel` stage needs the `mtap` stage's output for its reproduction checks: with
+`--only panel` it reuses `DIR/mtap_gankyrin` from an earlier run, and skips those checks when it is missing.
 
 ## Generate the data only
 
@@ -161,7 +163,7 @@ the key genes in every line (`measured_expression`).
 | small | All three scripts exit 0 and write their files. The raw DE extract has both genes. The uncorrected MTAP lists show the H1 artifact. |
 | mtap | H1 is in the top 3 MTAP positions and D10 in the top 3 PSMD10 positions. Plate 2 has the top PSMD10 DMSO offset. The MTAP-null calls equal the planted lines. Pemetrexed is in the top 3 MTAP-null-selective drugs. Ixazomib is in the top 3 "high-Gankyrin lines depleted more". The failed well is excluded. summary.txt has sections 1-9. Bortezomib 5 uM is flagged toxic with a transcription drop. Bortezomib leads the PROTEASOME module. The plate-2 DMSO offset inflates the uncorrected PSMD10 values and not the corrected ones. PSMD10 is higher in G2/M cells. coreg runs and fills its tables. |
 | atlas | `check` passes. `compute` runs and no angle logs an error. Every angle has brief.md, including focus_MTAP and focus_PSMD10. H1 and D10 carry the largest single-gene position shifts (top 3). MTAP/PSMD10/CHAC1 are the top genes at H1/D10/A12 and map back to them in position_sensitive_genes. H1 and D10 are in the first 10 rows of position_effects.csv: WARN only, because that file is sorted by the number of shifted genes, and chance alone gives each position 0-6 of them. Dimethyl fumarate is the top HMOX1 inducer. Bortezomib 5 uM is toxic. "MTAP not expressed" equals the planted lines, with Pemetrexed in its top 3. The failed well is excluded. Plate 2 DMSO reads low for PSMD10/CDKN1A. Dinaciclib shows a transcription drop. Paclitaxel shows a G2/M build-up. Ciclopirox/TFRC, Rimonabant/NAPEPLD, Bortezomib/HSPA1A and DNMT inhibitors/ISG15 each come out as top inducers. Ixazomib leads focus_PSMD10/level_vs_growth. Pemetrexed leads focus_MTAP/loss_selective_drugs. The MTAP expression-loss group equals the planted lines. ACSL4 and PSMD10 are biomarkers for Artesunate and Ixazomib. The HDAC class is coherent with Carbamazepine as its outlier. The look-ups print the expected cards. `agents --dry-run` writes a prompt per angle. atlas_bundle.zip lists `computation/` files. |
-| panel | Skipped until `tahoe_gene_panel.py` exists. |
+| panel | `check` passes; `all` runs with `--min-cells 10 --prior DIR/mtap_gankyrin` and no step logs a failure. Doxorubicin, Topotecan and 5-FU are the top 3 of the p53 WT-vs-altered screen (all three in the top 6). p53 responsiveness separates TP53-WT from TP53-altered lines (AUC >= 0.9, recomputed from `p53_functional_status.csv`). Dimethyl fumarate tops the NRF2 score and the HMOX1 inducers. Artesunate 5 uM raises FERRO_MARKERS without ISR, Auranofin 5 uM with ISR. Ciclopirox is the top TFRC inducer; Rimonabant is in the top 3 NAPEPLD inducers. Decitabine leads, and 5-Azacytidine is in the top 3 of, GSDME inducers in the GSDME-silenced lines; the GSDME loss group equals the planted lines. TRIM72 is 'not expressed'; NLRP3/CASP5/AIM2 are not testable. ACSL4 and PSMD10 levels predict Artesunate and Ixazomib depletion (top 3, rho < 0). Pemetrexed is in the top 3 MTAP-null-selective drugs. Bortezomib 5 uM is toxic with HEAT_SHOCK and PROTEASOME context. CHAC1's top position is A12 and no CHAC1 call comes from an A12 well. Plate 2 tops the CDKN1A and PSMD10 DMSO offsets, inflates the uncorrected CDKN1A values and gives no corrected call. The failed well is excluded. Every planted positive control is 'clear'. 100% of wells and the MTAP-null calls agree with the earlier run. The MTAP-null screen (z_selective, depletion) and the Gankyrin level screen (rho, rho_partial_G2M, z) reproduce `tahoe_mtap_gankyrin.py`'s files within 1e-6. summary.txt has sections 1-9 and no failed step; every angle has brief.md; `agents --dry-run` writes a prompt per angle; the bundle holds the summary, the positive controls and the log. |
 
 Rankings are checked as top-k (k = 2-3, or 10 for long lists), never as exact values.
 

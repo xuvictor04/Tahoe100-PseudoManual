@@ -1,6 +1,7 @@
 # Outputs the scripts write next to themselves (can be many GB)
 atlas/
 mtap_gankyrin/
+gene_panel/
 mtap_search/
 mtap_old/
 gankyrin_old/

@@ -10,7 +10,7 @@ run_smoke.py - smoke-test every script of this repo against the synthetic Tahoe-
      small  01_preview_parquet.py, 02_find_mtap_gankyrin.py, old_drug_effect_uncorrected.py   -> DIR/small
      mtap   tahoe_mtap_gankyrin.py all + coreg                                                 -> DIR/mtap_gankyrin
      atlas  tahoe_atlas.py check, compute, lookup x4, agents --dry-run, bundle                 -> DIR/atlas
-     panel  tahoe_gene_panel.py extract + analyze (skipped while that script does not exist)   -> DIR/gene_panel
+     panel  tahoe_gene_panel.py check, all, agents --dry-run, bundle (reads DIR/mtap_gankyrin) -> DIR/gene_panel
    Each stage starts from an empty output folder.
 3. Checks the outputs against the planted ground truth (DIR/synthetic_tahoe/ground_truth.json): one PASS/FAIL line
    per check (WARN = known weakness whose outcome depends on chance in these small data; it does not fail the run),
@@ -18,7 +18,7 @@ run_smoke.py - smoke-test every script of this repo against the synthetic Tahoe-
 
 DIR defaults to $TAHOE_SMOKE_DIR, else <system temp folder>/tahoe_smoke. No API key is used: the agents step runs
 with --dry-run and the API-key variables are removed from the environment of every command.
-To add a stage: write one function decorated with @stage("name") (see stage_panel at the end).
+To add a stage: write one function decorated with @stage("name") (see stage_panel for an example).
 """
 
 import argparse
@@ -532,20 +532,254 @@ def stage_atlas(ctx):
         ctx.check("atlas_bundle.zip lists computation/ files", bundle)
 
 
-# ============================================================================= stage: gene panel (future)
+# ============================================================================= stage: gene panel
+def auc_of(pos, neg):
+    """P(a random pos value > a random neg value), ties count half."""
+    pos, neg = [float(x) for x in pos], [float(x) for x in neg]
+    if not pos or not neg:
+        return float("nan")
+    wins = sum((a > b) + 0.5 * (a == b) for a in pos for b in neg)
+    return wins / (len(pos) * len(neg))
+
+
 @stage("panel")
 def stage_panel(ctx):
-    """Placeholder for tahoe_gene_panel.py (extract/analyze into DIR/gene_panel). Skipped until the script exists.
-    When it lands: keep the two commands below and add ground-truth checks from ctx.gt ('planted_drug_effects_top_dose',
-    'groups', 'expression_facts', 'measured_expression', 'well_position_artifacts', 'plate_dmso_offset')."""
+    """tahoe_gene_panel.py check, all (extract + analyze + bundle, reading the mtap stage's output as the earlier
+    run), agents --dry-run, bundle; then the planted ground truth and the reproduction of tahoe_mtap_gankyrin.py."""
+    gt = ctx.gt
     script = os.path.join(REPO, "tahoe_gene_panel.py")
     if not os.path.exists(script):
-        ctx.skip("tahoe_gene_panel.py", "not in the repo yet: stage skipped")
+        ctx.skip("tahoe_gene_panel.py", "not in the repo: stage skipped")
         return
     out = fresh(os.path.join(ctx.W, "gene_panel"))
-    ctx.run_ok("extract", [PY, script, "extract", "--data", ctx.D, "--out", out, "--workers", str(ctx.workers)])
-    ctx.run_ok("analyze", [PY, script, "analyze", "--data", ctx.D, "--out", out])
-    ctx.check("gene_panel: output written", lambda: (any(os.scandir(out)), f"{len(os.listdir(out))} entries in {out}"))
+    R = os.path.join(out, "results")
+    prior = os.path.join(ctx.W, "mtap_gankyrin")
+    have_prior = os.path.exists(os.path.join(prior, "results", "MTAP_null_selective_drugs.csv"))
+    base = ["--data", ctx.D, "--out", out]
+    ctx.run_ok("check", [PY, script, "check"] + base + ["--prior", prior])
+    txt = ctx.run_ok("all", [PY, script, "all"] + base + ["--workers", str(ctx.workers), "--min-cells", "10",
+                                                          "--prior", prior],
+                     expect_files=[os.path.join(R, f) for f in
+                                   ("summary.txt", "README_columns.txt", "panel_genes.csv", "expression_by_line.csv",
+                                    "positive_controls.csv", "pathway_scores_by_dose.csv", "drug_context_by_dose.csv",
+                                    "ferro_markers_with_context.csv", "p53_wt_vs_altered.csv",
+                                    "p53_functional_status.csv", "p53_wt_selective_growth.csv",
+                                    "MTAP_null_selective_drugs.csv", "loss_groups.csv", "loss_screens.csv",
+                                    "reexpression_in_silenced_lines.csv", "level_vs_growth.csv",
+                                    "cell_cycle_by_line.csv", "coregulation_matrix.csv", "crosslinks.csv",
+                                    "well_position_effects.csv", "plate_dmso_offsets.csv", "CHAC1_drug_summary.csv",
+                                    "PSMD10_drug_effects_by_dose.csv")] + [os.path.join(out, "gene_panel_bundle.zip")])
+    ang = os.path.join(out, "angles")
+    angles = ["ferroptosis", "pyroptosis", "p53", "napepld_trim72", "crosslinks"]
+    if txt is not None:
+        bad = [x.strip() for x in txt.splitlines() if "WARNING:" in x and " failed:" in x]
+        ctx.record("all: every analysis step ran (no 'WARNING: ... failed')", not bad, "; ".join(bad)[:1500] or
+                   "none failed")
+
+        def csv(name):
+            return pd.read_csv(os.path.join(R, name))
+
+        def p53_top():
+            t = csv("p53_wt_vs_altered.csv").sort_values("z_wt_more", ascending=False)
+            dd = {"Doxorubicin (hydrochloride)", "Topotecan (hydrochloride)", "5-Fluorouracil"}
+            ok = set(top_k(t["drug"], 3)) <= dd and dd <= set(top_k(t["drug"], 6))
+            return ok, f"top: {fmt_top(t, ['drug', 'conc', 'z_wt_more'], 6)}"
+        ctx.check("p53_wt_vs_altered: Doxorubicin, Topotecan, 5-FU top the WT-vs-altered screen", p53_top)
+
+        def p53_auc():
+            t = csv("p53_functional_status.csv").dropna(subset=["p53_responsiveness_log2"])
+            wt = t["tp53_annotation"].astype(str).str.startswith("wild type")
+            a = auc_of(t.loc[wt, "p53_responsiveness_log2"], t.loc[~wt, "p53_responsiveness_log2"])
+            want = set(gt["group_ids"]["tp53_wt"])
+            same = set(t.loc[wt, "cell_line_id"]) == want
+            return a >= 0.9 and same, f"AUC responsiveness WT vs altered {a:.2f}; WT annotation == planted: {same}"
+        ctx.check("p53_functional_status: responsiveness separates TP53 WT from altered (AUC >= 0.9)", p53_auc)
+
+        def dmf():
+            s_ = csv("pathway_scores_by_dose.csv")
+            s_ = s_[s_["score"] == "NRF2"].sort_values("z", ascending=False)
+            h = csv("HMOX1_drug_effects_by_dose.csv").sort_values("z_corrected", ascending=False)
+            ok = s_["drug"].iloc[0] == "Dimethyl fumarate" and h["drug"].iloc[0] == "Dimethyl fumarate"
+            return ok, f"NRF2: {fmt_top(s_, ['drug', 'conc', 'z'], 2)}; HMOX1: {fmt_top(h, ['drug', 'conc', 'fold_change'], 2)}"
+        ctx.check("Dimethyl fumarate tops the NRF2 score and the HMOX1 inducers", dmf)
+
+        def ferro():
+            t = csv("ferro_markers_with_context.csv")
+
+            def row(d):
+                r = t[(t["drug"] == d) & (t["conc"] == 5.0)].iloc[0]
+                return r["z"], r["ISR_z"], str(r["reading"])
+            az, ai, ar = row("Artesunate")
+            uz, ui, ur = row("Auranofin")
+            ok = az >= 3 and ai < 2 and "without" in ar and uz >= 3 and ui >= 3 and "with ISR" in ur
+            return ok, (f"Artesunate 5: markers z {az:.1f}, ISR z {ai:.1f} ({ar}); Auranofin 5: markers z {uz:.1f}, "
+                        f"ISR z {ui:.1f} ({ur})")
+        ctx.check("FERRO_MARKERS: Artesunate without ISR, Auranofin with ISR", ferro)
+
+        def inducer(gene, drugs, k):
+            t = csv(f"{gene}_drug_effects_by_dose.csv").sort_values("z_corrected", ascending=False)
+            return bool(set(drugs) & set(top_k(t["drug"], k))), \
+                f"{gene}: {fmt_top(t, ['drug', 'conc', 'fold_change', 'z_corrected'], k)}"
+        ctx.check("TFRC: Ciclopirox is the top inducer", lambda: inducer("TFRC", ["Ciclopirox"], 1))
+        ctx.check("NAPEPLD: Rimonabant in the top-3 inducers", lambda: inducer("NAPEPLD", ["Rimonabant"], 3))
+
+        def gsdme():
+            t = csv("reexpression_in_silenced_lines.csv")
+            t = t[t["gene"] == "GSDME"].sort_values("z_corrected", ascending=False)
+            dnmt = {"Decitabine", "5-Azacytidine"}
+            ok = t["drug"].iloc[0] in dnmt and dnmt <= set(top_k(t["drug"], 3))
+            return ok, f"GSDME in the silenced lines: {fmt_top(t, ['drug', 'conc', 'fold_change', 'z_corrected'], 4)}"
+        ctx.check("GSDME: Decitabine / 5-Azacytidine top the inducers in the GSDME-silenced lines", gsdme)
+
+        def loss_gsdme():
+            t = csv("loss_groups.csv")
+            r = t[t["gene"] == "GSDME"]
+            if r.empty:
+                return False, f"no GSDME loss group; groups: {list(t['gene'])}"
+            got = {x.strip() for x in str(r["cell_line_ids"].iloc[0]).split(",")}
+            want = set(gt["group_ids"]["gsdme_silenced"])
+            return got == want, f"GSDME loss group {r['lines'].iloc[0]}; planted {sorted(gt['groups']['gsdme_silenced'])}"
+        ctx.check("loss_groups: GSDME loss group == the planted GSDME-silenced lines", loss_gsdme)
+
+        def expression():
+            t = csv("panel_genes.csv").set_index("gene")["status"].astype(str)
+            ok = "not expressed" in t["TRIM72"] and all(t[g] != "testable" for g in ("NLRP3", "CASP5", "AIM2"))
+            return ok, "; ".join(f"{g}: {t[g][:45]}" for g in ("TRIM72", "NLRP3", "CASP5", "AIM2", "GSDME"))
+        ctx.check("panel_genes: TRIM72 'not expressed'; NLRP3/CASP5/AIM2 not testable", expression)
+
+        def level(gene, drug):
+            t = csv("level_vs_growth.csv")
+            t = t[t["gene"] == gene].sort_values("z")
+            r = t[(t["drug"] == drug) & (t["conc"] == 5.0)]
+            ok = drug in top_k(t["drug"], 3) and not r.empty and r["rho"].iloc[0] < 0
+            return ok, f"{gene}: {fmt_top(t, ['drug', 'conc', 'rho', 'z'], 3)}"
+        ctx.check("level_vs_growth: ACSL4 level predicts Artesunate depletion (top 3, rho < 0)",
+                  lambda: level("ACSL4", "Artesunate"))
+        ctx.check("level_vs_growth: PSMD10 level predicts Ixazomib depletion (top 3, rho < 0)",
+                  lambda: level("PSMD10", "Ixazomib"))
+
+        def pemetrexed():
+            t = csv("MTAP_null_selective_drugs.csv").sort_values("z_selective")
+            return "Pemetrexed" in top_k(t["drug"], 3), f"top: {fmt_top(t, ['drug', 'conc', 'z_selective'], 3)}"
+        ctx.check("MTAP_null_selective_drugs: Pemetrexed in the top 3", pemetrexed)
+
+        def bortezomib():
+            t = csv("drug_context_by_dose.csv")
+            r = t[(t["drug"] == "Bortezomib") & (t["conc"] == 5.0)].iloc[0]
+            f, c = str(r["flags"]), str(r["context"])
+            return "toxic" in f and "HEAT_SHOCK up" in c and "PROTEASOME up" in c, f"flags: {f}; context: {c}"
+        ctx.check("drug_context: Bortezomib 5 uM toxic with HEAT_SHOCK / PROTEASOME context", bortezomib)
+
+        def chac1():
+            w = csv("well_position_effects.csv")
+            w = w[w["gene"] == "CHAC1"].sort_values("z_vs_other_positions", ascending=False)
+            e = csv("CHAC1_drug_effects_by_dose.csv")
+            inducers = {"Auranofin", "Artesunate", "Bortezomib"}
+            a12 = e[e["wells"].astype(str).str.split(",").map(lambda s: "A12" in s)]
+            bad_calls = a12[(a12["call"] == "up") & ~a12["drug"].isin(inducers)]
+            calls = e[e["call"] == "up"]
+            ok = w["well"].iloc[0] == "A12" and bad_calls.empty and set(calls["drug"]) <= inducers
+            return ok, (f"top CHAC1 position {w['well'].iloc[0]} ({w['median_effect_plate_corrected'].iloc[0]:+.2f}); "
+                        f"{len(a12)} drug-doses sat in A12, up calls among them not planted: {len(bad_calls)}; "
+                        f"all CHAC1 up calls: {sorted(set(calls['drug']))}")
+        ctx.check("CHAC1: A12 position effect found and removed (no CHAC1 call driven by A12)", chac1)
+
+        def plate2():
+            p = csv("plate_dmso_offsets.csv")
+            top = {g: p[p["gene"] == g].sort_values("dmso_offset", ascending=False)["plate"].iloc[0]
+                   for g in ("CDKN1A", "PSMD10")}
+            e = csv("CDKN1A_drug_effects_by_dose.csv")
+            e = e[e["plates"].astype(str).str.split(",").map(lambda s: "plate2" in s)]
+            u, c = e["log2FC_vs_DMSO_uncorrected"].median(), e["log2FC_corrected"].abs().median()
+            calls = int((e["call"] == "up").sum())
+            ok = set(top.values()) == {"plate2"} and u > 0.15 and c < 0.12 and calls == 0
+            return ok, (f"top DMSO-offset plate {top}; CDKN1A drug-doses on plate2: median uncorrected log2FC {u:.2f}, "
+                        f"median |corrected| {c:.2f}, up calls {calls}")
+        ctx.check("plate2 DMSO offset seen (CDKN1A, PSMD10) and not in the corrected calls", plate2)
+
+        def failed():
+            t = csv("excluded_failed_wells.csv")
+            return gt["failed_well"]["sample"] in set(t["sample"]), f"excluded {list(t['sample'])}"
+        ctx.check("excluded_failed_wells: the failed well is excluded", failed)
+
+        def controls():
+            t = csv("positive_controls.csv")
+            want = [("NRF2 target genes", "Dimethyl fumarate"), ("raises HMOX1", "Dimethyl fumarate"),
+                    ("proteasome subunits", "Bortezomib"), ("heat-shock genes", "Bortezomib"),
+                    ("TFRC", "Ciclopirox"), ("GSDME", "Decitabine"), ("interferon", "Decitabine"),
+                    ("G2/M genes", "Paclitaxel"), ("transcription drop", "Dinaciclib"),
+                    ("raise P53_ACTIVITY", "Topotecan (hydrochloride)"), ("TP53-wild-type", "5-Fluorouracil")]
+            res = {}
+            for key, drug in want:
+                r = t[t["expectation"].str.contains(key, regex=False) & (t["drug"] == drug)]
+                res[f"{key}/{drug}"] = r["verdict"].iloc[0] if len(r) else "missing"
+            bad = {k: v for k, v in res.items() if v != "clear"}
+            return not bad, f"not clear: {bad}" if bad else f"{len(res)} planted controls clear"
+        ctx.check("positive_controls: every planted control is 'clear'", controls)
+
+        def prior_agreement():
+            if not have_prior:
+                return False, f"no earlier run in {prior} (run the mtap stage first)"
+            t = csv("crosslinks.csv").set_index("comparison")
+            w = float(t.loc["well positions (sample_map.csv)", "value"])
+            m = str(t.loc["MTAP-null calls", "reading"])
+            return w == 100.0 and m == "identical", f"wells at the same position {w:.1f}%; MTAP-null calls: {m}"
+        ctx.check("crosslinks: 100% of wells agree with the earlier run; identical MTAP-null calls", prior_agreement)
+
+        def reproduce(mine, theirs, key, cols):
+            a = pd.read_csv(os.path.join(R, mine))
+            b = pd.read_csv(os.path.join(prior, "results", theirs))
+            if key:
+                a = a[a["gene"] == key]
+            m = a.merge(b, on=["drug", "conc"], suffixes=("", "_t"))
+            d = {c: float((m[c] - m[ct + ("_t" if c == ct else "")]).abs().max()) for c, ct in cols}
+            ok = len(m) == len(a) == len(b) and all(v <= 1e-6 for v in d.values())
+            return ok, f"{len(m)}/{len(b)} drug-doses matched; max |difference| " + \
+                ", ".join(f"{c} {v:.2g}" for c, v in d.items())
+        if have_prior:
+            ctx.check("reproduces tahoe_mtap_gankyrin MTAP_null_selective_drugs.csv (z, depletion) within 1e-6",
+                      lambda: reproduce("MTAP_null_selective_drugs.csv", "MTAP_null_selective_drugs.csv", None,
+                                        [("z_selective", "z_selective"), ("extra_log2_depletion_of_MTAP_null",
+                                                                          "extra_log2_depletion_of_MTAP_null")]))
+            ctx.check("reproduces tahoe_mtap_gankyrin Gankyrin_level_vs_drug_response.csv (rho, partial, z) "
+                      "within 1e-6",
+                      lambda: reproduce("level_vs_growth.csv", "Gankyrin_level_vs_drug_response.csv", "PSMD10",
+                                        [("rho", "rho"), ("rho_partial_G2M", "rho_partial_G2M"),
+                                         ("z", "z_corrected")]))
+        else:
+            ctx.skip("reproduction of tahoe_mtap_gankyrin.py", f"no earlier run in {prior}: run the mtap stage first")
+
+        def sections():
+            with open(os.path.join(R, "summary.txt"), encoding="utf-8") as fh:
+                lines = fh.read().splitlines()
+            missing = [k for k in range(1, 10) if not any(x.startswith(f"{k}. ") for x in lines)]
+            return not missing and "Steps that failed: none" in lines, \
+                (f"missing sections {missing}" if missing else "sections 1-9 present") + \
+                ("" if "Steps that failed: none" in lines else "; some steps failed")
+        ctx.check("summary.txt has sections 1-9 and no failed step", sections)
+
+        def briefs():
+            miss = [a for a in angles if not os.path.exists(os.path.join(ang, a, "brief.md"))]
+            return not miss, f"missing brief.md: {miss}" if miss else f"{len(angles)} angle folders with brief.md"
+        ctx.check("angles: every angle folder has brief.md", briefs)
+    txt = ctx.run_ok("agents_dry_run", [PY, script, "agents"] + base + ["--dry-run"])
+    if txt is not None:
+        def prompts():
+            folders = [d for d in glob.glob(os.path.join(ang, "*")) if os.path.exists(os.path.join(d, "brief.md"))]
+            miss = [os.path.basename(d) for d in folders if not os.path.exists(os.path.join(d, "agent_prompt.txt"))]
+            return len(folders) == len(angles) and not miss, f"{len(folders)} prompts" + (f"; missing {miss}"
+                                                                                          if miss else "")
+        ctx.check("agents --dry-run: a prompt per angle", prompts)
+    txt = ctx.run_ok("bundle", [PY, script, "bundle"] + base, expect_files=[os.path.join(out, "gene_panel_bundle.zip")])
+    if txt is not None:
+        def bundle():
+            with zipfile.ZipFile(os.path.join(out, "gene_panel_bundle.zip")) as z:
+                names = z.namelist()
+            need = ["computation/results/summary.txt", "computation/results/positive_controls.csv",
+                    "computation/gene_panel.log"]
+            miss = [n for n in need if n not in names]
+            return not miss, f"{len(names)} files" + (f"; missing {miss}" if miss else "")
+        ctx.check("gene_panel_bundle.zip holds the summary, positive controls and log", bundle)
 
 
 # ============================================================================= main
