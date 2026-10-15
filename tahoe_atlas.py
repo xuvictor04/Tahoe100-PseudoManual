@@ -1050,6 +1050,10 @@ RULEBOOK = """## Rules for interpreting (learned on this dataset; follow them)
    heat-shock genes; statins raise cholesterol-synthesis genes; BRAF/MEK inhibitors deplete BRAF-mutant lines;
    KRAS G12C inhibitors deplete G12C lines) and say whether the data show them.
 7. mRNA after 24 h only: no claims about protein, function or causality. Label hypotheses as hypotheses.
+   Treat non-polyadenylated or multi-mapping RNAs as noise in this assay: 7SK / RN7SK* pseudogenes, RNU*, snoRNAs,
+   ribosomal-protein pseudogenes (RPS*P*, RPL*P*), MT-* pseudogenes (MTND*P*, MTATP*P*), unnamed ENSG lncRNAs and
+   the replication-dependent histone genes (H1-*, H2AC*, H2BC*, H3C*, H4C*; these also follow S phase). Do not base
+   a finding on them.
 8. Every number in your report must come from a query you ran on the files; name the file it came from.
 """
 
@@ -1224,28 +1228,42 @@ def angle_quality(fx, folder):
     gi = fx.gi
     labels = fx.label
     w = fx.wells
+    # each gene's shift at a position scored against that gene's own spread over all 96 positions: a real
+    # position artifact (MTAP at H1) stands out of its gene's spread; noisy low-level RNAs (7SK, RNU, pseudogenes)
+    # shift a lot everywhere and do not. Ranked only among shifts of at least 1.2x.
+    cen = np.nanmedian(sm, axis=0)
+    mad = 1.4826 * np.nanmedian(np.abs(sm - cen), axis=0)
+    zpos = (sm - cen) / np.where(mad > 0, mad, np.nan)
+    zrank = np.where(np.isfinite(zpos) & (np.abs(sm) >= LFC_MIN), np.abs(zpos), -1)
     rows = []
     for s in range(96):
         v = sm[s, g]
         here = (w["slot"] == s + 1) & fx.drug_w
         big = int(np.argmax(np.where(np.isfinite(v), np.abs(v), -1)))
+        art = int(np.argmax(zrank[s, g]))
+        has_art = zrank[s, g][art] >= 0
         rows.append({"well": T.well_name(s + 1), "n_drug_wells": int(here.sum()),
+                     "artifact_gene": labels[g][art] if has_art else "",
+                     "artifact_shift_log2": float(v[art]) if has_art else np.nan,
+                     "artifact_z_vs_gene_spread": float(zpos[s, g][art]) if has_art else np.nan,
                      "largest_shift_gene": labels[g][big] if np.isfinite(v[big]) else "",
                      "largest_shift_log2": float(v[big]),
                      "genes_up_over_1.2x": int((v > LFC_MIN).sum()), "genes_down_over_1.2x": int((v < -LFC_MIN).sum()),
                      "median_abs_shift": float(np.nanmedian(np.abs(v))),
                      "top_up": top_list(labels[g], v, 10), "top_down": top_list(labels[g], v, 10, reverse=False),
                      "drugs": ", ".join(sorted(set(w.loc[here, "drug"])))})
-    # sorted by the largest single-gene shift: a strong artifact on one gene (MTAP at H1) matters more than how many
-    # genes pass 1.2x by chance at a position
-    pd.DataFrame(rows).sort_values("largest_shift_log2", key=np.abs, ascending=False).to_csv(
-        os.path.join(folder, "position_effects.csv"), index=False)
-    absm = np.abs(sm[:, gi])
-    best = np.nanargmax(np.where(np.isfinite(absm), absm, -1), axis=0)
+    # sorted by the strongest gene-specific artifact (z against the gene's own spread over positions), not by the
+    # raw size of a shift, which noisy low-level RNAs dominate
+    pd.DataFrame(rows).sort_values("artifact_z_vs_gene_spread", key=np.abs, ascending=False,
+                                   na_position="last").to_csv(os.path.join(folder, "position_effects.csv"), index=False)
+    zr = zrank[:, gi]
+    best = np.argmax(zr, axis=0)
+    ok = zr[best, np.arange(gi.size)] >= 0
     ps = pd.DataFrame({"gene": labels[gi], "worst_well": [T.well_name(b + 1) for b in best],
-                       "shift_log2": sm[best, gi]}).assign(abs_shift=lambda d: d["shift_log2"].abs())
-    ps.sort_values("abs_shift", ascending=False).head(500).to_csv(os.path.join(folder, "position_sensitive_genes.csv"),
-                                                                    index=False)
+                       "shift_log2": sm[best, gi], "z_vs_gene_spread": zpos[best, gi]})[ok]
+    ps = ps.assign(abs_shift=ps["shift_log2"].abs())
+    ps.sort_values("z_vs_gene_spread", key=np.abs, ascending=False).head(500).to_csv(
+        os.path.join(folder, "position_sensitive_genes.csv"), index=False)
     off = np.asarray(fx.plate_offset)
     prow = []
     for i, p in enumerate(fx.plates):
@@ -1300,9 +1318,12 @@ replicate plates compared with random pairs, and whether the z-scores are calibr
 when most drugs do nothing to a gene; much more means the noise is underestimated for that gene). Conclude with
 what the other analyses should watch out for.
 """, [("summary.json", "headline numbers"),
-      ("position_effects.csv", "per well position (sorted by its largest single-gene shift): that gene and shift, "
-                               "genes shifted > 1.2x by every drug placed there, top genes, drugs"),
-      ("position_sensitive_genes.csv", "500 genes with the largest single-position shift"),
+      ("position_effects.csv", "per well position, sorted by its strongest gene-specific artifact (artifact_gene: "
+                               "the shift >= 1.2x that stands out most from that gene's spread over all positions, "
+                               "artifact_z_vs_gene_spread); also its largest raw shift, genes shifted > 1.2x by every "
+                               "drug placed there, top genes, drugs"),
+      ("position_sensitive_genes.csv", "500 genes whose worst position stands out most from their own spread "
+                                       "over positions (z_vs_gene_spread; shifts >= 1.2x only)"),
       ("plate_dmso_offsets.csv", "per plate: how far DMSO sits from the drug median (>0 = DMSO low), top genes"),
       ("failed_wells.csv", "excluded wells"),
       ("replicates.csv", "drug-doses on two plates: correlation of their genome-wide signatures (r) and its "
