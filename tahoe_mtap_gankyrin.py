@@ -64,6 +64,7 @@ FDR_CUT = 0.10                  # FDR cutoff for calling a drug
 NULL_FRAC = 0.30                # MTAP-null fallback cut (fraction of the median line, all wells); see null_threshold
 MIN_LINE_CELLS = 200            # lines with fewer cells in total are not classified
 MIN_SLOT_WELLS = 3              # need >= this many other-drug wells to estimate a position effect
+REDUCE_EVERY = 50               # extract: merge the per-file tables every this many files (main process stays ~1 GB)
 MIN_BASEMEAN = 5                # coreg: ignore genes with lower baseMean in a test
 N_PCS = 3                       # coreg: broad shared responses (principal components) removed before correlating;
                                 # more can also remove real modules, so both raw and adjusted r are reported
@@ -264,28 +265,49 @@ def py_cmd():
 
 
 # ============================================================================= file discovery
+REINDEX_HINT = " (if the download finished after an earlier run, add --reindex)"
+
+
+def data_parquets(data_abs, out_dir):
+    """Every parquet file under data_abs except the outputs of these scripts: out_dir and every folder below
+    data_abs that holds a file_index.json (mtap_gankyrin/, gene_panel/, atlas/, trial folders)."""
+    def norm(p):
+        return os.path.normcase(os.path.abspath(p))
+
+    skip = [norm(out_dir) + os.sep]
+    for f in glob.glob(os.path.join(data_abs, "**", "file_index.json"), recursive=True):
+        d = norm(os.path.dirname(f))
+        if d != norm(data_abs):
+            skip.append(d + os.sep)
+    return [f for f in sorted(glob.glob(os.path.join(data_abs, "**", "*.parquet"), recursive=True))
+            if not norm(f).startswith(tuple(skip))]
+
+
 def discover(data_dir, out_dir, refresh=False):
-    """Find every Tahoe table by its columns, not its file name. Cached in out_dir/file_index.json."""
+    """Find every Tahoe table by its columns, not its file name. Cached in out_dir/file_index.json; indexed again
+    when parquet files appeared or vanished since (e.g. the download finished after an earlier run)."""
     os.makedirs(out_dir, exist_ok=True)
     cache = os.path.join(out_dir, "file_index.json")
     data_abs = os.path.abspath(data_dir)
+    files = data_parquets(data_abs, out_dir)
     if os.path.exists(cache) and not refresh:
         with open(cache, encoding="utf-8") as fh:
             idx = json.load(fh)
         if idx.get("data_dir") == data_abs and idx.get("expression") and idx.get("version") == INDEX_VERSION:
-            return idx
+            known = {f for v in idx.values() if isinstance(v, list) for f in v}
+            new, gone = len(set(files) - known), len(known - set(files))
+            if not new and not gone:
+                return idx
+            log(f"{new} new and {gone} missing parquet files since the last index: indexing again")
     log("Indexing parquet files (one-time, reads only file footers) ...")
-    files = sorted(glob.glob(os.path.join(data_abs, "**", "*.parquet"), recursive=True))
-    out_abs = os.path.abspath(out_dir) + os.sep
     idx = {"version": INDEX_VERSION, "data_dir": data_abs, "expression": [], "pseudobulk": [], "gene": [],
-           "sample": [], "cell_line": [], "drug": [], "per_cell_metadata": [], "other": []}
+           "sample": [], "cell_line": [], "drug": [], "per_cell_metadata": [], "other": [], "unreadable": []}
     for f in files:
-        if os.path.abspath(f).startswith(out_abs):
-            continue
         try:
             names = set(pq.read_schema(f).names)
         except Exception as e:  # noqa: BLE001
             log(f"  skipping unreadable file {f}: {e}")
+            idx["unreadable"].append(f)         # listed, so it does not trigger a new index on every run
             continue
         if {"genes", "expressions", "sample", "cell_line_id"} <= names:
             idx["expression"].append(f)
@@ -450,7 +472,7 @@ def _aggregate_part(path):
 
 
 def _extract_one(job):
-    src, dst = job
+    src, dst = job[:2]
     t0 = time.time()
     if not os.path.exists(dst):
         pf = pq.ParquetFile(src)
@@ -464,8 +486,25 @@ def _extract_one(job):
         tmp = dst + ".tmp"
         pq.write_table(tbl, tmp, compression="zstd")
         os.replace(tmp, dst)
-    wl, bcf, smeta = _aggregate_part(dst)
+    try:
+        wl, bcf, smeta = _aggregate_part(dst)
+    except Exception as e:  # noqa: BLE001  (damaged per-cell file: power loss, disk error): extract it again once
+        if len(job) > 2:
+            raise
+        log(f"  {os.path.basename(dst)} is damaged ({type(e).__name__}): extracting that file again")
+        os.remove(dst)
+        return _extract_one((src, dst, "retry"))
     return (wl, bcf, smeta), time.time() - t0, int(wl["n_cells"].sum())
+
+
+def _merge_parts(wls, bcfs, smetas):
+    """Running reduction in extract: many files' partial tables -> one each. The sums are of whole counts, so the
+    result is the same as summing everything at the end, while the main process stays small (~1 GB, not tens)."""
+    keys = ["sample", "cell_line_id"]
+    wl = pd.concat(wls, ignore_index=True).groupby(keys, sort=False).sum(numeric_only=True).reset_index()
+    bcf = pd.concat(bcfs, ignore_index=True).groupby(["sample", "field", "value"], sort=False)["n"].sum().reset_index()
+    smeta = pd.concat(smetas, ignore_index=True).drop_duplicates("sample")
+    return [wl], [bcf], [smeta]
 
 
 def mem_available_gb():
@@ -609,12 +648,12 @@ def cmd_extract(args):
     idx = discover(args.data, out, refresh=args.reindex)
     exprs = idx["expression"]
     if not exprs:
-        sys.exit("No expression parquet files found under " + os.path.abspath(args.data))
+        sys.exit("No expression parquet files found under " + os.path.abspath(args.data) + REINDEX_HINT)
     if args.limit_files:
         exprs = exprs[:args.limit_files]
     gene_meta = read_tables(idx["gene"], ["token_id", "gene_symbol", "ensembl_id"])
     if gene_meta is None:
-        sys.exit("Gene metadata (token_id -> gene_symbol) not found")
+        sys.exit("Gene metadata (token_id -> gene_symbol) not found" + REINDEX_HINT)
     targets, cols, lut, report = build_columns(gene_meta, args.extra_genes)
     log(f"Extracting per cell: {', '.join(targets)} + modules "
         + ", ".join(f"{m} ({len(v)} genes)" for m, v in report["modules"].items() if v))
@@ -631,7 +670,7 @@ def cmd_extract(args):
     workers = args.workers or auto_workers()
     log(f"{len(jobs)} expression files ({done_before} already done), {workers} workers")
     wls, bcfs, smetas = [], [], []
-    n_cells, t0, last = 0, time.time(), 0.0
+    n_cells, t0, last, merges = 0, time.time(), 0.0, 0
     ctx = mp.get_context("spawn")
     with ctx.Pool(workers, initializer=_init_worker, initargs=(lut, cols, targets, args.batch_size)) as pool:
         for i, (res, _dt, nc) in enumerate(pool.imap_unordered(_extract_one, jobs, chunksize=1), 1):
@@ -639,6 +678,9 @@ def cmd_extract(args):
                 wls.append(res[0])
                 bcfs.append(res[1])
                 smetas.append(res[2])
+                if len(wls) >= REDUCE_EVERY:
+                    wls, bcfs, smetas = _merge_parts(wls, bcfs, smetas)
+                    merges += 1
             n_cells += nc
             now = time.time()
             if now - last > 60 or i == len(jobs):
@@ -646,7 +688,7 @@ def cmd_extract(args):
                 eta = (len(jobs) - i) / rate if rate > 0 else 0
                 log(f"  {i}/{len(jobs)} files, {n_cells:,} cells, ETA {eta / 60:.0f} min")
                 last = now
-    log("Combining ...")
+    log("Combining ..." + (f" (partial tables already merged {merges} times on the way)" if merges else ""))
     keys = ["sample", "cell_line_id"]
     wl = pd.concat(wls, ignore_index=True).groupby(keys, sort=True).sum(numeric_only=True).reset_index()
     bcf = pd.concat(bcfs, ignore_index=True)

@@ -10,7 +10,8 @@ run_smoke.py - smoke-test every script of this repo against the synthetic Tahoe-
      small  01_preview_parquet.py, 02_find_mtap_gankyrin.py, old_drug_effect_uncorrected.py   -> DIR/small
      mtap   tahoe_mtap_gankyrin.py all + coreg                                                 -> DIR/mtap_gankyrin
      atlas  tahoe_atlas.py check, compute, lookup x4, agents --dry-run, bundle                 -> DIR/atlas
-     panel  tahoe_gene_panel.py check, all, agents --dry-run, bundle (reads DIR/mtap_gankyrin) -> DIR/gene_panel
+     panel  tahoe_gene_panel.py check, all, agents --dry-run, analyze again, bundle (reads DIR/mtap_gankyrin)
+                                                                                               -> DIR/gene_panel
    Each stage starts from an empty output folder.
 3. Checks the outputs against the planted ground truth (DIR/synthetic_tahoe/ground_truth.json): one PASS/FAIL line
    per check (WARN = known weakness whose outcome depends on chance in these small data; it does not fail the run),
@@ -608,13 +609,14 @@ def stage_panel(ctx):
 
             def row(d):
                 r = t[(t["drug"] == d) & (t["conc"] == 5.0)].iloc[0]
-                return r["z"], r["ISR_z"], str(r["reading"])
-            az, ai, ar = row("Artesunate")
-            uz, ui, ur = row("Auranofin")
-            ok = az >= 3 and ai < 2 and "without" in ar and uz >= 3 and ui >= 3 and "with ISR" in ur
-            return ok, (f"Artesunate 5: markers z {az:.1f}, ISR z {ai:.1f} ({ar}); Auranofin 5: markers z {uz:.1f}, "
-                        f"ISR z {ui:.1f} ({ur})")
-        ctx.check("FERRO_MARKERS: Artesunate without ISR, Auranofin with ISR", ferro)
+                return r["z"], r["fdr_up"], r["ISR_z"], str(r["reading"]) if pd.notna(r["reading"]) else ""
+            az, aq, ai, ar = row("Artesunate")
+            uz, uq, ui, ur = row("Auranofin")
+            ok = (az >= 3 and aq < 0.1 and ai < 3 and bool(ar) and "artifact" not in ar
+                  and uz >= 3 and uq < 0.1 and ui >= 3 and bool(ur) and "artifact" not in ur)
+            return ok, (f"Artesunate 5: markers z {az:.1f}, fdr {aq:.2g}, ISR z {ai:.1f} ({ar}); Auranofin 5: markers "
+                        f"z {uz:.1f}, fdr {uq:.2g}, ISR z {ui:.1f} ({ur})")
+        ctx.check("FERRO_MARKERS: Artesunate 5 uM up with ISR_z < 3, Auranofin 5 uM with ISR_z >= 3 (both read)", ferro)
 
         def inducer(gene, drugs, k):
             t = csv(f"{gene}_drug_effects_by_dose.csv").sort_values("z_corrected", ascending=False)
@@ -630,6 +632,29 @@ def stage_panel(ctx):
             ok = t["drug"].iloc[0] in dnmt and dnmt <= set(top_k(t["drug"], 3))
             return ok, f"GSDME in the silenced lines: {fmt_top(t, ['drug', 'conc', 'fold_change', 'z_corrected'], 4)}"
         ctx.check("GSDME: Decitabine / 5-Azacytidine top the inducers in the GSDME-silenced lines", gsdme)
+
+        def reexpr():
+            t = csv("reexpression_in_silenced_lines.csv")
+            t["reading"] = t["reading"].fillna("").astype(str)
+            re_ = t["reading"].str.startswith("re-expression")
+            dele = t[t["gene"].isin(["CDKN2A", "CDKN2B"])]
+            g = t[(t["gene"] == "GSDME") & re_].sort_values("z_corrected", ascending=False)
+            ok = not (dele["reading"].str.startswith("re-expression")).any() and \
+                set(dele["gene"]) == {"CDKN2A", "CDKN2B"} and len(g) > 0 and g["drug"].iloc[0] == "Decitabine"
+            return ok, (f"CDKN2A/B rows: {dele.groupby('gene')['reading'].first().to_dict()}; GSDME 're-expression' "
+                        f"readings: {fmt_top(g, ['drug', 'conc', 'fold_change', 'z_corrected'], 3)}")
+        ctx.check("re-expression: none for the deleted CDKN2A/CDKN2B; Decitabine tops the GSDME re-expression readings",
+                  reexpr)
+
+        def il1b():
+            t = csv("expression_by_line.csv")
+            got = set(t.loc[(t["gene"] == "IL1B") & t["expressed"].astype(bool), "cell_line_id"].astype(str))
+            want = set(gt["group_ids"]["il1b_expressing"])
+            pg = csv("panel_genes.csv").set_index("gene")
+            return got == want and pg.at["IL1B", "ambient_cpm"] > 0, \
+                (f"IL1B expressed in {sorted(got)}; planted {sorted(want)}; ambient {pg.at['IL1B', 'ambient_cpm']:.2f} "
+                 f"CPM (af {pg.at['IL1B', 'ambient_fraction']:.3f})")
+        ctx.check("expression: IL1B expressed (above ambient) only in the planted il1b_expressing lines", il1b)
 
         def loss_gsdme():
             t = csv("loss_groups.csv")
@@ -717,6 +742,14 @@ def stage_panel(ctx):
             return not bad, f"not clear: {bad}" if bad else f"{len(res)} planted controls clear"
         ctx.check("positive_controls: every planted control is 'clear'", controls)
 
+        def at24():
+            t = csv("positive_controls.csv")
+            vals = set(t["expected_at_24h"].astype(str))
+            dnmt = set(t.loc[t["expectation"].str.startswith("DNMT"), "expected_at_24h"].astype(str))
+            return vals == {"robust", "uncertain"} and dnmt == {"uncertain"}, \
+                f"expected_at_24h values {sorted(vals)}; DNMT rows {sorted(dnmt)}"
+        ctx.check("positive_controls.csv has expected_at_24h (robust / uncertain; DNMT inhibitors uncertain)", at24)
+
         def prior_agreement():
             if not have_prior:
                 return False, f"no earlier run in {prior} (run the mtap stage first)"
@@ -770,16 +803,46 @@ def stage_panel(ctx):
             return len(folders) == len(angles) and not miss, f"{len(folders)} prompts" + (f"; missing {miss}"
                                                                                           if miss else "")
         ctx.check("agents --dry-run: a prompt per angle", prompts)
+
+        def agents_log():
+            f = os.path.join(out, "agents.log")
+            with open(f, encoding="utf-8") as fh:
+                t = fh.read()
+            return "Dry run" in t, f"{f}: {len(t)} bytes" + ("" if "Dry run" in t else "; no 'Dry run' line")
+        ctx.check("agents --dry-run writes gene_panel/agents.log", agents_log)
+    # a rerun of analyze: earlier results moved aside, earlier tables gone from the agent folders, the agents' own
+    # scripts kept, and a report older than the new analysis left out of the bundle
+    p53dir = os.path.join(ang, "p53")
+    stale, script_ = os.path.join(p53dir, "stale_table.csv"), os.path.join(p53dir, "agent_script.py")
+    old_rep = os.path.join(out, "reports", "02_pyroptosis.md")
+    if os.path.isdir(p53dir):
+        os.makedirs(os.path.dirname(old_rep), exist_ok=True)
+        for f, text in ((stale, "a,b\n1,2\n"), (script_, "print(1)\n"), (old_rep, "# old report\n" + "x" * 300)):
+            with open(f, "w", encoding="utf-8") as fh:
+                fh.write(text)
+    txt = ctx.run_ok("analyze_again", [PY, script, "analyze"] + base + ["--min-cells", "10", "--prior", prior],
+                     expect_files=[os.path.join(R, "previous_run", "summary.txt"), os.path.join(R, "summary.txt")])
+    if txt is not None:
+        def rerun():
+            prev = sorted(os.listdir(os.path.join(R, "previous_run")))
+            ok = not os.path.exists(stale) and os.path.exists(script_) and \
+                os.path.exists(os.path.join(p53dir, "brief.md")) and "summary.txt" in prev
+            return ok, (f"previous_run/: {len(prev)} files; stale angle table removed: {not os.path.exists(stale)}; "
+                        f"agent script kept: {os.path.exists(script_)}")
+        ctx.check("analyze again: earlier results in results/previous_run/, stale angle tables removed", rerun)
     txt = ctx.run_ok("bundle", [PY, script, "bundle"] + base, expect_files=[os.path.join(out, "gene_panel_bundle.zip")])
     if txt is not None:
         def bundle():
             with zipfile.ZipFile(os.path.join(out, "gene_panel_bundle.zip")) as z:
                 names = z.namelist()
             need = ["computation/results/summary.txt", "computation/results/positive_controls.csv",
-                    "computation/gene_panel.log"]
+                    "computation/gene_panel.log", "agent_logs/agents.log"]
             miss = [n for n in need if n not in names]
-            return not miss, f"{len(names)} files" + (f"; missing {miss}" if miss else "")
-        ctx.check("gene_panel_bundle.zip holds the summary, positive controls and log", bundle)
+            stale_rep = "reports/02_pyroptosis.md" in names
+            return not miss and not stale_rep, f"{len(names)} files" + (f"; missing {miss}" if miss else "") + \
+                ("; holds a report older than the analysis" if stale_rep else "; out-of-date report left out")
+        ctx.check("gene_panel_bundle.zip holds the summary, positive controls and both logs, no out-of-date report",
+                  bundle)
 
 
 # ============================================================================= main

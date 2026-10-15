@@ -4,8 +4,8 @@ tahoe_gene_panel.py - the MTAP / Gankyrin trial (tahoe_mtap_gankyrin.py) general
 pyroptosis and p53 genes plus NAPEPLD (NAPE-PLD) and TRIM72 (MG53), with the same artifact corrections, cross-linked
 to the earlier MTAP / Gankyrin run, and one Claude agent per pathway that writes a report.
 
-Put this file next to tahoe_mtap_gankyrin.py (and tahoe_atlas.py, which the agents step uses) in your Tahoe-100M
-folder and run from there:
+Put this file next to the CURRENT tahoe_mtap_gankyrin.py and tahoe_atlas.py (copy them over older versions; the
+MTAP / Gankyrin method and numbers are unchanged) in your Tahoe-100M folder and run from there:
 
     python3 tahoe_gene_panel.py check      # preflight: data, panel genes, disk, memory, earlier run, agents
     python3 tahoe_gene_panel.py all        # extract + analyze + bundle (start here; ~1 h, mostly reading cells)
@@ -20,7 +20,9 @@ Long run that survives logout:      nohup python3 tahoe_gene_panel.py all > /dev
 On Windows (PowerShell; leave the window open, no nohup):
                                     C:\tahoe\.venv\Scripts\python.exe tahoe_gene_panel.py all
                                     log: Get-Content gene_panel\gene_panel.log -Wait
-Every run appends to gene_panel/gene_panel.log and keeps the computer from sleeping while it runs.
+Every run appends to gene_panel/gene_panel.log (the agents to gene_panel/agents.log) and keeps the computer from
+sleeping while it runs. Rerunning analyze moves the earlier results to gene_panel/results/previous_run/ and makes
+every agent report out of date (to remake a bundle, use 'bundle', not 'all').
 
 The earlier MTAP / Gankyrin output (<data>/mtap_gankyrin) is read when present (--prior DIR; --prior none ignores
 it). Extra genes: --genes "SYM[:pathway],..." (aliases FSP1, DFNA5, ASC, MG53, NAPE-PLD, P21, PUMA, NOXA accepted),
@@ -39,6 +41,7 @@ import glob
 import json
 import math
 import os
+import re
 import shlex
 import shutil
 import sys
@@ -60,6 +63,11 @@ try:
     import tahoe_mtap_gankyrin as T
 except ImportError:
     sys.exit("tahoe_gene_panel.py needs tahoe_mtap_gankyrin.py in the same folder")
+OLD_COPY = "{f} next to tahoe_gene_panel.py is an older version: copy the current one over it{why}"
+if not all(hasattr(T, f) for f in ("safe_console", "start_run_log", "keep_awake", "py_cmd", "log_exit", "disk_kind",
+                                    "REDUCE_EVERY", "REINDEX_HINT", "data_parquets")):
+    sys.exit(OLD_COPY.format(f="tahoe_mtap_gankyrin.py", why=" (the MTAP / Gankyrin method and numbers are unchanged, "
+                                                          "so earlier mtap_gankyrin/ output stays valid)"))
 
 log = T.log
 
@@ -90,7 +98,7 @@ PANEL = [  # (gene, pathway, role): the user's list
     ("IL1B", "pyroptosis", "Inflammasome output cytokine"),
     ("IL18", "pyroptosis", "Inflammasome output cytokine"),
     ("TP53", "p53", "The gene itself; mutation status matters more than level"),
-    ("CDKN1A", "p53", "(p21) Best single reporter of p53 activity"),
+    ("CDKN1A", "p53", "(p21) Sensitive p53 reporter; also induced without p53 (HDAC inhibitors)"),
     ("MDM2", "p53", "Negative feedback loop"),
     ("BBC3", "p53", "(PUMA) Pro-apoptotic effector"),
     ("PMAIP1", "p53", "(NOXA) Pro-apoptotic effector"),
@@ -107,9 +115,10 @@ PANEL = [  # (gene, pathway, role): the user's list
 ]
 ANCHORS = list(T.TARGET_GENES)   # MTAP, PSMD10 (Gankyrin), CDKN2A, CDKN2B: the earlier analysis, extracted again
 ANCHOR_ROLES = {"MTAP": "Methionine salvage; co-deleted with CDKN2A at 9p21 (earlier analysis)",
-                "PSMD10": "(Gankyrin) proteasome assembly chaperone; promotes MDM2-mediated p53 degradation "
-                          "(earlier analysis)",
-                "CDKN2A": "p16INK4a / p14ARF (ARF restrains MDM2); 9p21 neighbour of MTAP",
+                "PSMD10": "(Gankyrin) 19S proteasome assembly chaperone; oncoprotein reported to bind RB and CDK4 "
+                          "and to promote MDM2-mediated p53 degradation (earlier analysis)",
+                "CDKN2A": "p16INK4a / p14ARF (one mRNA; ARF restrains MDM2 mainly after oncogene signalling); 9p21 "
+                          "neighbour of MTAP",
                 "CDKN2B": "p15INK4b; 9p21 neighbour of MTAP"}
 AKA = {"AIFM2": "FSP1", "GSDME": "DFNA5", "PYCARD": "ASC", "TRIM72": "MG53", "NAPEPLD": "NAPE-PLD", "CDKN1A": "p21",
        "BBC3": "PUMA", "PMAIP1": "NOXA", "PSMD10": "Gankyrin"}
@@ -125,9 +134,10 @@ CONTEXT = {  # context gene sets (no panel gene inside); each gene is extracted 
     "IFN": "ISG15 IFIT1 IFIT3 MX1 OAS1 IFI6 IFI44L STAT1 IRF7 IFITM1".split(),
     "NFKB": "NFKBIA TNFAIP3 RELB NFKB2 BIRC3 CXCL8 ICAM1 IER3".split(),
 }
-# PMAIP1, GADD45A and SESN2 are left out of P53_ACTIVITY on purpose: they are also strongly ATF4/stress-driven
+# PMAIP1, GADD45A, SESN2 and TNFRSF10B are left out of P53_ACTIVITY on purpose: they are also strongly ATF4/CHOP- or
+# stress-driven (TNFRSF10B stays a reported context gene)
 P53_ACTIVITY = ["CDKN1A", "MDM2", "FDXR", "ZMAT3", "SESN1", "BBC3", "BAX"] + \
-    [g for g in CONTEXT["P53_EXT"] if g not in ("CCNG1", "BTG2", "TIGAR")]
+    [g for g in CONTEXT["P53_EXT"] if g not in ("CCNG1", "BTG2", "TIGAR", "TNFRSF10B")]
 SCORES = {"P53_ACTIVITY": P53_ACTIVITY, "FERRO_MARKERS": ["PTGS2", "CHAC1", "SLC7A11"],
           "INFLAMMASOME": ["NLRP3", "AIM2", "PYCARD", "CASP1", "CASP4", "CASP5", "IL1B", "IL18", "GSDMD"],
           "NRF2": CONTEXT["NRF2_CORE"], "ISR": CONTEXT["ISR_ATF4"], "UPR": CONTEXT["UPR_ER"],
@@ -136,9 +146,17 @@ MODULES = ["PROTEASOME", "S_PHASE", "G2M_PHASE"]          # summed modules of ta
 CONTEXT_SCORES = ["ISR", "NRF2", "UPR", "HEAT_SHOCK", "IFN", "NFKB", "P53_ACTIVITY", "FERRO_MARKERS", "INFLAMMASOME",
                   "PROTEASOME", "S_PHASE", "G2M_PHASE"]
 CTX_VARS = ["cells_log2_vs_plate", "genes_per_cell_log2_vs_plate", "umi_per_cell_log2_vs_plate"]
-FERRO_LEVEL_GENES = ["GPX4", "ACSL4", "AIFM2", "SLC7A11", "NFE2L2", "LPCAT3", "TFRC"]
+FERRO_CONTEXT = ["ISR", "NRF2", "UPR", "HEAT_SHOCK", "NFKB", "IFN", "P53_ACTIVITY"]   # programs named with the markers
+FERRO_CONTEXT_PREFIX = ("ISR", "NRF2", "UPR", "HEAT", "NFKB", "IFN", "P53")
+FERRO_NOTES = {"ISR": "ISR: fits cystine starvation or any other ISR trigger, not separable from mRNA",
+               "NRF2": "NRF2: antioxidant / protective response", "NFKB": "NF-kB: PTGS2 is NF-kB-inducible"}
+NRF2_LEVEL = "NRF2_basal_score"   # level-vs-growth row for basal NRF2 activity (NFE2L2 mRNA is not NRF2 activity)
+FERRO_LEVEL_GENES = ["GPX4", "ACSL4", "AIFM2", "SLC7A11", "NFE2L2", NRF2_LEVEL, "LPCAT3", "TFRC"]
 MIN_EXPR_CPM = 1.0        # a line expresses a gene if its level (all wells) is >= this many CPM ...
-EXPR_FRAC = 0.25          # ... and >= this fraction of the median line
+EXPR_FRAC = 0.25          # ... and >= this fraction of the median line ...
+AMBIENT_MULT = 2.0        # ... and >= this many times the ambient level: af x the gene's pooled CPM (all lines), with
+AMBIENT_DEFAULT = 0.12    # af = what the MTAP-null lines read of the pooled MTAP (median; clipped to AMBIENT_CLIP);
+AMBIENT_CLIP = (0.05, 0.3)  # this default when < 2 MTAP-null lines. Lines with a deleted CDKN2A read ~5-10%.
 MIN_EXPR_LINES = 3        # genes expressed in fewer lines get no drug-effect calls
 MIN_LEVEL_LINES = 5       # level-vs-growth needs a gene expressed in at least this many lines
 MIN_COUNTS = 2.0          # 'testable': median raw counts per (well, line) profile among expressing lines
@@ -163,29 +181,33 @@ DNA_DAMAGE = {"names": ["Doxorubicin", "Epirubicin", "Idarubicin", "Daunorubicin
               "targets": r"\bTOP1\b|\bTOP2[AB]?\b|\bTYMS\b|\bDHFR\b|\bRRM[12]\b"}
 PROTEASOME_I = {"names": ["Bortezomib", "Ixazomib", "Carfilzomib"], "moa": "Proteasome inhibitor"}
 DNMT_I = {"names": ["Decitabine", "5-Azacytidine"], "moa": "DNA methyltransferase"}
-CONTROLS = [  # (expectation, readout kind, readout, direction (+1 up, -1 down, 0 either), drug finder)
+CONTROLS = [  # (expectation, readout kind, readout, direction (+1 up, -1 down, 0 either), drug finder, at 24 h)
     ("DNA-damaging drugs (TOP1/TOP2 poisons, antimetabolites, platinum) raise P53_ACTIVITY", "score",
-     "P53_ACTIVITY", 1, DNA_DAMAGE),
+     "P53_ACTIVITY", 1, DNA_DAMAGE, "robust"),
     ("... and raise it more in TP53-wild-type than in TP53-altered lines (p53_wt_vs_altered.csv)", "p53wt", "",
-     1, DNA_DAMAGE),
+     1, DNA_DAMAGE, "robust"),
     ("Dimethyl fumarate (NRF2 activator) raises NRF2 target genes", "score", "NRF2", 1,
-     {"names": ["Dimethyl fumarate"]}),
-    ("Dimethyl fumarate raises HMOX1", "gene", "HMOX1", 1, {"names": ["Dimethyl fumarate"]}),
-    ("Proteasome inhibitors raise proteasome subunits (bounce-back)", "score", "PROTEASOME", 1, PROTEASOME_I),
-    ("Proteasome inhibitors raise heat-shock genes", "score", "HEAT_SHOCK", 1, PROTEASOME_I),
-    ("Proteasome inhibitors raise HMOX1", "gene", "HMOX1", 1, PROTEASOME_I),
+     {"names": ["Dimethyl fumarate"]}, "uncertain"),
+    ("Dimethyl fumarate raises HMOX1", "gene", "HMOX1", 1, {"names": ["Dimethyl fumarate"]}, "uncertain"),
+    ("Proteasome inhibitors raise proteasome subunits (bounce-back)", "score", "PROTEASOME", 1, PROTEASOME_I,
+     "robust"),
+    ("Proteasome inhibitors raise heat-shock genes", "score", "HEAT_SHOCK", 1, PROTEASOME_I, "robust"),
+    ("Proteasome inhibitors raise HMOX1", "gene", "HMOX1", 1, PROTEASOME_I, "robust"),
     ("HSP90 inhibitors (Pimitespib) raise heat-shock genes", "score", "HEAT_SHOCK", 1,
-     {"names": ["Pimitespib"], "targets": r"\bHSP90"}),
-    ("Ciclopirox (iron chelator) raises TFRC (iron starvation)", "gene", "TFRC", 1, {"names": ["Ciclopirox"]}),
-    ("DNMT inhibitors raise GSDME in the GSDME-low (silenced) lines", "reexpr", "GSDME", 1, DNMT_I),
-    ("DNMT inhibitors raise interferon genes (viral mimicry)", "score", "IFN", 1, DNMT_I),
+     {"names": ["Pimitespib"], "targets": r"\bHSP90"}, "robust"),
+    ("Ciclopirox (iron chelator) raises TFRC (iron starvation)", "gene", "TFRC", 1, {"names": ["Ciclopirox"]},
+     "robust"),
+    ("DNMT inhibitors raise GSDME in the GSDME-low lines (uncertain at 24 h: demethylation needs several divisions)",
+     "reexpr", "GSDME", 1, DNMT_I, "uncertain"),
+    ("DNMT inhibitors raise interferon genes (viral mimicry; usually seen after days, uncertain at 24 h)", "score",
+     "IFN", 1, DNMT_I, "uncertain"),
     ("COX inhibitors change PTGS2 (report only: the direction is not certain)", "gene", "PTGS2", 0,
-     {"moa": "Cyclooxygenase"}),
+     {"moa": "Cyclooxygenase"}, "uncertain"),
     ("Antimitotics (taxanes, vinca alkaloids) raise G2/M genes", "score", "G2M_PHASE", 1,
      {"names": ["Paclitaxel", "Docetaxel", "Vinblastine", "Vincristine", "Vinorelbine", "Eribulin"],
-      "moa": "Microtubule inhibitor"}),
+      "moa": "Microtubule inhibitor"}, "robust"),
     ("Dinaciclib (CDK9) causes a transcription drop (UMIs per cell fall)", "ctx", "umi_per_cell_log2_vs_plate", -1,
-     {"names": ["Dinaciclib"]}),
+     {"names": ["Dinaciclib"]}, "robust"),
 ]
 
 
@@ -197,15 +219,54 @@ def quiet():
     np.seterr(all="ignore")
 
 
-def atlas(required=True):
-    """tahoe_atlas.py (agent runner, hints), imported only by check / agents / bundle."""
+_WARNED = {}
+
+
+def atlas(required=True, quiet=False):
+    """tahoe_atlas.py (agent runner, hints), imported only by check / agents / bundle (and analyze, to see whether
+    the atlas has been computed). An older copy without the agent runner counts as missing (warning unless quiet)."""
     try:
         import tahoe_atlas as A
-        return A
     except ImportError:
         if required:
             sys.exit("This step needs tahoe_atlas.py in the same folder as tahoe_gene_panel.py")
         return None
+    except SystemExit as e:                     # tahoe_atlas.py refuses an older tahoe_mtap_gankyrin.py
+        if required:
+            raise
+        if not quiet and not _WARNED.get("atlas"):
+            _WARNED["atlas"] = True
+            log(f"  WARNING: tahoe_atlas.py could not be loaded: {e}")
+        return None
+    if not all(hasattr(A, f) for f in ("agent_text", "add_log", "key_hint", "sdk_hint", "sandbox_problem",
+                                       "cmd_agents")):
+        msg = OLD_COPY.format(f="tahoe_atlas.py", why=" (needed for the agents step)")
+        if required:
+            sys.exit(msg)
+        if not quiet and not _WARNED.get("atlas"):
+            _WARNED["atlas"] = True
+            log("  WARNING: " + msg)
+        return None
+    return A
+
+
+def atlas_ready(atl):
+    """True when <atl> holds a complete atlas computation (tahoe_atlas.effects_ready; its completion stamp
+    effects/complete.json when tahoe_atlas.py is missing or older)."""
+    A = atlas(required=False, quiet=True)
+    if A is not None and hasattr(A, "effects_ready"):
+        try:
+            return bool(A.effects_ready(atl))
+        except Exception:  # noqa: BLE001
+            return False
+    return os.path.exists(os.path.join(atl, "effects", "complete.json"))
+
+
+def bpath(p):
+    """A path as written in the agents' briefs: forward slashes on Windows (PowerShell and Python both accept them,
+    and a pasted 'C:\\tahoe\\results' would turn \\t and \\r into control characters in a Python string)."""
+    p = str(p)
+    return p.replace("\\", "/") if sys.platform == "win32" else p
 
 
 def quote(p):
@@ -240,7 +301,7 @@ def user_cmd(command, extra=""):
 
 
 def long_run_hint(command, extra="", out="gene_panel"):
-    logf = rel_path(os.path.join(out, "gene_panel.log"))
+    logf = rel_path(os.path.join(out, "agents.log" if command == "agents" else "gene_panel.log"))
     if sys.platform == "win32":
         return f"{user_cmd(command, extra)}   (leave the window open; log in {logf})"
     return f"nohup {user_cmd(command, extra)} > /dev/null 2>&1 &   then: tail -f {quote(logf)}"
@@ -399,6 +460,9 @@ def label_of(g):
 
 
 # ============================================================================= extract
+REINDEX_HINT = T.REINDEX_HINT
+
+
 def cells_estimate_gb(n_files, n_cols):
     return n_files * 28_000 * (BYTES_PER_CELL + BYTES_PER_COLUMN * n_cols) / 1e9
 
@@ -449,10 +513,10 @@ def cmd_extract(args):
     os.makedirs(out, exist_ok=True)
     idx = T.discover(args.data, out, refresh=args.reindex)
     if not idx["expression"]:
-        sys.exit("No expression parquet files found under " + os.path.abspath(args.data))
+        sys.exit("No expression parquet files found under " + os.path.abspath(args.data) + REINDEX_HINT)
     gm = T.read_tables(idx["gene"], ["token_id", "gene_symbol", "ensembl_id"])
     if gm is None:
-        sys.exit("Gene metadata (token_id -> gene_symbol) not found")
+        sys.exit("Gene metadata (token_id -> gene_symbol) not found" + REINDEX_HINT)
     genes, missing = wanted_genes(args, gm["gene_symbol"].dropna().astype(str).tolist())
     _targets, cols, _lut, report = T.build_columns(gm, genes)
     problem = mixed_gene_list_problem(out, report, cols)
@@ -517,6 +581,23 @@ def load(S):
         if not os.path.exists(os.path.join(out, f)):
             sys.exit(f"{f} not found in {out}; run the 'extract' step first")
     os.makedirs(S.R, exist_ok=True)
+    prev = os.path.join(S.R, "previous_run")         # an earlier run's tables never pass as this run's
+    old = [f for f in glob.glob(os.path.join(S.R, "*")) if os.path.isfile(f)]
+    if old:
+        new = prev + "_new"
+        shutil.rmtree(new, ignore_errors=True)
+        os.makedirs(new)
+        for f in old:
+            try:
+                shutil.move(f, os.path.join(new, os.path.basename(f)))
+            except OSError as e:                     # Windows: a results file is open in another program
+                for g in glob.glob(os.path.join(new, "*")):
+                    shutil.move(g, os.path.join(S.R, os.path.basename(g)))
+                shutil.rmtree(new, ignore_errors=True)
+                sys.exit(f"Cannot move {f} ({e.strerror or e}): close it (open in Excel?) and run analyze again")
+        shutil.rmtree(prev, ignore_errors=True)
+        os.replace(new, prev)
+        log(f"  the earlier results ({len(old)} files) moved to {prev}")
     S.idx = T.discover(args.data, out)
     with open(os.path.join(out, "extract_info.json"), encoding="utf-8") as fh:
         S.info = json.load(fh)
@@ -569,13 +650,16 @@ def load(S):
 
 
 def genotypes(idx, index, names, wt_override, alt_override):
-    """TP53 status per line from the cell-line metadata (any TP53 driver row = altered), protein changes, CDKN2A
-    deletion; --tp53-wt / --tp53-altered override (names or Cellosaurus ids)."""
+    """TP53 status per line from the cell-line metadata (any TP53 driver row = altered), protein changes, CDKN2A and
+    CDKN2B deletion; --tp53-wt / --tp53-altered override (names or Cellosaurus ids). Returns (table, deleted):
+    deleted = {gene: lines with a deletion driver row for it}."""
     out = pd.DataFrame(index=index)
     out["in_cell_line_metadata"] = False
     out["tp53_status"] = "unknown (line not in the cell-line metadata)"
     out["tp53_changes"] = ""
     out["cdkn2a_deleted"] = False
+    out["cdkn2b_deleted"] = False
+    deleted = {}
     raw = T.read_tables(idx["cell_line"]) if idx.get("cell_line") else None
     if raw is not None and {"Cell_ID_Cellosaur", "Driver_Gene_Symbol"} <= set(raw.columns):
         cid = raw["Cell_ID_Cellosaur"].map(T.to_text).astype(str)
@@ -587,13 +671,16 @@ def genotypes(idx, index, names, wt_override, alt_override):
         txt = ch.where(ch != "", vt)
         tp = pd.DataFrame({"cid": cid, "ch": txt})[(sym == "TP53").to_numpy()]
         tpch = tp.groupby("cid")["ch"].agg(lambda s: "; ".join(sorted({x for x in s if x})))
-        dele = (sym == "CDKN2A") & (vt.str.contains("del", case=False) | ch.str.upper().eq("DEL"))
+        isdel = (vt.str.contains("del", case=False) | ch.str.upper().eq("DEL")).to_numpy()
+        for g, c in zip(sym[isdel], cid[isdel]):
+            deleted.setdefault(g, set()).add(c)
         inm = out.index.isin(set(cid))
         out.loc[inm, "in_cell_line_metadata"] = True
         out.loc[inm, "tp53_status"] = "wild type (no TP53 driver call)"
         out.loc[out.index.isin(set(tpch.index)), "tp53_status"] = "altered"
         out["tp53_changes"] = tpch.reindex(out.index).fillna("").astype(str)
-        out["cdkn2a_deleted"] = out.index.isin(set(cid[dele.to_numpy()]))
+        out["cdkn2a_deleted"] = out.index.isin(deleted.get("CDKN2A", set()))
+        out["cdkn2b_deleted"] = out.index.isin(deleted.get("CDKN2B", set()))
     for opt, status in ((wt_override, "wild type (set by --tp53-wt)"), (alt_override, "altered (set by --tp53-altered)")):
         if opt:
             want = {x.strip().upper() for x in opt.split(",") if x.strip()}
@@ -605,7 +692,7 @@ def genotypes(idx, index, names, wt_override, alt_override):
     st = out["tp53_status"].astype(str)
     out["tp53_group"] = np.where(st.str.startswith("wild type"), "WT", np.where(st.str.startswith("altered"),
                                                                                 "altered", ""))
-    return out
+    return out, deleted
 
 
 def step_baseline(S):
@@ -613,7 +700,7 @@ def step_baseline(S):
     for c in ["cell_name", "Organ", "drivers", "Cell_ID_DepMap"]:
         base[c] = base[c].fillna("").astype(str) if c in base else ""
     S.name = pd.Series([n or i for i, n in zip(base.index, base["cell_name"])], index=base.index)
-    geno = genotypes(S.idx, base.index, S.name, S.args.tp53_wt, S.args.tp53_altered)
+    geno, S.deleted = genotypes(S.idx, base.index, S.name, S.args.tp53_wt, S.args.tp53_altered)
     S.base = base.join(geno)
     S.null_lines = list(base.index[base["MTAP_null"]])
     log(f"  {len(base)} lines: TP53 wild type {int((S.base['tp53_group'] == 'WT').sum())}, altered "
@@ -631,9 +718,24 @@ def step_expression(S):
     C = pd.DataFrame({g: base[f"{g}_cpm_all_wells"].astype(float) for g in genes}, index=base.index)
     Cd = pd.DataFrame({g: base[f"{g}_cpm_dmso"].astype(float) for g in genes}, index=base.index)
     med = C[enough].median()
-    thr = np.maximum(EXPR_FRAC * med, MIN_EXPR_CPM)
+    # ambient RNA: every line reads some of the well's pooled RNA. af = what the MTAP-null lines (no MTAP mRNA of
+    # their own) read of the pooled MTAP level; a line must read >= AMBIENT_MULT x af x the gene's pooled level
+    pooled = (1e6 * S.wl[genes].sum() / S.wl["total_counts"].sum()).astype(float)
+    nl = [c for c in S.null_lines if c in C.index]
+    if len(nl) >= 2 and "MTAP" in C and pooled.get("MTAP", 0) > 0:
+        raw = float(C.loc[nl, "MTAP"].median() / pooled["MTAP"])
+        S.af = float(np.clip(raw, *AMBIENT_CLIP))
+        S.af_source = (f"median MTAP of the {len(nl)} MTAP-null lines / pooled MTAP = {raw:.3f}"
+                       + (f", clipped to {S.af:.2f}" if S.af != raw else ""))
+    else:
+        S.af = AMBIENT_DEFAULT
+        S.af_source = f"default {AMBIENT_DEFAULT:g} (fewer than 2 MTAP-null lines to measure it)"
+    S.pooled, S.ambient = pooled, S.af * pooled
+    thr = np.maximum(np.maximum(EXPR_FRAC * med, MIN_EXPR_CPM), AMBIENT_MULT * S.ambient)
     E = C.ge(thr, axis=1)
     S.C, S.Cd, S.med, S.thr, S.E = C, Cd, med, thr, E
+    log(f"  ambient RNA fraction af = {S.af:.3f} ({S.af_source}); a line expresses a gene at >= "
+        f"{EXPR_FRAC:.0%} of the median line, >= {MIN_EXPR_CPM:g} CPM and >= {AMBIENT_MULT:g} x af x its pooled CPM")
     d = S.wl.merge(S.sm[["sample", "is_dmso"]], on="sample")
     S.dmso_counts = d[d["is_dmso"]].groupby("cell_line_id")[genes].sum().reindex(base.index).fillna(0.0)
     S.g2m = None                                   # proliferation per line: DMSO G2M level (as T), else all wells
@@ -658,7 +760,8 @@ def step_expression(S):
             "organ": base["Organ"].values, "tp53_status": base["tp53_status"].values,
             "cpm_dmso": Cd[g].values, "cpm_all_wells": C[g].values,
             "pct_cells_dmso": base[f"{g}_pct_cells_dmso"].values,
-            "vs_median_line": (C[g] / med[g]).values if med[g] > 0 else np.nan, "expressed": E[g].values}))
+            "vs_median_line": (C[g] / med[g]).values if med[g] > 0 else np.nan,
+            "vs_pooled_level": (C[g] / pooled[g]).values if pooled[g] > 0 else np.nan, "expressed": E[g].values}))
     S.save(pd.concat(long, ignore_index=True), "expression_by_line.csv")
 
 
@@ -724,11 +827,13 @@ def step_effects(S):
 # ============================================================================= pathway scores and context
 def step_scores(S):
     wells = S.sm.set_index("sample")[["plate", "drug", "conc", "slot", "well", "is_dmso"]]
-    S.score_members = {}
+    S.score_members, S.score_low = {}, set()
     for name, members in SCORES.items():
         mem = [g for g in members if g in S.RES and S.status.get(g) == "testable"]
-        if not mem:
+        if not mem:                                        # only low-count members: kept, flagged 'low counts'
             mem = [g for g in members if g in S.RES]
+            if mem:
+                S.score_low.add(name)
         S.score_members[name] = mem
         if not mem:
             S.skipped[name] = "no member gene is expressed"
@@ -753,6 +858,8 @@ def step_scores(S):
         res["n_members"] = len(mem)
         S.SW[name] = W
         S.SC[name] = finish_score(res, name, S.drugs)
+        if name in S.score_low:                            # pseudocount-dominated members: shutdown wells look 'up'
+            S.SC[name]["flags"] = ["; ".join(x for x in (f, "low counts") if x) for f in S.SC[name]["flags"]]
     for m in MODULES:                                      # T's summed modules, from their own drug-effect tables
         if m in S.RES:
             r = S.RES[m].rename(columns={"log2FC_corrected": "log2FC", "z_corrected": "z"})
@@ -810,6 +917,9 @@ def step_context(S):
     S.ctab = ct
     S.save(ct.sort_values(["drug", "conc"]), "drug_context_by_dose.csv")
     cols = [c for c in ct.columns if c.endswith("_log2FC") or (c.endswith("_z") and c[:-2] in CONTEXT_SCORES)]
+    if "PSMD10" in S.RES and "PROTEASOME_z" in S.RES["PSMD10"]:   # T's plate mean (its flags used it); the context
+        S.RES["PSMD10"] = S.RES["PSMD10"].rename(columns={         # below gets the Stouffer z like every other gene
+            "PROTEASOME_z": "PROTEASOME_z_plate_mean", "PROTEASOME_log2FC": "PROTEASOME_log2FC_plate_mean"})
     for gname, res in list(S.RES.items()):
         add = [c for c in cols if c not in res]
         r = res.merge(ct[["drug", "conc"] + add].drop_duplicates(["drug", "conc"]), on=["drug", "conc"], how="left")
@@ -859,21 +969,31 @@ def step_gene_tables(S):
 
 
 def step_ferro_context(S):
-    """FERRO_MARKERS per drug-dose with the ISR / NRF2 / UPR context: ferroptosis-like or a stress program?"""
+    """FERRO_MARKERS per drug-dose with the programs that rose with them (context, not a verdict: CHAC1 and SLC7A11
+    are ATF4 targets - cystine starvation raises them through the ISR -, SLC7A11 is an NRF2 target, PTGS2 is
+    NF-kB-inducible). Artifact flags come first."""
     t = S.SC["FERRO_MARKERS"].copy()
-    ct = S.ctab[["drug", "conc"] + [c for c in S.ctab.columns if c.split("_")[0] in ("ISR", "NRF2", "UPR", "HEAT")
+    ct = S.ctab[["drug", "conc"] + [c for c in S.ctab.columns if c.split("_")[0] in FERRO_CONTEXT_PREFIX
                                     and (c.endswith("_z") or c.endswith("_log2FC"))]]
     t = t.merge(ct.drop_duplicates(["drug", "conc"]), on=["drug", "conc"], how="left")
     read = []
     for r in t.to_dict("records"):
-        if not (r["z"] >= 3):
+        fdr = r.get("fdr_up", np.nan)
+        if not (r["z"] >= 3 and fdr < T.FDR_CUT):
             read.append("")
             continue
-        with_ = [m for m in ("ISR", "NRF2", "UPR", "HEAT_SHOCK") if (r.get(f"{m}_z", np.nan) or 0) >= CONTEXT_Z]
-        read.append("markers with " + " + ".join(with_) if with_ else "markers without ISR / NRF2 / UPR / heat shock")
+        fl = str(r.get("flags", "") or "")
+        art = [f for f in ("toxic", "transcription drop", "cell-cycle shift") if f in fl]
+        if art:
+            read.append("markers with " + " / ".join(art) + " (artifact likely)")
+            continue
+        with_ = [m for m in FERRO_CONTEXT if (r.get(f"{m}_z", np.nan) or 0) >= CONTEXT_Z]
+        notes = [FERRO_NOTES[m] for m in with_ if m in FERRO_NOTES]
+        read.append("markers with " + " + ".join(with_) + (f" ({'; '.join(notes)})" if notes else "") if with_ else
+                    "markers without ISR / NRF2 / UPR / heat shock / NF-kB (not explained by these programs)")
     t["reading"] = read
-    lead = ["drug", "conc", "fold_change", "z", "fdr_up", "reading", "top_members", "ISR_z", "NRF2_z", "UPR_z",
-            "HEAT_SHOCK_z", "ISR_log2FC", "NRF2_log2FC", "flags", "z_by_dose", "dose_pattern_up"]
+    lead = ["drug", "conc", "fold_change", "z", "fdr_up", "reading", "top_members"] + \
+        [f"{m}_z" for m in FERRO_CONTEXT] + ["ISR_log2FC", "NRF2_log2FC", "flags", "z_by_dose", "dose_pattern_up"]
     t = t[[c for c in lead if c in t] + [c for c in t.columns if c not in lead and c != "score"]]
     S.ferro = t.sort_values("z", ascending=False)
     S.save(S.ferro, "ferro_markers_with_context.csv")
@@ -943,21 +1063,44 @@ def step_p53_function(S):
     P, base = S.P53, S.base
     sc = S.SC["P53_ACTIVITY"]
     ok = sc[~sc["flags"].astype(str).str.contains("toxic") & np.isfinite(sc["z"])].sort_values("z", ascending=False)
-    ref = ok.head(N_P53_DOSES)
+    ref = ok[ok["fdr_up"] < T.FDR_CUT].head(N_P53_DOSES)            # significant doses only (noise dilutes)
+    S.p53_ref_rule = f"the {len(ref)} strongest non-toxic P53_ACTIVITY drug-doses with FDR < {T.FDR_CUT:g}"
+    if len(ref) < 3:
+        ref = ok.head(N_P53_DOSES)
+        S.p53_ref_rule = (f"the {len(ref)} strongest non-toxic P53_ACTIVITY drug-doses (fewer than 3 with FDR < "
+                          f"{T.FDR_CUT:g})")
+    log(f"  p53 reference doses: {S.p53_ref_rule}")
     S.p53_ref = ref
     S.save(ref[["drug", "conc", "fold_change", "z", "fdr_up", "flags", "wells", "plates"]], "p53_reference_doses.csv")
     keys = set(zip(ref["drug"], ref["conc"]))
-    sel = [s for s, d, c, dm in zip(S.sm["sample"], S.sm["drug"], S.sm["conc"], S.sm["is_dmso"])
+    sel = [(s, (d, c)) for s, d, c, dm in zip(S.sm["sample"], S.sm["drug"], S.sm["conc"], S.sm["is_dmso"])
            if (d, c) in keys and not dm]
-    Ps = P.reindex(sel)
+    Ps = P.reindex([s for s, _ in sel])
     resp = Ps.mean(axis=0)
     nw = Ps.notna().sum(axis=0)
+    # SE of the responsiveness: residuals of a rank-1 fit (well strength x line response) of the per-well-centred
+    # scores, so the spread between weaker and stronger reference doses does not count as noise for responding lines
+    R = Ps.sub(Ps.median(axis=1), axis=0)
+    Rm = R.to_numpy(dtype=float)
+    fin = np.isfinite(Rm)
+    r = np.nan_to_num(np.nanmean(np.where(fin, Rm, np.nan), axis=0))
+    num = np.where(fin, np.nan_to_num(Rm) * r[None, :], 0).sum(axis=1)
+    den = np.where(fin, r[None, :] ** 2, 0).sum(axis=1)
+    sj = np.where(den > 0, num / np.where(den > 0, den, 1), np.nan)
+    sj = sj / np.nanmean(sj) if np.isfinite(sj).any() and np.nanmean(sj) > 0 else np.ones(len(sj))
+    E = np.where(fin, Rm - np.nan_to_num(sj, nan=1.0)[:, None] * r[None, :], np.nan)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        se = pd.Series(np.nanstd(E, axis=0, ddof=1) / np.sqrt(fin.sum(axis=0)), index=R.columns)
+    dose_of = pd.Series([k for _, k in sel], index=Ps.index)
+    nd = pd.Series({c: dose_of[Ps[c].notna().to_numpy()].nunique() for c in Ps.columns}, dtype=float)
     mem = [g for g in S.score_members["P53_ACTIVITY"] if f"{g}_cpm_dmso" in base]
     basal = basal_activity(S, mem)
     t = pd.DataFrame({"cell_name": S.name, "organ": base["Organ"], "tp53_annotation": base["tp53_status"],
                       "tp53_changes": base["tp53_changes"], "cdkn2a_deleted": base["cdkn2a_deleted"],
                       "mtap_null": base["MTAP_null"], "basal_p53_activity_log2": basal,
-                      "p53_responsiveness_log2": resp.reindex(base.index), "n_reference_wells": nw.reindex(base.index)})
+                      "p53_responsiveness_log2": resp.reindex(base.index),
+                      "p53_responsiveness_se": se.reindex(base.index), "n_reference_wells": nw.reindex(base.index),
+                      "n_reference_doses": nd.reindex(base.index)})
     t.index.name = "cell_line_id"
     t["responsiveness_rank"] = t["p53_responsiveness_log2"].rank(ascending=False)
     wt = t.loc[base["tp53_group"] == "WT", "p53_responsiveness_log2"]
@@ -968,8 +1111,11 @@ def step_p53_function(S):
     else:
         cut = 0.5 * t["p53_responsiveness_log2"].quantile(0.9)
     S.p53_cut = cut
-    t["functional_call"] = np.where(t["p53_responsiveness_log2"].isna(), "not measured",
-                                    np.where(t["p53_responsiveness_log2"] >= cut, "responsive", "unresponsive"))
+    v = t["p53_responsiveness_log2"]
+    near = ((v - cut).abs() < 2 * t["p53_responsiveness_se"]).fillna(False).to_numpy(dtype=bool)
+    t["functional_call"] = np.where(v.isna(), "not measured", np.where(near, "uncertain (within 2 SE of the cut)",
+                                                                       np.where(v >= cut, "responsive",
+                                                                                "unresponsive")))
     grp = base["tp53_group"]
     t["discordant"] = np.where((grp == "WT") & (t["functional_call"] == "unresponsive"),
                                "annotated wild type but unresponsive",
@@ -983,11 +1129,12 @@ def step_p53_function(S):
         f"discordant lines: {int((t['discordant'] != '').sum())}")
 
 
-def basal_activity(S, members):
-    """Per line, untreated (DMSO): mean over the expressed members of log2(cpm / median line)."""
+def basal_activity(S, members, C=None):
+    """Per line, untreated (DMSO; or the levels C given): mean over the expressed members of log2(cpm / median
+    line)."""
     if not members:
         return pd.Series(np.nan, index=S.base.index)
-    Cd = S.Cd[members]
+    Cd = (S.Cd if C is None else C)[members]
     med = Cd[S.enough.to_numpy()].median()
     L = np.log2((Cd + 0.5) / (med + 0.5))
     return L.where(S.E[members]).mean(axis=1)
@@ -1085,7 +1232,9 @@ def step_p53_growth(S):
 
 def loss_group(S, g):
     """Lines that have lost a gene most lines express (as tahoe_atlas.angle_focus): below T.null_threshold's gap,
-    or a clean 2x separation; >= 3 lost lines and >= 3 expressing lines in the growth analysis."""
+    >= 3 lost lines and >= 3 expressing lines in the growth analysis, and one of: a clean 2x separation; a gap with
+    every lost line at the ambient floor (<= 1.5 x af x pooled CPM: they read ambient RNA only, not merely a low
+    level); >= 3 lost lines with a deletion driver row for the gene in the cell-line metadata."""
     base = S.base
     lc = S.C[g]
     enough = S.enough
@@ -1097,13 +1246,20 @@ def loss_group(S, g):
     use = set(S.n["cell_line_id"].unique()) if getattr(S, "n", None) is not None else set(base.index)
     lost = [c for c in ratio.index[(ratio < thr) & enough] if c in use]
     rest = ratio[(ratio >= thr) & enough & ratio.index.isin(list(use))]
-    clean = len(lost) >= 3 and rest.size >= 3 and ratio[lost].max() < 0.5 * rest.min()
-    if len(lost) >= 3 and rest.size >= 3 and (np.isfinite(gap) or clean):
-        return {"gene": g, "lines": lost, "n_lines": len(lost), "threshold_vs_median": thr,
-                "gap_log2": gap, "clean_2x_separation": bool(clean),
-                "lost_lines_vs_median": "; ".join(f"{S.name[c]} {ratio[c]:.2f}" for c in sorted(lost, key=ratio.get)),
-                "lowest_expressing_vs_median": float(rest.min())}
-    return None
+    if len(lost) < 3 or rest.size < 3:
+        return None
+    clean = bool(ratio[lost].max() < 0.5 * rest.min())
+    floor = float(S.ambient.get(g, np.nan))                # af x pooled CPM (step_expression)
+    at_floor = bool(np.isfinite(gap) and np.isfinite(floor) and floor > 0 and lc[lost].max() <= 1.5 * floor)
+    n_del = len(set(lost) & getattr(S, "deleted", {}).get(g.upper(), set()))
+    rule = "clean 2x" if clean else "gap at ambient floor" if at_floor else "metadata deletion" if n_del >= 3 else ""
+    if not rule:
+        return None
+    return {"gene": g, "lines": lost, "n_lines": len(lost), "rule": rule, "threshold_vs_median": thr,
+            "gap_log2": gap, "clean_2x_separation": clean, "ambient_floor_vs_median": floor / med,
+            "n_lines_deleted_in_metadata": n_del,
+            "lost_lines_vs_median": "; ".join(f"{S.name[c]} {ratio[c]:.2f}" for c in sorted(lost, key=ratio.get)),
+            "lowest_expressing_vs_median": float(rest.min())}
 
 
 def step_loss(S):
@@ -1118,8 +1274,9 @@ def step_loss(S):
     gt = pd.DataFrame([{**{k: v for k, v in x.items() if k != "lines"},
                         "lines": ", ".join(S.name[c] for c in x["lines"]),
                         "cell_line_ids": ", ".join(x["lines"])} for x in groups],
-                      columns=["gene", "n_lines", "lines", "cell_line_ids", "threshold_vs_median", "gap_log2",
-                               "clean_2x_separation", "lost_lines_vs_median", "lowest_expressing_vs_median"])
+                      columns=["gene", "n_lines", "lines", "cell_line_ids", "rule", "threshold_vs_median", "gap_log2",
+                               "clean_2x_separation", "ambient_floor_vs_median", "n_lines_deleted_in_metadata",
+                               "lost_lines_vs_median", "lowest_expressing_vs_median"])
     S.save(gt, "loss_groups.csv")
     lost_of = {x["gene"]: x["lines"] for x in groups}
 
@@ -1132,9 +1289,15 @@ def step_loss(S):
         return res
 
     def reexpress(g):
-        lost = lost_of[g]
+        """Lost lines with a deletion driver row cannot re-express the gene: left out (all of them: one row)."""
+        dele = S.deleted.get(g.upper(), set())
+        lost = [c for c in lost_of[g] if c not in dele]
+        if not lost:
+            return pd.DataFrame([{"gene": g, "lines": ", ".join(S.name[c] for c in lost_of[g]),
+                                  "reading": "deleted in the cell-line metadata: re-expression impossible (any rise "
+                                             "is ambient RNA)"}])
         res = T.expression_effects(S.wl, S.sm, g, [c for c in S.base.index if c not in set(lost)], S.ctx, S.drugs)[0]
-        return reexpression_table(S, g, lost, res)
+        return reexpression_table(S, g, lost, res, len(lost_of[g]) - len(lost))
     screens = list(S.attempt_each("loss screen", list(lost_of), screen).values())
     reex = list(S.attempt_each("re-expression in lost lines", list(lost_of), reexpress).values())
     S.loss_res = pd.concat(screens, ignore_index=True) if screens else pd.DataFrame()
@@ -1148,9 +1311,11 @@ def step_loss(S):
     log("  loss groups: " + (", ".join(f"{x['gene']} ({x['n_lines']} lines)" for x in groups) or "none"))
 
 
-def reexpression_table(S, g, lost, res):
+def reexpression_table(S, g, lost, res, n_deleted=0):
     """Drug effect on a gene measured only in the lines that have lost it (silenced: e.g. GSDME and DNMT
-    inhibitors). Ambient RNA from the other lines rises with them, so the expressing lines' change is shown too."""
+    inhibitors). Ambient RNA from the other lines rises with them, so the expressing lines' change is shown too.
+    'Re-expression' needs z >= 3, a rise >= 1.41x and > 2x the expressing lines' change, FDR < 0.10, no toxic /
+    transcription-drop flag, >= max(2, half the lost lines) measured and >= 60% of them above zero."""
     t = res.copy()
     main = S.RES.get(g)
     if main is not None:
@@ -1164,14 +1329,28 @@ def reexpression_table(S, g, lost, res):
                     how="left")
     lf = np.log2(t["fold_change"])
     le = np.log2(t["expressing_lines_fold_change"]).fillna(0)
-    t["reading"] = np.where((t["z_corrected"] >= 3) & (lf >= 0.5) & (lf > 2 * le.clip(lower=0) + 0.25),
-                            "re-expression in the lost lines (expressing lines change less)",
-                            np.where(t["z_corrected"] >= 3, "rises in all lines (ambient RNA follows)", ""))
+    nmin = max(2, int(math.ceil(len(lost) / 2)))
+    fl = t["flags"].fillna("").astype(str)
+    hit = (t["z_corrected"] >= 3) & (lf >= 0.5) & (lf > 2 * le.clip(lower=0) + 0.25)
+    read = []
+    for z, h, f, q, n, fp in zip(t["z_corrected"], hit, fl, t["fdr_up"], t["n_lines"], t["frac_lines_positive"]):
+        if not z >= 3:
+            read.append("")
+            continue
+        why = [x for x in ("toxic", "transcription drop") if x in f] + \
+            ([f"FDR >= {T.FDR_CUT:g}"] if not q < T.FDR_CUT else []) + \
+            ([f"only {int(n) if n >= 0 else 0} of {len(lost)} lost lines measured"] if not n >= nmin else [])
+        read.append(f"not interpretable ({', '.join(why)})" if why else
+                    "re-expression in the lost lines (expressing lines change less)" if h and fp >= 0.6 else
+                    "rises in the lost lines (ambient RNA / toxicity?)" if h else
+                    "rises in all lines (ambient RNA follows)")
+    t["reading"] = read
     t.insert(0, "lines", ", ".join(S.name[c] for c in lost))
     t.insert(0, "gene", g)
+    t["n_lost_lines_deleted_left_out"] = n_deleted
     lead = ["gene", "lines", "drug", "conc", "fold_change", "z_corrected", "fdr_up", "reading",
             "expressing_lines_fold_change", "expressing_lines_z", "n_lines", "n_lines_up", "frac_lines_positive",
-            "flags", "context", "wells", "plates", "moa_fine", "targets"]
+            "flags", "context", "wells", "plates", "moa_fine", "targets", "n_lost_lines_deleted_left_out"]
     return t[[c for c in lead if c in t]].sort_values("z_corrected", ascending=False)
 
 
@@ -1217,12 +1396,17 @@ def level_screen(n, base, sm, drugs, level, gene="PSMD10", organ=None, g2m=None)
     res["z_within_lineage"] = T.per_dose_table(W, ["rho_within_lineage"], zcol="z_within")["z"].values
     res["p"] = 2 * T.norm_sf(np.abs(res["z"].values))
     res["fdr"] = T.bh(res["p"].values)
+    res["p_within_lineage"] = 2 * T.norm_sf(np.abs(res["z_within_lineage"].values))
+    res["fdr_within_lineage"] = T.bh(res["p_within_lineage"].values)
+    res["fdr_drug_within_lineage"] = T.add_dose_columns(res, "z_within_lineage", "p_within_lineage",
+                                                        "down")["fdr_drug"].values
     res = res.join(drugs, on="drug").rename(columns={"z": "z_corrected"})
     res["reading"] = np.where(res["z_corrected"] < 0, f"high-{gene} lines depleted more", f"high-{gene} lines spared")
     res = T.add_dose_columns(res, "z_corrected", "p", "down")
     res = res.rename(columns={"dose_pattern": "dose_pattern_depleted_more"})
     lead = ["drug", "conc", "rho", "rho_partial_G2M", "rho_within_lineage", "z_corrected", "z_within_lineage", "fdr",
-            "fdr_drug", "z_by_dose", "dose_pattern_depleted_more", "reading"]
+            "fdr_within_lineage", "fdr_drug", "fdr_drug_within_lineage", "z_by_dose", "dose_pattern_depleted_more",
+            "reading"]
     res = res[[c for c in lead if c in res] + [c for c in res.columns if c not in lead]]
     return res.sort_values("z_corrected"), len(lines)
 
@@ -1242,8 +1426,17 @@ def step_levels(S):
     out, tops = [], []
     S.level_src = {}
     genes = [g for g in S.main if g in S.targets and int(S.E[g].sum()) >= MIN_LEVEL_LINES]
+    nrf2 = [g for g in CONTEXT["NRF2_CORE"] if g in S.Cd]   # NRF2 activity (KEAP1 acts on the protein), not NFE2L2
+    nb, nsrc = basal_activity(S, nrf2), "DMSO"                # mRNA: untreated level of the NRF2 targets
+    if np.isfinite(nb).sum() < MIN_LEVEL_LINES:
+        nb, nsrc = basal_activity(S, nrf2, S.C), "all wells (too few DMSO counts)"
+    if nrf2 and np.isfinite(nb).sum() >= MIN_LEVEL_LINES:
+        genes.append(NRF2_LEVEL)
 
     def one(g):
+        if g == NRF2_LEVEL:
+            return (level_screen(S.n, S.base, S.sm, S.drugs, 2.0 ** nb, g, S.base["Organ"], S.g2m),
+                    f"basal NRF2 target score ({nsrc}: mean log2 of the expressed NRF2_CORE genes vs the median line)")
         lev, src = gene_level(S, g)
         return level_screen(S.n, S.base, S.sm, S.drugs, lev, g, S.base["Organ"], S.g2m), src
     done = S.attempt_each("level vs growth", genes, one)
@@ -1261,7 +1454,7 @@ def step_levels(S):
     top = pd.concat(tops, ignore_index=True) if tops else pd.DataFrame()
     if len(top):
         top = top[["gene", "drug", "conc", "rho", "rho_partial_G2M", "rho_within_lineage", "z", "z_within_lineage",
-                   "fdr", "fdr_drug", "z_by_dose", "reading", "n_lines", "moa_fine"]
+                   "fdr", "fdr_within_lineage", "fdr_drug", "z_by_dose", "reading", "n_lines", "moa_fine"]
                   if "rho_partial_G2M" in top else [c for c in top.columns]].sort_values("fdr")
     S.lvl_top = top
     S.save(top, "level_vs_growth_top.csv")
@@ -1352,11 +1545,11 @@ def step_cell_cycle(S):
 def step_coreg(S):
     dw = S.sm.loc[~S.sm["is_dmso"], "sample"]
     feats = {}
-    for g in S.main + S.ctx_genes + MODULES:
-        if g in S.WS:
+    for g in S.main + S.ctx_genes + MODULES:          # low-count genes left out: their W2 follows the pseudocount
+        if g in S.WS and (g in MODULES or S.status.get(g) == "testable"):
             feats[g] = S.WS[g]["W2"]
     for name in SCORES:
-        if name in S.SW:
+        if name in S.SW and name not in getattr(S, "score_low", set()):
             feats[name] = S.SW[name]["W2"]
     X = pd.DataFrame(feats).reindex(dw)
     X = X.loc[:, X.notna().sum() >= 10]
@@ -1417,8 +1610,33 @@ def _read(path, **kw):
     return pd.read_csv(path, **kw) if os.path.exists(path) else None
 
 
-def compare(rows, label, mine, prior, cols, key=("drug", "conc")):
-    """Max |difference| and Spearman between this run's and the earlier run's numbers (same drug-doses)."""
+def prior_differences(S, P):
+    """Why this run and the earlier one cannot give identical numbers ('' when they read the same files with the
+    same --min-cells): a --limit-files trial on either side, another file count, another --min-cells."""
+    why = []
+    jf = os.path.join(P, "extract_info.json")
+    if os.path.exists(jf):
+        try:
+            with open(jf, encoding="utf-8") as fh:
+                pi = json.load(fh)
+        except (OSError, ValueError):
+            pi = {}
+        a, b = (S.info.get("n_files"), S.info.get("limit_files") or 0), (pi.get("n_files"), pi.get("limit_files") or 0)
+        if None not in (a[0], b[0]) and a != b:
+            why.append(f"this run read {a[0]} files" + (" (--limit-files trial)" if a[1] else "") +
+                       f", the earlier run {b[0]}" + (" (--limit-files trial)" if b[1] else ""))
+    sf = os.path.join(P, "results", "summary.txt")
+    if os.path.exists(sf):
+        with open(sf, encoding="utf-8", errors="replace") as fh:
+            m = re.search(r"Min cells per cell line per well: (\d+)", fh.read())
+        if m and int(m.group(1)) != T.MIN_CELLS:
+            why.append(f"--min-cells {T.MIN_CELLS} here, {m.group(1)} in the earlier run")
+    return "; ".join(why)
+
+
+def compare(rows, label, mine, prior, cols, key=("drug", "conc"), why=""):
+    """Max |difference| and Spearman between this run's and the earlier run's numbers (same drug-doses). why: the
+    reason the runs differ by design (different input), or '' (then 0 is expected)."""
     if mine is None or prior is None:
         rows.append({"category": "reproducibility", "comparison": label, "reading": "not available"})
         return
@@ -1435,8 +1653,10 @@ def compare(rows, label, mine, prior, cols, key=("drug", "conc")):
         r, n, _ = spearman_p(x, y)
         rows.append({"category": "reproducibility", "comparison": f"{label}: {a}", "n": n,
                      "statistic": "max |difference|", "value": d, "spearman": r,
-                     "expected": "0 (same data, same code)",
-                     "reading": "identical" if d <= 1e-6 else ("near-identical" if r > 0.99 else "differs")})
+                     "expected": f"differs by design ({why})" if why else "0 (same data, same code)",
+                     "reading": "identical" if d <= 1e-6 else ("near-identical" if r > 0.99 else
+                                                               "differs (different input; expected)" if why else
+                                                               "differs")})
 
 
 def step_crosslinks(S):
@@ -1446,6 +1666,10 @@ def step_crosslinks(S):
     pr = os.path.join(P, "results") if P else None
     dst = os.path.join(S.out, "angles", "crosslinks", "prior")
     shutil.rmtree(dst, ignore_errors=True)                 # never leave an older run's copy behind
+    S.prior_why = prior_differences(S, P) if P else ""
+    why = S.prior_why
+    if why:
+        log(f"  cross-links: the earlier run read other input ({why}): its numbers differ by design")
     if P:
         os.makedirs(dst, exist_ok=True)
         for f in glob.glob(os.path.join(pr, "*.csv")) + [os.path.join(pr, x) for x in ("summary.txt",
@@ -1469,30 +1693,64 @@ def step_crosslinks(S):
                          "expected": "identical", "reading": "identical" if p0 == p1 else
                          f"only earlier: {', '.join(sorted(p0 - p1))}; only now: {', '.join(sorted(p1 - p0))}"})
         compare(rows, "MTAP drug effects", S.RES.get("MTAP"), _read(os.path.join(pr, "MTAP_drug_effects_by_dose.csv")),
-                [("z_corrected", "z_corrected"), ("log2FC_corrected", "log2FC_corrected")])
+                [("z_corrected", "z_corrected"), ("log2FC_corrected", "log2FC_corrected")], why=why)
         compare(rows, "PSMD10 drug effects", S.RES.get("PSMD10"),
                 _read(os.path.join(pr, "Gankyrin_PSMD10_drug_effects_by_dose.csv")),
-                [("z_corrected", "z_corrected"), ("log2FC_corrected", "log2FC_corrected")])
+                [("z_corrected", "z_corrected"), ("log2FC_corrected", "log2FC_corrected")], why=why)
         compare(rows, "MTAP-null screen", getattr(S, "mres", None),
                 _read(os.path.join(pr, "MTAP_null_selective_drugs.csv")),
                 [("z_selective", "z_selective"), ("extra_log2_depletion_of_MTAP_null",
-                                                  "extra_log2_depletion_of_MTAP_null")])
+                                                  "extra_log2_depletion_of_MTAP_null")], why=why)
         lv = S.lvl[S.lvl["gene"] == "PSMD10"] if len(getattr(S, "lvl", [])) else None
         compare(rows, "Gankyrin level screen", lv, _read(os.path.join(pr, "Gankyrin_level_vs_drug_response.csv")),
-                [("rho", "rho"), ("rho_partial_G2M", "rho_partial_G2M"), ("z", "z_corrected")])
+                [("rho", "rho"), ("rho_partial_G2M", "rho_partial_G2M"), ("z", "z_corrected")], why=why)
     else:
         rows.append({"category": "reproducibility", "comparison": "earlier MTAP / Gankyrin run",
                      "reading": "not found (--prior); MTAP and PSMD10 were recomputed here with the same code"})
     biology_links(S, rows)
     shared_drugs(S, rows, pr)
-    cols = ["category", "comparison", "n", "statistic", "value", "spearman", "auc", "p", "expected", "reading"]
+    cols = ["category", "comparison", "n", "statistic", "value", "spearman", "rho_within_lineage", "p_within_lineage",
+            "auc", "p", "p_bh", "expected", "reading"]
     S.xl = pd.DataFrame(rows).reindex(columns=cols)
+    bio = (S.xl["category"] == "biology").to_numpy()          # BH over the biology comparisons, on the p that is
+    if bio.any():                                             # read: within lineage for correlations, else the test's
+        pr = pd.to_numeric(S.xl.loc[bio, "p_within_lineage"], errors="coerce").fillna(
+            pd.to_numeric(S.xl.loc[bio, "p"], errors="coerce"))
+        S.xl.loc[bio, "p_bh"] = T.bh(pr.to_numpy(dtype=float))
     S.save(S.xl, "crosslinks.csv")
 
 
+def spearman_within(a, b, organ):
+    """Spearman rho with lineage removed (organ effects of organs with >= 3 lines projected out of both rank
+    vectors, as level_screen does) and a two-sided p (Fisher z, organ terms taken off the degrees of freedom)."""
+    a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
+    ok = np.isfinite(a) & np.isfinite(b)
+    n = int(ok.sum())
+    if n < 4:
+        return np.nan, np.nan
+    ra, rb = pd.Series(a[ok]).rank().to_numpy(), pd.Series(b[ok]).rank().to_numpy()
+    org = pd.Series(np.asarray(organ, dtype=object)[ok]).fillna("").astype(str).to_numpy()
+    big = [o for o in pd.unique(org) if o and (org == o).sum() >= 3]
+    Dm = np.column_stack([np.ones(n)] + [(org == o).astype(float) for o in big])
+    H = Dm @ np.linalg.pinv(Dm)
+    xa, xb = ra - H @ ra, rb - H @ rb
+    den = math.sqrt(float((xa ** 2).sum() * (xb ** 2).sum()))
+    if den == 0:
+        return np.nan, np.nan
+    r = float(xa @ xb / den)
+    df = n - 2 - int(np.linalg.matrix_rank(Dm))
+    if df < 1:
+        return r, np.nan
+    z = math.atanh(max(min(r, 0.999999), -0.999999)) * math.sqrt(df)
+    return r, float(2 * T.norm_sf([abs(z)])[0])
+
+
 def biology_links(S, rows):
+    """Hypotheses linking the panel to the earlier MTAP / Gankyrin analysis, across lines. Correlations are read
+    within lineage (lineage and KEAP1-mutant lung lines dominate basal NRF2); group contrasts are AUCs."""
     base, f = S.base, getattr(S, "p53f", None)
-    wt = base["tp53_group"] == "WT"
+    wt = (base["tp53_group"] == "WT").to_numpy()
+    organ = base["Organ"].to_numpy() if "Organ" in base else np.array([""] * len(base))
     basal_p53 = f["basal_p53_activity_log2"].reindex(base.index) if f is not None else \
         basal_activity(S, [g for g in P53_ACTIVITY if g in S.Cd])
     resp = f["p53_responsiveness_log2"].reindex(base.index) if f is not None else pd.Series(np.nan, index=base.index)
@@ -1501,58 +1759,76 @@ def biology_links(S, rows):
 
     def corr_row(label, a, b, expected, mask=None):
         mask = np.ones(len(base), bool) if mask is None else np.asarray(mask, bool)
-        r, n, p = spearman_p(np.asarray(a)[mask], np.asarray(b)[mask])
+        a, b = np.asarray(a, dtype=float)[mask], np.asarray(b, dtype=float)[mask]
+        r, n, p = spearman_p(a, b)
+        rw, pw = spearman_within(a, b, organ[mask])
+        same = np.isfinite(rw) and (rw < 0) == expected.startswith("neg")
         rows.append({"category": "biology", "comparison": label, "n": n, "statistic": "Spearman rho", "value": r,
-                     "p": p, "expected": expected,
-                     "reading": "" if not np.isfinite(r) else ("as expected" if (r < 0) == expected.startswith("neg")
-                                                               and p < 0.05 else ("same direction, not significant"
-                                                                                  if (r < 0) == expected.startswith(
-                                                                                      "neg") else "opposite"))})
+                     "rho_within_lineage": rw, "p_within_lineage": pw, "p": p, "expected": expected,
+                     "reading": "" if not np.isfinite(rw) else ("consistent (within lineage)" if same and pw < 0.05
+                                                                else "same direction (within lineage), not "
+                                                                     "significant" if same else
+                                                                "not consistent (within lineage)")})
     if gk is not None:
         corr_row("PSMD10 (Gankyrin) baseline vs basal p53 activity, TP53-WT lines", gk, basal_p53,
-                 "negative (Gankyrin promotes MDM2-mediated p53 degradation)", wt)
+                 "negative if Gankyrin-MDM2 degradation of p53 (a protein-level mechanism) sets basal target levels: "
+                 "a hypothesis", wt)
         corr_row("PSMD10 baseline vs p53 responsiveness to the reference activators, TP53-WT lines", gk, resp,
-                 "negative", wt)
+                 "negative if Gankyrin-MDM2 degradation of p53 limits its induction: a hypothesis", wt)
         corr_row("PSMD10 baseline vs basal NRF2 core activity, all lines", gk, nrf2,
-                 "positive (reported Gankyrin-KEAP1 link)")
-    nul = base["MTAP_null"].astype(bool)
+                 "positive if the reported Gankyrin-KEAP1/NRF2 feedback matters; KEAP1-mutant lung lines (e.g. A549, "
+                 "NCI-H460; not annotated here) dominate basal NRF2: use the within-lineage rho")
 
-    def group_row(label, v, mask, expected):
+    def group_row(label, v, mask, grp, expected, what):
         v = pd.Series(np.asarray(v, dtype=float), index=base.index)
-        a, b = v[mask & nul], v[mask & ~nul]
+        mask, grp = np.asarray(mask, bool), np.asarray(grp, bool)
+        a, b = v[mask & grp], v[mask & ~grp]
         u, p = auc(a, b)
         rows.append({"category": "biology", "comparison": label, "n": int(a.notna().sum() + b.notna().sum()),
-                     "statistic": "median null - intact",
+                     "statistic": f"median {what[0]} - {what[1]}",
                      "value": float(a.median() - b.median()) if a.notna().any() and b.notna().any() else np.nan,
                      "auc": u, "p": p, "expected": expected,
-                     "reading": f"{int(a.notna().sum())} null vs {int(b.notna().sum())} intact lines"})
-    group_row("MTAP-null (9p21 / CDKN2A-ARF loss) vs basal p53 activity, TP53-WT lines", basal_p53, wt,
-              "lower in null (ARF loss frees MDM2)")
-    group_row("MTAP-null vs p53 responsiveness, TP53-WT lines", resp, wt, "lower in null")
+                     "reading": f"{int(a.notna().sum())} {what[0]} vs {int(b.notna().sum())} {what[1]} lines"})
+    nul = base["MTAP_null"].astype(bool).to_numpy()
+    cdk = base["cdkn2a_deleted"].astype(bool).to_numpy()
+    low = "possibly slightly lower (hypothesis)"
+    nodiff = "no difference (DNA-damage activation of p53 does not need ARF)"
+    group_row("CDKN2A-deleted (p16 and ARF lost) vs CDKN2A-present, TP53-WT lines: basal p53 activity", basal_p53, wt,
+              cdk, low, ("deleted", "present"))
+    group_row("CDKN2A-deleted vs CDKN2A-present, TP53-WT lines: p53 responsiveness", resp, wt, cdk, nodiff,
+              ("deleted", "present"))
+    group_row("MTAP-null (9p21 proxy) vs MTAP-intact, TP53-WT lines: basal p53 activity", basal_p53, wt, nul, low,
+              ("null", "intact"))
+    group_row("MTAP-null (9p21 proxy) vs MTAP-intact, TP53-WT lines: p53 responsiveness", resp, wt, nul, nodiff,
+              ("null", "intact"))
     for g in ["SLC7A11", "GPX4", "ACSL4", "AIFM2", "CHAC1"]:
         if f"{g}_cpm_dmso" in base and g in S.C:
             lev, _ = gene_level(S, g)
             group_row(f"MTAP-null vs {g} baseline (log2 CPM)", np.log2(lev.astype(float) + 0.5),
-                      np.ones(len(base), bool), "unknown (MTA / transsulfuration -> cysteine)")
+                      np.ones(len(base), bool), nul, "speculative: no difference likely (MTAP loss mainly raises MTA; "
+                      "in cystine-rich medium any effect on cysteine supply is small)", ("null", "intact"))
 
 
 def shared_drugs(S, rows, pr):
-    """Drugs on both the earlier MTAP / Gankyrin top lists and the panel's top lists."""
+    """Drugs significant (drug-level FDR < 0.10) both in the earlier MTAP / Gankyrin run and in the panel, with the
+    number expected by chance (|any earlier list| x |any panel list| / drugs in the data)."""
     prior = {}
 
-    def top_drugs(t, col, asc, k):
+    def top_drugs(t, col, asc, k, fdr=None):
         if t is None or col not in t:
             return []
+        if fdr and fdr in t:
+            t = t[t[fdr] < T.FDR_CUT]
         return list(dict.fromkeys(t.sort_values(col, ascending=asc)["drug"].astype(str)))[:k]
     src = "earlier run" if pr else "this run (no earlier run found)"
     for g, f in (("MTAP", "MTAP_drug_summary.csv"), ("PSMD10", "Gankyrin_PSMD10_drug_summary.csv")):
         t = _read(os.path.join(pr, f)) if pr else S.DS.get(g)
-        prior[f"{g} up"] = top_drugs(t, "best_up_z", False, TOP)
-        prior[f"{g} down"] = top_drugs(t, "best_down_z", True, TOP)
+        prior[f"{g} up"] = top_drugs(t, "best_up_z", False, TOP, "fdr_up_drug")
+        prior[f"{g} down"] = top_drugs(t, "best_down_z", True, TOP, "fdr_down_drug")
     t = _read(os.path.join(pr, "MTAP_null_selective_drugs.csv")) if pr else getattr(S, "mres", None)
-    prior["MTAP-null selective"] = top_drugs(t, "z_selective", True, TOP)
+    prior["MTAP-null selective"] = top_drugs(t, "z_selective", True, TOP, "fdr_drug")
     t = _read(os.path.join(pr, "Gankyrin_level_vs_drug_response.csv")) if pr else None
-    prior["Gankyrin level: depleted more"] = top_drugs(t, "z_corrected", True, 10)
+    prior["Gankyrin level: depleted more"] = top_drugs(t, "z_corrected", True, 10, "fdr_drug")
     panel = {}
     for name, t in S.SC.items():
         if name in ("P53_ACTIVITY", "FERRO_MARKERS", "INFLAMMASOME", "NRF2", "ISR", "IFN", "HEAT_SHOCK"):
@@ -1565,16 +1841,23 @@ def shared_drugs(S, rows, pr):
     for g in S.panel:
         if g in S.DS and S.status.get(g) == "testable":
             d = S.DS[g]
-            panel[f"{g} up"] = list(d.loc[d["up_call"] == "up", "drug"].astype(str))[:5]
-            panel[f"{g} down"] = list(d.loc[d["down_call"] == "down", "drug"].astype(str))[:5]
+            panel[f"{g} up"] = list(d[d["up_call"] == "up"].sort_values("best_up_z", ascending=False)["drug"]
+                                    .astype(str))[:5]
+            panel[f"{g} down"] = list(d[d["down_call"] == "down"].sort_values("best_down_z")["drug"].astype(str))[:5]
+    n_drugs = max(1, S.sm.loc[~S.sm["is_dmso"], "drug"].nunique())
+    any_prior = {x for v in prior.values() for x in v}
+    any_panel = {x for v in panel.values() for x in v}
+    S.shared_expected = len(any_prior) * len(any_panel) / n_drugs
+    exp = f"~{S.shared_expected:.1f} drugs shared by chance ({len(any_prior)} x {len(any_panel)} / {n_drugs} drugs)"
     hits = []
-    for d in sorted({x for v in prior.values() for x in v}):
+    for d in sorted(any_prior):
         pl = [k for k, v in panel.items() if d in v]
         if pl:
             hits.append((len(pl), d, [k for k, v in prior.items() if d in v], pl))
+    S.shared_n = len(hits)
     for npl, d, a, b in sorted(hits, key=lambda t: (-t[0], t[1]))[:25]:
         rows.append({"category": "shared top drugs", "comparison": d, "n": npl,
-                     "statistic": f"top lists ({src})", "value": len(a), "expected": "",
+                     "statistic": f"significant lists ({src})", "value": len(a), "expected": exp,
                      "reading": f"MTAP/Gankyrin: {', '.join(a)} | panel: {', '.join(b)}"})
 
 
@@ -1625,7 +1908,7 @@ def _readout(S, kind, name):
 def step_controls(S):
     present = sorted(set(S.sm.loc[~S.sm["is_dmso"], "drug"].astype(str)))
     rows = []
-    for exp, kind, name, sign, spec in CONTROLS:
+    for exp, kind, name, sign, spec, at24 in CONTROLS:
         drugs = find_drugs(present, S.drugs, spec)
         t = readout(S, kind, name)
         low = kind == "reexpr" and len(getattr(S, "reex", [])) and (S.reex["gene"] == name).any()
@@ -1634,10 +1917,11 @@ def step_controls(S):
                 f"{name} mRNA (expressing lines: no {name}-low group found)",
                 "p53wt": "p53 targets, WT minus altered lines", "ctx": "UMIs per cell vs plate"}[kind]
         if not drugs:
-            rows.append({"expectation": exp, "readout": what, "drug": "not in data", "verdict": "not in data"})
+            rows.append({"expectation": exp, "expected_at_24h": at24, "readout": what, "drug": "not in data",
+                         "verdict": "not in data"})
             continue
         if t is None:
-            rows.append({"expectation": exp, "readout": what, "drug": ", ".join(drugs),
+            rows.append({"expectation": exp, "expected_at_24h": at24, "readout": what, "drug": ", ".join(drugs),
                          "verdict": f"not testable ({S.status.get(name, S.skipped.get(name, 'readout missing'))})"})
             continue
         sz = t["z"] * (sign if sign else 1)
@@ -1645,7 +1929,8 @@ def step_controls(S):
         for d in drugs:
             g = t[(t["drug"] == d) & np.isfinite(t["z"].astype(float))]
             if not len(g):
-                rows.append({"expectation": exp, "readout": what, "drug": d, "verdict": "not measured"})
+                rows.append({"expectation": exp, "expected_at_24h": at24, "readout": what, "drug": d,
+                             "verdict": "not measured"})
                 continue
             k = (g["z"] * sign if sign else g["z"].abs()).idxmax()
             r = t.loc[k]
@@ -1654,7 +1939,7 @@ def step_controls(S):
             lf = math.log2(r["fold_change"]) if r["fold_change"] > 0 else np.nan
             big = abs(lf) >= T.LFC_MIN if kind not in ("ctx", "p53wt") else (lf <= -0.5 if kind == "ctx" else True)
             verdict = "clear" if dz >= 3 and fdr < T.FDR_CUT and big else ("weak" if dz >= 2 else "absent")
-            rows.append({"expectation": exp, "readout": what, "drug": d, "best_dose": r["conc"],
+            rows.append({"expectation": exp, "expected_at_24h": at24, "readout": what, "drug": d, "best_dose": r["conc"],
                          "fold_change": r["fold_change"], "z": r["z"], "fdr": fdr, "rank_among_drug_doses": rank[k],
                          "of": len(t), "z_by_dose": r["z_by_dose"], "flags": r["flags"],
                          "direction": "up" if r["z"] > 0 else "down", "verdict": verdict})
@@ -1701,8 +1986,10 @@ def write_summary(S):
         + (f", TRIAL limited to {info['limit_files']} files" if info.get("limit_files") else "") + ")")
     say(f"Well position source: {info['well_position_source']}")
     say(f"Min cells per line per well: {T.MIN_CELLS}. Drug call: FDR < {T.FDR_CUT}, >= {2 ** T.LFC_MIN:.1f}x (median "
-        f"over lines), >= 60% of lines moving that way. Expressed: >= {EXPR_FRAC:.0%} of the median line and >= "
-        f"{MIN_EXPR_CPM:g} CPM (all wells).")
+        f"over lines), >= 60% of lines moving that way. Expressed: >= {EXPR_FRAC:.0%} of the median line, >= "
+        f"{MIN_EXPR_CPM:g} CPM and >= {AMBIENT_MULT:g}x the ambient level (all wells).")
+    say(f"Ambient RNA: lines read af = {S.af:.3f} of a gene's pooled level without expressing it ({S.af_source}); "
+        f"ambient level = af x pooled CPM (panel_genes.csv ambient_cpm).")
     say(f"Failed wells excluded: {len(S.failed)}" + (" -> " + ", ".join(
         f"{r.drug} {r.conc:g} ({r.plate} {r.well}, {int(r.n_cells)} cells)" for r in S.failed.itertuples())
         if len(S.failed) else ""))
@@ -1768,11 +2055,15 @@ def sec_checks(S, say, title):
     if xl is not None and len(xl):
         r = xl[xl["category"] == "reproducibility"]
         say("Agreement with the earlier MTAP / Gankyrin run" + (f" ({S.prior}):" if S.prior else ":"))
+        if getattr(S, "prior_why", ""):
+            say(f"  the two runs read different input, so their numbers differ by design: {S.prior_why}")
         say(table(r, ["comparison", "n", "statistic", "value", "spearman", "reading"], TOP, 6))
 
 
 def sec_expression(S, say, title):
-    title("2. EXPRESSION (all wells pooled; lines expressing = >= 25% of the median line and >= 1 CPM)")
+    title(f"2. EXPRESSION (all wells pooled; lines expressing = above ambient: >= {EXPR_FRAC:.0%} of the median "
+          f"line, >= {MIN_EXPR_CPM:g} CPM and >= {AMBIENT_MULT:g} x af x pooled CPM, af = {S.af:.2f} from the "
+          "MTAP-null lines)")
     pg = getattr(S, "pg", None)
     if pg is None:
         say("  not available")
@@ -1780,12 +2071,12 @@ def sec_expression(S, say, title):
     for pw in ["ferroptosis", "pyroptosis", "p53"]:
         t = pg[pg["pathway"] == pw]
         say(f"{pw}:")
-        say(table(t, ["gene", "also_known_as", "median_line_cpm", "n_lines_expressing", "n_lines",
+        say(table(t, ["gene", "also_known_as", "median_line_cpm", "ambient_cpm", "n_lines_expressing", "n_lines",
                       "median_pct_cells_dmso", "median_counts_per_profile", "status"], TOP, 2))
     t = pg[~pg["pathway"].isin(["ferroptosis", "pyroptosis", "p53"])]
     say("NAPEPLD, TRIM72, anchors" + (" and added genes" if (pg["gene_set"] == "added").any() else "") + ":")
-    say(table(t, ["gene", "also_known_as", "median_line_cpm", "n_lines_expressing", "n_lines", "median_pct_cells_dmso",
-                  "median_counts_per_profile", "status"], TOP, 2))
+    say(table(t, ["gene", "also_known_as", "median_line_cpm", "ambient_cpm", "n_lines_expressing", "n_lines",
+                  "median_pct_cells_dmso", "median_counts_per_profile", "status"], TOP, 2))
     bad = pg[pg["status"] != "testable"]
     say("Not testable as drug targets of mRNA change (and why):" if len(bad) else "Every panel gene is testable.")
     for r in bad.itertuples():
@@ -1799,7 +2090,7 @@ def sec_controls(S, say, title):
         say("  not available")
         return
     t = p.copy()
-    sign = {e: sg for e, _k, _n, sg, _s in CONTROLS}
+    sign = {e: sg for e, _k, _n, sg, *_r in CONTROLS}
     z = pd.to_numeric(t["z"], errors="coerce") if "z" in t else pd.Series(np.nan, index=t.index)
     sg = t["expectation"].map(sign).fillna(1)
     t["_z"] = np.where(sg == 0, z.abs(), z * sg)
@@ -1809,9 +2100,12 @@ def sec_controls(S, say, title):
     best = best.assign(_o=best["expectation"].map(order)).sort_values("_o")
     n_clear = t.groupby("expectation")["verdict"].agg(lambda s: f"{(s == 'clear').sum()}/{len(s)} clear")
     best["drugs_clear"] = best["expectation"].map(n_clear)
-    best["exp"] = best["expectation"].str.slice(0, 62)
-    say(table(best, ["exp", "drug", "best_dose", "fold_change", "z", "fdr", "rank_among_drug_doses", "verdict",
-                     "drugs_clear"], TOP, 3))
+    best["exp"] = best["expectation"].map(lambda s: s if len(s) <= 62 else s[:59].rsplit(" ", 1)[0] + " ...")
+    best["at_24h"] = best.get("expected_at_24h", "")
+    say(table(best, ["exp", "at_24h", "drug", "best_dose", "fold_change", "z", "fdr", "rank_among_drug_doses",
+                     "verdict", "drugs_clear"], TOP, 3))
+    say("at_24h: 'robust' controls that are absent lower the trust in the method; 'uncertain' ones (DNMT inhibitors: "
+        "demethylation needs several divisions; dimethyl fumarate at <= 5 uM; COX inhibitors) say little when absent.")
 
 
 def gene_best(S, genes):
@@ -1846,18 +2140,21 @@ def sec_ferroptosis(S, say, title):
     say(table(gene_best(S, fer), ["gene", "best_up", "up_flags_context", "best_down"], TOP))
     f = getattr(S, "ferro", None)
     if f is not None:
-        say("FERRO_MARKERS (PTGS2, CHAC1, SLC7A11) top drug-doses with their stress context ('without ISR' = the more "
-            "specific pattern):")
-        say(table(f, ["drug", "conc", "fold_change", "z", "fdr_up", "ISR_z", "NRF2_z", "UPR_z", "reading", "flags"], 10))
+        say("FERRO_MARKERS (PTGS2, CHAC1, SLC7A11) top drug-doses with their stress context (CHAC1/SLC7A11 are ATF4 "
+            "and NRF2 targets, PTGS2 is NF-kB-inducible: context, not a verdict):")
+        say(table(f, ["drug", "conc", "fold_change", "z", "fdr_up", "ISR_z", "NRF2_z", "UPR_z", "NFKB_z", "reading",
+                      "flags"], 10))
     iron = gene_best(S, ["TFRC", "FTH1", "FTL", "NCOA4"])
-    say("Iron genes (iron starvation: TFRC up with FTH1/FTL down; iron load: the reverse):")
+    say("Iron genes (mRNA: TFRC up = iron-starvation-like; FTH1/FTL mRNA mostly follow NRF2, not iron):")
     say(table(iron, ["gene", "best_up", "best_down"], 4))
     lv = getattr(S, "lvl", None)
     if lv is not None and len(lv):
         t = lv[lv["gene"].isin(FERRO_LEVEL_GENES)].sort_values("fdr").drop_duplicates("gene")
         say("Does a line's baseline level predict which lines a drug depletes? (best drug-dose per gene; rho < 0 = "
-            "high-level lines depleted more; within lineage = organ removed):")
-        say(table(t, ["gene", "drug", "conc", "rho", "rho_within_lineage", "z", "fdr", "z_by_dose", "reading"], 7))
+            f"high-level lines depleted more; within lineage = organ removed; {NRF2_LEVEL} = basal NRF2 target "
+            "activity):")
+        say(table(t, ["gene", "drug", "conc", "rho", "rho_within_lineage", "z", "fdr", "fdr_within_lineage",
+                      "z_by_dose", "reading"], len(FERRO_LEVEL_GENES)))
 
 
 def sec_pyroptosis(S, say, title):
@@ -1878,7 +2175,12 @@ def sec_pyroptosis(S, say, title):
     rx = getattr(S, "reex", None)
     if rx is not None and len(rx):
         for g, t in rx.groupby("gene"):
-            say(f"{g} measured only in the lines that lost it ({t['lines'].iloc[0]}): top drug-doses")
+            rd = t["reading"].astype(str)
+            if rd.str.startswith("deleted in the cell-line metadata").all():
+                say(f"{g}: all lost lines ({t['lines'].iloc[0]}) are deleted in the cell-line metadata; "
+                    "re-expression not analysed")
+                continue
+            say(f"{g} in the lines that silence it (deleted lines excluded; {t['lines'].iloc[0]}): top drug-doses")
             say(table(t, ["drug", "conc", "fold_change", "z_corrected", "fdr_up", "expressing_lines_fold_change",
                           "reading"], 5))
     say("INFLAMMASOME score (expressed members: " + ", ".join(S.score_members.get("INFLAMMASOME", [])) + "):")
@@ -1912,8 +2214,9 @@ def sec_p53(S, say, title):
     f = getattr(S, "p53f", None)
     if f is not None:
         a, p = S.p53_auc
-        say(f"Functional p53 status: responsiveness = mean p53-target shift over the {N_P53_DOSES} strongest non-toxic "
-            f"P53_ACTIVITY drug-doses (genotype-blind; p53_reference_doses.csv). AUC WT vs altered = {fnum(a)} "
+        say(f"Functional p53 status: responsiveness = mean p53-target shift over {S.p53_ref_rule} "
+            f"(p53_reference_doses.csv; responsiveness is genotype-blind; the responsive / unresponsive cut is halfway "
+            f"between the WT and altered medians; within 2 SE of it = 'uncertain'). AUC WT vs altered = {fnum(a)} "
             f"(p {fnum(p, '{:.2g}')}); cut {fnum(S.p53_cut)} log2.")
         d = f[f["discordant"] != ""].reset_index()
         say("Discordant lines:" if len(d) else "Discordant lines: none")
@@ -1925,7 +2228,8 @@ def sec_p53(S, say, title):
         say("Growth: drugs that deplete TP53-WT lines more than TP53-altered lines (negative = WT lost more):")
         say(table(g, ["drug", "conc", "extra_log2_depletion_of_TP53_WT", "z_selective", "fdr_selective", "fdr_drug",
                       "z_by_dose", "all_cells_log2_vs_plate"], 8))
-    say("Specific p53 reporters vs stress-generic targets (best increase):")
+    say("p53 reporters (FDXR, ZMAT3, MDM2) vs targets with p53-independent inducers (CDKN1A: HDAC inhibitors; "
+        "PMAIP1, GADD45A, SESN2: ATF4) (best increase):")
     say(table(gene_best(S, ["CDKN1A", "MDM2", "FDXR", "ZMAT3", "PMAIP1", "GADD45A", "SESN2", "TP53"]),
               ["gene", "best_up", "up_flags_context"], 8))
 
@@ -1950,8 +2254,13 @@ def sec_napepld(S, say, title):
                 say("  level vs growth: " + "; ".join(f"{d} {c:g} rho {r:.2f} (fdr {q:.2g})" for d, c, r, q in
                                                       zip(t["drug"], t["conc"], t["rho"], t["fdr"])))
     if S.status.get("TRIM72", "") != "testable":
-        say("TRIM72 is a muscle/heart gene; in cancer lines it is expected to be absent. Nothing more can be said from "
-            "these data.")
+        n = int(S.E["TRIM72"].sum()) if "TRIM72" in S.E else 0
+        if n == 0:
+            say("TRIM72 (MG53) is muscle/heart-enriched and is not detected above ambient in any line here.")
+        else:
+            names = ", ".join(S.name[c] for c in S.E.index[S.E["TRIM72"]][:8])
+            say(f"TRIM72 (MG53) is muscle/heart-enriched; it is detected at low level in {n} line(s) ({names}); "
+                f"status: {S.status.get('TRIM72', '')}. Treat any drug effect as exploratory.")
 
 
 def sec_crosslinks(S, say, title):
@@ -1960,15 +2269,20 @@ def sec_crosslinks(S, say, title):
     if xl is None:
         say("  not available")
         return
-    say(table(xl[xl["category"] == "biology"], ["comparison", "n", "statistic", "value", "auc", "p", "expected"],
-              TOP))
+    say("Hypotheses, not tests (correlations read within lineage; p_bh = BH over these rows of p_within_lineage, or "
+        "of p for group comparisons):")
+    say(table(xl[xl["category"] == "biology"], ["comparison", "n", "statistic", "value", "rho_within_lineage",
+                                                "p_within_lineage", "auc", "p", "p_bh", "expected"], TOP))
     sh = xl[xl["category"] == "shared top drugs"]
-    say(f"Drugs on both the MTAP / Gankyrin top lists and the panel top lists: {len(sh)}")
+    say(f"Drugs significant (drug-level FDR < {T.FDR_CUT:g}) in both the MTAP / Gankyrin run and the panel: "
+        f"{getattr(S, 'shared_n', len(sh))} (~{getattr(S, 'shared_expected', np.nan):.1f} expected by chance)")
     for r in sh.head(10).itertuples():
         say(f"  {r.comparison}: {r.reading}"[:200])
     if getattr(S, "pc1", None):
-        say(f"Co-regulation: the first principal component of the panel's drug responses explains "
-            f"{100 * S.pc1['share']:.0f}% (mostly global stress / shutdown): {S.pc1['top'][:150]}")
+        say(f"Co-regulation (low-count genes left out): the first principal component of the panel's drug responses "
+            f"explains {100 * S.pc1['share']:.0f}% (often a global stress / shutdown axis; check its loadings): "
+            f"{S.pc1['top'][:150]}")
+        say(f"  wells scoring highest on it: {S.pc1.get('wells_high', '')}")
         say("Partners per gene: coregulation_top_partners.csv; genome-wide partners: tahoe_atlas.py lookup corr GENE "
             "(once the atlas has been computed).")
 
@@ -1991,6 +2305,7 @@ def step_panel_genes(S):
             d.update({"median_line_cpm": S.med[g], "median_line_cpm_dmso": S.Cd[g][en].median(),
                       "median_pct_cells_dmso": S.base[f"{g}_pct_cells_dmso"][en].median(),
                       "n_lines": int(en.sum()), "n_lines_expressing": int(S.E[g][en].sum()),
+                      "pooled_cpm": S.pooled[g], "ambient_fraction": S.af, "ambient_cpm": S.ambient[g],
                       "expression_threshold_cpm": S.thr[g], "median_counts_per_profile": S.counts.get(g, np.nan),
                       "testable": S.status.get(g) == "testable",
                       "lowest_lines": "; ".join(f"{S.name[i]} {v:.2f}x" for i, v in ok.head(3).items()),
@@ -2014,8 +2329,12 @@ WHAT_DATA_SHOW = """## What these data can and cannot show
   formation, cytokine release or the mode of cell death. Say 'ferroptosis-like / stress signature', never
   'ferroptosis'; say 'depleted', never 'killed by pyroptosis'.
 - Fewer cells after 24 h = slower growth or death; the two cannot be told apart.
-- Lines that do not express a gene read 10-25% of a typical line from ambient RNA of the other lines in the well;
-  they are left out of that gene's drug effects (expressed rule below).
+- Lines that do not express a gene still read it from ambient RNA (the pooled RNA of all lines in the well): here
+  <AF> of the gene's pooled level, measured on the MTAP-null lines. For a gene that only a few lines express, those
+  reads just follow the few expressers. A line therefore counts as expressing a gene only when it reads >= 25% of the
+  median line, >= 1 CPM and >= 2x that ambient level ('lines above ambient'); the others are left out of the gene's
+  drug effects. When a drug is toxic or causes a transcription drop, ambient RNA becomes a larger share of every
+  line's reads, and absent genes appear to rise.
 """
 
 PANEL_RULEBOOK = """## Rules for interpreting (learned on this dataset; follow them)
@@ -2023,8 +2342,10 @@ PANEL_RULEBOOK = """## Rules for interpreting (learned on this dataset; follow t
    transcription shutdown ('transcription drop': genes or UMIs per cell fall; short stable mRNAs then rise and long
    or unstable ones fall, in relative terms); cell-cycle composition (S or G2/M arrest raises every cycle-linked
    mRNA); well position (H1 shifted MTAP, D10 PSMD10 on every plate; corrected, see ../../results/
-   well_position_effects.csv). The DMSO wells sit in corners and some plates' DMSO is off: never use DMSO-based
-   numbers (log2FC_vs_DMSO_uncorrected is there only for comparison).
+   well_position_effects.csv). The DMSO wells sit in corners and some plates' DMSO is off: never use the DMSO wells
+   as the reference for drug effects (log2FC_vs_DMSO_uncorrected is there only for comparison). Baseline levels per
+   line (cpm_dmso, basal_p53_activity_log2, the level in level_vs_growth.csv) come from untreated cells and are fine
+   for comparing lines.
 2. Dose consistency. Real effects usually grow with dose or appear at the top dose. A hit at a low dose only is
    most likely noise. Say what the dose pattern is (z_by_dose: doses in ascending order).
 3. Breadth. Check how many lines move (n_lines_up / n_lines, frac_lines_positive). One or two lines = a
@@ -2034,8 +2355,12 @@ PANEL_RULEBOOK = """## Rules for interpreting (learned on this dataset; follow t
    say whether a gene's change belongs to such a program or stands alone.
 5. Statistics. With ~1,100 drug-doses per gene, z > 3 happens by chance: rely on FDR, effect size and dose
    consistency. Report fold changes (not log2) with FDR and the number of lines.
-6. Known biology as a check: positive_controls.csv lists the expected effects and whether the data show them; use
-   them to calibrate how much to trust a new finding, and say when an expected effect is absent.
+6. Known biology as a check: positive_controls.csv lists expected effects and whether the data show them
+   (expected_at_24h). Robust at 24 h: DNA damage -> p53 targets; proteasome inhibitors -> proteasome, heat-shock and
+   HMOX1 genes; HSP90 inhibitor -> heat shock; ciclopirox -> TFRC; antimitotics -> G2/M; dinaciclib -> transcription
+   drop. Uncertain at 24 h or at <= 5 uM: DNMT inhibitors (demethylation needs several divisions), dimethyl fumarate
+   and COX inhibitors (report only). A robust control that is absent lowers trust; an uncertain one that is absent
+   says nothing about the method.
 7. mRNA after 24 h only: no claims about protein, function or causality. Label hypotheses as hypotheses.
 8. Every number in your report must come from a query you ran on the files; name the file it came from.
 """
@@ -2060,9 +2385,9 @@ report, and keep going. Work in your current folder (write your scripts and repo
 and the other files of the gene-panel folder may be read. {shell}Compute every number you report with Python: write a
 .py script in this folder and run it with `{py} script.py` (always allowed). If any command is refused, do the same
 thing in Python instead; never stop because of a refusal.
-Do not install packages, use the network, delete files or touch anything outside the gene-panel folder. Your job is
-finished only when report.md exists and follows brief.md; a precise, well-checked report matters more than a long
-one."""
+Do not install packages, use the network, delete files or write anything outside the gene-panel folder (reading files
+and running the look-up commands named in brief.md is allowed). Your job is finished only when report.md exists and
+follows brief.md; a precise, well-checked report matters more than a long one."""
 
 PANEL_SYNTH = """Read every report in this folder (all *.md files except 00_overview.md) and write 00_overview.md: a
 single overview of what Tahoe-100M shows about the gene panel (ferroptosis, pyroptosis, p53, NAPEPLD and TRIM72) and
@@ -2074,50 +2399,85 @@ language, Markdown. Do not invent numbers: use only what the reports state. Run 
 
 TASKS = {
     "ferroptosis": """
-Which drugs induce the ferroptosis markers (PTGS2, CHAC1, SLC7A11), and does that look ferroptosis-like or is it
-explained by the ISR/ATF4, NRF2 or UPR programs (ferro_markers_with_context.csv: 'markers without ISR / NRF2 / UPR'
-is the more specific pattern)? Which drugs move the defences (GPX4, AIFM2/FSP1, NFE2L2 and its targets), lipid
-remodelling (ACSL4, LPCAT3) and iron handling (TFRC, FTH1/FTL, NCOA4: iron starvation = TFRC up with ferritin down;
-iron load = the reverse)? Do baseline GPX4, ACSL4, AIFM2, SLC7A11, NFE2L2, LPCAT3, TFRC levels predict which lines a
-drug depletes, within lineage (level_vs_growth.csv)? Known biology to check: dimethyl fumarate -> NRF2; auranofin ->
-TXNRD -> NRF2/ISR; ciclopirox -> TFRC; statins and the mevalonate / selenoprotein / CoQ10-FSP1 axis; artesunate /
-dihydroartemisinin; proteasome inhibitors -> HMOX1. mRNA after 24 h cannot show lipid peroxidation or the death
-mode: say 'ferroptosis-like signature' and label hypotheses.""",
+Which drugs induce the ferroptosis markers (PTGS2, CHAC1, SLC7A11), and with which programs
+(ferro_markers_with_context.csv)? Read the context, not a verdict. CHAC1 and SLC7A11 are ATF4 targets that cystine
+starvation (system xc- inhibition, e.g. erastin) induces through the ISR, so 'with ISR' fits cystine starvation as
+well as any other ISR trigger. 'With NRF2' is an antioxidant (protective) response, since SLC7A11 is an NRF2 target.
+PTGS2 is also an NF-kB/AP-1 target and rises after COX inhibition, so check NFKB_z and top_members. Rows flagged
+'(artifact likely)' rose with toxicity, a transcription drop or a cell-cycle shift. Which drugs move the defences
+(GPX4, AIFM2/FSP1, NFE2L2 and its targets), lipid remodelling (ACSL4, LPCAT3) and iron handling (TFRC, FTH1/FTL,
+NCOA4)? At the mRNA level only TFRC reads iron status: iron starvation stabilises TFRC mRNA through IRP binding (TFRC
+up). TFRC also follows HIF and proliferation, so check the cell-cycle context. Ferritin is controlled mainly at
+translation, and FTH1/FTL mRNA rise with NRF2 (check NRF2_z) and inflammation. Do not read 'TFRC down with ferritin
+up' as iron load. Do baseline GPX4, ACSL4, AIFM2, SLC7A11, NFE2L2, LPCAT3, TFRC levels predict which lines a drug
+depletes, within lineage (level_vs_growth.csv: rho_within_lineage, fdr_within_lineage)? The library has no direct
+ferroptosis inducer (no erastin, sulfasalazine, sorafenib, RSL3, ML162/ML210, FIN56 or BSO); the nearest are
+artesunate / dihydroartemisinin, auranofin, statins and altretamine. A level-vs-depletion association is therefore
+not evidence of ferroptosis sensitivity. NFE2L2 mRNA is not NRF2 activity (KEAP1 acts on the protein): use the basal
+NRF2 target score (gene NRF2_basal_score in level_vs_growth.csv). Known biology to check: dimethyl fumarate -> NRF2;
+auranofin -> TXNRD -> NRF2/ISR; ciclopirox -> TFRC; statins (pitavastatin; pravastatin is hydrophilic and barely
+enters non-liver cells): their effects on GPX4 (selenoprotein translation) and CoQ10/FSP1 are not visible in mRNA, and
+their on-target mRNA readout (SREBP2 targets HMGCR, HMGCS1, LDLR, INSIG1) is not extracted here (use the atlas look-up
+below if the atlas exists); artesunate / dihydroartemisinin; proteasome inhibitors -> HMOX1. mRNA after 24 h cannot
+show lipid peroxidation or the death mode: say 'ferroptosis-like signature' and label hypotheses.""",
     "pyroptosis": """
 Which lines express which parts of the pyroptosis machinery (many carcinoma lines silence GSDME and the inflammasome
 genes; expression_by_line.csv, loss_groups.csv)? Which drugs change them: DNMT inhibitors -> GSDME re-expression in
-the silenced lines (reexpression_in_silenced_lines.csv: compare with the expressing lines, ambient RNA follows any
-change in the others); interferon / NF-kB inducers -> CASP1/CASP4/GSDMD/IL1B/IL18 (INFLAMMASOME, IFN, NFKB scores)?
-Does GSDME level predict which lines DNA-damaging chemotherapy depletes (level_vs_growth.csv, gene GSDME)? Are lines
-lacking a component selectively depleted by any drug (loss_screens.csv)? mRNA cannot show caspase cleavage, pore
-formation or cytokine release.""",
+the silenced lines (reexpression_in_silenced_lines.csv: lines with a deletion row in the cell-line metadata are left
+out, since a deleted gene cannot be re-expressed; compare with the expressing lines, ambient RNA follows any change
+in the others; 'not interpretable' rows rose with toxicity, a transcription drop, FDR >= 0.10 or too few lines;
+re-expression after demethylation usually needs several divisions, so it is uncertain at 24 h); NF-kB inducers ->
+IL1B and NLRP3 (priming); interferon (IRF1/IRF2) -> CASP1, CASP4 and GSDMD; IL18 is mostly constitutive (INFLAMMASOME =
+mean mRNA of the machinery, not activation; IFN and NFKB scores). Imiquimod acts through TLR7, which most carcinoma
+lines lack. Does GSDME level predict which lines DNA-damaging chemotherapy depletes (level_vs_growth.csv, gene GSDME;
+use rho_within_lineage, since GSDME silencing is lineage-linked)? GSDME mainly decides whether caspase-3 activation
+ends as pyroptosis or apoptosis, not whether cells die, so a weak or absent relationship is not evidence against
+GSDME-mediated pyroptosis. Are lines lacking a component selectively depleted by any drug (loss_screens.csv)? mRNA
+cannot show caspase cleavage, pore formation or cytokine release.""",
     "p53": """
 Which drugs activate p53 transcription, and is it p53-dependent (p53_wt_vs_altered.csv: TP53-wild-type vs
 TP53-altered lines in the same wells)? How does the functional p53 status (p53_functional_status.csv: responsiveness
-to the strongest non-toxic activators, genotype-blind) agree with the annotation (AUC, discordant lines: annotated
-wild type but unresponsive, altered but responsive - check protein changes, CDKN2A deletion, MTAP status)? Specific
-targets (FDXR, ZMAT3, MDM2, CDKN1A) vs stress-generic ones (PMAIP1, GADD45A, SESN2, also ATF4-driven: compare with
-the ISR context). TP53 mRNA itself (truncating mutants and deletions lower it). Which drugs deplete TP53-WT lines
-selectively (p53_wt_selective_growth.csv)? The library has no MDM2 inhibitor: DNA damage and antimetabolites are the
-expected activators.""",
+to the strongest significant non-toxic activators, genotype-blind; 'uncertain' = within 2 SE of the cut) agree with
+the annotation (AUC, discordant lines: annotated wild type but unresponsive, altered but responsive - check protein
+changes, CDKN2A deletion, MTAP status)? Specific targets (FDXR, ZMAT3, MDM2; context targets DDB2, XPC, PHLDA3, EDA2R,
+SPATA18) vs targets with strong p53-independent inducers: CDKN1A (HDAC inhibitors panobinostat, belinostat,
+tucidinostat; also TGF-b, MEK/ERK), PMAIP1, SESN2 and TNFRSF10B (ATF4/CHOP), and GADD45A (ATF4, FOXO, NF-kB). Check
+the ISR context and p53_wt_vs_altered.csv before calling a change p53-driven. TP53 mRNA itself (truncating mutants and
+deletions lower it). Which drugs deplete TP53-WT lines selectively (p53_wt_selective_growth.csv)? The library has no
+MDM2 inhibitor: the expected activators are DNA damage and antimetabolites, plus selinexor (XPO1 inhibitor: nuclear
+p53 retention) and possibly mitotic-arrest drugs (volasertib, antimitotics).""",
     "napepld_trim72": """
 NAPEPLD and TRIM72 (MG53): expression across lines (if TRIM72 is not expressed, say so plainly and keep that part
 short), drug effects if testable (dose pattern, breadth, context), co-regulation partners across drug wells
 (coregulation_top_partners.csv; genome-wide partners need the atlas), level vs growth, and plausible links
-(rimonabant / CNR1 and the NAPE-PLD pathway; TRIM72 and insulin / IRS1 / PI3K-AKT drugs). Keep the report short if
-the data say little.""",
+(hypotheses only: rimonabant is a CB1 (CNR1) inverse agonist, but CB1 is barely expressed in most cancer lines (CNR1
+was not extracted; one real Tahoe file has CNR1 at 0 CPM in 39 of 50 lines), so a rimonabant effect on NAPEPLD at
+0.5-5 uM is more likely CB1-independent. NAPE-PLD is one of several routes to N-acylethanolamines, so its mRNA does
+not report anandamide levels. TRIM72 and insulin / IRS1 / PI3K-AKT drugs: the library has no insulin.) Keep the
+report short if the data say little.""",
     "crosslinks": """
 How does the panel connect to the earlier MTAP and Gankyrin (PSMD10) findings (the earlier run's files are in
-prior/)? Gankyrin vs p53 activity (Gankyrin promotes MDM2-mediated p53 degradation: expect lower basal p53 activity
-and responsiveness in high-PSMD10 TP53-WT lines), Gankyrin vs NRF2 (reported KEAP1 link), MTAP/CDKN2A(ARF)-null vs
-p53 (ARF loss frees MDM2), MTAP loss vs ferroptosis genes (methionine salvage and transsulfuration feed cysteine),
-drugs on both top lists, and reproducibility vs the earlier run (crosslinks.csv). With ~50 lines, correlations
-below ~0.3 are weak: say so.""",
+prior/)? These are hypotheses, read within lineage (crosslinks.csv: rho_within_lineage, p_bh). Gankyrin vs p53
+activity (Gankyrin-MDM2 degradation of p53 is a protein-level mechanism: lower basal p53 activity and responsiveness
+in high-PSMD10 TP53-WT lines would fit it, but cannot test it), Gankyrin vs NRF2 (reported KEAP1/NRF2 feedback;
+KEAP1-mutant lung lines dominate basal NRF2 and are not annotated), CDKN2A deletion (cdkn2a_deleted; not MTAP-null:
+NCI-H460, A498 and A-427 lost CDKN2A but keep MTAP) vs p53. ARF restrains MDM2 mainly after oncogene signalling, so
+equal responsiveness to DNA damage is the expected result. CDKN2A mRNA counts p16INK4a and p14ARF together and is high
+in TP53- or RB-defective lines, so low CDKN2A in TP53-WT lines is common and is not by itself a deletion. MTAP loss vs
+ferroptosis gene baselines (speculative: MTAP loss mainly raises MTA; in cystine-rich medium any effect on cysteine
+supply is expected to be small, so no difference is the likely result; five comparisons, so one p < 0.05 is expected
+by chance). Drugs significant in both runs (crosslinks.csv, category shared top drugs; compare with the number
+expected by chance), and reproducibility vs the earlier run (crosslinks.csv). <RCRIT>""",
 }
 
 
+def r_crit(n):
+    """|rho| needed for a two-sided p < 0.05 over n lines (Fisher z, as the p values in crosslinks.csv)."""
+    return math.tanh(1.96 / math.sqrt(n - 3)) if n > 3 else np.nan
+
+
 def deeper_queries(S):
-    py = agent_python()
+    py = bpath(agent_python())
     o = os.path.abspath(S.out)
     R = os.path.join(o, "results")
     atl = os.path.join(os.path.abspath(S.args.data), "atlas")
@@ -2125,20 +2485,22 @@ def deeper_queries(S):
     s = f"""## Deeper queries
 - Python: run scripts as `{py} script.py` (numpy, pandas and pyarrow are available; scipy may be missing: check
   first). Keep the scripts you write in this folder.
-- All results: `{R}` (read `{os.path.join(R, 'README_columns.txt')}` first). Every panel gene and anchor has
-  `<GENE>_drug_effects_by_dose.csv` (every drug-dose, all columns) and `<GENE>_drug_summary.csv` (one row per drug).
-- Counts per well x cell line: `{os.path.join(o, 'well_line.parquet')}` (sample, cell_line_id, n_cells,
+- All results: `{bpath(R)}` (read `{bpath(os.path.join(R, 'README_columns.txt'))}` first). Every panel gene and
+  anchor has `<GENE>_drug_effects_by_dose.csv` (every drug-dose, all columns) and `<GENE>_drug_summary.csv` (one row
+  per drug).
+- Counts per well x cell line: `{bpath(os.path.join(o, 'well_line.parquet'))}` (sample, cell_line_id, n_cells,
   total_counts, raw counts of every extracted gene, det_<GENE> = cells with >= 1 count); wells:
-  `{os.path.join(o, 'sample_map.csv')}` (sample, plate, drug, conc, well, n_cells, is_dmso).
+  `{bpath(os.path.join(o, 'sample_map.csv'))}` (sample, plate, drug, conc, well, n_cells, is_dmso).
 - Per cell (large: read only the columns and rows you need, e.g. pyarrow.parquet.read_table(f, columns=[...],
-  filters=[('drug', 'in', [...])])): `{os.path.join(o, 'cells')}{os.sep}*.parquet`; columns barcode, sample, plate,
+  filters=[('drug', 'in', [...])])): `{bpath(os.path.join(o, 'cells'))}/*.parquet`; columns barcode, sample, plate,
   drug, cell_line_id, n_genes, total_counts, the extracted genes and the PROTEASOME / S_PHASE / G2M_PHASE sums.
 """
-    if os.path.isdir(os.path.join(atl, "effects")) and os.path.exists(me):
-        s += (f"- Genome-wide (the atlas has been computed): `{py} {quote(me)} --out {quote(atl)} lookup gene <SYMBOL>` "
-              "(also `corr <SYMBOL>`, `drug <NAME>`, `line <NAME>`).\n")
+    if os.path.exists(me) and atlas_ready(atl):
+        s += (f"- Genome-wide (the atlas has been computed): `{py} {quote(bpath(me))} --out {quote(bpath(atl))} lookup "
+              "gene <SYMBOL>` (also `corr <SYMBOL>`, `drug <NAME>`, `line <NAME>`).\n")
     else:
-        s += "- Genome-wide partners or other genes: not available here (tahoe_atlas.py has not been run).\n"
+        s += ("- Genome-wide partners or other genes: not available (no computed atlas in <data>/atlas when 'analyze' "
+              "ran; compute the atlas, then rerun this script's analyze).\n")
     return s
 
 
@@ -2152,7 +2514,7 @@ def high_lines(S, g, fold=8.0):
 
 
 def gene_status_md(S, genes):
-    rows = ["| gene | role | lines expressing | median line CPM | far above the median line | status |",
+    rows = ["| gene | role | lines above ambient | median line CPM | far above the median line | status |",
             "|---|---|---|---|---|---|"]
     role = dict(zip(S.gt["gene"], S.gt["role"]))
     for g in genes:
@@ -2176,7 +2538,12 @@ def write_brief(S, folder, name, files, genes):
         added = [g for g in genes if S.set_of.get(g) == "added"]
         task = TASKS[name].strip() + (f"\nGenes added with --genes ({', '.join(added)}) are in this folder too: report "
                                       "them the same way, briefly." if added else "")
-        fh.write(f"# Angle: {TITLES[name]}\n\n## Your task\n{task}\n\n{head}\n\n{WHAT_DATA_SHOW}\n"
+        n_all, n_wt = int(S.enough.sum()), int((S.base["tp53_group"] == "WT").sum())
+        task = task.replace("<RCRIT>", f"Correlations over all {n_all} lines need |rho| >= {fnum(r_crit(n_all))}, and "
+                                       f"those over the {n_wt} TP53-WT lines need |rho| >= {fnum(r_crit(n_wt))}, for "
+                                       "p < 0.05; below that, say the result is weak.")
+        what = WHAT_DATA_SHOW.replace("<AF>", f"about {S.af:.0%}")
+        fh.write(f"# Angle: {TITLES[name]}\n\n## Your task\n{task}\n\n{head}\n\n{what}\n"
                  f"## Genes of this angle\n{gene_status_md(S, genes)}\n## Data in this folder\n")
         for f, desc in files:
             fh.write(f"- `{f}`: {desc}\n")
@@ -2191,13 +2558,16 @@ PANEL_METHODS = """## How the numbers were made
   scored against the spread of all drug wells (median/MAD), Stouffer over the drug-dose's plates; fdr_up /
   fdr_down: Benjamini-Hochberg over the ~1,100 drug-doses of that gene. call: up/down when FDR < 0.10, >= 1.2x and
   >= 60% of lines moving that way. Drug summaries: best dose, Bonferroni over doses, BH over drugs (fdr_*_drug).
-- Expressed: a line expresses a gene when its level over all wells is >= 25% of the median line and >= 1 CPM.
-  Lines that do not are left out of that gene's drug effects; genes expressed in < 3 lines get none; genes whose
-  profiles hold a median of < 2 counts are flagged 'low counts'. MTAP follows the earlier run (MTAP-null lines left
-  out); PSMD10 keeps every line and carries the rest-of-proteasome change (PROTEASOME_log2FC / PROTEASOME_z).
+- Expressed: a line expresses a gene when its level over all wells is >= 25% of the median line, >= 1 CPM and >= 2x
+  the level ambient RNA alone gives (af x the gene's pooled CPM over all lines; af = what the MTAP-null lines read of
+  the pooled MTAP). Lines that do not are left out of that gene's drug effects; genes expressed in < 3 lines get none;
+  genes whose profiles hold a median of < 2 counts are flagged 'low counts' (so is a score built only from them).
+  MTAP follows the earlier run (MTAP-null lines left out); PSMD10 keeps every line and carries the rest-of-proteasome
+  change (PROTEASOME_log2FC_plate_mean / PROTEASOME_z_plate_mean as in the earlier run; PROTEASOME_z = Stouffer, as
+  for every other gene).
 - Pathway scores (pathway_scores_by_dose.csv): per well the mean of the expressed member genes' corrected shifts,
-  robust z over drug wells, Stouffer per drug-dose. P53_ACTIVITY = CDKN1A MDM2 FDXR ZMAT3 SESN1 BBC3 BAX + 15 more
-  p53 targets (PMAIP1, GADD45A, SESN2 left out: also ATF4-driven); FERRO_MARKERS = PTGS2 CHAC1 SLC7A11;
+  robust z over drug wells, Stouffer per drug-dose. P53_ACTIVITY = CDKN1A MDM2 FDXR ZMAT3 SESN1 BBC3 BAX + 14 more
+  p53 targets (PMAIP1, GADD45A, SESN2, TNFRSF10B left out: also ATF4/CHOP-driven); FERRO_MARKERS = PTGS2 CHAC1 SLC7A11;
   INFLAMMASOME = NLRP3 AIM2 PYCARD CASP1 CASP4 CASP5 IL1B IL18 GSDMD; NRF2, ISR (ATF4), UPR, HEAT_SHOCK, IFN, NFKB
   context sets; PROTEASOME, S_PHASE, G2M_PHASE = summed modules. 'context' on each gene's drug-dose names the
   programs with |z| >= 3 (scores that contain the gene itself excluded).
@@ -2211,7 +2581,7 @@ PANEL_METHODS = """## How the numbers were made
 - Level vs growth (level_vs_growth.csv): Spearman across lines of a gene's untreated level (DMSO CPM) and relative
   abundance after the drug (rho < 0: high-level lines depleted more); partial on the G2M level (proliferation);
   within lineage (organ effects removed from both ranks); Fisher z, position-corrected, robust z, Stouffer; FDR
-  within gene.
+  within gene (fdr; fdr_within_lineage for the within-lineage z).
 - Flags: toxic (< half the plate's typical cells), transcription drop (genes per cell -0.3 log2 or UMIs per cell
   -0.5 log2), cell-cycle shift (G2M module > 1.4x), position effect removed (> 1.15x), plate DMSO offset (affects
   only the uncorrected column), low counts.
@@ -2241,6 +2611,8 @@ def step_angles(S):
 
 def angle_files(S, name, folder, genes):
     files = []
+    for f in glob.glob(os.path.join(folder, "*.csv")) + glob.glob(os.path.join(folder, "*.parquet")):
+        os.remove(f)                   # an earlier run's tables; brief.md, report.md, agent.log, *.py and prior/ stay
 
     def put(df, fname, desc):
         if df is None or not len(df):
@@ -2278,15 +2650,19 @@ def angle_files(S, name, folder, genes):
             "dose pattern, drug-level FDR, flags and context at the best dose")
     exl = pd.read_csv(os.path.join(S.R, "expression_by_line.csv"))
     put(exl[exl["gene"].isin(gset)], "expression_by_line.csv",
-        "level of each gene in each line (DMSO and all wells, CPM), % cells expressing, vs the median line, expressed")
+        "level of each gene in each line (DMSO and all wells, CPM), % cells expressing, vs the median line, vs the "
+        "pooled level (ambient RNA alone gives ~af of it), expressed (above ambient)")
     if hasattr(S, "lvl") and len(S.lvl):
-        put(S.lvl[S.lvl["gene"].isin(gset)], "level_vs_growth.csv",
+        lg = gset | ({NRF2_LEVEL} if name == "ferroptosis" else set())
+        put(S.lvl[S.lvl["gene"].isin(lg)], "level_vs_growth.csv",
             "does a line's untreated level predict how a drug-dose affects its growth? rho (Spearman across lines), "
-            "rho_partial_G2M, rho_within_lineage, z, FDR within gene, z at every dose")
+            "rho_partial_G2M, rho_within_lineage, z, FDR within gene (fdr, fdr_within_lineage), z at every dose"
+            + (f"; {NRF2_LEVEL} = basal NRF2 target activity" if name == "ferroptosis" else ""))
     if hasattr(S, "coreg") and len(S.coreg):
         put(S.coreg[S.coreg["gene"].isin(gset)], "coregulation_top_partners.csv",
-            "top co-regulated genes / programs across drug wells (rank < 0: most negative), raw and after removing "
-            "the first principal component (global stress / shutdown)")
+            "top co-regulated genes / programs across drug wells (rank < 0: most negative; low-count genes left out), "
+            "raw and after removing the first principal component (see ../../results/summary.txt section 8 for what "
+            "it loads on)")
     if hasattr(S, "ccs"):
         put(S.ccs[S.ccs["gene"].isin(gset)], "cell_cycle_summary.csv",
             "untreated cells: level in G2M-/S-high vs -low cells (median over expressing lines): cell-cycle-linked genes")
@@ -2303,12 +2679,13 @@ def angle_files(S, name, folder, genes):
              "context")
     if name == "ferroptosis":
         put(getattr(S, "ferro", None), "ferro_markers_with_context.csv",
-            "FERRO_MARKERS per drug-dose with ISR / NRF2 / UPR / heat-shock z and a reading (markers with or without "
-            "a stress program)")
+            "FERRO_MARKERS per drug-dose with ISR / NRF2 / UPR / heat-shock / NF-kB / IFN / P53 z and a reading (the "
+            "programs that rose with the markers, or an artifact flag first; FDR < 0.10 and z >= 3 only)")
     if name == "pyroptosis":
         put(getattr(S, "reex", None), "reexpression_in_silenced_lines.csv",
-            "drug effects measured only in the lines that lost a gene (e.g. GSDME-silenced lines), with the expressing "
-            "lines' change for comparison (ambient RNA follows the other lines)")
+            "drug effects measured only in the lines that silence a gene (e.g. GSDME; lines with a deletion row in the "
+            "cell-line metadata left out), with the expressing lines' change for comparison (ambient RNA follows the "
+            "other lines) and a reading ('re-expression' only when FDR < 0.10, not toxic, enough lines rise)")
     if name in ("pyroptosis", "ferroptosis", "p53"):
         lr = getattr(S, "loss_res", None)
         if lr is not None and len(lr):
@@ -2323,13 +2700,14 @@ def angle_files(S, name, folder, genes):
                         ("p53_functional_status.csv", "per line: TP53 annotation and protein changes, CDKN2A deletion, "
                                                       "MTAP-null, basal p53 activity, responsiveness, functional call, "
                                                       "discordant"),
-                        ("p53_reference_doses.csv", "the drug-doses that define responsiveness (strongest non-toxic "
-                                                    "all-line P53_ACTIVITY)"),
+                        ("p53_reference_doses.csv", "the drug-doses that define responsiveness (strongest significant "
+                                                    "non-toxic all-line P53_ACTIVITY)"),
                         ("p53_wt_selective_growth.csv", "drugs that deplete TP53-WT lines more than TP53-altered lines")):
             put_file(os.path.join(S.R, f), f, desc)
     if name == "crosslinks":
-        for f, desc in (("crosslinks.csv", "reproducibility vs the earlier run, biology links (Gankyrin vs p53 / NRF2, "
-                                           "MTAP-null vs p53 and ferroptosis genes), shared top drugs"),
+        for f, desc in (("crosslinks.csv", "reproducibility vs the earlier run, biology links (hypotheses: Gankyrin vs "
+                                           "p53 / NRF2 within lineage, CDKN2A deletion / MTAP-null vs p53, MTAP-null "
+                                           "vs ferroptosis genes; p_bh), drugs significant in both runs"),
                         ("MTAP_null_selective_drugs.csv", "the MTAP-null screen recomputed here (same statistics as the "
                                                           "earlier run)"),
                         ("p53_functional_status.csv", "per line: p53 annotation, basal activity, responsiveness, "
@@ -2351,7 +2729,7 @@ cells/*.parquet          One row per cell: barcode, sample (well), plate, drug, 
 well_line.parquet / .csv One row per well x cell line: n_cells, summed counts, det_<GENE> = cells with >= 1 count.
 sample_map.csv           One row per well: plate, drug, dose, well position, cells.
 extracted_columns.json   The extracted genes and the members of each summed module. extract_info.json: run facts.
-gene_panel.log           The run log (every step, warnings, tracebacks of failed steps).
+gene_panel.log           The run log (every step, warnings, tracebacks of failed steps); agents.log: the agents' log.
 angles/<pathway>/        Agent folders: brief.md (task, methods, rules), the tables of that pathway, report.md once
                          the agents have run. reports/: NN_<pathway>.md and 00_overview.md.
 
@@ -2360,7 +2738,10 @@ Files in results/
 summary.txt                       Key checks and results. Start here.
 panel_genes.csv                   One row per panel gene and anchor: pathway, role, also_known_as, symbol_used,
                                   in_gene_metadata, extracted, median_line_cpm (all wells), median_line_cpm_dmso,
-                                  median_pct_cells_dmso, n_lines, n_lines_expressing, expression_threshold_cpm,
+                                  median_pct_cells_dmso, n_lines, n_lines_expressing, pooled_cpm (all lines pooled),
+                                  ambient_fraction (af: what the MTAP-null lines read of the pooled MTAP), ambient_cpm
+                                  (af x pooled_cpm: what a line reads from ambient RNA alone), expression_threshold_cpm
+                                  (max of 25% of the median line, 1 CPM and 2 x ambient_cpm),
                                   median_counts_per_profile (raw counts per well x line profile, expressing lines),
                                   testable, status (testable / low counts / expressed in too few lines / not expressed /
                                   not in the gene metadata), lowest_lines / highest_lines (x the median line),
@@ -2368,15 +2749,19 @@ panel_genes.csv                   One row per panel gene and anchor: pathway, ro
                                   e.g. IL1B), loss_group_lines, drug_effects (file or why none), n_calls_up/down
                                   (low-count genes get no calls: their changes are dominated by the pseudocount).
 expression_by_line.csv            Long: gene, gene_set, cell line, organ, tp53_status, cpm_dmso, cpm_all_wells,
-                                  pct_cells_dmso, vs_median_line, expressed (>= 25% of the median line and >= 1 CPM).
+                                  pct_cells_dmso, vs_median_line, vs_pooled_level (ambient RNA alone gives ~af),
+                                  expressed (>= 25% of the median line, >= 1 CPM and >= 2x the ambient level).
 baseline_by_cell_line.csv         Per line: tahoe_mtap_gankyrin.py's baseline table for every extracted gene
                                   (<GENE>_cpm_dmso, <GENE>_pct_cells_dmso, <GENE>_cpm_all_wells), MTAP_null, organ,
-                                  drivers, and the TP53 annotation (tp53_status, tp53_changes, tp53_group, cdkn2a_deleted).
+                                  drivers, the TP53 annotation (tp53_status, tp53_changes, tp53_group) and the
+                                  deletion rows of the cell-line metadata (cdkn2a_deleted, cdkn2b_deleted).
 <GENE>_drug_effects_by_dose.csv   One row per drug and dose (every panel gene with drug effects and the anchors MTAP,
                                   PSMD10, CDKN2A, CDKN2B): the columns of tahoe_mtap_gankyrin.py (below), plus the
                                   context of that drug-dose: <SCORE>_log2FC / <SCORE>_z for ISR, NRF2, UPR, HEAT_SHOCK,
                                   IFN, NFKB, P53_ACTIVITY, FERRO_MARKERS, INFLAMMASOME, PROTEASOME, S_PHASE, G2M_PHASE,
                                   and 'context' = the programs with |z| >= 3 (scores containing the gene left out).
+                                  PSMD10: PROTEASOME_z / _log2FC are the Stouffer context values like every gene's;
+                                  PROTEASOME_z_plate_mean / _log2FC_plate_mean are the earlier run's (plate mean).
 <GENE>_drug_summary.csv           One row per drug (tahoe_mtap_gankyrin.drug_summary) + up_context / down_context.
 context_genes_top.csv             Each context gene (P53_EXT, NRF2_CORE, ISR_ATF4, UPR_ER, HSF1_HEAT, IFN, NFKB): lines
                                   expressing, top 3 increases and decreases, number of calls. They feed the scores.
@@ -2389,8 +2774,12 @@ pathway_scores_by_dose.csv        Long: score, drug, conc, fold_change, log2FC (
 drug_context_by_dose.csv          Per drug-dose: cells_log2_vs_plate, genes_per_cell_log2_vs_plate,
                                   umi_per_cell_log2_vs_plate (each with a robust z, Stouffer), S/G2M shifts, every score's
                                   log2FC and z, flags, context.
-ferro_markers_with_context.csv    FERRO_MARKERS per drug-dose with ISR_z, NRF2_z, UPR_z, HEAT_SHOCK_z and reading:
-                                  'markers with ISR (+ ...)' or 'markers without ISR / NRF2 / UPR / heat shock' (z >= 3).
+ferro_markers_with_context.csv    FERRO_MARKERS per drug-dose with ISR_z, NRF2_z, UPR_z, HEAT_SHOCK_z, NFKB_z, IFN_z,
+                                  P53_ACTIVITY_z and reading (z >= 3 and FDR < 0.10 only; context, not a verdict):
+                                  'markers with <flag> (artifact likely)' when toxic / transcription drop / cell-cycle
+                                  shift; else 'markers with ISR (+ ...)' (the programs with z >= 3: CHAC1/SLC7A11 are
+                                  ATF4 targets, SLC7A11 an NRF2 target, PTGS2 NF-kB-inducible) or 'markers without ISR /
+                                  NRF2 / UPR / heat shock / NF-kB'.
 p53_wt_vs_altered.csv             Per drug-dose: extra_log2_p53_induction_in_WT = per well mean p53-target shift of the
                                   TP53-wild-type lines minus the median of the TP53-altered lines, position-corrected;
                                   z_wt_more (robust z, Stouffer), fdr, fdr_drug, z_by_dose, dose_pattern, wt_mean_log2,
@@ -2398,45 +2787,64 @@ p53_wt_vs_altered.csv             Per drug-dose: extra_log2_p53_induction_in_WT 
 p53_functional_status.csv         Per line: tp53_annotation, tp53_changes, cdkn2a_deleted, mtap_null,
                                   basal_p53_activity_log2 (DMSO: mean log2 of the expressed p53 targets vs the median
                                   line), p53_responsiveness_log2 (mean p53-target shift over the reference drug-doses),
-                                  n_reference_wells, responsiveness_rank, functional_call (vs the cut halfway between the
-                                  WT and altered medians), discordant, PSMD10_cpm_dmso.
-p53_reference_doses.csv           The 10 strongest non-toxic all-line P53_ACTIVITY drug-doses used for responsiveness.
+                                  p53_responsiveness_se (residuals of a well-strength x line-response fit),
+                                  n_reference_wells, n_reference_doses,
+                                  responsiveness_rank, functional_call (vs the cut halfway between the WT and altered
+                                  medians; 'uncertain' within 2 SE of it), discordant, PSMD10_cpm_dmso.
+p53_reference_doses.csv           The (up to 10) strongest non-toxic all-line P53_ACTIVITY drug-doses with FDR < 0.10
+                                  used for responsiveness (all non-toxic ones when fewer than 3 are significant).
 p53_wt_selective_growth.csv       Growth screen TP53-WT vs TP53-altered lines (columns as MTAP_null_selective_drugs.csv;
                                   extra_log2_depletion_of_TP53_WT < 0 = WT lines depleted more).
 MTAP_null_selective_drugs.csv     The earlier MTAP-null screen recomputed (same columns as in the earlier run).
-loss_groups.csv                   Genes (panel, CDKN2A/B) that most lines express but >= 3 lines have lost: lines,
-                                  threshold_vs_median, gap_log2 (T.null_threshold), clean_2x_separation, levels.
+loss_groups.csv                   Genes (panel, CDKN2A/B) that most lines express but >= 3 lines have lost: lines, rule
+                                  ('clean 2x': lost lines < half the lowest expressing line; 'gap at ambient floor':
+                                  a gap (T.null_threshold) and every lost line <= 1.5x the ambient level; 'metadata
+                                  deletion': >= 3 lost lines with a deletion row), threshold_vs_median, gap_log2,
+                                  clean_2x_separation, ambient_floor_vs_median, n_lines_deleted_in_metadata, levels.
 loss_screens.csv                  Per loss group and drug-dose: extra_log2_depletion (mean of the lost lines minus median
                                   of the others in the same well, position-corrected; < 0 = lost lines depleted more),
                                   z_selective (well noise + counting noise), fdr_selective, fdr_drug, z_by_dose,
                                   dose_pattern, delta_tissue_matched (vs other lines of the same organ), group_mean_log2,
                                   rest_median_log2, all_cells_log2_vs_plate.
 reexpression_in_silenced_lines.csv  Per loss-group gene and drug-dose: the drug effect measured only in the lines that
-                                  lost the gene (fold_change, z_corrected, fdr_up, lines up), the expressing lines'
-                                  fold change and z, reading ('re-expression in the lost lines' when they rise much more
-                                  than the expressing lines; else ambient RNA following the others), flags, context.
+                                  lost the gene and have no deletion row for it in the cell-line metadata (a deleted
+                                  gene cannot be re-expressed: one row 'deleted in the cell-line metadata' when every
+                                  lost line is deleted, e.g. CDKN2A/B), fold_change, z_corrected, fdr_up, lines up, the
+                                  expressing lines' fold change and z, reading (z >= 3 only): 're-expression in the
+                                  lost lines' (>= 1.41x, > 2x the expressing lines' change, FDR < 0.10, no toxic /
+                                  transcription-drop flag, >= half the lost lines measured, >= 60% of them up); 'not
+                                  interpretable (why)'; 'rises in the lost lines (ambient RNA / toxicity?)' (few lines
+                                  up); 'rises in all lines (ambient RNA follows)'. flags, context.
 level_vs_growth.csv               Long: gene, drug, conc, rho (Spearman across lines of the untreated level vs relative
                                   abundance after the drug), rho_partial_G2M (proliferation removed), rho_within_lineage
                                   (organ removed from both ranks), z (Fisher z, position-corrected, robust z, Stouffer),
-                                  z_within_lineage, fdr (within gene, two-sided), fdr_drug, z_by_dose,
+                                  z_within_lineage, fdr (within gene, two-sided), fdr_within_lineage (the same for
+                                  z_within_lineage), fdr_drug, fdr_drug_within_lineage, z_by_dose,
                                   dose_pattern_depleted_more, reading, n_lines, level_source (DMSO CPM; all-wells CPM
-                                  for lines with < 20 DMSO counts).
+                                  for lines with < 20 DMSO counts). Gene NRF2_basal_score = basal NRF2 target activity
+                                  (DMSO; NFE2L2 mRNA does not report NRF2 activity).
 level_vs_growth_top.csv           The 5 strongest 'depleted more' and 2 'spared' drug-doses per gene, sorted by fdr.
 cell_cycle_by_line.csv            Untreated (DMSO) cells, per line and gene: log2 level in G2M-high vs G2M-low quartile
                                   cells (and S), cell-level Spearman with the G2M and S scores (normalised by counts
                                   outside the cycle genes), expressed.
 cell_cycle_summary.csv            Per gene: medians over the expressing lines, lines higher in G2M cells.
 coregulation_matrix.csv           Pearson r across drug wells of the corrected per-well shifts (W2) of every gene,
-                                  score and module; coregulation_matrix_minus_pc1.csv: after removing the first
-                                  principal component (global stress / shutdown).
+                                  score and module (low-count genes left out); coregulation_matrix_minus_pc1.csv: after
+                                  removing the first principal component (summary.txt section 8: what it loads on).
 coregulation_top_partners.csv     Per panel gene and anchor: top 10 partners (rank 1-10) and most negative (rank -1..-3),
                                   raw r and after removing PC1 (scores containing the gene left out).
 crosslinks.csv                    category (reproducibility / biology / shared top drugs), comparison, n, statistic,
-                                  value, spearman (reproducibility), auc (MTAP-null vs intact: P(null > intact)), p,
+                                  value, spearman (reproducibility), rho_within_lineage and p_within_lineage (biology
+                                  correlations; the reading uses them), auc (group vs other lines: P(group > other)), p,
+                                  p_bh (BH over the biology rows of p_within_lineage, or of p for group comparisons),
                                   expected, reading.
                                   Reproducibility: well positions, MTAP-null calls, MTAP / PSMD10 drug z, MTAP-null
-                                  screen and Gankyrin level screen vs the earlier run (max |difference|).
-positive_controls.csv             expectation, readout, drug (found by name, mechanism or target; 'not in data'),
+                                  screen and Gankyrin level screen vs the earlier run (max |difference|; 0 expected
+                                  when both runs read the same files with the same --min-cells, else 'differs by
+                                  design'). Shared top drugs: drugs with drug-level FDR < 0.10 in both runs; expected =
+                                  the number shared by chance.
+positive_controls.csv             expectation, expected_at_24h (robust / uncertain: an absent uncertain control says
+                                  little), readout, drug (found by name, mechanism or target; 'not in data'),
                                   best_dose (strongest in the expected direction), fold_change, z, fdr,
                                   rank_among_drug_doses (of 'of'), z_by_dose, flags, direction, verdict (clear: z >= 3,
                                   FDR < 0.10 and >= 1.2x; weak: z >= 2; absent; not in data; not testable).
@@ -2552,11 +2960,13 @@ def cmd_check(args):
     ne = len(idx["expression"])
     say(ne > 0, f"{ne:,} expression files under {os.path.abspath(args.data)}" + ("" if ne else ": wrong --data folder?"))
     if 0 < ne < 3000 and not args.limit_files:
-        say(False, f"only {ne:,} expression files (the full dataset has ~3,388): is the download complete?", fatal=False)
+        say(False, f"only {ne:,} expression files (the full dataset has ~3,388): is the download complete? When it "
+                   "is, run again with --reindex", fatal=False)
     for k, fatal, why in (("gene", True, "needed"), ("sample", True, "needed (doses, well positions)"),
                           ("cell_line", False, "missing: no organ, no TP53 annotation (use --tp53-wt / --tp53-altered)"),
                           ("drug", False, "missing: no mechanisms / targets; positive controls by name only")):
-        say(bool(idx[k]), f"{k} metadata: {len(idx[k])} file(s)" + ("" if idx[k] else f" - {why}"), fatal=fatal)
+        say(bool(idx[k]), f"{k} metadata: {len(idx[k])} file(s)" + ("" if idx[k] else f" - {why}" + REINDEX_HINT),
+            fatal=fatal)
     n_cols = 120
     if idx["gene"]:
         gm = T.read_tables(idx["gene"], ["token_id", "gene_symbol"])
@@ -2610,13 +3020,17 @@ def cmd_check(args):
                                                           "--workers 2 usually reads faster)")
     mem, cpus = T.mem_available_gb(), os.cpu_count() or 1
     w = args.workers or T.auto_workers()
-    say(mem is None or mem >= 4, f"memory: {mem or 0:.0f} GB free, {cpus} CPUs -> {w} extract workers; analyze needs "
-                                 "~2-4 GB", fatal=mem is not None and mem < 2)
-    A = atlas(required=False)
+    say(mem is None or mem >= 4, f"memory: {mem or 0:.0f} GB free, {cpus} CPUs -> {w} extract workers; extract: up to "
+                                 "~3 GB per worker + ~1 GB main process; analyze ~2-4 GB",
+        fatal=mem is not None and mem < 2)
+    A = atlas(required=False, quiet=True)
     todo = []
     if A is None:
-        say(False, "tahoe_atlas.py not next to this script (needed only for the agents step)", fatal=False)
-        todo.append("put tahoe_atlas.py next to tahoe_gene_panel.py")
+        old = os.path.exists(os.path.join(HERE, "tahoe_atlas.py"))
+        say(False, "tahoe_atlas.py next to this script is an older version (needed only for the agents step)" if old
+            else "tahoe_atlas.py not next to this script (needed only for the agents step)", fatal=False)
+        todo.append(("copy the current tahoe_atlas.py over the old one" if old else "put tahoe_atlas.py") +
+                    " next to tahoe_gene_panel.py")
     else:
         try:
             import claude_agent_sdk
@@ -2663,13 +3077,20 @@ BUNDLE = [("results/summary.txt", None), ("results/README_columns.txt", None), (
 
 def cmd_bundle(args):
     """One small zip to upload to Claude: the key tables (to check the numbers before the agents), then the reports
-    and agent logs once the agents have run."""
+    and agent logs once the agents have run (only reports newer than this analysis: a rerun of analyze makes the
+    earlier ones out of date)."""
     out = args.out
     path = os.path.join(out, "gene_panel_bundle.zip")
     if not os.path.isdir(out):
         sys.exit(f"{out} does not exist: run 'all' first")
     A = atlas(required=False)
-    reps = sorted(glob.glob(os.path.join(out, "reports", "*.md")))
+    summ = os.path.join(out, "results", "summary.txt")
+    t_an = os.path.getmtime(summ) if os.path.exists(summ) else 0.0
+
+    def current(fs):
+        return [f for f in fs if os.path.exists(f) and os.path.getmtime(f) >= t_an]
+    allreps = sorted(glob.glob(os.path.join(out, "reports", "*.md")))
+    reps = current(allreps)
     items = list(BUNDLE) + [(os.path.relpath(f, out), None) for f in
                             sorted(glob.glob(os.path.join(out, "results", "*_drug_summary.csv")))]
     n_tables = 0
@@ -2680,21 +3101,29 @@ def cmd_bundle(args):
                 continue
             arc = os.path.join("computation", rel).replace(os.sep, "/")
             if nrows and src.endswith(".csv"):
-                z.writestr(arc, pd.read_csv(src, nrows=nrows).to_csv(index=False))
+                df = pd.read_csv(src)
+                if "gene" in df and df["gene"].nunique() > 1:      # cap per gene, so no gene drops out
+                    df = df.groupby("gene", sort=False, group_keys=False).head(max(100, nrows // df["gene"].nunique()))
+                else:
+                    df = df.head(nrows)
+                z.writestr(arc, df.to_csv(index=False))
             else:
                 z.write(src, arc)
             n_tables += 1
-        logf = os.path.join(out, "gene_panel.log")
-        if os.path.isfile(logf):
-            if A is not None:
-                A.add_log(z, logf, "computation/gene_panel.log")
-            else:
-                z.write(logf, "computation/gene_panel.log")
-        for f in reps + [os.path.join(out, "reports", "agents_summary.csv")]:
-            if os.path.exists(f):
-                z.write(f, "reports/" + os.path.basename(f))
-        for f in sorted(glob.glob(os.path.join(out, "angles", "*", "agent.log"))):
+        for f, arc in ((os.path.join(out, "gene_panel.log"), "computation/gene_panel.log"),
+                       (os.path.join(out, "agents.log"), "agent_logs/agents.log")):
+            if os.path.isfile(f):
+                if A is not None:
+                    A.add_log(z, f, arc)
+                else:
+                    z.write(f, arc)
+        for f in reps + current([os.path.join(out, "reports", "agents_summary.csv")]):
+            z.write(f, "reports/" + os.path.basename(f))
+        for f in current(sorted(glob.glob(os.path.join(out, "angles", "*", "agent.log")))):
             z.write(f, "agent_logs/" + os.path.basename(os.path.dirname(f)) + ".log")
+    if len(allreps) > len(reps):
+        log(f"  {len(allreps) - len(reps)} report(s) older than this analysis left out of the bundle (out of date; "
+            "rerun the agents for new ones)")
     if not n_tables and not reps:
         os.remove(path)
         log("Nothing to bundle yet: run 'all' (or 'analyze') first")
@@ -2718,6 +3147,18 @@ def cmd_agents(args):
 
 # ============================================================================= main
 def next_steps(args):
+    lim = args.limit_files
+    try:                                       # 'analyze' alone on a trial extraction is a trial too
+        with open(os.path.join(args.out, "extract_info.json"), encoding="utf-8") as fh:
+            lim = lim or json.load(fh).get("limit_files") or 0
+    except (OSError, ValueError):
+        pass
+    if lim:                                    # a trial: the next step is the full run, not the agents
+        full = os.path.join(args.data, "gene_panel")
+        return (f"Trial done ({lim} file{'s' if lim != 1 else ''}): check "
+                f"{os.path.join(args.out, 'results', 'summary.txt')}, then start the full run: "
+                + long_run_hint("all", same_folders(argparse.Namespace(data=args.data, out=full),
+                                                    getattr(args, "workers", 0)), full))
     A = atlas(required=False)
     key = A.key_hint() if A else "set ANTHROPIC_API_KEY"
     sdk = A.sdk_hint() if A else "pip install claude-agent-sdk"
@@ -2764,7 +3205,8 @@ def main():
     if args.command == "bundle":
         return cmd_bundle(args)
     os.makedirs(args.out, exist_ok=True)
-    T.start_run_log(os.path.join(args.out, "gene_panel.log"), "tahoe_gene_panel.py " + " ".join(sys.argv[1:]))
+    T.start_run_log(os.path.join(args.out, "agents.log" if args.command == "agents" else "gene_panel.log"),
+                    "tahoe_gene_panel.py " + " ".join(sys.argv[1:]))
     try:
         with T.keep_awake(f"tahoe_gene_panel.py {args.command}"):
             if args.command in ("extract", "all"):

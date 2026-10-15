@@ -64,6 +64,9 @@ try:
     import tahoe_mtap_gankyrin as T
 except ImportError:
     sys.exit("tahoe_atlas.py needs tahoe_mtap_gankyrin.py in the same folder")
+if not all(hasattr(T, f) for f in ("start_run_log", "keep_awake", "py_cmd", "REINDEX_HINT")):
+    sys.exit("tahoe_mtap_gankyrin.py next to tahoe_atlas.py is an older version: copy the current one over it "
+             "(its MTAP/Gankyrin method and results are unchanged)")
 
 log = T.log
 
@@ -96,6 +99,7 @@ TITLES = {"quality": "Data quality and artifacts",
           "cell_state": "Cell state: cell cycle, proliferation and toxicity"}
 BUILD_COLS = ["genes", "expressions", "BARCODE_SUB_LIB_ID", "sample", "plate", "drug", "cell_line_id"]
 BAD_IDS = {"", "none", "nan", "<na>", "null"}
+EFFECTS_VERSION = 2        # effects/complete.json: written last by 'effects'; angles, agents and lookups need it
 
 
 def dirs(out):
@@ -408,12 +412,12 @@ def cmd_build(args):
     idx = T.discover(args.data, args.out, refresh=args.reindex)
     exprs = idx["expression"]
     if not exprs:
-        sys.exit("No expression parquet files found under " + os.path.abspath(args.data))
+        sys.exit("No expression parquet files found under " + os.path.abspath(args.data) + T.REINDEX_HINT)
     if args.limit_files:
         exprs = exprs[:args.limit_files]
     gm = T.read_tables(idx["gene"], ["token_id", "gene_symbol", "ensembl_id"])
     if gm is None:
-        sys.exit("Gene metadata (token_id -> gene_symbol) not found")
+        sys.exit("Gene metadata (token_id -> gene_symbol) not found" + T.REINDEX_HINT)
     G = int(gm["token_id"].max()) + 1
     log(f"Finding the plate of each of {len(exprs)} files ...")
     with ThreadPoolExecutor(16) as ex:
@@ -587,9 +591,35 @@ def line_driver_changes(idx):
     return pd.Series(out, name="driver_changes")
 
 
+def effects_ready(out):
+    """True when <out>/effects is complete and from this version of tahoe_atlas.py (complete.json is written last)."""
+    try:
+        with open(os.path.join(out, "effects", "complete.json"), encoding="utf-8") as fh:
+            return json.load(fh).get("version") == EFFECTS_VERSION
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
+def save_npy(path, arr):
+    """np.save to a temporary file, then swap it in (an interrupted run never leaves a half-written matrix)."""
+    tmp = path + ".tmp"
+    with open(tmp, "wb") as fh:
+        np.save(fh, arr)
+    try:
+        os.replace(tmp, path)
+    except PermissionError:
+        os.remove(tmp)
+        sys.exit(f"Cannot replace {path}: another program has it open (an agent, a lookup or a Python session "
+                 "reading atlas/effects?). Close it, then run 'effects' (or 'compute') again")
+
+
 def cmd_effects(args):
     quiet()
     D = dirs(args.out)
+    try:                                    # not complete until this run writes it again at the very end
+        os.remove(os.path.join(D["fx"], "complete.json"))
+    except FileNotFoundError:
+        pass
     idx = T.discover(args.data, args.out)
     smp = os.path.join(args.out, "sample_map.csv")
     if not os.path.exists(smp):
@@ -819,11 +849,13 @@ def cmd_effects(args):
                       ("A2", A2.astype(np.float32)), ("zA", zA), ("VA", VA), ("DD_A", DD_A), ("DD_Az", DD_Az),
                       ("r2_modules", r2m.astype(np.float32)), ("DD_r2_modules", DD_r2m),
                       ("beta", beta), ("rcor", rcor), ("DD_beta", DD_beta), ("DD_rcor", DD_rcor)]:
-        np.save(os.path.join(out, f"{name}.npy"), arr)
+        save_npy(os.path.join(out, f"{name}.npy"), arr)
     with open(os.path.join(out, "modules.json"), "w", encoding="utf-8") as fh:
         json.dump({k: [int(t) for t in v] for k, v in modules.items()}, fh)
     with open(os.path.join(out, "README_effects.md"), "w", encoding="utf-8") as fh:
         fh.write(EFFECTS_README)
+    with open(os.path.join(out, "complete.json"), "w", encoding="utf-8") as fh:
+        json.dump({"version": EFFECTS_VERSION}, fh)
     log(f"Effects done: {gK:,} genes x {Dn:,} drug-doses x {L} lines -> {out}")
 
 
@@ -860,8 +892,9 @@ class FX:
     def __init__(self, out):
         self.out = out
         self.d = os.path.join(out, "effects")
-        if not os.path.exists(os.path.join(self.d, "DD_beta.npy")):
-            sys.exit("effects not found (or from an older version); run 'effects' first")
+        if not effects_ready(out):
+            sys.exit("effects missing, incomplete or from an older version of tahoe_atlas.py; "
+                     "run 'compute' (or 'effects') again")
         global MIN_CELLS
         try:
             with open(os.path.join(self.d, "info.json"), encoding="utf-8") as fh:
@@ -2364,8 +2397,7 @@ def key_hint():
 
 
 def sdk_hint():
-    return (f"{T.py_cmd()} -m pip install claude-agent-sdk" if sys.platform == "win32"
-            else "pip install claude-agent-sdk")
+    return f"{T.py_cmd()} -m pip install claude-agent-sdk"      # into this very Python, not whichever pip is first
 
 
 def sandbox_problem():
@@ -2390,9 +2422,9 @@ state your assumptions in the report, and keep going. Work in your current folde
 there); the effects matrices and cards elsewhere in the atlas folder may be read. {shell}Compute every number you
 report with Python: write a .py script in this folder and run it with `{py} script.py` (always allowed). If any
 command is refused, do the same thing in Python instead; never stop because of a refusal.
-Do not install packages, use the network, delete files or touch anything outside the atlas folder. Your job is
-finished only when report.md exists and follows brief.md; a precise, well-checked report matters more than a long
-one."""
+Do not install packages, use the network, delete files or write anything outside the atlas folder (reading files
+and running the look-up commands named in brief.md is allowed). Your job is finished only when report.md exists and
+follows brief.md; a precise, well-checked report matters more than a long one."""
 
 NUDGE = """{report} does not exist yet. Write it now, as your task (brief.md, if there is one) specifies: compute the
 numbers you need with Python (write a script in this folder and run it with `{py} script.py`; that is always
@@ -2427,7 +2459,9 @@ def agent_python():
 def agent_text(template, **fields):
     """Fill {py} (how to run this Python), {shell} (on Windows: the shell is PowerShell), {report} (default
     report.md) and any other {fields} in an agent text."""
-    shell = "Your shell is PowerShell (Windows), not bash: use PowerShell syntax. " if sys.platform == "win32" else ""
+    shell = ("Your shell is PowerShell (Windows), not bash: use PowerShell syntax. In Python write Windows paths as "
+             "raw strings (r'C:\\tahoe\\...') or with forward slashes ('C:/tahoe/...'), never as plain '...\\...' "
+             "strings ('\\t' and '\\r' would become control characters). " if sys.platform == "win32" else "")
     return template.format(**{"py": agent_python(), "shell": shell, "report": "report.md", **fields})
 
 
@@ -2617,7 +2651,8 @@ def cmd_check(args):
     ne = len(idx["expression"])
     say(ne > 0, f"{ne:,} expression files under {os.path.abspath(args.data)}" + ("" if ne else ": wrong --data folder?"))
     if 0 < ne < 3000:
-        say(False, f"only {ne:,} expression files (the full dataset has ~3,388): is the download complete?", fatal=False)
+        say(False, f"only {ne:,} expression files (the full dataset has ~3,388): is the download complete? "
+            "When it is, run again with --reindex", fatal=False)
     if ne:
         miss = [c for c in BUILD_COLS if c not in set(pq.read_schema(idx["expression"][0]).names)]
         say(not miss, "expression columns present" if not miss else f"expression files lack columns {miss}")
@@ -2686,7 +2721,8 @@ def cmd_check(args):
 
 DIAGNOSTICS = [   # (path under the atlas folder, max rows or None): what Claude needs to check the computation
     ("build_info.json", None), ("well_position_check.csv", None), ("sample_map.csv", None),
-    ("effects/info.json", None), ("effects/drugdose.csv", None), ("effects/lines.csv", None),
+    ("effects/info.json", None), ("effects/complete.json", None), ("effects/drugdose.csv", None),
+    ("effects/lines.csv", None),
     ("effects/failed_wells.csv", None), ("effects/plates.csv", None),
     ("angles/quality/summary.json", None), ("angles/quality/position_effects.csv", None),
     ("angles/quality/plate_dmso_offsets.csv", None), ("angles/quality/replicates.csv", None),
@@ -2914,9 +2950,20 @@ def run_steps(args):
     if args.command == "compute":
         log(f"Computation done in {(time.time() - t0) / 60:.0f} min. No agent has been called.")
         cmd_bundle(args)
-        log(f"Next: send atlas_bundle.zip to Claude to check the numbers; then run the agents: first {key_hint()} "
-            f"and {sdk_hint()}, then {long_run_hint('agents', same_folders(args), args.out)}")
+        if args.limit_files:                # a trial: the agents are for the full run
+            full = os.path.join(args.data, "atlas")
+            log(f"Trial done ({args.limit_files} file{'s' if args.limit_files != 1 else ''}): look at the tables in "
+                f"{rel_path(args.out)} (or its "
+                f"atlas_bundle.zip), then start the full run: "
+                + long_run_hint("compute", same_folders(argparse.Namespace(data=args.data, out=full), args.workers),
+                                full))
+        else:
+            log(f"Next: send atlas_bundle.zip to Claude to check the numbers; then run the agents: first {key_hint()} "
+                f"and {sdk_hint()}, then {long_run_hint('agents', same_folders(args), args.out)}")
     if args.command in ("agents", "all"):
+        if not effects_ready(args.out):     # the atlas's own agents only (cmd_agents is shared with the panel)
+            sys.exit("effects missing, incomplete or from an older version of tahoe_atlas.py; run 'compute' (or "
+                     "'effects' and 'angles') again before the agents")
         cmd_agents(args)
         if not args.dry_run:
             cmd_bundle(args)
