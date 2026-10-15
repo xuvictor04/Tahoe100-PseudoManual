@@ -2,7 +2,7 @@
 """
 run_smoke.py - smoke-test every script of this repo against the synthetic Tahoe-100M data.
 
-    python tests/run_smoke.py [--workdir DIR] [--regen] [--only small,mtap,atlas,panel] [--workers 2]
+    python tests/run_smoke.py [--workdir DIR] [--regen] [--only small,mtap,atlas,panel,wrapper] [--workers 2]
 
 1. Generates the synthetic download once into DIR/synthetic_tahoe (tests/make_synthetic_tahoe.py, ~1-2 min), and
    reuses it on later runs (regenerated automatically when the generator changed; --regen forces it).
@@ -12,6 +12,8 @@ run_smoke.py - smoke-test every script of this repo against the synthetic Tahoe-
      atlas  tahoe_atlas.py check, compute, lookup x4, agents --dry-run, bundle                 -> DIR/atlas
      panel  tahoe_gene_panel.py check, all, agents --dry-run, analyze again, bundle (reads DIR/mtap_gankyrin)
                                                                                                -> DIR/gene_panel
+     wrapper  tahoe_status.py status/next/facts on those outputs (both done, Next: tahoe bundle, 80 columns),
+              bash -n tahoe, tahoe help (bash only; needs the atlas and panel stages)          -> DIR/wrapper_state
    Each stage starts from an empty output folder.
 3. Checks the outputs against the planted ground truth (DIR/synthetic_tahoe/ground_truth.json): one PASS/FAIL line
    per check (WARN = known weakness whose outcome depends on chance in these small data; it does not fail the run),
@@ -843,6 +845,81 @@ def stage_panel(ctx):
                 ("; holds a report older than the analysis" if stale_rep else "; out-of-date report left out")
         ctx.check("gene_panel_bundle.zip holds the summary, positive controls and both logs, no out-of-date report",
                   bundle)
+
+
+# ============================================================================= stage: the 'tahoe' command
+@stage("wrapper")
+def stage_wrapper(ctx):
+    """tahoe_status.py on the finished outputs of the stages above (both runs done, a sensible Next line), then
+    'bash -n tahoe' and 'tahoe help'. Needs the atlas and panel stages' outputs in DIR (skipped without them)."""
+    status = os.path.join(REPO, "tahoe_status.py")
+    tahoe = os.path.join(REPO, "tahoe")
+    if not os.path.exists(status) or not os.path.exists(tahoe):
+        ctx.skip("tahoe / tahoe_status.py", "not in the repo: stage skipped")
+        return
+    outs = {k: os.path.join(ctx.W, d) for k, d in (("atlas", "atlas"), ("panel", "gene_panel"),
+                                                    ("mtap", "mtap_gankyrin"))}
+    if not (os.path.exists(os.path.join(outs["atlas"], "atlas.log"))
+            and os.path.exists(os.path.join(outs["panel"], "gene_panel.log"))):
+        ctx.skip("tahoe_status.py on the smoke outputs", "no atlas / gene panel outputs in DIR: run those stages first")
+    else:
+        state = fresh(os.path.join(ctx.W, "wrapper_state"))      # no job files: as for runs started by hand
+        base = ["--data", ctx.D, "--atlas-out", outs["atlas"], "--panel-out", outs["panel"], "--mtap-out", outs["mtap"],
+                "--state", state]
+        cols = ctx.env.get("COLUMNS")
+        ctx.env["COLUMNS"] = "80"                                 # the screen as in an 80-column SSH window
+        try:
+            txt = ctx.run_ok("status", [PY, status, "status"] + base)
+        finally:
+            if cols is None:
+                ctx.env.pop("COLUMNS", None)
+            else:
+                ctx.env["COLUMNS"] = cols
+        if txt is not None:
+            rows = txt.splitlines()
+
+            def row(label):
+                return next((r for r in rows if r.startswith(label)), "")
+            ctx.check("status: atlas and gene panel reported done",
+                      lambda: (row("Atlas").split()[1:2] == ["done"] and row("Gene panel").split()[2:3] == ["done"],
+                               f"{row('Atlas').strip()} | {row('Gene panel').strip()}"))
+            ctx.check("status: download complete (expression files and metadata)",
+                      lambda: ("done:" in row("Download") and "4 of 4 metadata" in row("Download"), row("Download")))
+            nxt = row("Next:")
+            ctx.check("status: one Next line, saying 'tahoe bundle' (both done, no agents yet, no bundle zip)",
+                      lambda: (sum(r.startswith("Next:") for r in rows) == 1 and "tahoe bundle" in nxt, nxt))
+            wide = [r for r in rows[1:] if len(r) > 79]
+            ctx.check("status: every line fits an 80-column window (long ones wrapped, none cut off)",
+                      lambda: (not wide and not any(r.rstrip().endswith("...") for r in rows),
+                               f"{len(wide)} lines over 79 characters" + (f": {wide[0]!r}" if wide else "")))
+            nx = ctx.run_ok("next", [PY, status, "next"] + base)
+            if nx is not None:
+                ctx.check("'tahoe_status.py next' says what the status screen's Next line says",
+                          lambda: (nx.strip().startswith(nxt[len("Next: "):].strip()), nx.strip()))
+        txt = ctx.run_ok("facts", [PY, status, "facts"] + base)
+        if txt is not None:
+            facts = dict(x.split("=", 1) for x in txt.splitlines() if "=" in x)
+            want = {"atlas": "done", "panel": "done", "atlas_ready": "1", "panel_ready": "1", "running": "",
+                    "queued": ""}
+            ctx.check("facts: atlas/panel done and ready, nothing running or queued",
+                      lambda: (all(facts.get(k) == v for k, v in want.items()),
+                               ", ".join(f"{k}={facts.get(k)!r}" for k in want)))
+    bash = shutil.which("bash")
+    if sys.platform == "win32" or not bash:
+        ctx.skip("bash -n tahoe, tahoe help", "no bash here (Windows uses the PowerShell commands)")
+        return
+    ctx.run_ok("bash_n", [bash, "-n", tahoe])
+    txt = ctx.run_ok("help", [bash, tahoe, "help"])
+    if txt is not None:
+        names = ["run", "atlas", "panel", "mtap", "log", "bundle", "agents", "stop", "setup", "download", "test",
+                 "update"]
+        lines = txt.strip().splitlines()
+        missing = [n for n in names if f"tahoe {n}" not in txt]
+        ctx.record("tahoe help: every command listed in <= 20 lines", not missing and len(lines) <= 20,
+                   f"{len(lines)} lines" + (f"; missing {missing}" if missing else ""))
+        wide = [x for x in lines if len(x) > 79 and "(data:" not in x]
+        ctx.record("tahoe help: lines fit an 80-column window", not wide,
+                   f"longest {max(len(x) for x in lines)} characters" + (f": {wide[0]!r}" if wide else ""))
 
 
 # ============================================================================= main

@@ -29,7 +29,7 @@ C:\tahoe\.venv\Scripts\python.exe tests\run_smoke.py --workdir C:\tahoe\smoke --
 Options:
 - `--workdir DIR`: where the data and outputs go. The default is `$TAHOE_SMOKE_DIR`, or else
   `<system temp>/tahoe_smoke`.
-- `--only small,mtap,atlas,panel`: run only these stages.
+- `--only small,mtap,atlas,panel,wrapper`: run only these stages.
 - `--workers 2`: passed to the scripts.
 - `--seed N`: generator seed. The data are regenerated when the seed changes.
 - `--regen`: regenerate the data.
@@ -46,6 +46,7 @@ What ends up in DIR:
 | `mtap_gankyrin/` | Output of `tahoe_mtap_gankyrin.py all` and `coreg`. |
 | `atlas/` | Output of `tahoe_atlas.py` `check`, `compute`, `lookup` x4, `agents --dry-run` and `bundle`. |
 | `gene_panel/` | Output of `tahoe_gene_panel.py` `check`, `all` (extract + analyze + bundle; it reads `mtap_gankyrin/` as the earlier run), `agents --dry-run`, `analyze` once more and `bundle`. |
+| `wrapper_state/` | The `wrapper` stage: `tahoe_status.py status`, `next` and `facts` on the outputs above (both runs done, `Next: tahoe bundle`, every line within 80 columns), then `bash -n tahoe` and `tahoe help` (all commands, 80 columns; skipped without bash). It needs the atlas and panel stages. |
 | `logs/<stage>_<step>.log` | The full output of every command. |
 | `smoke_results.json` | Every check (stage, name, PASS/FAIL/WARN/SKIP, detail) and every command (argv, exit code, seconds, log). |
 
@@ -63,6 +64,7 @@ Each stage starts from an empty output folder. The scripts run from `DIR/scratch
 | mtap | ~11 s |
 | atlas | ~30 s |
 | panel | ~100 s (two analyze runs) |
+| wrapper | ~1 s |
 | Whole run | ~3 min |
 
 **Adding a stage:** write one function decorated with `@stage("name")` in `run_smoke.py`, using

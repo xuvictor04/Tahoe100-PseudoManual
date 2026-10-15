@@ -1,10 +1,11 @@
 # Tahoe-100M scripts: the all-angles atlas, the gene panel, and the MTAP/Gankyrin trial
 
 Copy this folder's files into your Tahoe-100M download folder (default `~/Tahoe-100M`; on Windows `C:\tahoe\Tahoe-100M`)
-and run them from there. Replace older copies too: `tahoe_atlas.py` and `tahoe_gene_panel.py` need the current
-`tahoe_mtap_gankyrin.py`, and the panel the current `tahoe_atlas.py` (they stop with a message when they find an older
-one). The MTAP/Gankyrin method and numbers are unchanged (only logging, keep-awake, memory use, resuming and printed
-hints changed), so your earlier `mtap_gankyrin/` output stays valid. Two runs are current:
+and run them from there (on Linux / macOS the `tahoe` command of the Quick start below needs no copying). Replace
+older copies too: `tahoe_atlas.py` and `tahoe_gene_panel.py` need the current `tahoe_mtap_gankyrin.py`, and the panel
+the current `tahoe_atlas.py` (they stop with a message when they find an older one). The MTAP/Gankyrin method and
+numbers are unchanged (only logging, keep-awake, memory use, resuming and printed hints changed), so your earlier
+`mtap_gankyrin/` output stays valid. Two runs are current:
 1. **The atlas** (`tahoe_atlas.py`): one long computation that aggregates the whole dataset and pre-digests it into one
    data package per angle (genes, drugs, classes, cell lines, biomarkers, programs, cell state, ...), followed by one
    Claude agent per angle that does the actual analysis and writes a report.
@@ -12,8 +13,35 @@ hints changed), so your earlier `mtap_gankyrin/` output stays valid. Two runs ar
    ferroptosis, pyroptosis and p53 genes plus NAPEPLD (NAPE-PLD) and TRIM72 (MG53), with cross-links back to MTAP and
    Gankyrin; optionally one agent per pathway.
 
+## Quick start (Linux / macOS)
+
+The `tahoe` command does each step in one short line. Once (`~/repo` = where you cloned this folder):
+```bash
+git -C ~/repo pull         # gets the tahoe command (skip it on a fresh clone)
+~/repo/tahoe setup         # the Python environment ~/tahoe-venv, and the plain 'tahoe' command
+```
+Setup ends with one line to type in that window (or open a new SSH window). Then:
+```bash
+tahoe download     # the dataset into ~/Tahoe-100M (about 430 GB, resumes; skip it if the data are there)
+tahoe test         # optional: 3-minute test on synthetic data
+tahoe run          # the atlas, then the gene panel, in the background (safe to log out)
+tahoe              # where everything stands, and the exact command to type next (= tahoe status)
+tahoe bundle       # both bundles in one zip, and the one scp line to download it: upload it to Claude
+tahoe agents       # after Claude has checked the numbers (asks for the API key each time; it is never saved)
+```
+- `tahoe log` follows the running job's log (Ctrl-C stops watching, not the run); `tahoe stop` stops a run (finished
+  work is reused); `tahoe update` gets the newest scripts (git pull); `tahoe help` lists everything.
+- Options go to the script: `tahoe atlas --workers 4`, `tahoe panel analyze`, `tahoe atlas lookup gene MTAP`.
+- Nothing is copied: the scripts run from the repo folder with `--data ~/Tahoe-100M` (another folder:
+  `export TAHOE_DATA=/path`), and the outputs land where the commands below put them. Copies you made in
+  `~/Tahoe-100M` are not used: once no run started by hand uses them, delete them there
+  (`rm tahoe_atlas.py tahoe_gene_panel.py tahoe_mtap_gankyrin.py`), so an old copy is never run by mistake.
+- Runs started by hand show up in `tahoe status` too, and `tahoe panel` waits for an atlas that is running.
+
+The long commands below still work. Windows: use the PowerShell commands below.
+
 **Order of work.**
-0. Copy all files over the old ones (see above).
+0. Copy all files over the old ones (see above; not needed with the `tahoe` command).
 1. Atlas: `check`, then `compute` (~1-1.5 h).
 2. Gene panel: `check`, then `all` (~1 h). Run it after the atlas, so that its agent briefs include the genome-wide
    atlas look-ups. Never run the two long passes at the same time: each reads all ~96M cells.
@@ -36,6 +64,8 @@ For the agents also `claude-agent-sdk` and an Anthropic API key.
 | `tahoe_atlas.py` | **Every angle of the whole dataset** (all genes, drugs, doses, cell lines), one data package per angle, and a Claude agent per angle that writes a report. | see below |
 | `tahoe_gene_panel.py` | **The gene panel**: ferroptosis, pyroptosis, p53, NAPEPLD, TRIM72, on the MTAP/Gankyrin method. | ~1 h + minutes |
 | `old_drug_effect_uncorrected.py` | Superseded. Reproduces the original uncorrected drug lists, for comparison only. | minutes |
+| `tahoe` | The one-line commands of the Quick start (Linux / macOS): status, run, log, bundle, agents, stop, setup, ... (`tahoe help`). | seconds |
+| `tahoe_status.py` | What `tahoe status` prints: reads the logs, the job files in `<data>/.tahoe` and the process list. | seconds |
 | `tests/` | Synthetic Tahoe-100M data with planted effects and a smoke test of every script (see `tests/README.md`). | ~3 min |
 
 ## Setup
@@ -294,7 +324,7 @@ Other options: `--workers N`, `--mtap-null LINE1,LINE2`, `--extra-genes MAT2A,PR
 
 ## Tests
 
-`python3 tests/run_smoke.py` (Windows: `C:\tahoe\.venv\Scripts\python.exe tests\run_smoke.py --workdir C:\tahoe\smoke`)
+`tahoe test` or `python3 tests/run_smoke.py` (Windows: `C:\tahoe\.venv\Scripts\python.exe tests\run_smoke.py --workdir C:\tahoe\smoke`)
 generates a small synthetic Tahoe-100M download with planted effects (well-position artifacts, a plate-2 DMSO
 offset, MTAP-null lines, TP53-dependent p53 activation, NRF2 / ISR / iron / GSDME effects, toxic and shutdown drugs,
 a failed well) and checks that every script recovers them. No API key is used. Details in `tests/README.md`.

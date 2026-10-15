@@ -1,0 +1,1059 @@
+#!/usr/bin/env bash
+# tahoe - one short command for each step of the Tahoe-100M scripts in this folder (Linux / macOS).
+#
+#   tahoe            where everything stands, and the exact command to type next
+#   tahoe help       all commands
+#
+# Data folder: $TAHOE_DATA (default ~/Tahoe-100M). Python: $TAHOE_VENV/bin/python (default ~/tahoe-venv), else python3.
+# The scripts run from this folder (so 'tahoe update' = git pull updates everything) with --data <data folder>, in
+# the data folder; their outputs stay in <data>/atlas, <data>/gene_panel, ... Long runs go to the background (setsid
+# + nohup: safe to log out); each records its pid, exit code and console output in <data>/.tahoe/.
+# Windows: use the PowerShell commands in README.md.
+set -u
+
+# ----------------------------------------------------------------------------- paths
+resolve() {     # a path with every symlink followed (no readlink -f: not on macOS)
+  local p="$1" d
+  while [ -L "$p" ]; do
+    d="$(cd -P "$(dirname "$p")" && pwd)"
+    p="$(readlink "$p")"
+    case "$p" in /*) ;; *) p="$d/$p" ;; esac
+  done
+  d="$(cd -P "$(dirname "$p")" && pwd)"
+  printf '%s/%s\n' "$d" "$(basename "$p")"
+}
+
+tildify() {     # ~/x for messages
+  # shellcheck disable=SC2088  # a literal ~ to show
+  case "$1" in "$HOME") printf '~\n' ;; "$HOME"/*) printf '~/%s\n' "${1#"$HOME"/}" ;; *) printf '%s\n' "$1" ;; esac
+}
+
+absolute() {    # $1 with ~ expanded, made absolute, without a trailing slash
+  local p="$1"
+  # shellcheck disable=SC2088  # matching a literal ~ that was quoted
+  case "$p" in "~") p="$HOME" ;; "~/"*) p="$HOME/${p#"~/"}" ;; /*) ;; *) p="$PWD/$p" ;; esac
+  [ "$p" = / ] || p="${p%/}"
+  printf '%s\n' "$p"
+}
+
+SELF="$(resolve "${BASH_SOURCE[0]}")"
+REPO="$(dirname "$SELF")"
+HELPER="$REPO/tahoe_status.py"
+DATA="$(absolute "${TAHOE_DATA:-$HOME/Tahoe-100M}")"
+VENV="$(absolute "${TAHOE_VENV:-$HOME/tahoe-venv}")"
+STATE="$DATA/.tahoe"
+if [ -x "$VENV/bin/python" ]; then
+  PY="$VENV/bin/python"; HAVE_VENV=1
+else
+  PY="$(command -v python3 2>/dev/null || printf 'python3')"; HAVE_VENV=0
+fi
+ME="tahoe"                                    # how the user calls this command (for every hint we print)
+_onpath="$(command -v tahoe 2>/dev/null || true)"
+if [ -z "$_onpath" ] || [ "$(resolve "$_onpath")" != "$SELF" ]; then
+  ME="$(tildify "$SELF")"
+fi
+AGAIN="status"                                # the command the user typed (for 'type ... again' hints)
+TAB="  "
+
+say() { printf '%s\n' "$*"; }
+cap() { printf '%s' "$1" | sed 's/^the/The/'; }
+
+wrap() {        # lines longer than 79 characters wrapped at a space; continuation lines indented 4 more
+  awk -v max=79 '{
+    line = $0; ind = match(line, /[^ ]/) - 1; if (ind < 0) ind = 0
+    pre = sprintf("%" (ind + 4) "s", "")
+    while (length(line) > max) {
+      cut = 0
+      for (i = max; i > ind + 12; i--) if (substr(line, i, 1) == " ") { cut = i; break }
+      if (cut) { print substr(line, 1, cut - 1); line = pre substr(line, cut + 1) }
+      else { print substr(line, 1, max); line = pre substr(line, max + 1) }     # one long word (a path)
+    }
+    print line
+  }'
+}
+
+# ----------------------------------------------------------------------------- facts from tahoe_status.py
+helper() {
+  "$PY" "$HELPER" "$@" --data "$DATA" --state "$STATE" --me "$ME" --venv "$VENV" --have-venv "$HAVE_VENV"
+}
+FACTS=""
+load_facts() {  # what runs, what is done; when that cannot be known (ps failed), nothing is started
+  local rc err=/dev/null
+  [ -d "$STATE" ] && err="$STATE/facts.err"
+  FACTS="$(helper facts 2>"$err")"
+  rc=$?
+  [ "$rc" -eq 0 ] && return 0
+  if [ "$rc" -eq 2 ]; then
+    say "The process list (ps) could not be read, so it is not clear what runs: nothing done. Try again in a moment."
+  else
+    say "tahoe_status.py stopped with an error: $(tail -n 1 "$err" 2>/dev/null)"
+  fi
+  exit 1
+}
+fact() { printf '%s\n' "$FACTS" | sed -n "s/^$1=//p" | head -n 1; }
+is_in() { case " $1 " in *" $2 "*) return 0 ;; esac; return 1; }
+
+name_of() {
+  case "$1" in
+    atlas) printf 'the atlas' ;; panel) printf 'the gene panel' ;; mtap) printf 'the MTAP/Gankyrin trial' ;;
+    agents) printf 'the agents' ;; download) printf 'the download' ;; *) printf '%s' "$1" ;;
+  esac
+}
+names_of() {    # "atlas panel" -> "the atlas and the gene panel"
+  local out="" j
+  for j in $1; do
+    if [ -z "$out" ]; then out="$(name_of "$j")"; else out="$out and $(name_of "$j")"; fi
+  done
+  printf '%s' "$out"
+}
+by_hand() { [ "$(fact "$1_by")" = hand ] && printf ' (started by hand)'; return 0; }
+busy_now() { printf '%s' "$(fact running) $(fact queued)" | xargs; }     # long runs running or queued
+is_are() { case "$1" in *" "*) printf 'are' ;; *) printf 'is' ;; esac; }   # "atlas panel" -> are
+hint_watch() { say "Check: $ME status    Watch: $ME log    (safe to log out)"; }
+
+need_python() {
+  if ! command -v "$PY" >/dev/null 2>&1 && [ ! -x "$PY" ]; then
+    say "Python 3 not found. Type: sudo apt-get install -y python3 python3-venv   then: $ME setup"
+    return 1
+  fi
+}
+need_data() {
+  need_python || return 1
+  if [ ! -d "$DATA" ]; then
+    say "The data folder $(tildify "$DATA") does not exist."
+    say "Next: $ME download   (or, if the data are elsewhere: export TAHOE_DATA=/path/to/Tahoe-100M)"
+    return 1
+  fi
+  mkdir -p "$STATE" 2>/dev/null || { say "Cannot write to $(tildify "$STATE")."; return 1; }
+}
+need_packages() {   # the scripts need numpy, pandas and pyarrow: say 'tahoe setup' instead of a Python traceback
+  "$PY" -c 'import numpy, pandas, pyarrow' >/dev/null 2>&1 && return 0
+  if [ "$HAVE_VENV" = 1 ]; then
+    say "The Python environment $(tildify "$VENV") lacks numpy, pandas or pyarrow."
+  else
+    say "There is no Python environment yet ($(tildify "$VENV")), and $(tildify "$PY") lacks numpy, pandas or pyarrow."
+  fi
+  say "First: $ME setup   (one time), then '$ME $AGAIN' again."
+  return 1
+}
+
+# ----------------------------------------------------------------------------- one command at a time
+pid_is() {      # pid_is PID WORD: process PID is alive and its command line holds WORD
+  local args
+  [ -n "$1" ] || return 1
+  kill -0 "$1" 2>/dev/null || return 1
+  args="$(ps -p "$1" -o args= 2>/dev/null)" || return 0       # no ps: alive is all we know
+  case "$args" in *"$2"*) return 0 ;; esac
+  return 1
+}
+
+LOCK=""
+lock_take() {   # commands that start or stop runs take turns (two 'tahoe run' at once must not start two atlases)
+  local d="$STATE/lock" pid i=0 empty=0 said=0
+  mkdir -p "$STATE" 2>/dev/null || return 0
+  while ! mkdir "$d" 2>/dev/null; do
+    pid="$(cat "$d/pid" 2>/dev/null)"
+    if [ -z "$pid" ]; then empty=$((empty + 1)); else empty=0; fi
+    if { [ -n "$pid" ] && ! pid_is "$pid" tahoe; } || [ "$empty" -ge 30 ]; then
+      rm -f "$d/pid"; rmdir "$d" 2>/dev/null          # left by a command that was killed
+      continue
+    fi
+    if [ "$said" = 0 ] && [ "$i" -ge 10 ]; then
+      say "Waiting for another '$ME' command (pid ${pid:-?}) to finish ..."; said=1
+    fi
+    if [ "$i" -ge 1800 ]; then
+      say "Another '$ME' command (pid ${pid:-?}) is still busy: nothing done. Try again in a minute."
+      return 1
+    fi
+    sleep 0.1; i=$((i + 1))
+  done
+  printf '%s\n' "$$" > "$d/pid"
+  LOCK="$d"
+  trap lock_drop EXIT
+  trap 'exit 130' INT TERM HUP
+}
+lock_drop() { if [ -n "$LOCK" ]; then rm -f "$LOCK/pid"; rmdir "$LOCK" 2>/dev/null; LOCK=""; fi; }
+
+# ----------------------------------------------------------------------------- background jobs
+next_seq() {    # queue position: after everything queued so far
+  local now last
+  now=$(( $(date +%s) * 1000 ))
+  last="$(fact queue_last)"
+  [ -n "$last" ] && [ "$last" -ge "$now" ] 2>/dev/null && now=$(( last + 1 ))
+  printf '%s\n' "$now"
+}
+
+# start_job JOB QUEUED(0|1) WHAT  @label cmd args... [:: @label cmd args...]
+#   runs the commands one after the other in the background (each only if the one before succeeded); QUEUED=1
+#   waits first until nothing else runs (SEQ, when set, is its place in the queue; AFTER = the runs it waits for:
+#   when one of those ends badly, it does not start)
+start_job() {
+  local job="$1" queued="$2" what="$3" ext i=0 err pid
+  shift 3
+  mkdir -p "$STATE" || return 1
+  pid="$(cat "$STATE/$job.pid" 2>/dev/null)"
+  if [ -n "$pid" ] && pid_is "$pid" "_job $job "; then
+    say "$(cap "$(name_of "$job")") is already running or queued: nothing new started. ('$ME status' shows it.)"
+    return 1
+  fi
+  for ext in exit started step pid queued skipped after; do rm -f "$STATE/$job.$ext"; done
+  [ -f "$STATE/$job.console" ] && mv -f "$STATE/$job.console" "$STATE/$job.console.prev"
+  printf '%s\n' "$what" > "$STATE/$job.what"
+  date +%s > "$STATE/$job.created"
+  if [ "$queued" = 1 ]; then
+    printf '%s\n' "${AFTER:-}" > "$STATE/$job.after"
+    printf '%s\n' "${SEQ:-$(next_seq)}" > "$STATE/$job.queued"
+  fi
+  if command -v setsid >/dev/null 2>&1; then
+    setsid nohup bash "$SELF" _job "$job" "$DATA" "$@" </dev/null >>"$STATE/$job.console" 2>&1 &
+  else
+    nohup bash "$SELF" _job "$job" "$DATA" "$@" </dev/null >>"$STATE/$job.console" 2>&1 &
+  fi
+  while [ ! -f "$STATE/$job.pid" ] && [ "$i" -lt 50 ]; do sleep 0.1; i=$((i + 1)); done
+  [ "$queued" = 1 ] && return 0
+  i=0                     # a wrong option or a missing file ends a run at once: say so now, not an hour later
+  while [ ! -f "$STATE/$job.exit" ] && [ "$i" -lt 20 ]; do sleep 0.1; i=$((i + 1)); done
+  if [ -f "$STATE/$job.exit" ] && [ "$(cut -d ' ' -f 1 "$STATE/$job.exit")" != 0 ]; then
+    say "$(cap "$(name_of "$job")") stopped right away:"
+    err="$(grep -i -E 'error|STOPPED|FAIL' "$STATE/$job.console" | grep -v '^\[tahoe\]' | tail -n 2)"
+    [ -n "$err" ] || err="$(grep -v '^\[tahoe\]' "$STATE/$job.console" | tail -n 2)"
+    printf '%s\n' "${err//"$HOME"\//\~/}" | sed "s/^/$TAB/" | wrap
+    say "Fix that, then try again. ('$ME log $job' shows everything.)"
+    return 1
+  fi
+  return 0
+}
+
+job_lock() {    # one runner per job: a second one (started at the same moment) ends at once
+  local d="$STATE/$JOB.lock" pid n=0
+  while ! mkdir "$d" 2>/dev/null; do
+    pid="$(cat "$d/pid" 2>/dev/null)"
+    if [ -z "$pid" ] && [ "$n" -lt 20 ]; then sleep 0.1; n=$((n + 1)); continue; fi
+    if [ -n "$pid" ] && [ "$pid" != "$$" ] && pid_is "$pid" "_job $JOB "; then return 1; fi
+    rm -f "$d/pid"; rmdir "$d" 2>/dev/null || return 1
+  done
+  printf '%s\n' "$$" > "$d/pid"
+}
+job_unlock() { rm -f "$STATE/$JOB.lock/pid"; rmdir "$STATE/$JOB.lock" 2>/dev/null; return 0; }
+
+CHILD=""
+JOB=""
+_job() {        # the background job itself (started by start_job; not for typing)
+  JOB="$1"; DATA="$2"; shift 2
+  STATE="$DATA/.tahoe"
+  cd "$DATA" || exit 1
+  if ! job_lock; then
+    say "[tahoe] $(date '+%H:%M:%S') another runner of this job is alive: this one ends"
+    exit 0
+  fi
+  printf '%s\n' "$$" > "$STATE/$JOB.pid"
+  trap '_job_end' TERM HUP INT
+  local b rc=0 label why
+  if [ -f "$STATE/$JOB.queued" ]; then
+    say "[tahoe] $(date '+%H:%M:%S') queued: waits until nothing else runs"
+    while :; do
+      # an error (ps failed, a broken helper) counts as 'still blocked': never start on a guess
+      if b="$(helper blockers --job "$JOB" --runner "$$" 2>/dev/null)" && [ -z "$b" ]; then
+        why="$(helper gate --job "$JOB" 2>/dev/null)"
+        rc=$?
+        [ "$rc" -eq 0 ] && break
+        if [ "$rc" -eq 3 ]; then          # what it waited for FAILED or was stopped: do not run on a half result
+          printf '%s\n' "$why" > "$STATE/$JOB.skipped"
+          printf '125 %s skipped\n' "$(date +%s)" > "$STATE/$JOB.exit"
+          rm -f "$STATE/$JOB.pid" "$STATE/$JOB.queued"
+          say "[tahoe] $(date '+%H:%M:%S') not started: it waited for $why"
+          job_unlock
+          exit 125
+        fi
+      fi
+      sleep 15 & CHILD=$!
+      wait "$CHILD"
+      CHILD=""
+    done
+    rc=0
+  fi
+  date +%s > "$STATE/$JOB.started"
+  rm -f "$STATE/$JOB.queued"
+  while [ $# -gt 0 ]; do
+    label="${1#@}"; shift
+    local argv=()
+    while [ $# -gt 0 ] && [ "$1" != "::" ]; do argv+=("$1"); shift; done
+    [ $# -gt 0 ] && shift
+    printf '%s\n' "$label" > "$STATE/$JOB.step"
+    say "[tahoe] $(date '+%H:%M:%S') $label: ${argv[*]}"
+    "${argv[@]}" &
+    CHILD=$!
+    wait "$CHILD"
+    rc=$?
+    CHILD=""
+    [ "$rc" -eq 0 ] || break
+  done
+  printf '%s %s\n' "$rc" "$(date +%s)" > "$STATE/$JOB.exit"
+  rm -f "$STATE/$JOB.pid"
+  job_unlock
+  say "[tahoe] $(date '+%H:%M:%S') finished (exit code $rc)"
+  exit "$rc"
+}
+
+_job_end() {    # TERM / HUP / INT: stop the step that runs and record that (queued: 'cancelled')
+  trap '' TERM HUP INT
+  local how=stopped
+  [ -f "$STATE/$JOB.queued" ] && how=cancelled
+  [ -n "$CHILD" ] && kill -TERM "$CHILD" 2>/dev/null
+  printf '143 %s %s\n' "$(date +%s)" "$how" > "$STATE/$JOB.exit"
+  rm -f "$STATE/$JOB.pid" "$STATE/$JOB.queued"
+  job_unlock
+  say "[tahoe] $(date '+%H:%M:%S') $how"
+  exit 143
+}
+
+# run_check NAME LABEL cmd...: a script's quick 'check' in the foreground; shows only its FAIL lines (and the
+# warnings that matter before computing)
+NOTES_SEEN=""
+run_check() {
+  local name="$1" label="$2" out rc tty=0 err notes line bad
+  shift 2
+  out="$STATE/$name.check.txt"
+  [ -t 1 ] && tty=1
+  [ "$tty" = 1 ] && printf 'Checking %s (up to a minute) ...\r' "$label"
+  ( cd "$DATA" && "$@" ) >"$out" 2>&1
+  rc=$?
+  [ "$tty" = 1 ] && printf '%-70s\r' ""
+  if [ "$rc" -ne 0 ]; then
+    if grep -q '^\[FAIL\]' "$out"; then
+      say "The check of $label found problems:"
+      err="$(grep '^\[FAIL\]' "$out")"
+      printf '%s\n' "${err//"$HOME"\//\~/}" | sed "s/^/$TAB/" | wrap
+    else
+      say "The check of $label stopped with an error:"
+      err="$(grep -i 'error' "$out" | tail -n 2)"
+      [ -n "$err" ] || err="$(grep -v '^[[:space:]]*$' "$out" | tail -n 3)"
+      printf '%s\n' "${err//"$HOME"\//\~/}" | sed "s/^/$TAB/" | wrap
+    fi
+    bad="$(sed -n 's/.*error: unrecognized arguments: //p' "$out" | head -n 1)"
+    if [ -n "$bad" ] && [ "$AGAIN" = run ]; then
+      say "('$ME run' gives its options to both scripts, and $(script_of "$name") does not take $bad:" \
+        "give such an option to one script, with '$ME atlas ...' or '$ME panel ...'.)" | wrap
+    fi
+    say "Nothing was started. Fix that, then type '$ME $AGAIN' again."
+    say "(The whole check: $(tildify "$out"))"
+    return 1
+  fi
+  notes="$(grep '^\[warn\]' "$out" | grep -v -i -E 'agent|api key|sandbox|claude' | sed "s/^\[warn\] /${TAB}note: /")"
+  while IFS= read -r line; do               # each note once per command (the atlas and panel checks share some)
+    [ -n "$line" ] || continue
+    case "$line" in                         # a cloud SSD often reports as a hard drive: say so, and what to do
+      *"seem to sit on a hard drive"*)
+        line="${TAB}note: the disk reports as a hard drive (cloud SSDs often do). Only if the run is slow:"
+        line="$line $ME stop, then $ME $AGAIN --workers 2" ;;
+    esac
+    case "$NOTES_SEEN" in *"|$line|"*) continue ;; esac
+    NOTES_SEEN="$NOTES_SEEN|$line|"
+    say "$line" | wrap
+  done <<NOTES
+$notes
+NOTES
+  return 0
+}
+
+script_of() { case "$1" in atlas) printf 'tahoe_atlas.py' ;; panel) printf 'tahoe_gene_panel.py' ;; mtap) printf 'tahoe_mtap_gankyrin.py' ;; esac; }
+
+foreground() {  # a quick command of a script, in the data folder
+  local job="$1"; shift
+  need_data || return 1
+  need_packages || return 1
+  ( cd "$DATA" && "$PY" "$REPO/$(script_of "$job")" "$@" )
+}
+
+took_words() {  # how long a run takes, for 'Started: ...'
+  local t
+  t="$(fact "$1_took")"
+  if [ -n "$t" ]; then printf 'the last full run here took %s min' "$t"
+  elif [ "$1" = atlas ]; then printf '20 min to 1.5 h, depending on the machine'
+  else printf "'%s status' estimates it after a minute" "$ME"
+  fi
+}
+
+atlas_note() {  # a gene panel that runs before the atlas is done writes briefs without the atlas look-ups
+  [ "$(fact atlas_ready)" = 1 ] && return 0
+  is_in "$(busy_now)" atlas && return 0
+  say "Note: the atlas is not done, so the gene panel's agent briefs leave out its look-ups."
+  say "(After the atlas: $ME panel analyze, a few minutes.)"
+}
+
+# ----------------------------------------------------------------------------- commands
+cmd_status() {
+  need_python || return 1
+  helper status
+}
+
+cmd_run() {
+  need_data || return 1
+  need_packages || return 1
+  lock_take || return 1
+  load_facts
+  local dl a p busy do_atlas=0 do_panel=0
+  dl="$(fact download)"
+  if [ "$dl" = running ]; then
+    say "The download is still running: type '$ME run' when it has finished ('$ME status' shows it)."
+    return 1
+  fi
+  if [ "$(fact atlas_ready)" != 1 ] && [ "$dl" != "done" ]; then
+    say "Only $(fact download_have) of $(fact download_expected) expression files are here."
+    say "Next: $ME download   (it resumes; then: $ME run)"
+    return 1
+  fi
+  a="$(fact atlas)"; p="$(fact panel)"
+  if [ "$a" = running ] || [ "$a" = queued ]; then say "The atlas is already $a$(by_hand atlas): not started again."
+  elif [ "$(fact atlas_ready)" = 1 ]; then say "The atlas is already done."
+  else do_atlas=1
+  fi
+  if [ "$p" = running ] || [ "$p" = queued ]; then say "The gene panel is already $p$(by_hand panel)."
+  elif [ "$(fact panel_ready)" = 1 ]; then say "The gene panel is already done."
+  else do_panel=1
+  fi
+  if [ "$do_atlas$do_panel" = 00 ]; then
+    if [ -z "$(busy_now)" ]; then say "Nothing to run. Next: $(helper next)"; else hint_watch; fi
+    return 0
+  fi
+  # both checks before anything starts: an option one script does not take must not leave half a start
+  if [ "$do_atlas" = 1 ]; then
+    run_check atlas "the atlas setup" "$PY" "$REPO/tahoe_atlas.py" check --data "$DATA" --dry-run "$@" || return 1
+  fi
+  if [ "$do_panel" = 1 ]; then
+    run_check panel "the gene panel setup" "$PY" "$REPO/tahoe_gene_panel.py" check --data "$DATA" "$@" || return 1
+  fi
+  if [ "$do_atlas" = 1 ]; then
+    busy="$(busy_now)"
+    if [ -n "$busy" ]; then
+      AFTER="$busy" start_job atlas 1 "compute" @compute "$PY" "$REPO/tahoe_atlas.py" compute --data "$DATA" "$@" ||
+        return 1
+      say "Queued: the atlas starts by itself when $(names_of "$busy") finishes."
+    else
+      start_job atlas 0 "compute" @compute "$PY" "$REPO/tahoe_atlas.py" compute --data "$DATA" "$@" || return 1
+      say "Started: the atlas ($(took_words atlas))."
+    fi
+    load_facts
+  fi
+  if [ "$do_panel" = 1 ]; then
+    busy="$(busy_now)"
+    if [ -n "$busy" ]; then
+      AFTER="$busy" start_job panel 1 "check all" @check "$PY" "$REPO/tahoe_gene_panel.py" check --data "$DATA" "$@" \
+        :: @all "$PY" "$REPO/tahoe_gene_panel.py" all --data "$DATA" "$@" || return 1
+      say "Queued: the gene panel starts by itself when $(names_of "$busy") finishes."
+    else
+      start_job panel 0 "all" @all "$PY" "$REPO/tahoe_gene_panel.py" all --data "$DATA" "$@" || return 1
+      say "Started: the gene panel ($(took_words panel))."
+      atlas_note
+    fi
+  fi
+  hint_watch
+}
+
+cmd_atlas() {
+  local sub=compute explicit=0 busy
+  case "${1:-}" in
+    check) shift; foreground atlas check --data "$DATA" "$@"; return $? ;;
+    bundle|lookup) sub="$1"; shift; foreground atlas "$sub" --data "$DATA" "$@"; return $? ;;
+    agents) shift; cmd_agents atlas "$@"; return $? ;;
+    compute|build|effects|angles) sub="$1"; explicit=1; shift ;;
+    all) say "'all' would also start the agents: type '$ME atlas', and later '$ME agents atlas'."; return 2 ;;
+  esac
+  need_data || return 1
+  need_packages || return 1
+  lock_take || return 1
+  load_facts
+  case "$(fact atlas)" in
+    running) say "The atlas is already running$(by_hand atlas): nothing new started."; hint_watch; return 0 ;;
+    queued) say "The atlas is already queued: it starts by itself."; hint_watch; return 0 ;;
+  esac
+  if [ "$explicit" = 0 ] && [ "$(fact atlas_ready)" = 1 ]; then
+    say "The atlas is already done. To compute it all again anyway: $ME atlas compute"
+    say "(that makes agent reports out of date). Next: $(helper next)"
+    return 0
+  fi
+  run_check atlas "the atlas setup" "$PY" "$REPO/tahoe_atlas.py" check --data "$DATA" --dry-run "$@" || return 1
+  busy="$(busy_now)"
+  if [ -n "$busy" ]; then
+    AFTER="$busy" start_job atlas 1 "$sub" "@$sub" "$PY" "$REPO/tahoe_atlas.py" "$sub" --data "$DATA" "$@" || return 1
+    say "Queued: the atlas ($sub) starts by itself when $(names_of "$busy") finishes."
+  else
+    start_job atlas 0 "$sub" "@$sub" "$PY" "$REPO/tahoe_atlas.py" "$sub" --data "$DATA" "$@" || return 1
+    if [ "$sub" = compute ]; then say "Started: the atlas ($(took_words atlas))."; else say "Started: the atlas ($sub)."; fi
+  fi
+  hint_watch
+}
+
+cmd_panel() {
+  local sub=all explicit=0 busy
+  case "${1:-}" in
+    check|bundle) sub="$1"; shift; foreground panel "$sub" --data "$DATA" "$@"; return $? ;;
+    agents) shift; cmd_agents panel "$@"; return $? ;;
+    extract|analyze|all) sub="$1"; explicit=1; shift ;;
+  esac
+  need_data || return 1
+  need_packages || return 1
+  lock_take || return 1
+  load_facts
+  case "$(fact panel)" in
+    running) say "The gene panel is already running$(by_hand panel): nothing new started."; hint_watch; return 0 ;;
+    queued) say "The gene panel is already queued: it starts by itself."; hint_watch; return 0 ;;
+  esac
+  if [ "$explicit" = 0 ] && [ "$(fact panel_ready)" = 1 ]; then
+    say "The gene panel is already done. To run it again anyway: $ME panel all   (or only the analysis:"
+    say "$ME panel analyze; either makes agent reports out of date). Next: $(helper next)"
+    return 0
+  fi
+  run_check panel "the gene panel setup" "$PY" "$REPO/tahoe_gene_panel.py" check --data "$DATA" "$@" || return 1
+  busy="$(busy_now)"
+  if [ -n "$busy" ]; then
+    AFTER="$busy" start_job panel 1 "check $sub" @check "$PY" "$REPO/tahoe_gene_panel.py" check --data "$DATA" "$@" \
+      :: "@$sub" "$PY" "$REPO/tahoe_gene_panel.py" "$sub" --data "$DATA" "$@" || return 1
+    say "Queued: the gene panel ($sub) starts by itself when $(names_of "$busy") finishes."
+  else
+    start_job panel 0 "$sub" "@$sub" "$PY" "$REPO/tahoe_gene_panel.py" "$sub" --data "$DATA" "$@" || return 1
+    if [ "$sub" = all ]; then say "Started: the gene panel ($(took_words panel))."; else say "Started: the gene panel ($sub)."; fi
+    [ "$sub" = extract ] || atlas_note
+  fi
+  hint_watch
+}
+
+cmd_mtap() {
+  local sub=all explicit=0 busy seq
+  case "${1:-}" in extract|analyze|all|coreg) sub="$1"; explicit=1; shift ;; esac
+  need_data || return 1
+  need_packages || return 1
+  lock_take || return 1
+  load_facts
+  case "$(fact mtap)" in
+    running|queued) say "The MTAP/Gankyrin trial is already $(fact mtap)."; hint_watch; return 0 ;;
+  esac
+  if [ "$explicit" = 0 ] && [ "$(fact mtap_ready)" = 1 ]; then
+    say "The MTAP/Gankyrin trial is already done ($(tildify "$DATA/mtap_gankyrin/results/summary.txt"))."
+    return 0
+  fi
+  busy="$(busy_now)"
+  if [ -z "$busy" ]; then
+    start_job mtap 0 "$sub" "@$sub" "$PY" "$REPO/tahoe_mtap_gankyrin.py" "$sub" --data "$DATA" "$@" || return 1
+    say "Started: the MTAP/Gankyrin trial ($sub)."
+  elif [ "$(fact panel)" = queued ]; then          # it must finish before the panel's analysis: go first
+    seq=$(( $(fact panel_seq) - 1 ))
+    SEQ="$seq" AFTER="$(fact running)" start_job mtap 1 "$sub" "@$sub" "$PY" "$REPO/tahoe_mtap_gankyrin.py" "$sub" \
+      --data "$DATA" "$@" || return 1
+    printf ' mtap\n' >> "$STATE/panel.after"     # the panel waits for it: not started if the trial FAILS
+    say "Queued: the MTAP/Gankyrin trial starts when $(names_of "$(fact running)") finishes, before the"
+    say "gene panel (so that the panel compares with it)."
+  else
+    AFTER="$busy" start_job mtap 1 "$sub" "@$sub" "$PY" "$REPO/tahoe_mtap_gankyrin.py" "$sub" --data "$DATA" "$@" ||
+      return 1
+    say "Queued: the MTAP/Gankyrin trial starts by itself when $(names_of "$busy") finishes."
+    if is_in "$busy" panel; then
+      say "The gene panel runs first, so it will not compare with the trial: when both are done, type"
+      say "'$ME panel analyze' (minutes) to add the comparison."
+    fi
+  fi
+  if [ "$(fact panel_ready)" = 1 ] && ! is_in "$busy" panel; then
+    say "When it has finished, type '$ME panel analyze' (minutes) so the gene panel compares with it."
+  fi
+  hint_watch
+}
+
+cmd_log() {
+  local which="${1:-}" line job file old=0
+  case "$which" in
+    ""|atlas|panel|agents|download|mtap) ;;
+    *) say "Which log? $ME log atlas | panel | agents | download | mtap   (none: the one running now)"; return 2 ;;
+  esac
+  need_data || return 1
+  line="$(helper logfile --job "$which")"
+  job="${line%% *}"; file="${line#* }"
+  load_facts
+  if is_in "$(fact queued)" "$job"; then
+    [ -e "$file" ] && old=1
+    say "$(cap "$(name_of "$job")") is queued: waiting for it to start (its log will appear here)."
+    [ "$old" = 1 ] && say "(The lines below are from its last run, until it starts.)"
+  elif [ ! -e "$file" ]; then
+    if [ "$job" = download ] && [ "$(fact download)" = running ]; then
+      say "The download was started by hand: its output goes to the window it was started from (no log here)."
+      say "'$ME status' shows how far it is."
+    else
+      say "No log yet for $(name_of "$job"): it has not run. ('$ME status' shows what to type.)"
+    fi
+    return 0
+  fi
+  say "Ctrl-C stops watching, not the run.   ($(tildify "$file"))"
+  exec tail -n 25 -F "$file" 2>/dev/null
+}
+
+scp_line() {    # the one line to type on the user's own computer to download $1
+  local file="$1" client cport host port rel user
+  read -r client cport host port <<< "${SSH_CONNECTION:-}"
+  : "$client" "$cport"
+  user="${USER:-$(id -un)}"
+  if [ -z "${host:-}" ]; then
+    say "It is on this computer: $file"
+    return 0
+  fi
+  case "$file" in "$HOME"/*) rel="${file#"$HOME"/}" ;; *) rel="$file" ;; esac
+  case "$rel" in *" "*) rel="'$rel'" ;; esac
+  case "$host" in *:*) host="[$host]" ;; esac
+  say "On your own computer (a terminal there, not this SSH window), type:"
+  case "$host" in
+    10.*|192.168.*|172.1[6-9].*|172.2[0-9].*|172.3[01].*|100.6[4-9].*|100.[7-9][0-9].*|100.1[01][0-9].*|100.12[0-7].*|\
+    fd*|fc*|"[fd"*|"[fc"*)                     # a private address (most clouds): the user's own address works
+      say "${TAB}scp $user@SERVER:$rel ."
+      say "(SERVER = the address you type after ssh: in 'ssh $user@1.2.3.4' it is 1.2.3.4.)" ;;
+    *)
+      if [ "${port:-22}" = 22 ]; then say "${TAB}scp $user@$host:$rel ."; else say "${TAB}scp -P $port $user@$host:$rel ."; fi ;;
+  esac
+  say "(If your ssh command has -i keyfile, add the same -i keyfile after scp.)"
+}
+
+cmd_bundle() {
+  need_data || return 1
+  need_packages || return 1
+  load_facts
+  local files=() desc="" out txt what job sub dir zip size have="" busy="" never=""
+  if is_in "$(fact running)" agents || is_in "$(fact queued)" agents; then
+    say "The agents are running: they remake the bundles themselves at the end."
+    say "Type '$ME bundle' when '$ME status' says they are done." | wrap
+    return 1
+  fi
+  for job in atlas panel; do
+    if [ "$job" = atlas ]; then dir="$DATA/atlas"; zip="$dir/atlas_bundle.zip"; sub="effects"
+    else dir="$DATA/gene_panel"; zip="$dir/gene_panel_bundle.zip"; sub="results"; fi
+    if is_in "$(fact running)" "$job" || is_in "$(fact queued)" "$job"; then busy="${busy:+$busy }$job"; continue; fi
+    [ -d "$dir/$sub" ] || { never="${never:+$never }$job"; continue; }
+    txt="$STATE/bundle.$job.txt"
+    ( cd "$DATA" && "$PY" "$REPO/$(script_of "$job")" bundle --data "$DATA" ) >"$txt" 2>&1
+    what="$(sed -n 's/.*Bundled \(.*\) -> .*/\1/p' "$txt" | tail -n 1)"
+    if [ -n "$what" ] && [ -f "$zip" ]; then
+      files+=("$zip")
+      have="${have:+$have }$job"
+      desc="${desc:+$desc and }$(basename "$zip") ($what)"
+    else
+      say "$(cap "$(name_of "$job")"): no bundle ($(grep -v '^[[:space:]]*$' "$txt" | tail -n 1 |
+        sed 's/^\[[0-9:]*\] //'))" | wrap
+      never="${never:+$never }$job"
+    fi
+  done
+  if [ ${#files[@]} -eq 0 ]; then
+    if [ -n "$busy" ]; then
+      say "Nothing to bundle yet: $(names_of "$busy") $(is_are "$busy") still running. ('$ME status' shows how far.)" | wrap
+    else
+      say "Nothing to bundle yet: neither the atlas nor the gene panel has finished. Next: $(helper next)"
+    fi
+    return 1
+  fi
+  out="$DATA/tahoe_bundles.zip"
+  size="$("$PY" "$HELPER" zip "$out" "${files[@]}")" || { say "Could not write $(tildify "$out")."; return 1; }
+  say "One file: $(tildify "$out") ($size)"
+  say "${TAB}holding $desc" | wrap
+  if [ -n "$busy" ]; then           # half a zip: say so, and do not hand out a download line for it
+    say "Only $(names_of "$have") bundle is in it: $(names_of "$busy") $(is_are "$busy") still running." | wrap
+    say "Type '$ME bundle' again when '$ME status' says it is done." | wrap
+    return 0
+  fi
+  scp_line "$out"
+  if [ -z "$never" ]; then
+    say "Then upload tahoe_bundles.zip to Claude (it holds both bundles)."
+  else
+    say "Then upload tahoe_bundles.zip to Claude ($(names_of "$have") bundle only: $(names_of "$never") has not run yet)." | wrap
+  fi
+}
+
+agent_auth_set() {
+  [ -n "${ANTHROPIC_API_KEY:-}${ANTHROPIC_AUTH_TOKEN:-}${CLAUDE_CODE_OAUTH_TOKEN:-}${CLAUDE_CODE_USE_BEDROCK:-}" ] ||
+    [ -n "${CLAUDE_CODE_USE_VERTEX:-}" ]
+}
+
+cmd_agents() {
+  local which=both a dry=0 angles=0 parts="" busy key="" budget=5 prev="" n_agents=0 n part script groups=()
+  local typed=0 reason cap_total span
+  case "${1:-}" in atlas|panel|both) which="$1"; shift ;; esac
+  for a in "$@"; do
+    case "$a" in --dry-run) dry=1 ;; --angles|--angles=*) angles=1 ;; --budget=*) budget="${a#--budget=}" ;; esac
+    [ "$prev" = --budget ] && budget="$a"
+    prev="$a"
+  done
+  if [ "$which" = both ] && [ "$angles" = 1 ]; then
+    say "--angles names the agents of one run: type '$ME agents atlas --angles ...' or '$ME agents panel --angles ...'." | wrap
+    return 2
+  fi
+  need_data || return 1
+  need_packages || return 1
+  [ "$dry" = 1 ] || lock_take || return 1
+  load_facts
+  busy="$(busy_now)"
+  if is_in "$busy" agents; then
+    say "The agents are already running. Watch: $ME log agents"
+    return 0
+  fi
+  if [ -n "$busy" ]; then
+    say "$(cap "$(names_of "$busy")") $(is_are "$busy") still running:" \
+      "start the agents afterwards ('$ME status' shows it)." | wrap
+    return 1
+  fi
+  for part in atlas panel; do
+    [ "$which" = both ] || [ "$which" = "$part" ] || continue
+    if [ "$(fact "${part}_ready")" = 1 ]; then
+      parts="${parts:+$parts }$part"
+    elif [ "$which" = "$part" ]; then
+      say "$(cap "$(name_of "$part")") has not been computed yet: type '$ME $part' first."
+      return 1
+    fi
+  done
+  if [ -z "$parts" ]; then
+    say "Nothing to run the agents on yet. Next: $(helper next)"
+    return 1
+  fi
+  if [ "$which" = both ] && [ "$parts" != "atlas panel" ]; then
+    say "Note: $(name_of "$([ "$parts" = atlas ] && printf panel || printf atlas)") has not run yet," \
+      "so only the $parts agents run now." | wrap
+  fi
+  if [ "$dry" = 1 ]; then
+    for part in $parts; do
+      script="$(script_of "$part")"
+      ( cd "$DATA" && "$PY" "$REPO/$script" agents --data "$DATA" "$@" ) >"$STATE/agents.dry.$part.txt" 2>&1 || {
+        say "The $part dry run failed:"; grep -v '^[[:space:]]*$' "$STATE/agents.dry.$part.txt" | tail -n 3 | sed "s/^/$TAB/"
+        return 1; }
+      n="$(sed -n 's/.*Dry run: \([0-9]*\) agents planned.*Cost cap: \([^(]*[^( ]\) *(.*/\1 agents + overview, cost cap \2/p' \
+        "$STATE/agents.dry.$part.txt" | tail -n 1)"
+      say "Dry run, $part: ${n:-done}"
+      say "${TAB}(the prompts: agent_prompt.txt in each agent's folder; nothing was called)"
+    done
+    say "To run them for real: $ME agents$([ "$which" = both ] || printf ' %s' "$which")"
+    return 0
+  fi
+  if ! "$PY" -c 'import claude_agent_sdk' >/dev/null 2>&1; then
+    say "Installing the agent SDK (claude-agent-sdk) into $(tildify "$VENV") (one time, about a minute) ..."
+    if [ "$HAVE_VENV" != 1 ] || ! "$PY" -m pip install -q --disable-pip-version-check claude-agent-sdk; then
+      say "That did not work. Type '$ME setup' first, then '$ME agents' again."
+      return 1
+    fi
+  fi
+  if ! agent_auth_set; then
+    if [ -t 0 ]; then
+      printf 'Paste your Anthropic API key (sk-ant-..., from console.anthropic.com; not shown, not saved), then Enter: '
+      IFS= read -rs key
+      printf '\n'
+      if [ -z "$key" ]; then say "No key given: nothing started."; return 1; fi
+      export ANTHROPIC_API_KEY="$key"           # only for this command and the job it starts; never written
+      key=""
+      typed=1
+    else
+      say "No API key, and no keyboard to type one in. Set it first:"
+      say "${TAB}export ANTHROPIC_API_KEY=sk-ant-...   then: $ME agents"
+      return 1
+    fi
+  fi
+  [ -t 1 ] && printf 'Testing the key with one tiny agent call (about one cent) ...\r'
+  ( cd "$DATA" && "$PY" "$REPO/tahoe_atlas.py" check --data "$DATA" "$@" ) >"$STATE/agents.check.txt" 2>&1
+  [ -t 1 ] && printf '%-70s\r' ""
+  if ! grep -q '^\[ok  \] live agent test' "$STATE/agents.check.txt"; then
+    reason="$(sed -n 's/^\[[a-zA-Z ]*\] live agent test: //p' "$STATE/agents.check.txt" | tail -n 1)"
+    case "$reason" in
+      *[Ii]nvalid*[Aa][Pp][Ii]*[Kk]ey*|*authentication*|*401*|*[Uu]nauthorized*)
+        if [ "$typed" = 1 ]; then
+          say "The key did not work (Invalid API key): no agent was started."
+          say "Type '$ME agents$([ "$which" = both ] || printf ' %s' "$which")' and paste it again (console.anthropic.com shows your keys)." | wrap
+        else
+          say "The key in the environment did not work (Invalid API key): no agent was started."
+          say "Set the right one (export ANTHROPIC_API_KEY=sk-ant-...), then: $ME agents"
+        fi ;;
+      "")
+        say "The test call could not be made: no agent was started."
+        grep -E '^\[(FAIL|warn)\]' "$STATE/agents.check.txt" | grep -i -E 'agent|key|claude' | tail -n 2 |
+          sed "s/^/$TAB/" | wrap
+        say "Details: $(tildify "$STATE/agents.check.txt"). Then: $ME agents" ;;
+      *)
+        say "The test call did not work ($(printf '%s' "$reason" | cut -c 1-90)): no agent was started." | wrap
+        say "Check the network and the key, then: $ME agents   (details: $(tildify "$STATE/agents.check.txt"))" | wrap ;;
+    esac
+    return 1
+  fi
+  for part in $parts; do
+    script="$(script_of "$part")"
+    [ ${#groups[@]} -gt 0 ] && groups+=("::")
+    groups+=("@$part" "$PY" "$REPO/$script" agents --data "$DATA" "$@")
+    n="$(find "$DATA/$([ "$part" = atlas ] && printf atlas || printf gene_panel)/angles" -name brief.md 2>/dev/null | wc -l)"
+    n_agents=$(( n_agents + n + 1 ))
+  done
+  start_job agents 0 "$parts" "${groups[@]}" || return 1
+  case "$parts" in "atlas panel") span="atlas, then gene panel; about 1-2 h" ;; atlas) span="about 30-90 min" ;;
+    *) span="about 20-45 min" ;; esac
+  cap_total="$(awk -v n="$n_agents" -v b="$budget" 'BEGIN { x = n * b; if (x == int(x)) printf "%d", x; else printf "%.2f", x }')"
+  say "Started: the agents ($span)."
+  say "Cost cap: \$$cap_total ($n_agents agents x \$$budget); usually far less."
+  hint_watch
+}
+
+STOP_RUN=""; STOP_Q=""; STOP_WHAT=""
+plan_stop() {   # what 'tahoe stop $1' would do, from the facts: STOP_RUN, STOP_Q, STOP_WHAT; 1 = nothing to do
+  local which="$1" running queued j
+  running="$(fact running)"; queued="$(fact queued)"
+  STOP_RUN=""; STOP_Q=""; STOP_WHAT=""
+  if [ -z "$running$queued" ]; then say "Nothing is running."; return 1; fi
+  case "$which" in
+    ""|all) STOP_RUN="$running"; STOP_Q="$queued" ;;
+    *)
+      if is_in "$running" "$which"; then STOP_RUN="$which"; STOP_Q="$queued"   # the queued ones would start at once
+      elif is_in "$queued" "$which"; then STOP_Q="$which"
+      else say "$(cap "$(name_of "$which")") is not running. ('$ME status' shows what runs.)"; return 1
+      fi ;;
+  esac
+  for j in $STOP_RUN; do STOP_WHAT="${STOP_WHAT:+$STOP_WHAT and }stop $(name_of "$j")$(by_hand "$j")"; done
+  [ -n "$STOP_Q" ] && STOP_WHAT="${STOP_WHAT:+$STOP_WHAT and }cancel $(names_of "$STOP_Q") (queued)"
+  return 0
+}
+
+ask_yes() {     # ask_yes QUESTION: y/N from the keyboard or a pipe
+  local ans
+  printf '%s [y/N] ' "$1"
+  read -r ans || ans=""
+  [ -t 0 ] || printf '%s\n' "$ans"                # answer piped in: show it, so the screen reads normally
+  case "$ans" in y|Y|yes|YES|Yes) return 0 ;; esac
+  return 1
+}
+
+cmd_stop() {
+  local which="${1:-}" j before
+  case "$which" in
+    ""|all|atlas|panel|agents|download|mtap) ;;
+    *) say "Stop what? $ME stop atlas | panel | agents | download | mtap | all"; return 2 ;;
+  esac
+  need_data || return 1
+  lock_take || return 1
+  load_facts
+  plan_stop "$which" || return 0
+  ask_yes "Really $STOP_WHAT? Finished work is kept and reused next time." || { say "Nothing stopped."; return 0; }
+  before="$STOP_WHAT"
+  load_facts                                       # it may have changed while the question waited
+  plan_stop "$which" || return 0
+  if [ "$STOP_WHAT" != "$before" ]; then
+    say "That changed in the meantime."
+    ask_yes "Really $STOP_WHAT?" || { say "Nothing stopped."; return 0; }
+  fi
+  for j in $STOP_Q; do kill_job "$j"; done        # the queued ones first: nothing may start in between
+  for j in $STOP_RUN; do kill_job "$j"; done
+  if [ -z "$STOP_RUN" ]; then
+    say "To queue it again: $ME $STOP_Q"
+  else
+    case "$STOP_RUN" in
+      atlas|panel) say "To start again: $ME run   (finished work is reused)" ;;
+      *) say "To start again: $ME $STOP_RUN   (finished work is reused)" ;;
+    esac
+  fi
+}
+
+kill_job() {    # TERM, then KILL after 15 s: the job's runner, its script processes (also ones started by hand)
+  local job="$1" kind pid rest pids="" logs="" i=0 left="" queued_only=1
+  while read -r kind pid rest; do
+    [ -n "${pid:-}" ] || continue
+    pids="$pids $pid"
+    [ "$kind" = runner ] && [ "$rest" != queued ] && queued_only=0
+    [ "$kind" = proc ] && queued_only=0
+    [ "$kind" = proc ] && [ -n "$rest" ] && logs="$logs$rest
+"
+  done <<EOF
+$(helper stopinfo --job "$job")
+EOF
+  [ -n "$pids" ] || { say "$(cap "$(name_of "$job")") had already ended."; return 0; }
+  for pid in $pids; do kill -TERM "$pid" 2>/dev/null; done
+  while [ "$i" -lt 30 ]; do
+    left=""
+    for pid in $pids; do kill -0 "$pid" 2>/dev/null && left="$left $pid"; done
+    [ -z "$left" ] && break
+    sleep 0.5; i=$((i + 1))
+  done
+  for pid in $left; do kill -KILL "$pid" 2>/dev/null; done     # only the ones still there (no reused pids)
+  printf '%s' "$logs" | while IFS= read -r f; do
+    [ -f "$f" ] && printf '[%s] STOPPED by tahoe stop\n' "$(date '+%H:%M:%S')" >> "$f"
+  done
+  if [ -f "$STATE/$job.pid" ] || { [ -f "$STATE/$job.what" ] && [ ! -f "$STATE/$job.exit" ]; }; then
+    printf '143 %s %s\n' "$(date +%s)" "$([ "$queued_only" = 1 ] && printf cancelled || printf stopped)" \
+      > "$STATE/$job.exit"
+    rm -f "$STATE/$job.pid" "$STATE/$job.queued"
+  fi
+  if [ "$queued_only" = 1 ]; then say "Cancelled: $(name_of "$job") (queued)."; else say "Stopped: $(name_of "$job")."; fi
+}
+
+cmd_setup() {
+  local py3 link="$HOME/.local/bin/tahoe" rc_file
+  py3="$(command -v python3 2>/dev/null)" || { say "python3 not found. Type: sudo apt-get install -y python3 python3-venv"; return 1; }
+  if [ -x "$VENV/bin/python" ] && "$VENV/bin/python" -c 'import sys' >/dev/null 2>&1; then
+    say "Python environment: $(tildify "$VENV") (exists)"
+  else
+    if [ -e "$VENV" ] && [ ! -f "$VENV/pyvenv.cfg" ] && [ -n "$(ls -A "$VENV" 2>/dev/null)" ]; then
+      say "$(tildify "$VENV") exists and is not a Python environment: nothing changed there."
+      say "Choose another folder, e.g.  export TAHOE_VENV=~/tahoe-venv   then: $ME setup"
+      return 1
+    fi
+    say "Creating the Python environment $(tildify "$VENV") ..."
+    if [ -f "$VENV/pyvenv.cfg" ]; then         # a broken environment (e.g. Python was upgraded): rebuild it
+      "$py3" -m venv --clear "$VENV" >/dev/null 2>&1
+    else
+      "$py3" -m venv "$VENV" >/dev/null 2>&1
+    fi
+    if [ ! -x "$VENV/bin/python" ] || ! "$VENV/bin/python" -m pip --version >/dev/null 2>&1; then
+      say "Could not create it. Type:  sudo apt-get install -y python3-venv   then: $ME setup"
+      return 1
+    fi
+  fi
+  "$VENV/bin/python" -c 'import sys; sys.exit(sys.version_info < (3, 10))' ||
+    say "Note: $("$VENV/bin/python" -V 2>&1) is older than 3.10: the computation works, the agents need 3.10+."
+  say "Installing the packages (a minute or two; packages already there are kept as they are) ..."
+  if ! "$VENV/bin/python" -m pip install -q --disable-pip-version-check numpy pandas pyarrow scipy psutil duckdb \
+      huggingface_hub hf_xet 'brotli>=1.2.0'; then
+    say "The package install failed (see above). Check the internet connection, then '$ME setup' again."
+    return 1
+  fi
+  if "$VENV/bin/python" -m pip show brotlicffi >/dev/null 2>&1; then      # an old one crashes the download
+    "$VENV/bin/python" -m pip install -q --disable-pip-version-check -U brotlicffi
+  fi
+  if ! { mkdir -p "$HOME/.local/bin" && ln -sf "$SELF" "$link"; }; then
+    say "Could not link $(tildify "$link")."
+    return 1
+  fi
+  say "Linked: $(tildify "$link") -> $(tildify "$SELF")"
+  case ":$PATH:" in
+    *":$HOME/.local/bin:"*) say "Done. Next: tahoe" ;;
+    *)
+      rc_file="$HOME/.bashrc"
+      case "${SHELL:-}" in */zsh) rc_file="$HOME/.zshrc" ;; esac
+      if ! grep -q '\.local/bin' "$HOME/.profile" "$rc_file" 2>/dev/null; then
+        # shellcheck disable=SC2016  # written as is: the shell expands it when it reads the file
+        printf '\n# the tahoe command (added by tahoe setup)\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$rc_file"
+        say "Added ~/.local/bin to PATH in $(tildify "$rc_file") (new windows get it)."
+      fi
+      say "Done. In this window, type once:  export PATH=\"\$HOME/.local/bin:\$PATH\"   then: tahoe" ;;
+  esac
+}
+
+cmd_download() {
+  local busy again=0
+  [ "${1:-}" = again ] && { again=1; shift; }
+  need_python || return 1
+  if [ "$HAVE_VENV" != 1 ]; then say "First: $ME setup   (the download uses its Python environment)"; return 1; fi
+  mkdir -p "$DATA" "$STATE" || { say "Cannot create $(tildify "$DATA")."; return 1; }
+  lock_take || return 1
+  load_facts
+  if [ "$(fact download)" = running ]; then say "The download is already running. Watch: $ME log download"; return 0; fi
+  busy="$(busy_now)"
+  if [ -n "$busy" ]; then say "$(cap "$(names_of "$busy")") $(is_are "$busy") running: download afterwards."; return 1; fi
+  if [ "$(fact download)" = "done" ] && [ "$again" = 0 ]; then
+    say "The download is complete ($(fact download_have) of $(fact download_expected) expression files). Nothing started."
+    say "(To check every file again: $ME download again)"
+    return 0
+  fi
+  fact download_have > "$STATE/download.startcount"
+  start_job download 0 "download" @download env PATH="$VENV/bin:$PATH" bash "$REPO/00_download_tahoe.sh" "$DATA" ||
+    return 1
+  say "Started: the download into $(tildify "$DATA") (about 430 GB; hours; it resumes if interrupted)."
+  hint_watch
+}
+
+cmd_test() {
+  local wd log rc
+  need_python || return 1
+  wd="$(absolute "${TAHOE_SMOKE_DIR:-$HOME/tahoe_smoke}")"
+  mkdir -p "$wd" || return 1
+  log="$wd/smoke.log"
+  say "Running the smoke test on synthetic data (about 3 minutes; log: $(tildify "$log")) ..."
+  "$PY" "$REPO/tests/run_smoke.py" --workdir "$wd" "$@" >"$log" 2>&1
+  rc=$?
+  "$PY" "$HELPER" smoke "$wd/smoke_results.json" "$rc" "$log"
+  return "$rc"
+}
+
+busy_any() {    # long runs going on, also when tahoe_status.py cannot tell (its job files and the process list)
+  local f pid out=""
+  if [ -d "$DATA" ] && FACTS="$(helper facts 2>/dev/null)"; then busy_now; return 0; fi
+  for f in "$STATE"/*.pid; do
+    [ -f "$f" ] || continue
+    pid="$(cat "$f" 2>/dev/null)"
+    pid_is "$pid" "_job " && out="$out $(basename "$f" .pid)"
+  done
+  printf '%s' "$out" | xargs
+}
+
+cmd_update() {
+  local old new out rc files n busy
+  command -v git >/dev/null 2>&1 || { say "git is not installed: sudo apt-get install -y git"; return 1; }
+  old="$(git -C "$REPO" rev-parse HEAD 2>/dev/null)" || { say "$(tildify "$REPO") is not a git clone."; return 1; }
+  busy="$(busy_any)"
+  if [ -n "$busy" ]; then   # the scripts start worker processes that load the files anew: never swap them mid-run
+    say "$(cap "$(names_of "$busy")") $(is_are "$busy") running or queued: update when nothing runs ('$ME status' shows it)." | wrap
+    return 1
+  fi
+  out="$(git -C "$REPO" pull --ff-only 2>&1)"
+  rc=$?
+  if [ "$rc" -ne 0 ]; then
+    files="$(printf '%s\n' "$out" | sed -n 's/^[[:space:]][[:space:]]*\([^[:space:]].*\)$/\1/p' | xargs)"
+    if printf '%s' "$out" | grep -q 'would be overwritten'; then
+      say "Update failed: these files were changed here by hand: $files"
+      say "Next: git -C $(tildify "$REPO") stash   (puts those changes aside; 'git stash pop' brings them back), then: $ME update"
+    else
+      say "Update failed: $(printf '%s\n' "$out" | grep -i -E '^(error|fatal)' | head -n 1)"
+      say "(Check the internet connection; 'git -C $(tildify "$REPO") status' shows the state of the folder.)"
+    fi
+    return 1
+  fi
+  new="$(git -C "$REPO" rev-parse HEAD)"
+  if [ "$old" = "$new" ]; then say "Already up to date."; return 0; fi
+  files="$(git -C "$REPO" diff --name-only "$old" "$new")"
+  n="$(printf '%s\n' "$files" | grep -c .)"
+  say "Updated: $n file(s) changed ($(printf '%s\n' "$files" | head -n 6 | xargs | sed 's/ /, /g')$([ "$n" -gt 6 ] && printf ', ...'))." | wrap
+  return 0
+}
+
+cmd_help() {
+  if [ "$ME" != tahoe ]; then
+    say "(Not set up yet: type '$ME setup' once; until then, type '$ME' where this says 'tahoe'.)" | wrap
+  fi
+  cat <<EOF
+tahoe: one-line commands for Tahoe-100M   (data: $(tildify "$DATA"))
+  tahoe status      where things stand, and the command to type next (= tahoe)
+  tahoe run         atlas, then gene panel, in the background (safe to log out)
+  tahoe atlas       only the atlas
+  tahoe panel       only the gene panel (waits for a running atlas)
+  tahoe mtap        optional: the MTAP/Gankyrin trial (the panel compares)
+  tahoe log [job]   watch a log: atlas, panel, agents, download or mtap
+  tahoe bundle      both bundles in one zip, and the scp line to fetch it
+  tahoe agents      the Claude agents (asks for the API key; --dry-run: free)
+  tahoe stop [job]  stop a run (asks first; finished work is kept)
+  tahoe setup       one time: Python environment and the plain 'tahoe'
+  tahoe download    the dataset (430 GB; resumes)
+  tahoe test        3-minute test on synthetic data
+  tahoe update      the newest scripts (git pull)
+Options go to the script: tahoe atlas --workers 4, tahoe panel analyze
+EOF
+}
+
+# ----------------------------------------------------------------------------- main
+main() {
+  local cmd="${1:-}"
+  [ $# -gt 0 ] && shift
+  AGAIN="${cmd:-status}"
+  case "$cmd" in
+    "") cmd_status; say "('$ME help' lists the commands)" ;;
+    status|st) cmd_status "$@" ;;
+    run) cmd_run "$@" ;;
+    atlas) cmd_atlas "$@" ;;
+    panel|gene_panel|genepanel) AGAIN=panel; cmd_panel "$@" ;;
+    mtap) cmd_mtap "$@" ;;
+    log|logs) cmd_log "$@" ;;
+    bundle|bundles) AGAIN=bundle; cmd_bundle "$@" ;;
+    agents|agent) AGAIN=agents; cmd_agents "$@" ;;
+    stop) cmd_stop "$@" ;;
+    setup|install) cmd_setup "$@" ;;
+    download) cmd_download "$@" ;;
+    test) cmd_test "$@" ;;
+    update) cmd_update "$@" ;;
+    help|-h|--help) cmd_help ;;
+    _job) _job "$@" ;;
+    *) say "Unknown command '$cmd'. '$ME help' lists the commands."; return 2 ;;
+  esac
+}
+
+main "$@"
