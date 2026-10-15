@@ -1,0 +1,1646 @@
+#!/usr/bin/env python3
+"""
+tahoe_mtap_gankyrin.py
+MTAP and Gankyrin (PSMD10) in Tahoe-100M, rebuilt from the single-cell data with
+corrections for the technical artifacts found in the published pseudobulk table.
+
+Run it from the folder you downloaded Tahoe-100M into:
+
+    python3 tahoe_mtap_gankyrin.py all        # extract + analyze (start here)
+    python3 tahoe_mtap_gankyrin.py extract    # one pass over the ~95M cells (resumable)
+    python3 tahoe_mtap_gankyrin.py analyze    # corrected analyses from the extracted tables (minutes)
+    python3 tahoe_mtap_gankyrin.py coreg      # optional, heavy: genome-wide co-regulation (pseudobulk table)
+
+Quick trial on a few files first:   python3 tahoe_mtap_gankyrin.py all --limit-files 30
+Long run that survives logout:      nohup python3 tahoe_mtap_gankyrin.py all > mtap_gankyrin.log 2>&1 &
+
+Corrections built in (each one targets a problem found in the published DE table):
+  1. Plate baseline: every well is compared with the median of all drug wells on the same plate
+     for the same cell line, not with the plate's DMSO wells (one bad DMSO well shifted a whole plate).
+  2. Well position: the effect of each well position is estimated from the OTHER drugs that sat in
+     the same position on other plates (leave-drug-out median) and subtracted.
+  3. Calibrated statistics: each well's effect is scored against the spread of all other wells
+     (robust z), so well-to-well noise is part of the null. Cell lines in one well are not treated
+     as independent replicates.
+  4. Counting: cell lines are counted once per drug and dose, even if it was tested on two plates.
+
+Requires numpy, pandas, pyarrow (and duckdb for 'coreg').
+"""
+
+import argparse
+import glob
+import json
+import math
+import multiprocessing as mp
+import os
+import re
+import sys
+import time
+from collections import defaultdict
+
+import numpy as np
+import pandas as pd
+import pyarrow as pa
+import pyarrow.compute as pc
+import pyarrow.parquet as pq
+
+# ----------------------------------------------------------------------------- settings
+TARGET_GENES = ["MTAP", "PSMD10", "CDKN2A", "CDKN2B"]  # PSMD10 = Gankyrin; CDKN2A/B = 9p21 neighbours of MTAP
+EFFECT_GENES = ["MTAP", "PSMD10", "PROTEASOME"]          # get full drug-effect tables
+DMSO_PREFIX = "DMSO"            # DMSO_TF marks vehicle controls
+MIN_CELLS = 30                  # min cells of one cell line in one well to use its expression
+LFC_MIN = math.log2(1.2)        # min log2 fold change to count a cell line or call a drug (1.2x)
+Z_LINE = 2.0                    # per-cell-line z cutoff for counting a line as changed
+FDR_CUT = 0.10                  # FDR cutoff for calling a drug
+NULL_FRAC = 0.30                # MTAP-null fallback cut (fraction of the median line, all wells); see null_threshold
+MIN_LINE_CELLS = 200            # lines with fewer cells in total are not classified
+MIN_SLOT_WELLS = 3              # need >= this many other-drug wells to estimate a position effect
+MIN_BASEMEAN = 5                # coreg: ignore genes with lower baseMean in a test
+N_PCS = 3                       # coreg: broad shared responses (principal components) removed before correlating;
+                                # more can also remove real modules, so both raw and adjusted r are reported
+
+# Tirosh et al. 2016 cell-cycle genes (old and current HGNC names both listed)
+S_GENES = """MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP CENPU
+HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6
+EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8""".split()
+G2M_GENES = """HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3
+FAM64A PIMREG SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1
+JPT1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR
+CKAP5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA""".split()
+PROTEASOME_RE = re.compile(r"^(PSMA[1-7]|PSMB[1-7]|PSMC[1-6]|PSMD[1-9]|PSMD1[0-4])$")
+PROTEASOME_EXCLUDE = {"PSMD5", "PSMD9", "PSMD10"}  # assembly chaperones; PSMD10 is Gankyrin itself
+
+# drugs named in the earlier analyses, printed side by side in the summary
+WATCH = ["Pyridoxine", "HI-TOPK-032", "Docetaxel", "Calcium lactate", "Daptomycin", "XRK3F2",
+         "Lenalidomide", "Simotinib", "Ranolazine", "Afatinib", "Bentamapimod", "NG25",
+         "Darinaparsin", "Dinaciclib", "Harringtonine"]
+
+META_COLS = ["BARCODE_SUB_LIB_ID", "sample", "plate", "drug", "cell_line_id"]
+INDEX_VERSION = 2
+ROWS = "ABCDEFGH"
+
+
+def log(msg):
+    print(time.strftime("[%H:%M:%S] ") + str(msg), flush=True)
+
+
+# ============================================================================= file discovery
+def discover(data_dir, out_dir, refresh=False):
+    """Find every Tahoe table by its columns, not its file name. Cached in out_dir/file_index.json."""
+    os.makedirs(out_dir, exist_ok=True)
+    cache = os.path.join(out_dir, "file_index.json")
+    data_abs = os.path.abspath(data_dir)
+    if os.path.exists(cache) and not refresh:
+        with open(cache) as fh:
+            idx = json.load(fh)
+        if idx.get("data_dir") == data_abs and idx.get("expression") and idx.get("version") == INDEX_VERSION:
+            return idx
+    log("Indexing parquet files (one-time, reads only file footers) ...")
+    files = sorted(glob.glob(os.path.join(data_abs, "**", "*.parquet"), recursive=True))
+    out_abs = os.path.abspath(out_dir) + os.sep
+    idx = {"version": INDEX_VERSION, "data_dir": data_abs, "expression": [], "pseudobulk": [], "gene": [],
+           "sample": [], "cell_line": [], "drug": [], "per_cell_metadata": [], "other": []}
+    for f in files:
+        if os.path.abspath(f).startswith(out_abs):
+            continue
+        try:
+            names = set(pq.read_schema(f).names)
+        except Exception as e:  # noqa: BLE001
+            log(f"  skipping unreadable file {f}: {e}")
+            continue
+        if {"genes", "expressions", "sample", "cell_line_id"} <= names:
+            idx["expression"].append(f)
+        elif {"gene_name", "log2FoldChange", "drug", "plate"} <= names:
+            idx["pseudobulk"].append(f)
+        elif {"token_id", "gene_symbol"} <= names:
+            idx["gene"].append(f)
+        elif "BARCODE_SUB_LIB_ID" in names:          # obs_metadata: one row per cell, not per sample
+            idx["per_cell_metadata"].append(f)
+        elif {"sample", "drugname_drugconc"} <= names:
+            idx["sample"].append(f)
+        elif {"Cell_ID_Cellosaur", "Organ"} <= names:
+            idx["cell_line"].append(f)
+        elif "drug" in names and "targets" in names:
+            idx["drug"].append(f)
+        else:
+            idx["other"].append(f)
+    with open(cache, "w") as fh:
+        json.dump(idx, fh, indent=1)
+    log("  found: " + ", ".join(f"{k}={len(v)}" for k, v in idx.items() if isinstance(v, list)))
+    return idx
+
+
+def read_tables(files, columns=None):
+    if not files:
+        return None
+    dfs = []
+    for f in files:
+        cols = None
+        if columns is not None:
+            have = set(pq.read_schema(f).names)
+            cols = [c for c in columns if c in have]
+        dfs.append(pq.read_table(f, columns=cols).to_pandas())
+    return pd.concat(dfs, ignore_index=True)
+
+
+def to_text(v):
+    """Turn list-like / null metadata values into a plain string."""
+    if v is None:
+        return ""
+    if isinstance(v, float) and math.isnan(v):
+        return ""
+    if isinstance(v, (list, tuple, np.ndarray)):
+        return ", ".join(str(x) for x in v)
+    return str(v)
+
+
+# ============================================================================= extract
+def build_columns(gene_meta, extra_genes):
+    """Columns to extract per cell: target genes, then summed modules. Returns names, LUT, report."""
+    gm = gene_meta.dropna(subset=["token_id", "gene_symbol"]).copy()
+    gm["token_id"] = gm["token_id"].astype(np.int64)
+    gm["gene_symbol"] = gm["gene_symbol"].astype(str)
+    targets = []
+    for g in TARGET_GENES + list(extra_genes):
+        if g in targets:
+            continue
+        if (gm.gene_symbol == g).any():
+            targets.append(g)
+        else:
+            log(f"  WARNING: gene {g} not found in gene metadata, skipped")
+    target_set = set(targets)
+    syms = set(gm.gene_symbol)
+    modules = {
+        "PROTEASOME": sorted(s for s in syms if PROTEASOME_RE.match(s) and s not in PROTEASOME_EXCLUDE
+                             and s not in target_set),
+        "S_PHASE": sorted(s for s in set(S_GENES) & syms if s not in target_set),
+        "G2M_PHASE": sorted(s for s in set(G2M_GENES) & syms if s not in target_set),
+    }
+    cols = targets + [m for m in modules if modules[m]]
+    lut = np.full(int(gm.token_id.max()) + 2, -1, dtype=np.int16)
+    for k, name in enumerate(cols):
+        members = [name] if name in target_set else modules[name]
+        lut[gm.token_id[gm.gene_symbol.isin(members)].values] = k
+    lut[0] = -1
+    lut[-1] = -1  # sentinel for out-of-range tokens (np.take mode="clip")
+    report = {"targets": targets, "modules": modules}
+    return targets, cols, lut, report
+
+
+_W = {}
+
+
+def _init_worker(lut, cols, targets, batch_size):
+    _W.update(lut=lut, cols=cols, targets=targets, batch=batch_size)
+    try:
+        pa.set_cpu_count(1)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _process_batch(batch):
+    lut, cols = _W["lut"], _W["cols"]
+    n = batch.num_rows
+
+    def col(name):
+        return batch.column(batch.schema.get_field_index(name))
+
+    genes, expr = col("genes"), col("expressions")
+    lens = pc.fill_null(pc.list_value_length(genes), 0).to_numpy(zero_copy_only=False).astype(np.int64)
+    elens = pc.fill_null(pc.list_value_length(expr), 0).to_numpy(zero_copy_only=False).astype(np.int64)
+    if not np.array_equal(lens, elens):
+        raise ValueError("genes and expressions lists have different lengths")
+    vals = np.asarray(genes.flatten().to_numpy(zero_copy_only=False)).astype(np.int64, copy=False)
+    ex = np.array(expr.flatten().to_numpy(zero_copy_only=False), dtype=np.float32)  # writable copy
+    offsets = np.zeros(n + 1, dtype=np.int64)
+    np.cumsum(lens, out=offsets[1:])
+    first = offsets[:-1][lens > 0]          # first entry of each row is a marker token: ignore it
+    ex[first] = 0.0
+    csum = np.zeros(ex.size + 1, dtype=np.float64)
+    np.cumsum(ex, dtype=np.float64, out=csum[1:])
+    total = (csum[offsets[1:]] - csum[offsets[:-1]]).astype(np.float32)
+    idx = np.take(lut, vals, mode="clip")
+    idx[first] = -1
+    hit = np.flatnonzero(idx >= 0)
+    k = len(cols)
+    if hit.size:
+        rows = np.searchsorted(offsets, hit, side="right") - 1
+        acc = np.bincount(rows * k + idx[hit].astype(np.int64), weights=ex[hit], minlength=n * k)
+        acc = acc.reshape(n, k).astype(np.float32)
+    else:
+        acc = np.zeros((n, k), dtype=np.float32)
+    data = {
+        "barcode": pc.cast(col("BARCODE_SUB_LIB_ID"), pa.string()),
+        "sample": pc.cast(col("sample"), pa.string()),
+        "plate": pc.cast(col("plate"), pa.string()),
+        "drug": pc.cast(col("drug"), pa.string()),
+        "cell_line_id": pc.cast(col("cell_line_id"), pa.string()),
+        "n_genes": pa.array(np.maximum(lens - 1, 0).astype(np.int32)),
+        "total_counts": pa.array(total),
+    }
+    for j, name in enumerate(cols):
+        data[name] = pa.array(acc[:, j])
+    return pa.table(data)
+
+
+def _aggregate_part(path):
+    cols, targets = _W["cols"], _W["targets"]
+    df = pq.read_table(path, columns=["barcode", "sample", "plate", "drug", "cell_line_id", "n_genes",
+                                      "total_counts"] + cols).to_pandas()
+    for c in ["barcode", "sample", "plate", "drug", "cell_line_id"]:
+        df[c] = df[c].astype(str)
+    keys = [df["sample"], df["cell_line_id"]]
+    agg = df.groupby(keys, sort=False)[["total_counts", "n_genes"] + cols].sum()
+    agg.insert(0, "n_cells", df.groupby(keys, sort=False).size())
+    det = (df[targets] > 0).groupby(keys, sort=False).sum()
+    det.columns = ["det_" + c for c in targets]
+    wl = agg.join(det)
+    wl.index.names = ["sample", "cell_line_id"]
+    wl = wl.reset_index()
+    # barcode fields (e.g. 01_001_052-lib_1105): one of them identifies the sample well
+    fields = df["barcode"].str.split("-", n=1).str[0].str.split("_", expand=True)
+    bcs = []
+    for i in range(min(3, fields.shape[1])):
+        v = pd.to_numeric(fields[i], errors="coerce")
+        t = pd.DataFrame({"sample": df["sample"].values, "field": i, "value": v.values}).dropna()
+        if len(t):
+            bcs.append(t.groupby(["sample", "field", "value"], sort=False).size().rename("n").reset_index())
+    bcf = pd.concat(bcs, ignore_index=True) if bcs else pd.DataFrame(columns=["sample", "field", "value", "n"])
+    smeta = df.groupby("sample", sort=False)[["plate", "drug"]].first().reset_index()
+    return wl, bcf, smeta
+
+
+def _extract_one(job):
+    src, dst = job
+    t0 = time.time()
+    if not os.path.exists(dst):
+        pf = pq.ParquetFile(src)
+        pieces = [_process_batch(b) for b in
+                  pf.iter_batches(batch_size=_W["batch"], columns=["genes", "expressions"] + META_COLS,
+                                  use_threads=False)]
+        pieces = [p for p in pieces if p.num_rows]
+        if not pieces:
+            return None, time.time() - t0, 0
+        tbl = pa.concat_tables(pieces)
+        tmp = dst + ".tmp"
+        pq.write_table(tbl, tmp, compression="zstd")
+        os.replace(tmp, dst)
+    wl, bcf, smeta = _aggregate_part(dst)
+    return (wl, bcf, smeta), time.time() - t0, int(wl["n_cells"].sum())
+
+
+def mem_available_gb():
+    """Free memory in GB on Linux, Windows or macOS (None if it cannot be read)."""
+    try:
+        import psutil
+        return psutil.virtual_memory().available / 1e9
+    except Exception:  # noqa: BLE001
+        pass
+    if sys.platform == "win32":
+        try:
+            import ctypes
+
+            class MEMSTAT(ctypes.Structure):
+                _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+                            ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                            ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+                            ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
+                            ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+            st = MEMSTAT()
+            st.dwLength = ctypes.sizeof(MEMSTAT)
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(st)):
+                return st.ullAvailPhys / 1e9
+        except Exception:  # noqa: BLE001
+            return None
+        return None
+    try:
+        with open("/proc/meminfo", encoding="utf-8") as fh:
+            for line in fh:
+                if line.startswith("MemAvailable:"):
+                    return int(line.split()[1]) / 1e6
+    except OSError:
+        pass
+    try:                                                    # macOS and other Unix: total physical memory / 2
+        return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / 2e9
+    except (ValueError, OSError, AttributeError):
+        return None
+
+
+def auto_workers():
+    cpus = os.cpu_count() or 2
+    mem_gb = mem_available_gb()
+    w = max(1, cpus - 1)
+    if mem_gb:
+        w = min(w, max(1, int(mem_gb / 3)))  # ~3 GB per worker is generous
+    return min(w, 48)
+
+
+def parse_conc(s):
+    """"[('8-Hydroxyquinoline',0.05,'uM')]" -> (0.05, 'uM')"""
+    if s is None or (isinstance(s, float) and math.isnan(s)):
+        return np.nan, ""
+    m = re.search(r",\s*([-+0-9.eE]+)\s*,\s*['\"]([^'\"]*)['\"]", str(s))
+    if m:
+        try:
+            return float(m.group(1)), m.group(2)
+        except ValueError:
+            pass
+    return np.nan, ""
+
+
+def well_name(slot):
+    if slot is None or not np.isfinite(slot):
+        return ""
+    s = int(slot)
+    if 1 <= s <= 96:
+        return f"{ROWS[(s - 1) // 12]}{(s - 1) % 12 + 1}"
+    return f"slot{s}"
+
+
+def slot_from_well(w):
+    m = re.match(r"^\s*([A-Ha-h])\s*0*([0-9]{1,2})\s*$", str(w))
+    if not m:
+        return np.nan
+    r, c = ROWS.index(m.group(1).upper()), int(m.group(2))
+    return r * 12 + c if 1 <= c <= 12 else np.nan
+
+
+def build_sample_map(smeta, bcf, wl, idx, layout_file):
+    sm = smeta.drop_duplicates("sample").set_index("sample")
+    sm["n_cells"] = wl.groupby("sample")["n_cells"].sum()
+    sm["is_dmso"] = sm["drug"].str.upper().str.startswith(DMSO_PREFIX)
+    sm["plate_num"] = sm["plate"].str.extract(r"(\d+)", expand=False)
+    # dose from sample metadata
+    smd = read_tables(idx["sample"])
+    sm["conc"], sm["unit"] = np.nan, ""
+    if smd is not None and "drugname_drugconc" in smd:
+        smd = smd.drop_duplicates("sample").set_index("sample")
+        cu = smd["drugname_drugconc"].map(parse_conc)
+        sm["conc"] = cu.map(lambda t: t[0]).reindex(sm.index)
+        sm["unit"] = cu.map(lambda t: t[1]).reindex(sm.index).fillna("")
+        for c in ["mean_gene_count", "mean_tscp_count", "mean_pcnt_mito"]:
+            if c in smd:
+                sm[c] = smd[c].reindex(sm.index)
+    else:
+        log("  WARNING: sample metadata not found; doses unknown (plates will be used as dose labels)")
+    sm.loc[sm.is_dmso, "conc"] = 0.0
+    # well position
+    checks = []
+    if layout_file:
+        lay = pd.read_csv(layout_file)
+        lay.columns = [c.strip().lower() for c in lay.columns]
+        if "slot" not in lay:
+            lay["slot"] = lay["well"].map(slot_from_well)
+        sm["slot"] = lay.drop_duplicates("sample").set_index("sample")["slot"].reindex(sm.index)
+        sm["slot_purity"] = 1.0
+        source = f"layout file {layout_file}"
+    else:
+        bc = bcf.groupby(["sample", "field", "value"])["n"].sum().reset_index()
+        best = None
+        for f, g in bc.groupby("field"):
+            tot = g.groupby("sample")["n"].sum()
+            top = g.sort_values("n", ascending=False).drop_duplicates("sample").set_index("sample")
+            purity = (top["n"] / tot.reindex(top.index)).reindex(sm.index)
+            slot = top["value"].reindex(sm.index)
+            dup = (pd.DataFrame({"plate": sm["plate"], "slot": slot}).dropna()
+                   .duplicated(["plate", "slot"]).sum())
+            checks.append({"barcode_field": int(f) + 1, "median_purity": float(purity.median()),
+                           "min_purity": float(purity.min()), "distinct_values": int(slot.nunique()),
+                           "max_value": float(slot.max()), "duplicate_positions_within_plate": int(dup)})
+            score = float(purity.median()) - 0.01 * dup
+            if best is None or score > best[0]:
+                best = (score, int(f), slot, purity)
+        if best is None:
+            sm["slot"], sm["slot_purity"] = np.nan, np.nan
+            source = "none (barcodes could not be parsed)"
+        else:
+            _, f, slot, purity = best
+            if slot.min() == 0:
+                slot = slot + 1
+            sm["slot"], sm["slot_purity"] = slot, purity
+            source = f"barcode field {f + 1} (Parse round-1 well; numbered row-major A1=1 ... H12=96)"
+            if purity.median() < 0.9:
+                log("  WARNING: no barcode field identifies the sample well cleanly; consider --layout")
+    sm["well"] = sm["slot"].map(well_name)
+    return sm.reset_index(), source, pd.DataFrame(checks)
+
+
+def cmd_extract(args):
+    out = args.out
+    idx = discover(args.data, out, refresh=args.reindex)
+    exprs = idx["expression"]
+    if not exprs:
+        sys.exit("No expression parquet files found under " + os.path.abspath(args.data))
+    if args.limit_files:
+        exprs = exprs[:args.limit_files]
+    gene_meta = read_tables(idx["gene"], ["token_id", "gene_symbol", "ensembl_id"])
+    if gene_meta is None:
+        sys.exit("Gene metadata (token_id -> gene_symbol) not found")
+    targets, cols, lut, report = build_columns(gene_meta, args.extra_genes)
+    log(f"Extracting per cell: {', '.join(targets)} + modules "
+        + ", ".join(f"{m} ({len(v)} genes)" for m, v in report["modules"].items() if v))
+    with open(os.path.join(out, "extracted_columns.json"), "w") as fh:
+        json.dump(report, fh, indent=1)
+    cells_dir = os.path.join(out, "cells")
+    os.makedirs(cells_dir, exist_ok=True)
+    root = os.path.abspath(args.data)
+    jobs = []
+    for src in exprs:
+        rel = os.path.relpath(os.path.abspath(src), root)
+        jobs.append((src, os.path.join(cells_dir, re.sub(r"[^\w.-]+", "__", rel))))
+    done_before = sum(os.path.exists(d) for _, d in jobs)
+    workers = args.workers or auto_workers()
+    log(f"{len(jobs)} expression files ({done_before} already done), {workers} workers")
+    wls, bcfs, smetas = [], [], []
+    n_cells, t0, last = 0, time.time(), 0.0
+    ctx = mp.get_context("spawn")
+    with ctx.Pool(workers, initializer=_init_worker, initargs=(lut, cols, targets, args.batch_size)) as pool:
+        for i, (res, _dt, nc) in enumerate(pool.imap_unordered(_extract_one, jobs, chunksize=1), 1):
+            if res is not None:
+                wls.append(res[0])
+                bcfs.append(res[1])
+                smetas.append(res[2])
+            n_cells += nc
+            now = time.time()
+            if now - last > 60 or i == len(jobs):
+                rate = i / max(now - t0, 1e-9)
+                eta = (len(jobs) - i) / rate if rate > 0 else 0
+                log(f"  {i}/{len(jobs)} files, {n_cells:,} cells, ETA {eta / 60:.0f} min")
+                last = now
+    log("Combining ...")
+    keys = ["sample", "cell_line_id"]
+    wl = pd.concat(wls, ignore_index=True).groupby(keys, sort=True).sum(numeric_only=True).reset_index()
+    bcf = pd.concat(bcfs, ignore_index=True)
+    smeta = pd.concat(smetas, ignore_index=True)
+    sm, source, checks = build_sample_map(smeta, bcf, wl, idx, args.layout)
+    wl.to_parquet(os.path.join(out, "well_line.parquet"), index=False)
+    wl.to_csv(os.path.join(out, "well_line.csv"), index=False)
+    sm.to_csv(os.path.join(out, "sample_map.csv"), index=False)
+    checks.to_csv(os.path.join(out, "well_position_check.csv"), index=False)
+    with open(os.path.join(out, "extract_info.json"), "w") as fh:
+        json.dump({"well_position_source": source, "targets": targets, "columns": cols,
+                   "n_files": len(jobs), "n_cells": int(wl["n_cells"].sum()),
+                   "limit_files": args.limit_files}, fh, indent=1)
+    dup = sm.dropna(subset=["slot"]).duplicated(["plate", "slot"]).sum()
+    log(f"Done: {int(wl['n_cells'].sum()):,} cells, {sm['sample'].nunique()} wells, "
+        f"{wl['cell_line_id'].nunique()} cell lines, {sm['plate'].nunique()} plates")
+    log(f"Well position from {source}; median purity {sm['slot_purity'].median():.3f}, "
+        f"duplicate positions within a plate: {dup}")
+
+
+# ============================================================================= analysis helpers
+def norm_sf(z):
+    z = np.asarray(z, dtype=float)
+    out = np.full(z.shape, np.nan)
+    ok = np.isfinite(z)
+    out[ok] = [0.5 * math.erfc(v / math.sqrt(2.0)) for v in z[ok]]
+    return out
+
+
+def bh(p):
+    p = np.asarray(p, dtype=float)
+    out = np.full(p.shape, np.nan)
+    ok = np.isfinite(p)
+    n = int(ok.sum())
+    if n == 0:
+        return out
+    ps = p[ok]
+    order = np.argsort(ps)
+    ranked = ps[order] * n / np.arange(1, n + 1)
+    ranked = np.minimum.accumulate(ranked[::-1])[::-1]
+    tmp = np.empty(n)
+    tmp[order] = np.minimum(ranked, 1.0)
+    out[ok] = tmp
+    return out
+
+
+def robust_center_scale(v):
+    v = np.asarray(v, dtype=float)
+    v = v[np.isfinite(v)]
+    if v.size == 0:
+        return 0.0, 1.0
+    c = float(np.median(v))
+    s = 1.4826 * float(np.median(np.abs(v - c)))
+    if not s > 0:
+        s = float(np.std(v)) or 1.0
+    return c, s
+
+
+def loo_slot(values, slot, drug, use):
+    """Leave-drug-out position effect: for each well, the median value of wells in the same position
+    (on any plate) that hold a DIFFERENT drug. Returns effect and number of wells used."""
+    v = np.asarray(values, dtype=float)
+    slot = np.asarray(slot, dtype=float)
+    drug = np.asarray(drug, dtype=object)
+    use = np.asarray(use, dtype=bool) & np.isfinite(v)
+    eff = np.zeros(v.size)
+    n_used = np.zeros(v.size, dtype=int)
+    groups = defaultdict(list)
+    for i, s in enumerate(slot):
+        if np.isfinite(s):
+            groups[s].append(i)
+    for ii in groups.values():
+        ii = np.asarray(ii)
+        for i in ii:
+            m = ii[use[ii] & (drug[ii] != drug[i])]
+            n_used[i] = m.size
+            if m.size >= MIN_SLOT_WELLS:
+                eff[i] = float(np.median(v[m]))
+    return eff, n_used
+
+
+def plate_line_residual(d, col):
+    """value minus the median over drug wells on the same plate, same cell line"""
+    ref = d.loc[~d["is_dmso"]].groupby(["plate", "cell_line_id"])[col].median()
+    key = pd.MultiIndex.from_arrays([d["plate"], d["cell_line_id"]])
+    return d[col].values - ref.reindex(key).values
+
+
+def correct_wells(d, resid, wells):
+    """Per-well median over cell lines -> leave-drug-out position correction -> robust z."""
+    w1 = pd.Series(resid, index=d.index).groupby(d["sample"].values).median()
+    W = wells.reindex(w1.index).copy()
+    W["W1"] = w1.values
+    eff, n_used = loo_slot(W["W1"].values, W["slot"].values, W["drug"].values, ~W["is_dmso"].values)
+    W["slot_effect"] = eff
+    W["slot_n"] = n_used
+    W["W2"] = W["W1"] - W["slot_effect"]
+    c, s = robust_center_scale(W.loc[~W["is_dmso"], "W2"])
+    W["z"] = (W["W2"] - c) / s
+    return W, (c, s)
+
+
+def dose_key(sm):
+    """String key for a dose; falls back to the plate when the dose is unknown."""
+    return pd.Series([f"{c:.6g}" if np.isfinite(c) else f"plate:{p}"
+                      for c, p in zip(sm["conc"].astype(float), sm["plate"])], index=sm.index)
+
+
+def pattern(zs, thr=2.0):
+    """Classify how an effect behaves across ascending doses."""
+    zs = [z for z in zs if np.isfinite(z)]
+    if not zs or max(zs) < thr:
+        return "none"
+    if len(zs) == 1:
+        return "single dose"
+    if min(zs) >= thr:
+        return "all doses, stronger at high dose" if zs[-1] - zs[0] >= 1.0 else "all doses, flat"
+    if zs[-1] >= thr and max(zs[:-1]) < thr * 0.75:
+        return "top dose only"
+    if zs[-1] >= thr and all(b >= a - 0.5 for a, b in zip(zs, zs[1:])):
+        return "rises with dose"
+    return "inconsistent across doses"
+
+
+def fmt_list(vals, fmt="{:.2f}"):
+    return " / ".join("NA" if not np.isfinite(v) else fmt.format(v) for v in vals)
+
+
+# ============================================================================= analyses
+def baseline_by_line(wl, sm, cl, targets, null_override):
+    d = wl.merge(sm[["sample", "is_dmso"]], on="sample")
+    dm = d[d["is_dmso"]].groupby("cell_line_id").sum(numeric_only=True)
+    al = d.groupby("cell_line_id").sum(numeric_only=True)
+    out = pd.DataFrame(index=al.index)
+    out["n_cells_total"] = al["n_cells"]
+    out["n_cells_dmso"] = dm["n_cells"].reindex(out.index).fillna(0).astype(int)
+    for g in targets:
+        out[f"{g}_cpm_dmso"] = 1e6 * dm[g] / dm["total_counts"]
+        out[f"{g}_pct_cells_dmso"] = 100 * dm[f"det_{g}"] / dm["n_cells"]
+        out[f"{g}_cpm_all_wells"] = 1e6 * al[g] / al["total_counts"]
+    for m in ["PROTEASOME", "S_PHASE", "G2M_PHASE"]:
+        if m in dm:
+            out[f"{m}_cpm_dmso"] = 1e6 * dm[m] / dm["total_counts"]
+    out["umi_per_cell_dmso"] = dm["total_counts"] / dm["n_cells"]
+    out["MTAP_vs_median_line"] = out["MTAP_cpm_dmso"] / out["MTAP_cpm_dmso"].median()
+    # classify on all wells (many more cells than DMSO alone; few drugs move MTAP much)
+    allw = out["MTAP_cpm_all_wells"] / out["MTAP_cpm_all_wells"].median()
+    out["MTAP_all_wells_vs_median_line"] = allw
+    enough = out["n_cells_total"] >= MIN_LINE_CELLS
+    thr, gap = null_threshold(allw[enough])
+    out["MTAP_null"] = enough & (allw < thr)
+    if "CDKN2A_cpm_dmso" in out:
+        out["CDKN2A_vs_median_line"] = out["CDKN2A_cpm_all_wells"] / out["CDKN2A_cpm_all_wells"].median()
+    if cl is not None:
+        out = out.join(cl, how="left")
+    source = f"MTAP across all wells below {thr:.0%} of the median line" + \
+        (f" (largest gap in the data, {2 ** gap:.1f}x)" if np.isfinite(gap) else " (default cut; no clear gap)")
+    if null_override:
+        want = {x.strip().upper() for x in null_override.split(",") if x.strip()}
+        names = out.get("cell_name", pd.Series("", index=out.index)).fillna("").str.upper()
+        out["MTAP_null"] = [i.upper() in want or n in want for i, n in zip(out.index, names)]
+        source = "set by --mtap-null"
+    out.index.name = "cell_line_id"
+    return out.sort_values("MTAP_all_wells_vs_median_line"), source
+
+
+def null_threshold(ratio):
+    """MTAP-deleted lines keep only background RNA from the other lines pooled in the well (roughly 10-25% of
+    the median line). Cut at the largest gap between 15% and 50% of the median; else fall back to NULL_FRAC."""
+    v = np.sort(np.asarray(ratio.dropna(), dtype=float))
+    v = v[v > 0]
+    best = None
+    for a, b in zip(v[:-1], v[1:]):
+        mid, gap = math.sqrt(a * b), math.log2(b / a)
+        if 0.15 <= mid <= 0.5 and gap >= 0.4 and (best is None or gap > best[1]):
+            best = (mid, gap)
+    return best if best else (NULL_FRAC, float("nan"))
+
+
+def load_cell_lines(idx):
+    cl = read_tables(idx["cell_line"])
+    if cl is None or "Cell_ID_Cellosaur" not in cl:
+        return None
+    rows = []
+    for cid, g in cl.groupby("Cell_ID_Cellosaur"):
+        drivers = []
+        if "Driver_Gene_Symbol" in g:
+            for _, r in g.iterrows():
+                sym = to_text(r.get("Driver_Gene_Symbol"))
+                if sym:
+                    vt = to_text(r.get("Driver_VarType", ""))
+                    drivers.append(f"{sym}({vt})" if vt else sym)
+        first = g.iloc[0]
+        rows.append({"cell_line_id": cid, "cell_name": to_text(first.get("cell_name", "")),
+                     "Cell_ID_DepMap": to_text(first.get("Cell_ID_DepMap", "")),
+                     "Organ": to_text(first.get("Organ", "")),
+                     "drivers": "; ".join(sorted(set(drivers)))})
+    return pd.DataFrame(rows).set_index("cell_line_id")
+
+
+def load_drugs(idx):
+    dm = read_tables(idx["drug"])
+    if dm is None:
+        return pd.DataFrame(columns=["targets", "moa_fine"])
+    dm = dm.drop_duplicates("drug").set_index("drug")
+    out = pd.DataFrame(index=dm.index)
+    out["targets"] = dm["targets"].map(to_text) if "targets" in dm else ""
+    out["moa_fine"] = dm["moa-fine"].map(to_text) if "moa-fine" in dm else ""
+    out["moa_broad"] = dm["moa-broad"].map(to_text) if "moa-broad" in dm else ""
+    if "human-approved" in dm:
+        out["approved"] = dm["human-approved"].map(to_text)
+    return out
+
+
+def well_context(wl, sm, cols_present):
+    """Per-well covariates: cell count, genes/UMIs per cell, cell-cycle modules (all corrected)."""
+    d = wl.merge(sm[["sample", "plate", "drug", "slot", "is_dmso"]], on="sample")
+    wells = sm.set_index("sample")[["plate", "drug", "conc", "slot", "well", "is_dmso"]]
+    tot = d.groupby("sample")[["n_cells", "n_genes", "total_counts"]].sum()
+    W = wells.reindex(tot.index).copy()
+    W["cells"] = tot["n_cells"]
+    W["genes_per_cell"] = tot["n_genes"] / tot["n_cells"]
+    W["umi_per_cell"] = tot["total_counts"] / tot["n_cells"]
+    for c in ["cells", "genes_per_cell", "umi_per_cell"]:
+        ref = W.loc[~W["is_dmso"]].groupby("plate")[c].median()
+        W[f"{c}_log2_vs_plate"] = np.log2(W[c] / W["plate"].map(ref))
+    ctx = W[["cells", "cells_log2_vs_plate", "genes_per_cell_log2_vs_plate", "umi_per_cell_log2_vs_plate"]].copy()
+    dd = d[d["n_cells"] >= MIN_CELLS].copy()
+    for m in ["S_PHASE", "G2M_PHASE"]:
+        if m in cols_present:
+            dd["_y"] = np.log2((dd[m] + 0.5) / (dd["total_counts"] + 1.0) * 1e6)
+            Wm, _ = correct_wells(dd, plate_line_residual(dd, "_y"), wells)
+            ctx[f"{m}_shift_log2"] = Wm["W2"].reindex(ctx.index)
+    return ctx
+
+
+def expression_effects(wl, sm, gene, exclude_lines, ctx, drugs, extra_cols=None):
+    """Corrected effect of every drug and dose on one gene (or module)."""
+    wells = sm.set_index("sample")[["plate", "drug", "conc", "slot", "well", "is_dmso"]]
+    keep = ["sample", "cell_line_id", "n_cells", "total_counts", gene]
+    has_det = f"det_{gene}" in wl
+    if has_det:
+        keep.append(f"det_{gene}")
+    d = wl.loc[(wl["n_cells"] >= MIN_CELLS) & ~wl["cell_line_id"].isin(exclude_lines), keep]
+    d = d.merge(sm[["sample", "plate", "drug", "slot", "is_dmso"]], on="sample").reset_index(drop=True)
+    d["y"] = np.log2((d[gene] + 0.5) / (d["total_counts"] + 1.0) * 1e6)
+
+    # main effect: plate baseline -> position correction -> calibrated z
+    d["r1"] = plate_line_residual(d, "y")
+    W, (c0, s0) = correct_wells(d, d["r1"].values, wells)
+    d["r2"] = d["r1"] - d["sample"].map(W["slot_effect"])
+    ref = d.loc[~d["is_dmso"]]
+    lc = ref.groupby("cell_line_id")["r2"].median()
+    ls = 1.4826 * (ref["r2"] - ref["cell_line_id"].map(lc)).abs().groupby(ref["cell_line_id"]).median()
+    d["z_line"] = (d["r2"] - d["cell_line_id"].map(lc)) / d["cell_line_id"].map(ls)
+
+    # the old way, for comparison: fold change against the plate's pooled DMSO wells
+    dm = d[d["is_dmso"]].groupby(["plate", "cell_line_id"])[[gene, "total_counts"]].sum()
+    dmso_y = np.log2((dm[gene] + 0.5) / (dm["total_counts"] + 1.0) * 1e6)
+    key = pd.MultiIndex.from_arrays([d["plate"], d["cell_line_id"]])
+    d["lfc_dmso"] = d["y"].values - dmso_y.reindex(key).values
+    W["lfc_vs_dmso"] = d.groupby("sample")["lfc_dmso"].median().reindex(W.index)
+    W["lines_in_well"] = d.groupby("sample").size().reindex(W.index)
+
+    # single-cell detail: more cells expressing, or more per expressing cell?
+    if has_det:
+        d["pct"] = 100.0 * d[f"det_{gene}"] / d["n_cells"]
+        d["lvl"] = np.log2(((d[gene] + 0.5) / (d[f"det_{gene}"] + 0.5)) / (d["total_counts"] / d["n_cells"]))
+        Wp, _ = correct_wells(d, plate_line_residual(d, "pct"), wells)
+        Wl, _ = correct_wells(d, plate_line_residual(d, "lvl"), wells)
+        W["pct_cells_expressing_change"] = Wp["W2"].reindex(W.index)
+        W["level_in_expressing_cells_log2"] = Wl["W2"].reindex(W.index)
+
+    # plate DMSO offset: >0 means the plate's DMSO wells read low, inflating DMSO-based fold changes
+    pl = pd.DataFrame({"plate": d["plate"], "off": d["lfc_dmso"] - d["r1"]}).dropna()
+    plate_off = pl.groupby("plate")["off"].median()
+    W["plate_dmso_offset"] = W["plate"].map(plate_off)
+    W = W.join(ctx, how="left")
+    if extra_cols is not None:
+        W = W.join(extra_cols, how="left")
+
+    # ---- per drug and dose (plates averaged; cell lines counted once)
+    Wd = W.loc[~W["is_dmso"]].copy()
+    Wd["dose"] = dose_key(Wd)
+    d2 = d.loc[~d["is_dmso"]].copy()
+    d2["dose"] = d2["sample"].map(Wd["dose"])
+    per_line = d2.groupby(["drug", "dose", "cell_line_id"])[["r2", "z_line"]].mean().reset_index()
+    per_line["up"] = (per_line["z_line"] > Z_LINE) & (per_line["r2"] > LFC_MIN)
+    per_line["down"] = (per_line["z_line"] < -Z_LINE) & (per_line["r2"] < -LFC_MIN)
+    per_line["pos"] = per_line["r2"] > 0
+    per_line["neg"] = per_line["r2"] < 0
+    lines = per_line.groupby(["drug", "dose"]).agg(n_lines=("up", "size"), n_lines_up=("up", "sum"),
+                                                   n_lines_down=("down", "sum"), n_pos=("pos", "sum"),
+                                                   n_neg=("neg", "sum"))
+    num = [c for c in Wd.columns if c not in ("plate", "drug", "conc", "slot", "well", "is_dmso", "dose", "z")
+           and pd.api.types.is_numeric_dtype(Wd[c])]
+    g = Wd.groupby(["drug", "dose"])
+    res = g[num].mean()
+    res["z"] = g["z"].sum() / np.sqrt(g["z"].count())   # Stouffer across plates
+    res["n_plates"] = g.size()
+    res["plates"] = g["plate"].agg(lambda s: ",".join(sorted(set(map(str, s)))))
+    res["wells"] = g["well"].agg(lambda s: ",".join(sorted(set(map(str, s)))))
+    res["conc"] = g["conc"].first()
+    res = res.join(lines)
+    res["frac_lines_up"] = res["n_lines_up"] / res["n_lines"]
+    res["frac_lines_down"] = res["n_lines_down"] / res["n_lines"]
+    res["frac_lines_positive"] = res.pop("n_pos") / res["n_lines"]
+    res["frac_lines_negative"] = res.pop("n_neg") / res["n_lines"]
+    res["p_up"] = norm_sf(res["z"].values)
+    res["p_down"] = norm_sf(-res["z"].values)
+    res["fdr_up"] = bh(res["p_up"].values)
+    res["fdr_down"] = bh(res["p_down"].values)
+    res["fold_change"] = 2.0 ** res["W2"]
+    res = res.reset_index().drop(columns=["dose"])
+    res = res.join(drugs, on="drug")
+    res = res.rename(columns={"W2": "log2FC_corrected", "z": "z_corrected",
+                              "lfc_vs_dmso": "log2FC_vs_DMSO_uncorrected", "slot_effect": "position_effect_removed",
+                              "W1": "log2FC_plate_corrected_only", "slot_n": "position_wells_used"})
+    res["flags"] = [flag_row(r, gene) for _, r in res.iterrows()]
+    res["call"] = [call_row(r) for _, r in res.iterrows()]
+    lead = ["drug", "conc", "call", "fold_change", "log2FC_corrected", "z_corrected", "fdr_up", "fdr_down",
+            "n_lines", "n_lines_up", "n_lines_down", "frac_lines_positive", "flags", "log2FC_vs_DMSO_uncorrected",
+            "position_effect_removed", "plate_dmso_offset", "wells", "plates", "n_plates"]
+    res = res[[c for c in lead if c in res] + [c for c in res.columns if c not in lead]]
+    calib = {
+        "drug_wells": int((~W["is_dmso"]).sum()),
+        "pct_drug_wells_abs_z_gt_1.96": float(100 * (W.loc[~W["is_dmso"], "z"].abs() > 1.96).mean()),
+        "pct_dmso_wells_abs_z_gt_1.96": float(100 * (W.loc[W["is_dmso"], "z"].abs() > 1.96).mean())
+        if W["is_dmso"].any() else float("nan"),
+        "pct_drug_wells_abs_z_gt_3": float(100 * (W.loc[~W["is_dmso"], "z"].abs() > 3).mean()),
+        "null_center": c0, "null_scale": s0,
+    }
+    return res, W, d, calib
+
+
+def flag_row(r, gene):
+    f = []
+    if r.get("cells_log2_vs_plate", 0) < -1:
+        f.append("toxic")
+    if r.get("genes_per_cell_log2_vs_plate", 0) < -0.3 or r.get("umi_per_cell_log2_vs_plate", 0) < -0.5:
+        f.append("transcription drop")
+    if abs(r.get("G2M_PHASE_shift_log2", 0) or 0) > 0.5:
+        f.append("cell-cycle shift")
+    if gene == "PSMD10" and np.isfinite(r.get("PROTEASOME_z", np.nan)):
+        if r["z_corrected"] > 2 and r["PROTEASOME_z"] > 2:
+            f.append("whole proteasome up")
+        if r["z_corrected"] < -2 and r["PROTEASOME_z"] < -2:
+            f.append("whole proteasome down")
+    if abs(r.get("position_effect_removed", 0)) > 0.2:
+        f.append("position effect removed")
+    if abs(r.get("plate_dmso_offset", 0) or 0) > 0.2:
+        f.append("plate DMSO offset")
+    return "; ".join(f)
+
+
+def call_row(r):
+    if r["fdr_up"] < FDR_CUT and r["log2FC_corrected"] >= LFC_MIN and r["frac_lines_positive"] >= 0.6:
+        return "up"
+    if r["fdr_down"] < FDR_CUT and r["log2FC_corrected"] <= -LFC_MIN and r["frac_lines_negative"] >= 0.6:
+        return "down"
+    return ""
+
+
+def drug_summary(res):
+    rows = []
+    for drug, g in res.groupby("drug"):
+        g = g.sort_values("conc")
+        zs = g["z_corrected"].tolist()
+        best_up = g.loc[g["z_corrected"].fillna(-np.inf).idxmax()]
+        best_dn = g.loc[g["z_corrected"].fillna(np.inf).idxmin()]
+        k = len(g)
+        p_up = min(1.0, k * float(g["p_up"].min()))
+        p_dn = min(1.0, k * float(g["p_down"].min()))
+        rows.append({
+            "drug": drug, "moa_fine": best_up.get("moa_fine", ""), "targets": best_up.get("targets", ""),
+            "doses": fmt_list(g["conc"].tolist(), "{:g}"),
+            "z_by_dose": fmt_list(zs), "log2FC_by_dose": fmt_list(g["log2FC_corrected"].tolist()),
+            "best_up_dose": best_up["conc"], "best_up_fold_change": best_up["fold_change"],
+            "best_up_z": best_up["z_corrected"], "p_up_drug": p_up,
+            "up_lines": f"{int(best_up['n_lines_up'])}/{int(best_up['n_lines'])}",
+            "pct_lines_positive_at_best_up": round(100 * best_up["frac_lines_positive"]),
+            "up_pattern": pattern(zs), "up_call": best_up["call"] if best_up["call"] == "up" else "",
+            "up_flags": best_up["flags"],
+            "best_down_dose": best_dn["conc"], "best_down_fold_change": best_dn["fold_change"],
+            "best_down_z": best_dn["z_corrected"], "p_down_drug": p_dn,
+            "down_lines": f"{int(best_dn['n_lines_down'])}/{int(best_dn['n_lines'])}",
+            "pct_lines_negative_at_best_down": round(100 * best_dn["frac_lines_negative"]),
+            "down_pattern": pattern([-z for z in zs]),
+            "down_call": best_dn["call"] if best_dn["call"] == "down" else "",
+            "down_flags": best_dn["flags"],
+            "uncorrected_log2FC_vs_DMSO_at_best_up": best_up["log2FC_vs_DMSO_uncorrected"],
+            "wells": ",".join(sorted(set(",".join(g["wells"].astype(str)).split(",")))),
+        })
+    s = pd.DataFrame(rows)
+    s["fdr_up_drug"] = bh(s["p_up_drug"].values)
+    s["fdr_down_drug"] = bh(s["p_down_drug"].values)
+    return s.sort_values("best_up_z", ascending=False)
+
+
+def abundance(wl, sm, base):
+    """Relative abundance of each cell line in each well vs the plate's drug-well median. Lines with very few cells
+    are left out (counting noise is propagated into the scores, so moderately rare lines are fine)."""
+    lines = base.index[base["n_cells_total"] >= 0.02 * base["n_cells_total"].median()]
+    d = wl.loc[wl["cell_line_id"].isin(lines), ["sample", "cell_line_id", "n_cells"]]
+    grid = pd.MultiIndex.from_product([sm["sample"], lines], names=["sample", "cell_line_id"])
+    n = d.set_index(["sample", "cell_line_id"])["n_cells"].reindex(grid, fill_value=0).reset_index()
+    n = n.merge(sm[["sample", "plate", "drug", "conc", "slot", "well", "is_dmso"]], on="sample")
+    N = n.groupby("sample")["n_cells"].transform("sum")
+    n["frac"] = n["n_cells"] / N
+    eps = 0.5 / float(n.groupby("sample")["n_cells"].sum().median())
+    ref = n.loc[~n["is_dmso"]].groupby(["plate", "cell_line_id"])["frac"].median()
+    key = pd.MultiIndex.from_arrays([n["plate"], n["cell_line_id"]])
+    n["A"] = np.log2((n["frac"].values + eps) / (ref.reindex(key).values + eps))
+    n["varA"] = 1.0 / ((n["n_cells"] + 0.5) * math.log(2) ** 2)   # counting noise of A (Poisson)
+    return n
+
+
+def find_failed_wells(sm):
+    """Wells that recovered < 1/8 of the plate's typical cell count while the same drug recovered at least half
+    at the same or a higher dose elsewhere. Treated as technical failures and excluded from every analysis."""
+    s = sm.copy()
+    med = s.loc[~s["is_dmso"]].groupby("plate")["n_cells"].median()
+    s["cells_log2_vs_plate"] = np.log2(s["n_cells"] / s["plate"].map(med))
+    failed = []
+    for _, r in s[s["cells_log2_vs_plate"] < -3].iterrows():
+        other = s[(s["drug"] == r["drug"]) & (s["sample"] != r["sample"]) & (s["conc"] >= r["conc"])]
+        if (other["cells_log2_vs_plate"] > -1).any():
+            failed.append(r["sample"])
+    return s[s["sample"].isin(failed)]
+
+
+def add_dose_columns(res, zcol, pcol, direction):
+    """Add the drug's z at every dose, a dose pattern, and a drug-level FDR (best dose, Bonferroni over doses)."""
+    zs_map, doses_map, pat_map, p_map = {}, {}, {}, {}
+    for drug, g in res.groupby("drug"):
+        g = g.sort_values("conc")
+        zs = g[zcol].tolist()
+        zs_map[drug] = fmt_list(zs)
+        doses_map[drug] = fmt_list(g["conc"].tolist(), "{:g}")
+        pat_map[drug] = pattern([-z for z in zs] if direction == "down" else zs)
+        p_map[drug] = min(1.0, len(g) * float(np.nanmin(g[pcol].values)))
+    drugs = list(p_map)
+    fdr = dict(zip(drugs, bh(np.array([p_map[d] for d in drugs]))))
+    res = res.copy()
+    res["doses"] = res["drug"].map(doses_map)
+    res["z_by_dose"] = res["drug"].map(zs_map)
+    res["dose_pattern"] = res["drug"].map(pat_map)
+    res["fdr_drug"] = res["drug"].map(fdr)
+    return res
+
+
+def per_dose_table(W, value_cols, zcol="z"):
+    Wd = W.loc[~W["is_dmso"]].copy()
+    Wd["dose"] = dose_key(Wd)
+    g = Wd.groupby(["drug", "dose"])
+    res = g[value_cols].mean()
+    res["z"] = g[zcol].sum() / np.sqrt(g[zcol].count())
+    res["conc"] = g["conc"].first()
+    res["wells"] = g["well"].agg(lambda s: ",".join(sorted(set(map(str, s)))))
+    res["plates"] = g["plate"].agg(lambda s: ",".join(sorted(set(map(str, s)))))
+    return res.reset_index().drop(columns=["dose"])
+
+
+def mtap_null_screen(n, base, sm, drugs, ctx):
+    wells = sm.set_index("sample")[["plate", "drug", "conc", "slot", "well", "is_dmso"]]
+    null = set(base.index[base["MTAP_null"]])
+    intact = set(base.index[~base["MTAP_null"]])
+    n = n.copy()
+    n["grp"] = np.where(n["cell_line_id"].isin(null), "null", np.where(n["cell_line_id"].isin(intact), "intact", ""))
+    A = n.pivot_table(index="sample", columns="cell_line_id", values="A")
+    V = n.pivot_table(index="sample", columns="cell_line_id", values="varA")
+    nl = [c for c in A.columns if c in null]
+    il = [c for c in A.columns if c in intact]
+    W = wells.reindex(A.index).copy()
+    W["null_mean_log2"] = A[nl].mean(axis=1)
+    W["intact_median_log2"] = A[il].median(axis=1)
+    W["delta"] = W["null_mean_log2"] - W["intact_median_log2"]
+    # counting noise of delta (mean of the null lines minus median of the intact lines)
+    k, m = max(len(nl), 1), max(len(il), 1)
+    W["delta_counting_var"] = V[nl].sum(axis=1) / k ** 2 + (math.pi / 2) * V[il].sum(axis=1) / m ** 2
+    # tissue-matched: MTAP-null lines vs MTAP-intact lines of the same organ
+    organ = base.get("Organ", pd.Series("", index=base.index)).fillna("")
+    parts, wts = [], []
+    for o in sorted(set(organ[list(null)])):
+        if not o:
+            continue
+        on = [c for c in nl if organ.get(c, "") == o]
+        oi = [c for c in il if organ.get(c, "") == o]
+        if on and len(oi) >= 2:
+            parts.append(A[on].mean(axis=1) - A[oi].median(axis=1))
+            wts.append(len(on))
+    if parts:
+        W["delta_tissue_matched"] = sum(p * w for p, w in zip(parts, wts)) / sum(wts)
+    eff, n_used = loo_slot(W["delta"].values, W["slot"].values, W["drug"].values, ~W["is_dmso"].values)
+    W["position_effect_removed"] = eff
+    W["delta_corrected"] = W["delta"] - eff
+    # spread across wells = biological/technical well noise + counting noise; wells with few cells get the
+    # counting part on top, so a handful of surviving cells cannot produce an extreme score
+    drug_w = ~W["is_dmso"]
+    c, s = robust_center_scale(W.loc[drug_w, "delta_corrected"])
+    typical_count_var = float(np.nanmedian(W.loc[drug_w, "delta_counting_var"]))
+    well_var = max(s ** 2 - typical_count_var, (0.25 * s) ** 2)
+    W["z"] = (W["delta_corrected"] - c) / np.sqrt(well_var + W["delta_counting_var"])
+    W = W.join(ctx[["cells_log2_vs_plate"]], how="left")
+    names = base.get("cell_name", pd.Series(index=base.index, dtype=object)).fillna("")
+    for cid in nl:
+        W[f"{names.get(cid) or cid}_log2"] = A[cid]
+    vals = ["delta_corrected", "delta", "null_mean_log2", "intact_median_log2", "position_effect_removed",
+            "cells_log2_vs_plate"] + (["delta_tissue_matched"] if "delta_tissue_matched" in W else []) + \
+           [f"{names.get(cid) or cid}_log2" for cid in nl]
+    res = per_dose_table(W, vals)
+    res["p_selective"] = norm_sf(-res["z"].values)
+    res["fdr_selective"] = bh(res["p_selective"].values)
+    res = res.join(drugs, on="drug")
+    tgt = res.get("targets", pd.Series("", index=res.index)).fillna("").str.upper()
+    moa = res.get("moa_fine", pd.Series("", index=res.index)).fillna("").str.upper()
+    res["PRMT5_or_MAT2A_drug"] = tgt.str.contains("PRMT5|MAT2A") | moa.str.contains("PRMT5|MAT2A")
+    res = res.rename(columns={"z": "z_selective", "delta_corrected": "extra_log2_depletion_of_MTAP_null",
+                              "cells_log2_vs_plate": "all_cells_log2_vs_plate"})
+    res = add_dose_columns(res, "z_selective", "p_selective", "down")
+    lead = ["drug", "conc", "extra_log2_depletion_of_MTAP_null", "z_selective", "fdr_selective", "fdr_drug",
+            "z_by_dose", "dose_pattern", "PRMT5_or_MAT2A_drug", "delta_tissue_matched", "intact_median_log2",
+            "all_cells_log2_vs_plate"]
+    res = res[[c for c in lead if c in res] + [c for c in res.columns if c not in lead]]
+    return res.sort_values("z_selective"), W, sorted(nl), sorted(il)
+
+
+def gankyrin_level_screen(n, base, sm, drugs):
+    """Does a cell line's untreated Gankyrin level predict how a drug affects its abundance?"""
+    wells = sm.set_index("sample")[["plate", "drug", "conc", "slot", "well", "is_dmso"]]
+    A = n.pivot_table(index="sample", columns="cell_line_id", values="A")
+    lines = [c for c in A.columns if np.isfinite(base.loc[c, "PSMD10_cpm_dmso"])]
+    A = A[lines]
+    x = np.log2(base.loc[lines, "PSMD10_cpm_dmso"].values)
+    gcol = "G2M_PHASE_cpm_dmso" if "G2M_PHASE_cpm_dmso" in base else None
+    rA = A.rank(axis=1).values
+    rx = pd.Series(x).rank().values
+
+    def rowcorr(M, v):
+        Mc = M - M.mean(axis=1, keepdims=True)
+        vc = v - v.mean()
+        den = np.sqrt((Mc ** 2).sum(axis=1) * (vc ** 2).sum())
+        with np.errstate(invalid="ignore", divide="ignore"):
+            return (Mc @ vc) / den
+
+    W = wells.reindex(A.index).copy()
+    W["rho"] = rowcorr(rA, rx)
+    if gcol:
+        rg = pd.Series(np.log2(base.loc[lines, gcol].values)).rank().values
+        G = np.column_stack([np.ones_like(rg), rg])
+        P = G @ np.linalg.pinv(G)
+        W["rho_partial_G2M"] = rowcorr(rA - rA @ P.T, rx - P @ rx)
+    fz = np.arctanh(np.clip(W["rho"].values, -0.999, 0.999))
+    eff, _ = loo_slot(fz, W["slot"].values, W["drug"].values, ~W["is_dmso"].values)
+    W["fisher_corrected"] = fz - eff
+    c, s = robust_center_scale(W.loc[~W["is_dmso"], "fisher_corrected"])
+    W["z"] = (W["fisher_corrected"] - c) / s
+    vals = ["rho"] + (["rho_partial_G2M"] if gcol else [])
+    res = per_dose_table(W, vals)
+    res["p"] = 2 * norm_sf(np.abs(res["z"].values))
+    res["fdr"] = bh(res["p"].values)
+    res = res.join(drugs, on="drug").rename(columns={"z": "z_corrected"})
+    res["reading"] = np.where(res["z_corrected"] < 0, "high-Gankyrin lines depleted more",
+                              "high-Gankyrin lines spared")
+    res = add_dose_columns(res, "z_corrected", "p", "down")
+    res = res.rename(columns={"dose_pattern": "dose_pattern_depleted_more"})
+    lead = ["drug", "conc", "rho", "rho_partial_G2M", "z_corrected", "fdr", "fdr_drug", "z_by_dose",
+            "dose_pattern_depleted_more", "reading"]
+    res = res[[c for c in lead if c in res] + [c for c in res.columns if c not in lead]]
+    return res.sort_values("z_corrected"), len(lines)
+
+
+def cell_cycle_by_line(out, base, cols_present):
+    need = {"PSMD10", "MTAP", "S_PHASE", "G2M_PHASE"}
+    if not need <= set(cols_present):
+        return None
+    cells_dir = os.path.join(out, "cells")
+    files = sorted(glob.glob(os.path.join(cells_dir, "*.parquet")))
+    parts = []
+    for f in files:
+        t = pq.read_table(f, columns=["drug", "cell_line_id", "total_counts", "MTAP", "PSMD10", "S_PHASE", "G2M_PHASE"])
+        mask = pc.starts_with(pc.utf8_upper(t["drug"]), DMSO_PREFIX)
+        t = t.filter(mask)
+        if t.num_rows:
+            parts.append(t.select(["cell_line_id", "total_counts", "MTAP", "PSMD10", "S_PHASE",
+                                   "G2M_PHASE"]).to_pandas())
+    if not parts:
+        return None
+    df = pd.concat(parts, ignore_index=True)
+    # normalise by counts outside the cell-cycle genes, so their own rise in cycling cells does not dilute others
+    df["den"] = df["total_counts"] - df["S_PHASE"] - df["G2M_PHASE"]
+    df = df[df["den"] > 0]
+    df["cell_line_id"] = df["cell_line_id"].astype(str)
+    rows = []
+    for cid, x in df.groupby("cell_line_id"):
+        if len(x) < 100:
+            continue
+        r = {"cell_line_id": cid, "n_dmso_cells": len(x)}
+        for score in ["G2M_PHASE", "S_PHASE"]:
+            sc = x[score] / x["den"]
+            lo, hi = sc.quantile(0.25), sc.quantile(0.75)
+            top, bot = x[sc >= hi], x[sc <= lo]
+            for g in ["PSMD10", "MTAP"]:
+                a = top[g].sum() / top["den"].sum()
+                b = bot[g].sum() / bot["den"].sum()
+                r[f"{g}_log2_top_vs_bottom_{score}_quartile"] = np.log2(a / b) if a > 0 and b > 0 else np.nan
+                r[f"{g}_cell_spearman_vs_{score}"] = (x[g] / x["den"]).rank().corr(sc.rank())
+        rows.append(r)
+    if not rows:
+        return None
+    res = pd.DataFrame(rows).set_index("cell_line_id")
+    if "cell_name" in base:
+        res.insert(0, "cell_name", base["cell_name"].reindex(res.index))
+    return res
+
+
+def slot_table(W, label):
+    Wd = W.loc[~W["is_dmso"]]
+    g = Wd.groupby("well")
+    t = pd.DataFrame({"median_effect_plate_corrected": g["W1"].median(), "n_wells": g.size(),
+                      "drugs": g["drug"].agg(lambda s: ", ".join(sorted(set(s))))})
+    c, s = robust_center_scale(t["median_effect_plate_corrected"])
+    t["z_vs_other_positions"] = (t["median_effect_plate_corrected"] - c) / s
+    t.insert(0, "gene", label)
+    return t.sort_values("z_vs_other_positions", ascending=False)
+
+
+def plate_table(W, label):
+    t = W.groupby("plate").agg(dmso_offset=("plate_dmso_offset", "first"),
+                               n_dmso_wells=("is_dmso", "sum"))
+    t["dmso_wells"] = W.loc[W["is_dmso"]].groupby("plate")["well"].agg(lambda s: ",".join(map(str, s)))
+    t.insert(0, "gene", label)
+    return t.sort_values("dmso_offset", ascending=False)
+
+
+def cmd_analyze(args):
+    out = args.out
+    res_dir = os.path.join(out, "results")
+    os.makedirs(res_dir, exist_ok=True)
+    for f in ["well_line.parquet", "sample_map.csv"]:
+        if not os.path.exists(os.path.join(out, f)):
+            sys.exit(f"{f} not found in {out}; run the 'extract' step first")
+    idx = discover(args.data, out)
+    with open(os.path.join(out, "extract_info.json")) as fh:
+        info = json.load(fh)
+    wl = pd.read_parquet(os.path.join(out, "well_line.parquet"))
+    wl["sample"] = wl["sample"].astype(str)
+    wl["cell_line_id"] = wl["cell_line_id"].astype(str)
+    sm = pd.read_csv(os.path.join(out, "sample_map.csv"), dtype={"sample": str, "plate": str, "drug": str,
+                                                                  "plate_num": str})
+    sm["is_dmso"] = sm["is_dmso"].astype(bool)
+    sm["well"] = sm["well"].fillna("")
+    targets = info["targets"]
+    cols_present = info["columns"]
+    cl = load_cell_lines(idx)
+    drugs = load_drugs(idx)
+    S = []  # summary lines
+
+    def say(s=""):
+        S.append(s)
+
+    failed = find_failed_wells(sm)
+    failed[["sample", "plate", "well", "drug", "conc", "n_cells", "cells_log2_vs_plate"]].to_csv(
+        os.path.join(res_dir, "excluded_failed_wells.csv"), index=False)
+    if len(failed):
+        log(f"Excluding {len(failed)} failed wells (almost no cells recovered; same drug fine elsewhere)")
+        sm = sm[~sm["sample"].isin(failed["sample"])].reset_index(drop=True)
+        wl = wl[wl["sample"].isin(sm["sample"])].reset_index(drop=True)
+
+    log("Baseline by cell line ...")
+    base, null_source = baseline_by_line(wl, sm, cl, targets, args.mtap_null)
+    base.to_csv(os.path.join(res_dir, "baseline_by_cell_line.csv"))
+    null_lines = list(base.index[base["MTAP_null"]])
+    label = base.get("cell_name", pd.Series(base.index, index=base.index)).fillna("")
+    label = pd.Series([n if n else i for i, n in zip(base.index, label)], index=base.index)
+
+    log("Well covariates ...")
+    ctx = well_context(wl, sm, cols_present)
+
+    log("Drug effects (corrected) ...")
+    results, Ws, calibs = {}, {}, {}
+    order = [g for g in ["PROTEASOME", "MTAP", "PSMD10"] if g in cols_present]
+    for gene in order:
+        excl = null_lines if gene == "MTAP" else []
+        extra = None
+        if gene == "PSMD10" and "PROTEASOME" in Ws:
+            extra = Ws["PROTEASOME"][["W2", "z"]].rename(columns={"W2": "PROTEASOME_log2FC", "z": "PROTEASOME_z"})
+        res, W, _d, calib = expression_effects(wl, sm, gene, excl, ctx, drugs, extra)
+        results[gene], Ws[gene], calibs[gene] = res, W, calib
+        name = "Gankyrin_PSMD10" if gene == "PSMD10" else gene
+        if gene in ("MTAP", "PSMD10"):
+            res.sort_values("z_corrected", ascending=False).to_csv(
+                os.path.join(res_dir, f"{name}_drug_effects_by_dose.csv"), index=False)
+            drug_summary(res).to_csv(os.path.join(res_dir, f"{name}_drug_summary.csv"), index=False)
+        else:
+            res.sort_values("z_corrected", ascending=False).to_csv(
+                os.path.join(res_dir, f"{name}_module_drug_effects_by_dose.csv"), index=False)
+    pos = pd.concat([slot_table(Ws[g], g) for g in ["MTAP", "PSMD10"] if g in Ws])
+    pos.to_csv(os.path.join(res_dir, "well_position_effects.csv"))
+    plates = pd.concat([plate_table(Ws[g], g) for g in ["MTAP", "PSMD10"] if g in Ws])
+    plates.to_csv(os.path.join(res_dir, "plate_dmso_offsets.csv"))
+
+    failures = {}
+
+    def attempt(label, fn):
+        """Run one analysis; if it fails, log it and carry on with the others."""
+        try:
+            return fn()
+        except Exception as e:  # noqa: BLE001
+            log(f"  WARNING: {label} failed: {e!r}")
+            failures[label] = repr(e)
+            return None
+
+    log("MTAP-null selective killing ...")
+    n = attempt("abundance table", lambda: abundance(wl, sm, base))
+    out_m = attempt("MTAP-null screen", lambda: mtap_null_screen(n, base, sm, drugs, ctx)) if n is not None else None
+    mres, nl, il = (out_m[0], out_m[2], out_m[3]) if out_m else (None, [], [])
+    if mres is not None:
+        mres.to_csv(os.path.join(res_dir, "MTAP_null_selective_drugs.csv"), index=False)
+
+    log("Gankyrin level vs drug response ...")
+    out_g = attempt("Gankyrin level screen", lambda: gankyrin_level_screen(n, base, sm, drugs)) \
+        if n is not None else None
+    gres, n_g_lines = out_g if out_g else (None, 0)
+    if gres is not None:
+        gres.to_csv(os.path.join(res_dir, "Gankyrin_level_vs_drug_response.csv"), index=False)
+
+    log("Cell cycle (DMSO cells) ...")
+    cc = attempt("cell cycle", lambda: cell_cycle_by_line(out, base, cols_present))
+    if cc is not None:
+        cc.to_csv(os.path.join(res_dir, "cell_cycle_by_cell_line.csv"))
+
+    # ------------------------------------------------------------------ summary
+    log("Writing summary ...")
+    pd.set_option("display.width", 250)
+    pd.set_option("display.max_columns", 30)
+    pd.set_option("display.max_colwidth", 60)
+    say("Tahoe-100M: MTAP and Gankyrin (PSMD10), artifact-corrected rebuild")
+    say("=" * 72)
+    say(f"Cells: {int(wl['n_cells'].sum()):,}   wells: {sm['sample'].nunique()}   plates: {sm['plate'].nunique()}"
+        f"   cell lines: {wl['cell_line_id'].nunique()}   (files used: {info['n_files']}"
+        + (f", TRIAL limited to {info['limit_files']} files" if info.get("limit_files") else "") + ")")
+    say(f"Well position source: {info['well_position_source']}")
+    say(f"Min cells per cell line per well: {MIN_CELLS}.  Drug call: FDR < {FDR_CUT}, >= {2 ** LFC_MIN:.1f}x "
+        f"(median over cell lines), >= 60% of cell lines moving the same way.")
+    say(f"Failed wells excluded (< 1/8 of the plate's usual cells while the same drug was fine elsewhere): "
+        f"{len(failed)}" + (" -> " + ", ".join(f"{r.drug} {r.conc:g} ({r.plate} {r.well}, {int(r.n_cells)} cells)"
+                                                for r in failed.itertuples()) if len(failed) else ""))
+    say()
+    say("1. CHECKS: do the known artifacts show up where they should?")
+    say("-" * 72)
+    for g in ["MTAP", "PSMD10"]:
+        if g in Ws:
+            t = pos[pos["gene"] == g].head(5)
+            say(f"Top well positions for {g} (median plate-corrected log2 shift of all drugs at that position):")
+            say(t[["median_effect_plate_corrected", "z_vs_other_positions", "n_wells", "drugs"]]
+                .round(3).to_string())
+            say()
+    say("Earlier finding: MTAP artifact at H1, Gankyrin artifact at D10. If those wells are on top above,")
+    say("the well positions are mapped correctly. If not, rerun with --layout pointing to the plate layout.")
+    say()
+    for g in ["MTAP", "PSMD10"]:
+        if g in Ws:
+            t = plates[plates["gene"] == g].head(4)
+            say(f"Plates whose DMSO wells read lowest for {g} (offset > 0 inflated every DMSO-based fold change):")
+            say(t[["dmso_offset", "n_dmso_wells", "dmso_wells"]].round(3).to_string())
+            say()
+    say("Calibration: share of wells with |z| > 1.96 (~5% expected if most drugs do nothing; the original")
+    say("DE table had 32% of MTAP tests at p < 0.05) and |z| > 3 (0.3% expected; much more = heavy tails):")
+    for g, c in calibs.items():
+        say(f"  {g:11s} drug wells {c['pct_drug_wells_abs_z_gt_1.96']:.1f}%   DMSO wells "
+            f"{c['pct_dmso_wells_abs_z_gt_1.96']:.1f}%   |z| > 3: {c['pct_drug_wells_abs_z_gt_3']:.1f}%   "
+            f"(null spread {c['null_scale']:.3f} log2)")
+    say()
+    say(f"2. BASELINE: MTAP-null cell lines ({null_source})")
+    say("-" * 72)
+    cols = [c for c in ["cell_name", "Organ", "n_cells_total", "MTAP_all_wells_vs_median_line",
+                        "MTAP_cpm_all_wells", "MTAP_pct_cells_dmso", "CDKN2A_vs_median_line", "drivers"] if c in base]
+    say(base.loc[base["MTAP_null"], cols].round(3).to_string() if null_lines else "  none called")
+    say("Next-lowest MTAP lines:")
+    say(base.loc[~base["MTAP_null"], cols].head(4).round(3).to_string())
+    say()
+    for g, title in [("MTAP", "3. DRUGS THAT CHANGE MTAP"), ("PSMD10", "4. DRUGS THAT CHANGE GANKYRIN (PSMD10)")]:
+        if g not in results:
+            continue
+        say(title + (" (corrected; MTAP-null lines excluded)" if g == "MTAP" else " (corrected)"))
+        say("-" * 72)
+        sm_ = drug_summary(results[g])
+        show = ["drug", "doses", "z_by_dose", "best_up_fold_change", "fdr_up_drug", "pct_lines_positive_at_best_up",
+                "up_pattern", "up_flags"]
+        say("Top 15 increases:")
+        say(sm_.head(15)[show].round(3).to_string(index=False))
+        say()
+        dn = sm_.sort_values("best_down_z")
+        show = ["drug", "doses", "z_by_dose", "best_down_fold_change", "fdr_down_drug",
+                "pct_lines_negative_at_best_down", "down_pattern", "down_flags"]
+        say("Top 10 decreases:")
+        say(dn.head(10)[show].round(3).to_string(index=False))
+        say()
+        called_up = (results[g]["call"] == "up").sum()
+        called_dn = (results[g]["call"] == "down").sum()
+        say(f"Drug-dose combinations called: {called_up} up, {called_dn} down.")
+        say("(pct_lines_* = % of cell lines moving in that direction at that dose; fold change = median line)")
+        say()
+    say("5. DRUGS NAMED EARLIER, before vs after correction (best dose for each)")
+    say("-" * 72)
+    for g in ["MTAP", "PSMD10"]:
+        if g not in results:
+            continue
+        r = results[g]
+        hit = r[r["drug"].str.lower().apply(lambda s: any(w.lower() in s for w in WATCH))]
+        if hit.empty:
+            continue
+        best = hit.loc[hit.groupby("drug")["z_corrected"].idxmax()]
+        say(f"{g}:")
+        say(best[["drug", "conc", "log2FC_vs_DMSO_uncorrected", "log2FC_corrected", "z_corrected", "fdr_up",
+                  "n_lines_up", "n_lines", "position_effect_removed", "plate_dmso_offset", "wells"]]
+            .sort_values("z_corrected", ascending=False).round(3).to_string(index=False))
+        say()
+    say("6. DRUGS THAT SELECTIVELY DEPLETE MTAP-NULL LINES")
+    say("-" * 72)
+    if mres is not None:
+        say(f"MTAP-null lines: {', '.join(label[c] for c in nl) or 'none'}; compared with {len(il)} "
+            "MTAP-intact lines")
+        say("in the same wells (log2 relative abundance vs the plate median; negative = null lines lost more).")
+        show = [c for c in ["drug", "conc", "extra_log2_depletion_of_MTAP_null", "z_selective", "fdr_drug",
+                            "z_by_dose", "dose_pattern", "delta_tissue_matched", "all_cells_log2_vs_plate",
+                            "PRMT5_or_MAT2A_drug", "moa_fine"] if c in mres]
+        say(mres.head(15)[show].round(3).to_string(index=False))
+        pc_rows = mres[mres["PRMT5_or_MAT2A_drug"]]
+        say("PRMT5/MAT2A drugs in the dataset (expected positive controls): "
+            + (", ".join(sorted(set(pc_rows["drug"]))) if len(pc_rows) else "none found"))
+    else:
+        say("  failed: " + failures.get("MTAP-null screen", failures.get("abundance table", "")))
+    say()
+    say("7. DOES A LINE'S GANKYRIN LEVEL PREDICT DRUG RESPONSE?")
+    say("-" * 72)
+    if gres is not None:
+        say(f"Spearman correlation across {n_g_lines} lines between untreated PSMD10 level and relative abundance")
+        say("after the drug (partial = controlling for proliferation via the G2M score).")
+        show = [c for c in ["drug", "conc", "rho", "rho_partial_G2M", "z_corrected", "fdr_drug", "z_by_dose",
+                            "moa_fine"] if c in gres]
+        say("Strongest 'high-Gankyrin lines depleted more':")
+        say(gres.head(10)[show].round(3).to_string(index=False))
+        say("Strongest 'high-Gankyrin lines spared':")
+        say(gres.sort_values("z_corrected", ascending=False).head(5)[show].round(3).to_string(index=False))
+    else:
+        say("  failed: " + failures.get("Gankyrin level screen", failures.get("abundance table", "")))
+    say()
+    say("8. CO-REGULATION")
+    say("-" * 72)
+    if "PSMD10" in Ws and "PROTEASOME" in Ws:
+        a = Ws["PSMD10"].loc[~Ws["PSMD10"]["is_dmso"], "W2"]
+        b = Ws["PROTEASOME"]["W2"].reindex(a.index)
+        say(f"Across all drug wells, Gankyrin vs rest-of-proteasome corrected shifts: Pearson r = {a.corr(b):.2f}, "
+            f"Spearman = {a.rank().corr(b.rank()):.2f}")
+    if "PSMD10" in Ws and "MTAP" in Ws:
+        a = Ws["PSMD10"].loc[~Ws["PSMD10"]["is_dmso"], "W2"]
+        b = Ws["MTAP"]["W2"].reindex(a.index)
+        say(f"MTAP vs Gankyrin corrected shifts: Pearson r = {a.corr(b):.2f}")
+    say("Genome-wide co-regulation: run the 'coreg' step (heavy, optional).")
+    say()
+    say("9. CELL CYCLE (untreated cells)")
+    say("-" * 72)
+    if cc is not None and len(cc):
+        for g in ["PSMD10", "MTAP"]:
+            col = f"{g}_log2_top_vs_bottom_G2M_PHASE_quartile"
+            col2 = f"{g}_log2_top_vs_bottom_S_PHASE_quartile"
+            say(f"{g}: G2M-high vs G2M-low cells, median log2 ratio across lines {cc[col].median():.2f} "
+                f"(positive in {int((cc[col] > 0).sum())}/{cc[col].notna().sum()} lines); "
+                f"S-high vs S-low {cc[col2].median():.2f}")
+    else:
+        say("  not available")
+    say()
+    say("Files in results/: see README_columns.txt")
+    with open(os.path.join(res_dir, "summary.txt"), "w") as fh:
+        fh.write("\n".join(S) + "\n")
+    with open(os.path.join(res_dir, "README_columns.txt"), "w") as fh:
+        fh.write(README)
+    log(f"Done. Start with {os.path.join(res_dir, 'summary.txt')}")
+
+
+README = """Extracted data (one folder up)
+=============================
+cells/*.parquet          One row per cell (~95M): barcode, sample (well), plate, drug, cell_line_id, n_genes,
+                         total_counts, raw counts of MTAP, PSMD10, CDKN2A, CDKN2B, and summed counts of the
+                         PROTEASOME, S_PHASE and G2M_PHASE gene sets. Query with duckdb or pyarrow.
+well_line.csv / .parquet One row per well x cell line: cell count, summed counts, cells with >= 1 count (det_*).
+sample_map.csv           One row per well: plate, drug, dose, well position, cells.
+well_position_check.csv  Which barcode field gave the well position and how cleanly.
+extracted_columns.json   Genes in each summed gene set.
+
+Files in results/
+=================
+summary.txt                          Key checks and top results. Start here.
+MTAP_drug_summary.csv                One row per drug: corrected MTAP effect at every dose.
+MTAP_drug_effects_by_dose.csv        One row per drug and dose, all columns.
+Gankyrin_PSMD10_drug_summary.csv     Same for Gankyrin.
+Gankyrin_PSMD10_drug_effects_by_dose.csv
+PROTEASOME_module_drug_effects_by_dose.csv   Same for the rest of the proteasome (sum of PSMA/PSMB/PSMC/PSMD
+                                     subunits, excluding PSMD10 and chaperones); used to tell Gankyrin-specific
+                                     changes from whole-proteasome changes.
+MTAP_null_selective_drugs.csv        Drugs that deplete MTAP-null lines more than MTAP-intact lines in the same wells.
+Gankyrin_level_vs_drug_response.csv  Drugs whose effect on a line's abundance tracks the line's Gankyrin level.
+baseline_by_cell_line.csv            Untreated (DMSO) MTAP, PSMD10, CDKN2A, CDKN2B levels, % of cells expressing,
+                                     MTAP-null call, organ, driver mutations.
+cell_cycle_by_cell_line.csv          In untreated cells: Gankyrin and MTAP in G2M-/S-high vs -low cells.
+well_position_effects.csv            Median shift of all drugs in each well position (the artifact being removed).
+plate_dmso_offsets.csv               How far each plate's DMSO wells sit from the plate's drug-well median.
+excluded_failed_wells.csv            Wells that recovered < 1/8 of the plate's usual cells while the same drug was
+                                     fine at the same or higher dose elsewhere: technical failures, left out of
+                                     every analysis.
+coregulation_summary.txt, coregulated_with_*.csv   (from the 'coreg' step) Genes whose drug responses track MTAP
+                                     or Gankyrin across all drug wells. r_adjusted removes the top principal
+                                     components first (broad responses such as transcription shutdown that move
+                                     thousands of genes together; 3 by default, set with --pcs); r is before that
+                                     adjustment. Strong real modules can also become components, so compare both.
+
+Main columns (drug effect tables)
+---------------------------------
+log2FC_corrected       Effect after: plate baseline = median of the plate's drug wells for the same cell line;
+                       minus the leave-drug-out well-position effect; median over cell lines.
+fold_change            2 ** log2FC_corrected.
+z_corrected            log2FC_corrected scored against the spread of all drug wells (robust z; median/MAD).
+                       Combined across plates (Stouffer) when a drug and dose was on two plates.
+fdr_up, fdr_down       Benjamini-Hochberg over all drug-dose combinations, one-sided.
+n_lines_up             Cell lines (counted once) with a per-line z > 2 and > 1.2x. n_lines = lines measured.
+frac_lines_positive    Share of cell lines whose corrected change is above zero (frac_lines_negative: below).
+call                   up/down when FDR < 0.10, median change >= 1.2x, and >= 60% of lines move that way.
+flags                  toxic: well has < half the plate's typical cell count.
+                       transcription drop: genes per cell fell; relative mRNA levels can rise artificially.
+                       cell-cycle shift: G2M module changed > 1.4x (Gankyrin follows the cell cycle).
+                       whole proteasome up/down: rest of the proteasome moved the same way (Gankyrin not specific).
+                       position effect removed / plate DMSO offset: how much the corrections changed the estimate.
+log2FC_vs_DMSO_uncorrected   The old-style estimate (against the plate's DMSO wells, no position correction).
+position_effect_removed      Leave-drug-out median of other drugs in the same well position.
+plate_dmso_offset      > 0: this plate's DMSO wells read low, which inflated every DMSO-based fold change on it.
+pct_cells_expressing_change  Change in % of cells with >= 1 count (corrected). With level_in_expressing_cells_log2
+                       this tells a shift in every cell from a change in the fraction of expressing cells.
+PROTEASOME_log2FC, PROTEASOME_z   Rest-of-proteasome change in the same wells (Gankyrin tables).
+S_PHASE_shift_log2, G2M_PHASE_shift_log2   Corrected change of the cell-cycle modules.
+cells_log2_vs_plate    log2 cells recovered in the well vs the plate's typical drug well.
+Drug summary: z_by_dose / log2FC_by_dose list doses in ascending order; up_pattern describes the dose behaviour
+                       ('top dose only', 'rises with dose', 'all doses, stronger at high dose', 'all doses, flat',
+                       'inconsistent across doses'). A real effect usually grows with dose; a significant result
+                       at one low dose only deserves suspicion.
+                       p/fdr_*_drug: best dose, Bonferroni over doses, then Benjamini-Hochberg over drugs.
+
+MTAP_null_selective_drugs.csv
+-----------------------------
+extra_log2_depletion_of_MTAP_null   Mean log2 relative abundance of MTAP-null lines minus the median of
+                       MTAP-intact lines in the same well, after position correction. Negative = selective.
+z_selective            Scored against the spread across wells plus each well's own counting noise, so wells
+                       with few surviving cells cannot produce extreme scores.
+delta_tissue_matched   Same, comparing only with intact lines of the same organ.
+intact_median_log2     Typical intact-line change (relative to the well), all_cells_log2_vs_plate = overall kill.
+<line>_log2            Each MTAP-null line separately.
+PRMT5_or_MAT2A_drug    Positive controls if present (MTAP loss makes cells depend on PRMT5/MAT2A).
+z_by_dose, dose_pattern, fdr_drug   The drug's z at every dose (ascending), how depletion behaves with dose,
+                       and a drug-level FDR (best dose, Bonferroni over doses, Benjamini-Hochberg over drugs).
+
+Gankyrin_level_vs_drug_response.csv
+-----------------------------------
+rho                    Spearman correlation across lines: untreated PSMD10 level vs relative abundance after drug.
+rho_partial_G2M        Same, controlling for proliferation (G2M score), since fast-growing lines differ in both.
+z_corrected            Fisher-transformed rho, position-corrected, scored against all drug wells.
+z_by_dose, fdr_drug    As above. Lineage is a confounder here: check whether a hit is driven by one tissue.
+"""
+
+
+# ============================================================================= coreg
+def cmd_coreg(args):
+    try:
+        import duckdb
+    except ImportError:
+        sys.exit("coreg needs duckdb:  pip install duckdb")
+    out = args.out
+    res_dir = os.path.join(out, "results")
+    os.makedirs(res_dir, exist_ok=True)
+    cache = os.path.join(out, "coreg_matrix.npz")
+    if os.path.exists(cache) and not args.reindex:
+        log("Using the saved well x gene matrix (coreg_matrix.npz); add --reindex to rebuild it")
+        z = np.load(cache, allow_pickle=False)
+        wk = pd.DataFrame({"drug": z["drug"], "conc": z["conc"], "plate_num": z["plate_num"]})
+        coreg_from_matrix(z["X"], z["genes"], wk, res_dir, failed_well_keys(out))
+        return
+    idx = discover(args.data, out)
+    files = idx["pseudobulk"]
+    if not files:
+        sys.exit("No pseudobulk differential expression files found")
+    smp = os.path.join(out, "sample_map.csv")
+    if not os.path.exists(smp):
+        sys.exit("sample_map.csv not found; run 'extract' first (it provides the well positions)")
+    sm = pd.read_csv(smp, dtype={"plate_num": str, "drug": str})
+    sm = sm[~sm["is_dmso"].astype(bool) & sm["slot"].notna()]
+    wells = pd.DataFrame({"drug": sm["drug"], "conc": sm["conc"].round(4),
+                          "plate_num": sm["plate_num"].astype(str), "slot": sm["slot"].astype(int)})
+    mem = mem_available_gb()
+    con = duckdb.connect()
+    tmp = os.path.join(out, "duckdb_tmp")
+    os.makedirs(tmp, exist_ok=True)
+    con.execute(f"SET temp_directory='{tmp}'")
+    if mem:
+        con.execute(f"SET memory_limit='{max(2, int(mem * 0.6))}GB'")
+    con.register("wells_df", wells)
+    con.execute("CREATE TABLE wells AS SELECT * FROM wells_df")
+    log(f"Averaging log2 fold changes per gene and well across cell lines ({len(files)} files; slow) ...")
+    flist = "[" + ",".join("'" + f.replace("'", "''") + "'" for f in files) + "]"
+    con.execute(f"""
+        CREATE TABLE wg AS
+        SELECT gene_name, drug, round(CAST(concentration AS DOUBLE), 4) AS conc,
+               regexp_extract(plate, '([0-9]+)', 1) AS plate_num,
+               avg(greatest(least(log2FoldChange, 5), -5)) AS lfc
+        FROM read_parquet({flist})
+        WHERE log2FoldChange IS NOT NULL AND isfinite(log2FoldChange) AND baseMean >= {MIN_BASEMEAN}
+        GROUP BY 1, 2, 3, 4
+    """)
+    log("Correcting for plate and well position ...")
+    con.execute("""
+        CREATE TABLE r1 AS
+        SELECT wg.gene_name, wg.drug, wg.conc, wg.plate_num, w.slot,
+               wg.lfc - median(wg.lfc) OVER (PARTITION BY wg.gene_name, wg.plate_num) AS r1
+        FROM wg JOIN wells w ON wg.drug = w.drug AND wg.conc = w.conc AND wg.plate_num = w.plate_num
+    """)
+    con.execute("""
+        CREATE TABLE res AS
+        SELECT gene_name, drug, conc, plate_num,
+               r1 - median(r1) OVER (PARTITION BY gene_name, slot) AS res
+        FROM r1
+    """)
+    n_matched = con.execute("SELECT count(*) FROM (SELECT DISTINCT drug, conc, plate_num FROM res)").fetchone()[0]
+    log(f"  {n_matched} drug wells matched to well positions")
+    log("Building the well x gene matrix ...")
+    con.execute("""CREATE TABLE wid AS SELECT (row_number() OVER (ORDER BY drug, conc, plate_num)) - 1 AS wid,
+                   drug, conc, plate_num FROM (SELECT DISTINCT drug, conc, plate_num FROM res)""")
+    con.execute("""CREATE TABLE gid AS SELECT (row_number() OVER (ORDER BY gene_name)) - 1 AS gid, gene_name
+                   FROM (SELECT DISTINCT gene_name FROM res)""")
+    arr = con.execute("""SELECT g.gid, w.wid, r.res FROM res r
+                         JOIN gid g ON r.gene_name = g.gene_name
+                         JOIN wid w ON r.drug = w.drug AND r.conc = w.conc AND r.plate_num = w.plate_num""").fetchnumpy()
+    genes = np.array([str(x) for x in con.execute("SELECT gene_name FROM gid ORDER BY gid").fetchnumpy()["gene_name"]])
+    wk = con.execute("SELECT drug, conc, plate_num FROM wid ORDER BY wid").fetchdf()
+    X = np.full((len(genes), len(wk)), np.nan, dtype=np.float32)
+    X[np.asarray(arr["gid"], dtype=np.int64), np.asarray(arr["wid"], dtype=np.int64)] = np.asarray(arr["res"])
+    con.close()
+    import shutil
+    shutil.rmtree(tmp, ignore_errors=True)
+    np.savez_compressed(cache, X=X, genes=np.array([str(g) for g in genes], dtype=str),
+                        drug=np.array([str(d) for d in wk["drug"]], dtype=str),
+                        conc=wk["conc"].to_numpy(dtype=float),
+                        plate_num=np.array([str(p) for p in wk["plate_num"]], dtype=str))
+    coreg_from_matrix(X, genes, wk, res_dir, failed_well_keys(out))
+
+
+def failed_well_keys(out):
+    """(drug, dose, plate number) of the failed wells, so co-regulation leaves them out too."""
+    smp = os.path.join(out, "sample_map.csv")
+    if not os.path.exists(smp):
+        return set()
+    sm = pd.read_csv(smp, dtype={"sample": str, "plate": str, "drug": str})
+    sm["is_dmso"] = sm["is_dmso"].astype(bool)
+    fw = find_failed_wells(sm)
+    nums = fw["plate"].astype(str).str.extract(r"(\d+)", expand=False)
+    return {(str(d), round(float(c), 4), str(p)) for d, c, p in zip(fw["drug"], fw["conc"], nums)}
+
+
+def coreg_from_matrix(X, genes, wk, res_dir, drop=frozenset()):
+    """Correlate every gene with MTAP and PSMD10 across drug wells, before and after removing the broad
+    responses shared by thousands of genes (top principal components: e.g. transcription shutdown)."""
+    wk = wk.reset_index(drop=True)
+    use = np.array([(str(d), round(float(c), 4), str(p)) not in drop
+                    for d, c, p in zip(wk["drug"], wk["conc"], wk["plate_num"])])
+    if (~use).any():
+        log(f"Leaving out {int((~use).sum())} failed wells")
+    X = X[:, use]
+    wk = wk[use].reset_index(drop=True)
+    keep = np.isfinite(X).mean(axis=1) >= 0.9
+    genes = np.asarray(genes)[keep]
+    Z = np.where(np.isfinite(X[keep]), X[keep], 0).astype(np.float32)
+    Z -= Z.mean(axis=1, keepdims=True)
+    sd = Z.std(axis=1, keepdims=True)
+    sd[sd == 0] = 1
+    Z /= sd
+    log(f"Principal components of {Z.shape[0]:,} genes x {Z.shape[1]:,} drug wells ...")
+    U, Sv, Vt = np.linalg.svd(Z, full_matrices=False)
+    k = min(N_PCS, len(Sv) - 1)
+    Zr = Z - (U[:, :k] * Sv[:k]) @ Vt[:k]
+    k10 = min(10, len(Sv) - 1)
+    Zr10 = Z - (U[:, :k10] * Sv[:k10]) @ Vt[:k10]     # stricter version, as a sensitivity check
+    var = Sv ** 2 / (Sv ** 2).sum()
+    labels = [f"{d} {c:g} (plate {p})" for d, c, p in zip(wk["drug"], wk["conc"], wk["plate_num"])]
+
+    def corr_with(M, v):
+        nv = np.linalg.norm(v)
+        nm = np.linalg.norm(M, axis=1)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            return (M @ v) / (nm * nv)
+
+    S = ["Genome-wide co-regulation",
+         "Per drug well: published pseudobulk log2FC averaged over cell lines, corrected for plate and well position.",
+         f"r = Pearson correlation across {Z.shape[1]:,} drug wells. r_adjusted = the same after removing the top {k}",
+         "principal components, i.e. broad responses shared by thousands of genes (e.g. transcription or",
+         "translation shutdown, proliferation), which otherwise dominate every gene's partner list.", "=" * 72,
+         "\nTop components removed (share of variance): " + ", ".join(f"PC{i + 1} {100 * var[i]:.1f}%" for i in range(k))]
+    for j in range(3):
+        order = np.argsort(Vt[j])
+        S.append(f"PC{j + 1} ({100 * var[j]:.1f}%): drug wells at one end: "
+                 + "; ".join(labels[i] for i in order[:5]))
+        S.append("      other end: " + "; ".join(labels[i] for i in order[::-1][:5]))
+        go = np.argsort(U[:, j])
+        S.append("      genes: " + ", ".join(genes[go[:8]]) + "  <->  " + ", ".join(genes[go[::-1][:8]]))
+    for target in ["MTAP", "PSMD10"]:
+        hit = np.flatnonzero(genes == target)
+        if not hit.size:
+            S.append(f"\n{target}: not measured in enough wells")
+            continue
+        i = int(hit[0])
+        df = pd.DataFrame({"gene_name": genes, "r_adjusted": corr_with(Zr, Zr[i]), "r": corr_with(Z, Z[i]),
+                           "r_adjusted_10pcs": corr_with(Zr10, Zr10[i])})
+        df = df[df["gene_name"] != target].sort_values("r_adjusted", ascending=False).reset_index(drop=True)
+        df["rank_pct_adjusted"] = (np.arange(len(df)) + 1) / len(df) * 100
+        df["rank_pct_10pcs"] = df["r_adjusted_10pcs"].rank(ascending=False, pct=True) * 100
+        df["proteasome_gene"] = df["gene_name"].str.match(PROTEASOME_RE.pattern)
+        name = "Gankyrin_PSMD10" if target == "PSMD10" else target
+        df.to_csv(os.path.join(res_dir, f"coregulated_with_{name}.csv"), index=False)
+        S.append(f"\n{target}: {len(df):,} genes")
+        S.append("Most positively co-regulated (after removing broad responses):")
+        S.append(df.head(25)[["gene_name", "r_adjusted", "r"]].round(3).to_string(index=False))
+        S.append("Most negatively co-regulated:")
+        S.append(df.tail(10)[["gene_name", "r_adjusted", "r"]].round(3).to_string(index=False))
+        raw = df.sort_values("r", ascending=False)
+        S.append("Before removing broad responses, the top partners were: " + ", ".join(raw["gene_name"].head(10)))
+        strict = df.sort_values("r_adjusted_10pcs", ascending=False)
+        S.append(f"With {k10} components removed (stricter check), the top partners are: "
+                 + ", ".join(strict["gene_name"].head(15)))
+        p = df[df["proteasome_gene"]]
+        if len(p):
+            rr = raw["r"].rank(ascending=False, pct=True) * 100
+            S.append(f"Proteasome subunits ({len(p)} genes): median rank percentile {p['rank_pct_adjusted'].median():.1f} "
+                     f"after adjustment, {rr[p.index].median():.1f} before, {p['rank_pct_10pcs'].median():.1f} with "
+                     f"{k10} components removed (near 0 = move together with {target})")
+    with open(os.path.join(res_dir, "coregulation_summary.txt"), "w") as fh:
+        fh.write("\n".join(S) + "\n")
+    log("Done: results/coregulation_summary.txt and results/coregulated_with_*.csv")
+
+
+# ============================================================================= main
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("command", choices=["extract", "analyze", "all", "coreg"])
+    ap.add_argument("--data", default=".", help="Tahoe-100M download folder (default: current folder)")
+    ap.add_argument("--out", default=None, help="output folder (default: <data>/mtap_gankyrin)")
+    ap.add_argument("--workers", type=int, default=0, help="parallel processes for extract (default: auto)")
+    ap.add_argument("--batch-size", type=int, default=20000, help="cells per batch per worker")
+    ap.add_argument("--limit-files", type=int, default=0, help="trial run on the first N expression files")
+    ap.add_argument("--layout", default=None, help="CSV with columns sample,well to override well positions")
+    ap.add_argument("--mtap-null", default=None, help="comma-separated cell lines to treat as MTAP-null")
+    ap.add_argument("--extra-genes", default="", help="comma-separated extra genes to extract per cell")
+    ap.add_argument("--min-cells", type=int, default=MIN_CELLS, help="min cells per line per well")
+    ap.add_argument("--reindex", action="store_true", help="rescan the download folder (coreg: rebuild its matrix)")
+    ap.add_argument("--pcs", type=int, default=N_PCS, help="coreg: broad components to remove (default 3)")
+    args = ap.parse_args()
+    args.out = args.out or os.path.join(args.data, "mtap_gankyrin")
+    args.extra_genes = [g.strip() for g in args.extra_genes.split(",") if g.strip()]
+    globals()["MIN_CELLS"] = args.min_cells
+    globals()["N_PCS"] = args.pcs
+    if args.command in ("extract", "all"):
+        cmd_extract(args)
+    if args.command in ("analyze", "all"):
+        cmd_analyze(args)
+    if args.command == "coreg":
+        cmd_coreg(args)
+
+
+if __name__ == "__main__":
+    main()

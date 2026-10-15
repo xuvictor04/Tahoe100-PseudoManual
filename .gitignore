@@ -1,0 +1,18 @@
+# Outputs the scripts write next to themselves (can be many GB)
+atlas/
+mtap_gankyrin/
+mtap_search/
+mtap_old/
+gankyrin_old/
+tahoe_preview.txt
+tahoe_preview.csv
+*.log
+
+# Tahoe-100M data, if this folder is also the download folder
+*.parquet
+.cache/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
