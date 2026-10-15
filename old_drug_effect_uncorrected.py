@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""
+r"""
 SUPERSEDED - kept only to reproduce the original, UNCORRECTED drug lists for comparison.
 
 This ranks drugs straight from the published pseudobulk DE table. Its top hits turned out to be artifacts:
@@ -11,6 +11,7 @@ Use tahoe_mtap_gankyrin.py for corrected results (it also reports these uncorrec
 
     python3 old_drug_effect_uncorrected.py MTAP mtap_old
     python3 old_drug_effect_uncorrected.py PSMD10 gankyrin_old
+    C:\tahoe\.venv\Scripts\python.exe old_drug_effect_uncorrected.py MTAP mtap_old   # Windows (PowerShell)
 """
 import glob
 import os
@@ -19,6 +20,9 @@ import sys
 import duckdb
 import pyarrow.parquet as pq
 
+if len(sys.argv) != 3:
+    print(__doc__)
+    sys.exit(0 if sys.argv[1:2] in (["-h"], ["--help"]) else 2)
 GENE, OUT = sys.argv[1], sys.argv[2]
 PADJ = 0.05      # significance cutoff
 LFC = 0.5        # log2 fold change cutoff (0.5 ~ 1.4x, 1.0 = 2x)

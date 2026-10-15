@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""
+r"""
 tahoe_mtap_gankyrin.py
 MTAP and Gankyrin (PSMD10) in Tahoe-100M, rebuilt from the single-cell data with
 corrections for the technical artifacts found in the published pseudobulk table.
@@ -12,7 +12,10 @@ Run it from the folder you downloaded Tahoe-100M into:
     python3 tahoe_mtap_gankyrin.py coreg      # optional, heavy: genome-wide co-regulation (pseudobulk table)
 
 Quick trial on a few files first:   python3 tahoe_mtap_gankyrin.py all --limit-files 30
-Long run that survives logout:      nohup python3 tahoe_mtap_gankyrin.py all > mtap_gankyrin.log 2>&1 &
+Long run that survives logout:      nohup python3 tahoe_mtap_gankyrin.py all > /dev/null 2>&1 &
+On Windows (PowerShell):            C:\tahoe\.venv\Scripts\python.exe tahoe_mtap_gankyrin.py all  (keep window open)
+Every run appends its log to mtap_gankyrin/mtap_gankyrin.log (tail -f mtap_gankyrin/mtap_gankyrin.log;
+Windows: Get-Content mtap_gankyrin\mtap_gankyrin.log -Wait) and keeps the computer from sleeping while it runs.
 
 Corrections built in (each one targets a problem found in the published DE table):
   1. Plate baseline: every well is compared with the median of all drug wells on the same plate
@@ -28,14 +31,20 @@ Requires numpy, pandas, pyarrow (and duckdb for 'coreg').
 """
 
 import argparse
+import contextlib
 import glob
 import json
 import math
 import multiprocessing as mp
 import os
+import platform
 import re
+import shlex
+import shutil
+import subprocess
 import sys
 import time
+import traceback
 from collections import defaultdict
 
 import numpy as np
@@ -80,8 +89,178 @@ INDEX_VERSION = 2
 ROWS = "ABCDEFGH"
 
 
+def _to_log_file(text):
+    """Append to the run log named by TAHOE_LOG_FILE (set by start_run_log; worker processes inherit it)."""
+    path = os.environ.get("TAHOE_LOG_FILE")
+    if path:
+        try:
+            with open(path, "a", encoding="utf-8") as fh:
+                fh.write(text + "\n")
+        except Exception:  # noqa: BLE001  (logging must never stop a run)
+            pass
+
+
 def log(msg):
-    print(time.strftime("[%H:%M:%S] ") + str(msg), flush=True)
+    line = time.strftime("[%H:%M:%S] ") + str(msg)
+    try:
+        print(line, flush=True)
+    except UnicodeEncodeError:                  # console code page without these characters (Windows)
+        enc = getattr(sys.stdout, "encoding", None) or "ascii"
+        try:
+            print(line.encode(enc, "replace").decode(enc), flush=True)
+        except Exception:  # noqa: BLE001
+            pass
+    except OSError:                             # console gone (closed pipe): the run log still gets the line
+        if not os.environ.get("TAHOE_LOG_FILE"):
+            raise
+    _to_log_file(line)
+
+
+# ============================================================================= platform helpers
+def safe_console():
+    """Characters the console cannot show (Windows code pages) are printed as escapes instead of crashing."""
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(errors="backslashreplace")
+        except Exception:  # noqa: BLE001  (not a text stream)
+            pass
+
+
+def start_run_log(path, title):
+    """From now on every log() line, also from worker processes (they inherit the environment), is appended to
+    `path`, and so is the traceback of a crash (sys.exit messages: log_exit). Returns the absolute path."""
+    path = os.path.abspath(path)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    os.environ["TAHOE_LOG_FILE"] = path
+    safe_console()
+    try:
+        plat = platform.platform()
+    except Exception:  # noqa: BLE001
+        plat = sys.platform
+    v = sys.version_info
+    _to_log_file(("\n" if os.path.exists(path) and os.path.getsize(path) else "")
+                 + f"===== {title} started {time.strftime('%Y-%m-%d %H:%M:%S')} | Python {v.major}.{v.minor}.{v.micro}"
+                 f" | {plat} =====")
+    prev = sys.excepthook
+    if not getattr(prev, "_tahoe", False):
+        def hook(et, ev, tb):                   # the file gets the traceback; the console gets it from prev
+            what = "STOPPED by Ctrl-C" if issubclass(et, KeyboardInterrupt) else \
+                "CRASHED:\n" + "".join(traceback.format_exception(et, ev, tb)).rstrip()
+            _to_log_file(time.strftime("[%H:%M:%S] ") + what)
+            prev(et, ev, tb)
+        hook._tahoe = True
+        sys.excepthook = hook
+    return path
+
+
+def log_exit(e):
+    """Write why a run stopped through sys.exit (which bypasses the excepthook) to the run log."""
+    code = getattr(e, "code", None)
+    if code not in (None, 0):
+        _to_log_file(time.strftime("[%H:%M:%S] ") + (f"STOPPED: {code}" if isinstance(code, str)
+                                                     else f"STOPPED with exit code {code}"))
+
+
+@contextlib.contextmanager
+def keep_awake(reason="the computation"):
+    """Keep the computer from sleeping while the block runs (Windows; macOS caffeinate; Linux systemd-inhibit).
+    Never raises; does nothing where it cannot. A laptop still sleeps when its lid is closed."""
+    stop, how = None, ""
+    try:
+        if sys.platform == "win32":
+            import ctypes
+            f = ctypes.windll.kernel32.SetThreadExecutionState
+            f.argtypes, f.restype = [ctypes.c_uint], ctypes.c_uint
+            ES_CONTINUOUS, ES_SYSTEM_REQUIRED = 0x80000000, 0x00000001
+            if f(ES_CONTINUOUS | ES_SYSTEM_REQUIRED):
+                stop, how = (lambda: f(ES_CONTINUOUS)), "Windows"
+        else:
+            cmd = None
+            if sys.platform == "darwin":
+                if shutil.which("caffeinate"):
+                    cmd = ["caffeinate", "-i", "-w", str(os.getpid())]
+            elif shutil.which("systemd-inhibit"):
+                # the inhibited command watches this process, so the lock goes away even if this one is killed
+                cmd = ["systemd-inhibit", "--what=sleep:idle", "--who=tahoe", "--why=" + reason, "--mode=block",
+                       "sh", "-c", f"while kill -0 {os.getpid()} 2>/dev/null; do sleep 15; done"]
+            if cmd:
+                p = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                     stderr=subprocess.DEVNULL)
+                time.sleep(0.5)
+                if p.poll() is None:            # still running = the lock is held (it fails fast without a bus)
+                    stop, how = (lambda: (p.terminate(), p.wait(5))), cmd[0]
+    except Exception:  # noqa: BLE001
+        stop = None
+    if stop:
+        log(f"Keeping the computer awake while {reason} runs ({how})")
+    try:
+        yield
+    finally:
+        if stop:
+            try:
+                stop()
+            except Exception:  # noqa: BLE001
+                pass
+
+
+def _linux_disk_kind(dev, depth=0):
+    """dev: a /sys/class/block or /sys/dev/block entry. Partitions -> their disk; dm-/md- devices -> slaves/."""
+    dev = os.path.realpath(dev)
+    if os.path.exists(os.path.join(dev, "partition")):
+        dev = os.path.dirname(dev)
+    if os.path.basename(dev).startswith("nvme"):
+        return "ssd"
+    slaves = os.path.join(dev, "slaves")
+    under = sorted(os.listdir(slaves)) if os.path.isdir(slaves) and depth < 5 else []
+    if under:
+        kinds = {_linux_disk_kind(os.path.join(slaves, s), depth + 1) for s in under}
+        return "hdd" if "hdd" in kinds else ("ssd" if kinds == {"ssd"} else None)
+    with open(os.path.join(dev, "queue", "rotational"), encoding="utf-8") as fh:
+        return {"0": "ssd", "1": "hdd"}.get(fh.read().strip())
+
+
+def disk_kind(path):
+    """'ssd', 'hdd' or None (unknown) for the drive holding `path`. Never raises; at most ~20 s. Only for hints:
+    many cloud VMs report their SSDs as rotational."""
+    try:
+        if sys.platform == "win32":
+            drive = os.path.splitdrive(os.path.abspath(path))[0]
+            if len(drive) != 2 or drive[1] != ":":
+                return None
+            ps = (f"$n = (Get-Partition -DriveLetter {drive[0]} -ErrorAction Stop).DiskNumber; "
+                  "$p = Get-PhysicalDisk | Where-Object { $_.DeviceId -eq \"$n\" }; "
+                  "if (-not $p) { $p = Get-Disk -Number $n | Get-PhysicalDisk -ErrorAction SilentlyContinue }; "
+                  "$p.MediaType")
+            out = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps],
+                                 capture_output=True, text=True, timeout=20).stdout
+            kinds = {w.upper() for w in out.split()}
+            if kinds & {"HDD", "3"}:
+                return "hdd"
+            return "ssd" if kinds and kinds <= {"SSD", "4", "SCM", "5"} else None
+        if sys.platform == "darwin":
+            mnt = os.path.abspath(path)
+            while not os.path.ismount(mnt) and os.path.dirname(mnt) != mnt:
+                mnt = os.path.dirname(mnt)
+            out = subprocess.run(["diskutil", "info", mnt], capture_output=True, text=True, timeout=20).stdout
+            m = re.search(r"Solid State:\s*(Yes|No)", out)
+            return None if not m else ("ssd" if m.group(1) == "Yes" else "hdd")
+        st = os.stat(path).st_dev
+        return _linux_disk_kind(f"/sys/dev/block/{os.major(st)}:{os.minor(st)}")
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def py_cmd():
+    """What a user types to run this Python: on Windows its path (PowerShell needs & "..." when the path has
+    spaces); elsewhere 'python3' when that is this very interpreter (same folder, same file), else the full path."""
+    exe = sys.executable or "python3"
+    if sys.platform == "win32":
+        return f'& "{exe}"' if " " in exe else exe
+    p3 = shutil.which("python3")
+    if p3 and os.path.realpath(p3) == os.path.realpath(exe) \
+            and os.path.dirname(os.path.abspath(p3)) == os.path.dirname(os.path.abspath(exe)):
+        return "python3"
+    return shlex.quote(exe)
 
 
 # ============================================================================= file discovery
@@ -91,7 +270,7 @@ def discover(data_dir, out_dir, refresh=False):
     cache = os.path.join(out_dir, "file_index.json")
     data_abs = os.path.abspath(data_dir)
     if os.path.exists(cache) and not refresh:
-        with open(cache) as fh:
+        with open(cache, encoding="utf-8") as fh:
             idx = json.load(fh)
         if idx.get("data_dir") == data_abs and idx.get("expression") and idx.get("version") == INDEX_VERSION:
             return idx
@@ -124,7 +303,7 @@ def discover(data_dir, out_dir, refresh=False):
             idx["drug"].append(f)
         else:
             idx["other"].append(f)
-    with open(cache, "w") as fh:
+    with open(cache, "w", encoding="utf-8") as fh:
         json.dump(idx, fh, indent=1)
     log("  found: " + ", ".join(f"{k}={len(v)}" for k, v in idx.items() if isinstance(v, list)))
     return idx
@@ -439,7 +618,7 @@ def cmd_extract(args):
     targets, cols, lut, report = build_columns(gene_meta, args.extra_genes)
     log(f"Extracting per cell: {', '.join(targets)} + modules "
         + ", ".join(f"{m} ({len(v)} genes)" for m, v in report["modules"].items() if v))
-    with open(os.path.join(out, "extracted_columns.json"), "w") as fh:
+    with open(os.path.join(out, "extracted_columns.json"), "w", encoding="utf-8") as fh:
         json.dump(report, fh, indent=1)
     cells_dir = os.path.join(out, "cells")
     os.makedirs(cells_dir, exist_ok=True)
@@ -477,7 +656,7 @@ def cmd_extract(args):
     wl.to_csv(os.path.join(out, "well_line.csv"), index=False)
     sm.to_csv(os.path.join(out, "sample_map.csv"), index=False)
     checks.to_csv(os.path.join(out, "well_position_check.csv"), index=False)
-    with open(os.path.join(out, "extract_info.json"), "w") as fh:
+    with open(os.path.join(out, "extract_info.json"), "w", encoding="utf-8") as fh:
         json.dump({"well_position_source": source, "targets": targets, "columns": cols,
                    "n_files": len(jobs), "n_cells": int(wl["n_cells"].sum()),
                    "limit_files": args.limit_files}, fh, indent=1)
@@ -1111,7 +1290,7 @@ def cmd_analyze(args):
         if not os.path.exists(os.path.join(out, f)):
             sys.exit(f"{f} not found in {out}; run the 'extract' step first")
     idx = discover(args.data, out)
-    with open(os.path.join(out, "extract_info.json")) as fh:
+    with open(os.path.join(out, "extract_info.json"), encoding="utf-8") as fh:
         info = json.load(fh)
     wl = pd.read_parquet(os.path.join(out, "well_line.parquet"))
     wl["sample"] = wl["sample"].astype(str)
@@ -1343,9 +1522,9 @@ def cmd_analyze(args):
         say("  not available")
     say()
     say("Files in results/: see README_columns.txt")
-    with open(os.path.join(res_dir, "summary.txt"), "w") as fh:
+    with open(os.path.join(res_dir, "summary.txt"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(S) + "\n")
-    with open(os.path.join(res_dir, "README_columns.txt"), "w") as fh:
+    with open(os.path.join(res_dir, "README_columns.txt"), "w", encoding="utf-8") as fh:
         fh.write(README)
     log(f"Done. Start with {os.path.join(res_dir, 'summary.txt')}")
 
@@ -1609,7 +1788,7 @@ def coreg_from_matrix(X, genes, wk, res_dir, drop=frozenset()):
             S.append(f"Proteasome subunits ({len(p)} genes): median rank percentile {p['rank_pct_adjusted'].median():.1f} "
                      f"after adjustment, {rr[p.index].median():.1f} before, {p['rank_pct_10pcs'].median():.1f} with "
                      f"{k10} components removed (near 0 = move together with {target})")
-    with open(os.path.join(res_dir, "coregulation_summary.txt"), "w") as fh:
+    with open(os.path.join(res_dir, "coregulation_summary.txt"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(S) + "\n")
     log("Done: results/coregulation_summary.txt and results/coregulated_with_*.csv")
 
@@ -1634,12 +1813,18 @@ def main():
     args.extra_genes = [g.strip() for g in args.extra_genes.split(",") if g.strip()]
     globals()["MIN_CELLS"] = args.min_cells
     globals()["N_PCS"] = args.pcs
-    if args.command in ("extract", "all"):
-        cmd_extract(args)
-    if args.command in ("analyze", "all"):
-        cmd_analyze(args)
-    if args.command == "coreg":
-        cmd_coreg(args)
+    start_run_log(os.path.join(args.out, "mtap_gankyrin.log"), "tahoe_mtap_gankyrin.py " + " ".join(sys.argv[1:]))
+    try:
+        with keep_awake(f"tahoe_mtap_gankyrin.py {args.command}"):
+            if args.command in ("extract", "all"):
+                cmd_extract(args)
+            if args.command in ("analyze", "all"):
+                cmd_analyze(args)
+            if args.command == "coreg":
+                cmd_coreg(args)
+    except SystemExit as e:
+        log_exit(e)
+        raise
 
 
 if __name__ == "__main__":

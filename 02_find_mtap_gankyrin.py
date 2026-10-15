@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""
+r"""
 Find everything in Tahoe-100M that mentions MTAP or Gankyrin (PSMD10), table by table.
 
     cd ~/Tahoe-100M
     python3 02_find_mtap_gankyrin.py           # or: python3 02_find_mtap_gankyrin.py /path/to/Tahoe-100M
+    C:\tahoe\.venv\Scripts\python.exe 02_find_mtap_gankyrin.py   # Windows (PowerShell; needs duckdb installed)
 
 Writes to ./mtap_search/:
   search_summary.txt                every table, its size, and how many rows mention MTAP / PSMD10 / Gankyrin
@@ -21,6 +22,9 @@ import sys
 import pandas as pd
 import pyarrow.parquet as pq
 
+if sys.argv[1:2] in (["-h"], ["--help"]):
+    print(__doc__)
+    sys.exit(0)
 data = sys.argv[1] if len(sys.argv) > 1 else "."
 OUT = "mtap_search"
 GENES = ("MTAP", "PSMD10")
@@ -53,7 +57,7 @@ for f in files:
 # group sharded files into tables, e.g. ".../train-00012-of-00400.parquet" -> ".../train"
 groups = {}
 for f in files:
-    key = re.sub(r"[-_]?\d{3,}[^/]*\.parquet$", "", os.path.relpath(f, data))
+    key = re.sub(r"[-_]?\d{3,}[^/\\]*\.parquet$", "", os.path.relpath(f, data))
     key = re.sub(r"\.parquet$", "", key)
     groups.setdefault(key, []).append(f)
 
@@ -90,6 +94,6 @@ for key, fs in sorted(groups.items()):
         line += f", written to {out}"
     summary.append(line)
 
-with open(os.path.join(OUT, "search_summary.txt"), "w") as fh:
+with open(os.path.join(OUT, "search_summary.txt"), "w", encoding="utf-8") as fh:
     fh.write("\n".join(summary) + "\n")
 print("\n".join(summary))

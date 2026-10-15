@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""
+r"""
 tahoe_atlas.py - every angle of Tahoe-100M with the artifact corrections worked out on MTAP and Gankyrin,
 and a Claude agent at each endpoint that analyses one angle and writes a report on it.
 
@@ -21,10 +21,15 @@ Every drug and every cell line also gets a card (angles/drugs/cards, angles/cell
 
 Agents:  --model sonnet|opus  --budget 5 (USD cap per agent)  --max-turns 80  --parallel 3
          --angles drugs,genes (subset)  --dry-run (write prompts only)  --redo (rerun finished reports)
-         --web (let agents check the literature)  --sandbox (agent shell inside bubblewrap)
+         --web (let agents check the literature)  --sandbox (agent shell sandboxed; Linux/macOS only)
 Output:  atlas/pseudobulk (counts), atlas/effects (matrices), atlas/angles/<angle> (data + brief + report),
          atlas/reports/NN_<angle>.md (one report per angle) and 00_overview.md.
-Long runs:  nohup python3 tahoe_atlas.py compute > atlas.log 2>&1 &   (later: ... agents > agents.log 2>&1 &)
+Logs:    the script writes its own log: atlas/atlas.log (computation) and atlas/agents.log (agents), and keeps the
+         computer from sleeping while it runs.
+Long runs on Linux/macOS (survive logout):
+             nohup python3 tahoe_atlas.py compute > /dev/null 2>&1 &      then: tail -f atlas/atlas.log
+On Windows (PowerShell; leave the window open, no nohup):
+             C:\tahoe\.venv\Scripts\python.exe tahoe_atlas.py compute     log: atlas\atlas.log
 """
 
 import argparse
@@ -36,6 +41,7 @@ import math
 import multiprocessing as mp
 import os
 import re
+import shlex
 import shutil
 import sys
 import time
@@ -302,7 +308,7 @@ def _build_group(job):
     flist = base + "_files.txt"
     want = "\n".join(files)
     if all(os.path.exists(o) for o in outs) and os.path.exists(flist):
-        with open(flist) as fh:
+        with open(flist, encoding="utf-8", errors="replace") as fh:
             if fh.read() == want:
                 return gid, name, 0, True
     try:
@@ -392,20 +398,9 @@ def _build_group(job):
                  columns=["sample", "field", "value", "n"]).to_csv(outs[1], index=False)
     pd.DataFrame([(s, p, d) for s, (p, d) in smeta.items()],
                  columns=["sample", "plate", "drug"]).to_csv(outs[2], index=False)
-    with open(flist, "w") as fh:
+    with open(flist, "w", encoding="utf-8") as fh:
         fh.write(want)
     return gid, name, cells, False
-
-
-def mem_available_gb():
-    try:
-        with open("/proc/meminfo") as fh:
-            for line in fh:
-                if line.startswith("MemAvailable:"):
-                    return int(line.split()[1]) / 1e6
-    except OSError:
-        pass
-    return None
 
 
 def cmd_build(args):
@@ -435,11 +430,14 @@ def cmd_build(args):
                 os.remove(f)
     workers = min(args.workers or T.auto_workers(), len(jobs))
     per_worker = 5000 * G * 4 / 1e9 * 1.3 + 1.0
-    mem = mem_available_gb()
+    mem = T.mem_available_gb()
     if mem:
         workers = max(1, min(workers, int(mem / per_worker)))
     log(f"{len(exprs)} files on {len(by_plate)} plates -> one group per plate, {workers} at a time "
         f"(~{per_worker:.1f} GB each)")
+    if not args.workers and workers > 2 and T.disk_kind(args.data) == "hdd":
+        log("  the data seem to sit on a hard drive: if reading is slow, stop and rerun with --workers 2 "
+            "(parallel readers make a hard drive seek; finished plates are kept)")
     t0, done, cells = time.time(), 0, 0
     ctx = mp.get_context("spawn")
     with ctx.Pool(workers) as pool:
@@ -459,7 +457,7 @@ def cmd_build(args):
     sm, source, checks = T.build_sample_map(smeta, bcf, wl_like, idx, args.layout)
     sm.to_csv(os.path.join(args.out, "sample_map.csv"), index=False)
     checks.to_csv(os.path.join(args.out, "well_position_check.csv"), index=False)
-    with open(os.path.join(args.out, "build_info.json"), "w") as fh:
+    with open(os.path.join(args.out, "build_info.json"), "w", encoding="utf-8") as fh:
         json.dump({"G": G, "groups": len(jobs), "cells": int(prof["n_cells"].sum()), "profiles": len(prof),
                    "well_position_source": source, "limit_files": args.limit_files}, fh, indent=1)
     dup = sm.dropna(subset=["slot"]).duplicated(["plate", "slot"]).sum()
@@ -563,7 +561,7 @@ def set_min_cells(args, prof):
     elif med < 4 * MIN_CELLS:
         MIN_CELLS = max(3, int(med // 4))
         log(f"  only ~{med:.0f} cells per line per well (trial run?): using profiles with >= {MIN_CELLS} cells")
-    with open(os.path.join(args.out, "effects", "info.json"), "w") as fh:
+    with open(os.path.join(args.out, "effects", "info.json"), "w", encoding="utf-8") as fh:
         json.dump({"min_cells": MIN_CELLS, "median_cells_per_profile": med}, fh)
 
 
@@ -611,7 +609,7 @@ def cmd_effects(args):
     prof = prof[prof["cell_line_id"].isin(lines)].reset_index(drop=True)
     set_min_cells(args, prof)
     gm = T.read_tables(idx["gene"], ["token_id", "gene_symbol", "ensembl_id"])
-    with open(os.path.join(args.out, "build_info.json")) as fh:
+    with open(os.path.join(args.out, "build_info.json"), encoding="utf-8") as fh:
         G = json.load(fh)["G"]
     L = len(lines)
     li = {s: i for i, s in enumerate(lines)}
@@ -667,7 +665,9 @@ def cmd_effects(args):
             dc = counts[dm].sum(axis=0)
             dt = tot[dm].sum(axis=0)
             dn = nc[dm].sum(axis=0)
-            dy = np.where((dn >= MIN_CELLS)[:, None], np.log2((dc + 0.5) / (dt[:, None] + 1.0) * 1e6), np.nan)
+            k = np.maximum((tot[dm] > 0).sum(axis=0), 1)[:, None]     # DMSO wells pooled per line: one pseudocount
+            dy = np.where((dn >= MIN_CELLS)[:, None],                     # per well, as in the single-well base
+                          np.log2((dc + 0.5 * k) / (dt[:, None] + k) * 1e6), np.nan)
             dy[~expr_mask] = np.nan
             offsets.append(np.nanmedian(base - dy, axis=0).astype(np.float32))
         else:
@@ -820,9 +820,9 @@ def cmd_effects(args):
                       ("r2_modules", r2m.astype(np.float32)), ("DD_r2_modules", DD_r2m),
                       ("beta", beta), ("rcor", rcor), ("DD_beta", DD_beta), ("DD_rcor", DD_rcor)]:
         np.save(os.path.join(out, f"{name}.npy"), arr)
-    with open(os.path.join(out, "modules.json"), "w") as fh:
+    with open(os.path.join(out, "modules.json"), "w", encoding="utf-8") as fh:
         json.dump({k: [int(t) for t in v] for k, v in modules.items()}, fh)
-    with open(os.path.join(out, "README_effects.md"), "w") as fh:
+    with open(os.path.join(out, "README_effects.md"), "w", encoding="utf-8") as fh:
         fh.write(EFFECTS_README)
     log(f"Effects done: {gK:,} genes x {Dn:,} drug-doses x {L} lines -> {out}")
 
@@ -864,7 +864,7 @@ class FX:
             sys.exit("effects not found (or from an older version); run 'effects' first")
         global MIN_CELLS
         try:
-            with open(os.path.join(self.d, "info.json")) as fh:
+            with open(os.path.join(self.d, "info.json"), encoding="utf-8") as fh:
                 MIN_CELLS = json.load(fh)["min_cells"]
         except (OSError, KeyError, ValueError):
             pass
@@ -969,7 +969,7 @@ def unit_rows(X):
 
 
 def write_brief(folder, title, task, files, extra=""):
-    with open(os.path.join(folder, "brief.md"), "w") as fh:
+    with open(os.path.join(folder, "brief.md"), "w", encoding="utf-8") as fh:
         fh.write(f"# Angle: {title}\n\n## Your task\n{task.strip()}\n\n## Data in this folder\n")
         for name, desc in files:
             fh.write(f"- `{name}`: {desc}\n")
@@ -1033,15 +1033,17 @@ Work unattended: never ask questions; if something is unclear, decide, and say w
 
 
 def deeper_queries(out):
-    me = os.path.abspath(__file__)
+    py, me = agent_python(), shell_quote(os.path.abspath(__file__))
     o = os.path.abspath(out)
     fx = os.path.join(o, "effects")
+    cards = [os.path.join(o, "angles", a, "cards") + os.sep for a in ("drugs", "cell_lines")]
     return f"""## Deeper queries
-- Cards: `python3 {me} --out {o} lookup gene <SYMBOL>` (also `drug <NAME>`, `line <NAME>`, `corr <SYMBOL>`).
-  Ready-made cards for every drug and line: `{o}/angles/drugs/cards/` and `{o}/angles/cell_lines/cards/`.
-- Whole matrices: `{fx}` (read `{fx}/README_effects.md` first; numpy.load(path, mmap_mode='r')).
-- Python 3 with numpy, pandas and pyarrow is available (scipy or others may be missing: check before relying on
-  them). Keep any scripts you write in this folder. Do not read the raw single-cell files (hundreds of GB).
+- Cards: `{py} {me} --out {shell_quote(o)} lookup gene <SYMBOL>` (also `drug <NAME>`, `line <NAME>`, `corr <SYMBOL>`).
+  Ready-made cards for every drug and line: `{cards[0]}` and `{cards[1]}`.
+- Whole matrices: `{fx}` (read `{os.path.join(fx, "README_effects.md")}` first; numpy.load(path, mmap_mode='r')).
+- Python (run it as `{py}`) with numpy, pandas and pyarrow is available (scipy or others may be missing: check
+  before relying on them). Keep any scripts you write in this folder. Do not read the raw single-cell files
+  (hundreds of GB).
 """
 
 
@@ -1168,7 +1170,7 @@ def write_cards(fx, folder, kind):
     if kind == "drug":
         for drug in sorted(fx.rows_of_drug):
             fn = safe_name(drug) + ".md"
-            with open(os.path.join(cd, fn), "w") as fh:
+            with open(os.path.join(cd, fn), "w", encoding="utf-8") as fh:
                 fh.write(card_drug(fx, drug))
             r = fx.dd.loc[fx.rows_of_drug[drug]]
             index.append({"drug": drug, "card": f"cards/{fn}", "moa_fine": r["moa_fine"].iloc[0],
@@ -1176,7 +1178,7 @@ def write_cards(fx, folder, kind):
     else:
         for i in range(len(fx.lines)):
             fn = safe_name(fx.line_name[i]) + ".md"
-            with open(os.path.join(cd, fn), "w") as fh:
+            with open(os.path.join(cd, fn), "w", encoding="utf-8") as fh:
                 fh.write(card_line(fx, i))
             index.append({"line": fx.line_name[i], "card": f"cards/{fn}", "organ": fx.lines.at[i, "Organ"]})
     pd.DataFrame(index).to_csv(os.path.join(cd, "index.csv"), index=False)
@@ -1193,12 +1195,17 @@ def angle_quality(fx, folder):
     for s in range(96):
         v = sm[s, g]
         here = (w["slot"] == s + 1) & fx.drug_w
+        big = int(np.argmax(np.where(np.isfinite(v), np.abs(v), -1)))
         rows.append({"well": T.well_name(s + 1), "n_drug_wells": int(here.sum()),
+                     "largest_shift_gene": labels[g][big] if np.isfinite(v[big]) else "",
+                     "largest_shift_log2": float(v[big]),
                      "genes_up_over_1.2x": int((v > LFC_MIN).sum()), "genes_down_over_1.2x": int((v < -LFC_MIN).sum()),
                      "median_abs_shift": float(np.nanmedian(np.abs(v))),
                      "top_up": top_list(labels[g], v, 10), "top_down": top_list(labels[g], v, 10, reverse=False),
                      "drugs": ", ".join(sorted(set(w.loc[here, "drug"])))})
-    pd.DataFrame(rows).sort_values("genes_up_over_1.2x", ascending=False).to_csv(
+    # sorted by the largest single-gene shift: a strong artifact on one gene (MTAP at H1) matters more than how many
+    # genes pass 1.2x by chance at a position
+    pd.DataFrame(rows).sort_values("largest_shift_log2", key=np.abs, ascending=False).to_csv(
         os.path.join(folder, "position_effects.csv"), index=False)
     absm = np.abs(sm[:, gi])
     best = np.nanargmax(np.where(np.isfinite(absm), absm, -1), axis=0)
@@ -1251,7 +1258,7 @@ def angle_quality(fx, folder):
                "random_pair_median_r": float(np.median(nulls)) if nulls.size else None,
                "random_pair_95th_pct_r": float(np.percentile(nulls, 95)) if nulls.size else None,
                "failed_wells": int(len(pd.read_csv(os.path.join(folder, "failed_wells.csv"))))}
-    with open(os.path.join(folder, "summary.json"), "w") as fh:
+    with open(os.path.join(folder, "summary.json"), "w", encoding="utf-8") as fh:
         json.dump(summary, fh, indent=1)
     write_brief(folder, TITLES["quality"], """
 How trustworthy are these data, and where are the traps? Quantify the well-position artifacts (which positions,
@@ -1260,7 +1267,8 @@ replicate plates compared with random pairs, and whether the z-scores are calibr
 when most drugs do nothing to a gene; much more means the noise is underestimated for that gene). Conclude with
 what the other analyses should watch out for.
 """, [("summary.json", "headline numbers"),
-      ("position_effects.csv", "per well position: genes shifted > 1.2x by every drug placed there, top genes, drugs"),
+      ("position_effects.csv", "per well position (sorted by its largest single-gene shift): that gene and shift, "
+                               "genes shifted > 1.2x by every drug placed there, top genes, drugs"),
       ("position_sensitive_genes.csv", "500 genes with the largest single-position shift"),
       ("plate_dmso_offsets.csv", "per plate: how far DMSO sits from the drug median (>0 = DMSO low), top genes"),
       ("failed_wells.csv", "excluded wells"),
@@ -1545,7 +1553,8 @@ def expression_loss_features(fx, max_lost=15, min_gap=0.8):
     present = (ratio[ok] >= LOSS_PRESENT).mean(axis=0)
     cand = np.flatnonzero((med >= LOSS_MIN_CPM) & (present >= 0.7))
     groups = defaultdict(list)
-    if cand.size and idx_ok.size > max_lost + 3:
+    max_lost = min(max_lost, idx_ok.size - 4)        # keep >= 4 lines above the cut (fewer lines: smaller groups)
+    if cand.size and max_lost >= 3:
         S = np.sort(np.log2(np.maximum(ratio[ok][:, cand], 1e-4)), axis=0)       # ascending, per gene
         lower = S[2:max_lost]                         # value of the k-th lowest line, k = 3..max_lost
         gaps = np.where(lower <= math.log2(LOSS_MAX), S[3:max_lost + 1] - lower, -np.inf)
@@ -2142,7 +2151,7 @@ be trusted). Use known drugs as a check (taxanes, vinca alkaloids, Aurora/PLK in
 def angle_focus(fx, folder, gene, per_line):
     c = fx.col_of(gene)
     if c is None or not fx.gmask[c]:
-        with open(os.path.join(folder, "brief.md"), "w") as fh:
+        with open(os.path.join(folder, "brief.md"), "w", encoding="utf-8") as fh:
             fh.write(f"# {gene}\n\n{gene} is not among the tested genes (too low or not found). "
                      "Write report.md saying so in one line.\n")
         return
@@ -2306,25 +2315,140 @@ def cmd_lookup(args):
         sys.exit("lookup kinds: gene, corr, drug, line")
 
 
+# ============================================================================= commands shown to the user and agents
+def shell_quote(p):
+    """A path as the shell needs it: PowerShell on Windows ("..." when needed), sh elsewhere."""
+    p = str(p)
+    if sys.platform == "win32":
+        return f'"{p}"' if not p or any(c in p for c in " &();,'{}") else p
+    return shlex.quote(p)
+
+
+def rel_path(p):
+    """p relative to the current folder when it lies below it, else absolute (for messages)."""
+    try:
+        r = os.path.relpath(p)
+    except ValueError:                          # another drive (Windows)
+        return os.path.abspath(p)
+    return os.path.abspath(p) if r.startswith("..") else r
+
+
+def user_cmd(command, extra=""):
+    """What the user types to run `tahoe_atlas.py <command>` with this Python."""
+    me = os.path.abspath(__file__)
+    here = os.path.normcase(os.path.dirname(me)) == os.path.normcase(os.getcwd())
+    return f"{T.py_cmd()} {os.path.basename(me) if here else shell_quote(me)} {command}{extra}"
+
+
+def long_run_hint(command, extra="", out="atlas"):
+    """How to start a long run of `command` here, and where its log is (the script writes it itself)."""
+    logf = rel_path(os.path.join(out, "agents.log" if command == "agents" else "atlas.log"))
+    if sys.platform == "win32":
+        return f"{user_cmd(command, extra)}   (leave the window open; log in {logf})"
+    return f"nohup {user_cmd(command, extra)} > /dev/null 2>&1 &   then: tail -f {shell_quote(logf)}"
+
+
+def same_folders(args, workers=0):
+    """--data / --out (when not the defaults) and --workers, so a printed command works on the same folders."""
+    s = ""
+    if os.path.abspath(args.data) != os.path.abspath("."):
+        s += " --data " + shell_quote(args.data)
+    if os.path.abspath(args.out) != os.path.abspath(os.path.join(args.data, "atlas")):
+        s += " --out " + shell_quote(args.out)
+    return s + (f" --workers {workers}" if workers else "")
+
+
+def key_hint():
+    return ('$env:ANTHROPIC_API_KEY="sk-ant-..." (in the same window)' if sys.platform == "win32"
+            else "export ANTHROPIC_API_KEY=sk-ant-...")
+
+
+def sdk_hint():
+    return (f"{T.py_cmd()} -m pip install claude-agent-sdk" if sys.platform == "win32"
+            else "pip install claude-agent-sdk")
+
+
+def sandbox_problem():
+    """Why --sandbox cannot work on this computer, or None (macOS: built in; Linux: bubblewrap + socat)."""
+    if sys.platform == "win32":
+        return ("--sandbox is not available on Windows (Claude Code cannot sandbox commands there); run without it: "
+                "the refusal rules (delete, kill, network, installs) still apply")
+    if sys.platform != "darwin" and not (shutil.which("bwrap") and shutil.which("socat")):
+        return "--sandbox needs bubblewrap and socat:  sudo apt-get install -y bubblewrap socat"
+    return None
+
+
+def here_hints():
+    return (f"On this computer:\n  long run:   {long_run_hint('compute')}\n  API key:    {key_hint()}\n"
+            f"  agent SDK:  {sdk_hint()}")
+
+
 # ============================================================================= agents
 AGENT_APPEND = """You are a careful computational biologist analysing one angle of the Tahoe-100M single-cell drug
-perturbation atlas. You run unattended on a server: nobody will answer questions or grant permissions, so never ask;
-decide, state your assumptions in the report, and keep going. Work in your current folder (write your scripts and
-report.md there); the effects matrices and cards elsewhere in the atlas folder may be read. Compute every number you
-report with python3 (always allowed: write a .py script in this folder and run `python3 script.py`, or use
-`python3 -c`). If any command is refused, do the same thing in python3 instead; never stop because of a refusal.
+perturbation atlas. You run unattended: nobody will answer questions or grant permissions, so never ask; decide,
+state your assumptions in the report, and keep going. Work in your current folder (write your scripts and report.md
+there); the effects matrices and cards elsewhere in the atlas folder may be read. {shell}Compute every number you
+report with Python: write a .py script in this folder and run it with `{py} script.py` (always allowed). If any
+command is refused, do the same thing in Python instead; never stop because of a refusal.
 Do not install packages, use the network, delete files or touch anything outside the atlas folder. Your job is
 finished only when report.md exists and follows brief.md; a precise, well-checked report matters more than a long
 one."""
 
-NUDGE = """report.md does not exist yet. Write it now, as brief.md specifies: compute the numbers you need with
-python3 (write a script in this folder and run it; python3 is always allowed), then write report.md. Do not ask
-questions and do not stop until report.md is written."""
+NUDGE = """{report} does not exist yet. Write it now, as your task (brief.md, if there is one) specifies: compute the
+numbers you need with Python (write a script in this folder and run it with `{py} script.py`; that is always
+allowed), then write {report}. Do not ask questions and do not stop until {report} is written."""
 
 DENY = ["Bash(rm *)", "Bash(rm)", "Bash(rmdir *)", "Bash(sudo *)", "Bash(su *)", "Bash(kill *)", "Bash(pkill *)",
         "Bash(killall *)", "Bash(curl *)", "Bash(wget *)", "Bash(ssh *)", "Bash(scp *)", "Bash(rsync *)",
         "Bash(git *)", "Bash(pip *)", "Bash(pip3 *)", "Bash(conda *)", "Bash(apt *)", "Bash(apt-get *)",
-        "Bash(shutdown *)", "Bash(reboot *)", "Bash(dd *)", "Bash(mkfs *)", "Bash(chown *)", "Bash(nohup *)"]
+        "Bash(shutdown *)", "Bash(reboot *)", "Bash(dd *)", "Bash(mkfs *)", "Bash(chown *)", "Bash(nohup *)",
+        "Bash(*-m pip *)"]
+# the same intents for the PowerShell tool (Windows); each command both with and without arguments
+DENY_PS = [f"PowerShell({c}{a})" for c in (
+    "Remove-Item", "rm", "del", "erase", "rd", "rmdir", "ri", "Clear-Content",                  # delete
+    "Stop-Process", "kill", "spps", "taskkill",                                                 # kill
+    "Stop-Computer", "Restart-Computer", "shutdown", "Format-Volume", "Clear-Disk",             # power, disk
+    "Invoke-WebRequest", "iwr", "curl", "curl.exe", "wget", "Invoke-RestMethod", "irm",         # network
+    "Start-BitsTransfer", "ssh", "scp",
+    "git", "pip", "pip3", "conda", "winget", "choco",                                           # vcs, packages
+    "Set-ExecutionPolicy", "Start-Process", "runas") for a in (" *", "")] + ["PowerShell(*-m pip *)"]
+
+
+def agent_python():
+    """How the agents run this Python (it has numpy, pandas, pyarrow): sys.executable; in PowerShell
+    & "C:\\path with spaces\\python.exe" when the path needs quotes."""
+    exe = sys.executable or "python3"
+    if sys.platform == "win32":
+        q = shell_quote(exe)
+        return f"& {q}" if q != exe else exe
+    return shlex.quote(exe)
+
+
+def agent_text(template, **fields):
+    """Fill {py} (how to run this Python), {shell} (on Windows: the shell is PowerShell), {report} (default
+    report.md) and any other {fields} in an agent text."""
+    shell = "Your shell is PowerShell (Windows), not bash: use PowerShell syntax. " if sys.platform == "win32" else ""
+    return template.format(**{"py": agent_python(), "shell": shell, "report": "report.md", **fields})
+
+
+def deny_rules():
+    """Commands the agents may never run: the Bash list everywhere, plus the PowerShell list on Windows."""
+    return DENY + (DENY_PS if sys.platform == "win32" else [])
+
+
+def git_bash():
+    """Git Bash on Windows (the agents' Bash tool needs it; WSL's bash.exe does not count), else None."""
+    for p in (os.environ.get("CLAUDE_CODE_GIT_BASH_PATH"), shutil.which("bash"), r"C:\Program Files\Git\bin\bash.exe"):
+        if p and os.path.exists(p) and not re.search(r"system32|windowsapps", p, re.I):
+            return p
+    return None
+
+
+def agent_tools(web=False):
+    """Files, search and a shell: Bash; on Windows PowerShell (plus Bash when Git Bash is installed)."""
+    shells = (["PowerShell"] + (["Bash"] if git_bash() else [])) if sys.platform == "win32" else ["Bash"]
+    return ["Read", "Write", "Edit", "Glob", "Grep"] + shells + (["WebSearch", "WebFetch"] if web else [])
+
 
 SYNTH_TASK = """Read every report in this folder (all *.md files except 00_overview.md) and write 00_overview.md:
 a single overview of what Tahoe-100M shows across all angles. Start with the 5-8 most important findings (each with
@@ -2335,10 +2459,14 @@ Do not invent numbers: use only what the reports state. Run unattended; never as
 FALLBACK_TAG = "<!-- agent did not write its report; last messages below -->"
 
 
-def agent_jobs(D, args):
+def agent_jobs(D, args, order=None, append=None):
+    """One job per folder under D['ang'] with a brief.md; its report is copied to D['rep']/NN_<name>.md, NN = the
+    folder's position in `order` (default ANGLES), 50 for the others. args.angles (if present) picks a subset.
+    append: the agents' system-prompt addition (default: AGENT_APPEND for this computer)."""
+    num = {a: i + 1 for i, a in enumerate(order or ANGLES)}
+    want = {a.strip() for a in (getattr(args, "angles", "") or "").split(",") if a.strip()} or None
+    append = agent_text(AGENT_APPEND) if append is None else append
     jobs = []
-    order = {a: i + 1 for i, a in enumerate(ANGLES)}
-    want = {a.strip() for a in args.angles.split(",") if a.strip()} if args.angles else None
     for folder in sorted(glob.glob(os.path.join(D["ang"], "*"))):
         name = os.path.basename(folder)
         brief = os.path.join(folder, "brief.md")
@@ -2346,9 +2474,9 @@ def agent_jobs(D, args):
             continue
         if want and name not in want and not (name.startswith("focus_") and "focus" in want):
             continue
-        out = os.path.join(D["rep"], f"{order.get(name, 50):02d}_{name}.md")
+        out = os.path.join(D["rep"], f"{num.get(name, 50):02d}_{name}.md")
         jobs.append({"name": name, "cwd": folder, "out": out, "report": os.path.join(folder, "report.md"),
-                     "brief": brief, "append": AGENT_APPEND,
+                     "brief": brief, "append": append,
                      "prompt": "Read brief.md in this folder, analyse the data as it asks, and write report.md here."})
     return jobs
 
@@ -2357,7 +2485,7 @@ def up_to_date(job):
     out = job["out"]
     if not os.path.exists(out) or os.path.getsize(out) < 200:
         return False
-    with open(out) as fh:
+    with open(out, encoding="utf-8", errors="replace") as fh:
         if FALLBACK_TAG in fh.read(500):
             return False
     return os.path.getmtime(out) >= os.path.getmtime(job["brief"])
@@ -2366,14 +2494,14 @@ def up_to_date(job):
 def agent_options(job, args, resume=None, budget=None, max_turns=None):
     from claude_agent_sdk import ClaudeAgentOptions
     fields = {f.name for f in dataclasses.fields(ClaudeAgentOptions)}
-    tools = ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
-    if args.web:
-        tools += ["WebSearch", "WebFetch"]
-    want = {"cwd": job["cwd"], "tools": tools, "allowed_tools": list(tools), "disallowed_tools": DENY,
+    tools = agent_tools(args.web)
+    want = {"cwd": job["cwd"], "tools": tools, "allowed_tools": list(tools), "disallowed_tools": deny_rules(),
             "permission_mode": args.permission_mode, "setting_sources": [], "add_dirs": [os.path.abspath(args.out)],
             "system_prompt": {"type": "preset", "preset": "claude_code", "append": job["append"]},
             "model": args.model, "max_turns": max_turns or args.max_turns,
             "max_budget_usd": args.budget if budget is None else budget}
+    if sys.platform == "win32":                 # else any Bash deny rule silently switches the PowerShell tool off
+        want["env"] = {"CLAUDE_CODE_USE_POWERSHELL_TOOL": "1"}
     if resume:
         want["resume"] = resume
     if args.sandbox:
@@ -2409,16 +2537,24 @@ async def run_agent(job, args, sem):
         if os.path.exists(rep):
             os.replace(rep, rep + ".prev")        # never pass off an old report as new
         results, texts, err = [], [], ""
-        with open(os.path.join(job["cwd"], "agent.log"), "w") as logf:
+        with open(os.path.join(job["cwd"], "agent.log"), "w", encoding="utf-8") as logf:
             try:
                 r = await _one_query(job["prompt"], agent_options(job, args), logf, texts)
                 results.append(r)
                 sid = getattr(r, "session_id", None)
-                if not os.path.exists(rep) and sid:          # one nudge, in the same session
-                    logf.write("[harness] report.md missing: resuming the session once\n")
-                    log(f"Agent {job['name']}: no report yet, resuming once")
-                    results.append(await _one_query(NUDGE, agent_options(job, args, resume=sid,
-                                                                         budget=args.budget / 2), logf, texts))
+                if not os.path.exists(rep) and sid:          # one nudge, in the same session, within the cap
+                    left = args.budget - (getattr(r, "total_cost_usd", None) or 0.0)
+                    name = os.path.basename(rep)
+                    if left < max(0.25, 0.1 * args.budget):
+                        logf.write(f"[harness] {name} missing; not resuming: ${left:.2f} of the "
+                                   f"${args.budget:g} cap left\n")
+                        log(f"Agent {job['name']}: no report and only ${left:.2f} of its cap left: not resuming")
+                    else:
+                        logf.write(f"[harness] {name} missing: resuming the session once (${left:.2f} left)\n")
+                        log(f"Agent {job['name']}: no report yet, resuming once with the ${left:.2f} left of its cap")
+                        nudge = agent_text(NUDGE, report=name)
+                        results.append(await _one_query(nudge, agent_options(job, args, resume=sid, budget=left),
+                                                        logf, texts))
             except Exception as e:  # noqa: BLE001  (CLI/process errors; the report may still exist)
                 err = f"{type(e).__name__}: {e}"
                 logf.write(f"[error] {err}\n")
@@ -2426,7 +2562,7 @@ async def run_agent(job, args, sem):
             if os.path.abspath(rep) != os.path.abspath(job["out"]):
                 shutil.copy(rep, job["out"])
         elif texts:
-            with open(job["out"], "w") as fh:
+            with open(job["out"], "w", encoding="utf-8") as fh:
                 fh.write(f"# {job['name']}\n{FALLBACK_TAG}\n\n" + "\n\n".join(texts[-3:]))
         for old in glob.glob(os.path.join(os.path.dirname(job["out"]), f"[0-9][0-9]_{glob.escape(job['name'])}.md")):
             if os.path.exists(job["out"]) and os.path.abspath(old) != os.path.abspath(job["out"]):
@@ -2451,13 +2587,13 @@ async def ping_agent(args):
     d = os.path.join(args.out, "check")
     os.makedirs(d, exist_ok=True)
     texts = []
-    with open(os.path.join(d, "agent.log"), "w") as logf:
+    with open(os.path.join(d, "agent.log"), "w", encoding="utf-8") as logf:
         r = await _one_query("Reply with the single word: ready",
                              agent_options({"cwd": d, "append": "Reply briefly."}, args, budget=0.25, max_turns=2),
                              logf, texts)
     ok = r is not None and not getattr(r, "is_error", True) and any("ready" in t.lower() for t in texts)
     return ok, (f"{getattr(r, 'subtype', 'no result')}, model {args.model}, ${getattr(r, 'total_cost_usd', 0) or 0:.3f}"
-                + ("" if ok else f"; reply: {' '.join(texts)[:200] or '-'} (see {d}/agent.log)"))
+                + ("" if ok else f"; reply: {' '.join(texts)[:200] or '-'} (see {os.path.join(d, 'agent.log')})"))
 
 
 def cmd_check(args):
@@ -2496,7 +2632,15 @@ def cmd_check(args):
     os.makedirs(args.out, exist_ok=True)
     free = shutil.disk_usage(args.out).free / 1e9
     say(free >= need, f"disk: {free:.0f} GB free at {os.path.abspath(args.out)}, ~{need:.0f} GB needed")
-    mem, cpus = mem_available_gb(), os.cpu_count() or 1
+    kind = T.disk_kind(args.data)
+    if kind == "hdd":
+        say(False, "disk type: the data seem to sit on a hard drive (HDD); parallel readers make a hard drive seek "
+            "constantly, so --workers 2 usually reads faster (added to the command below; some cloud SSDs also "
+            "report as HDD: then leave it out)", fatal=False)
+    else:
+        say(True, "disk type: SSD" if kind == "ssd" else "disk type: could not be determined (SSD or hard drive; "
+            "on a hard drive --workers 2 usually reads faster)")
+    mem, cpus = T.mem_available_gb(), os.cpu_count() or 1
     per_worker = 5000 * G * 4 / 1e9 * 1.3 + 1.0
     workers = max(1, min(14, max(1, cpus - 1), int((mem or 0) / per_worker) or 1))
     say(mem is None or mem >= per_worker + 5, f"memory: {mem or 0:.0f} GB free, {cpus} CPUs -> {workers} build workers "
@@ -2509,14 +2653,13 @@ def cmd_check(args):
         sdk = True
         say(True, f"claude-agent-sdk {getattr(claude_agent_sdk, '__version__', '?')}")
     except ImportError:
-        agent_todo.append("pip install claude-agent-sdk")
-        say(False, "claude-agent-sdk not installed (needed only for the agents step): pip install claude-agent-sdk",
-            fatal=False)
+        agent_todo.append(sdk_hint())
+        say(False, f"claude-agent-sdk not installed (needed only for the agents step): {sdk_hint()}", fatal=False)
     keys = ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX",
             "CLAUDE_CODE_OAUTH_TOKEN"]
     auth = any(os.environ.get(k) for k in keys)
     if not auth:
-        agent_todo.append("export ANTHROPIC_API_KEY=sk-ant-...")
+        agent_todo.append(key_hint())
     say(auth, "API key found in the environment" if auth else
         "ANTHROPIC_API_KEY not set (needed only for the agents step)", fatal=False)
     if sdk and auth and not args.dry_run:
@@ -2528,14 +2671,17 @@ def cmd_check(args):
             agent_todo.append("fix the live agent test above (key, network or model name)")
         say(ok, f"live agent test: {info}", fatal=False)
     if args.sandbox:
-        say(bool(shutil.which("bwrap") and shutil.which("socat")), "bubblewrap and socat for --sandbox", fatal=False)
+        prob = sandbox_problem()
+        say(prob is None, prob or ("--sandbox: built in on macOS" if sys.platform == "darwin" else
+                                   "--sandbox: bubblewrap and socat found"), fatal=False)
     print()
     if bad:
         print(f"{len(bad)} problem(s) to fix before computing (see FAIL lines above).")
         sys.exit(1)
-    print("Ready to compute:  nohup python3 tahoe_atlas.py compute > atlas.log 2>&1 &")
-    print("Agents step: " + ("ready too (python3 tahoe_atlas.py agents, after compute)." if not agent_todo else
-                             "before it, " + "; ".join(agent_todo) + "."))
+    hint_workers = args.workers or (2 if kind == "hdd" else 0)
+    print("Ready to compute:  " + long_run_hint("compute", same_folders(args, hint_workers), args.out))
+    print("Agents step: " + (f"ready too, after compute:  {long_run_hint('agents', same_folders(args), args.out)}"
+                             if not agent_todo else "before it: " + ";  ".join(agent_todo)))
 
 
 DIAGNOSTICS = [   # (path under the atlas folder, max rows or None): what Claude needs to check the computation
@@ -2584,9 +2730,17 @@ def cmd_bundle(args):
             else:
                 z.write(src, arc)
             n_tables += 1
-        for lg in {os.path.abspath(p) for p in ("atlas.log", os.path.join(args.data, "atlas.log")) if os.path.exists(p)}:
-            if os.path.getsize(lg) < 20e6:
-                z.write(lg, os.path.join("computation", "atlas.log"))
+        # the run logs the script writes, then console logs that older instructions redirected next to the data
+        logs = [(os.path.join(args.out, "atlas.log"), "computation/atlas.log"),
+                (os.path.join(args.out, "agents.log"), "agent_logs/agents.log")]
+        logs += [(os.path.join(d, f"{n}.log"), f"{'computation' if n == 'atlas' else 'agent_logs'}/{n}_console.log")
+                 for n in ("atlas", "agents") for d in (".", args.data)]
+        seen = set()
+        for src, arc in logs:
+            src = os.path.abspath(src)
+            if src not in seen and os.path.isfile(src):
+                seen.add(src)
+                add_log(z, src, arc)
         for f in reps + [os.path.join(D["rep"], "agents_summary.csv")]:
             if os.path.exists(f):
                 z.write(f, os.path.join("reports", os.path.basename(f)))
@@ -2598,22 +2752,39 @@ def cmd_bundle(args):
         return
     what = f"{n_tables} computation tables" + (f" and {len(reps)} reports" if reps else "")
     log(f"Bundled {what} -> {os.path.abspath(path)} ({os.path.getsize(path) / 1e6:.1f} MB). "
-        "Download it (e.g. scp) and upload it to Claude" + (" to turn each report into a doc." if reps else
-                                                          " to check the numbers before running the agents."))
+        + ("Upload it" if sys.platform == "win32" else "Download it (e.g. scp) and upload it") + " to Claude"
+        + (" to turn each report into a doc." if reps else " to check the numbers before running the agents."))
+
+
+def add_log(z, src, arc, cap=20_000_000):
+    """Put a log into the zip; a log larger than cap bytes goes in as its last cap bytes."""
+    size = os.path.getsize(src)
+    if size <= cap:
+        z.write(src, arc)
+        return
+    with open(src, "rb") as fh:
+        fh.seek(size - cap)
+        tail = fh.read(cap)
+    z.writestr(arc, f"[first {(size - cap) / 1e6:.0f} MB of {os.path.basename(src)} left out]\n".encode() + tail)
 
 
 def check_auth():
     keys = ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX",
             "CLAUDE_CODE_OAUTH_TOKEN"]
     if not any(os.environ.get(k) for k in keys):
-        sys.exit("Set your API key first:  export ANTHROPIC_API_KEY=sk-ant-...   (or run 'compute' for the computation alone)")
+        sys.exit(f"Set your API key first:  {key_hint()}   (or run 'compute' for the computation alone)")
 
 
-def cmd_agents(args):
-    D = dirs(args.out)
-    jobs = agent_jobs(D, args)
+def cmd_agents(args, D=None, order=None, synth_task=None, append=None):
+    """One agent per folder with a brief.md under D['ang'], reports in D['rep'], then an overview agent.
+    Defaults are the atlas's: dirs(args.out), ANGLES order, SYNTH_TASK, AGENT_APPEND. Another script can run the
+    same stage on its own folders with its own order, overview task and system-prompt addition (used verbatim;
+    agent_text() fills {py} and {shell})."""
+    D = D or dirs(args.out)
+    os.makedirs(D["rep"], exist_ok=True)
+    jobs = agent_jobs(D, args, order, append)
     if not jobs:
-        sys.exit("No angle folders with a brief.md; run 'angles' first")
+        sys.exit(f"No folders with a brief.md under {D['ang']} (atlas: run 'angles' first)")
     todo = [j for j in jobs if args.redo or not up_to_date(j)]
     skipped = [j["name"] for j in jobs if j not in todo]
     if skipped:
@@ -2622,21 +2793,22 @@ def cmd_agents(args):
     reports = [j["out"] for j in jobs]
     if args.dry_run:
         for j in todo:
-            with open(os.path.join(j["cwd"], "agent_prompt.txt"), "w") as fh:
+            with open(os.path.join(j["cwd"], "agent_prompt.txt"), "w", encoding="utf-8") as fh:
                 fh.write("SYSTEM (appended to the Claude Code preset):\n" + j["append"] + "\n\nPROMPT:\n" + j["prompt"])
         n = len(todo) + (0 if args.skip_overview else 1)
         log(f"Dry run: {len(todo)} agents planned: {', '.join(j['name'] for j in todo) or '-'}"
             + ("" if args.skip_overview else " + overview")
             + f"; prompts written as agent_prompt.txt. Cost cap: {n} x ${args.budget:g} = ${n * args.budget:g} "
-              f"(actual cost is usually well below the cap)")
+              f"(each agent stops at its cap; the SDK's cost estimate can overshoot it slightly; actual cost is "
+              f"usually well below)")
         return
     check_auth()
     try:
         import claude_agent_sdk  # noqa: F401
     except ImportError:
-        sys.exit("Install the agent SDK first:  pip install claude-agent-sdk")
-    if args.sandbox and not (shutil.which("bwrap") and shutil.which("socat")):
-        sys.exit("--sandbox needs bubblewrap and socat:  sudo apt-get install -y bubblewrap socat")
+        sys.exit(f"Install the agent SDK first:  {sdk_hint()}")
+    if args.sandbox and sandbox_problem():
+        sys.exit(sandbox_problem())
     log(f"Running {len(todo)} agents, {args.parallel} at a time, model {args.model}, "
         f"cap ${args.budget:g} and {args.max_turns} turns each")
 
@@ -2648,8 +2820,9 @@ def cmd_agents(args):
         if not args.skip_overview and have and (args.redo or not os.path.exists(ov_out)
                                                 or os.path.getmtime(ov_out) < newest):
             ov = {"name": "overview", "cwd": D["rep"], "out": ov_out, "report": ov_out, "brief": ov_out,
-                  "prompt": SYNTH_TASK, "append": "You write the overview of a set of analysis reports. Work only "
-                                                  "in this folder and never ask questions."}
+                  "prompt": synth_task or SYNTH_TASK,
+                  "append": "You write the overview of a set of analysis reports. Work only in this folder and "
+                            "never ask questions."}
             recs.append(await run_agent(ov, args, asyncio.Semaphore(1)))
         return recs
 
@@ -2668,36 +2841,42 @@ def cmd_agents(args):
 
 # ============================================================================= main
 def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
+                                 epilog=here_hints())
     ap.add_argument("command", choices=["check", "compute", "build", "effects", "angles", "agents", "all", "bundle",
                                         "lookup"])
     ap.add_argument("kind", nargs="?", help="lookup: gene | drug | line | corr")
     ap.add_argument("name", nargs="*", help="lookup: the gene, drug or line")
     ap.add_argument("--data", default=".", help="Tahoe-100M download folder (default: current folder)")
     ap.add_argument("--out", default=None, help="output folder (default: <data>/atlas)")
-    ap.add_argument("--workers", type=int, default=0)
-    ap.add_argument("--batch-size", type=int, default=20000)
+    ap.add_argument("--workers", type=int, default=0, help="build: plates read at once (default: from CPUs and "
+                                                           "free memory; 2 is often faster from a hard drive)")
+    ap.add_argument("--batch-size", type=int, default=20000, help="build: cells per batch per worker")
     ap.add_argument("--limit-files", type=int, default=0, help="trial run on the first N expression files "
                                                                "(use a separate --out)")
     ap.add_argument("--layout", default=None, help="CSV sample,well to override well positions")
     ap.add_argument("--min-cells", type=int, default=0, help="cells per line per well needed (default 30; "
                                                              "lowered automatically for small trial runs)")
-    ap.add_argument("--reindex", action="store_true")
+    ap.add_argument("--reindex", action="store_true", help="rescan the download folder for its parquet files")
     ap.add_argument("--angles", default="", help="comma-separated subset of: " + ",".join(ANGLES) + ",focus")
     ap.add_argument("--focus-genes", default="MTAP,PSMD10", help="genes that get their own focus report")
     ap.add_argument("--model", default="sonnet", help="agent model: sonnet, opus, or a full model ID")
-    ap.add_argument("--budget", type=float, default=5.0, help="USD cap per agent")
-    ap.add_argument("--max-turns", type=int, default=80)
+    ap.add_argument("--budget", type=float, default=5.0, help="USD cap per agent (its one 'write the report' "
+                                                              "nudge only gets what is left of it)")
+    ap.add_argument("--max-turns", type=int, default=80, help="turns per agent")
     ap.add_argument("--parallel", type=int, default=3, help="agents running at once")
-    ap.add_argument("--permission-mode", default="dontAsk")
+    ap.add_argument("--permission-mode", default="dontAsk", help="Claude Code permission mode of the agents "
+                                                                 "(dontAsk: anything not allowed is refused)")
     ap.add_argument("--web", action="store_true", help="let agents use web search to check the literature")
-    ap.add_argument("--sandbox", action="store_true", help="run agent shell commands inside bubblewrap")
+    ap.add_argument("--sandbox", action="store_true", help="run agent shell commands sandboxed (Linux: bubblewrap; "
+                                                           "macOS: built in; not available on Windows)")
     ap.add_argument("--redo", action="store_true", help="agents: rerun even if a report is already up to date")
-    ap.add_argument("--skip-overview", action="store_true")
+    ap.add_argument("--skip-overview", action="store_true", help="agents: no overview report")
     ap.add_argument("--dry-run", action="store_true", help="agents: write the prompts, call nothing")
     args = ap.parse_args()
     args.out = args.out or os.path.join(args.data, "atlas")
     os.makedirs(args.out, exist_ok=True)
+    T.safe_console()
     if args.command == "lookup":
         if not args.kind or not args.name:
             sys.exit("usage: tahoe_atlas.py lookup gene|drug|line|corr NAME")
@@ -2706,12 +2885,25 @@ def main():
         return cmd_check(args)
     if args.command == "bundle":
         return cmd_bundle(args)
+    T.start_run_log(os.path.join(args.out, "agents.log" if args.command == "agents" else "atlas.log"),
+                    "tahoe_atlas.py " + " ".join(sys.argv[1:]))
+    try:
+        with T.keep_awake(f"tahoe_atlas.py {args.command}"):
+            run_steps(args)
+    except SystemExit as e:
+        T.log_exit(e)
+        raise
+
+
+def run_steps(args):
     if args.command == "all" and not args.dry_run:          # fail now, not after hours of computing
         check_auth()
         try:
             import claude_agent_sdk  # noqa: F401
         except ImportError:
-            sys.exit("Install the agent SDK first (pip install claude-agent-sdk), or run 'compute' for the computation alone")
+            sys.exit(f"Install the agent SDK first ({sdk_hint()}), or run 'compute' for the computation alone")
+        if args.sandbox and sandbox_problem():
+            sys.exit(sandbox_problem())
     t0 = time.time()
     if args.command in ("build", "all", "compute"):
         cmd_build(args)
@@ -2722,8 +2914,8 @@ def main():
     if args.command == "compute":
         log(f"Computation done in {(time.time() - t0) / 60:.0f} min. No agent has been called.")
         cmd_bundle(args)
-        log("Next: send atlas_bundle.zip to Claude to check the numbers; then run the agents with "
-            "'python3 tahoe_atlas.py agents' (needs ANTHROPIC_API_KEY and pip install claude-agent-sdk).")
+        log(f"Next: send atlas_bundle.zip to Claude to check the numbers; then run the agents: first {key_hint()} "
+            f"and {sdk_hint()}, then {long_run_hint('agents', same_folders(args), args.out)}")
     if args.command in ("agents", "all"):
         cmd_agents(args)
         if not args.dry_run:

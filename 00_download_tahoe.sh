@@ -19,7 +19,7 @@ pip install -q -U huggingface_hub hf_xet "brotli>=1.2.0" pyarrow pandas numpy du
 # An old brotlicffi also triggers the "process() takes no keyword arguments" crash
 if pip show brotlicffi >/dev/null 2>&1; then pip install -q -U brotlicffi; fi
 
-df -h "$DEST" | tail -1 | awk '{print "Free space at destination: " $4 " (need about 430G for everything)"}'
+df -hP "$DEST" | tail -1 | awk '{print "Free space at destination: " $4 " (need about 430G for everything)"}'
 
 for attempt in 1 2 3; do
   echo "Download attempt $attempt into $DEST ..."

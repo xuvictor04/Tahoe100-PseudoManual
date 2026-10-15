@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""
+r"""
 Write a readable preview of one Tahoe-100M expression parquet file.
 
     cd ~/Tahoe-100M
     python3 01_preview_parquet.py              # or: python3 01_preview_parquet.py /path/to/Tahoe-100M
+    C:\tahoe\.venv\Scripts\python.exe 01_preview_parquet.py      # Windows (PowerShell, in C:\tahoe\Tahoe-100M)
 
 Writes, in the current folder:
   tahoe_preview.txt  schema, row counts, and the top 50 genes (by name) of the first cell
@@ -17,6 +18,9 @@ import sys
 import pandas as pd
 import pyarrow.parquet as pq
 
+if sys.argv[1:2] in (["-h"], ["--help"]):
+    print(__doc__)
+    sys.exit(0)
 data = sys.argv[1] if len(sys.argv) > 1 else "."
 
 
@@ -77,7 +81,7 @@ out["total_counts"] = df["expressions"].apply(lambda x: int(sum(x[1:])))
 out["top10_genes"] = df.apply(top_str, axis=1)
 out.to_csv("tahoe_preview.csv", index=False)
 
-with open("tahoe_preview.txt", "w") as fh:
+with open("tahoe_preview.txt", "w", encoding="utf-8") as fh:
     fh.write(f"Parquet files in folder: {len(files)}\n")
     fh.write(f"Expression file:         {expr}\n")
     fh.write(f"Gene metadata file:      {gmeta}\n")
