@@ -319,6 +319,20 @@ run_check() {
   ( cd "$DATA" && "$@" ) >"$out" 2>&1
   rc=$?
   [ "$tty" = 1 ] && printf '%-70s\r' ""
+  # REUSED=1: this run reuses the atlas build / the panel's extract, which the check's disk estimate counts anew;
+  # the new effects / analysis (and their temporary copies) still need ~2 GB at full size
+  if [ "$rc" -ne 0 ] && [ "${REUSED:-0}" = 1 ] && grep -q '^\[FAIL\] disk:' "$out" &&
+      ! grep '^\[FAIL\]' "$out" | grep -q -v '^\[FAIL\] disk:'; then
+    local free_kb
+    free_kb="$(df -Pk "$DATA" 2>/dev/null | awk 'NR == 2 {print $4}')"
+    if [ "${free_kb:-0}" -ge $((2 * 1024 * 1024)) ] 2>/dev/null; then
+      rc=0
+      say "${TAB}note: the disk check counts space for a new build or extract; this run reuses the one there." | wrap
+    else
+      say "${TAB}note: this run reuses the build or extract, but its new outputs still need ~2 GB free" \
+        "($((${free_kb:-0} / 1024 / 1024)) GB free)." | wrap
+    fi
+  fi
   if [ "$rc" -ne 0 ]; then
     if grep -q '^\[FAIL\]' "$out"; then
       say "The check of $label found problems:"
@@ -365,13 +379,54 @@ foreground() {  # a quick command of a script, in the data folder
   ( cd "$DATA" && "$PY" "$REPO/$(script_of "$job")" "$@" )
 }
 
-took_words() {  # how long a run takes, for 'Started: ...'
+took_words() {  # how long a run takes, for 'Started: ...' (took_words JOB [STEPS]); empty: nothing to say
   local t
+  case "$1 ${2:-}" in
+    "atlas effects angles") printf 'its build is reused: %s' "$(fact atlas_redo)"; return 0 ;;
+    "atlas angles") printf 'a few minutes: rewrites the agent briefs'; return 0 ;;
+    "panel analyze") printf 'its extract is reused: %s' "$(fact panel_analyze)"; return 0 ;;
+    "atlas compute"|"atlas "|"panel all"|"panel ") ;;
+    *) return 0 ;;
+  esac
   t="$(fact "$1_took")"
   if [ -n "$t" ]; then printf 'the last full run here took %s min' "$t"
   elif [ "$1" = atlas ]; then printf '20 min to 1.5 h, depending on the machine'
   else printf "'%s status' estimates it after a minute" "$ME"
   fi
+}
+
+what_words() {  # what_words JOB STEPS: "the atlas effects and angles", "the gene panel's analysis", ...
+  case "$1 $2" in
+    "atlas compute") printf 'the atlas' ;;
+    "atlas effects angles") printf 'the atlas effects and angles' ;;
+    "atlas angles") printf 'the atlas angles' ;;
+    "panel all") printf 'the gene panel' ;;
+    "panel analyze") printf "the gene panel's analysis" ;;
+    *) printf '%s (%s)' "$(name_of "$1")" "$2" ;;
+  esac
+}
+
+reuses() {      # reuses "STEP ...": 1 when no step reads the cells (the build / extract there is reused), else 0
+  case " $1 " in *" compute "*|*" build "*|*" extract "*|*" all "*) printf 0 ;; *) printf 1 ;; esac
+}
+
+JOBARGS=()
+job_steps() {   # job_steps JOB CHECK(0|1) "STEP ..." ARGS...: JOBARGS = [@check ... ::] @STEP cmd [:: @STEP cmd ...]
+  local job="$1" check="$2" steps="$3" script s
+  shift 3
+  script="$REPO/$(script_of "$job")"
+  JOBARGS=()
+  [ "$check" = 1 ] && JOBARGS=(@check "$PY" "$script" check --data "$DATA" "$@")
+  for s in $steps; do
+    [ ${#JOBARGS[@]} -gt 0 ] && JOBARGS+=("::")
+    JOBARGS+=("@$s" "$PY" "$script" "$s" --data "$DATA" "$@")
+  done
+}
+
+said_started() {    # said_started JOB STEPS: 'Started: the atlas effects and angles (its build is reused: ...).'
+  local w
+  w="$(took_words "$1" "$2")"
+  say "Started: $(what_words "$1" "$2")${w:+ ($w)}."
 }
 
 atlas_note() {  # a gene panel that runs before the atlas is done writes briefs without the atlas look-ups
@@ -392,7 +447,7 @@ cmd_run() {
   need_packages || return 1
   lock_take || return 1
   load_facts
-  local dl a p busy do_atlas=0 do_panel=0
+  local dl a p ap pp x busy do_atlas=0 do_panel=0
   dl="$(fact download)"
   if [ "$dl" = running ]; then
     say "The download is still running: type '$ME run' when it has finished ('$ME status' shows it)."
@@ -403,47 +458,57 @@ cmd_run() {
     say "Next: $ME download   (it resumes; then: $ME run)"
     return 1
   fi
-  a="$(fact atlas)"; p="$(fact panel)"
+  # what to (re)do comes from the outputs (tahoe_status.py run_plan): after a method update only what it needs,
+  # e.g. the atlas's effects + angles on its finished build, and the gene panel's analysis on its finished extract
+  a="$(fact atlas)"; p="$(fact panel)"; ap="$(fact atlas_plan)"; pp="$(fact panel_plan)"
   if [ "$a" = running ] || [ "$a" = queued ]; then say "The atlas is already $a$(by_hand atlas): not started again."
-  elif [ "$(fact atlas_ready)" = 1 ]; then say "The atlas is already done."
+  elif [ -z "$ap" ]; then say "The atlas is already done."
   else do_atlas=1
   fi
   if [ "$p" = running ] || [ "$p" = queued ]; then say "The gene panel is already $p$(by_hand panel)."
-  elif [ "$(fact panel_ready)" = 1 ]; then say "The gene panel is already done."
+  elif [ -z "$pp" ]; then say "The gene panel is already done."
   else do_panel=1
   fi
   if [ "$do_atlas$do_panel" = 00 ]; then
-    if [ -z "$(busy_now)" ]; then say "Nothing to run. Next: $(helper next)"; else hint_watch; fi
+    if [ -z "$(busy_now)" ]; then say "Nothing to run. Next: $(helper next)" | wrap; else hint_watch; fi
     return 0
   fi
+  for x in atlas panel; do
+    if [ "$([ "$x" = atlas ] && printf '%s' "$do_atlas" || printf '%s' "$do_panel")$(fact "${x}_outdated")" = 11 ]; then
+      say "$(cap "$(name_of "$x")") was made with an older method: redoing what the new one needs."
+    fi
+  done
   # both checks before anything starts: an option one script does not take must not leave half a start
   if [ "$do_atlas" = 1 ]; then
-    run_check atlas "the atlas setup" "$PY" "$REPO/tahoe_atlas.py" check --data "$DATA" --dry-run "$@" || return 1
+    REUSED="$(reuses "$ap")" run_check atlas "the atlas setup" "$PY" "$REPO/tahoe_atlas.py" check --data "$DATA" \
+      --dry-run "$@" || return 1
   fi
   if [ "$do_panel" = 1 ]; then
-    run_check panel "the gene panel setup" "$PY" "$REPO/tahoe_gene_panel.py" check --data "$DATA" "$@" || return 1
+    REUSED="$(reuses "$pp")" run_check panel "the gene panel setup" "$PY" "$REPO/tahoe_gene_panel.py" check \
+      --data "$DATA" "$@" || return 1
   fi
   if [ "$do_atlas" = 1 ]; then
     busy="$(busy_now)"
+    job_steps atlas 0 "$ap" "$@"
     if [ -n "$busy" ]; then
-      AFTER="$busy" start_job atlas 1 "compute" @compute "$PY" "$REPO/tahoe_atlas.py" compute --data "$DATA" "$@" ||
-        return 1
-      say "Queued: the atlas starts by itself when $(names_of "$busy") finishes."
+      AFTER="$busy" start_job atlas 1 "$ap" "${JOBARGS[@]}" || return 1
+      say "Queued: $(what_words atlas "$ap") starts by itself when $(names_of "$busy") finishes."
     else
-      start_job atlas 0 "compute" @compute "$PY" "$REPO/tahoe_atlas.py" compute --data "$DATA" "$@" || return 1
-      say "Started: the atlas ($(took_words atlas))."
+      start_job atlas 0 "$ap" "${JOBARGS[@]}" || return 1
+      said_started atlas "$ap" | wrap
     fi
     load_facts
   fi
   if [ "$do_panel" = 1 ]; then
     busy="$(busy_now)"
-    if [ -n "$busy" ]; then
-      AFTER="$busy" start_job panel 1 "check all" @check "$PY" "$REPO/tahoe_gene_panel.py" check --data "$DATA" "$@" \
-        :: @all "$PY" "$REPO/tahoe_gene_panel.py" all --data "$DATA" "$@" || return 1
-      say "Queued: the gene panel starts by itself when $(names_of "$busy") finishes."
+    if [ -n "$busy" ]; then              # a run that reads the cells checks the disk again when it starts
+      job_steps panel "$(( 1 - $(reuses "$pp") ))" "$pp" "$@"
+      AFTER="$busy" start_job panel 1 "$pp" "${JOBARGS[@]}" || return 1
+      say "Queued: $(what_words panel "$pp") starts by itself when $(names_of "$busy") finishes." | wrap
     else
-      start_job panel 0 "all" @all "$PY" "$REPO/tahoe_gene_panel.py" all --data "$DATA" "$@" || return 1
-      say "Started: the gene panel ($(took_words panel))."
+      job_steps panel 0 "$pp" "$@"
+      start_job panel 0 "$pp" "${JOBARGS[@]}" || return 1
+      said_started panel "$pp" | wrap
       atlas_note
     fi
   fi
@@ -467,19 +532,24 @@ cmd_atlas() {
     running) say "The atlas is already running$(by_hand atlas): nothing new started."; hint_watch; return 0 ;;
     queued) say "The atlas is already queued: it starts by itself."; hint_watch; return 0 ;;
   esac
-  if [ "$explicit" = 0 ] && [ "$(fact atlas_ready)" = 1 ]; then
-    say "The atlas is already done. To compute it all again anyway: $ME atlas compute"
-    say "(that makes agent reports out of date). Next: $(helper next)"
-    return 0
+  if [ "$explicit" = 0 ]; then              # what is missing or outdated (e.g. only effects + angles)
+    sub="$(fact atlas_plan)"
+    if [ -z "$sub" ]; then
+      say "The atlas is already done. To compute it all again anyway: $ME atlas compute"
+      say "(that makes agent reports out of date). Next: $(helper next)" | wrap
+      return 0
+    fi
   fi
-  run_check atlas "the atlas setup" "$PY" "$REPO/tahoe_atlas.py" check --data "$DATA" --dry-run "$@" || return 1
+  REUSED="$(reuses "$sub")" run_check atlas "the atlas setup" "$PY" "$REPO/tahoe_atlas.py" check --data "$DATA" \
+    --dry-run "$@" || return 1
   busy="$(busy_now)"
+  job_steps atlas 0 "$sub" "$@"
   if [ -n "$busy" ]; then
-    AFTER="$busy" start_job atlas 1 "$sub" "@$sub" "$PY" "$REPO/tahoe_atlas.py" "$sub" --data "$DATA" "$@" || return 1
-    say "Queued: the atlas ($sub) starts by itself when $(names_of "$busy") finishes."
+    AFTER="$busy" start_job atlas 1 "$sub" "${JOBARGS[@]}" || return 1
+    say "Queued: $(what_words atlas "$sub") starts by itself when $(names_of "$busy") finishes."
   else
-    start_job atlas 0 "$sub" "@$sub" "$PY" "$REPO/tahoe_atlas.py" "$sub" --data "$DATA" "$@" || return 1
-    if [ "$sub" = compute ]; then say "Started: the atlas ($(took_words atlas))."; else say "Started: the atlas ($sub)."; fi
+    start_job atlas 0 "$sub" "${JOBARGS[@]}" || return 1
+    said_started atlas "$sub" | wrap
   fi
   hint_watch
 }
@@ -499,20 +569,25 @@ cmd_panel() {
     running) say "The gene panel is already running$(by_hand panel): nothing new started."; hint_watch; return 0 ;;
     queued) say "The gene panel is already queued: it starts by itself."; hint_watch; return 0 ;;
   esac
-  if [ "$explicit" = 0 ] && [ "$(fact panel_ready)" = 1 ]; then
-    say "The gene panel is already done. To run it again anyway: $ME panel all   (or only the analysis:"
-    say "$ME panel analyze; either makes agent reports out of date). Next: $(helper next)"
-    return 0
+  if [ "$explicit" = 0 ]; then              # what is missing or outdated (e.g. only the analysis)
+    sub="$(fact panel_plan)"
+    if [ -z "$sub" ]; then
+      say "The gene panel is already done. To run it again anyway: $ME panel all   (or only the analysis:"
+      say "$ME panel analyze; either makes agent reports out of date). Next: $(helper next)" | wrap
+      return 0
+    fi
   fi
-  run_check panel "the gene panel setup" "$PY" "$REPO/tahoe_gene_panel.py" check --data "$DATA" "$@" || return 1
+  REUSED="$(reuses "$sub")" run_check panel "the gene panel setup" "$PY" "$REPO/tahoe_gene_panel.py" check \
+    --data "$DATA" "$@" || return 1
   busy="$(busy_now)"
   if [ -n "$busy" ]; then
-    AFTER="$busy" start_job panel 1 "check $sub" @check "$PY" "$REPO/tahoe_gene_panel.py" check --data "$DATA" "$@" \
-      :: "@$sub" "$PY" "$REPO/tahoe_gene_panel.py" "$sub" --data "$DATA" "$@" || return 1
-    say "Queued: the gene panel ($sub) starts by itself when $(names_of "$busy") finishes."
+    job_steps panel "$(( 1 - $(reuses "$sub") ))" "$sub" "$@"
+    AFTER="$busy" start_job panel 1 "$sub" "${JOBARGS[@]}" || return 1
+    say "Queued: $(what_words panel "$sub") starts by itself when $(names_of "$busy") finishes." | wrap
   else
-    start_job panel 0 "$sub" "@$sub" "$PY" "$REPO/tahoe_gene_panel.py" "$sub" --data "$DATA" "$@" || return 1
-    if [ "$sub" = all ]; then say "Started: the gene panel ($(took_words panel))."; else say "Started: the gene panel ($sub)."; fi
+    job_steps panel 0 "$sub" "$@"
+    start_job panel 0 "$sub" "${JOBARGS[@]}" || return 1
+    said_started panel "$sub" | wrap
     [ "$sub" = extract ] || atlas_note
   fi
   hint_watch
@@ -529,8 +604,12 @@ cmd_mtap() {
     running|queued) say "The MTAP/Gankyrin trial is already $(fact mtap)."; hint_watch; return 0 ;;
   esac
   if [ "$explicit" = 0 ] && [ "$(fact mtap_ready)" = 1 ]; then
-    say "The MTAP/Gankyrin trial is already done ($(tildify "$DATA/mtap_gankyrin/results/summary.txt"))."
-    return 0
+    if [ -z "$(fact mtap_plan)" ]; then
+      say "The MTAP/Gankyrin trial is already done ($(tildify "$DATA/mtap_gankyrin/results/summary.txt"))."
+      return 0
+    fi
+    sub="$(fact mtap_plan)"                 # analysed with an older method: redo it ('analyze' on its extract)
+    say "The MTAP/Gankyrin trial was analysed with an older method: running '$sub' again."
   fi
   busy="$(busy_now)"
   if [ -z "$busy" ]; then
@@ -613,7 +692,7 @@ cmd_bundle() {
   need_data || return 1
   need_packages || return 1
   load_facts
-  local files=() desc="" out txt what job sub dir zip size have="" busy="" never=""
+  local files=() desc="" out txt what job sub dir zip size have="" busy="" never="" old=""
   if is_in "$(fact running)" agents || is_in "$(fact queued)" agents; then
     say "The agents are running: they remake the bundles themselves at the end."
     say "Type '$ME bundle' when '$ME status' says they are done." | wrap
@@ -649,6 +728,12 @@ cmd_bundle() {
   size="$("$PY" "$HELPER" zip "$out" "${files[@]}")" || { say "Could not write $(tildify "$out")."; return 1; }
   say "One file: $(tildify "$out") ($size)"
   say "${TAB}holding $desc" | wrap
+  old=""                            # outputs of an older method: say so before anyone downloads them
+  for job in $have; do [ "$(fact "$job")" = outdated ] && old="${old:+$old }$job"; done
+  if [ -n "$old" ]; then
+    say "Note: $(names_of "$old") $(case "$old" in *" "*) printf were ;; *) printf was ;; esac) made with an older" \
+      "method, so the zip holds old numbers: '$ME run' first for the current ones." | wrap
+  fi
   if [ -n "$busy" ]; then           # half a zip: say so, and do not hand out a download line for it
     say "Only $(names_of "$have") bundle is in it: $(names_of "$busy") $(is_are "$busy") still running." | wrap
     say "Type '$ME bundle' again when '$ME status' says it is done." | wrap
@@ -669,7 +754,7 @@ agent_auth_set() {
 
 cmd_agents() {
   local which=both a dry=0 angles=0 parts="" busy key="" budget=5 prev="" n_agents=0 n part script groups=()
-  local typed=0 reason cap_total span
+  local typed=0 reason cap_total span bad bpath bnames
   case "${1:-}" in atlas|panel|both) which="$1"; shift ;; esac
   for a in "$@"; do
     case "$a" in --dry-run) dry=1 ;; --angles|--angles=*) angles=1 ;; --budget=*) budget="${a#--budget=}" ;; esac
@@ -696,6 +781,11 @@ cmd_agents() {
   fi
   for part in atlas panel; do
     [ "$which" = both ] || [ "$which" = "$part" ] || continue
+    if [ "$(fact "$part")" = outdated ]; then         # agents on numbers of an older method would be wasted money
+      say "$(cap "$(name_of "$part")") was made with an older method: its agents would read old numbers."
+      say "First: $ME run   (redoes only what the new method needs), then: $ME agents"
+      return 1
+    fi
     if [ "$(fact "${part}_ready")" = 1 ]; then
       parts="${parts:+$parts }$part"
     elif [ "$which" = "$part" ]; then
@@ -704,12 +794,26 @@ cmd_agents() {
     fi
   done
   if [ -z "$parts" ]; then
-    say "Nothing to run the agents on yet. Next: $(helper next)"
+    say "Nothing to run the agents on yet. Next: $(helper next)" | wrap
     return 1
   fi
   if [ "$which" = both ] && [ "$parts" != "atlas panel" ]; then
     say "Note: $(name_of "$([ "$parts" = atlas ] && printf panel || printf atlas)") has not run yet," \
       "so only the $parts agents run now." | wrap
+  fi
+  # the briefs' look-up commands run the script that wrote them: a deleted copy would make every look-up fail
+  bad="$(helper briefcheck --job "$parts" 2>/dev/null | head -n 1)"
+  if [ -n "$bad" ]; then
+    IFS=$'\t' read -r part bpath bnames <<< "$bad"
+    if [ "$dry" = 1 ]; then
+      say "Note: the agent briefs of $(name_of "$part") ($bnames) name $(tildify "$bpath")," \
+        "which does not exist ('$ME run' writes them again)." | wrap
+    else
+      say "Not started: the agent briefs of $(name_of "$part") ($bnames) name $(tildify "$bpath"), which does not" \
+        "exist, so their look-ups would fail." | wrap
+      say "Fix: $ME run   (minutes: writes the briefs again from $(tildify "$REPO")), then: $ME agents" | wrap
+      return 1
+    fi
   fi
   if [ "$dry" = 1 ]; then
     for part in $parts; do
@@ -978,7 +1082,7 @@ busy_any() {    # long runs going on, also when tahoe_status.py cannot tell (its
 }
 
 cmd_update() {
-  local old new out rc files n busy
+  local old new out rc files n busy nxt
   command -v git >/dev/null 2>&1 || { say "git is not installed: sudo apt-get install -y git"; return 1; }
   old="$(git -C "$REPO" rev-parse HEAD 2>/dev/null)" || { say "$(tildify "$REPO") is not a git clone."; return 1; }
   busy="$(busy_any)"
@@ -1004,6 +1108,9 @@ cmd_update() {
   files="$(git -C "$REPO" diff --name-only "$old" "$new")"
   n="$(printf '%s\n' "$files" | grep -c .)"
   say "Updated: $n file(s) changed ($(printf '%s\n' "$files" | head -n 6 | xargs | sed 's/ /, /g')$([ "$n" -gt 6 ] && printf ', ...'))." | wrap
+  if [ -d "$DATA" ] && need_python >/dev/null 2>&1; then    # the new scripts may need outputs redone (a new method)
+    nxt="$(helper next 2>/dev/null)" && [ -n "$nxt" ] && say "Next: $nxt" | wrap
+  fi
   return 0
 }
 
@@ -1014,7 +1121,7 @@ cmd_help() {
   cat <<EOF
 tahoe: one-line commands for Tahoe-100M   (data: $(tildify "$DATA"))
   tahoe status      where things stand, and the command to type next (= tahoe)
-  tahoe run         atlas, then gene panel, in the background (safe to log out)
+  tahoe run         atlas, then gene panel: what is missing or outdated
   tahoe atlas       only the atlas
   tahoe panel       only the gene panel (waits for a running atlas)
   tahoe mtap        optional: the MTAP/Gankyrin trial (the panel compares)

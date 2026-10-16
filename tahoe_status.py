@@ -8,7 +8,11 @@ tahoe_status.py - the status screen and small helpers behind the 'tahoe' command
 It only reads: the scripts' own logs (the latest run of each = the part after the last '=====' header line), the job
 files that 'tahoe' keeps in <data>/.tahoe, and the process list (ps), so it also sees runs that were started by hand
 (e.g. 'nohup python3 tahoe_atlas.py compute > /dev/null 2>&1 &' from the data folder).
-Other subcommands, used by 'tahoe': next, facts, blockers, gate, stopinfo, logfile, zip, smoke.
+Output made by an older method than the repo's scripts (the atlas's effects/complete.json version, the panel's
+results/run_info.json method_version) shows as 'done, but outdated (method vN)'; 'facts' then says what 'tahoe run'
+redoes (atlas_plan, panel_plan): only the effects and angles when the atlas build is complete, only the panel's
+analysis when its extract is complete.
+Other subcommands, used by 'tahoe': next, facts, blockers, gate, stopinfo, logfile, briefcheck, zip, smoke.
 """
 
 import argparse
@@ -31,7 +35,8 @@ LONG = {"atlas": {"compute", "build", "effects", "angles", "all"},      # comman
         "mtap": {"extract", "analyze", "all", "coreg"}}
 VALUE_OPTS = {"--data", "--out", "--workers", "--batch-size", "--limit-files", "--layout", "--min-cells", "--angles",
               "--focus-genes", "--model", "--budget", "--max-turns", "--parallel", "--permission-mode", "--genes",
-              "--mtap-null", "--tp53-wt", "--tp53-altered", "--prior", "--extra-genes", "--pcs", "--seed"}
+              "--mtap-null", "--tp53-wt", "--tp53-altered", "--prior", "--extra-genes", "--pcs", "--seed",
+              "--unreliable-plates", "--atlas"}
 JOBS = ["download", "atlas", "panel", "mtap", "agents"]
 LABEL = {"download": "Download", "atlas": "Atlas", "panel": "Gene panel", "mtap": "MTAP/Gankyrin", "agents": "Agents"}
 NAME = {"download": "the download", "atlas": "the atlas", "panel": "the gene panel",
@@ -48,6 +53,12 @@ DEPS = {"panel": ["download", "atlas", "mtap"], "atlas": ["download"], "mtap": [
         "agents": ["atlas", "panel"]}        # a queued job does not start when one of these it waited for ended badly
 REPO = os.path.dirname(os.path.abspath(__file__))
 ADVISORY = re.compile(r"hard drive|^\s*WARNING|^\s*note:", re.I)    # log lines that are advice, not progress
+# a script path named in an agent brief (quoted when it holds spaces): its look-up commands run that file
+_SCRIPT = r"tahoe_(?:atlas|gene_panel|mtap_gankyrin)\.py"
+SCRIPT_REF = re.compile(rf"'([^'\n]*{_SCRIPT})'|\"([^\"\n]*{_SCRIPT})\"|([^\s`'\"]*{_SCRIPT})")
+# the method version each part's output records, and the constant in the repo's script that it must match
+VERSION_OF = {"atlas": ("tahoe_atlas.py", "EFFECTS_VERSION"), "panel": ("tahoe_gene_panel.py", "PANEL_METHOD"),
+              "mtap": ("tahoe_mtap_gankyrin.py", "METHOD_VERSION")}
 HEADER = re.compile(r"^===== (\S+)\s*(.*?) started (\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)(?: \| .*)? =====\s*$")
 STAMP = re.compile(r"^\[(\d\d):(\d\d):(\d\d)\] ?(.*)$")
 ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
@@ -449,6 +460,8 @@ class Ctx:
         self.procs = Procs(self.data)
         self.jf = {j: self.job_files(j) for j in JOBS}
         self.V = None                   # the views, once collect() ran
+        self._ver = {}                  # the method versions of the repo's scripts (read once)
+        self._expr = None               # the download's expression files (expression_now, read once)
 
     def job_files(self, job):
         """The files 'tahoe' keeps for a background job, and whether its runner is alive."""
@@ -494,52 +507,76 @@ class Ctx:
         return os.path.join(self.out[job], LOGNAME[job])
 
     # ---- readiness from the output files
-    def atlas_version(self):
-        """(version in effects/complete.json, EFFECTS_VERSION of the repo's tahoe_atlas.py); None when unknown."""
-        have = want = None
-        try:
-            with open(os.path.join(self.out["atlas"], "effects", "complete.json"), encoding="utf-8") as fh:
-                have = json.load(fh).get("version")
-        except (OSError, ValueError, AttributeError):
-            pass
-        m = re.search(r"^EFFECTS_VERSION = (\d+)", read_text(os.path.join(REPO, "tahoe_atlas.py"), "") or "", re.M)
-        if m:
-            want = int(m.group(1))
-        return have, want
+    def stamp(self, job):
+        """The file that records the method version of a part's output: the atlas's effects/complete.json (written
+        last by 'effects'), the panel's / trial's results/run_info.json (written last by 'analyze'; runs before
+        method v3 wrote none)."""
+        return os.path.join(self.out[job], "effects", "complete.json") if job == "atlas" else \
+            os.path.join(self.out[job], "results", "run_info.json")
 
-    def atlas_outdated(self):
-        """True when the atlas was computed by a tahoe_atlas.py older than the repo's (its effects must be redone)."""
-        if not os.path.exists(os.path.join(self.out["atlas"], "effects", "complete.json")):
+    def version(self, job):
+        """(method version the output records, the version the repo's script writes); None when unknown (no
+        stamp, or a repo script that predates version stamps)."""
+        if job not in self._ver:
+            name, const = VERSION_OF[job]
+            m = re.search(rf"^{const} = (\d+)", read_text(os.path.join(REPO, name), "") or "", re.M)
+            self._ver[job] = int(m.group(1)) if m else None
+        have = None
+        try:
+            with open(self.stamp(job), encoding="utf-8") as fh:
+                have = json.load(fh).get("version" if job == "atlas" else "method_version")
+            have = int(have) if have is not None else None
+        except (OSError, ValueError, AttributeError, TypeError):
+            pass
+        return have, self._ver[job]
+
+    def atlas_version(self):
+        return self.version("atlas")
+
+    def outdated(self, job):
+        """True when finished output of `job` was made by an older method than the repo's script (the atlas: its
+        effects; the gene panel and the MTAP/Gankyrin trial: their analysis) and must be computed again."""
+        done = os.path.join(self.out[job], "effects", "complete.json") if job == "atlas" else \
+            os.path.join(self.out[job], "results", "summary.txt")
+        if not os.path.exists(done):
             return False
-        have, want = self.atlas_version()
+        have, want = self.version(job)
         return want is not None and have != want
 
+    def atlas_outdated(self):
+        return self.outdated("atlas")
+
     def ready(self, job):
+        """Finished, current output: the atlas's effects of this method plus a finished 'angles' after them (its
+        angles/complete.json; every brief newer than the effects: older ones describe other numbers), the panel's
+        analysis of this method with its briefs."""
         o = self.out.get(job)
-        if job == "atlas":
-            return os.path.exists(os.path.join(o, "effects", "complete.json")) and not self.atlas_outdated() and \
-                bool(glob.glob(os.path.join(o, "angles", "*", "brief.md")))
+        if job == "atlas":                 # every brief (an interrupted or failed 'angles' leaves older ones) and
+            cj = os.path.join(o, "effects", "complete.json")      # the angles' own stamp, written last, are newer
+            aj = os.path.join(o, "angles", "complete.json")
+            briefs = glob.glob(os.path.join(o, "angles", "*", "brief.md"))
+            return os.path.exists(cj) and not self.outdated("atlas") and bool(briefs) and \
+                all(mtime(b) >= mtime(cj) for b in briefs) and os.path.exists(aj) and mtime(aj) >= mtime(cj)
         if job == "panel":
-            return os.path.exists(os.path.join(o, "results", "summary.txt")) and \
+            return os.path.exists(os.path.join(o, "results", "summary.txt")) and not self.outdated("panel") and \
                 bool(glob.glob(os.path.join(o, "angles", "*", "brief.md")))
         if job == "mtap":
             return os.path.exists(os.path.join(o, "results", "summary.txt"))
         return False
 
+    def report_current(self, part, brief):
+        """True when the agent of this brief has a report newer than the brief (the next 'agents' run skips it)."""
+        name = os.path.basename(os.path.dirname(brief))
+        for r in glob.glob(os.path.join(self.out[part], "reports", f"[0-9][0-9]_{name}.md")):
+            head = read_text(r, "")[:600]
+            if mtime(r) >= mtime(brief) and os.path.getsize(r) >= 200 and FALLBACK_TAG not in head:
+                return True
+        return False
+
     def reports(self, part):
         """(current reports, agent folders): a report is current when it is newer than its brief."""
-        o = self.out[part]
-        briefs = glob.glob(os.path.join(o, "angles", "*", "brief.md"))
-        cur = 0
-        for b in briefs:
-            name = os.path.basename(os.path.dirname(b))
-            reps = glob.glob(os.path.join(o, "reports", f"[0-9][0-9]_{name}.md"))
-            for r in reps:
-                head = read_text(r, "")[:600]
-                if mtime(r) >= mtime(b) and os.path.getsize(r) >= 200 and FALLBACK_TAG not in head:
-                    cur += 1
-                    break
-        return cur, len(briefs)
+        briefs = glob.glob(os.path.join(self.out[part], "angles", "*", "brief.md"))
+        return sum(self.report_current(part, b) for b in briefs), len(briefs)
 
 
 def base_view(ctx, job, sec, done_markers):
@@ -651,8 +688,16 @@ def atlas_view(ctx):
             v["lines"].append(("effects and angles" if sec.command == "build" else "angles") + " not run yet")
     if v["state"] in ("done", "partial", "none") and ctx.atlas_outdated():
         v["state"] = "outdated"
-        v["lines"].append("by an older tahoe_atlas.py: the effects must be computed again (the build is reused)")
+        v["lines"].append(f"{made_with(ctx, 'atlas', 'computed')}: '{ctx.me} run' "
+                          + ("redoes its effects and angles (the build is reused)" if atlas_built(ctx)
+                             else "computes it again (finished plates are reused)"))
     return v
+
+
+def made_with(ctx, job, verb):
+    """'computed with method v2 (now v3)' / 'analysed before method v3' for an outdated part."""
+    have, want = ctx.version(job)
+    return f"{verb} with method v{have} (now v{want})" if have else f"{verb} before method v{want}"
 
 
 # ---- time estimates from the earlier runs in the same log (every run appends to it)
@@ -775,7 +820,7 @@ def atlas_progress(ctx, sec, v):
             phase, t_phase = "fx1", t
         elif msg.startswith("Pass 2"):
             phase = "fx2"
-        elif re.match(r"\s+\S+: \d+ wells$", msg):
+        elif re.match(r"\s+\S+: \d+ wells(?:$|;)", msg):        # method v3 adds '; median composition shift ...'
             fx_plates += 1
         elif msg.startswith("Well-position correction"):
             phase = "fx_pos"
@@ -851,6 +896,8 @@ def atlas_progress(ctx, sec, v):
         left = f"{fmt_min(est['effects'][0] + est['angles'][0], est['effects'][1])} for effects and angles" \
             + as_last(est["effects"][1], est["angles"][1])
     elif phase.startswith("fx") and phase != "fxdone":
+        if P is None:                   # 'effects' alone (the build is reused): its plates are the build's groups
+            P = len(glob.glob(os.path.join(ctx.out["atlas"], "pseudobulk", "group*_profiles.csv"))) or None
         words = {"fx1": "pass 1 of 3 (gene levels per cell line)",
                  "fx2": f"pass 2 of 3 (corrected effects), {fx_plates} of {P or '?'} plates",
                  "fx_pos": "pass 2 of 3, well-position correction", "fx_growth": "pass 2 of 3, growth",
@@ -949,11 +996,20 @@ def extract_view(ctx, job):
         v["at"] = finished_at(sec, v, now, "all")
         if extra:
             v["lines"].append(extra[2:])
-        if sec.command == "extract" and not ctx.ready(job):
+        if sec.command == "extract" and not ctx.ready(job) and not ctx.outdated(job):
             v["state"] = "partial"
             v["lines"].append("analyze not run yet")
         if job == "panel" and ctx.ready("panel"):
             v["lines"] += panel_notes(ctx)
+    if v["state"] in ("done", "partial", "none") and ctx.outdated(job):
+        v["state"] = "outdated"
+        if job == "panel":
+            v["lines"].append(f"{made_with(ctx, job, 'analysed')}: '{ctx.me} run' "
+                              + ("redoes its analysis (the extract is reused)" if extract_complete(ctx, job)
+                                 else "runs it again"))
+        else:                           # optional; the gene panel compares with it
+            v["lines"].append(f"{made_with(ctx, job, 'analysed')} (optional: '{ctx.me} mtap' redoes it, then "
+                              f"'{ctx.me} panel analyze')")
     return v
 
 
@@ -964,21 +1020,34 @@ def panel_compare(ctx):
     has_prior = os.path.isdir(prior) and bool(os.listdir(prior))
     if ctx.is_running("mtap") or ctx.is_queued("mtap"):
         return "running"
-    if ctx.ready("mtap") and mtime(os.path.join(ctx.out["mtap"], "results", "summary.txt")) > \
+    if ctx.ready("mtap") and not ctx.outdated("mtap") and \
+            mtime(os.path.join(ctx.out["mtap"], "results", "summary.txt")) > \
             mtime(os.path.join(ctx.out["panel"], "results", "summary.txt")):
         return "newer"
     return "ok" if has_prior else "none"
 
 
 def panel_lacks_atlas(ctx):
-    """True when the panel's agent briefs were written before the atlas was computed (no genome-wide look-ups).
-    Only for the atlas the panel looks for (<data>/atlas): for an atlas elsewhere a rerun would not help."""
+    """True when the panel's analysis ran without the computed atlas it would use now: its agent briefs lack the
+    genome-wide look-ups, or (method v3) it took no composition shift and plate factors from the atlas because the
+    atlas was not computed with this method then, or the atlas's effects were computed again after it. Only for the
+    atlas the panel looks for (<data>/atlas): for an atlas elsewhere a rerun would not help."""
     if real(ctx.out["atlas"]) != real(os.path.join(ctx.data, "atlas")):
         return False
     for b in glob.glob(os.path.join(ctx.out["panel"], "angles", "*", "brief.md")):
         if "not available (no computed atlas" in (read_text(b, "") or ""):
             return True
-    return False
+    ri_path = ctx.stamp("panel")
+    try:
+        with open(ri_path, encoding="utf-8") as fh:
+            ri = json.load(fh)
+    except (OSError, ValueError):
+        return False
+    if not isinstance(ri, dict):
+        return False
+    if "atlas not computed" in str(ri.get("composition_normalisation", "")):
+        return True
+    return ctx.ready("atlas") and mtime(ri_path) < mtime(ctx.stamp("atlas"))
 
 
 def panel_notes(ctx):
@@ -991,8 +1060,8 @@ def panel_notes(ctx):
     elif c == "none":
         out.append(f"not compared with MTAP/Gankyrin (optional: {me} mtap)")
     if panel_lacks_atlas(ctx):
-        out.append("its agent briefs lack the atlas look-ups (the atlas was not done when it ran)" +
-                   (f": {me} panel analyze (minutes)" if ctx.ready("atlas") else ""))
+        out.append("analysed without the current atlas (look-ups, composition shift, plate factors)"
+                   + (f": {me} panel analyze (minutes)" if ctx.ready("atlas") else ""))
     return out
 
 
@@ -1243,6 +1312,152 @@ def download_view(ctx):
     return v
 
 
+# ============================================================================= what 'tahoe run' does
+def expression_now(ctx):
+    """The expression files of the download as it is now (real paths): data/*.parquet (the Hugging Face layout),
+    else the atlas's file index (another layout); empty when unknown. Read once per run of this script."""
+    if ctx._expr is None:
+        files = glob.glob(os.path.join(ctx.data, "data", "*.parquet"))
+        ctx._expr = {real(f) for f in files}
+        if not files:
+            try:
+                with open(os.path.join(ctx.out["atlas"], "file_index.json"), encoding="utf-8") as fh:
+                    ctx._expr = {real(f) for f in json.load(fh).get("expression", []) if os.path.exists(f)}
+            except (OSError, ValueError, AttributeError):
+                pass
+    return ctx._expr
+
+
+def atlas_built(ctx):
+    """True when the atlas holds a finished build of exactly the expression files the download holds now
+    (build_info.json written after every plate's files, a full run, not a --limit-files trial): then 'effects' and
+    'angles' redo the analysis from it without reading the cells again."""
+    o = ctx.out["atlas"]
+    bi = os.path.join(o, "build_info.json")
+    try:
+        with open(bi, encoding="utf-8") as fh:
+            info = json.load(fh)
+    except (OSError, ValueError):
+        return False
+    if not isinstance(info, dict) or info.get("limit_files") or not os.path.exists(os.path.join(o, "sample_map.csv")):
+        return False
+    lists = glob.glob(os.path.join(o, "pseudobulk", "group*_files.txt"))
+    if not lists or (isinstance(info.get("groups"), int) and len(lists) != info["groups"]):
+        return False
+    built = set()
+    for f in lists:
+        base = f[:-len("_files.txt")]
+        outs = [base + s for s in ("_profiles.csv", "_barcodes.csv", "_samples.csv", ".npy")]
+        if not all(os.path.exists(x) for x in outs) or max(mtime(x) for x in outs + [f]) > mtime(bi) + 1:
+            return False                    # a plate missing, or rewritten by a later build that did not finish
+        built |= {real(x.strip()) for x in (read_text(f, "") or "").splitlines() if x.strip()}
+    now = expression_now(ctx)
+    return bool(now) and built == now
+
+
+def extract_complete(ctx, job):
+    """True when the gene panel's (or the MTAP/Gankyrin trial's) folder holds a finished extract of every
+    expression file the download holds now (not a --limit-files trial): then 'analyze' (minutes) redoes the
+    analysis from it."""
+    o = ctx.out[job]
+    try:
+        with open(os.path.join(o, "extract_info.json"), encoding="utf-8") as fh:
+            info = json.load(fh)
+    except (OSError, ValueError):
+        return False
+    if not isinstance(info, dict) or info.get("limit_files") or \
+            not all(os.path.exists(os.path.join(o, f)) for f in ("well_line.parquet", "sample_map.csv")):
+        return False
+    now = expression_now(ctx)
+    try:
+        with open(os.path.join(o, "file_index.json"), encoding="utf-8") as fh:
+            used = {real(f) for f in json.load(fh).get("expression", [])}
+    except (OSError, ValueError, AttributeError):
+        used = None
+    if now and used is not None and used != now:
+        return False
+    return not now or info.get("n_files") == len(now)
+
+
+def brief_refs(ctx, part):
+    """{script path: [agent names]}: the absolute tahoe_*.py paths named in the agent briefs of `part` that the next
+    'agents' run gives its agents (<out>/angles/*/brief.md without an up-to-date report). Their look-up commands
+    run those files."""
+    out = {}
+    for b in sorted(glob.glob(os.path.join(ctx.out[part], "angles", "*", "brief.md"))):
+        if ctx.report_current(part, b):
+            continue
+        name = os.path.basename(os.path.dirname(b))
+        for m in SCRIPT_REF.finditer(read_text(b, "") or ""):
+            p = next(g for g in m.groups() if g)
+            if os.path.isabs(p) and name not in out.get(p, []):
+                out.setdefault(p, []).append(name)
+    return out
+
+
+def brief_problems(ctx, part):
+    """(missing, copies), each {path: [agent names]}: script paths in those briefs that no longer exist (a copy
+    since deleted or moved: every look-up would fail), and ones outside the repo (copies, e.g. in the data folder:
+    they must stay until the briefs are written again from the repo)."""
+    refs = brief_refs(ctx, part)
+    missing = {p: n for p, n in refs.items() if not os.path.exists(p)}
+    copies = {p: n for p, n in refs.items() if p not in missing and real(os.path.dirname(p)) != real(REPO)}
+    return missing, copies
+
+
+def run_plan(ctx, V):
+    """The steps 'tahoe run' starts, per part ([] = nothing to do: current, or running / queued). After an update
+    of the method only what it needs: the atlas's 'effects' and 'angles' when its build is complete (else
+    'compute'), only 'angles' when the effects are current; the gene panel's 'analyze' when its extract is complete
+    (else 'all'). Finished parts whose briefs name a missing script or a copy outside the repo get their briefs
+    written again ('angles' / 'analyze'); the gene panel also when it ran without the current atlas (unless its
+    agents ran). mtap: what 'tahoe mtap' does for an outdated MTAP/Gankyrin trial ('tahoe run' leaves it alone)."""
+    plan = {"atlas": [], "panel": [], "mtap": []}
+
+    def busy(j):
+        return V[j]["state"] in ("running", "queued")
+    if not busy("atlas"):
+        if ctx.ready("atlas"):
+            if any(brief_problems(ctx, "atlas")):
+                plan["atlas"] = ["angles"]
+        elif os.path.exists(ctx.stamp("atlas")) and not ctx.outdated("atlas"):
+            plan["atlas"] = ["angles"]                  # effects current, angles not run since
+        elif atlas_built(ctx):
+            plan["atlas"] = ["effects", "angles"]
+        else:
+            plan["atlas"] = ["compute"]
+    if not busy("panel"):
+        if ctx.ready("panel"):
+            agents_ran = V["agents"]["panel"]["state"] in ("done", "partial")
+            atlas_soon = ctx.ready("atlas") or bool(plan["atlas"]) or busy("atlas")
+            if any(brief_problems(ctx, "panel")) or (not agents_ran and atlas_soon and panel_lacks_atlas(ctx)):
+                plan["panel"] = ["analyze"]
+        elif extract_complete(ctx, "panel"):
+            plan["panel"] = ["analyze"]
+        else:
+            plan["panel"] = ["all"]
+    if not busy("mtap") and ctx.ready("mtap") and ctx.outdated("mtap"):
+        plan["mtap"] = ["analyze"] if extract_complete(ctx, "mtap") else ["all"]
+    return plan
+
+
+def plan_words(plan):
+    """'the atlas effects and angles (its build is reused), then the gene panel's analysis'."""
+    a, p = plan["atlas"], plan["panel"]
+    bits = []
+    if a == ["compute"]:
+        bits.append("the atlas")
+    elif a == ["effects", "angles"]:
+        bits.append("the atlas effects and angles (its build is reused)")
+    elif a:
+        bits.append("the atlas angles")
+    if p == ["all"]:
+        bits.append("the gene panel")
+    elif p:
+        bits.append("the gene panel's analysis (its extract is reused)")
+    return ", then ".join(bits)
+
+
 # ============================================================================= the screen
 def collect(ctx):
     V = {"download": download_view(ctx), "atlas": atlas_view(ctx), "panel": extract_view(ctx, "panel"),
@@ -1295,7 +1510,8 @@ def head_line(ctx, v, job):
     if s == "partial":
         return "partly done" + v.get("at", "").replace(" at ", ": finished at ", 1)
     if s == "outdated":
-        return "done, but outdated"
+        want = ctx.version(job)[1]
+        return "done, but outdated" + (f" (method v{want})" if want else "")
     if s == "skipped":                  # (once what it waited for is fine again, that reason is history)
         return f"not started: it waited for {v.get('waited')}" if ctx.V is None or doomed(ctx, ctx.V, job) \
             else "not started"
@@ -1405,10 +1621,16 @@ def render(ctx, V, out=sys.stdout):
     if first:
         say(LABEL["agents"], "not started")
     print(file=out)
-    stale = stale_copies(ctx)
-    if stale:
-        note(f"(Your copies in {tilde(ctx.data)} differ from {tilde(REPO)}, which {ctx.me} runs. When no run "
-             f"started by hand uses them: cd {tilde(ctx.data)} && rm {' '.join(stale)})")
+    named = sorted({tilde(os.path.dirname(p)) for part in ("atlas", "panel") for p in brief_problems(ctx, part)[1]})
+    if named:                           # agents still to run would call those copies: they must stay for now
+        note(f"(The agent briefs name the scripts in {', '.join(named)}, not {tilde(REPO)}: keep those copies "
+             f"until '{ctx.me} run' has written the briefs again from {tilde(REPO)}; then they may be deleted.)")
+    else:
+        stale = stale_copies(ctx)
+        if stale:
+            note(f"(Your copies in {tilde(ctx.data)} differ from {tilde(REPO)}, which {ctx.me} runs, and no agent "
+                 f"brief names them. Once no run started by hand uses them, they may be deleted: "
+                 f"cd {tilde(ctx.data)} && rm {' '.join(stale)})")
     if ctx.me != "tahoe":
         note(f"(Tip: '{ctx.me} setup' once, and plain 'tahoe' works from any folder.)")
     note("Next: " + next_step(ctx, V))
@@ -1474,8 +1696,13 @@ def next_step(ctx, V):
                 else f"{me} download" + ("   (it resumes)" if st["download"] == "incomplete" else ""))
     if not getattr(ctx.args, "have_venv", 1):
         return f"{me} setup   (one time: the Python environment the scripts run in)"
-    if st["atlas"] == "outdated":
-        return f"{me} atlas compute   (the updated tahoe_atlas.py needs the effects again; the build is reused)"
+    plan = run_plan(ctx, V)
+    old = [j for j in ("atlas", "panel") if st[j] == "outdated"]
+    if old:                             # e.g. after 'tahoe update' brought a new method: one command redoes it
+        want = max(ctx.version(j)[1] or 0 for j in old)
+        fast = plan["atlas"] != ["compute"] and plan["panel"] != ["all"]
+        return f"{me} run   (method v{want}: {plan_words(plan) or 'what is out of date'}; " + \
+            ("minutes: the cells are not read again; " if fast else "") + "safe to log out)"
     if not ctx.ready("atlas"):
         cmd = f"{me} run" if not ctx.ready("panel") else f"{me} atlas"
         if st["atlas"] in ("stopped", "partial"):
@@ -1485,12 +1712,22 @@ def next_step(ctx, V):
     if not ctx.ready("panel"):
         if st["panel"] in ("stopped", "partial"):
             return f"{me} panel   (continues where it stopped: finished work is reused)"
+        if plan["panel"] == ["analyze"]:
+            return f"{me} panel   (minutes: its analysis; the extracted cells are reused)"
         return f"{me} panel   (in the background; safe to log out)"
     panel_agents = ag["panel"] in ("done", "partial")
     if panel_compare(ctx) == "newer" and not panel_agents:
         return f"{me} panel analyze   (minutes: adds the comparison with the MTAP/Gankyrin trial)"
     if panel_lacks_atlas(ctx) and not panel_agents:
-        return f"{me} panel analyze   (minutes: adds the atlas look-ups to the gene panel's agent briefs)"
+        return f"{me} panel analyze   (minutes: the gene panel's analysis with the current atlas: its look-ups, " \
+            "composition shift and plate factors)"
+    for part in ("atlas", "panel"):     # briefs whose look-ups would call a deleted script, or a copy
+        missing, copies = brief_problems(ctx, part)
+        if missing or copies:
+            p = next(iter(missing or copies))
+            why = f"they name {tilde(p)}, which no longer exists" if missing else f"they name the copy {tilde(p)}"
+            return f"{me} run   (minutes: writes the {'atlas' if part == 'atlas' else 'gene panel'} agent briefs " \
+                f"again from {tilde(REPO)}; {why})"
     for p in ("atlas", "panel"):
         if ag[p] == "failed":
             return f"'{me} log agents' shows the error; fix it, then '{me} agents {p}' (finished reports are kept)"
@@ -1599,10 +1836,31 @@ def cmd_facts(ctx):
     p.append(f"atlas_took={took(ctx, 'atlas') or ''}")
     p.append(f"panel_took={took(ctx, 'panel') or ''}")
     p.append(f"panel_lacks_atlas={int(ctx.ready('panel') and panel_lacks_atlas(ctx))}")
+    plan = run_plan(ctx, V)                     # what 'tahoe run' / 'tahoe atlas' / 'tahoe panel' start
+    for j in ("atlas", "panel", "mtap"):
+        p.append(f"{j}_plan={' '.join(plan[j])}")
+        p.append(f"{j}_outdated={int(ctx.outdated(j))}")
+    # for 'Started: ...': the earlier runs in each log, the latest one included (an empty Section skips none)
+    est = atlas_estimates(Section(ctx.logpath("atlas"), rows=[]))
+    x, how = est["effects"][0] + est["angles"][0], est["effects"][1]
+    p.append("atlas_redo=" + (f"the effects and angles took {fmt_min(x, how)} here last time" if how == "last"
+                              else fmt_min(x, how)))
+    an = extract_history(Section(ctx.logpath("panel"), rows=[]), "panel").get("analyze")
+    p.append("panel_analyze=" + (f"the analysis took {fmt_min(an, 'last')} here last time" if an else "a few minutes"))
     p.append(f"ps_ok={int(ctx.procs.ok)}")
     print("\n".join(p))
     if not ctx.procs.ok:
         sys.exit(2)
+
+
+def cmd_briefcheck(ctx, parts):
+    """'tahoe agents' preflight: one line '<part>\\t<path>\\t<agents>' per script path that the briefs of the
+    agents still to run name and that no longer exists (their look-ups would fail; 'tahoe run' writes them again)."""
+    for part in parts.split():
+        if part in ("atlas", "panel"):
+            for path, names in brief_problems(ctx, part)[0].items():
+                print(f"{part}\t{path}\t{', '.join(names[:3])}" + (f" and {len(names) - 3} more" if len(names) > 3
+                                                                    else ""))
 
 
 def cmd_stopinfo(ctx, job):
@@ -1699,14 +1957,15 @@ def cmd_smoke(results, rc, log):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("command", choices=["status", "next", "facts", "blockers", "gate", "stopinfo", "logfile",
-                                            "zip", "smoke"])
+                                            "briefcheck", "zip", "smoke"])
     ap.add_argument("rest", nargs="*", help="zip: OUT FILE...; smoke: RESULTS.json EXIT_CODE LOG")
     ap.add_argument("--data", default=os.environ.get("TAHOE_DATA") or "~/Tahoe-100M", help="the data folder")
     ap.add_argument("--state", default=None, help="the job files of 'tahoe' (default: <data>/.tahoe)")
     ap.add_argument("--atlas-out", default=None, help="atlas output folder (default: <data>/atlas)")
     ap.add_argument("--panel-out", default=None, help="gene panel output folder (default: <data>/gene_panel)")
     ap.add_argument("--mtap-out", default=None, help="MTAP/Gankyrin output folder (default: <data>/mtap_gankyrin)")
-    ap.add_argument("--job", default="", help="blockers / gate / stopinfo / logfile: the job")
+    ap.add_argument("--job", default="", help="blockers / gate / stopinfo / logfile: the job; briefcheck: the "
+                                              "parts ('atlas panel')")
     ap.add_argument("--runner", type=int, default=None, help="blockers: the pid of the asking job's runner")
     ap.add_argument("--me", default="tahoe", help="how the user calls the 'tahoe' command (for the Next line)")
     ap.add_argument("--venv", default=None, help="the Python environment folder (for messages)")
@@ -1737,6 +1996,8 @@ def main():
         cmd_stopinfo(ctx, args.job)
     elif args.command == "logfile":
         cmd_logfile(ctx, args.job)
+    elif args.command == "briefcheck":
+        cmd_briefcheck(ctx, args.job)
 
 
 if __name__ == "__main__":

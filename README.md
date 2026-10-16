@@ -3,9 +3,14 @@
 Copy this folder's files into your Tahoe-100M download folder (default `~/Tahoe-100M`; on Windows `C:\tahoe\Tahoe-100M`)
 and run them from there (on Linux / macOS the `tahoe` command of the Quick start below needs no copying). Replace
 older copies too: `tahoe_atlas.py` and `tahoe_gene_panel.py` need the current `tahoe_mtap_gankyrin.py`, and the panel
-the current `tahoe_atlas.py` (they stop with a message when they find an older one). The MTAP/Gankyrin method and
-numbers are unchanged (only logging, keep-awake, memory use, resuming and printed hints changed), so your earlier
-`mtap_gankyrin/` output stays valid. Two runs are current:
+the current `tahoe_atlas.py` (they stop with a message when they find an older one; the panel's `analyze` warns,
+still reads a computed atlas's tables, and leaves the genome-wide look-ups out of its briefs).
+
+**The method is now v3** (see [Method v3](#method-v3-what-changed-and-why)): it fixes weaknesses that the check of the
+first full run found in the real data, so the numbers change, MTAP/Gankyrin included. Outputs made before v3 show in
+`tahoe status` as `done, but outdated (method v3)`. `tahoe update`, then `tahoe run`, redoes only what v3 needs: the
+atlas's effects and angles on its finished build, and the gene panel's analysis on its finished extract (minutes;
+the ~96M cells are not read again). Two runs are current:
 1. **The atlas** (`tahoe_atlas.py`): one long computation that aggregates the whole dataset and pre-digests it into one
    data package per angle (genes, drugs, classes, cell lines, biomarkers, programs, cell state, ...), followed by one
    Claude agent per angle that does the actual analysis and writes a report.
@@ -29,27 +34,46 @@ tahoe              # where everything stands, and the exact command to type next
 tahoe bundle       # both bundles in one zip, and the one scp line to download it: upload it to Claude
 tahoe agents       # after Claude has checked the numbers (asks for the API key each time; it is never saved)
 ```
+Already ran everything with an earlier version? Then:
+```bash
+tahoe update       # the newest scripts (git pull); it ends with the command to type next
+tahoe run          # method v3: the atlas effects + angles, then the gene panel's analysis (the build and the
+                   # extract are reused: minutes, not hours), then tahoe bundle and tahoe agents as above
+```
+- `tahoe run` starts only what is missing or outdated. When the atlas build is complete (`atlas/build_info.json`
+  for the same files as the download), it runs the atlas `effects` and `angles` only, else `compute`; then the
+  gene panel's `analyze` when its extract is complete, else `all`. The briefs are written again from the repo
+  on the way.
 - `tahoe log` follows the running job's log (Ctrl-C stops watching, not the run); `tahoe stop` stops a run (finished
   work is reused); `tahoe update` gets the newest scripts (git pull); `tahoe help` lists everything.
 - Options go to the script: `tahoe atlas --workers 4`, `tahoe panel analyze`, `tahoe atlas lookup gene MTAP`.
 - Nothing is copied: the scripts run from the repo folder with `--data ~/Tahoe-100M` (another folder:
-  `export TAHOE_DATA=/path`), and the outputs land where the commands below put them. Copies you made in
-  `~/Tahoe-100M` are not used: once no run started by hand uses them, delete them there
-  (`rm tahoe_atlas.py tahoe_gene_panel.py tahoe_mtap_gankyrin.py`), so an old copy is never run by mistake.
+  `export TAHOE_DATA=/path`), and the outputs land where the commands below put them.
+- Copies you made in `~/Tahoe-100M` are not run by `tahoe`, but agent briefs written by a run started from them
+  name them in their look-up commands. Keep them until the briefs have been written again from the repo (`tahoe run`
+  does that). `tahoe status` says when they may go (then
+  `cd ~/Tahoe-100M && rm tahoe_atlas.py tahoe_gene_panel.py tahoe_mtap_gankyrin.py`). `tahoe agents` refuses to
+  start while a brief names a script that no longer exists, and says what to type.
 - Runs started by hand show up in `tahoe status` too, and `tahoe panel` waits for an atlas that is running.
 
 The long commands below still work. Windows: use the PowerShell commands below.
 
-**Order of work.**
-0. Copy all files over the old ones (see above; not needed with the `tahoe` command).
-1. Atlas: `check`, then `compute` (~1-1.5 h).
-2. Gene panel: `check`, then `all` (~1 h). Run it after the atlas, so that its agent briefs include the genome-wide
-   atlas look-ups. Never run the two long passes at the same time: each reads all ~96M cells.
-3. Upload `atlas/atlas_bundle.zip` and `gene_panel/gene_panel_bundle.zip` to Claude to check the numbers.
+**Order of work.** (`tahoe run` does steps 1 and 2 in this order.)
+0. Copy all files over the old ones (see above; with the `tahoe` command: `tahoe update`).
+1. Atlas: `check`, then `compute` (~1-1.5 h). Outputs of an older method (`tahoe status`: outdated): `effects`, then
+   `angles` (minutes; the build is reused; `effects` removes the old `atlas_bundle.zip`, `angles` writes a new one).
+   Run the atlas and the gene panel with the same `--unreliable-plates` (the panel warns and fits its own plate
+   factors when they differ), and never point the panel at a `--limit-files` trial atlas (nothing is imported).
+2. Gene panel: `check`, then `all` (~1 h); outputs of an older method: `analyze` (minutes; the extract is reused).
+   Run it after the atlas: it takes the atlas's composition shift, plate factors and 'wells disagree' (so that
+   MTAP and PSMD10 agree between the two), and its agent briefs get the genome-wide atlas look-ups. Never run the two
+   long passes at the same time: each reads all ~96M cells.
+3. Upload `atlas/atlas_bundle.zip` and `gene_panel/gene_panel_bundle.zip` to Claude to check the numbers (each now
+   holds its agent briefs as `briefs/<angle>.md`, so the text the agents get is checked too).
 4. Then the agents of each (`tahoe_atlas.py agents`, `tahoe_gene_panel.py agents`). Each remakes its bundle with the
-   reports: upload both again. Do not rerun `compute`/`angles` or the panel's `all`/`analyze` after the agents: that
-   makes every report out of date, and the next `agents` run redoes (and pays for) all of them. To remake a bundle,
-   use `bundle`.
+   reports: upload both again. Do not rerun `compute`/`effects`/`angles` or the panel's `all`/`analyze` after the
+   agents: that makes every report out of date, and the next `agents` run redoes (and pays for) all of them. To
+   remake a bundle, use `bundle`.
 
 Requirements: Python 3.10+ with numpy, pandas, pyarrow (every script); duckdb for `02_find_mtap_gankyrin.py`,
 `old_drug_effect_uncorrected.py` and `tahoe_mtap_gankyrin.py coreg`; scipy and psutil are optional (used when present).
@@ -65,8 +89,170 @@ For the agents also `claude-agent-sdk` and an Anthropic API key.
 | `tahoe_gene_panel.py` | **The gene panel**: ferroptosis, pyroptosis, p53, NAPEPLD, TRIM72, on the MTAP/Gankyrin method. | ~1 h + minutes |
 | `old_drug_effect_uncorrected.py` | Superseded. Reproduces the original uncorrected drug lists, for comparison only. | minutes |
 | `tahoe` | The one-line commands of the Quick start (Linux / macOS): status, run, log, bundle, agents, stop, setup, ... (`tahoe help`). | seconds |
-| `tahoe_status.py` | What `tahoe status` prints: reads the logs, the job files in `<data>/.tahoe` and the process list. | seconds |
+| `tahoe_status.py` | What `tahoe status` prints: reads the logs, the job files in `<data>/.tahoe`, the process list and the method version each output records; decides what `tahoe run` redoes. | seconds |
 | `tests/` | Synthetic Tahoe-100M data with planted effects and a smoke test of every script (see `tests/README.md`). | ~3 min |
+
+## Method v3 (what changed and why)
+
+The first full run on the real data (95.6M cells, 1,344 wells, 50 lines) was checked line by line before any agent
+ran. The bookkeeping and the arithmetic were exact, and the effects agree with Tahoe's own DESeq2 table (median
+per-gene Spearman 0.63 / Pearson 0.83 on the plates compared, 0.84 / 0.90 with our position correction added back;
+93% of effects >= 1.2x have the same sign). But the data have technical structure the method did not remove, and it
+would have misled the agents. Version 3 of the method fixes it in all three scripts (one definition each, used
+identically by the atlas and the gene panel / MTAP trial).
+
+**Plates 2 and 3 were too noisy.** They hold the 0.5 and 5 uM doses of the plate 1-3 layout (about 16% of the
+drug-doses). Their z-scores were about 1.4x and 2x too wide (18% and 36% of drug wells beyond |z| 1.96, against
+5-12% on the other plates), because whole plate rows lost cells or sequencing depth. As a result they gave 49% of the
+panel's calls and 43% of the atlas's significant gene calls. *Fix:* a plate factor per plate and dose: the group's
+spread over that of the same dose on the other reliable plates, median over genes. Every expression z on that plate
+(genes, modules, pathway scores, the p53 contrast) is divided by it; the growth (relative abundance) z are not.
+A gene that is noisier on a plate than that plate's median gene (its own spread ratio > 1.3x the factor; in the
+first run's numbers PSMD10 and several panel genes were 2-3x their peers on plate 2, the median panel gene ~1.45x)
+gets its own, larger factor (ratio / 1.3); it never gets a smaller one. Whether the growth z need a factor too,
+the quality angle's `calibration_growth_by_plate.csv` shows. The factor only ever widens (never below 1), so a
+quiet plate is never sharpened; part of plate 3's spread may be real activity of its targeted-oncology drugs. The
+fold changes are unchanged. Flag: `noisy plate (z scaled)` (factor > 1.2). The factors are in
+`effects/plate_scale.csv` and the panel's `results/plate_scale.csv`.
+
+**Plate 13 does not reproduce.** It is a mixed-dose rescue plate (all three doses, plus re-runs of plate 1's failed
+wells; DMSO at B11/B12, not H11/H12). Its replicate pairs agree at median r -0.06, against +0.30 for pairs on two
+other plates (strong drug-doses: +0.58, none negative). Topotecan 5 uM on plate 9 vs plate 13: r -0.19. Ribociclib,
+which sits only there, shows no G1 arrest (S-phase z +0.31 at 5 uM; palbociclib 0.5 uM: -8.9). *Fix:* plate 13 is an
+unreliable plate by default (`--unreliable-plates plate13`, or `none`, or another list, on every script). Its wells
+are still computed and listed, but they stay out of the reference spread and the plate-factor peers. A drug-dose
+that also has a well on a reliable plate uses only those wells; one that sits only on plate 13 keeps it and is
+flagged `unreliable plate only`.
+
+**Strong neighbours leaked into the position correction.** The plates share four layouts, so 361 of 367 drugs sit
+at the same well position at every dose. A drug's position correction is the median of the other drugs' wells at
+that position (about 11 wells of about 4 drugs). When one of those drugs is strong, its effect is subtracted as if
+it were positional. Example: sodium salicylate appeared to lower TFRC to 0.64x at all three doses, a mirror image
+of dinaciclib, which shares its well position. The same layout also means that dose consistency does not rule out a
+position artifact; agreement at a different position is the stronger test. *Fix:* a second pass uses only the clean
+donors for each gene (wells whose first-pass |z| < 3). With fewer than 3 clean donors that gene is not corrected in
+that well and is flagged `position correction uncertain`.
+
+**Some wells could not be corrected at all.** 15 drug wells had fewer than 3 other-drug wells at their position:
+Adagrasib 0.05 uM sits at H10 on 13 plates (221 significant genes at 50 nM, none at 0.5 uM; CASP3 0.85x with
+z -12.9), and on plate 13 carbidopa and ribociclib 0.05 uM sit at H11/H12. *Fix:* flag `position not correctable`.
+
+**Library composition.** Effects are CPM ratios: when a few genes take a large share of a well's reads, all others
+read lower. TAK-901 5 uM read about 0.5 log2 lower than Tahoe's DESeq2 table for nearly all genes (Ouabain 5 uM
+about 0.25). *Fix:* a median-of-ratios shift per well and cell line (the median residual of the genes the line
+expresses at >= 10 CPM, as in DESeq2), subtracted from every gene, is saved as `effects/composition_shift.parquet`.
+The gene panel and the MTAP trial take it from the computed atlas (`<data>/atlas`; `--atlas DIR` for another one,
+`--atlas none` for none), so run the atlas first; without it they say `composition normalisation not applied`. Flag
+`composition shift` when a drug-dose's shift is >= 0.2 log2: its effects are relative to the median gene, and a raw
+CPM view would differ.
+
+**The 'toxic' flag was mostly noise.** It meant "the well kept less than half the plate's cells". Replicate wells of
+one drug-dose did not agree on it (Spearman -0.19; of 14 pairs with one well below that line, none had the other
+below). Whole plate rows lost cells (plate 2 row D: all 12 wells, 17 of the 49 'toxic' drug-doses were on plate 2).
+*Fix:* `toxic` now means cell loss that no higher dose of the same drug recovers from, judged against the plate row
+where that row is itself shifted (> 0.8 log2; a row of toxic 5 uM neighbours is no reason to subtract their loss,
+which had relabelled e.g. bortezomib and topotecan 5 uM), and, when the drug-dose has several used wells, seen in
+its best well too (selinexor 5 uM: one well -2.5, the other +0.3: not toxic). At the top dose there is no higher
+dose to check and most drug-doses have one well, so `toxic` there still rests on one well's cell count; duplicate
+wells (plates 6 and 14) agree poorly on cell loss, so treat it as weak evidence alone. Other cell loss is flagged
+`low cells (technical?)` (not confirmed, not necessarily technical: antimitotics kill more at a lower dose), and a
+shifted plate row `plate-row cell shift`.
+`transcription drop` is judged against the plate row too, and `cell-cycle shift` looks at both S and G2/M. The p53
+reference doses and the re-expression gating use the new `toxic`.
+
+**Statistics that were too optimistic.**
+- Atlas `level_vs_growth` and `proliferation_dependent_drugs` drew 'hits' from inert drug-doses (170 PSMD10
+  level-vs-growth hits at q < 0.1, mostly single wells). They now use an empirical null: the robust centre and
+  spread of the statistic over the reliable drug-doses.
+- Biomarkers: an inert drug-dose could reach more than 3,000 'marker' genes (Aliskiren 0.5 uM: 18 significant genes,
+  3,397 markers). Each gene's correlation is now calibrated against its own spread over drug-doses (markers need
+  calibrated |z| >= 3). A `replicated` column (the growth pattern agrees between doses or wells, r >= 0.3) ranks
+  `selective_drugs` first.
+- `feature_response`: a Welch t on 3-line groups gave q ~1e-16 for tiny differences. The group variance is now
+  floored at the rest's, and `small_group` marks groups of <= 4 lines.
+- Replicates are reported by pair type (`same position, other plate`, `different position`, `same plate`,
+  `unreliable plate`), with a same-position null, each drug-dose counted once (Adagrasib 0.05 uM's 16 wells gave
+  78 of the 170 same-position pairs); pairs with a well that had no position correction are reported apart. The
+  single median r 0.18 had pooled these. Few drug-doses have a replicate at a different position on reliable
+  plates (on the real layout 9 drug-doses of Afatinib, Binimetinib and Trametinib), and the briefs name them.
+- `lowest_active_dose` needs every higher dose to be active too; otherwise it reads `low dose only (noise?)`
+  (18 drugs were 'active' only at 0.05 uM).
+- The genes angle's inducible / repressible lists hold at most 25 genes per drug-dose and no noise RNAs. Before,
+  Idarubicin 5 uM and TAK-901 5 uM filled 378 and 375 of the 500 rows.
+- Gene panel: the p53 WT-vs-altered table has a `pattern` column. `WT induction` needs the WT lines to rise >= 1.2x
+  and the all-line P53 score to go up; otherwise it is `relative (altered lines fall)` (read it from the run's
+  `p53_wt_vs_altered.csv`: the composition normalisation moves exactly the drug-doses whose altered lines seemed to
+  fall). Re-expression is compared with the lines deleted for the gene in the same wells (pure ambient RNA; the
+  expressing lines when fewer than 2 are deleted): it needs >= 2 lines up and a dose pattern, and reads
+  `lost lines read ambient only: not interpretable` when the lost lines' untreated level is at the ambient floor
+  (whether or not any line is deleted for the gene). Pathway scores average the members' z, each on its own noise
+  scale, so 6-line CASP5 no longer drives INFLAMMASOME. The crosslinks' shared-drug count is compared with an
+  expectation stratified by drug activity: 38 shared drugs had looked like ~3x the ~12 'expected', but strong drugs
+  are in every list, and the stratified expectation is about 34.
+- The `plate DMSO offset` flag is gone (it was on 28% of best-dose rows and never changed a value). The
+  `plate_dmso_offset` column stays.
+
+**Briefs.** The briefs now state the facts above from the data. They list the plates with a factor > 1.2 and the
+unreliable plates with their replicate r. They say where DMSO sits, which drug-doses have no data (their only well
+failed), which lines have usable expression in < 25% of wells, that ~20 drugs appear twice as salt forms, that
+cytostatic drugs deplete lines only weakly at 24 h, and how wide the gap behind the MTAP-null cut is. The focus
+briefs no longer assert earlier findings: they say the earlier MTAP / Gankyrin analysis was inconclusive and ask
+the agent to test every candidate rise against its dose pattern, flags, cell cycle and the whole proteasome. Both
+bundles include the briefs.
+
+**What changes in the numbers.** Every z, FDR, call and flag can move compared with earlier runs. Expect plates 2 and
+3 to lose many calls, drug-doses with a plate-13 well to rest on their other wells, position-corrected values to
+change where a strong drug shares the position, composition-shift drug-doses to move by up to ~0.5 log2 for all
+genes, and `toxic` to become rarer. Unchanged: the build and extract (the cells are not read again), failed wells,
+`--min-cells`, the expression rules, the MTAP-null call and the TP53 annotation. **MTAP / Gankyrin:** the
+conclusion is expected to stay that there is no clean inducer. MTAP had no convincing inducer (its one call,
+clobetasol 0.05 uM 1.30x, is inconsistent across doses). PSMD10 mRNA does rise 1.3-2.2x with about 15 drug-doses
+(dinaciclib 5 uM, NG25 5 uM, XRK3F2 0.5 uM, ...), and Tahoe's own table ranks the same drug-doses on top, but nearly
+all of them come with toxicity, a transcription drop or the whole proteasome. Read the v3 tables before restating it.
+
+**Flags** (the `flags` column of every drug-dose table; the strings are exact, one definition in both scripts):
+
+| Flag | Means | What to do |
+|---|---|---|
+| `toxic` | < -1 log2 cells vs the plate (and after subtracting the plate row's median where the row itself moved > 0.8 log2), the best used well < -0.5 too, and no higher dose of the drug recovering to >= -1 | Cytotoxicity: effects partly reflect dying or stressed cells. At the top dose it rests on one well's cell count (duplicate wells agree poorly): weak evidence alone |
+| `low cells (technical?)` | < half the plate's cells, but not confirmed as dose-consistent loss beyond its row | Not confirmed: a row that lost cells, a non-monotonic dose response (antimitotics), toxic neighbours, or a well that did not replicate. Do not call the drug toxic from it alone; a drug-dose with many significant genes is still active: read its effects with the cell-loss caveat |
+| `plate-row cell shift` | The other drug wells of its plate row are shifted together (cells by > 0.8 log2 either way, or UMI per cell < -0.4 log2) | Technical: confirm on another plate |
+| `transcription drop` | Genes or UMIs per cell fall vs the plate and its row (< -0.3 / < -0.5 log2) | Global shutdown: many genes fall together |
+| `cell-cycle shift` | S or G2/M module moved > 0.5 log2 (or > 0.25 with \|z\| >= 4) | Cycle genes follow the cell-cycle mix |
+| `composition shift` | The drug-dose's composition shift is >= 0.2 log2 | Effects are relative to the median gene |
+| `noisy plate (z scaled)` | Plate factor > 1.2 (the group's, or the gene's own where it is noisier there): its z were divided by it | Fold changes are unchanged; prefer agreement on another plate |
+| `unreliable plate only` | Only wells on an unreliable plate (default plate 13) | Unconfirmed |
+| `position correction uncertain` | (per gene) < 3 clean other-drug wells at the position: not corrected | Could be positional |
+| `position not correctable` | < 3 other-drug wells at the position at all | No position correction: unconfirmed |
+| `position effect removed` | (per gene) the correction moved it by > 0.2 log2 | Check that the corrected value still holds |
+| `wells disagree` | >= 2 wells whose z over the top 500 genes correlate at r < 0.1, with >= 100 significant genes | Not replicated |
+| `whole proteasome up/down` | (gene panel, PSMD10) the whole proteasome moves with it | Not Gankyrin-specific |
+
+**New columns and files.**
+- Atlas `effects/`: `composition_shift.parquet` (sample, cell_line_id, shift_log2), `plate_scale.csv` (plate, dose,
+  n_wells, factor_raw, factor, group), `posunc.npy` / `DD_posunc.npy` (position correction uncertain per well /
+  drug-dose x gene), `DD_poseff.npy` (position effect removed), `plate_scale_gene.npy` (each gene's z divisor per
+  plate group). `wells.csv` adds `composition_shift_log2`, `unreliable_plate`, `plate_scale` / `plate_scale_group_id`,
+  the plate-row medians (`row_cells_log2`, `row_umi_per_cell_log2`, `row_genes_per_cell_log2`),
+  `cells_log2_beyond_row`, `position_clean_donors_median` and `position_not_correctable`. `drugdose.csv` adds
+  `composition_shift_log2`, `plate_scale`, `unreliable_plate_only`, `position_not_correctable`, `replicate_r`,
+  `n_wells_all` / `wells_left_out`, `cells_log2_best_well` and `cells_log2_best_higher_dose`. `complete.json` says
+  version 3; `angles/complete.json` is written when `angles` finishes (`tahoe status` needs it).
+- Atlas angles: `quality/calibration_by_plate.csv` (% of the measured |z| > 1.96 and > 3 per plate and dose, before
+  and after the factors), `quality/calibration_by_plate_gene.csv` (the focus genes and the genes widened most beyond
+  their plate's factor), `quality/replicate_by_plate_pair.csv`, `quality/replicates.csv` with `pair_type`,
+  `quality/composition_shifts.csv`, `quality/position_not_correctable_wells.csv`; `small_group` in
+  `line_response/feature_response_top.csv`; `replicated` in the biomarker tables; `plate_scale_gene` in the focus
+  tables.
+- Gene panel `results/`: `run_info.json` (method_version 3 and the run's settings; written last, read by
+  `tahoe status`), `plate_scale.csv`, `plate_scale_by_gene.csv`, `replicate_pairs.csv`, `well_effects.csv.gz` (per
+  well: unreliable plate, plate factor, composition shift, and every gene's and score's log2FC and z, the value
+  before the position correction and its position state), `pattern` in `p53_wt_vs_altered.csv`. The MTAP trial
+  writes `run_info.json`, `plate_scale.csv` and `plate_scale_by_gene.csv` too.
+- Every drug-dose table: `plate_scale_gene` (the gene's own z divisor) and `cells_log2_best_well` (the input of
+  `toxic`). A gene measured in fewer than 5 lines in a typical well (real CASP5: 4 colorectal lines in nearly every
+  well) is computed from the lines it has; other genes need >= 5 measured lines per well, as in the atlas.
+- `README_effects.md` (atlas) and `results/README_columns.txt` (panel) describe every column.
 
 ## Setup
 
@@ -126,9 +312,10 @@ count by itself). `compute` ends by writing `atlas/atlas_bundle.zip` (a few MB: 
 log). Download it and upload it to Claude, which checks the numbers (well positions, artifact corrections, known
 biology) before any money is spent on agents. If the run stops part-way, run the same command again: finished plates
 are reused. `effects` swaps each matrix in only once it is fully written and stamps `atlas/effects/complete.json`
-last; `angles`, `agents` and `lookup` refuse effects without that stamp (an interrupted run, or effects from an older
-`tahoe_atlas.py`: run `compute` again). On Windows, close agents and look-ups that read `atlas/effects` before
-rerunning `compute`.
+last; `angles`, `agents` and `lookup` refuse effects without that stamp (an interrupted run: run `compute` again)
+or with an older method's version in it (run `effects`, then `angles`: minutes, the build is reused; `tahoe run`
+does that). Options of the method: `--unreliable-plates LIST|none` (default `plate13` when present) on `effects`,
+`compute` and `all`. On Windows, close agents and look-ups that read `atlas/effects` before rerunning `compute`.
 
 ### Agents (after the check)
 ```bash
@@ -145,24 +332,28 @@ C:\tahoe\.venv\Scripts\python.exe tahoe_atlas.py agents   # log: atlas\agents.lo
 ```
 When the agents finish, `atlas/atlas_bundle.zip` is remade with every report added (`python3 tahoe_atlas.py bundle`
 remakes it any time): upload it to Claude to turn each report into a doc. `all` runs both stages in one go. The
-briefs name the Python that ran `angles`, so run `angles` (minutes) on the computer that runs the agents.
+briefs name the Python and the `tahoe_atlas.py` that ran `angles` (their look-up commands run them), so run `angles`
+(minutes) on the computer that runs the agents, and keep that `tahoe_atlas.py` where it is until the agents are done.
+`agents` refuses briefs that name a script that no longer exists: run `angles` again first.
 
 | Step | What it does | Time (estimate) |
 |---|---|---|
 | `build` | One pass over all ~96M cells: counts per well x cell line x gene (one worker per plate). | 20-60 min |
-| `effects` | Corrected effect of every drug-dose on every gene (~15,000 genes), on growth of every line, and how strongly each line shows each drug's response. | 10-20 min |
+| `effects` | Corrected effect of every drug-dose on every gene (16,643 genes tested in the real data), on growth of every line, and how strongly each line shows each drug's response (method v3: composition shift, plate factors, unreliable plates, two-pass position correction). | ~5 min (the first real run took 4.2 min on 30 CPUs; v3 adds ~5%); up to ~15 min on a slow machine |
 | `angles` | One folder per angle with tables, a `brief.md` for its agent, and cards for every drug and line. | ~5 min |
 | `agents` | One Claude agent per angle reads its folder, runs its own Python checks, writes `report.md`; then an overview agent reads all reports. | 30-90 min |
 
-Corrections carried over from the MTAP/Gankyrin work: plate baseline = median of the plate's drug wells (never
-DMSO); leave-drug-out well-position correction; robust z against the spread of all wells; Stouffer over plates;
-BH FDR within each gene; failed wells removed; non-expressing lines left out per gene; growth z with counting
-noise; toxicity, transcription-shutdown and cell-cycle flags on every drug-dose.
+Corrections shared with the gene panel and the MTAP/Gankyrin trial (method v3, see above): plate baseline = median
+of the plate's drug wells (never DMSO); composition (median-of-ratios) shift per well and line; leave-drug-out
+well-position correction in two passes (the second with clean donors only); robust z against the spread of the drug
+wells on reliable plates, widened per plate and dose by the plate factor; Stouffer over a drug-dose's wells (its
+reliable ones when it has any); BH FDR within each gene; failed wells removed; non-expressing lines left out per
+gene; growth z with counting noise; the flags of the table above on every drug-dose.
 
 ### Angles (one report each, in `atlas/reports/`)
 | Report | Question |
 |---|---|
-| `01_quality` | Where are the traps: well positions, plate DMSO offsets, failed wells, replicate agreement, z calibration |
+| `01_quality` | Where are the traps: well positions (and wells that cannot be corrected), plate factors and z calibration per plate and dose, unreliable plates, composition shifts, plate DMSO offsets, failed wells, replicate agreement by pair type |
 | `02_drugs` | What each drug does: signature size, potency, specificity vs toxicity/shutdown, look-alike drugs |
 | `03_genes` | Which drugs move each gene: clean, dose-consistent inducers and repressors genome-wide |
 | `04_classes` | Do drugs with the same mechanism or target share a signature; outliers; target mRNA feedback |
@@ -209,8 +400,12 @@ rules match command text: they are guard rails, not a security boundary. No web 
 
 It extracts MTAP, PSMD10 (Gankyrin), CDKN2A and CDKN2B again for the cross-links, and 73 context genes (more p53
 targets, NRF2, ATF4/ISR, UPR, heat shock, interferon, NF-kB) that tell a specific response from a general stress
-program. Keep the current `tahoe_mtap_gankyrin.py` and `tahoe_atlas.py` next to it (copy them over older versions;
-the MTAP/Gankyrin method and numbers are unchanged, so the earlier `mtap_gankyrin/` output stays valid).
+program. Keep the current `tahoe_mtap_gankyrin.py` and `tahoe_atlas.py` next to it (copy them over older versions:
+it stops when `tahoe_mtap_gankyrin.py` is older than method v3). It takes the composition shift, the plate factors
+and 'wells disagree' from the computed atlas (`<data>/atlas`, `--atlas DIR|none`) once its effects are method v3, so
+MTAP and PSMD10 agree between the two; without it, it fits its own plate factors and says so. An earlier
+`mtap_gankyrin/` output made before v3 is still compared, but differs by design (summary.txt says why);
+`tahoe mtap` redoes its analysis with v3 in minutes.
 
 ```bash
 python3 tahoe_gene_panel.py check                                   # preflight: data, genes, TP53 annotation, earlier run, disk
@@ -224,9 +419,11 @@ C:\tahoe\.venv\Scripts\python.exe tahoe_gene_panel.py all       # leave the wind
 ```
 The trial gets its own folder so that its results, briefs and bundle never mix with the full run's; it reads only the
 first files, so its cross-links to the earlier run differ by design (look at `panel_trial/results/summary.txt`, then
-delete the folder). The agent briefs are written by `analyze`: they name the Python that ran it, and they offer
-genome-wide look-ups (`tahoe_atlas.py lookup`) only if the atlas is already computed in `<data>/atlas`. If the atlas
-comes later, rerun `python3 tahoe_gene_panel.py analyze` (minutes) before the panel's agents.
+delete the folder). The agent briefs are written by `analyze`: they name the Python and the scripts that ran it,
+and they offer genome-wide look-ups (`tahoe_atlas.py lookup`) only if the atlas is already computed in
+`<data>/atlas`. If the atlas comes later, or is computed again, rerun `python3 tahoe_gene_panel.py analyze`
+(minutes) before the panel's agents: then the panel also takes the atlas's composition shift and plate factors
+(`tahoe status` says when; `tahoe run` does it).
 
 | Step | What it does | Time (estimate) |
 |---|---|---|
@@ -247,10 +444,13 @@ rerun of `analyze` moves the earlier results to `gene_panel/results/previous_run
   line-specific.
 - **Drug effects.** Effects on every gene (`<GENE>_drug_summary.csv`, one row per drug; `..._by_dose.csv`). Every
   drug-dose carries its stress context: ISR, NRF2, UPR, heat-shock, interferon, NF-kB, p53 and cell-cycle scores,
-  plus toxicity and shutdown flags. This shows, for example, whether CHAC1/SLC7A11/PTGS2 rise with or without a
-  general ATF4 stress response.
+  plus the flags of the [Method v3](#method-v3-what-changed-and-why) table and its `plate_scale` and
+  `composition_shift_log2`. This shows, for example, whether CHAC1/SLC7A11/PTGS2 rise with or without a general ATF4
+  stress response. Calls use the dose-level FDR. Pathway scores are the mean member z (each member on its own noise
+  scale); their fold change is the mean member log2FC.
 - **p53.** TP53 status comes from the cell-line driver table (any TP53 row = altered). The analysis checks:
-  - which drugs raise p53 targets more in TP53-wild-type than in altered lines in the same wells;
+  - which drugs raise p53 targets more in TP53-wild-type than in altered lines in the same wells, and whether that
+    is `WT induction` or only `relative (altered lines fall)` (the `pattern` column);
   - a genotype-blind functional p53 status per line, with its agreement with the annotation (AUC) and the
     discordant lines;
   - whether TP53-wild-type lines are depleted more.
@@ -260,8 +460,10 @@ rerun of `analyze` moves the earlier results to `gene_panel/results/previous_run
   never read alone.
 - **Loss and level screens.** Lines that lost a gene (e.g. GSDME silencing) are tested for selective depletion
   (the MTAP-null screen) and for re-expression (e.g. DNMT inhibitors; lines with a deletion in the cell-line metadata
-  are left out of it: there is nothing to re-express). For every gene, the analysis tests whether a line's baseline
-  level predicts which lines a drug depletes (the Gankyrin test), raw and within lineage.
+  are left out of it: there is nothing to re-express). Re-expression is compared with the lines deleted for the gene
+  in the same wells (pure ambient RNA) and needs >= 2 lines up and a dose pattern; lost lines that read no more than
+  ambient give `lost lines read ambient only: not interpretable`. For every gene, the analysis tests whether a line's
+  baseline level predicts which lines a drug depletes (the Gankyrin test), raw and within lineage.
 - **Cross-links to the earlier run** (read from `<data>/mtap_gankyrin`; `--prior DIR` or `--prior none`):
   - agreement of the well map, the MTAP-null calls and the MTAP/PSMD10 effects (identical when both runs read the
     same files with the same `--min-cells`; a `--limit-files` trial differs by design);
@@ -270,7 +472,9 @@ rerun of `analyze` moves the earlier results to `gene_panel/results/previous_run
     lost CDKN2A but keep MTAP) vs p53 activity, with MTAP-null as a 9p21 proxy. Expected: no difference in
     DNA-damage responsiveness (DNA damage activates p53 without ARF);
   - MTAP-null vs the ferroptosis genes;
-  - drugs significant (drug-level FDR < 0.10) in both runs, with the number expected by chance.
+  - drugs significant (drug-level FDR < 0.10) for MTAP / PSMD10 and for a panel gene, with the number expected
+    among drugs of the same activity (strong drugs are in every list). Without an earlier run these are this run's
+    MTAP / PSMD10 lists: the same wells, so no reproducibility claim.
 - **Positive controls** (`positive_controls.csv`, summary section 3). Each expected effect is listed with its
   verdict and whether it is expected at 24 h (`expected_at_24h`):
   - robust: DNA damage -> p53 targets (more in TP53-wild-type lines); proteasome inhibitors -> proteasome and
@@ -302,6 +506,8 @@ $env:ANTHROPIC_API_KEY="sk-ant-..."     # in the same window
 C:\tahoe\.venv\Scripts\python.exe tahoe_gene_panel.py agents   # log: gene_panel\agents.log
 ```
 Other options:
+- `--unreliable-plates LIST|none` (default `plate13` when present) and `--atlas DIR|none` (the atlas to take the
+  composition shift and plate factors from; default `<data>/atlas`): see Method v3.
 - `--genes "SYM[:pathway],..."` adds genes; it needs a new `--out`, because the per-cell files of another gene list
   are never mixed. Aliases are accepted: FSP1, DFNA5, ASC, MG53, NAPE-PLD, P21, PUMA, NOXA.
 - `--tp53-wt` / `--tp53-altered` override the annotation, and `--mtap-null` overrides the MTAP-null call.
@@ -320,7 +526,12 @@ Gankyrin, and plate 2 should top the Gankyrin DMSO list. If not, the well positi
 are wrong: get the plate layout as a CSV with `sample` and `well` columns and rerun with `--layout layout.csv`
 (the atlas and the panel take the same `--layout` option).
 
-Other options: `--workers N`, `--mtap-null LINE1,LINE2`, `--extra-genes MAT2A,PRMT5`, `--min-cells N` (default 30).
+Method v3: `tahoe mtap` (or `python3 tahoe_mtap_gankyrin.py analyze`, minutes) redoes the analysis of an earlier
+trial on its extract. Like the panel, it takes the composition shift and plate factors from the atlas computed with
+v3 (`--atlas DIR|none`), so compute the atlas first; it writes `results/run_info.json` (method version 3).
+
+Other options: `--workers N`, `--mtap-null LINE1,LINE2`, `--extra-genes MAT2A,PRMT5`, `--min-cells N` (default 30),
+`--unreliable-plates LIST|none` (default `plate13`).
 
 ## Tests
 
@@ -328,3 +539,8 @@ Other options: `--workers N`, `--mtap-null LINE1,LINE2`, `--extra-genes MAT2A,PR
 generates a small synthetic Tahoe-100M download with planted effects (well-position artifacts, a plate-2 DMSO
 offset, MTAP-null lines, TP53-dependent p53 activation, NRF2 / ISR / iron / GSDME effects, toxic and shutdown drugs,
 a failed well) and checks that every script recovers them. No API key is used. Details in `tests/README.md`.
+Method v3 adds a planted case for each fix: a noisy plate, an unreliable mixed-dose `plate13`, a strong and an inert
+drug sharing one position, a drug at the same position on every plate (not correctable), a composition-shift drug,
+a plate row that loses cells (technical, not toxic), and a panel run without an earlier MTAP/Gankyrin output. The
+smoke test also checks that the atlas and the panel agree on MTAP and PSMD10, the version stamps, and that
+`tahoe status` calls older outputs outdated.

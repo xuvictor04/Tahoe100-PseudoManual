@@ -18,6 +18,11 @@ Design (defaults): 6 plates of 96 wells, 94 drugs + 2 DMSO wells (H11, H12) per 
 18 real cell lines pooled in every well (some rarer than others); ~1,000 UMIs per cell; Poisson counts with ambient
 RNA (each cell gets 8-14% of its counts from the well-average profile); per-well log-normal noise on every gene.
 Planted effects follow the ground truth of the gene-panel spec (see GROUND TRUTH below and ground_truth.json).
+On top of that, the traps that method v3 fixes, as in the real data (ground_truth.json 'method_v3'): a noisy 5 uM
+plate (plate6), an unreliable mixed-dose plate13 whose wells carry other drugs' biology, a strong and an inert drug
+taking turns in the same two wells (B11/B12), a strong drug's 5 uM well among the position donors of an inert drug
+(enough clean donors), a reference drug in H10 of every plate (no other drug there: position not
+correctable), a composition-shift drug, a plate-row cell loss and a low-dose-only cell loss.
 Self-contained: the real metadata rows it needs are in tahoe_meta_snapshot.py next to this file.
 Deterministic for a given --seed. Needs numpy and pyarrow only.
 """
@@ -122,6 +127,43 @@ ARTIFACT_WELLS = {"H1": ("MTAP", 1.6), "D10": ("PSMD10", 1.5), "A12": ("CHAC1", 
 # spec: 0.7x / 0.75x; made stronger because an offset read from 2 DMSO wells of ~25-cell profiles is noisy
 PLATE2_DMSO = {"PSMD10": 0.6, "CDKN1A": 0.65}
 
+# ----------------------------------------------------------------------------- method v3 traps (real-data findings)
+# a. noisy plate: the last 5 uM plate gets this many times the per-well expression noise (sd 0.08 shared by the
+#    well, 0.05 per line), so that its W2 spread is ~2x its peer's (counting noise, which stays, is part of it).
+NOISY_MULT = 3.0
+# b. unreliable plate: a 7th, mixed-dose plate named plate13 (dose by row; DMSO in B11/B12, as the real plate 13).
+#    Its wells carry the biology of OTHER drugs on it (labels shuffled), so its replicates do not reproduce.
+UNRELIABLE_PLATE = "plate13"
+P13_ROW_DOSE = {"A": 0.05, "B": 0.05, "C": 5.0, "D": 0.5, "E": 0.05, "F": 5.0, "G": 0.5, "H": 0.05}
+P13_DMSO = ("B11", "B12")
+# c. co-location: a strong drug (X) and an inert one (Y) take turns in the same two wells on every regular plate
+#    (plate13 has DMSO there), so each one's only position donors are the other's three doses
+COLOC_X, COLOC_Y, COLOC_WELLS = "Dinaciclib", "Pyridoxine", ("B11", "B12")
+COLOC_DOWN, COLOC_UP = (14, 0.35), (10, 2.5)     # X's own SYNTH genes: (number, fold) down and up
+COLOC_TFRC = 0.35        # and TFRC: strong enough that X's 5 uM well stays an unclean donor (|z| >= 3) on plate6 too
+# c2. co-location with enough clean donors (as sodium salicylate next to dinaciclib in the real data: ~11 donors of
+#     ~4 drugs, one strong): in a well position (the first of COLOC2_WELLS that fits), the inert filler on a 5 uM plate
+#     becomes a strong drug (X2) and the inert filler on a lower-dose plate is the test drug (Y2). Y2's well there has
+#     6 donors of 6 drugs, one of them X2's strong 5 uM well: the clean-donor pass drops that one and corrects Y2 with
+#     the median of the other 5 (no 'position correction uncertain'). The plant moves no well and consumes no random
+#     number of the main draw (X2's signature is put on its wells' counts with a separate stream), so every other
+#     planted effect reads as before.
+COLOC2_WELLS = ("F7", "C3", "G5", "A6", "D4", "F9", "B5", "G8", "C9", "A3", "D7", "G3")
+COLOC2_DOWN, COLOC2_UP = (12, 0.3), (10, 3.0)    # X2's own SYNTH genes: (number, fold) down and up
+# d. uncorrectable position: a reference drug at 0.05 uM in H10 of every regular plate, whatever the plate's dose
+#    (as Adagrasib in the real data); its 0.5 and 5 uM doses exist only on plate13
+REF_DRUG, REF_WELL, REF_DOSE = "Bestatin", "H10", 0.05
+# e. composition shift: the most abundant SYNTH genes x30 at 5 uM take ~1/3 more counts, every other gene reads low
+COMP_DRUG, COMP_FOLD, COMP_N = "8-Hydroxyquinoline", 30.0, 4
+# f. plate-row cell loss (technical): one row of the first 5 uM plate loses 2/3 of its cells (-1.6 log2; a well's
+#    cell number varies by ~0.22 log2, so ~60% would leave some drug-doses above the -1 cut). The row holds 12 inert
+#    drugs whose 5 uM dose sits on that plate only (one well, as every drug-dose on the real plates 1-3), so the
+#    drug-dose reads the loss; on the other 5 uM plate their positions hold a second well of 12 other inert drugs
+#    ('same plate' replicates, as Everolimus / Gemcitabine on the real plates 1-3)
+ROW_LOSS_ROW, ROW_LOSS_X = "E", 0.33
+LOWDOSE_LOSS_DRUG, LOWDOSE_LOSS_X = "Ranolazine", 0.35   # both 0.05 uM wells low, 0.5 / 5 uM fine: not 'toxic'
+RESERVED = [COLOC_Y, REF_DRUG, COMP_DRUG, LOWDOSE_LOSS_DRUG]   # fillers with a role: no private signature
+
 # ----------------------------------------------------------------------------- baseline levels
 # Synthetic counts per million in the median line (G1 cells), and the spread across lines (sd of ln level).
 # The ordering is realistic (FTL/FTH1/BAX high, inflammasome sensors absent, TRIM72 zero); the range is
@@ -148,7 +190,12 @@ S_PHASE_UP, G2M_PHASE_UP, PSMD10_G2M_UP = 2.5, 3.0, 1.25
 # ~2.8M), so a gene below ~100 CPM here sits at the pseudocount floor, which real genes above the atlas's 2-CPM cut
 # do not. With 0.7 nearly every filler gets >= ~200 CPM, the same counting regime as a real 2-CPM gene.
 FILLER_SD = 0.7
-GSDME_SILENT, GSDME_REEXPRESS = 0.005, 60.0        # silenced GSDME level (x median) and the DNMT-inhibitor rescue
+# silenced GSDME level (x median) and the DNMT-inhibitor rescue (x the silenced level). Silenced, not deleted: the
+# lines keep 8% of the median line, so in DMSO they read ~2x the ambient-RNA floor (method v3 calls a rise in lines
+# that read ambient only 'not interpretable'); decitabine (the more potent DNMT inhibitor) brings them to ~1x the
+# median (~6x as measured), 5-azacytidine to ~0.5x (~3.5x).
+GSDME_SILENT = 0.08
+GSDME_REEXPRESS = {"Decitabine": 12.0, "5-Azacytidine": 6.0}
 # Level-vs-growth controls (Artesunate/ACSL4, Ixazomib/PSMD10): log2 cell change from the lowest- to the highest-
 # expressing line at 5 uM. Strong because ~25 cells per line per well give far more counting noise than real wells,
 # and with 18 lines chance alone gives |rho| ~0.75 for some of ~1,100 genes.
@@ -174,6 +221,11 @@ def well_name(slot):
 
 def slot_of(well):
     return ROWS.index(well[0]) * 12 + int(well[1:])
+
+
+def row_slots(row):
+    r = ROWS.index(row)
+    return list(range(12 * r + 1, 12 * r + 13))
 
 
 # ============================================================================= design
@@ -215,8 +267,9 @@ class Design:
         # ---- genes
         named = [g for g, _ in SNAP.NAMED_GENES]
         n_fill = args.genes - len(named)
-        if n_fill < 50:
-            sys.exit(f"--genes must be at least {len(named) + 50} (named genes: {len(named)})")
+        need = 127 + COLOC_DOWN[0] + COLOC_UP[0] + COMP_N + 30     # the SYNTH sets below + the largest private one
+        if n_fill < need:
+            sys.exit(f"--genes must be at least {len(named) + need} (named genes: {len(named)})")
         self.genes = named + [f"SYNTH{i:04d}" for i in range(1, n_fill + 1)]
         self.ens = [e for _, e in SNAP.NAMED_GENES] + [f"ENSG9{i:010d}" for i in range(1, n_fill + 1)]
         self.G = len(self.genes)
@@ -237,12 +290,117 @@ class Design:
         fillers = [r["drug"] for r in self.drug_rows if r["drug"] not in PLANTED_DRUGS]
         self.drugs = PLANTED_DRUGS + sorted(fillers)
         assert len(self.drugs) == 94, len(self.drugs)
-        self.P = args.plates
-        self.plate_dose = [DOSES[p * 3 // self.P] for p in range(self.P)]
-        base = rng.permutation(94)
-        self.slot = {(d, p): int((base[k] + 17 * p) % 94) + 1 for k, d in enumerate(self.drugs) for p in range(self.P)}
-        self.failed_plate = self.plate_dose.index(0.5)
+        self.P = args.plates                                  # regular plates; plate13 comes on top
         self.effects(rng)
+        self.make_layout(rng)
+
+    # ------------------------------------------------------------------ plates and well positions
+    def make_layout(self, rng):
+        """Regular plates: DMSO in H11/H12, the reference drug (0.05 uM) in H10, the co-located pair in B11/B12,
+        every other drug at a different position on every plate. Then plate13 (mixed doses, shuffled biology).
+        self.layout[p] = {slot: (label drug, conc, biology drug)}."""
+        P = self.P
+        self.plate_names = [f"plate{p + 1}" for p in range(P)] + [UNRELIABLE_PLATE]
+        self.plate_nums = [str(p + 1) for p in range(P)] + [UNRELIABLE_PLATE[len("plate"):]]
+        self.plate_dose = [DOSES[p * 3 // P] for p in range(P)] + [None]       # None: mixed (plate13)
+        self.n_plates = P + 1
+        self.failed_plate = self.plate_dose.index(0.5)
+        five = [p for p in range(P) if self.plate_dose[p] == 5.0]
+        self.noisy_plate = five[-1] if len(five) >= 2 else None
+        self.row_plate = five[0]
+        fixed = {slot_of(REF_WELL): REF_DRUG}
+        free = [s for s in range(1, 95) if s != slot_of(REF_WELL) and well_name(s) not in COLOC_WELLS]
+        rot = [d for d in self.drugs if d not in (COLOC_X, COLOC_Y, REF_DRUG)]
+        n = len(free)
+        assert len(rot) == n and math.gcd(17, n) == 1, (len(rot), n)
+        base = rng.permutation(n)
+        # the plate-row cell loss hits a row filled with inert drugs only (so no planted effect loses its wells)
+        inert = [d for d in self.drugs if d in self.fillers and d not in self.private and d not in RESERVED]
+        self.row_drugs = sorted(rng.choice(sorted(inert), size=12, replace=False).tolist())
+        k_of = {d: k for k, d in enumerate(rot)}
+        for d, s in zip(self.row_drugs, row_slots(ROW_LOSS_ROW)):
+            want = (free.index(s) - 17 * self.row_plate) % n
+            other = int(np.flatnonzero(base == want)[0])
+            base[k_of[d]], base[other] = base[other], base[k_of[d]]
+        self.layout = []
+        for p in range(P):
+            lay = {free[(base[k] + 17 * p) % n]: (d, self.plate_dose[p], d) for k, d in enumerate(rot)}
+            for s, d in fixed.items():
+                lay[s] = (d, REF_DOSE, d)
+            x, y = (COLOC_X, COLOC_Y) if p % 2 == 0 else (COLOC_Y, COLOC_X)
+            lay[slot_of(COLOC_WELLS[0])] = (x, self.plate_dose[p], x)
+            lay[slot_of(COLOC_WELLS[1])] = (y, self.plate_dose[p], y)
+            lay[95] = lay[96] = (DMSO, 0.0, None)
+            assert sorted(lay) == list(range(1, 97))
+            self.layout.append(lay)
+        pool = sorted(d for d in inert if d not in self.row_drugs)
+        self.dup_drugs = sorted(rng.choice(pool, size=len(self.row_drugs), replace=False).tolist())
+        self.dup_plates = [p for p in range(P) if self.plate_dose[p] == self.plate_dose[self.row_plate]
+                           and p != self.row_plate]
+        for p in self.dup_plates:
+            slots = sorted(s for s, v in self.layout[p].items() if v[0] in self.row_drugs)
+            for s, d in zip(slots, self.dup_drugs):
+                self.layout[p][s] = (d, self.plate_dose[p], d)
+        self.coloc2(inert)
+        self.layout.append(self.plate13(rng, inert))
+
+    def coloc2(self, inert):
+        """Trap c2 (no random draw, no well moved): a well position whose occupant on a 5 uM plate (X2) and on a
+        lower-dose plate (Y2) are inert fillers without another role; X2 becomes strong (its own SYNTH genes, put on
+        its wells' counts in simulate_plate from a separate stream), so the main random stream is unchanged."""
+        P = self.P
+        fixed = {slot_of(w) for w in (REF_WELL, *COLOC_WELLS, *ARTIFACT_WELLS)} | {95, 96}
+        ok = set(inert) - set(self.row_drugs) - set(self.dup_drugs)
+        order = list(COLOC2_WELLS) + [well_name(k) for k in range(1, 97) if well_name(k) not in COLOC2_WELLS]
+        five = [p for p in range(P) if self.plate_dose[p] == 5.0]
+        low = [p for p in range(P) if self.plate_dose[p] != 5.0]
+        for w in order:
+            s2 = slot_of(w)
+            if s2 in fixed:
+                continue
+            px = next((p for p in five if self.layout[p][s2][0] in ok), None)
+            py = next((p for p in low if self.layout[p][s2][0] in ok and px is not None
+                       and self.layout[p][s2][0] != self.layout[px][s2][0]), None)
+            if px is not None and py is not None:
+                break
+        else:
+            raise RuntimeError("no well position for trap c2 (co-location with clean donors)")
+        x, y = self.layout[px][s2][0], self.layout[py][s2][0]
+        self.coloc2_x, self.coloc2_y, self.coloc2_well = x, y, w
+        self.coloc2_plates = {x: [px], y: [py]}
+        g = self.coloc2_genes[-(COLOC2_DOWN[0] + COLOC2_UP[0]):]
+        down, up = g[:COLOC2_DOWN[0]], g[COLOC2_DOWN[0]:]
+        self.coloc2_sig = {**{i: math.log2(COLOC2_DOWN[1]) for i in down}, **{i: math.log2(COLOC2_UP[1]) for i in up}}
+        self.synth_sets["COLOC2_DOWN"] = [self.genes[i] for i in down]
+        self.synth_sets["COLOC2_UP"] = [self.genes[i] for i in up]
+
+    def plate13(self, rng, inert):
+        """Mixed doses by row; the reference drug's 0.5 and 5 uM (only here); the private-signature drugs at every
+        dose; inert fillers. Labels shuffled against the biology: each well gets another drug's planted effects
+        (a single cycle over the wells, never the label's own; the reference drug's 5 uM well gets a strong one)."""
+        priv = sorted(self.private)
+        dm = [slot_of(w) for w in P13_DMSO]
+        by_dose = {dose: [s for s in range(1, 97) if s not in dm and P13_ROW_DOSE[well_name(s)[0]] == dose]
+                   for dose in DOSES}
+        no_row = [d for d in inert if d not in self.row_drugs]
+        lay = {s: (DMSO, 0.0, None) for s in dm}
+        for dose, slots in by_dose.items():
+            labels = ([REF_DRUG] if dose != REF_DOSE else []) + priv
+            pool = sorted(inert if dose == 0.05 else no_row)
+            labels += rng.choice(pool, size=len(slots) - len(labels), replace=False).tolist()
+            for s, d in zip(rng.permutation(slots), labels):
+                lay[int(s)] = (d, dose, None)
+        wells = sorted(s for s in lay if lay[s][0] != DMSO)
+        for _ in range(1000):
+            order = rng.permutation(wells)
+            bio = {int(order[i]): lay[int(order[(i + 1) % len(order)])][0] for i in range(len(order))}
+            if all(bio[s] != lay[s][0] for s in wells):
+                break
+        ref5 = next(s for s in wells if lay[s][:2] == (REF_DRUG, 5.0))
+        if bio[ref5] not in self.private:                 # give the plate13-only 5 uM well a strong signature
+            s2 = next(s for s in wells if bio[s] in self.private and lay[s][0] != bio[ref5] and s != ref5)
+            bio[ref5], bio[s2] = bio[s2], bio[ref5]
+        return {s: (lab, c, bio.get(s)) for s, (lab, c, _) in lay.items()}
 
     # ------------------------------------------------------------------ baseline expression per line
     def baseline(self, rng):
@@ -337,9 +495,8 @@ class Design:
         put("Ciclopirox", "NCOA4", 1.3)
         for drug in ["Decitabine", "5-Azacytidine"]:
             put(drug, S["IFN"], 1.6)
-            # silenced lines keep 0.5% of the median line; x60 brings them to ~0.3 of the median, which reads ~4x
-            # above their ambient-inflated baseline
-            put(drug, "GSDME", GSDME_REEXPRESS, self.gsdme_sil)
+            # silenced lines keep 8% of the median line (+ ~8% ambient); the rescue reads ~6x / ~3.5x above that
+            put(drug, "GSDME", GSDME_REEXPRESS[drug], self.gsdme_sil)
         put("Bortezomib", S["PROTEASOME"], 1.8)
         put("Bortezomib", S["HSF1_HEAT"], 3.0)
         put("Bortezomib", "HMOX1", 3.0)
@@ -357,7 +514,9 @@ class Design:
         put("Imiquimod (maleate)", S["NFKB"], 2.0)
         put("Imiquimod (maleate)", "IL1B", 3.0, self.il1b_expr)
         put("Imiquimod (maleate)", "CASP4", 1.5)
-        put("Rimonabant", "NAPEPLD", 1.6)
+        # the spec's 1.6x is within chance of the top noise drug-doses of NAPEPLD (~0.17 log2 well noise) once
+        # one of the two 5 uM wells sits on the noisy plate (method v3 trap a): 2x
+        put("Rimonabant", "NAPEPLD", 2.0)
         self.LIB[di["Dinaciclib"]] = lg(0.65)    # spec ~0.7x; the scripts flag < 0.707x
         put("Dinaciclib", "MDM2", 0.5)
         put("Celecoxib", "PTGS2", 1.5)
@@ -368,10 +527,19 @@ class Design:
 
         # ---- extra realism (not part of the panel ground truth; listed in ground_truth.json as 'extra')
         syn = self.synth
-        pick = rng.permutation(syn)
+        comp = syn[np.argsort(-np.median(self.B[:, syn], axis=0), kind="stable")[:COMP_N]]   # most abundant fillers
+        pick = rng.permutation(np.setdiff1d(syn, comp))
+        nd, nu = COLOC_DOWN[0], COLOC_UP[0]
         sets = {"HDAC_UP": pick[:40], "HDAC_DOWN": pick[40:65], "RIBI": pick[65:105], "GLUCO": pick[105:115],
-                "CHOL": pick[115:127]}
+                "CHOL": pick[115:127], "COLOC_DOWN": pick[127:127 + nd], "COLOC_UP": pick[127 + nd:127 + nd + nu],
+                "COMPOSITION": comp}
         self.synth_sets = {k: [self.genes[i] for i in v] for k, v in sets.items()}
+        # ---- method v3 traps: the co-located strong drug's own genes, the composition-shift drug
+        k = di[COLOC_X]
+        self.E[k][:, sets["COLOC_DOWN"]] = lg(COLOC_DOWN[1])
+        self.E[k][:, sets["COLOC_UP"]] = lg(COLOC_UP[1])
+        put(COLOC_X, "TFRC", COLOC_TFRC)
+        self.E[di[COMP_DRUG]][:, comp] = lg(COMP_FOLD)
 
         def line_strength():
             return np.exp(0.35 * rng.standard_normal(L))[:, None]
@@ -393,15 +561,19 @@ class Design:
             put(drug, S["S_PHASE"] + S["G2M_PHASE"], 0.6)
         special = set(PLANTED_DRUGS) | set(HDAC) | set(MTORI) | set(GLUCO) | set(STATINS) | set(CDK46) | \
             {FAILED_DRUG, "Carbamazepine"}
-        others = [d for d in self.drugs if d not in special]
-        rest = pick[127:]
+        self.fillers = [d for d in self.drugs if d not in special]
+        others = [d for d in self.fillers if d not in RESERVED]
+        rest = pick[127 + nd + nu:]
         self.private = {}
+        used = set()
         for drug in sorted(rng.choice(others, size=min(22, len(others)), replace=False)):
             n = int(rng.integers(8, 31))
             cols = rng.choice(rest, size=n, replace=False)
             eff = rng.uniform(0.6, 1.4, n) * rng.choice([-1, 1], n)
             self.E[di[drug]][:, cols] = eff[None, :] * line_strength()
             self.private[drug] = n
+            used.update(int(c) for c in cols)
+        self.coloc2_genes = [int(c) for c in rest if int(c) not in used]    # moved by no other drug (c2)
 
     def phase_profiles(self, Bw):
         """ln weights per line for G1, S and G2M cells (L, 3, G), each normalised to sum 1 (returned linear)."""
@@ -422,17 +594,17 @@ def simulate_plate(ds, p, de_cols):
     args = ds.args
     rng = np.random.default_rng([args.seed, 100 + p])
     L, G = ds.L, ds.G
-    dose = ds.plate_dose[p]
-    sc = DOSE_SCALE[dose]
-    plate = f"plate{p + 1}"
+    plate = ds.plate_names[p]
+    lay = ds.layout[p]
+    noise = NOISY_MULT if p == ds.noisy_plate else 1.0
     plate_cells = math.exp(0.08 * rng.standard_normal())
     plate_lib = math.exp(0.08 * rng.standard_normal())
     plate_gene = 0.04 * rng.standard_normal(G)
-    by_slot = {ds.slot[(d, p)]: d for d in ds.drugs}
-    by_slot[95] = DMSO
-    by_slot[96] = DMSO
+    by_slot = {s: v[0] for s, v in lay.items()}
+    conc_of = {s: v[1] for s, v in lay.items()}
     di = {d: k for k, d in enumerate(ds.drugs)}
     art_cols = {slot_of(w): (ds.gi[g], math.log(f)) for w, (g, f) in ARTIFACT_WELLS.items()}
+    row_loss = set(row_slots(ROW_LOSS_ROW)) if p == ds.row_plate else set()
     libs = [LIB_BASE + 2 * p, LIB_BASE + 2 * p + 1]
     csr_ind, csr_val, nnz, cell_line, cell_slot, cell_bc, cell_lib = [], [], [], [], [], [], []
     wells = []
@@ -442,16 +614,20 @@ def simulate_plate(ds, p, de_cols):
     line_sum = np.zeros((L, G))
     line_sum_dmso = np.zeros((L, G))
     for slot in range(1, 97):
-        drug = by_slot[slot]
+        drug, conc, bio = lay[slot]
         is_dmso = drug == DMSO
-        k = None if is_dmso else di[drug]
-        s = 0.0 if is_dmso else sc
+        k = None if is_dmso else di[bio]                  # the biology: the label's own, except on plate13
+        s = 0.0 if is_dmso else DOSE_SCALE[conc]
         # ---- cells per line
         lam = args.cells * ds.abund * plate_cells * math.exp(0.15 * rng.standard_normal())
         if k is not None:
             lam = lam * 2.0 ** (s * (ds.AB[k] + ds.TOX[k]))
             if drug == FAILED_DRUG and p == ds.failed_plate:
                 lam = lam * 0.03
+            if slot in row_loss:                          # technical: the whole plate row lost cells
+                lam = lam * ROW_LOSS_X
+            if drug == LOWDOSE_LOSS_DRUG and conc == DOSES[0] and p < ds.P:
+                lam = lam * LOWDOSE_LOSS_X
         n_l = rng.poisson(lam)
         n = int(n_l.sum())
         line_of_cell = np.repeat(np.arange(L), n_l)
@@ -459,7 +635,8 @@ def simulate_plate(ds, p, de_cols):
         lnB = ds.B.copy()
         if k is not None:
             lnB = lnB + math.log(2) * s * ds.E[k].astype(np.float64)
-        lnB = lnB + plate_gene[None, :] + 0.08 * rng.standard_normal(G)[None, :] + 0.05 * rng.standard_normal((L, G))
+        lnB = lnB + plate_gene[None, :] + noise * (0.08 * rng.standard_normal(G)[None, :]
+                                                   + 0.05 * rng.standard_normal((L, G)))
         if not is_dmso and slot in art_cols:
             c, f = art_cols[slot]
             lnB[:, c] += f
@@ -480,6 +657,12 @@ def simulate_plate(ds, p, de_cols):
         amb /= amb.sum()
         rate = lib[:, None] * ((1.0 - amb_frac)[:, None] * Pc + amb_frac[:, None] * amb[None, :])
         C = rng.poisson(rate).astype(np.float32)
+        if bio == ds.coloc2_x and s > 0:                  # c2: X2's signature, a separate stream (see COLOC2_WELLS)
+            r2 = np.random.default_rng([args.seed, 500 + p, slot])
+            for c, lf in ds.coloc2_sig.items():
+                m = 2.0 ** (s * lf)
+                C[:, c] = r2.binomial(C[:, c].astype(np.int64), m) if m < 1 else \
+                    C[:, c] + r2.poisson(C[:, c] * (m - 1.0))
         del rate, Pc
         # ---- barcodes: round-1 well = this slot; rounds 2-3 unique within the well; two sublibraries per plate
         code = np.sort(rng.choice(192 * 192, size=n, replace=False)) if n else np.zeros(0, dtype=np.int64)
@@ -506,7 +689,7 @@ def simulate_plate(ds, p, de_cols):
             line_sum_dmso += S
         genes_per_cell = nnz[-1]
         umi = C.sum(axis=1)
-        wells.append({"slot": slot, "drug": drug, "n_cells": n,
+        wells.append({"slot": slot, "drug": drug, "conc": conc, "biology": bio, "n_cells": n,
                       "mean_gene_count": float(genes_per_cell.mean()) if n else 0.0,
                       "mean_tscp_count": float(umi.mean()) if n else 0.0})
     # ---- output order: sublibrary, then well, then barcode (rows grouped by sample, as in the real files)
@@ -522,7 +705,8 @@ def simulate_plate(ds, p, de_cols):
     np.cumsum(nnz, out=starts[1:])
     cells = {"order": order, "nnz": nnz, "starts": starts, "ind": ind, "val": val, "line": cline, "slot": cslot,
              "bc": cbc, "lib": np.array(libs)[clib]}
-    return {"plate": plate, "dose": dose, "cells": cells, "wells": wells, "by_slot": by_slot,
+    return {"plate": plate, "plate_num": ds.plate_nums[p], "cells": cells, "wells": wells, "by_slot": by_slot,
+            "conc_of": conc_of,
             "sums_de": sums_de, "tot": tot, "ncell": ncell, "line_sum": line_sum, "line_sum_dmso": line_sum_dmso}
 
 
@@ -624,7 +808,7 @@ def pseudobulk_table(ds, results, de_genes):
         cc = res["sums_de"][dm_slots].sum(axis=0)            # (L, Gd)
         ct = res["tot"][dm_slots].sum(axis=0)
         cn = res["ncell"][dm_slots].sum(axis=0)
-        for slot in range(1, 95):
+        for slot in sorted(s for s, d in res["by_slot"].items() if d != DMSO):
             drug = res["by_slot"][slot]
             x = res["sums_de"][slot - 1]
             xt = res["tot"][slot - 1]
@@ -650,13 +834,13 @@ def pseudobulk_table(ds, results, de_genes):
             cols["stat"].append(stat.ravel())
             cols["pvalue"].append(pv.ravel())
             cols["padj"].append(padj.ravel())
-            cols["plate"] += [str(p + 1)] * nrow
+            cols["plate"] += [res["plate_num"]] * nrow
             cols["n_cells_trt"].append(np.repeat(xn[li], Gd))
             cols["n_cells_ctrl"].append(np.repeat(cn[li], Gd))
             cols["Cell_ID_Cellosaur"] += [ds.line_id[i] for i in li for _ in range(Gd)]
             cols["Cell_ID_DepMap"] += [ds.line_depmap[i] for i in li for _ in range(Gd)]
             cols["drug"] += [drug] * nrow
-            cols["concentration"].append(np.full(nrow, res["dose"]))
+            cols["concentration"].append(np.full(nrow, res["conc_of"][slot]))
             cols["concentration_unit"] += ["uM"] * nrow
             cols["Cell_Name_Vevo"] += [ds.lines[i] for i in li for _ in range(Gd)]
     f32 = pa.float32()
@@ -703,7 +887,7 @@ def write_metadata(ds, results, outdir, de_genes):
     for p, res in enumerate(results):
         for w in res["wells"]:
             drug = w["drug"]
-            conc = 0.0 if drug == DMSO else res["dose"]
+            conc = w["conc"]
             name = drug + (" " if drug in TRAILING_SPACE else "")
             rows["sample"].append(sample_name(p, w["slot"]))
             rows["plate"].append(res["plate"])
@@ -728,6 +912,79 @@ def write_metadata(ds, results, outdir, de_genes):
 
 
 # ============================================================================= ground truth
+def method_v3_truth(ds, layout):
+    """The traps method v3 fixes (section 10 of the v3 spec), with what the method should make of each."""
+    P = ds.P
+    lay = [w for w in layout if w["drug"] != DMSO]
+    gi = ds.gi
+    di = {d: k for k, d in enumerate(ds.drugs)}
+    x = di[COLOC_X]
+    cgenes = ["TFRC", "MDM2"] + ds.synth_sets["COLOC_DOWN"] + ds.synth_sets["COLOC_UP"]
+    e = {g: float(np.median(ds.E[x][:, gi[g]])) for g in cgenes}
+    W = np.exp(np.where(np.isfinite(ds.B), ds.B, -np.inf))
+    share = (W / W.sum(axis=1, keepdims=True))[:, [gi[g] for g in ds.synth_sets["COMPOSITION"]]].sum(axis=1)
+    shift = {str(c): float(np.median(-np.log2(1 + share * (COMP_FOLD ** DOSE_SCALE[c] - 1)))) for c in DOSES}
+    names = ds.plate_names
+    only13 = sorted({(w["drug"], w["conc"]) for w in lay if w["plate"] == UNRELIABLE_PLATE} -
+                    {(w["drug"], w["conc"]) for w in lay if w["plate"] != UNRELIABLE_PLATE})
+    special = set(PLANTED_DRUGS) | set(HDAC) | set(MTORI) | set(GLUCO) | set(STATINS) | set(CDK46) | \
+        {FAILED_DRUG, "Carbamazepine"}
+    inert = [d for d in ds.drugs if d not in special and d not in ds.private and d not in RESERVED
+             and d not in (ds.coloc2_x, ds.coloc2_y)]
+    return {
+        "noisy_plate": {"plate": names[ds.noisy_plate] if ds.noisy_plate is not None else None,
+                        "dose": 5.0, "noise_multiplier": NOISY_MULT,
+                        "peers": [names[p] for p in range(P) if ds.plate_dose[p] == 5.0 and p != ds.noisy_plate],
+                        "expected": "plate factor ~2 for it, 1 for its peer; 5 uM drug-doses (one well there) "
+                                    "plate_scale ~1.5 -> 'noisy plate (z scaled)'"},
+        "unreliable_plate": {"plate": UNRELIABLE_PLATE, "row_doses": P13_ROW_DOSE, "dmso_wells": list(P13_DMSO),
+                             "only_there": [{"drug": d, "conc": c} for d, c in only13],
+                             "n_drug_wells": sum(w["plate"] == UNRELIABLE_PLATE for w in lay),
+                             "expected": "left out of every drug-dose that has a well on a reliable plate; the "
+                                         "drug-doses only there are flagged 'unreliable plate only'; its replicate "
+                                         "pairs do not agree (labels shuffled against the biology: layout 'biology')"},
+        "co_location": {"strong": COLOC_X, "inert": COLOC_Y, "wells": list(COLOC_WELLS),
+                        "genes": cgenes, "strong_log2_top_dose": e,
+                        "inert_log2_before_fix": {g: -DOSE_SCALE[0.5] * v for g, v in e.items()},
+                        "expected": f"{COLOC_Y} ~0 on these genes after the fix (pass-2 donors with |z| >= 3 dropped: "
+                                    "too few clean donors) and flagged 'position correction uncertain'; before the "
+                                    f"fix it reads minus {COLOC_X}'s 0.5 uM effect (median of its three doses). "
+                                    f"{COLOC_X} is 'uncertain' on its genes too (its donors, {COLOC_Y}'s wells, carry "
+                                    "the pass-1 mirror image), with its own effect intact"},
+        "co_location_clean": {"strong": ds.coloc2_x, "inert": ds.coloc2_y, "well": ds.coloc2_well,
+                              "strong_plates": [names[p] for p in ds.coloc2_plates[ds.coloc2_x]],
+                              "inert_plate": names[ds.coloc2_plates[ds.coloc2_y][0]],
+                              "inert_conc": ds.plate_dose[ds.coloc2_plates[ds.coloc2_y][0]],
+                              "genes": ds.synth_sets["COLOC2_DOWN"] + ds.synth_sets["COLOC2_UP"],
+                              "strong_log2_top_dose": {g: float(ds.coloc2_sig[gi[g]]) for g in
+                                                       ds.synth_sets["COLOC2_DOWN"] + ds.synth_sets["COLOC2_UP"]},
+                              "expected": f"{ds.coloc2_y}'s well at {ds.coloc2_well} has 6 donors of 6 drugs, one of "
+                                          f"them {ds.coloc2_x}'s 5 uM well (strong): the clean-donor pass drops it and "
+                                          "corrects the well with the median of the other donors (it reads ~0 on those "
+                                          "genes and is NOT 'position correction uncertain')"},
+        "uncorrectable": {"drug": REF_DRUG, "conc": REF_DOSE, "well": REF_WELL, "plates": names[:P],
+                          "expected": "'position not correctable' (no other drug in that position on the reliable "
+                                      "plates; one plate13 well)"},
+        "composition": {"drug": COMP_DRUG, "conc": 5.0, "genes": ds.synth_sets["COMPOSITION"], "fold": COMP_FOLD,
+                        "expected_shift_log2_by_dose": shift,
+                        "expected": "composition_shift_log2 ~ the 5 uM shift, flag 'composition shift'; after the "
+                                    "normalisation every other gene ~0"},
+        "row_cell_loss": {"plate": names[ds.row_plate], "row": ROW_LOSS_ROW, "cells_x": ROW_LOSS_X,
+                          "conc": ds.plate_dose[ds.row_plate], "drugs": ds.row_drugs,
+                          "expected": "one well per drug-dose (this dose only on this plate): 'low cells "
+                                      "(technical?)' and 'plate-row cell shift', not 'toxic'"},
+        "same_plate_replicates": {"plates": [names[p] for p in ds.dup_plates], "conc": ds.plate_dose[ds.row_plate],
+                                  "drugs": ds.dup_drugs,
+                                  "expected": "two wells of the drug on one plate: replicate pair_type 'same plate'"},
+        "low_dose_cell_loss": {"drug": LOWDOSE_LOSS_DRUG, "conc": DOSES[0], "cells_x": LOWDOSE_LOSS_X,
+                               "expected": "'low cells (technical?)' (higher doses fine), not 'toxic', no row shift"},
+        "inert_drugs": inert,
+        "drugs_with_a_role": {"coloc_strong": COLOC_X, "coloc_inert": COLOC_Y, "reference": REF_DRUG,
+                              "composition": COMP_DRUG, "low_dose_cell_loss": LOWDOSE_LOSS_DRUG,
+                              "coloc_clean_strong": ds.coloc2_x, "coloc_clean_inert": ds.coloc2_y},
+    }
+
+
 def ground_truth(ds, results, n_cells, files, de_rows, outdir):
     li = {n: i for i, n in enumerate(ds.lines)}
     line_sum = sum(r["line_sum"] for r in results)
@@ -752,18 +1009,23 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
     layout = []
     for p, res in enumerate(results):
         for slot, d in sorted(res["by_slot"].items()):
+            bio = ds.layout[p][slot][2]
             layout.append({"sample": sample_name(p, slot), "plate": res["plate"], "well": well_name(slot),
-                           "slot": slot, "drug": d, "conc": 0.0 if d == DMSO else res["dose"]})
+                           "slot": slot, "drug": d, "conc": res["conc_of"][slot],
+                           **({"biology": bio} if bio not in (None, d) else {})})
+    v3 = method_v3_truth(ds, layout)
     fp = ds.failed_plate
-    fslot = ds.slot[(FAILED_DRUG, fp)]
+    fslot = next(s for s, v in ds.layout[fp].items() if v[0] == FAILED_DRUG)
     gt = {
         "generator": "tests/make_synthetic_tahoe.py",
         "generator_sha1": source_hash(),
         "params": {k: getattr(ds.args, k) for k in ["seed", "plates", "lines", "cells", "genes"]},
         "n_cells": int(n_cells), "n_expression_files": files, "pseudobulk_rows": int(de_rows),
         "doses_uM": DOSES, "dose_scale_of_log_effect": {str(k): v for k, v in DOSE_SCALE.items()},
-        "plates": {f"plate{p + 1}": ds.plate_dose[p] for p in range(ds.P)},
+        "plates": {ds.plate_names[p]: ds.plate_dose[p] for p in range(ds.n_plates)},   # plate13: None (mixed)
         "dmso_wells": ["H11", "H12"],
+        "dmso_wells_by_plate": {res["plate"]: sorted((well_name(s) for s, d in res["by_slot"].items() if d == DMSO),
+                                                     key=slot_of) for res in results},
         "lines": lines,
         "groups": {"tp53_wt": ds.tp53_wt, "tp53_altered": ds.tp53_alt, "tp53_deleted": ds.tp53_deleted,
                    "mtap_null": ds.mtap_null, "cdkn2a_deleted": ds.cdkn2a_del, "cdkn2b_deleted": ds.cdkn2b_del,
@@ -782,15 +1044,21 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
                           "(log2 change -1.8 x ACSL4 rank fraction)",
             "Auranofin": "NRF2_CORE 1.8x, HMOX1 3x, SLC7A11 2x, CHAC1 2.5x, ISR_ATF4 1.8x",
             "Ciclopirox": "TFRC 2.5x, FTH1 0.7x, FTL 0.7x, NCOA4 1.3x",
-            "Decitabine|5-Azacytidine": "IFN 1.6x (all lines); GSDME x60 of the silenced level in gsdme_silenced "
-                                        "lines (~4x as measured, ambient included)",
+            "Decitabine|5-Azacytidine": "IFN 1.6x (all lines); GSDME x{:g} (Decitabine) / x{:g} (5-Azacytidine) of "
+                                        "the silenced level in gsdme_silenced lines (~6x / ~3.5x as measured, ambient "
+                                        "included)".format(*GSDME_REEXPRESS.values()),
             "Bortezomib": "PROTEASOME 1.8x, HSF1_HEAT 3x, HMOX1 3x, ISR_ATF4 2x, CHAC1 2x; cells 0.3x; UMIs/cell 0.6x",
             "Paclitaxel": "G2M_PHASE genes 1.8x",
             "Pemetrexed": "cells of mtap_null lines 0.5x (0.75x at 0.5 uM)",
             "Ixazomib": "cells: high-PSMD10 lines depleted more (log2 change -1.8 x PSMD10 rank fraction)",
             "Imiquimod (maleate)": "NFKB 2x, IL1B 3x in il1b_expressing lines, CASP4 1.5x",
-            "Rimonabant": "NAPEPLD 1.6x",
-            "Dinaciclib": "UMIs/cell 0.65x (genes/cell fall with it), MDM2 0.5x",
+            "Rimonabant": "NAPEPLD 2x",
+            "Dinaciclib": f"UMIs/cell 0.65x (genes/cell fall with it), MDM2 0.5x, TFRC {COLOC_TFRC:g}x, COLOC_DOWN "
+                          "SYNTH genes "
+                          f"{COLOC_DOWN[1]:g}x, COLOC_UP {COLOC_UP[1]:g}x (method_v3 co_location: it shares "
+                          f"{COLOC_WELLS[0]}/{COLOC_WELLS[1]} with {COLOC_Y})",
+            COMP_DRUG: f"COMPOSITION SYNTH genes (the {COMP_N} most abundant fillers) {COMP_FOLD:g}x: every other "
+                       "gene reads lower in CPM (method_v3 composition)",
             "Celecoxib": "PTGS2 1.5x",
         },
         "toxic_drug_doses": [{"drug": "Bortezomib", "conc": 5.0, "cells_x": 0.3},
@@ -805,7 +1073,8 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
             "TRIM72": "0 in every line (no counts at all)",
             "NLRP3|CASP5|AIM2": "~1 CPM (essentially absent; below the atlas 2-CPM cut)",
             "IL1B": "expressed only in il1b_expressing lines", "CASP1": "0 in casp1_absent lines (ambient only)",
-            "GSDME": "0.5% of the median line in gsdme_silenced lines (+ ambient: reads <10%)",
+            "GSDME": f"{GSDME_SILENT:.0%} of the median line in gsdme_silenced lines (+ ambient: reads ~15%, ~2x "
+                     "the ambient floor)",
             "MTAP": "0 in mtap_null lines (ambient only)", "CDKN2A|CDKN2B": "0 in deleted lines (ambient only)",
             "TP53": "0 in tp53_deleted lines (ambient only)",
             "ambient": "each cell gets 8-14% of its counts from the well-average profile",
@@ -823,6 +1092,7 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
                           "cells",
             "synthetic gene sets": ds.synth_sets,
         },
+        "method_v3": v3,
         "layout": layout,
     }
     with open(os.path.join(outdir, "ground_truth.json"), "w") as fh:
@@ -835,13 +1105,14 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("outdir")
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--plates", type=int, default=6, help="plates (>= 3; doses split evenly, low to high)")
+    ap.add_argument("--plates", type=int, default=6, help="regular plates (3-12; doses split evenly, low to high); "
+                                                          "plate13 (mixed doses, unreliable) comes on top")
     ap.add_argument("--lines", type=int, default=18, help="cell lines (10-18)")
     ap.add_argument("--cells", type=float, default=35, help="cells per line per well for a line of average abundance")
     ap.add_argument("--genes", type=int, default=1200, help="genes in total (named genes + SYNTH fillers)")
     args = ap.parse_args()
-    if not 3 <= args.plates <= 14:
-        sys.exit("--plates must be 3..14")
+    if not 3 <= args.plates <= 12:
+        sys.exit("--plates must be 3..12 (plate13 is the unreliable plate on top)")
     if not 10 <= args.lines <= len(LINE_DESIGN):
         sys.exit(f"--lines must be 10..{len(LINE_DESIGN)}")
     t0 = time.time()
@@ -853,21 +1124,22 @@ def main():
     tmp = os.path.join(out, "data", "_tmp")
     os.makedirs(tmp, exist_ok=True)
     ds = Design(args)
-    log(f"Design: {ds.P} plates, {len(ds.drugs)} drugs + DMSO, {ds.L} lines, {ds.G} genes")
+    log(f"Design: {ds.P} plates + {UNRELIABLE_PLATE}, {len(ds.drugs)} drugs + DMSO, {ds.L} lines, {ds.G} genes")
     named_de = ANCHORS + [g for g in ds.sets["PROTEASOME"]] + PANEL + ds.sets["S_PHASE"][:10] + \
         ds.sets["G2M_PHASE"][:10]
     named_de = list(dict.fromkeys(named_de))
     de_genes = named_de + [ds.genes[i] for i in ds.synth[:max(0, 152 - len(named_de))]]
     de_cols = [ds.gi[g] for g in de_genes]
     results, parts, n_cells = [], [], 0
-    for p in range(ds.P):
+    for p in range(ds.n_plates):
         res = simulate_plate(ds, p, de_cols)
         parts += write_plate_files(ds, res, p, tmp, len(parts))
         nc = int(res["cells"]["order"].size)
         n_cells += nc
         del res["cells"]
         results.append(res)
-        log(f"  plate{p + 1} ({ds.plate_dose[p]:g} uM): {nc:,} cells, {len(parts)} files so far")
+        dose = "mixed doses" if ds.plate_dose[p] is None else f"{ds.plate_dose[p]:g} uM"
+        log(f"  {ds.plate_names[p]} ({dose}): {nc:,} cells, {len(parts)} files so far")
     N = len(parts)
     for i, f in enumerate(parts):
         os.replace(f, os.path.join(out, "data", f"train-{i:05d}-of-{N:05d}.parquet"))

@@ -26,6 +26,17 @@ Corrections built in (each one targets a problem found in the published DE table
      (robust z), so well-to-well noise is part of the null. Cell lines in one well are not treated
      as independent replicates.
   4. Counting: cell lines are counted once per drug and dose, even if it was tested on two plates.
+Method v3 (found on the full real run; numbers differ from earlier runs, see README 'Method v3'):
+  5. Composition: when the atlas (<data>/atlas, --atlas) exported it, each profile's library-composition shift
+     (median-of-ratios over the line's well-expressed genes) is subtracted, so a few hugely induced genes cannot
+     make every other gene look lower.
+  6. Plate dispersion: each (plate, dose) group's spread is compared with the same dose on the other plates; a
+     noisier group gets its z divided by that factor (only ever widened, never narrowed).
+  7. Unreliable plates (--unreliable-plates; default plate13): kept per well, left out of the pooled drug-doses
+     that have a well elsewhere, of the reference spread and of the plate-factor peers.
+  8. Position correction in two passes: donors whose own first-pass |z| >= 3 for the gene are left out, so a strong
+     drug at the same well position cannot create a mirror-image effect; wells without enough clean donors are not
+     corrected and flagged ('position correction uncertain' / 'position not correctable').
 
 Requires numpy, pandas, pyarrow (and duckdb for 'coreg').
 """
@@ -64,6 +75,22 @@ FDR_CUT = 0.10                  # FDR cutoff for calling a drug
 NULL_FRAC = 0.30                # MTAP-null fallback cut (fraction of the median line, all wells); see null_threshold
 MIN_LINE_CELLS = 200            # lines with fewer cells in total are not classified
 MIN_SLOT_WELLS = 3              # need >= this many other-drug wells to estimate a position effect
+MIN_LINES = 5                   # a well's effect on a gene needs >= this many measured lines (as tahoe_atlas.py; a
+                                # gene measured in fewer lines in a typical well: any well with a measured line counts)
+# method v3 (README 'Method v3'): numbers differ from the earlier runs (v2)
+METHOD_VERSION = 3              # results/run_info.json; tahoe_gene_panel.py needs >= 3, tahoe_status.py reads it
+UNRELIABLE_PLATES = ("plate13",)  # default --unreliable-plates (when present): its wells stay in the per-well
+                                # tables but leave the reference spread, the plate-factor peers and every drug-dose
+                                # that also has a well on another plate (plate 13 of the real data does not reproduce)
+POS_CLEAN_Z = 3.0               # position correction, pass 2: donor wells only with |first-pass z| < this (per gene)
+PLATE_SCALE_MIN_WELLS = 20      # a (plate, dose) group with fewer drug wells joins its plate's largest group
+NOISY_PLATE = 1.2               # flag 'noisy plate (z scaled)' above this plate factor
+PLATE_SCALE_BAND = 1.3          # a gene whose own spread ratio on a plate group exceeds the group factor x this (about
+                                # the upper sampling band of a MAD ratio over ~90 wells) gets ratio / this instead
+ROW_SHIFT = 0.8                 # a plate row whose other drug wells moved by more (log2 cells) is itself shifted
+TOXIC_BEST_WELL = -0.5          # 'toxic' of a drug-dose with several used wells: its best well lost cells too (log2)
+COMPOSITION_FLAG = 0.2          # flag 'composition shift' at |drug-dose composition shift| >= this (log2)
+WELL_COLS = ["plate", "drug", "conc", "slot", "well", "is_dmso", "unreliable_plate"]   # every per-well table
 REDUCE_EVERY = 50               # extract: merge the per-file tables every this many files (main process stays ~1 GB)
 MIN_BASEMEAN = 5                # coreg: ignore genes with lower baseMean in a test
 N_PCS = 3                       # coreg: broad shared responses (principal components) removed before correlating;
@@ -770,6 +797,41 @@ def loo_slot(values, slot, drug, use):
     return eff, n_used
 
 
+def loo_slot_clean(values, slot, drug, use, clean):
+    """Second pass of the leave-drug-out position effect (method v3): for each well, the median of the wells in the
+    same position (any plate) that hold a DIFFERENT drug and are clean for this gene (clean: first-pass |z| <
+    POS_CLEAN_Z), so a strong drug sharing the position cannot pass its own effect on as a 'position effect'.
+    >= MIN_SLOT_WELLS clean donors: their median. Fewer, but >= MIN_SLOT_WELLS donors in total: 0, state 1
+    ('position correction uncertain'). < MIN_SLOT_WELLS donors in total: 0, state 2 ('position not correctable').
+    Donors in total count every other-drug `use` well at the position (as tahoe_atlas.py: per well, whatever their
+    values); clean donors need a value. Returns effect, donors in total, clean donors, state."""
+    v = np.asarray(values, dtype=float)
+    slot = np.asarray(slot, dtype=float)
+    drug = np.asarray(drug, dtype=object)
+    usew = np.asarray(use, dtype=bool)
+    ok = usew & np.isfinite(v) & np.asarray(clean, dtype=bool)
+    eff = np.zeros(v.size)
+    n_tot = np.zeros(v.size, dtype=int)
+    n_cl = np.zeros(v.size, dtype=int)
+    state = np.full(v.size, 2, dtype=int)                  # wells without a known position: not correctable
+    groups = defaultdict(list)
+    for i, s in enumerate(slot):
+        if np.isfinite(s):
+            groups[s].append(i)
+    for ii in groups.values():
+        ii = np.asarray(ii)
+        for i in ii:
+            other = drug[ii] != drug[i]
+            n_tot[i] = int((usew[ii] & other).sum())
+            m = ii[ok[ii] & other]
+            n_cl[i] = m.size
+            if m.size >= MIN_SLOT_WELLS:
+                eff[i], state[i] = float(np.median(v[m])), 0
+            else:
+                state[i] = 1 if n_tot[i] >= MIN_SLOT_WELLS else 2
+    return eff, n_tot, n_cl, state
+
+
 def plate_line_residual(d, col):
     """value minus the median over drug wells on the same plate, same cell line"""
     ref = d.loc[~d["is_dmso"]].groupby(["plate", "cell_line_id"])[col].median()
@@ -777,18 +839,443 @@ def plate_line_residual(d, col):
     return d[col].values - ref.reindex(key).values
 
 
-def correct_wells(d, resid, wells):
-    """Per-well median over cell lines -> leave-drug-out position correction -> robust z."""
+def unreliable_plates(sm, spec=None):
+    """Plates whose wells are computed (the per-well tables keep them) but left out of the reference spread, the
+    plate-factor peers and every drug-dose that also has a well on another plate. spec: --unreliable-plates
+    ('plate13,plate5', any case; plate numbers also work; 'none' or 'no'); default (no option, or an empty one):
+    UNRELIABLE_PLATES that are in the data. The one definition: tahoe_atlas.py calls this too."""
+    plates = sorted(set(sm["plate"].astype(str)), key=lambda p: (len(p), p))
+    txt = "" if spec is None else str(spec).strip()
+    if txt.lower() in ("none", "no"):
+        return []
+    want = [x.strip() for x in txt.split(",") if x.strip()] if txt else list(UNRELIABLE_PLATES)
+    num = {re.sub(r"\D", "", p): p for p in plates}
+    out = []
+    for w in want:
+        hit = next((p for p in plates if p.lower() == w.lower()), None) or \
+            (num.get(w) if w.isdigit() else None)
+        if hit:
+            out.append(hit)
+        elif txt:
+            log(f"  WARNING: --unreliable-plates: no plate called {w} (plates: {', '.join(plates)})")
+    return sorted(set(out), key=lambda p: (len(p), p))
+
+
+def mark_unreliable(sm, plates):
+    sm = sm.copy()
+    sm["unreliable_plate"] = sm["plate"].astype(str).isin(set(plates))
+    return sm
+
+
+def wells_of(sm):
+    """One row per well (index: sample) with the columns every per-well table carries (WELL_COLS)."""
+    w = sm.set_index("sample")
+    if "unreliable_plate" not in w:
+        w = w.assign(unreliable_plate=False)
+    w = w[WELL_COLS].copy()
+    w["unreliable_plate"] = w["unreliable_plate"].fillna(False).astype(bool)
+    return w
+
+
+def reference_wells(W):
+    """Drug wells on reliable plates: the reference for robust centres / scales (all drug wells when every plate
+    is marked unreliable)."""
+    drug = ~W["is_dmso"].astype(bool)
+    rel = drug & ~W["unreliable_plate"].astype(bool) if "unreliable_plate" in W else drug
+    return rel if rel.any() else drug
+
+
+def used_wells(Wd):
+    """The drug wells that enter their drug-dose (Wd: drug wells with a 'dose' column): the wells on reliable
+    plates, or every well when the drug-dose has none there ('unreliable plate only')."""
+    if "unreliable_plate" not in Wd:
+        return pd.Series(True, index=Wd.index)
+    unrel = Wd["unreliable_plate"].astype(bool)
+    has_rel = (~unrel).groupby([Wd["drug"], Wd["dose"]]).transform("any")
+    return ~unrel | ~has_rel
+
+
+def dose_text(v):
+    """A dose as dose_key writes it ('0.05', '5'); other labels unchanged."""
+    try:
+        return f"{float(v):.6g}"
+    except (TypeError, ValueError):
+        return str(v)
+
+
+def plate_groups(W):
+    """Plate dispersion group of every well (index of W) as 'plate|dose': (plate, dose) groups with fewer than
+    PLATE_SCALE_MIN_WELLS drug wells (a lone control well of another dose, the DMSO wells) join their plate's largest
+    group. Plate 13 of the real data (all three doses) gives three groups."""
+    dose = dose_key(W)
+    drug = ~W["is_dmso"].astype(bool)
+    n = pd.Series(1, index=W.index)[drug].groupby([W["plate"][drug], dose[drug]]).sum()
+    largest = {}
+    for (p, d_), k in n.items():
+        if p not in largest or k > n[(p, largest[p])]:
+            largest[p] = d_
+    out = [f"{p}|{d_}" if n.get((p, d_), 0) >= PLATE_SCALE_MIN_WELLS or p not in largest else f"{p}|{largest[p]}"
+           for p, d_ in zip(W["plate"], dose)]
+    return pd.Series(out, index=W.index)
+
+
+def spread_ratios(mads, info):
+    """Per group and feature (mads: groups x features, each feature's 1.4826 x median |W2 - c| over the group's drug
+    wells; info: per group plate, dose, reliable): the group's spread over the median spread of the same dose on the
+    OTHER reliable plates (its peers). NaN without peers. Returns (ratios, number of peers per group)."""
+    R = pd.DataFrame(np.nan, index=mads.index, columns=mads.columns)
+    npeer = {}
+    for G in mads.index:
+        p, d_ = info.at[G, "plate"], info.at[G, "dose"]
+        peers = [P for P in mads.index if info.at[P, "dose"] == d_ and info.at[P, "plate"] != p
+                 and bool(info.at[P, "reliable"])]
+        npeer[G] = len(peers)
+        if peers:
+            ref = mads.loc[peers].median(axis=0)
+            R.loc[G] = (mads.loc[G] / ref.where(ref > 0)).to_numpy(dtype=float)
+    return R, npeer
+
+
+def fit_plate_factors(mads, info):
+    """Plate factors (method v3) from mads and info (see spread_ratios): factor_raw = median spread ratio over the
+    features; factor = max(1, factor_raw): a noisy group is widened, a quiet one never narrowed (part of a noisy
+    plate's spread may be real activity); no peers -> 1. A feature's own z uses feature_factors on top."""
+    R, npeer = spread_ratios(mads, info)
+    rows = []
+    for G in mads.index:
+        ratio = R.loc[G].to_numpy(dtype=float)
+        fr = float(np.nanmedian(ratio)) if np.isfinite(ratio).any() else np.nan
+        rows.append({"group": G, "n_peers": npeer[G], "n_features": int(mads.loc[G].notna().sum()),
+                     "factor_raw": fr, "factor": max(1.0, fr) if np.isfinite(fr) else 1.0})
+    return pd.DataFrame(rows).set_index("group")
+
+
+def feature_factors(group_factor, ratio):
+    """The z divisor of one feature per group: the group's factor, raised to the feature's own spread ratio /
+    PLATE_SCALE_BAND where that is larger (a gene over-dispersed on a plate beyond the group's median gene; only
+    ever widens). group_factor, ratio: aligned arrays (ratio NaN: the group's factor)."""
+    f = np.asarray(group_factor, dtype=float)
+    r = np.asarray(ratio, dtype=float) / PLATE_SCALE_BAND
+    return np.where(np.isfinite(r), np.maximum(f, r), f)
+
+
+def cells_beyond_row(cells, row):
+    """A well's cell loss that its plate row does not explain (log2 vs the plate): where the row's other drug wells
+    are themselves shifted (|row| > ROW_SHIFT), the smaller loss of the two readings (vs the plate, vs the row);
+    otherwise the plain value (a row of toxic neighbours at a high dose is no reason to subtract their loss). NaN
+    row: the plain value. 'toxic' needs this < -1 in the drug-dose's best used well."""
+    c = np.asarray(cells, dtype=float)
+    r = np.nan_to_num(np.asarray(row, dtype=float))
+    return np.where(np.abs(r) > ROW_SHIFT, np.maximum(c, c - r), c)
+
+
+POSITION_PAIR_TYPES = ("same position, other plate", "different position")
+
+
+def replicate_summary(pairs, active=None):
+    """Replicate agreement per pair type with every drug-dose counted ONCE (its mean r over its well pairs of that
+    type), so a drug-dose with many wells cannot dominate. pairs: one row per well pair with drug, dose (or conc),
+    pair_type, r and optionally position_not_correctable (either well had no position correction: such pairs stay out
+    of the two position types and are reported as their own row 'position not correctable (either well)').
+    active: set of (drug, dose text) for a second median over the active drug-doses. One row per type: n_pairs,
+    n_drug_doses, n_drugs, median_r, drugs (named when <= 5), n_active, median_r_active."""
+    cols = ["pair_type", "n_pairs", "n_drug_doses", "n_drugs", "median_r", "drugs", "n_active", "median_r_active"]
+    if pairs is None or not len(pairs):
+        return pd.DataFrame(columns=cols)
+    p = pairs.copy()
+    p["dose_"] = (p["dose"] if "dose" in p else p["conc"]).map(dose_text)
+    if "position_not_correctable" in p:
+        nc = p["position_not_correctable"].fillna(False).astype(bool) & p["pair_type"].isin(POSITION_PAIR_TYPES)
+        p.loc[nc, "pair_type"] = "position not correctable (either well)"
+    d = p.groupby(["pair_type", "drug", "dose_"]).agg(r=("r", "mean"), n=("r", "size")).reset_index()
+    rows = []
+    for t, g in d.groupby("pair_type", sort=False):
+        drugs = sorted(set(g["drug"]))
+        act = g[[(a, b) in active for a, b in zip(g["drug"], g["dose_"])]] if active is not None else g.iloc[:0]
+        rows.append({"pair_type": t, "n_pairs": int(g["n"].sum()), "n_drug_doses": len(g), "n_drugs": len(drugs),
+                     "median_r": float(g["r"].median()), "drugs": ", ".join(drugs) if len(drugs) <= 5 else "",
+                     "n_active": len(act), "median_r_active": float(act["r"].median()) if len(act) else np.nan})
+    order = {t: i for i, t in enumerate(("same position, other plate", "different position", "same plate",
+                                         "unreliable plate", "position not correctable (either well)"))}
+    return pd.DataFrame(rows, columns=cols).sort_values("pair_type", key=lambda s: s.map(order).fillna(9))
+
+
+def replicate_text(tab, active_label="active"):
+    """'different position: median r 0.58 over 10 drug-doses of 4 drugs (Afatinib, ...)' per row of
+    replicate_summary."""
+    out = []
+    for r in tab.itertuples():
+        x = (f"{r.pair_type}: median r {r.median_r:.2f} over {r.n_drug_doses} drug-dose"
+             f"{'s' if r.n_drug_doses != 1 else ''} of {r.n_drugs} drug{'s' if r.n_drugs != 1 else ''}"
+             + (f" ({r.drugs})" if r.drugs else "") + f", {r.n_pairs} well pair{'s' if r.n_pairs != 1 else ''}")
+        if r.n_active and np.isfinite(r.median_r_active):
+            x += f"; {active_label} drug-doses {r.median_r_active:.2f} ({r.n_active})"
+        out.append(x)
+    return "; ".join(out)
+
+
+def salt_base(name):
+    """A drug name without its trailing salt / form in brackets ('Topotecan (hydrochloride)' -> 'Topotecan';
+    one level of nested brackets, '(R)-Verapamil (hydrochloride)' -> '(R)-Verapamil'): the drugs listed twice as
+    salt forms share it."""
+    return re.sub(r"\s*\((?:[^()]|\([^()]*\))*\)\s*$", "", str(name)).strip()
+
+
+class Method:
+    """The drug-effect method (v3) on one set of wells: what every gene, module and score of one analysis shares -
+    the unreliable plates (sm column unreliable_plate), the composition shift per (well, line) (optional: the
+    atlas's composition_shift.parquet), the plate dispersion groups and factors (imported from the atlas's
+    plate_scale.csv, or fitted over the features added here), the drug-dose columns imported from the atlas
+    ('wells disagree'), and each feature's two position passes (cached).
+    Use: add(wl, gene, excluded_lines) for every feature, complete(fit_on), then expression_effects(..., method=M)
+    and well_context(..., method=M); a feature not added before is computed on demand with the factors fitted so
+    far (or, when nothing was fitted, with factors fitted on that feature alone)."""
+
+    def __init__(self, sm, shift=None, plate_scale=None, dd_extra=None):
+        self.sm = sm
+        self.W = wells_of(sm)
+        self.group = plate_groups(self.W)
+        self.shift = None
+        if shift is not None and len(shift):
+            s = shift.assign(sample=shift["sample"].astype(str), cell_line_id=shift["cell_line_id"].astype(str))
+            s = s.drop_duplicates(["sample", "cell_line_id"]).set_index(["sample", "cell_line_id"])["shift_log2"]
+            self.shift = s.astype(float)
+        self.dd_extra = dd_extra
+        self.factors = {1: None, 2: None}        # dict group -> factor, per pass
+        self.factor_table = None
+        self.factor_source = ""
+        self.cache = {}                          # (feature, excluded lines) -> well-level passes
+        self.pending = []                        # added, second pass not yet done
+        self.feature_table = {}                  # feature -> per group: its spread ratio and z divisor (finish)
+        if plate_scale is not None and len(plate_scale):
+            try:
+                self._import_factors(plate_scale)
+            except (KeyError, ValueError, TypeError) as e:     # an unexpected table: fit our own, say so
+                log(f"  WARNING: the atlas's plate_scale.csv could not be used ({e!r}): plate factors fitted here")
+                self.factors, self.factor_table, self.factor_source = {1: None, 2: None}, None, ""
+
+    # ---- plate factors
+    def group_info(self):
+        g = pd.DataFrame({"group": self.group, "plate": self.W["plate"].astype(str),
+                          "unreliable": self.W["unreliable_plate"], "drug": ~self.W["is_dmso"]})
+        info = g.groupby("group").agg(plate=("plate", "first"), n_wells=("drug", "sum"),
+                                      unreliable=("unreliable", "all"))
+        info["dose"] = [x.split("|", 1)[1] for x in info.index]
+        info["reliable"] = ~info["unreliable"]
+        return info[["plate", "dose", "n_wells", "reliable"]]
+
+    def _import_factors(self, ps):
+        ps = ps.copy()
+        if not {"plate", "dose"} <= set(ps.columns) and "group" in ps:
+            sp = ps["group"].astype(str).str.split("|", n=1, expand=True)
+            ps["plate"], ps["dose"] = sp[0], sp[1]
+        if not {"plate", "dose", "factor"} <= set(ps.columns):
+            raise KeyError("plate_scale.csv needs the columns plate, dose and factor")
+        ps["plate"] = ps["plate"].astype(str)
+        ps["dose"] = ps["dose"].map(dose_text)
+        key = {f"{p}|{d_}": r for p, d_, r in zip(ps["plate"], ps["dose"], ps.to_dict("records"))}
+        big = ps.sort_values("n_wells", ascending=False) if "n_wells" in ps else ps
+        bigk = {}                                # a group the atlas does not list: its plate's largest group
+        for p, r in zip(big["plate"], big.to_dict("records")):
+            bigk.setdefault(p, r)
+        info = self.group_info()
+        f1, f2 = {}, {}
+        for G in info.index:
+            r = key.get(G) or bigk.get(info.at[G, "plate"])
+            v = float(r.get("factor", np.nan)) if r is not None else np.nan
+            f2[G] = v if np.isfinite(v) and v > 0 else 1.0
+            v1 = float(r.get("factor_pass1", np.nan)) if r is not None else np.nan
+            f1[G] = v1 if np.isfinite(v1) and v1 > 0 else f2[G]
+        self.factors = {1: f1, 2: f2}
+        t = info.copy()
+        t["factor"] = pd.Series(f2)
+        t["factor_raw"] = [float(key[G].get("factor_raw", np.nan)) if G in key else np.nan for G in t.index]
+        self.factor_table = t
+        self.factor_source = "imported from the atlas (plate_scale.csv)"
+
+    def well_factor(self, k, index):
+        f = self.factors.get(k) or {}
+        return pd.Series([f.get(g, 1.0) for g in self.group.reindex(index)], index=index, dtype=float)
+
+    def factor_for(self, values, center, feature=None):
+        """Per well (index of values): the z divisor of one feature (a gene, module, score or contrast; method v3):
+        its plate group's factor (pass 2, imported or fitted), raised where the feature's own spread ratio on that
+        group (from these values, the same wells and peers as the factors) exceeds it x PLATE_SCALE_BAND
+        (feature_factors). With `feature`, the per-group table is kept for plate_scale_by_gene.csv."""
+        info = self.group_info()
+        v = pd.Series(values, dtype=float)
+        dw = ~self.W["is_dmso"].reindex(v.index).fillna(True).astype(bool) & np.isfinite(v)
+        dev = (v[dw] - center).abs()
+        mad = 1.4826 * dev.groupby(self.group.reindex(dev.index)).median()
+        R, _ = spread_ratios(pd.DataFrame({0: mad}).reindex(info.index), info)
+        f2 = self.factors.get(2) or {}
+        fg = pd.Series([f2.get(G, 1.0) for G in info.index], index=info.index, dtype=float)
+        ff = pd.Series(feature_factors(fg, R[0]), index=info.index)
+        if feature is not None:
+            self.feature_table[feature] = pd.DataFrame({"plate": info["plate"], "dose": info["dose"],
+                                                        "n_wells": info["n_wells"], "spread_ratio": R[0],
+                                                        "group_factor": fg, "factor": ff})
+        return pd.Series(ff.reindex(self.group.reindex(v.index)).fillna(1.0).to_numpy(), index=v.index)
+
+    def _fit(self, k, cores, col, ccol):
+        info = self.group_info()
+        mads = {}
+        for i, core in enumerate(cores):
+            W = core["W"]
+            dw = ~W["is_dmso"] & np.isfinite(W[col])
+            v = (W.loc[dw, col] - core[ccol]).abs()
+            mads[i] = 1.4826 * v.groupby(self.group.reindex(v.index)).median()
+        M = pd.DataFrame(mads).reindex(info.index)
+        t = fit_plate_factors(M, info)
+        self.factors[k] = t["factor"].to_dict()
+        if k == 2:
+            self.factor_table = info.join(t)
+            self.factor_table["factor_pass1"] = pd.Series(self.factors[1])
+
+    # ---- the passes
+    def shift_of(self, d):
+        if self.shift is None:
+            return np.zeros(len(d))
+        key = pd.MultiIndex.from_arrays([d["sample"].astype(str), d["cell_line_id"].astype(str)])
+        return self.shift.reindex(key).fillna(0.0).to_numpy(dtype=float)
+
+    def well_shift(self):
+        """Per well: median composition shift over its lines (NaN without a shift table)."""
+        if self.shift is None:
+            return pd.Series(np.nan, index=self.W.index)
+        s = self.shift.groupby(level=0).median()
+        return s.reindex(self.W.index)
+
+    def profiles(self, wl, gene, exclude_lines):
+        """Per (well, line) profile of one gene or module: log2 CPM y; r1 = y minus the plate x line median of the
+        plate's drug wells; r1c = r1 minus the profile's composition shift (0 without the atlas's table)."""
+        keep = ["sample", "cell_line_id", "n_cells", "total_counts", gene]
+        if f"det_{gene}" in wl:
+            keep.append(f"det_{gene}")
+        d = wl.loc[(wl["n_cells"] >= MIN_CELLS) & ~wl["cell_line_id"].isin(exclude_lines), keep]
+        d = d.merge(self.sm[["sample", "plate", "drug", "slot", "is_dmso"]], on="sample").reset_index(drop=True)
+        d["y"] = np.log2((d[gene] + 0.5) / (d["total_counts"] + 1.0) * 1e6)
+        d["r1"] = plate_line_residual(d, "y")
+        d["r1c"] = d["r1"] - self.shift_of(d)
+        return d
+
+    def _pass1(self, W1):
+        W = self.W.reindex(W1.index).copy()
+        W["W1"] = W1.to_numpy(dtype=float)
+        eff, _n = loo_slot(W["W1"].values, W["slot"].values, W["drug"].values, ~W["is_dmso"].values)
+        W["position_effect_pass1"] = eff
+        W["W2a"] = W["W1"] - eff
+        c, s = robust_center_scale(W.loc[reference_wells(W), "W2a"])
+        return {"W": W, "c1": c, "s1": s}
+
+    def _pass2(self, core):
+        W = core["W"]
+        za = (W["W2a"] - core["c1"]) / (core["s1"] * self.well_factor(1, W.index))
+        eff, n_tot, n_cl, state = loo_slot_clean(W["W1"].values, W["slot"].values, W["drug"].values,
+                                                 ~W["is_dmso"].values, (za.abs() < POS_CLEAN_Z).to_numpy())
+        W["slot_effect"], W["slot_n"], W["slot_clean_n"], W["pos_state"] = eff, n_tot, n_cl, state
+        W["W2"] = W["W1"] - W["slot_effect"]
+        core["c"], core["s"] = robust_center_scale(W.loc[reference_wells(W), "W2"])
+        core["done"] = True
+
+    def add(self, wl, gene, exclude_lines, min_lines=None):
+        """First pass of one feature (cached; the second pass needs the first-pass plate factors: complete()).
+        min_lines: measured lines a well needs (default MIN_LINES, as tahoe_atlas.py, or 1 for a gene measured in
+        fewer lines in a typical well (the median over wells): CASP5 of the real data, 6 expressing lines of which
+        2 are usable in few wells, keeps its 4 colorectal lines in nearly every well; 1 for effects within a chosen
+        subset of lines, e.g. the lines that lost a gene)."""
+        k = (gene, frozenset(exclude_lines), min_lines)
+        if k not in self.cache:
+            d = self.profiles(wl, gene, exclude_lines)
+            g = d.groupby("sample")["r1c"]
+            W1 = g.median()
+            n = g.count()                                  # lines measured per well; a gene measured in a typical
+            need = min_lines or (MIN_LINES if len(n) and n.median() >= MIN_LINES else 1)   # well in fewer: 1
+            W1[n < need] = np.nan                          # too few lines measured in the well
+            self.cache[k] = self._pass1(W1)
+            self.cache[k]["feature"] = gene if min_lines is None else None   # None: a subset (plate_scale_by_gene)
+            self.pending.append(k)
+        return k
+
+    def complete(self, fit_on=None):
+        """Plate factors of the first pass (unless imported or fitted before), the clean-donor second pass of every
+        pending feature, then the final plate factors over the features in fit_on (default: all pending)."""
+        todo, self.pending = self.pending, []
+        fit = [self.cache[k] for k in todo if fit_on is None or k[0] in set(fit_on)] or [self.cache[k] for k in todo]
+        own = self.factors[2] is None
+        if own and fit:
+            self._fit(1, fit, "W2a", "c1")
+        for k in todo:
+            self._pass2(self.cache[k])
+        if own and fit:
+            self._fit(2, fit, "W2", "c")
+            n = len(fit)
+            self.factor_source = f"fitted over {n} gene{'s' if n != 1 else ''} / modules of this analysis"
+
+    def core(self, wl, gene, exclude_lines, min_lines=None):
+        k = self.add(wl, gene, exclude_lines, min_lines)
+        if not self.cache[k].get("done"):
+            self.complete()
+        return self.cache[k]
+
+    def finish(self, core):
+        """The well-level table of one feature: W1, both position passes, W2 and z = (W2 - c) / (s x the feature's
+        plate factor). plate_scale = its group's factor, plate_scale_gene = the divisor used (factor_for)."""
+        W = core["W"].copy()
+        W["plate_scale"] = self.well_factor(2, W.index)
+        W["plate_scale_gene"] = self.factor_for(W["W2"], core["c"], core.get("feature"))
+        W["z"] = (W["W2"] - core["c"]) / (core["s"] * W["plate_scale_gene"])
+        t = self.feature_table.get(core.get("feature"))
+        if t is not None:                          # calibration per group: group factor only vs the divisor used
+            dw = ~W["is_dmso"].astype(bool) & W["z"].notna()
+            grp = self.group.reindex(W.index)[dw]
+            t["pct_drug_wells_abs_z_gt_1.96_group_factor"] = 100 * (
+                (W["z"] * W["plate_scale_gene"] / W["plate_scale"])[dw].abs() > 1.96).groupby(grp).mean()
+            t["pct_drug_wells_abs_z_gt_1.96"] = 100 * (W.loc[dw, "z"].abs() > 1.96).groupby(grp).mean()
+        W["position_correction_uncertain"] = (W["pos_state"] == 1) & W["W1"].notna()
+        W["position_not_correctable"] = W["pos_state"] == 2
+        return W
+
+    def well_pass(self, W1):
+        """Both passes and z for a per-well series with the factors fitted so far (not cached), e.g. the
+        single-cell detail columns. Returns the finished well table and (c, s)."""
+        core = self._pass1(W1)
+        if self.factors[2] is None:
+            self._fit(1, [core], "W2a", "c1")
+            self._pass2(core)
+            self._fit(2, [core], "W2", "c")
+            self.factor_source = "fitted on a single feature"
+        else:
+            self._pass2(core)
+        return self.finish(core), (core["c"], core["s"])
+
+    def not_correctable(self):
+        """Per well: fewer than MIN_SLOT_WELLS other-drug wells at its position (on any plate): no correction."""
+        W = self.W
+        _e, _n, _c, state = loo_slot_clean(np.zeros(len(W)), W["slot"].values, W["drug"].values,
+                                           ~W["is_dmso"].values, np.ones(len(W), dtype=bool))
+        return pd.Series(state == 2, index=W.index)
+
+    def add_dd_columns(self, res):
+        """The drug-dose columns imported from the atlas (wells_disagree, replicate_r), joined on drug + dose."""
+        if self.dd_extra is None or not len(res) or "drug" not in res:
+            return res
+        e = self.dd_extra
+        m = {(str(d_), str(k)): (bool(w), r) for d_, k, w, r in zip(e["drug"], e["dose"], e["wells_disagree"],
+                                                                     e["replicate_r"])}
+        keys = [(str(d_), dose_text(c)) for d_, c in zip(res["drug"], res["conc"])]
+        res = res.copy()
+        res["wells_disagree"] = [m.get(k, (False, np.nan))[0] for k in keys]
+        res["replicate_r"] = [m.get(k, (False, np.nan))[1] for k in keys]
+        return res
+
+
+def correct_wells(d, resid, wells, method=None):
+    """Per-well median over cell lines -> two-pass leave-drug-out position correction -> robust z (method v3; with
+    `method`, its plate factors)."""
     w1 = pd.Series(resid, index=d.index).groupby(d["sample"].values).median()
-    W = wells.reindex(w1.index).copy()
-    W["W1"] = w1.values
-    eff, n_used = loo_slot(W["W1"].values, W["slot"].values, W["drug"].values, ~W["is_dmso"].values)
-    W["slot_effect"] = eff
-    W["slot_n"] = n_used
-    W["W2"] = W["W1"] - W["slot_effect"]
-    c, s = robust_center_scale(W.loc[~W["is_dmso"], "W2"])
-    W["z"] = (W["W2"] - c) / s
-    return W, (c, s)
+    M = method if method is not None else Method(wells.rename_axis("sample").reset_index())
+    return M.well_pass(w1)
 
 
 def dose_key(sm):
@@ -903,49 +1390,92 @@ def load_drugs(idx):
     return out
 
 
-def well_context(wl, sm, cols_present):
-    """Per-well covariates: cell count, genes/UMIs per cell, cell-cycle modules (all corrected)."""
-    d = wl.merge(sm[["sample", "plate", "drug", "slot", "is_dmso"]], on="sample")
-    wells = sm.set_index("sample")[["plate", "drug", "conc", "slot", "well", "is_dmso"]]
+def row_medians_of_others(W, col):
+    """Per well: the median of `col` over the OTHER drug wells in the same plate row (A-H) of its plate; NaN when
+    there are none. Tells a drug's own cell loss from a technical loss of the whole row."""
+    row = W["well"].astype(str).str.extract(r"^([A-Ha-h])", expand=False).str.upper().fillna("").to_numpy()
+    v = W[col].to_numpy(dtype=float)
+    drug = ~W["is_dmso"].astype(bool).to_numpy()
+    out = np.full(len(W), np.nan)
+    for (_p, r), ii in pd.Series(np.arange(len(W))).groupby([W["plate"].to_numpy(), row]).groups.items():
+        if not r:
+            continue
+        ii = np.asarray(list(ii))
+        for i in ii:
+            m = ii[(ii != i) & drug[ii] & np.isfinite(v[ii])]
+            if m.size:
+                out[i] = float(np.median(v[m]))
+    return out
+
+
+def well_context(wl, sm, cols_present, method=None):
+    """Per-well covariates: cells, genes and UMIs per cell vs the plate's drug wells, the same for the other drug
+    wells of the well's plate row (row_*: a technical loss of a whole row), the cell loss the row does not explain
+    (cells_log2_beyond_row; a drug-dose keeps its best used well's: cells_log2_best_well), the composition shift
+    (median over the
+    well's lines), the plate factor, whether the position could be corrected at all, and the cell-cycle modules
+    (corrected like every gene: shift_log2 and z)."""
+    M = method if method is not None else Method(sm)
+    d = wl.merge(sm[["sample"]], on="sample")
     tot = d.groupby("sample")[["n_cells", "n_genes", "total_counts"]].sum()
-    W = wells.reindex(tot.index).copy()
+    W = M.W.reindex(tot.index).copy()
     W["cells"] = tot["n_cells"]
     W["genes_per_cell"] = tot["n_genes"] / tot["n_cells"]
     W["umi_per_cell"] = tot["total_counts"] / tot["n_cells"]
     for c in ["cells", "genes_per_cell", "umi_per_cell"]:
         ref = W.loc[~W["is_dmso"]].groupby("plate")[c].median()
         W[f"{c}_log2_vs_plate"] = np.log2(W[c] / W["plate"].map(ref))
-    ctx = W[["cells", "cells_log2_vs_plate", "genes_per_cell_log2_vs_plate", "umi_per_cell_log2_vs_plate"]].copy()
-    dd = d[d["n_cells"] >= MIN_CELLS].copy()
+    for c, name in (("cells_log2_vs_plate", "row_cells_log2"), ("umi_per_cell_log2_vs_plate", "row_umi_per_cell_log2"),
+                    ("genes_per_cell_log2_vs_plate", "row_genes_per_cell_log2")):
+        W[name] = row_medians_of_others(W, c)
+    W["cells_log2_beyond_row"] = cells_beyond_row(W["cells_log2_vs_plate"], W["row_cells_log2"])
+    ctx = W[["cells", "cells_log2_vs_plate", "genes_per_cell_log2_vs_plate", "umi_per_cell_log2_vs_plate",
+             "row_cells_log2", "row_umi_per_cell_log2", "row_genes_per_cell_log2", "cells_log2_beyond_row"]].copy()
+    if M.shift is not None:
+        ctx["composition_shift_log2"] = M.well_shift().reindex(ctx.index)
+    ctx["plate_scale"] = M.well_factor(2, ctx.index)
+    ctx["position_not_correctable"] = M.not_correctable().reindex(ctx.index).fillna(True).astype(bool)
     for m in ["S_PHASE", "G2M_PHASE"]:
         if m in cols_present:
-            dd["_y"] = np.log2((dd[m] + 0.5) / (dd["total_counts"] + 1.0) * 1e6)
-            Wm, _ = correct_wells(dd, plate_line_residual(dd, "_y"), wells)
+            Wm = M.finish(M.core(wl, m, []))
             ctx[f"{m}_shift_log2"] = Wm["W2"].reindex(ctx.index)
+            ctx[f"{m}_z"] = Wm["z"].reindex(ctx.index)
     return ctx
 
 
-def expression_effects(wl, sm, gene, exclude_lines, ctx, drugs, extra_cols=None):
-    """Corrected effect of every drug and dose on one gene (or module)."""
-    wells = sm.set_index("sample")[["plate", "drug", "conc", "slot", "well", "is_dmso"]]
-    keep = ["sample", "cell_line_id", "n_cells", "total_counts", gene]
-    has_det = f"det_{gene}" in wl
-    if has_det:
-        keep.append(f"det_{gene}")
-    d = wl.loc[(wl["n_cells"] >= MIN_CELLS) & ~wl["cell_line_id"].isin(exclude_lines), keep]
-    d = d.merge(sm[["sample", "plate", "drug", "slot", "is_dmso"]], on="sample").reset_index(drop=True)
-    d["y"] = np.log2((d[gene] + 0.5) / (d["total_counts"] + 1.0) * 1e6)
+def best_well_columns(g, res):
+    """Drug-dose columns taken from the best used well instead of the mean (g: the used wells grouped by drug-dose;
+    res: their means): cells_log2_best_well = the largest cells_log2_beyond_row, so one well's cell count never
+    makes a replicated drug-dose 'toxic' (duplicate wells of the real data do not agree on cell loss)."""
+    if "cells_log2_beyond_row" in res:
+        res = res.drop(columns=["cells_log2_beyond_row"])
+        res["cells_log2_best_well"] = g["cells_log2_beyond_row"].max()
+    return res
 
-    # main effect: plate baseline -> position correction -> calibrated z
-    d["r1"] = plate_line_residual(d, "y")
-    W, (c0, s0) = correct_wells(d, d["r1"].values, wells)
-    d["r2"] = d["r1"] - d["sample"].map(W["slot_effect"])
-    ref = d.loc[~d["is_dmso"]]
+
+def stouffer(g, col):
+    """Stouffer's z over the rows of each group (NaN skipped)."""
+    return g[col].sum() / np.sqrt(g[col].count())
+
+
+def expression_effects(wl, sm, gene, exclude_lines, ctx, drugs, extra_cols=None, method=None, min_lines=None):
+    """Corrected effect of every drug and dose on one gene (or module), method v3 (Method): plate baseline ->
+    composition shift -> median over lines (min_lines: see Method.add) -> two-pass leave-drug-out position
+    correction -> z against the drug wells of the reliable plates, scaled by the plate factor -> per drug-dose over
+    its used wells."""
+    M = method if method is not None else Method(sm)
+    core = M.core(wl, gene, exclude_lines, min_lines)
+    c0, s0 = core["c"], core["s"]
+    W = M.finish(core)
+    d = M.profiles(wl, gene, exclude_lines)
+    has_det = f"det_{gene}" in d
+    d["r2"] = d["r1c"] - d["sample"].map(W["slot_effect"])
+    ref = d.loc[d["sample"].map(reference_wells(W)).fillna(False).astype(bool)]
     lc = ref.groupby("cell_line_id")["r2"].median()
     ls = 1.4826 * (ref["r2"] - ref["cell_line_id"].map(lc)).abs().groupby(ref["cell_line_id"]).median()
     d["z_line"] = (d["r2"] - d["cell_line_id"].map(lc)) / d["cell_line_id"].map(ls)
 
-    # the old way, for comparison: fold change against the plate's pooled DMSO wells
+    # the old way, for comparison: fold change against the plate's pooled DMSO wells (no composition, no position)
     dm = d[d["is_dmso"]].groupby(["plate", "cell_line_id"])[[gene, "total_counts"]].sum()
     dmso_y = np.log2((dm[gene] + 0.5) / (dm["total_counts"] + 1.0) * 1e6)
     key = pd.MultiIndex.from_arrays([d["plate"], d["cell_line_id"]])
@@ -957,8 +1487,9 @@ def expression_effects(wl, sm, gene, exclude_lines, ctx, drugs, extra_cols=None)
     if has_det:
         d["pct"] = 100.0 * d[f"det_{gene}"] / d["n_cells"]
         d["lvl"] = np.log2(((d[gene] + 0.5) / (d[f"det_{gene}"] + 0.5)) / (d["total_counts"] / d["n_cells"]))
-        Wp, _ = correct_wells(d, plate_line_residual(d, "pct"), wells)
-        Wl, _ = correct_wells(d, plate_line_residual(d, "lvl"), wells)
+        Wp, _ = M.well_pass(pd.Series(plate_line_residual(d, "pct"), index=d.index).groupby(d["sample"]).median())
+        Wl, _ = M.well_pass(pd.Series(plate_line_residual(d, "lvl") - M.shift_of(d), index=d.index)
+                            .groupby(d["sample"]).median())
         W["pct_cells_expressing_change"] = Wp["W2"].reindex(W.index)
         W["level_in_expressing_cells_log2"] = Wl["W2"].reindex(W.index)
 
@@ -966,15 +1497,22 @@ def expression_effects(wl, sm, gene, exclude_lines, ctx, drugs, extra_cols=None)
     pl = pd.DataFrame({"plate": d["plate"], "off": d["lfc_dmso"] - d["r1"]}).dropna()
     plate_off = pl.groupby("plate")["off"].median()
     W["plate_dmso_offset"] = W["plate"].map(plate_off)
-    W = W.join(ctx, how="left")
+    zctx = []
+    if ctx is not None:
+        zctx = [c for c in ctx.columns if c.endswith("_z")]
+        W = W.join(ctx.drop(columns=[c for c in ctx.columns if c in W]), how="left")
     if extra_cols is not None:
-        W = W.join(extra_cols, how="left")
+        W = W.join(extra_cols.drop(columns=[c for c in extra_cols.columns if c in W]), how="left")
 
-    # ---- per drug and dose (plates averaged; cell lines counted once)
+    # ---- per drug and dose (plates averaged; cell lines counted once); the wells of unreliable plates only when
+    # the drug-dose has no other well
     Wd = W.loc[~W["is_dmso"]].copy()
     Wd["dose"] = dose_key(Wd)
-    d2 = d.loc[~d["is_dmso"]].copy()
-    d2["dose"] = d2["sample"].map(Wd["dose"])
+    Wd["_used"] = used_wells(Wd)
+    left = (~Wd["_used"]).groupby([Wd["drug"], Wd["dose"]]).sum()
+    Wu = Wd.loc[Wd["_used"]]
+    d2 = d.loc[d["sample"].isin(Wu.index)].copy()
+    d2["dose"] = d2["sample"].map(Wu["dose"])
     per_line = d2.groupby(["drug", "dose", "cell_line_id"])[["r2", "z_line"]].mean().reset_index()
     per_line["up"] = (per_line["z_line"] > Z_LINE) & (per_line["r2"] > LFC_MIN)
     per_line["down"] = (per_line["z_line"] < -Z_LINE) & (per_line["r2"] < -LFC_MIN)
@@ -983,11 +1521,19 @@ def expression_effects(wl, sm, gene, exclude_lines, ctx, drugs, extra_cols=None)
     lines = per_line.groupby(["drug", "dose"]).agg(n_lines=("up", "size"), n_lines_up=("up", "sum"),
                                                    n_lines_down=("down", "sum"), n_pos=("pos", "sum"),
                                                    n_neg=("neg", "sum"))
-    num = [c for c in Wd.columns if c not in ("plate", "drug", "conc", "slot", "well", "is_dmso", "dose", "z")
-           and pd.api.types.is_numeric_dtype(Wd[c])]
-    g = Wd.groupby(["drug", "dose"])
-    res = g[num].mean()
-    res["z"] = g["z"].sum() / np.sqrt(g["z"].count())   # Stouffer across plates
+    flagcols = ["position_correction_uncertain", "position_not_correctable", "unreliable_plate"]
+    skip = {"plate", "drug", "conc", "slot", "well", "is_dmso", "dose", "z", "_used", "pos_state", "W2a"} | \
+        set(flagcols) | set(zctx)
+    num = [c for c in Wu.columns if c not in skip and pd.api.types.is_numeric_dtype(Wu[c])]
+    g = Wu.groupby(["drug", "dose"])
+    res = best_well_columns(g, g[num].mean())
+    res["z"] = stouffer(g, "z")                            # Stouffer across plates
+    for c in zctx:
+        res[c] = stouffer(g, c)
+    res["position_correction_uncertain"] = g["position_correction_uncertain"].any()
+    res["position_not_correctable"] = g["position_not_correctable"].any()
+    res["unreliable_plate_only"] = g["unreliable_plate"].all()
+    res["n_wells_left_out_unreliable"] = left.reindex(res.index).fillna(0).astype(int)
     res["n_plates"] = g.size()
     res["plates"] = g["plate"].agg(lambda s: ",".join(sorted(set(map(str, s)))))
     res["wells"] = g["well"].agg(lambda s: ",".join(sorted(set(map(str, s)))))
@@ -1004,43 +1550,142 @@ def expression_effects(wl, sm, gene, exclude_lines, ctx, drugs, extra_cols=None)
     res["fold_change"] = 2.0 ** res["W2"]
     res = res.reset_index().drop(columns=["dose"])
     res = res.join(drugs, on="drug")
+    res = M.add_dd_columns(res)
     res = res.rename(columns={"W2": "log2FC_corrected", "z": "z_corrected",
                               "lfc_vs_dmso": "log2FC_vs_DMSO_uncorrected", "slot_effect": "position_effect_removed",
-                              "W1": "log2FC_plate_corrected_only", "slot_n": "position_wells_used"})
-    res["flags"] = [flag_row(r, gene) for _, r in res.iterrows()]
+                              "W1": "log2FC_plate_corrected_only", "slot_n": "position_wells_used",
+                              "slot_clean_n": "position_clean_donors"})
+    res["flags"] = flag_rows(res, gene)
     res["call"] = [call_row(r) for _, r in res.iterrows()]
     lead = ["drug", "conc", "call", "fold_change", "log2FC_corrected", "z_corrected", "fdr_up", "fdr_down",
             "n_lines", "n_lines_up", "n_lines_down", "frac_lines_positive", "flags", "log2FC_vs_DMSO_uncorrected",
-            "position_effect_removed", "plate_dmso_offset", "wells", "plates", "n_plates"]
+            "position_effect_removed", "plate_dmso_offset", "wells", "plates", "n_plates", "plate_scale",
+            "composition_shift_log2"]
     res = res[[c for c in lead if c in res] + [c for c in res.columns if c not in lead]]
+    dw, rel = ~W["is_dmso"] & W["z"].notna(), reference_wells(W) & W["z"].notna()   # shares of the measured z
+    zu = (W["W2"] - c0) / s0
     calib = {
-        "drug_wells": int((~W["is_dmso"]).sum()),
-        "pct_drug_wells_abs_z_gt_1.96": float(100 * (W.loc[~W["is_dmso"], "z"].abs() > 1.96).mean()),
-        "pct_dmso_wells_abs_z_gt_1.96": float(100 * (W.loc[W["is_dmso"], "z"].abs() > 1.96).mean())
+        "drug_wells": int((~W["is_dmso"]).sum()), "drug_wells_with_z": int(dw.sum()),
+        "pct_drug_wells_abs_z_gt_1.96": float(100 * (W.loc[dw, "z"].abs() > 1.96).mean()),
+        "pct_dmso_wells_abs_z_gt_1.96": float(100 * (W.loc[W["is_dmso"], "z"].dropna().abs() > 1.96).mean())
         if W["is_dmso"].any() else float("nan"),
-        "pct_drug_wells_abs_z_gt_3": float(100 * (W.loc[~W["is_dmso"], "z"].abs() > 3).mean()),
+        "pct_drug_wells_abs_z_gt_3": float(100 * (W.loc[dw, "z"].abs() > 3).mean()),
+        "pct_drug_wells_abs_z_gt_1.96_unscaled": float(100 * (zu[dw].abs() > 1.96).mean()),
+        "pct_reliable_drug_wells_abs_z_gt_1.96": float(100 * (W.loc[rel, "z"].abs() > 1.96).mean()),
+        "wells_position_uncertain": int(W.loc[~W["is_dmso"], "position_correction_uncertain"].sum()),
+        "wells_position_not_correctable": int(W.loc[~W["is_dmso"], "position_not_correctable"].sum()),
         "null_center": c0, "null_scale": s0,
     }
     return res, W, d, calib
 
 
+def _num(r, k, default=0.0):
+    """r[k] as a float; default when missing or not finite (a NaN never triggers a flag)."""
+    v = r.get(k, default)
+    try:
+        v = float(v)
+    except (TypeError, ValueError):
+        return default
+    return v if math.isfinite(v) else default
+
+
+def is_toxic(cells, row, best_well=float("nan"), higher_keeps=False):
+    """'toxic' (method v3, one definition with tahoe_atlas.flags_for): the drug-dose's mean cell count is < -1 log2
+    vs the plate, also beyond its plate row where that row is itself shifted (cells_beyond_row), its best used well
+    lost cells too (best_well = the largest cells_beyond_row of the used wells < TOXIC_BEST_WELL: a well of several
+    that kept its cells means the loss did not replicate; NaN: not known), and no higher dose of the drug keeps
+    >= half the plate's cells. For a drug-dose of one well this is: its loss beyond a shifted row < -1."""
+    if not cells < -1 or not float(cells_beyond_row(cells, row)) < -1 or higher_keeps:
+        return False
+    return not (math.isfinite(best_well) and best_well >= TOXIC_BEST_WELL)
+
+
+def cell_loss_replication(W):
+    """How well two wells of one drug-dose agree on cell loss: Spearman r of cells_log2_beyond_row between the two
+    used wells of every drug-dose with exactly two on reliable plates (W: per-well table with drug, dose or conc,
+    unreliable_plate, cells_log2_beyond_row, is_dmso). Returns (r, number of drug-doses); (nan, n) below 10.
+    In the first real run duplicate wells did not agree (r ~ -0.2): a one-well 'toxic' is weak evidence."""
+    W = W[~W["is_dmso"].astype(bool)]
+    if "unreliable_plate" in W:
+        W = W[~W["unreliable_plate"].fillna(False).astype(bool)]
+    key = W["dose"] if "dose" in W else W["conc"].map(dose_text)
+    g = W.assign(_k=key).groupby(["drug", "_k"])["cells_log2_beyond_row"]
+    two = [v.to_numpy(dtype=float) for _, v in g if len(v) == 2 and np.isfinite(v.to_numpy(dtype=float)).all()]
+    if len(two) < 10:
+        return float("nan"), len(two)
+    a, b = (pd.Series([t[i] for t in two]).rank() for i in (0, 1))
+    return float(np.corrcoef(a, b)[0, 1]), len(two)
+
+
+def cell_loss_replication_text(r, n):
+    """The sentence the briefs state about 'toxic' at the top dose, from cell_loss_replication."""
+    if not np.isfinite(r):
+        return (f"too few two-well drug-doses ({n}) to say how well wells agree on cell loss: treat a one-well "
+                "'toxic' as weak evidence alone")
+    how = "poorly, so a one-well 'toxic' is weak evidence alone" if r < 0.5 else \
+        "well, but a one-well 'toxic' is still a single measurement"
+    return f"two wells of one drug-dose agree on cell loss at Spearman r {r:.2f} ({n} drug-doses): {how}"
+
+
+def higher_dose_keeps_cells(res):
+    """Per drug-dose row: does a HIGHER dose of the same drug keep >= half the plate's usual cells (its mean
+    cells_log2_vs_plate >= -1)? Then this dose's cell loss is not dose-consistent: 'low cells (technical?)'."""
+    if not len(res) or "cells_log2_vs_plate" not in res:
+        return np.zeros(len(res), dtype=bool)
+    c = pd.to_numeric(res["cells_log2_vs_plate"], errors="coerce").to_numpy(dtype=float)
+    conc = pd.to_numeric(res["conc"], errors="coerce").to_numpy(dtype=float)
+    out = np.zeros(len(res), dtype=bool)
+    for ii in pd.Series(np.arange(len(res))).groupby(res["drug"].astype(str).to_numpy()).groups.values():
+        ii = np.asarray(list(ii))
+        for i in ii:
+            out[i] = bool(((conc[ii] > conc[i]) & (c[ii] >= -1)).any())
+    return out
+
+
+def flag_rows(res, gene=""):
+    """flag_row for every row of a drug-dose table (adds the dose-consistency input of 'toxic')."""
+    keep = higher_dose_keeps_cells(res)
+    return [flag_row({**r, "higher_dose_keeps_cells": k}, gene) for r, k in zip(res.to_dict("records"), keep)]
+
+
 def flag_row(r, gene):
+    """Artifact flags of one drug-dose (method v3; the same definitions as tahoe_atlas.py). The values are the
+    drug-dose's means over its used wells; row_* = the median of the other drug wells in the same plate row;
+    cells_log2_best_well = the best used well's cell loss beyond a shifted row (cells_beyond_row). Use flag_rows on
+    a whole table: 'toxic' needs the drug's other doses."""
     f = []
-    if r.get("cells_log2_vs_plate", 0) < -1:
-        f.append("toxic")
-    if r.get("genes_per_cell_log2_vs_plate", 0) < -0.3 or r.get("umi_per_cell_log2_vs_plate", 0) < -0.5:
+    cells, row = _num(r, "cells_log2_vs_plate"), _num(r, "row_cells_log2")
+    if cells < -1:
+        f.append("toxic" if is_toxic(cells, row, _num(r, "cells_log2_best_well", float("nan")),
+                                     bool(_num(r, "higher_dose_keeps_cells"))) else "low cells (technical?)")
+    if abs(row) > ROW_SHIFT or _num(r, "row_umi_per_cell_log2") < -0.4:
+        f.append("plate-row cell shift")
+    g, u = _num(r, "genes_per_cell_log2_vs_plate"), _num(r, "umi_per_cell_log2_vs_plate")
+    if (g < -0.3 and g - _num(r, "row_genes_per_cell_log2") < -0.3) or \
+            (u < -0.5 and u - _num(r, "row_umi_per_cell_log2") < -0.5):
         f.append("transcription drop")
-    if abs(r.get("G2M_PHASE_shift_log2", 0) or 0) > 0.5:
+    cyc = [(abs(_num(r, f"{m}_shift_log2")), abs(_num(r, f"{m}_z"))) for m in ("S_PHASE", "G2M_PHASE")]
+    if any(s > 0.5 or (s > 0.25 and z >= 4) for s, z in cyc):
         f.append("cell-cycle shift")
-    if gene == "PSMD10" and np.isfinite(r.get("PROTEASOME_z", np.nan)):
-        if r["z_corrected"] > 2 and r["PROTEASOME_z"] > 2:
+    if abs(_num(r, "composition_shift_log2")) >= COMPOSITION_FLAG:
+        f.append("composition shift")
+    if max(_num(r, "plate_scale", 1.0), _num(r, "plate_scale_gene", 1.0)) > NOISY_PLATE:
+        f.append("noisy plate (z scaled)")
+    if _num(r, "unreliable_plate_only"):
+        f.append("unreliable plate only")
+    if gene == "PSMD10" and math.isfinite(_num(r, "PROTEASOME_z", float("nan"))):
+        if _num(r, "z_corrected") > 2 and _num(r, "PROTEASOME_z") > 2:
             f.append("whole proteasome up")
-        if r["z_corrected"] < -2 and r["PROTEASOME_z"] < -2:
+        if _num(r, "z_corrected") < -2 and _num(r, "PROTEASOME_z") < -2:
             f.append("whole proteasome down")
-    if abs(r.get("position_effect_removed", 0)) > 0.2:
+    if _num(r, "position_not_correctable"):
+        f.append("position not correctable")
+    if _num(r, "position_correction_uncertain"):
+        f.append("position correction uncertain")
+    if abs(_num(r, "position_effect_removed")) > 0.2:
         f.append("position effect removed")
-    if abs(r.get("plate_dmso_offset", 0) or 0) > 0.2:
-        f.append("plate DMSO offset")
+    if _num(r, "wells_disagree"):
+        f.append("wells disagree")
     return "; ".join(f)
 
 
@@ -1141,19 +1786,39 @@ def add_dose_columns(res, zcol, pcol, direction):
 
 
 def per_dose_table(W, value_cols, zcol="z"):
+    """Per drug-dose over its used wells (used_wells): means of value_cols, Stouffer of zcol and of every value
+    column ending in '_z', any() of boolean columns; unreliable_plate_only and n_wells_left_out_unreliable when W
+    carries unreliable_plate."""
     Wd = W.loc[~W["is_dmso"]].copy()
     Wd["dose"] = dose_key(Wd)
+    used = used_wells(Wd)
+    left = (~used).groupby([Wd["drug"], Wd["dose"]]).sum()
+    Wd = Wd.loc[used]
     g = Wd.groupby(["drug", "dose"])
-    res = g[value_cols].mean()
-    res["z"] = g[zcol].sum() / np.sqrt(g[zcol].count())
+    zc = [c for c in value_cols if c.endswith("_z") and c != zcol]
+    bc = [c for c in value_cols if c not in zc and (pd.api.types.is_bool_dtype(Wd[c]) or (
+        Wd[c].dtype == object and len(Wd[c].dropna()) and Wd[c].dropna().map(type).eq(bool).all()))]
+    for c in bc:
+        Wd[c] = Wd[c].fillna(False).astype(bool)
+    res = g[[c for c in value_cols if c not in zc and c not in bc]].mean()
+    for c in value_cols:
+        if c in zc:
+            res[c] = stouffer(g, c)
+        elif c in bc:
+            res[c] = g[c].any()
+    res = best_well_columns(g, res[[c for c in value_cols]])
+    res["z"] = stouffer(g, zcol)
     res["conc"] = g["conc"].first()
     res["wells"] = g["well"].agg(lambda s: ",".join(sorted(set(map(str, s)))))
     res["plates"] = g["plate"].agg(lambda s: ",".join(sorted(set(map(str, s)))))
+    if "unreliable_plate" in Wd:
+        res["unreliable_plate_only"] = g["unreliable_plate"].all()
+        res["n_wells_left_out_unreliable"] = left.reindex(res.index).fillna(0).astype(int)
     return res.reset_index().drop(columns=["dose"])
 
 
 def mtap_null_screen(n, base, sm, drugs, ctx):
-    wells = sm.set_index("sample")[["plate", "drug", "conc", "slot", "well", "is_dmso"]]
+    wells = wells_of(sm)
     null = set(base.index[base["MTAP_null"]])
     intact = set(base.index[~base["MTAP_null"]])
     n = n.copy()
@@ -1186,8 +1851,8 @@ def mtap_null_screen(n, base, sm, drugs, ctx):
     W["position_effect_removed"] = eff
     W["delta_corrected"] = W["delta"] - eff
     # spread across wells = biological/technical well noise + counting noise; wells with few cells get the
-    # counting part on top, so a handful of surviving cells cannot produce an extreme score
-    drug_w = ~W["is_dmso"]
+    # counting part on top, so a handful of surviving cells cannot produce an extreme score (reliable plates)
+    drug_w = reference_wells(W)
     c, s = robust_center_scale(W.loc[drug_w, "delta_corrected"])
     typical_count_var = float(np.nanmedian(W.loc[drug_w, "delta_counting_var"]))
     well_var = max(s ** 2 - typical_count_var, (0.25 * s) ** 2)
@@ -1218,7 +1883,7 @@ def mtap_null_screen(n, base, sm, drugs, ctx):
 
 def gankyrin_level_screen(n, base, sm, drugs):
     """Does a cell line's untreated Gankyrin level predict how a drug affects its abundance?"""
-    wells = sm.set_index("sample")[["plate", "drug", "conc", "slot", "well", "is_dmso"]]
+    wells = wells_of(sm)
     A = n.pivot_table(index="sample", columns="cell_line_id", values="A")
     lines = [c for c in A.columns if np.isfinite(base.loc[c, "PSMD10_cpm_dmso"])]
     A = A[lines]
@@ -1244,7 +1909,7 @@ def gankyrin_level_screen(n, base, sm, drugs):
     fz = np.arctanh(np.clip(W["rho"].values, -0.999, 0.999))
     eff, _ = loo_slot(fz, W["slot"].values, W["drug"].values, ~W["is_dmso"].values)
     W["fisher_corrected"] = fz - eff
-    c, s = robust_center_scale(W.loc[~W["is_dmso"], "fisher_corrected"])
+    c, s = robust_center_scale(W.loc[reference_wells(W), "fisher_corrected"])
     W["z"] = (W["fisher_corrected"] - c) / s
     vals = ["rho"] + (["rho_partial_G2M"] if gcol else [])
     res = per_dose_table(W, vals)
@@ -1324,10 +1989,163 @@ def plate_table(W, label):
     return t.sort_values("dmso_offset", ascending=False)
 
 
+def atlas_effects_version(atl):
+    """The version stamped in <atl>/effects/complete.json (0 when missing or unreadable)."""
+    try:
+        with open(os.path.join(atl, "effects", "complete.json"), encoding="utf-8") as fh:
+            return int(json.load(fh).get("version") or 0)
+    except (OSError, ValueError, TypeError, AttributeError):
+        return 0
+
+
+def atlas_dir(args):
+    """--atlas DIR (default <data>/atlas); None for --atlas none (load_atlas_inputs(..., why='--atlas none'))."""
+    a = getattr(args, "atlas", None)
+    if a and str(a).strip().lower() == "none":
+        return None
+    return a or os.path.join(args.data, "atlas")
+
+
+def atlas_build_info(atl):
+    """(unreliable plates of its effects or None, limit_files of its build): from effects/complete.json and
+    build_info.json of a computed atlas."""
+    def rd(*parts):
+        try:
+            with open(os.path.join(atl, *parts), encoding="utf-8") as fh:
+                return json.load(fh)
+        except (OSError, ValueError):
+            return {}
+    cj, bi = rd("effects", "complete.json"), rd("build_info.json")
+    unrel = cj.get("unreliable_plates") if isinstance(cj, dict) else None
+    lim = bi.get("limit_files") if isinstance(bi, dict) else 0
+    return (sorted(map(str, unrel), key=lambda p: (len(p), p)) if isinstance(unrel, list) else None), int(lim or 0)
+
+
+def load_atlas_inputs(atl, unreliable=None, why=""):
+    """What a method-v3 atlas ('tahoe_atlas.py effects') exports for the gene-level analyses, read by path:
+    effects/composition_shift.parquet (sample, cell_line_id, shift_log2), effects/plate_scale.csv (plate, dose,
+    n_wells, factor_raw, factor; factor_pass1 if present) and effects/drugdose.csv ('wells disagree' in flags,
+    replicate_r, n_sig_genes). Returns {dir, version, shift, plate_scale, drugdose, dd_extra, notes, warnings,
+    why, unreliable_plates, limit_files}; the tables are None when absent, or when the atlas effects are missing or
+    older than method v3. Nothing is imported from a --limit-files trial build (its tables cover a few plates
+    only). unreliable: this run's unreliable plates; when the atlas's differ, its plate factors and 'wells
+    disagree' (fitted on other wells) are not imported and a warning says so (the composition shift is per
+    profile and still holds). why: the reason when atl is None (e.g. '--atlas none')."""
+    out = {"dir": os.path.abspath(atl) if atl else "", "version": atlas_effects_version(atl) if atl else 0,
+           "shift": None, "plate_scale": None, "drugdose": None, "dd_extra": None, "notes": [], "warnings": [],
+           "why": why if not atl else "", "unreliable_plates": None, "limit_files": 0}
+    if not atl or out["version"] < METHOD_VERSION:
+        return out
+    out["unreliable_plates"], out["limit_files"] = atlas_build_info(atl)
+    if out["limit_files"]:
+        out["why"] = f"the atlas is a --limit-files {out['limit_files']} trial: nothing imported"
+        out["warnings"].append(f"{atl} is a --limit-files {out['limit_files']} trial build: its composition "
+                               "shifts, plate factors and 'wells disagree' are not imported")
+        return out
+    differ = unreliable is not None and out["unreliable_plates"] is not None and \
+        sorted(map(str, unreliable)) != sorted(out["unreliable_plates"])
+    if differ:
+        out["warnings"].append(
+            f"the atlas's unreliable plates ({', '.join(out['unreliable_plates']) or 'none'}) differ from this "
+            f"run's ({', '.join(unreliable) or 'none'}): its plate factors and 'wells disagree' are not imported "
+            "(fitted here instead), so MTAP / PSMD10 differ from the atlas's; run both with the same "
+            "--unreliable-plates")
+    fx = os.path.join(atl, "effects")
+
+    def rd(name, fn):
+        p = os.path.join(fx, name)
+        if not os.path.exists(p):
+            out["notes"].append(f"{name} missing")
+            return None
+        try:
+            return fn(p)
+        except Exception as e:  # noqa: BLE001
+            out["notes"].append(f"{name} unreadable ({type(e).__name__}: {e})")
+            return None
+    out["shift"] = rd("composition_shift.parquet",
+                      lambda p: pd.read_parquet(p, columns=["sample", "cell_line_id", "shift_log2"]))
+    if not differ:
+        out["plate_scale"] = rd("plate_scale.csv", lambda p: pd.read_csv(p, dtype={"plate": str, "dose": str}))
+    dd = rd("drugdose.csv", lambda p: pd.read_csv(p, dtype={"drug": str}))
+    if dd is not None and "drug" in dd:
+        out["drugdose"] = dd
+        flags = dd["flags"].fillna("").astype(str) if "flags" in dd else pd.Series("", index=dd.index)
+        out["dd_extra"] = pd.DataFrame({
+            "drug": dd["drug"].astype(str),
+            "dose": (dd["dose"] if "dose" in dd else dd["conc"]).map(dose_text),
+            "wells_disagree": flags.str.contains("wells disagree", regex=False),
+            "replicate_r": pd.to_numeric(dd["replicate_r"], errors="coerce") if "replicate_r" in dd else np.nan})
+        if differ:
+            out["dd_extra"] = None
+    return out
+
+
+def composition_note(ax):
+    """One line on the composition normalisation of this run (summary.txt, briefs, run_info.json)."""
+    if ax.get("shift") is not None:
+        return f"applied (median-of-ratios shift per well x line from {os.path.join(ax['dir'], 'effects')})"
+    if ax.get("why"):
+        why = ax["why"]
+    elif not ax.get("version"):
+        why = "atlas not computed"
+    elif ax["version"] < METHOD_VERSION:
+        why = f"atlas not computed with method v{METHOD_VERSION}: its effects are v{ax['version']}"
+    else:
+        why = "; ".join(ax.get("notes", [])) or "no composition table in the atlas"
+    return f"composition normalisation not applied ({why})"
+
+
+def plate_factor_text(M, cut=NOISY_PLATE):
+    """'plate3 5 x2.04, plate2 0.5 x1.38' for the plate groups with a factor > cut."""
+    t = M.factor_table
+    if t is None or not len(t):
+        return "none"
+    hi = t[t["factor"] > cut].sort_values("factor", ascending=False)
+    return ", ".join(f"{g.split('|')[0]} {g.split('|')[1]} uM x{f:.2f}" for g, f in zip(hi.index, hi["factor"])) \
+        or f"none above {cut:g}"
+
+
+def write_plate_scale(M, path):
+    t = M.factor_table.copy() if M.factor_table is not None else pd.DataFrame()
+    if len(t):
+        t = t.rename_axis("group").reset_index()
+        t["source"] = M.factor_source
+    t.to_csv(path, index=False)
+    return t
+
+
+def write_plate_scale_by_gene(M, path):
+    """results/plate_scale_by_gene.csv: per feature and plate group, the feature's own spread ratio, the group's
+    factor and the z divisor it got (Method.factor_for), with the share of drug wells beyond |z| 1.96 before (group
+    factor only) and after; a gene widened beyond its group shows where one plate is noisier for it alone."""
+    rows = []
+    for feat, t in M.feature_table.items():
+        t = t.rename_axis("group").reset_index()
+        t.insert(0, "feature", feat)
+        rows.append(t)
+    t = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()
+    t.to_csv(path, index=False)
+    return t
+
+
+def write_run_info(path, **kw):
+    """results/run_info.json: method version and the run's settings (tahoe_status.py reads method_version)."""
+    info = {"method_version": METHOD_VERSION, "written": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "python": sys.version.split()[0]}
+    info.update(kw)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(info, fh, indent=1, default=str)
+
+
 def cmd_analyze(args):
     out = args.out
     res_dir = os.path.join(out, "results")
     os.makedirs(res_dir, exist_ok=True)
+    for f in ("run_info.json", "summary.txt"):     # written last: a failed rerun never looks finished
+        try:
+            os.remove(os.path.join(res_dir, f))
+        except FileNotFoundError:
+            pass
     for f in ["well_line.parquet", "sample_map.csv"]:
         if not os.path.exists(os.path.join(out, f)):
             sys.exit(f"{f} not found in {out}; run the 'extract' step first")
@@ -1357,6 +2175,18 @@ def cmd_analyze(args):
         log(f"Excluding {len(failed)} failed wells (almost no cells recovered; same drug fine elsewhere)")
         sm = sm[~sm["sample"].isin(failed["sample"])].reset_index(drop=True)
         wl = wl[wl["sample"].isin(sm["sample"])].reset_index(drop=True)
+    unrel = unreliable_plates(sm, getattr(args, "unreliable_plates", None))
+    sm = mark_unreliable(sm, unrel)
+    if unrel:
+        log(f"Unreliable plates (kept per well; left out of the reference spread, the plate-factor peers and the "
+            f"drug-doses that also have a well elsewhere): {', '.join(unrel)}")
+    atl = atlas_dir(args)
+    ax = load_atlas_inputs(atl, unrel, "--atlas none" if atl is None else "")
+    for w in ax["warnings"]:
+        log(f"  WARNING: {w}")
+    M = Method(sm, ax["shift"], ax["plate_scale"], ax["dd_extra"])
+    comp_note = composition_note(ax)
+    log(f"  composition: {comp_note}")
 
     log("Baseline by cell line ...")
     base, null_source = baseline_by_line(wl, sm, cl, targets, args.mtap_null)
@@ -1365,18 +2195,25 @@ def cmd_analyze(args):
     label = base.get("cell_name", pd.Series(base.index, index=base.index)).fillna("")
     label = pd.Series([n if n else i for i, n in zip(base.index, label)], index=base.index)
 
+    log("Position passes and plate factors (method v3) ...")
+    order = [g for g in ["PROTEASOME", "MTAP", "PSMD10"] if g in cols_present]
+    for gene in order + [m for m in ("S_PHASE", "G2M_PHASE") if m in cols_present]:
+        M.add(wl, gene, null_lines if gene == "MTAP" else [])
+    M.complete()
+    log(f"  plate factors {M.factor_source}; > {NOISY_PLATE:g}: {plate_factor_text(M)}")
+    write_plate_scale(M, os.path.join(res_dir, "plate_scale.csv"))
+
     log("Well covariates ...")
-    ctx = well_context(wl, sm, cols_present)
+    ctx = well_context(wl, sm, cols_present, M)
 
     log("Drug effects (corrected) ...")
     results, Ws, calibs = {}, {}, {}
-    order = [g for g in ["PROTEASOME", "MTAP", "PSMD10"] if g in cols_present]
     for gene in order:
         excl = null_lines if gene == "MTAP" else []
         extra = None
         if gene == "PSMD10" and "PROTEASOME" in Ws:
             extra = Ws["PROTEASOME"][["W2", "z"]].rename(columns={"W2": "PROTEASOME_log2FC", "z": "PROTEASOME_z"})
-        res, W, _d, calib = expression_effects(wl, sm, gene, excl, ctx, drugs, extra)
+        res, W, _d, calib = expression_effects(wl, sm, gene, excl, ctx, drugs, extra, method=M)
         results[gene], Ws[gene], calibs[gene] = res, W, calib
         name = "Gankyrin_PSMD10" if gene == "PSMD10" else gene
         if gene in ("MTAP", "PSMD10"):
@@ -1386,6 +2223,7 @@ def cmd_analyze(args):
         else:
             res.sort_values("z_corrected", ascending=False).to_csv(
                 os.path.join(res_dir, f"{name}_module_drug_effects_by_dose.csv"), index=False)
+    write_plate_scale_by_gene(M, os.path.join(res_dir, "plate_scale_by_gene.csv"))
     pos = pd.concat([slot_table(Ws[g], g) for g in ["MTAP", "PSMD10"] if g in Ws])
     pos.to_csv(os.path.join(res_dir, "well_position_effects.csv"))
     plates = pd.concat([plate_table(Ws[g], g) for g in ["MTAP", "PSMD10"] if g in Ws])
@@ -1459,9 +2297,26 @@ def cmd_analyze(args):
     say("Calibration: share of wells with |z| > 1.96 (~5% expected if most drugs do nothing; the original")
     say("DE table had 32% of MTAP tests at p < 0.05) and |z| > 3 (0.3% expected; much more = heavy tails):")
     for g, c in calibs.items():
-        say(f"  {g:11s} drug wells {c['pct_drug_wells_abs_z_gt_1.96']:.1f}%   DMSO wells "
-            f"{c['pct_dmso_wells_abs_z_gt_1.96']:.1f}%   |z| > 3: {c['pct_drug_wells_abs_z_gt_3']:.1f}%   "
-            f"(null spread {c['null_scale']:.3f} log2)")
+        say(f"  {g:11s} drug wells {c['pct_drug_wells_abs_z_gt_1.96']:.1f}% "
+            f"({c['pct_drug_wells_abs_z_gt_1.96_unscaled']:.1f}% before the plate factors)   DMSO wells {c['pct_dmso_wells_abs_z_gt_1.96']:.1f}%   |z| > 3: "
+            f"{c['pct_drug_wells_abs_z_gt_3']:.1f}%   (null spread {c['null_scale']:.3f} log2)")
+    say()
+    say(f"Method v{METHOD_VERSION} (README 'Method v3'):")
+    say(f"  Unreliable plates: {', '.join(unrel) if unrel else 'none'} (--unreliable-plates; kept per well, left out "
+        "of the reference spread, the plate-factor peers and every drug-dose that also has a well elsewhere; "
+        "drug-doses only there are flagged 'unreliable plate only').")
+    say(f"  Composition: {comp_note}.")
+    for w in ax["warnings"]:
+        say(f"  WARNING: {w}.")
+    say(f"  Plate factors ({M.factor_source}; z divided by the factor, never below 1): > {NOISY_PLATE:g}: "
+        f"{plate_factor_text(M)} (results/plate_scale.csv).")
+    nc = ctx.loc[~sm.set_index("sample").reindex(ctx.index)["is_dmso"].astype(bool), "position_not_correctable"]
+    ncw = sm.set_index("sample").reindex(nc.index[nc.astype(bool)])
+    say(f"  Position correction: {int(nc.sum())} drug wells could not be corrected (< {MIN_SLOT_WELLS} other-drug "
+        "wells at their position)" + (": " + ", ".join(sorted({f"{r.drug} {r.conc:g} ({r.well})" for r in
+                                                                 ncw.itertuples()})[:8]) if len(ncw) else "")
+        + "; per gene, wells left uncorrected because too few donors were clean (|z| < 3): "
+        + ", ".join(f"{g} {c['wells_position_uncertain']}" for g, c in calibs.items()) + ".")
     say()
     say(f"2. BASELINE: MTAP-null cell lines ({null_source})")
     say("-" * 72)
@@ -1502,7 +2357,7 @@ def cmd_analyze(args):
         hit = r[r["drug"].str.lower().apply(lambda s: any(w.lower() in s for w in WATCH))]
         if hit.empty:
             continue
-        best = hit.loc[hit.groupby("drug")["z_corrected"].idxmax()]
+        best = hit.loc[hit["z_corrected"].fillna(-np.inf).groupby(hit["drug"]).idxmax()]
         say(f"{g}:")
         say(best[["drug", "conc", "log2FC_vs_DMSO_uncorrected", "log2FC_corrected", "z_corrected", "fdr_up",
                   "n_lines_up", "n_lines", "position_effect_removed", "plate_dmso_offset", "wells"]]
@@ -1568,6 +2423,12 @@ def cmd_analyze(args):
         fh.write("\n".join(S) + "\n")
     with open(os.path.join(res_dir, "README_columns.txt"), "w", encoding="utf-8") as fh:
         fh.write(README)
+    write_run_info(os.path.join(res_dir, "run_info.json"), script=os.path.abspath(__file__),
+                   data=os.path.abspath(args.data), out=os.path.abspath(out), min_cells=MIN_CELLS,
+                   n_files=info.get("n_files"), limit_files=info.get("limit_files") or 0, unreliable_plates=unrel,
+                   composition_normalisation=comp_note, plate_scale_source=M.factor_source,
+                   plate_factors_above_1={g: round(float(f), 4) for g, f in (M.factors[2] or {}).items() if f > 1},
+                   atlas=ax["dir"] or None, atlas_effects_version=ax["version"], failed_steps=failures)
     log(f"Done. Start with {os.path.join(res_dir, 'summary.txt')}")
 
 
@@ -1598,6 +2459,16 @@ baseline_by_cell_line.csv            Untreated (DMSO) MTAP, PSMD10, CDKN2A, CDKN
 cell_cycle_by_cell_line.csv          In untreated cells: Gankyrin and MTAP in G2M-/S-high vs -low cells.
 well_position_effects.csv            Median shift of all drugs in each well position (the artifact being removed).
 plate_dmso_offsets.csv               How far each plate's DMSO wells sit from the plate's drug-well median.
+plate_scale.csv                      Plate dispersion groups (plate|dose): drug wells, peers (the same dose on other
+                                     reliable plates), factor_raw (median over the genes/modules of the group's spread
+                                     / its peers' median spread), factor = max(1, factor_raw), source (fitted here, or
+                                     imported from the atlas).
+plate_scale_by_gene.csv              Per gene / module and group: its own spread ratio, the group factor and the z
+                                     divisor it got (factor = max(group factor, spread_ratio / 1.3): a gene noisier on
+                                     a plate than the group's median gene is widened further, never narrowed), and
+                                     the % of drug wells beyond |z| 1.96 with the group factor only and with its own.
+run_info.json                        Method version (3) and the run's settings: unreliable plates, composition
+                                     normalisation, plate-factor source.
 excluded_failed_wells.csv            Wells that recovered < 1/8 of the plate's usual cells while the same drug was
                                      fine at the same or higher dose elsewhere: technical failures, left out of
                                      every analysis.
@@ -1609,28 +2480,66 @@ coregulation_summary.txt, coregulated_with_*.csv   (from the 'coreg' step) Genes
 
 Main columns (drug effect tables)
 ---------------------------------
-log2FC_corrected       Effect after: plate baseline = median of the plate's drug wells for the same cell line;
-                       minus the leave-drug-out well-position effect; median over cell lines.
+log2FC_corrected       Effect after (method v3): plate baseline = median of the plate's drug wells for the same cell
+                       line; minus the profile's composition shift (when the atlas exported it); median over cell
+                       lines (a well needs >= 5 measured lines, as in the atlas; a gene measured in fewer lines in a
+                       typical well, e.g. one carried by 4 lines in most wells: one); minus the leave-drug-out
+                       well-position effect (second pass: only donor wells whose own first-pass |z| < 3 for this
+                       gene). Mean over the drug-dose's used wells (below).
 fold_change            2 ** log2FC_corrected.
-z_corrected            log2FC_corrected scored against the spread of all drug wells (robust z; median/MAD).
-                       Combined across plates (Stouffer) when a drug and dose was on two plates.
+z_corrected            log2FC_corrected scored against the spread of the drug wells on reliable plates (robust z;
+                       median/MAD), divided by the gene's plate factor of the well's plate x dose group
+                       (plate_scale_gene: the group's factor, plate_scale, or more where this gene alone is noisier
+                       on that plate; results/plate_scale_by_gene.csv).
+                       Combined across plates (Stouffer) when a drug and dose was on several plates.
+used wells             A drug-dose with a well on a reliable plate uses only those wells (means, Stouffer, counts);
+                       one with wells only on unreliable plates (--unreliable-plates; default plate13) keeps them and
+                       is flagged 'unreliable plate only'. n_wells_left_out_unreliable counts the wells left out.
 fdr_up, fdr_down       Benjamini-Hochberg over all drug-dose combinations, one-sided.
 n_lines_up             Cell lines (counted once) with a per-line z > 2 and > 1.2x. n_lines = lines measured.
 frac_lines_positive    Share of cell lines whose corrected change is above zero (frac_lines_negative: below).
 call                   up/down when FDR < 0.10, median change >= 1.2x, and >= 60% of lines move that way.
-flags                  toxic: well has < half the plate's typical cell count.
-                       transcription drop: genes per cell fell; relative mRNA levels can rise artificially.
-                       cell-cycle shift: G2M module changed > 1.4x (Gankyrin follows the cell cycle).
+flags                  toxic: the drug-dose kept < half the plate's typical cells, also < half of its plate row's
+                         where that row is itself shifted (|row_cells_log2| > 0.8); with several used wells, its BEST
+                         one lost cells too (cells_log2_best_well < -0.5); and no higher dose of the drug kept
+                         >= half: dose-consistent cell loss. Otherwise < half the cells = 'low cells (technical?)':
+                         not confirmed (a row that lost cells, a lower dose killing more than a higher one, as
+                         antimitotics do, or one well of several). At the top dose 'toxic' rests on one well's cell
+                         count when the drug-dose has one well, and duplicate wells of the real data do not agree on
+                         cell loss: weak evidence alone.
+                       plate-row cell shift: the plate row itself lost or gained cells (|row_cells_log2| > 0.8) or
+                         UMIs per cell (row_umi_per_cell_log2 < -0.4): a technical row effect.
+                       transcription drop: genes per cell -0.3 log2 or UMIs per cell -0.5 log2 vs the plate, and also
+                         vs the plate row; relative mRNA levels can rise artificially.
+                       cell-cycle shift: S_PHASE or G2M_PHASE module changed > 1.41x (> 1.19x with |z| >= 4).
+                       composition shift: |composition_shift_log2| >= 0.2: a few genes took a large share of the
+                         reads; the effects are relative to the median gene (the raw CPM view would differ).
+                       noisy plate (z scaled): plate_scale (or plate_scale_gene) > 1.2: the z was divided by it.
+                       unreliable plate only: every well of the drug-dose sits on an unreliable plate.
                        whole proteasome up/down: rest of the proteasome moved the same way (Gankyrin not specific).
-                       position effect removed / plate DMSO offset: how much the corrections changed the estimate.
+                       position not correctable: a used well had < 3 other-drug wells at its position (no correction).
+                       position correction uncertain: a used well had < 3 clean donor wells for this gene (left
+                         uncorrected): a strong drug may share the position; check sample_map.csv.
+                       position effect removed: the correction moved the estimate by > 0.2 log2.
+                       wells disagree: imported from the atlas (its wells' genome-wide signatures do not agree).
 log2FC_vs_DMSO_uncorrected   The old-style estimate (against the plate's DMSO wells, no position correction).
-position_effect_removed      Leave-drug-out median of other drugs in the same well position.
-plate_dmso_offset      > 0: this plate's DMSO wells read low, which inflated every DMSO-based fold change on it.
+position_effect_removed      Leave-drug-out median of other drugs in the same well position (second pass).
+position_effect_pass1  The same from every other-drug well (first pass, before the clean-donor rule).
+position_wells_used, position_clean_donors   Other-drug wells at the position in total, and those clean for the gene.
+plate_dmso_offset      > 0: this plate's DMSO wells read low, which inflated every DMSO-based fold change on it
+                       (a column only: it never changes the corrected values).
+plate_scale            Mean plate factor of the used wells (results/plate_scale.csv); plate_scale_gene: the mean z
+                       divisor of this gene (results/plate_scale_by_gene.csv).
+composition_shift_log2 Mean over the used wells of the well's median composition shift over its lines.
+row_cells_log2, row_umi_per_cell_log2, row_genes_per_cell_log2   The plate row's other drug wells (median).
 pct_cells_expressing_change  Change in % of cells with >= 1 count (corrected). With level_in_expressing_cells_log2
                        this tells a shift in every cell from a change in the fraction of expressing cells.
 PROTEASOME_log2FC, PROTEASOME_z   Rest-of-proteasome change in the same wells (Gankyrin tables).
 S_PHASE_shift_log2, G2M_PHASE_shift_log2   Corrected change of the cell-cycle modules.
-cells_log2_vs_plate    log2 cells recovered in the well vs the plate's typical drug well.
+cells_log2_vs_plate    log2 cells recovered in the well vs the plate's typical drug well (mean over used wells).
+cells_log2_best_well   The used well with the least cell loss, after subtracting its plate row's median where that
+                       row is shifted by > 0.8 log2 (else the plain value): 'toxic' needs it < -0.5 (a used well
+                       that kept its cells: the loss did not replicate).
 Drug summary: z_by_dose / log2FC_by_dose list doses in ascending order; up_pattern describes the dose behaviour
                        ('top dose only', 'rises with dose', 'all doses, stronger at high dose', 'all doses, flat',
                        'inconsistent across doses'). A real effect usually grows with dose; a significant result
@@ -1641,8 +2550,9 @@ MTAP_null_selective_drugs.csv
 -----------------------------
 extra_log2_depletion_of_MTAP_null   Mean log2 relative abundance of MTAP-null lines minus the median of
                        MTAP-intact lines in the same well, after position correction. Negative = selective.
-z_selective            Scored against the spread across wells plus each well's own counting noise, so wells
-                       with few surviving cells cannot produce extreme scores.
+z_selective            Scored against the spread across wells (reliable plates) plus each well's own counting noise,
+                       so wells with few surviving cells cannot produce extreme scores. Per drug-dose over its used
+                       wells (unreliable_plate_only, n_wells_left_out_unreliable as in the drug-effect tables).
 delta_tissue_matched   Same, comparing only with intact lines of the same organ.
 intact_median_log2     Typical intact-line change (relative to the well), all_cells_log2_vs_plate = overall kill.
 <line>_log2            Each MTAP-null line separately.
@@ -1848,6 +2758,11 @@ def main():
     ap.add_argument("--mtap-null", default=None, help="comma-separated cell lines to treat as MTAP-null")
     ap.add_argument("--extra-genes", default="", help="comma-separated extra genes to extract per cell")
     ap.add_argument("--min-cells", type=int, default=MIN_CELLS, help="min cells per line per well")
+    ap.add_argument("--unreliable-plates", default=None,
+                    help="plates kept per well but left out of pooled drug-doses, comma-separated, or 'none' "
+                         f"(default: {', '.join(UNRELIABLE_PLATES)} when present)")
+    ap.add_argument("--atlas", default=None, help="computed atlas (method v3) whose composition shift and plate "
+                                                  "factors to use (default: <data>/atlas when there; 'none')")
     ap.add_argument("--reindex", action="store_true", help="rescan the download folder (coreg: rebuild its matrix)")
     ap.add_argument("--pcs", type=int, default=N_PCS, help="coreg: broad components to remove (default 3)")
     args = ap.parse_args()
