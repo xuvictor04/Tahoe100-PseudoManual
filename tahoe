@@ -475,7 +475,7 @@ cmd_run() {
   fi
   for x in atlas panel; do
     if [ "$([ "$x" = atlas ] && printf '%s' "$do_atlas" || printf '%s' "$do_panel")$(fact "${x}_outdated")" = 11 ]; then
-      say "$(cap "$(name_of "$x")") was made with an older method: redoing what the new one needs."
+      say "$(cap "$(name_of "$x")") was made before a repo update (an older method or new genes): redoing what it needs."
     fi
   done
   # both checks before anything starts: an option one script does not take must not leave half a start

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 r"""
 tahoe_gene_panel.py - the MTAP / Gankyrin trial (tahoe_mtap_gankyrin.py) generalized to a gene panel: ferroptosis,
-pyroptosis and p53 genes plus NAPEPLD (NAPE-PLD) and TRIM72 (MG53), with the same artifact corrections, cross-linked
-to the earlier MTAP / Gankyrin run, and one Claude agent per pathway that writes a report.
+pyroptosis and p53 genes plus NAPEPLD (NAPE-PLD), TRIM72 (MG53) and the drug efflux pumps ABCB1 (MDR1) and ABCG2
+(BCRP), with the same artifact corrections, cross-linked to the earlier MTAP / Gankyrin run, and one Claude agent per
+pathway that writes a report.
 
 Put this file next to the CURRENT tahoe_mtap_gankyrin.py and tahoe_atlas.py (copy them over older versions: the
 method is v3 now, see README 'Method v3') in your Tahoe-100M folder and run from there:
@@ -27,8 +28,9 @@ every agent report out of date (to remake a bundle, use 'bundle', not 'all').
 The earlier MTAP / Gankyrin output (<data>/mtap_gankyrin) is read when present (--prior DIR; --prior none ignores
 it); the computed atlas (<data>/atlas; --atlas DIR or none) supplies the composition shift, the plate factors and
 'wells disagree' once its effects are method v3; --unreliable-plates LIST|none (default plate13).
-Extra genes: --genes "SYM[:pathway],..." (aliases FSP1, DFNA5, ASC, MG53, NAPE-PLD, P21, PUMA, NOXA accepted), into a
-NEW --out: per-cell files of an earlier gene list are never mixed with a new one.
+Extra genes: --genes "SYM[:pathway],..." (aliases FSP1, DFNA5, ASC, MG53, NAPE-PLD, P21, PUMA, NOXA, MDR1, BCRP
+accepted), into a NEW --out: per-cell files of an earlier gene list are never mixed with a new one. Per-cell files of
+an earlier version of the built-in list (before ABCB1 and ABCG2) are extracted again by 'extract' / 'all'.
 Same corrections as tahoe_mtap_gankyrin.py (method v3): plate baseline = median of the plate's drug wells (never
 DMSO); composition shift from the atlas (<data>/atlas or --atlas; effects computed with method v3); two-pass
 leave-drug-out well-position correction (clean donors only); robust z against the drug wells of the reliable plates,
@@ -120,7 +122,13 @@ PANEL = [  # (gene, pathway, role): the user's list
                               "other N-acylethanolamines"),
     ("TRIM72", "additional", "(MG53) Membrane-repair E3 ligase (also IRS1 ubiquitination); muscle/heart-enriched, "
                              "may be absent in cancer lines"),
+    ("ABCB1", "efflux", "(MDR1) P-glycoprotein, ATP-driven drug efflux pump: taxanes, vinca alkaloids, "
+                        "anthracyclines, etoposide; off in most carcinoma lines, high in a few"),
+    ("ABCG2", "efflux", "(BCRP) ATP-driven drug efflux pump: mitoxantrone, topotecan / irinotecan (SN-38), "
+                        "methotrexate"),
 ]
+PANEL_LIST = 2            # version of the built-in gene list, recorded in extract_info.json (tahoe_status.py reads it);
+PANEL_LIST_NOTE = "ABCB1 (MDR1) and ABCG2 (BCRP)"     # what v2 added: per-cell files of v1 are extracted again
 ANCHORS = list(T.TARGET_GENES)   # MTAP, PSMD10 (Gankyrin), CDKN2A, CDKN2B: the earlier analysis, extracted again
 ANCHOR_ROLES = {"MTAP": "Methionine salvage; co-deleted with CDKN2A at 9p21 (earlier analysis)",
                 "PSMD10": "(Gankyrin) 19S proteasome assembly chaperone; oncoprotein reported to bind RB and CDK4 "
@@ -129,9 +137,10 @@ ANCHOR_ROLES = {"MTAP": "Methionine salvage; co-deleted with CDKN2A at 9p21 (ear
                           "neighbour of MTAP",
                 "CDKN2B": "p15INK4b; 9p21 neighbour of MTAP"}
 AKA = {"AIFM2": "FSP1", "GSDME": "DFNA5", "PYCARD": "ASC", "TRIM72": "MG53", "NAPEPLD": "NAPE-PLD", "CDKN1A": "p21",
-       "BBC3": "PUMA", "PMAIP1": "NOXA", "PSMD10": "Gankyrin"}
+       "BBC3": "PUMA", "PMAIP1": "NOXA", "PSMD10": "Gankyrin", "ABCB1": "MDR1", "ABCG2": "BCRP"}
 ALIASES = {"FSP1": "AIFM2", "DFNA5": "GSDME", "ASC": "PYCARD", "MG53": "TRIM72", "NAPE-PLD": "NAPEPLD",
-           "P21": "CDKN1A", "PUMA": "BBC3", "NOXA": "PMAIP1", "GANKYRIN": "PSMD10"}
+           "P21": "CDKN1A", "PUMA": "BBC3", "NOXA": "PMAIP1", "GANKYRIN": "PSMD10", "MDR1": "ABCB1", "P-GP": "ABCB1",
+           "PGP": "ABCB1", "BCRP": "ABCG2"}
 CONTEXT = {  # context gene sets (no panel gene inside); each gene is extracted as its own column
     "P53_EXT": "TP53I3 RRM2B AEN DDB2 XPC TNFRSF10B PHLDA3 SPATA18 TRIAP1 RPS27L ACER2 TP53INP1 PLK3 POLH EDA2R "
                "CCNG1 BTG2 TIGAR".split(),
@@ -176,12 +185,21 @@ PER_LINE_MAX = 10         # growth screens list each group line separately up to
 TOP = 15                  # rows per table in summary.txt
 BYTES_PER_CELL = 8.0      # per-cell files: measured on a real file, ~25 bytes per cell with 117 columns ...
 BYTES_PER_COLUMN = 0.15   # ... (zstd; most values are zero)
-PANEL_ANGLES = ["ferroptosis", "pyroptosis", "p53", "napepld_trim72", "crosslinks"]
+PANEL_ANGLES = ["ferroptosis", "pyroptosis", "p53", "napepld_trim72", "efflux", "crosslinks"]
 TITLES = {"ferroptosis": "Ferroptosis genes: markers, defences, lipid remodelling, iron",
           "pyroptosis": "Pyroptosis machinery: gasdermins, inflammasome, caspases",
           "p53": "p53 activity: which drugs, which lines, genotype vs function",
           "napepld_trim72": "NAPEPLD (NAPE-PLD) and TRIM72 (MG53)",
+          "efflux": "Drug efflux pumps: ABCB1 (MDR1) and ABCG2 (BCRP)",
           "crosslinks": "Cross-links to MTAP / Gankyrin"}
+# known substrates of each pump (drug names, prefix match as find_drugs). Kinase inhibitors are left out on purpose:
+# many are substrates and inhibitors at once, so neither direction is expected
+EFFLUX = {"ABCB1": {"names": ["Paclitaxel", "Docetaxel", "Vinblastine", "Vincristine", "Vinorelbine", "Eribulin",
+                              "Doxorubicin", "Daunorubicin", "Epirubicin", "Idarubicin", "Mitoxantrone", "Etoposide",
+                              "Teniposide", "Dactinomycin", "Actinomycin", "Colchicine", "Romidepsin"]},
+          "ABCG2": {"names": ["Mitoxantrone", "Topotecan", "Irinotecan", "SN-38", "Methotrexate", "Alvocidib",
+                              "Flavopiridol"]}}
+EFFLUX_ACTIVE = -0.5      # a drug-dose counts as active in the substrate test when all cells fell <= this log2 vs plate
 DNA_DAMAGE = {"names": ["Doxorubicin", "Epirubicin", "Idarubicin", "Daunorubicin", "Mitoxantrone", "Topotecan",
                         "Irinotecan", "Etoposide", "Teniposide", "Amsacrine", "Camptothecin", "Oxaliplatin", "Cisplatin",
                         "Carboplatin", "5-Fluorouracil", "Floxuridine", "Gemcitabine", "Cytarabine", "Hydroxyurea",
@@ -216,6 +234,10 @@ CONTROLS = [  # (expectation, readout kind, readout, direction (+1 up, -1 down, 
       "moa": "Microtubule inhibitor"}, "robust"),
     ("Dinaciclib (CDK9) causes a transcription drop (UMIs per cell fall)", "ctx", "umi_per_cell_log2_vs_plate", -1,
      {"names": ["Dinaciclib"]}, "robust"),
+    ("ABCB1 substrates (taxanes, vinca alkaloids, anthracyclines) spare the ABCB1-high lines (uncertain: 24 h, few "
+     "lines express it)", "spare", "ABCB1", 1, EFFLUX["ABCB1"], "uncertain"),
+    ("ABCG2 substrates (mitoxantrone, topotecan, irinotecan, methotrexate) spare the ABCG2-high lines (uncertain: "
+     "24 h)", "spare", "ABCG2", 1, EFFLUX["ABCG2"], "uncertain"),
 ]
 
 
@@ -513,6 +535,35 @@ def mixed_gene_list_problem(out, report, cols):
             f"to start over.")
 
 
+def extract_list_version(out):
+    """The built-in gene list version (PANEL_LIST) of the extraction in out: extract_info.json panel_list (1 for
+    extractions made before it was recorded); None when out holds no finished extraction."""
+    try:
+        with open(os.path.join(out, "extract_info.json"), encoding="utf-8") as fh:
+            return int(json.load(fh).get("panel_list") or 1)
+    except (OSError, ValueError, TypeError, AttributeError):
+        return None
+
+
+def older_list_cells(out, report):
+    """The genes the gene list gained since the per-cell files in out/cells were extracted, when those files hold an
+    earlier version of the built-in list (extract_info.json panel_list < PANEL_LIST) and no gene the current list
+    lacks: 'extract' then extracts every file again (old and new files cannot be mixed). [] otherwise: no files, the
+    same list (an interrupted re-extraction resumes), or another list (mixed_gene_list_problem)."""
+    if not glob.glob(os.path.join(out, "cells", "*.parquet")):
+        return []
+    try:
+        with open(os.path.join(out, "extracted_columns.json"), encoding="utf-8") as fh:
+            old = set(json.load(fh).get("targets", []))
+    except (OSError, ValueError, AttributeError):
+        return []
+    new = set(report["targets"])
+    v = extract_list_version(out)
+    if not old or not old < new or v is None or v >= PANEL_LIST:
+        return []
+    return sorted(new - old)
+
+
 def wanted_genes(args, symbols):
     """Panel (+ --genes) and context genes resolved against the gene metadata; logs the ones missing."""
     gt = gene_table(args, symbols)
@@ -537,6 +588,14 @@ def cmd_extract(args):
         sys.exit("Gene metadata (token_id -> gene_symbol) not found" + REINDEX_HINT)
     genes, missing = wanted_genes(args, gm["gene_symbol"].dropna().astype(str).tolist())
     _targets, cols, _lut, report = T.build_columns(gm, genes)
+    gained = older_list_cells(out, report)
+    if gained:
+        old = sorted(glob.glob(os.path.join(out, "cells", "*.parquet")))
+        log(f"The {len(old)} per-cell files in {os.path.join(out, 'cells')} hold an earlier version of the gene list "
+            f"(without {', '.join(gained)}): they are deleted and every file is extracted again (the earlier results "
+            "stay until 'analyze' replaces them)")
+        for f in old:
+            os.remove(f)
     problem = mixed_gene_list_problem(out, report, cols)
     if problem:
         sys.exit(problem)
@@ -547,6 +606,12 @@ def cmd_extract(args):
     a = argparse.Namespace(**vars(args))
     a.extra_genes, a.reindex = genes, False
     T.cmd_extract(a)
+    jf = os.path.join(out, "extract_info.json")          # the built-in list's version (tahoe_status.py reads it)
+    with open(jf, encoding="utf-8") as fh:
+        info = json.load(fh)
+    info["panel_list"] = PANEL_LIST
+    with open(jf, "w", encoding="utf-8") as fh:
+        json.dump(info, fh, indent=1)
 
 
 # ============================================================================= analyze: the shared state
@@ -815,7 +880,9 @@ def effective_lines(S, g):
 
 def gene_status(S, g):
     if g not in S.targets:
+        builtin = g in {x for x, _, _ in PANEL} | {x for x, _ in context_genes()}
         return ("not in the gene metadata" if S.symbols and g not in S.symbols else
+                "not extracted (added to the panel after this extraction: 'all' extracts again)" if builtin else
                 "not extracted (not in this extraction's gene list: extract into a new --out)")
     n = int(S.E[g].sum())
     if n == 0:
@@ -1605,6 +1672,109 @@ def step_levels(S):
     log(f"  level vs growth: {len(out)} genes")
 
 
+# ============================================================================= growth: drug efflux pumps
+def efflux_group(S, g):
+    """The lines that carry a pump: its lines above ambient when they are a minority (2 to half of the lines with
+    growth data; pumps are off in most carcinoma lines and high in a few), else the top quarter by untreated level
+    (>= 3 lines). Returns (lines, rule), or (None, why not)."""
+    if g not in S.targets or g not in S.E:
+        return None, S.status.get(g, "not extracted")
+    use = set(S.n["cell_line_id"].unique())
+    lines = [c for c in S.base.index if c in use and S.enough.get(c, False)]
+    if len(lines) < 6:
+        return None, f"only {len(lines)} lines with growth data"
+    expr = [c for c in lines if S.E.at[c, g]]
+    if len(expr) < 2:
+        return None, f"{len(expr)} line(s) express {g} above ambient: no {g}-high group"
+    if len(expr) <= len(lines) // 2:
+        return expr, f"the {len(expr)} lines that express {g} above ambient"
+    lev, _ = gene_level(S, g)
+    lev = lev.reindex(lines).astype(float).dropna().sort_values(ascending=False)
+    k = max(3, len(lev) // 4)
+    return list(lev.index[:k]), f"the top quarter by untreated {g} level ({k} of {len(lev)} lines; {len(expr)} " \
+                                "express it above ambient)"
+
+
+def step_efflux(S):
+    """ABCB1 / ABCG2: (1) the pump-high lines vs the other lines in the same wells, every drug-dose
+    (group_growth_screen; z_spared > 0 = the pump-high lines kept more of their cells); (2) are the pump's known
+    substrates (EFFLUX) spared more than the other active drugs? Per drug its most depleting dose (all cells <=
+    EFFLUX_ACTIVE log2 vs the plate, not on unreliable plates only); AUC = P(substrate > other) of the group z and of
+    the within-lineage level-vs-growth z (> 0.5: substrates spare the pump-high lines more)."""
+    present = sorted(set(S.sm.loc[~S.sm["is_dmso"], "drug"].astype(str)))
+    S.efflux_grp, S.efflux_why, S.efflux_lines = {}, {}, {}
+    grp_out, test_rows, drug_rows = [], [], []
+    ct = S.ctab[["drug", "conc", "cells_log2_vs_plate", "flags"]].drop_duplicates(["drug", "conc"]) \
+        if hasattr(S, "ctab") else None
+    for g in [x for x, p, _ in PANEL if p == "efflux"]:
+        subs = set(find_drugs(present, S.drugs, EFFLUX[g]))
+        group, rule = efflux_group(S, g)
+        if group is None:
+            S.efflux_why[g] = rule
+            test_rows.append({"pump": g, "test": "substrates spare the pump-high lines", "reading": f"not tested "
+                              f"({rule})", "substrates_in_data": ", ".join(sorted(subs))})
+            continue
+        res = group_growth_screen(S.n, S.base, S.sm, S.drugs, S.ctx, group,
+                                  [c for c in S.base.index if c not in set(group)])[0]
+        res = res.rename(columns={"extra_log2_depletion": "extra_log2_abundance_of_high", "z_selective": "z_spared",
+                                  "fdr_selective": "fdr_depleted", "group_mean_log2": "high_mean_log2",
+                                  "rest_median_log2": "other_median_log2"})
+        res["p_spared"] = T.norm_sf(res["z_spared"].values)
+        res["fdr_spared"] = T.bh(res["p_spared"].values)
+        res = T.add_dose_columns(res.drop(columns=["fdr_drug", "dose_pattern"]), "z_spared", "p_spared", "up")
+        res = res.rename(columns={"fdr_drug": "fdr_drug_spared", "dose_pattern": "dose_pattern_spared"})
+        if ct is not None:
+            res = res.merge(ct[["drug", "conc", "flags"]], on=["drug", "conc"], how="left")
+        res.insert(0, "known_substrate", res["drug"].isin(subs))
+        res.insert(0, "high_lines", ", ".join(S.name[c] for c in group))
+        res.insert(0, "pump", g)
+        lead = ["pump", "high_lines", "known_substrate", "drug", "conc", "extra_log2_abundance_of_high", "z_spared",
+                "fdr_spared", "fdr_depleted", "fdr_drug_spared", "z_by_dose", "dose_pattern_spared", "high_mean_log2",
+                "other_median_log2", "all_cells_log2_vs_plate", "delta_tissue_matched", "flags"]
+        res = res[[c for c in lead if c in res] + [c for c in res.columns if c not in lead]]
+        res = res.sort_values("z_spared", ascending=False)
+        S.efflux_grp[g], S.efflux_lines[g] = res, (group, rule)
+        grp_out.append(res)
+        # (2) one dose per active drug: the one that lowered all cells most
+        uo = res["unreliable_plate_only"].fillna(False).astype(bool) if "unreliable_plate_only" in res else \
+            pd.Series(False, index=res.index)
+        a = res[(res["all_cells_log2_vs_plate"] <= EFFLUX_ACTIVE) & ~uo]
+        a = a.sort_values("all_cells_log2_vs_plate").drop_duplicates("drug")
+        lv = S.lvl[S.lvl["gene"] == g][["drug", "conc", "rho_within_lineage", "z_within_lineage"]] \
+            if len(getattr(S, "lvl", [])) else pd.DataFrame(columns=["drug", "conc", "z_within_lineage"])
+        a = a.merge(lv.drop_duplicates(["drug", "conc"]), on=["drug", "conc"], how="left")
+        for r in a.itertuples():
+            drug_rows.append({"pump": g, "drug": r.drug, "conc": r.conc, "known_substrate": r.known_substrate,
+                              "all_cells_log2_vs_plate": r.all_cells_log2_vs_plate,
+                              "extra_log2_abundance_of_high": r.extra_log2_abundance_of_high, "z_spared": r.z_spared,
+                              "fdr_spared": r.fdr_spared, "rho_within_lineage": getattr(r, "rho_within_lineage", np.nan),
+                              "z_within_lineage": getattr(r, "z_within_lineage", np.nan), "flags": r.flags,
+                              "moa_fine": getattr(r, "moa_fine", "")})
+        sub, oth = a[a["known_substrate"]], a[~a["known_substrate"]]
+        for test, col in (("substrates spare the pump-high lines (group z)", "z_spared"),
+                          ("substrates spare high-level lines, within lineage (level-vs-growth z)", "z_within_lineage")):
+            x, y = sub[col].astype(float).dropna(), oth[col].astype(float).dropna()
+            u, p = auc(x, y)
+            test_rows.append({"pump": g, "test": test, "high_lines": ", ".join(S.name[c] for c in group),
+                              "group_rule": rule, "n_substrates_active": len(x), "n_other_active": len(y),
+                              "auc": u, "p": p, "median_z_substrates": x.median() if len(x) else np.nan,
+                              "median_z_other": y.median() if len(y) else np.nan,
+                              "substrates": "; ".join(f"{d} {c:g} (z {z:.1f})" for d, c, z in
+                                                      zip(sub["drug"], sub["conc"], sub[col]) if np.isfinite(z)),
+                              "substrates_in_data": ", ".join(sorted(subs)),
+                              "reading": "" if not np.isfinite(u) else
+                              ("substrates spared more (consistent with efflux)" if u > 0.5 and p < 0.05 else
+                               "substrates spared more, not significant" if u > 0.5 else "substrates not spared more")})
+    S.efflux_test = pd.DataFrame(test_rows)
+    S.efflux_drugs = pd.DataFrame(drug_rows)
+    S.efflux_res = pd.concat(grp_out, ignore_index=True) if grp_out else pd.DataFrame()
+    S.save(S.efflux_res, "efflux_high_lines_growth.csv")
+    S.save(S.efflux_test, "efflux_substrate_test.csv")
+    S.save(S.efflux_drugs, "efflux_active_drugs.csv")
+    log("  efflux: " + "; ".join(f"{g}: {len(v[0])} high lines" for g, v in S.efflux_lines.items())
+        + ("; " if S.efflux_lines and S.efflux_why else "") + "; ".join(f"{g}: {w}" for g, w in S.efflux_why.items()))
+
+
 # ============================================================================= cell cycle in untreated cells
 def _dmso_cells(path, dmso, cols):
     """DMSO rows of one per-cell file: only the 'drug' column is read first; most files have no DMSO cells."""
@@ -2095,6 +2265,13 @@ def _readout(S, kind, name):
         t["fold_change"] = 2.0 ** t["extra_log2_p53_induction_in_WT"]
         t["fdr_down"] = np.nan
         return t[["drug", "conc", "fold_change", "z", "fdr_up", "fdr_down", "z_by_dose", "flags"]]
+    if kind == "spare":
+        t = getattr(S, "efflux_grp", {}).get(name)
+        if t is None:
+            return None
+        t = t.rename(columns={"z_spared": "z", "fdr_spared": "fdr_up", "fdr_depleted": "fdr_down"})
+        t["fold_change"] = 2.0 ** t["extra_log2_abundance_of_high"]
+        return t[["drug", "conc", "fold_change", "z", "fdr_up", "fdr_down", "z_by_dose", "flags"]]
     if kind == "ctx":
         t = S.ctab.rename(columns={f"{name}_z": "z"}).copy()
         t["fold_change"] = 2.0 ** t[name]
@@ -2115,14 +2292,17 @@ def step_controls(S):
         what = {"score": f"{name} score", "gene": f"{name} mRNA",
                 "reexpr": f"{name} mRNA in the {name}-low lines" if low else
                 f"{name} mRNA (expressing lines: no {name}-low group found)",
-                "p53wt": "p53 targets, WT minus altered lines", "ctx": "UMIs per cell vs plate"}[kind]
+                "p53wt": "p53 targets, WT minus altered lines", "ctx": "UMIs per cell vs plate",
+                "spare": f"cells of the {name}-high lines vs the other lines in the same wells"}[kind]
         if not drugs:
             rows.append({"expectation": exp, "expected_at_24h": at24, "readout": what, "drug": "not in data",
                          "verdict": "not in data"})
             continue
         if t is None:
+            why = getattr(S, "efflux_why", {}).get(name) if kind == "spare" else None
             rows.append({"expectation": exp, "expected_at_24h": at24, "readout": what, "drug": ", ".join(drugs),
-                         "verdict": f"not testable ({S.status.get(name, S.skipped.get(name, 'readout missing'))})"})
+                         "verdict": f"not testable "
+                                    f"({why or S.status.get(name, S.skipped.get(name, 'readout missing'))})"})
             continue
         sz = t["z"] * (sign if sign else 1)
         rank = (sz if sign else t["z"].abs()).rank(ascending=False, method="min")
@@ -2307,7 +2487,7 @@ def step_well_effects(S):
 
 def write_panel_run_info(S):
     """results/run_info.json (written last): method version 3 and this run's settings (tahoe_status.py reads it)."""
-    T.write_run_info(os.path.join(S.R, "run_info.json"), method_version=PANEL_METHOD,
+    T.write_run_info(os.path.join(S.R, "run_info.json"), method_version=PANEL_METHOD, panel_list=PANEL_LIST,
                      tahoe_mtap_gankyrin_method_version=T.METHOD_VERSION, script=os.path.abspath(__file__),
                      tahoe_mtap_gankyrin=os.path.abspath(T.__file__), data=os.path.abspath(S.args.data),
                      out=os.path.abspath(S.out), min_cells=T.MIN_CELLS, n_files=S.info.get("n_files"),
@@ -2334,8 +2514,8 @@ def write_summary(S):
         say(s)
         say("-" * 100)
     info, wl, sm, base = S.info, S.wl, S.sm, S.base
-    say("Tahoe-100M gene panel: ferroptosis, pyroptosis, p53, NAPEPLD and TRIM72 (artifact-corrected), built on the")
-    say("MTAP / Gankyrin run")
+    say("Tahoe-100M gene panel: ferroptosis, pyroptosis, p53, NAPEPLD, TRIM72 and the efflux pumps ABCB1 / ABCG2")
+    say("(artifact-corrected), built on the MTAP / Gankyrin run")
     say("=" * 100)
     say(f"Cells: {int(wl['n_cells'].sum()):,}   wells: {sm['sample'].nunique()}   plates: {sm['plate'].nunique()}   "
         f"cell lines: {wl['cell_line_id'].nunique()}   (files used: {info['n_files']}"
@@ -2365,8 +2545,9 @@ def write_summary(S):
     sec_pyroptosis(S_, say, title)
     sec_p53(S_, say, title)
     sec_napepld(S_, say, title)
+    sec_efflux(S_, say, title)
     sec_crosslinks(S_, say, title)
-    title("9. FILES")
+    title("10. FILES")
     say("results/README_columns.txt explains every file and column. Start with positive_controls.csv and panel_genes.csv,")
     say("then <GENE>_drug_summary.csv (one row per drug) and pathway_scores_by_dose.csv. Agent briefs: angles/<pathway>/.")
     with open(os.path.join(S.R, "summary.txt"), "w", encoding="utf-8") as fh:
@@ -2440,12 +2621,12 @@ def sec_expression(S, say, title):
     if pg is None:
         say("  not available")
         return
-    for pw in ["ferroptosis", "pyroptosis", "p53"]:
+    for pw in ["ferroptosis", "pyroptosis", "p53", "efflux"]:
         t = pg[pg["pathway"] == pw]
         say(f"{pw}:")
         say(table(t, ["gene", "also_known_as", "median_line_cpm", "ambient_cpm", "n_lines_expressing", "n_lines",
                       "median_pct_cells_dmso", "median_counts_per_profile", "status"], TOP, 2))
-    t = pg[~pg["pathway"].isin(["ferroptosis", "pyroptosis", "p53"])]
+    t = pg[~pg["pathway"].isin(["ferroptosis", "pyroptosis", "p53", "efflux"])]
     say("NAPEPLD, TRIM72, anchors" + (" and added genes" if (pg["gene_set"] == "added").any() else "") + ":")
     say(table(t, ["gene", "also_known_as", "median_line_cpm", "ambient_cpm", "n_lines_expressing", "n_lines",
                   "median_pct_cells_dmso", "median_counts_per_profile", "status"], TOP, 2))
@@ -2480,7 +2661,8 @@ def sec_controls(S, say, title):
     for r in best.itertuples():
         say(f"  {r.exp}: {r.readout}")
     say("at_24h: 'robust' controls that are absent lower the trust in the method; 'uncertain' ones (DNMT inhibitors: "
-        "demethylation needs several divisions; dimethyl fumarate at <= 5 uM; COX inhibitors) say little when absent.")
+        "demethylation needs several divisions; dimethyl fumarate at <= 5 uM; COX inhibitors; efflux substrates: "
+        "few pump-high lines, little killing at 24 h) say little when absent.")
 
 
 def gene_best(S, genes):
@@ -2646,8 +2828,48 @@ def sec_napepld(S, say, title):
                 f"status: {S.status.get('TRIM72', '')}. Treat any drug effect as exploratory.")
 
 
+def sec_efflux(S, say, title):
+    title("8. DRUG EFFLUX: ABCB1 (MDR1) and ABCG2 (BCRP) (mRNA and relative cell numbers after 24 h; no pump activity)")
+    lines_of = getattr(S, "efflux_lines", {})
+    for g in [x for x, p, _ in PANEL if p == "efflux"]:
+        st = S.status.get(g, "not extracted")
+        ef = effective_lines(S, g) if g in S.E else []
+        hl = high_lines(S, g)
+        say(f"{label_of(g)}: {st}; median line {fnum(S.med.get(g, np.nan), '{:.1f}')} CPM, expressed in "
+            f"{int(S.E[g].sum()) if g in S.E else 0}/{len(S.base)} lines"
+            + (f"; effects carried by {len(ef)}: {', '.join(S.name[c] for c in ef)}" if 0 < len(ef) <= 10 else "")
+            + (f"; >= 8x the median line in: {hl}" if hl else "") + ".")
+        if g in lines_of:
+            say(f"  pump-high group: {lines_of[g][1]}: {', '.join(S.name[c] for c in lines_of[g][0])}")
+        elif g in getattr(S, "efflux_why", {}):
+            say(f"  pump-high group: none ({S.efflux_why[g]})")
+        if g in getattr(S, "DS", {}):
+            say("  mRNA change (induction at 24 h is not expected to be common):")
+            say(table(gene_best(S, [g]), ["best_up", "up_flags_context", "best_down"], 1))
+        r = getattr(S, "efflux_grp", {}).get(g)
+        if r is not None and len(r):
+            say(f"  Drug-doses that spare the {g}-high lines most (z_spared > 0: they kept more of their cells than "
+                "the other lines in the same wells):")
+            say(table(r, ["drug", "conc", "known_substrate", "extra_log2_abundance_of_high", "z_spared", "fdr_spared",
+                          "z_by_dose", "all_cells_log2_vs_plate", "flags"], 8))
+    t = getattr(S, "efflux_test", None)
+    if t is not None and len(t):
+        say(f"Are the known substrates spared more than the other active drugs (all cells <= {EFFLUX_ACTIVE:g} log2 vs "
+            "plate; one dose per drug, the most depleting; auc = P(substrate > other), > 0.5 = substrates spare the "
+            "pump-high lines more)?")
+        say(table(t, ["pump", "test", "n_substrates_active", "n_other_active", "auc", "p", "median_z_substrates",
+                      "median_z_other", "reading"], 6))
+    lv = getattr(S, "lvl", None)
+    if lv is not None and len(lv):
+        t = by_fdr(lv[lv["gene"].isin([x for x, p, _ in PANEL if p == "efflux"])])
+        if len(t):
+            say("Level vs growth (rho > 0: high-level lines spared; within lineage = organ removed):")
+            say(table(t.groupby("gene").head(3), ["gene", "drug", "conc", "rho", "rho_within_lineage", "z", "fdr",
+                                                  "fdr_within_lineage", "reading"], 6))
+
+
 def sec_crosslinks(S, say, title):
-    title("8. CROSS-LINKS to MTAP / Gankyrin" + (" (and the earlier MTAP / Gankyrin run)" if S.prior else
+    title("9. CROSS-LINKS to MTAP / Gankyrin" + (" (and the earlier MTAP / Gankyrin run)" if S.prior else
                                                   " (no earlier run: this run's MTAP / PSMD10 results)"))
     xl = getattr(S, "xl", None)
     if xl is None:
@@ -2716,9 +2938,10 @@ def step_panel_genes(S):
 WHAT_DATA_SHOW = """## What these data can and cannot show
 - They are mRNA counts 24 h after the drug, in ~50 cancer cell lines pooled in each well. They show which genes go
   up or down, in which lines, and which lines lose ground (relative cell numbers) - nothing else.
-- They cannot show protein, enzyme activity, lipid peroxidation, iron levels, caspase or gasdermin cleavage, pore
-  formation, cytokine release or the mode of cell death. Say 'ferroptosis-like / stress signature', never
-  'ferroptosis'; say 'depleted', never 'killed by pyroptosis'.
+- They cannot show protein, enzyme activity, drug efflux, lipid peroxidation, iron levels, caspase or gasdermin
+  cleavage, pore formation, cytokine release or the mode of cell death. Say 'ferroptosis-like / stress signature',
+  never 'ferroptosis'; say 'depleted', never 'killed by pyroptosis'; say 'spared, consistent with efflux', never
+  'resistant through efflux'.
 - Fewer cells after 24 h = slower growth or death; the two cannot be told apart.
 - Lines that do not express a gene still read it from ambient RNA (the pooled RNA of all lines in the well): here
   <AF> of the gene's pooled level, measured on the MTAP-null lines. For a gene that only a few lines express, those
@@ -2780,7 +3003,8 @@ PANEL_RULEBOOK = """## Rules for interpreting (learned on this dataset; follow t
    (expected_at_24h). Robust at 24 h: DNA damage -> p53 targets; proteasome inhibitors -> proteasome, heat-shock and
    HMOX1 genes; HSP90 inhibitor -> heat shock; ciclopirox -> TFRC; antimitotics -> G2/M; dinaciclib -> transcription
    drop. Uncertain at 24 h or at <= 5 uM: DNMT inhibitors (demethylation needs several divisions), dimethyl fumarate
-   and COX inhibitors (report only). Cytostatic drugs (BRAF/MEK, EGFR inhibitors) deplete lines only weakly at 24 h.
+   and COX inhibitors (report only), efflux-pump substrates sparing the pump-high lines (few such lines, little
+   killing at 24 h). Cytostatic drugs (BRAF/MEK, EGFR inhibitors) deplete lines only weakly at 24 h.
    A robust control that is absent lowers trust; an uncertain one that is absent says nothing about the method.
 7. mRNA after 24 h only: no claims about protein, function or causality. Label hypotheses as hypotheses.
 8. Every number in your report must come from a query you ran on the files; name the file it came from.
@@ -2812,11 +3036,12 @@ and running the look-up commands named in brief.md is allowed). Your job is fini
 follows brief.md; a precise, well-checked report matters more than a long one."""
 
 PANEL_SYNTH = """Read every report in this folder (all *.md files except 00_overview.md) and write 00_overview.md: a
-single overview of what Tahoe-100M shows about the gene panel (ferroptosis, pyroptosis, p53, NAPEPLD and TRIM72) and
-how it connects to MTAP and Gankyrin (the crosslinks report; the earlier MTAP / Gankyrin analysis of these data was
-inconclusive). Start with the top findings per pathway (each with its
+single overview of what Tahoe-100M shows about the gene panel (ferroptosis, pyroptosis, p53, NAPEPLD and TRIM72, and
+the drug efflux pumps ABCB1 and ABCG2) and how it connects to MTAP and Gankyrin (the crosslinks report; the earlier
+MTAP / Gankyrin analysis of these data was inconclusive). Start with the top findings per pathway (each with its
 numbers and which report it comes from), then where the reports agree or disagree, the main caveats (mRNA after 24 h
-only: no protein, lipid peroxidation, cleavage or death mode; genes that are not expressed or not testable), and a
+only: no protein, pump activity, lipid peroxidation, cleavage or death mode; genes that are not expressed or not
+testable), and a
 ranked list of the 10 best leads to test experimentally (drug, dose, cell line, readout). At most ~1,500 words, plain
 language, Markdown. Do not invent numbers: use only what the reports state. Run unattended; never ask questions."""
 
@@ -2889,6 +3114,28 @@ not report anandamide levels. TRIM72 and insulin / IRS1 / PI3K-AKT drugs: the li
 raises TRIM72 strongly, ambient RNA lifts the low-expressing lines with it, so the count of lines up is not evidence
 of breadth; TRIM72 reads in carcinoma lines may also come from a non-canonical transcript: confirm MG53 protein before
 claiming induction. Keep the report short if the data say little.""",
+    "efflux": """
+ABCB1 (MDR1, P-glycoprotein) and ABCG2 (BCRP) pump drugs out of cells. Which lines express them (expression_by_line.csv,
+gene_roles.csv)? Both are off in most carcinoma lines and high in a few, often by lineage, so name the lines that
+carry each pump; a change in a line that only reads ambient RNA is not real. The main question: do the pump-high
+lines keep more of their cells after the pump's known substrates? efflux_high_lines_growth.csv compares the pump-high
+lines (the group rule is in efflux_substrate_test.csv) with the other lines in the same wells for every drug-dose
+(z_spared > 0 = the pump-high lines kept more of their cells; known_substrate marks the substrates).
+efflux_substrate_test.csv asks whether the active substrates (one dose per drug: the most depleting, from
+efflux_active_drugs.csv) are spared more than the other active drugs (auc > 0.5), by the group z and by the
+within-lineage level-vs-growth z (level_vs_growth.csv rho_within_lineage; lineage drives pump expression, so the raw
+rho mixes lineage with efflux). Substrates used here: ABCB1 - taxanes, vinca alkaloids, eribulin, anthracyclines,
+mitoxantrone, etoposide / teniposide, dactinomycin, colchicine, romidepsin; ABCG2 - mitoxantrone, topotecan,
+irinotecan / SN-38, methotrexate, flavopiridol. Kinase inhibitors are left out on purpose: many are substrates and
+inhibitors of these pumps at once. Expect a weak or absent signal: at 24 h most depletion is cytostatic, few lines
+are pump-high, doses are <= 5 uM where efflux can be saturated, and irinotecan is a prodrug (SN-38 is the real ABCG2
+substrate). Sparing of a pump-high group can also come from slower growth: check rho_partial_G2M in level_vs_growth.csv
+and whether non-substrates of the same mechanism spare the same lines. Which drugs change ABCB1 / ABCG2 mRNA
+(gene_drug_effects.csv)? Induction within 24 h is not expected to be common, and a rise in the low-expressing lines is
+usually ambient RNA following a toxic or transcription-drop well (check the flags and the pump-high lines only).
+mRNA and relative cell numbers after 24 h cannot show transporter activity, surface protein or drug levels: say
+'consistent with efflux', never 'efflux-resistant', and label hypotheses. Keep the report short if the data say
+little.""",
     "crosslinks": """
 How does the panel connect to MTAP and Gankyrin (PSMD10)<PRIOR>? These are hypotheses, read within lineage
 (crosslinks.csv: rho_within_lineage, p_bh). For context, the earlier MTAP / Gankyrin analysis of these data was
@@ -3094,7 +3341,7 @@ def step_angles(S):
     pyr = [g for g, p, _ in PANEL if p == "pyroptosis"]
     p53 = [g for g, p, _ in PANEL if p == "p53"]
     groups = {"ferroptosis": fer, "pyroptosis": pyr, "p53": p53, "napepld_trim72": ["NAPEPLD", "TRIM72"],
-              "crosslinks": ANCHORS}
+              "efflux": [g for g, p, _ in PANEL if p == "efflux"], "crosslinks": ANCHORS}
     added = [g for g in S.panel if g not in {x for x, _, _ in PANEL}]
     if added:
         groups["napepld_trim72"] = groups["napepld_trim72"] + added
@@ -3161,7 +3408,7 @@ def angle_files(S, name, folder, genes):
     if hasattr(S, "coreg") and len(S.coreg):
         put(S.coreg[S.coreg["gene"].isin(gset)], "coregulation_top_partners.csv",
             "top co-regulated genes / programs across drug wells (rank < 0: most negative; low-count genes left out), "
-            "raw and after removing the first principal component (see ../../results/summary.txt section 8 for what "
+            "raw and after removing the first principal component (see ../../results/summary.txt section 9 for what "
             "it loads on)")
     if hasattr(S, "ccs"):
         put(S.ccs[S.ccs["gene"].isin(gset)], "cell_cycle_summary.csv",
@@ -3169,7 +3416,7 @@ def angle_files(S, name, folder, genes):
     pw = os.path.join(S.R, "pathway_scores_by_dose.csv")
     sc = {"ferroptosis": ["FERRO_MARKERS", "NRF2", "ISR", "UPR", "HEAT_SHOCK"],
           "pyroptosis": ["INFLAMMASOME", "IFN", "NFKB"], "p53": ["P53_ACTIVITY", "ISR"],
-          "napepld_trim72": [], "crosslinks": ["P53_ACTIVITY", "NRF2", "PROTEASOME"]}[name]
+          "napepld_trim72": [], "efflux": [], "crosslinks": ["P53_ACTIVITY", "NRF2", "PROTEASOME"]}[name]
     if sc and os.path.exists(pw):
         t = pd.read_csv(pw)
         put(t[t["score"].isin(sc)], "pathway_scores_by_dose.csv",
@@ -3210,6 +3457,17 @@ def angle_files(S, name, folder, genes):
                                                     "non-toxic all-line P53_ACTIVITY)"),
                         ("p53_wt_selective_growth.csv", "drugs that deplete TP53-WT lines more than TP53-altered lines")):
             put_file(os.path.join(S.R, f), f, desc)
+    if name == "efflux":
+        put(getattr(S, "efflux_res", None), "efflux_high_lines_growth.csv",
+            "per pump and drug-dose: relative cell numbers of the pump-high lines vs the other lines in the same "
+            "wells (extra_log2_abundance_of_high > 0 and z_spared > 0 = the pump-high lines kept more of their "
+            "cells), known_substrate, FDR, z at every dose")
+        put(getattr(S, "efflux_test", None), "efflux_substrate_test.csv",
+            "per pump: are the known substrates spared more than the other active drugs (auc = P(substrate > other), "
+            "> 0.5 = yes), by the group z and by the within-lineage level-vs-growth z")
+        put(getattr(S, "efflux_drugs", None), "efflux_active_drugs.csv",
+            "the active drug-doses (all cells fell) used in the test, one per drug: known_substrate, cell loss, "
+            "z_spared, level-vs-growth rho_within_lineage")
     if name == "crosslinks":
         xdesc = ("reproducibility vs the earlier run, biology links (hypotheses: Gankyrin vs p53 / NRF2 within "
                  "lineage, CDKN2A deletion / MTAP-null vs p53, MTAP-null vs ferroptosis genes; p_bh), drugs in both "
@@ -3374,13 +3632,27 @@ level_vs_growth.csv               Long: gene, drug, conc, rho (Spearman across l
                                   for lines with < 20 DMSO counts). Gene NRF2_basal_score = basal NRF2 target activity
                                   (DMSO; NFE2L2 mRNA does not report NRF2 activity).
 level_vs_growth_top.csv           The 5 strongest 'depleted more' and 2 'spared' drug-doses per gene, sorted by fdr.
+efflux_high_lines_growth.csv      Per efflux pump (ABCB1, ABCG2) and drug-dose: the pump-high lines (high_lines; the
+                                  lines above ambient when a minority, else the top quarter by untreated level) vs the
+                                  other lines in the same wells. extra_log2_abundance_of_high and z_spared > 0 = the
+                                  pump-high lines kept more of their cells (spared); known_substrate; fdr_spared,
+                                  fdr_depleted, fdr_drug_spared, z_by_dose, all_cells_log2_vs_plate, flags. Relative
+                                  cell numbers only: no transporter activity.
+efflux_substrate_test.csv         Per pump: do the known substrates (EFFLUX: ABCB1 - taxanes, vinca alkaloids,
+                                  anthracyclines, etoposide, ...; ABCG2 - mitoxantrone, topotecan, irinotecan/SN-38,
+                                  methotrexate) spare the pump-high lines more than the other active drugs, by the
+                                  group z (z_spared) and the within-lineage level-vs-growth z? auc = P(substrate >
+                                  other), > 0.5 = yes; p, median z of each group, the substrates and the reading.
+efflux_active_drugs.csv           The active drug-doses used in the test, one per drug (all cells <= -0.5 log2 vs the
+                                  plate, most depleting): known_substrate, cell loss, z_spared, fdr_spared,
+                                  level-vs-growth rho_within_lineage / z_within_lineage, flags.
 cell_cycle_by_line.csv            Untreated (DMSO) cells, per line and gene: log2 level in G2M-high vs G2M-low quartile
                                   cells (and S), cell-level Spearman with the G2M and S scores (normalised by counts
                                   outside the cycle genes), expressed.
 cell_cycle_summary.csv            Per gene: medians over the expressing lines, lines higher in G2M cells.
 coregulation_matrix.csv           Pearson r across drug wells of the corrected per-well shifts (W2) of every gene,
                                   score and module (low-count genes left out); coregulation_matrix_minus_pc1.csv: after
-                                  removing the first principal component (summary.txt section 8: what it loads on).
+                                  removing the first principal component (summary.txt section 9: what it loads on).
 coregulation_top_partners.csv     Per panel gene and anchor: top 10 partners (rank 1-10) and most negative (rank -1..-3),
                                   raw r and after removing PC1 (scores containing the gene left out).
 crosslinks.csv                    category (reproducibility / biology / shared top drugs), comparison, n, statistic,
@@ -3497,6 +3769,7 @@ def cmd_analyze(args):
         S.attempt("TP53-WT selective growth", lambda: step_p53_growth(S))
         S.attempt("loss screens", lambda: step_loss(S))
         S.attempt("level vs growth", lambda: step_levels(S))
+        S.attempt("drug efflux", lambda: step_efflux(S))
     log("Cell cycle (DMSO cells) ...")
     S.attempt("cell cycle", lambda: step_cell_cycle(S))
     log("Co-regulation, cross-links, positive controls ...")
@@ -3567,8 +3840,11 @@ def cmd_check(args):
                                           if g in sym and g not in ANCHORS]
         gm2 = T.read_tables(idx["gene"], ["token_id", "gene_symbol", "ensembl_id"])
         _t, cols, _l, report = T.build_columns(gm2, list(dict.fromkeys(targets[len(ANCHORS):])))
-        prob = mixed_gene_list_problem(args.out, report, cols)
-        say(prob is None, "no earlier extraction with another gene list in --out" if prob is None else prob)
+        gained = older_list_cells(args.out, report)
+        prob = None if gained else mixed_gene_list_problem(args.out, report, cols)
+        say(prob is None, f"the per-cell files in --out predate {', '.join(gained)}: 'extract' / 'all' extracts every "
+                          "file again" if gained else
+            "no earlier extraction with another gene list in --out" if prob is None else prob)
     if idx["cell_line"]:
         cl = T.read_tables(idx["cell_line"])
         if {"Cell_ID_Cellosaur", "Driver_Gene_Symbol"} <= set(cl.columns):
@@ -3656,6 +3932,8 @@ BUNDLE = [("results/summary.txt", None), ("results/README_columns.txt", None), (
           ("results/p53_wt_selective_growth.csv", 300), ("results/MTAP_null_selective_drugs.csv", 300),
           ("results/loss_groups.csv", None), ("results/loss_screens.csv", 3000),
           ("results/reexpression_in_silenced_lines.csv", 1500), ("results/level_vs_growth_top.csv", None),
+          ("results/efflux_high_lines_growth.csv", 400), ("results/efflux_substrate_test.csv", None),
+          ("results/efflux_active_drugs.csv", None),
           ("results/cell_cycle_summary.csv", None), ("results/coregulation_top_partners.csv", None),
           ("results/context_genes_top.csv", None), ("results/well_position_effects.csv", None),
           ("results/plate_dmso_offsets.csv", None), ("results/excluded_failed_wells.csv", None),

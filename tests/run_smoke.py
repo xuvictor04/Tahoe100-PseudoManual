@@ -782,10 +782,12 @@ def stage_panel(ctx):
                                     "MTAP_null_selective_drugs.csv", "loss_groups.csv", "loss_screens.csv",
                                     "reexpression_in_silenced_lines.csv", "level_vs_growth.csv",
                                     "cell_cycle_by_line.csv", "coregulation_matrix.csv", "crosslinks.csv",
+                                    "efflux_high_lines_growth.csv", "efflux_substrate_test.csv",
+                                    "efflux_active_drugs.csv",
                                     "well_position_effects.csv", "plate_dmso_offsets.csv", "CHAC1_drug_summary.csv",
                                     "PSMD10_drug_effects_by_dose.csv")] + [os.path.join(out, "gene_panel_bundle.zip")])
     ang = os.path.join(out, "angles")
-    angles = ["ferroptosis", "pyroptosis", "p53", "napepld_trim72", "crosslinks"]
+    angles = ["ferroptosis", "pyroptosis", "p53", "napepld_trim72", "efflux", "crosslinks"]
     if txt is not None:
         bad = [x.strip() for x in txt.splitlines() if "WARNING:" in x and " failed:" in x]
         ctx.record("all: every analysis step ran (no 'WARNING: ... failed')", not bad, "; ".join(bad)[:1500] or
@@ -901,6 +903,44 @@ def stage_panel(ctx):
             t = csv("MTAP_null_selective_drugs.csv").sort_values("z_selective")
             return "Pemetrexed" in top_k(t["drug"], 3), f"top: {fmt_top(t, ['drug', 'conc', 'z_selective'], 3)}"
         ctx.check("MTAP_null_selective_drugs: Pemetrexed in the top 3", pemetrexed)
+
+        def efflux_expression():
+            t = csv("expression_by_line.csv")
+            pg = csv("panel_genes.csv").set_index("gene")
+            out, ok = [], True
+            for gene, group in (("ABCB1", "abcb1_high"), ("ABCG2", "abcg2_high")):
+                got = set(t.loc[(t["gene"] == gene) & t["expressed"].astype(bool), "cell_line_id"].astype(str))
+                want = set(gt["group_ids"].get(group, []))
+                ok &= got == want and str(pg.at[gene, "status"]) == "testable"
+                out.append(f"{gene} expressed in {sorted(got)} (planted {sorted(want)}); status {pg.at[gene, 'status']}")
+            return ok, "; ".join(out)
+        ctx.check("efflux: ABCB1 / ABCG2 expressed (above ambient) only in the planted pump-high lines, both testable",
+                  efflux_expression)
+
+        def efflux_group():
+            # the pump-high group the screen built must be exactly the planted high lines (only expression is
+            # planted, no growth effect, so z_spared is not checked)
+            t = csv("efflux_high_lines_growth.csv")
+            name = {l["cell_line_id"]: l["cell_name"] for l in gt["lines"]}
+            out, ok = [], True
+            for gene, group in (("ABCB1", "abcb1_high"), ("ABCG2", "abcg2_high")):
+                r = t[t["pump"] == gene]
+                got = set(str(r["high_lines"].iloc[0]).split(", ")) if len(r) else set()
+                want = {name[i] for i in gt["group_ids"][group]}
+                ok &= got == want and len(r) > 0
+                out.append(f"{gene}: high group {sorted(got)} (planted {sorted(want)})")
+            return ok, "; ".join(out)
+        ctx.check("efflux: the screen's pump-high group == the planted ABCB1 / ABCG2 high lines", efflux_group)
+
+        def efflux_test_ran():
+            t = csv("efflux_substrate_test.csv")
+            pumps = set(t["pump"]) if len(t) else set()
+            d = csv("efflux_active_drugs.csv")
+            # the growth screen ran for both pumps and the substrate test produced rows (no planted sparing, so the
+            # AUC is not asserted); the active-drug table lists drug-doses that depleted cells
+            return {"ABCB1", "ABCG2"} <= pumps and len(d) > 0, \
+                f"substrate test pumps {sorted(pumps)}; active drug-doses {len(d)}"
+        ctx.check("efflux: the substrate test and active-drug table are produced for both pumps", efflux_test_ran)
 
         def bortezomib():
             t = csv("drug_context_by_dose.csv")
@@ -1022,11 +1062,11 @@ def stage_panel(ctx):
         def sections():
             with open(os.path.join(R, "summary.txt"), encoding="utf-8") as fh:
                 lines = fh.read().splitlines()
-            missing = [k for k in range(1, 10) if not any(x.startswith(f"{k}. ") for x in lines)]
+            missing = [k for k in range(1, 11) if not any(x.startswith(f"{k}. ") for x in lines)]
             return not missing and "Steps that failed: none" in lines, \
-                (f"missing sections {missing}" if missing else "sections 1-9 present") + \
+                (f"missing sections {missing}" if missing else "sections 1-10 present") + \
                 ("" if "Steps that failed: none" in lines else "; some steps failed")
-        ctx.check("summary.txt has sections 1-9 and no failed step", sections)
+        ctx.check("summary.txt has sections 1-10 and no failed step", sections)
 
         def briefs():
             miss = [a for a in angles if not os.path.exists(os.path.join(ang, a, "brief.md"))]

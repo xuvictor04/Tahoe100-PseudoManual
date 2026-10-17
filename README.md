@@ -15,8 +15,8 @@ the ~96M cells are not read again). Two runs are current:
    data package per angle (genes, drugs, classes, cell lines, biomarkers, programs, cell state, ...), followed by one
    Claude agent per angle that does the actual analysis and writes a report.
 2. **The gene panel** (`tahoe_gene_panel.py`): the MTAP/Gankyrin method, already run on the real data, applied to the
-   ferroptosis, pyroptosis and p53 genes plus NAPEPLD (NAPE-PLD) and TRIM72 (MG53), with cross-links back to MTAP and
-   Gankyrin; optionally one agent per pathway.
+   ferroptosis, pyroptosis and p53 genes plus NAPEPLD (NAPE-PLD), TRIM72 (MG53) and the drug efflux pumps ABCB1
+   (MDR1) and ABCG2 (BCRP), with cross-links back to MTAP and Gankyrin; optionally one agent per pathway.
 
 ## Quick start (Linux / macOS)
 
@@ -86,7 +86,7 @@ For the agents also `claude-agent-sdk` and an Anthropic API key.
 | `02_find_mtap_gankyrin.py` | Searches every metadata table for MTAP / PSMD10 / Gankyrin and pulls both genes' raw (uncorrected) DE tests into `mtap_search/`. | minutes |
 | `tahoe_mtap_gankyrin.py` | The MTAP / Gankyrin trial with all artifact corrections (`mtap_gankyrin/results/`). Also the library the atlas and the panel import: keep the current copy next to them. | ~1 hour |
 | `tahoe_atlas.py` | **Every angle of the whole dataset** (all genes, drugs, doses, cell lines), one data package per angle, and a Claude agent per angle that writes a report. | see below |
-| `tahoe_gene_panel.py` | **The gene panel**: ferroptosis, pyroptosis, p53, NAPEPLD, TRIM72, on the MTAP/Gankyrin method. | ~1 h + minutes |
+| `tahoe_gene_panel.py` | **The gene panel**: ferroptosis, pyroptosis, p53, NAPEPLD, TRIM72, ABCB1/ABCG2, on the MTAP/Gankyrin method. | ~1 h + minutes |
 | `old_drug_effect_uncorrected.py` | Superseded. Reproduces the original uncorrected drug lists, for comparison only. | minutes |
 | `tahoe` | The one-line commands of the Quick start (Linux / macOS): status, run, log, bundle, agents, stop, setup, ... (`tahoe help`). | seconds |
 | `tahoe_status.py` | What `tahoe status` prints: reads the logs, the job files in `<data>/.tahoe`, the process list and the method version each output records; decides what `tahoe run` redoes. | seconds |
@@ -390,13 +390,18 @@ rules match command text: they are guard rails, not a security boundary. No web 
 `sudo apt-get install -y bubblewrap socat`, macOS has it built in, Windows does not support it (`check` warns and
 `agents` stops with a message).
 
-## 2. The gene panel: ferroptosis, pyroptosis, p53, NAPEPLD, TRIM72
+## 2. The gene panel: ferroptosis, pyroptosis, p53, NAPEPLD, TRIM72, ABCB1/ABCG2
 
 `tahoe_gene_panel.py` applies the MTAP/Gankyrin method to your gene list:
 - **Ferroptosis (13):** PTGS2, CHAC1, SLC7A11, GPX4, ACSL4, LPCAT3, AIFM2 (FSP1), NFE2L2, HMOX1, TFRC, FTH1, FTL, NCOA4.
 - **Pyroptosis (11):** GSDMD, GSDME, NLRP3, AIM2, PYCARD (ASC), CASP1, CASP4, CASP5, CASP3, IL1B, IL18.
 - **p53 (11):** TP53, CDKN1A (p21), MDM2, BBC3 (PUMA), PMAIP1 (NOXA), BAX, GADD45A, SESN1, SESN2, FDXR, ZMAT3.
 - **Additional:** NAPEPLD (NAPE-PLD) and TRIM72 (MG53).
+- **Drug efflux (2):** ABCB1 (MDR1, P-glycoprotein) and ABCG2 (BCRP). Both are off in most carcinoma lines and
+  high in a few; the `efflux` angle asks which lines express each pump and whether its known substrates (taxanes,
+  vinca alkaloids, anthracyclines for ABCB1; mitoxantrone, topotecan, irinotecan, methotrexate for ABCG2) deplete
+  the pump-high lines less than the other lines in the same wells. mRNA and 24-h cell numbers cannot show transporter
+  activity, so a sparing pattern is "consistent with efflux", not proof of it.
 
 It extracts MTAP, PSMD10 (Gankyrin), CDKN2A and CDKN2B again for the cross-links, and 73 context genes (more p53
 targets, NRF2, ATF4/ISR, UPR, heat shock, interferon, NF-kB) that tell a specific response from a general stress
@@ -419,7 +424,10 @@ C:\tahoe\.venv\Scripts\python.exe tahoe_gene_panel.py all       # leave the wind
 ```
 The trial gets its own folder so that its results, briefs and bundle never mix with the full run's; it reads only the
 first files, so its cross-links to the earlier run differ by design (look at `panel_trial/results/summary.txt`, then
-delete the folder). The agent briefs are written by `analyze`: they name the Python and the scripts that ran it,
+delete the folder). When a repo update adds genes to the built-in panel (ABCB1 and ABCG2 were added after the first
+release), an extract made before them is out of date: `extract`/`all` deletes the old per-cell files and reads the
+cells again, and `tahoe status` shows the panel as `done, but outdated (new genes in the panel)` with `tahoe run`
+redoing it. The agent briefs are written by `analyze`: they name the Python and the scripts that ran it,
 and they offer genome-wide look-ups (`tahoe_atlas.py lookup`) only if the atlas is already computed in
 `<data>/atlas`. If the atlas comes later, or is computed again, rerun `python3 tahoe_gene_panel.py analyze`
 (minutes) before the panel's agents: then the panel also takes the atlas's composition shift and plate factors
@@ -429,7 +437,7 @@ and they offer genome-wide look-ups (`tahoe_atlas.py lookup`) only if the atlas 
 |---|---|---|
 | `extract` | One pass over all cells: per-cell counts of the panel, anchor and context genes plus the S/G2M/proteasome modules (`gene_panel/cells/`, ~2.5 GB; resumable). | ~1 h, like the MTAP/Gankyrin extract (longer from a hard drive); up to ~3 GB memory per worker + ~1 GB for the main process |
 | `analyze` | Corrected drug effects per gene, pathway scores, the p53 screens, loss and level screens, cell cycle, co-regulation, cross-links, positive controls, `summary.txt`, the agent briefs, and the bundle. | a few minutes (~2-4 GB memory) |
-| `agents` | One Claude agent per pathway (ferroptosis, pyroptosis, p53, napepld_trim72, crosslinks) plus an overview. | ~20-45 min |
+| `agents` | One Claude agent per pathway (ferroptosis, pyroptosis, p53, napepld_trim72, efflux, crosslinks) plus an overview. | ~20-45 min |
 
 What `analyze` does (all with the corrections above; `gene_panel/results/README_columns.txt` explains every file; a
 rerun of `analyze` moves the earlier results to `gene_panel/results/previous_run/`):
@@ -475,6 +483,12 @@ rerun of `analyze` moves the earlier results to `gene_panel/results/previous_run
   - drugs significant (drug-level FDR < 0.10) for MTAP / PSMD10 and for a panel gene, with the number expected
     among drugs of the same activity (strong drugs are in every list). Without an earlier run these are this run's
     MTAP / PSMD10 lists: the same wells, so no reproducibility claim.
+- **Drug efflux** (`efflux_high_lines_growth.csv`, `efflux_substrate_test.csv`, `efflux_active_drugs.csv`, summary
+  section 8). For ABCB1 and ABCG2 the analysis names the pump-high lines (those above ambient when a minority, else
+  the top quarter by level) and tests whether the pump's known substrates deplete them less than the other lines in
+  the same wells (`z_spared` > 0), and less than non-substrate drugs of similar potency (`auc` > 0.5), by the group
+  screen and the within-lineage level-vs-growth test. At 24 h, with few pump-high lines and mostly cytostatic
+  depletion, expect a weak or absent signal; mRNA and cell numbers cannot show transporter activity.
 - **Positive controls** (`positive_controls.csv`, summary section 3). Each expected effect is listed with its
   verdict and whether it is expected at 24 h (`expected_at_24h`):
   - robust: DNA damage -> p53 targets (more in TP53-wild-type lines); proteasome inhibitors -> proteasome and

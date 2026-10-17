@@ -23,6 +23,9 @@ plate (plate6), an unreliable mixed-dose plate13 whose wells carry other drugs' 
 taking turns in the same two wells (B11/B12), a strong drug's 5 uM well among the position donors of an inert drug
 (enough clean donors), a reference drug in H10 of every plate (no other drug there: position not
 correctable), a composition-shift drug, a plate-row cell loss and a low-dose-only cell loss.
+The efflux pumps ABCB1 / ABCG2 are expressed in a few lines each (emitted as extra output columns from a separate
+random stream, so the other genes and all cell numbers are byte-identical to a run without them; only expression,
+not a growth effect, is planted).
 Self-contained: the real metadata rows it needs are in tahoe_meta_snapshot.py next to this file.
 Deterministic for a given --seed. Needs numpy and pyarrow only.
 """
@@ -50,6 +53,9 @@ import tahoe_meta_snapshot as SNAP  # noqa: E402
 PANEL = ("PTGS2 CHAC1 SLC7A11 GPX4 ACSL4 LPCAT3 AIFM2 NFE2L2 HMOX1 TFRC FTH1 FTL NCOA4 GSDMD GSDME NLRP3 AIM2 "
          "PYCARD CASP1 CASP4 CASP5 CASP3 IL1B IL18 TP53 CDKN1A MDM2 BBC3 PMAIP1 BAX GADD45A SESN1 SESN2 FDXR ZMAT3 "
          "NAPEPLD TRIM72").split()
+# ABCB1 (MDR1) and ABCG2 (BCRP): generated as additive side-columns (EFFLUX_PANEL below), so the main genes and all
+# cell numbers stay byte-identical to a run without them; only expression (not a growth effect) is planted
+EFFLUX_PANEL = ["ABCB1", "ABCG2"]
 ANCHORS = ["MTAP", "PSMD10", "CDKN2A", "CDKN2B"]
 CONTEXT = {
     "P53_EXT": "TP53I3 RRM2B AEN DDB2 XPC TNFRSF10B PHLDA3 SPATA18 TRIAP1 RPS27L ACER2 TP53INP1 PLK3 POLH EDA2R "
@@ -111,6 +117,12 @@ MTAP_NULL = ["A549", "MCF-7", "PANC-1", "MIA PaCa-2", "BxPC-3"]
 GSDME_SILENCED = ["MCF-7", "HT-29", "SW480", "LoVo", "BT-474"]
 CASP1_ABSENT = ["A549", "HT-29", "PANC-1", "NCI-H1299", "BT-474", "DLD-1"]
 IL1B_EXPRESSING = ["HS-578T", "Calu-1"]
+# drug efflux pumps (ABCB1 / ABCG2): off in most carcinoma lines, high in a few. Expression only is planted (a
+# growth effect would change cell numbers and the per-plate random stream; the pumps are side-columns, see
+# Design.efflux_counts). The pump-high lines read ~PUMP_HIGH_CPM, every other line only ambient (~PUMP_AMBIENT_CPM).
+ABCB1_HIGH = ["HCT116", "LoVo", "SW480"]
+ABCG2_HIGH = ["NCI-H460", "A549", "MIA PaCa-2"]
+PUMP_HIGH_CPM, PUMP_HIGH_SD, PUMP_AMBIENT_CPM = 1600.0, 0.3, 15.0
 
 # ----------------------------------------------------------------------------- drugs
 PLANTED_DRUGS = ["Doxorubicin (hydrochloride)", "Topotecan (hydrochloride)", "5-Fluorouracil", "Dimethyl fumarate",
@@ -260,22 +272,35 @@ class Design:
         self.gsdme_sil = [n for n in GSDME_SILENCED if n in names]
         self.casp1_abs = [n for n in CASP1_ABSENT if n in names]
         self.il1b_expr = [n for n in IL1B_EXPRESSING if n in names]
+        self.abcb1_high = [n for n in ABCB1_HIGH if n in names]
+        self.abcg2_high = [n for n in ABCG2_HIGH if n in names]
         d = np.array([LINE_DESIGN[n] for n in names])
         self.abund, self.libf, self.psmd10, self.acsl4, self.g2m_frac = (d[:, i] for i in range(5))
         self.abund = self.abund / 1.15                    # an average line gets ~0.7 x --cells per well
         self.s_frac = 0.8 * self.g2m_frac + 0.05
-        # ---- genes
-        named = [g for g, _ in SNAP.NAMED_GENES]
+        # ---- genes. The efflux pumps are kept OUT of the main gene set so that every main-stream draw (baseline,
+        # effects, per-plate simulation) is byte-identical to a run without them; they are emitted as extra output
+        # columns from a separate stream (efflux_counts), appended after the SYNTH fillers.
+        ens_of = dict(SNAP.NAMED_GENES)
+        self.efflux = [g for g in EFFLUX_PANEL if g in ens_of]
+        named = [g for g, _ in SNAP.NAMED_GENES if g not in self.efflux]
         n_fill = args.genes - len(named)
         need = 127 + COLOC_DOWN[0] + COLOC_UP[0] + COMP_N + 30     # the SYNTH sets below + the largest private one
         if n_fill < need:
             sys.exit(f"--genes must be at least {len(named) + need} (named genes: {len(named)})")
         self.genes = named + [f"SYNTH{i:04d}" for i in range(1, n_fill + 1)]
-        self.ens = [e for _, e in SNAP.NAMED_GENES] + [f"ENSG9{i:010d}" for i in range(1, n_fill + 1)]
+        self.ens = [ens_of[g] for g in named] + [f"ENSG9{i:010d}" for i in range(1, n_fill + 1)]
         self.G = len(self.genes)
         self.tokens = np.arange(3, 3 + self.G, dtype=np.int64)   # compact token ids, from 3 as in the real data
         self.gi = {g: i for i, g in enumerate(self.genes)}
         self.synth = np.arange(len(named), self.G)
+        # output gene list = main genes + the efflux side-columns (their token ids continue the main range)
+        self.out_genes = self.genes + self.efflux
+        self.out_ens = self.ens + [ens_of[g] for g in self.efflux]
+        self.out_tokens = np.arange(3, 3 + len(self.out_genes), dtype=np.int64)
+        self.efflux_col = {g: self.G + k for k, g in enumerate(self.efflux)}
+        hi = {"ABCB1": set(self.abcb1_high), "ABCG2": set(self.abcg2_high)}
+        self.efflux_high_idx = {g: {names.index(n) for n in hi.get(g, set())} for g in self.efflux}
         syms = set(named)
         self.sets = {k: [g for g in v if g in syms] for k, v in CONTEXT.items()}
         self.sets["P53_ACTIVITY"] = [g for g in P53_ACTIVITY if g in syms]
@@ -449,6 +474,20 @@ class Design:
         self.cycle_s = np.array([gg in set(self.sets["S_PHASE"]) for gg in self.genes])
         self.cycle_g2m = np.array([gg in set(self.sets["G2M_PHASE"]) for gg in self.genes])
 
+    def efflux_counts(self, rng, line_of_cell, main_total):
+        """Per-cell counts of the efflux side-columns (ABCB1, ABCG2), drawn from a separate stream so the main genes
+        are untouched: the pump-high lines read ~PUMP_HIGH_CPM of their library, every other line only ambient
+        (~PUMP_AMBIENT_CPM). Returns an (n, len(self.efflux)) int array of extra counts (output columns efflux_col)."""
+        n = len(line_of_cell)
+        out = np.zeros((n, len(self.efflux)), dtype=np.float32)
+        total = np.asarray(main_total, dtype=np.float64)
+        for k, gene in enumerate(self.efflux):
+            high = np.isin(line_of_cell, list(self.efflux_high_idx.get(gene, set())))
+            spread = np.exp(PUMP_HIGH_SD * rng.standard_normal(n))
+            cpm = np.where(high, PUMP_HIGH_CPM * spread, PUMP_AMBIENT_CPM)
+            out[:, k] = rng.poisson(np.maximum(cpm / 1e6 * total, 0.0))
+        return out
+
     # ------------------------------------------------------------------ drug effects (top dose; log2)
     def effects(self, rng):
         L, G, D = self.L, self.G, len(self.drugs)
@@ -593,6 +632,7 @@ def simulate_plate(ds, p, de_cols):
     """Returns per-cell CSR (in output order) + per-cell metadata + per (well, line) sums."""
     args = ds.args
     rng = np.random.default_rng([args.seed, 100 + p])
+    effrng = np.random.default_rng([args.seed, 850 + p])   # efflux side-columns: a separate stream (main untouched)
     L, G = ds.L, ds.G
     plate = ds.plate_names[p]
     lay = ds.layout[p]
@@ -669,9 +709,13 @@ def simulate_plate(ds, p, de_cols):
         perm = rng.permutation(n)                             # cells in barcode order, lines shuffled
         C = C[perm]
         line_of_cell = line_of_cell[perm]
-        rr, cc = np.nonzero(C)
+        if ds.efflux:                                         # append the efflux side-columns (separate stream)
+            Cout = np.concatenate([C, ds.efflux_counts(effrng, line_of_cell, C.sum(axis=1))], axis=1)
+        else:
+            Cout = C
+        rr, cc = np.nonzero(Cout)
         csr_ind.append(cc.astype(np.int32))
-        csr_val.append(C[rr, cc])
+        csr_val.append(Cout[rr, cc])
         nnz.append(np.bincount(rr, minlength=n))
         cell_line.append(line_of_cell)
         cell_slot.append(np.full(n, slot, dtype=np.int32))
@@ -728,7 +772,7 @@ def write_plate_files(ds, res, p, tmpdir, file_no):
     c = res["cells"]
     order = c["order"]
     paths = []
-    tok = ds.tokens
+    tok = ds.out_tokens                       # main genes + the efflux side-columns
     drug_of_slot = res["by_slot"]
     meta = {}
     for slot, drug in drug_of_slot.items():
@@ -877,8 +921,8 @@ def write_metadata(ds, results, outdir, de_genes):
     t = {c: pa.array([r[c] for r in ds.drug_rows], pa.float64() if c == "pubchem_cid" else S) for c in dcols}
     pq.write_table(pa.table(t), os.path.join(md, "drug_metadata.parquet"))
     # genes
-    pq.write_table(pa.table({"gene_symbol": pa.array(ds.genes, S), "ensembl_id": pa.array(ds.ens, S),
-                             "token_id": pa.array(ds.tokens, pa.int64())}),
+    pq.write_table(pa.table({"gene_symbol": pa.array(ds.out_genes, S), "ensembl_id": pa.array(ds.out_ens, S),
+                             "token_id": pa.array(ds.out_tokens, pa.int64())}),
                    os.path.join(md, "gene_metadata.parquet"))
     # samples
     rng = np.random.default_rng([ds.args.seed, 7])
@@ -1029,10 +1073,12 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
         "lines": lines,
         "groups": {"tp53_wt": ds.tp53_wt, "tp53_altered": ds.tp53_alt, "tp53_deleted": ds.tp53_deleted,
                    "mtap_null": ds.mtap_null, "cdkn2a_deleted": ds.cdkn2a_del, "cdkn2b_deleted": ds.cdkn2b_del,
-                   "gsdme_silenced": ds.gsdme_sil, "casp1_absent": ds.casp1_abs, "il1b_expressing": ds.il1b_expr},
+                   "gsdme_silenced": ds.gsdme_sil, "casp1_absent": ds.casp1_abs, "il1b_expressing": ds.il1b_expr,
+                   "abcb1_high": ds.abcb1_high, "abcg2_high": ds.abcg2_high},
         "group_ids": {k: [ds.line_id[li[n]] for n in v] for k, v in {
             "tp53_wt": ds.tp53_wt, "mtap_null": ds.mtap_null, "gsdme_silenced": ds.gsdme_sil,
-            "casp1_absent": ds.casp1_abs, "il1b_expressing": ds.il1b_expr, "cdkn2a_deleted": ds.cdkn2a_del}.items()},
+            "casp1_absent": ds.casp1_abs, "il1b_expressing": ds.il1b_expr, "cdkn2a_deleted": ds.cdkn2a_del,
+            "abcb1_high": ds.abcb1_high, "abcg2_high": ds.abcg2_high}.items()},
         "drugs": ds.drugs,
         "gene_sets": {k: v for k, v in ds.sets.items()},
         "planted_drug_effects_top_dose": {
@@ -1077,6 +1123,8 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
                      "the ambient floor)",
             "MTAP": "0 in mtap_null lines (ambient only)", "CDKN2A|CDKN2B": "0 in deleted lines (ambient only)",
             "TP53": "0 in tp53_deleted lines (ambient only)",
+            "ABCB1": f"expressed (~{PUMP_HIGH_CPM:g} CPM) only in abcb1_high lines (side-column; others ambient only)",
+            "ABCG2": f"expressed (~{PUMP_HIGH_CPM:g} CPM) only in abcg2_high lines (side-column; others ambient only)",
             "ambient": "each cell gets 8-14% of its counts from the well-average profile",
         },
         "measured_expression": measured,
@@ -1124,7 +1172,8 @@ def main():
     tmp = os.path.join(out, "data", "_tmp")
     os.makedirs(tmp, exist_ok=True)
     ds = Design(args)
-    log(f"Design: {ds.P} plates + {UNRELIABLE_PLATE}, {len(ds.drugs)} drugs + DMSO, {ds.L} lines, {ds.G} genes")
+    log(f"Design: {ds.P} plates + {UNRELIABLE_PLATE}, {len(ds.drugs)} drugs + DMSO, {ds.L} lines, {ds.G} genes"
+        + (f" + {len(ds.efflux)} efflux side-columns ({', '.join(ds.efflux)})" if ds.efflux else ""))
     named_de = ANCHORS + [g for g in ds.sets["PROTEASOME"]] + PANEL + ds.sets["S_PHASE"][:10] + \
         ds.sets["G2M_PHASE"][:10]
     named_de = list(dict.fromkeys(named_de))

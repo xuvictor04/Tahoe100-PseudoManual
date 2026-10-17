@@ -535,13 +535,38 @@ class Ctx:
 
     def outdated(self, job):
         """True when finished output of `job` was made by an older method than the repo's script (the atlas: its
-        effects; the gene panel and the MTAP/Gankyrin trial: their analysis) and must be computed again."""
+        effects; the gene panel and the MTAP/Gankyrin trial: their analysis) and must be computed again. The gene
+        panel is also outdated when its extract predates the repo's built-in gene list (panel_list_outdated: new
+        genes were added, so 'all' extracts again)."""
         done = os.path.join(self.out[job], "effects", "complete.json") if job == "atlas" else \
             os.path.join(self.out[job], "results", "summary.txt")
         if not os.path.exists(done):
             return False
         have, want = self.version(job)
-        return want is not None and have != want
+        stale = want is not None and have != want
+        if job == "panel":
+            stale = stale or self.panel_list_outdated()
+        return stale
+
+    def panel_list_version(self):
+        """(the panel_list of the panel's extract, the PANEL_LIST the repo's tahoe_gene_panel.py defines); a part
+        None when unknown. An extract from before the constant existed reads as list 1."""
+        if "panel_list" not in self._ver:
+            m = re.search(r"^PANEL_LIST = (\d+)", read_text(os.path.join(REPO, "tahoe_gene_panel.py"), "") or "", re.M)
+            self._ver["panel_list"] = int(m.group(1)) if m else None
+        have = None
+        try:
+            with open(os.path.join(self.out["panel"], "extract_info.json"), encoding="utf-8") as fh:
+                have = int(json.load(fh).get("panel_list") or 1)
+        except (OSError, ValueError, AttributeError, TypeError):
+            pass
+        return have, self._ver["panel_list"]
+
+    def panel_list_outdated(self):
+        """True when the panel's extract was made with an older built-in gene list than the repo's (new genes were
+        added since: 'tahoe run' / 'tahoe panel' re-extracts and analyses again)."""
+        have, want = self.panel_list_version()
+        return have is not None and want is not None and have < want
 
     def atlas_outdated(self):
         return self.outdated("atlas")
@@ -698,6 +723,19 @@ def made_with(ctx, job, verb):
     """'computed with method v2 (now v3)' / 'analysed before method v3' for an outdated part."""
     have, want = ctx.version(job)
     return f"{verb} with method v{have} (now v{want})" if have else f"{verb} before method v{want}"
+
+
+def panel_list_added(ctx):
+    """What the newest built-in gene list added (PANEL_LIST_NOTE in tahoe_gene_panel.py), for the outdated message;
+    a plain fallback when the constant cannot be read."""
+    m = re.search(r'^PANEL_LIST_NOTE = "([^"\n]*)"', read_text(os.path.join(REPO, "tahoe_gene_panel.py"), "") or "",
+                  re.M)
+    return m.group(1) if m else "the genes it now adds"
+
+
+def panel_gene_list_outdated(ctx, job):
+    """The panel is outdated only because its extract predates the repo's genes (its method version is current)."""
+    return job == "panel" and ctx.panel_list_outdated() and ctx.version(job)[0] == ctx.version(job)[1]
 
 
 # ---- time estimates from the earlier runs in the same log (every run appends to it)
@@ -1003,7 +1041,10 @@ def extract_view(ctx, job):
             v["lines"] += panel_notes(ctx)
     if v["state"] in ("done", "partial", "none") and ctx.outdated(job):
         v["state"] = "outdated"
-        if job == "panel":
+        if panel_gene_list_outdated(ctx, job):
+            v["lines"].append(f"extracted with an older gene list (before {panel_list_added(ctx)}): "
+                              f"'{ctx.me} run' extracts the new genes and analyses again")
+        elif job == "panel":
             v["lines"].append(f"{made_with(ctx, job, 'analysed')}: '{ctx.me} run' "
                               + ("redoes its analysis (the extract is reused)" if extract_complete(ctx, job)
                                  else "runs it again"))
@@ -1368,6 +1409,8 @@ def extract_complete(ctx, job):
     if not isinstance(info, dict) or info.get("limit_files") or \
             not all(os.path.exists(os.path.join(o, f)) for f in ("well_line.parquet", "sample_map.csv")):
         return False
+    if job == "panel" and ctx.panel_list_outdated():     # the extract predates the repo's genes: 'all' re-extracts
+        return False
     now = expression_now(ctx)
     try:
         with open(os.path.join(o, "file_index.json"), encoding="utf-8") as fh:
@@ -1510,6 +1553,8 @@ def head_line(ctx, v, job):
     if s == "partial":
         return "partly done" + v.get("at", "").replace(" at ", ": finished at ", 1)
     if s == "outdated":
+        if panel_gene_list_outdated(ctx, job):
+            return "done, but outdated (new genes in the panel)"
         want = ctx.version(job)[1]
         return "done, but outdated" + (f" (method v{want})" if want else "")
     if s == "skipped":                  # (once what it waited for is fine again, that reason is history)
@@ -1698,10 +1743,12 @@ def next_step(ctx, V):
         return f"{me} setup   (one time: the Python environment the scripts run in)"
     plan = run_plan(ctx, V)
     old = [j for j in ("atlas", "panel") if st[j] == "outdated"]
-    if old:                             # e.g. after 'tahoe update' brought a new method: one command redoes it
-        want = max(ctx.version(j)[1] or 0 for j in old)
+    if old:                             # e.g. after 'tahoe update' brought a new method or new genes: one command
+        method = [j for j in old if not panel_gene_list_outdated(ctx, j)]   # redoes it
+        want = max((ctx.version(j)[1] or 0 for j in method), default=0)
+        why = f"method v{want}" if method else "new genes in the panel"
         fast = plan["atlas"] != ["compute"] and plan["panel"] != ["all"]
-        return f"{me} run   (method v{want}: {plan_words(plan) or 'what is out of date'}; " + \
+        return f"{me} run   ({why}: {plan_words(plan) or 'what is out of date'}; " + \
             ("minutes: the cells are not read again; " if fast else "") + "safe to log out)"
     if not ctx.ready("atlas"):
         cmd = f"{me} run" if not ctx.ready("panel") else f"{me} atlas"
