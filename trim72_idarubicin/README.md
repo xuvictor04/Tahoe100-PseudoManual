@@ -9,6 +9,8 @@ fold change as 2^−ΔΔCt). A negative pseudo-ΔΔCt means TRIM72 is higher und
 | `fetch_trim72_idarubicin.py` | Reads `metadata/pseudobulk_differential_expression` remotely from Hugging Face (parquet footers plus the row groups whose `drug` statistics match), keeps TRIM72 × Idarubicin (hydrochloride). No full download needed. |
 | `trim72_idarubicin_raw.csv` | All 200 rows as published (50 cell lines; 0.05 and 0.5 µM on one plate each, 5 µM on plates 6 and 14). |
 | `TRIM72_idarubicin.csv` | The same rows, trimmed to the useful columns, with `pseudo_ddCt`. |
+| `plot_fold_change.py` | Draws `TRIM72_idarubicin_5uM_fold_change.png` from `TRIM72_idarubicin.csv`. |
+| `TRIM72_idarubicin_5uM_fold_change.png` | Fold change at 5 µM per cell line and plate, with 95% CI (uncorrected, as published). |
 
     pip install fsspec aiohttp pyarrow pandas
     python3 fetch_trim72_idarubicin.py trim72_idarubicin_raw.csv    # ~10 min, 1,026 files
