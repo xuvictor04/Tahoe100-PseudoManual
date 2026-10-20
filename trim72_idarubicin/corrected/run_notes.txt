@@ -1,0 +1,8 @@
+drug: Idarubicin (hydrochloride)
+expressed threshold (CPM): 1.000
+median line CPM: 3.951; ambient CPM: 0.495 (af 0.098: median MTAP of the 6 MTAP-null lines / pooled MTAP = 0.098)
+status: testable
+plate factors: imported from the atlas (plate_scale.csv)
+excluded lines: 1
+5 uM wells: ['smp_2010', 'smp_2778']; used: ['smp_2010', 'smp_2778']
+calibration: {'drug_wells': 1301, 'drug_wells_with_z': 1301, 'pct_drug_wells_abs_z_gt_1.96': 7.840122982321292, 'pct_dmso_wells_abs_z_gt_1.96': 0.0, 'pct_drug_wells_abs_z_gt_3': 2.07532667179093, 'pct_drug_wells_abs_z_gt_1.96_unscaled': 10.29976940814758, 'pct_reliable_drug_wells_abs_z_gt_1.96': 7.705053852526926, 'wells_position_uncertain': 0, 'wells_position_not_correctable': 15, 'null_center': 0.009150519967079163, 'null_scale': 0.32079507970064874}
