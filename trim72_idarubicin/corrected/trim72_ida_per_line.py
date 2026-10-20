@@ -8,7 +8,7 @@ per well and averaged over the used wells, as the method's own per_line table do
 
     python3 trim72_ida_per_line.py --data DIR --outdir DIR
 """
-import argparse, os, sys
+import argparse, os, shutil, sys, tempfile
 
 import numpy as np
 import pandas as pd
@@ -23,7 +23,7 @@ GENE, DRUG_PAT = os.environ.get("GENE", "TRIM72"), os.environ.get("DRUG_PAT", "I
 
 def run(args, outdir):
     S = P.Run(args)
-    S.R = os.path.join(outdir, "panel_tables")        # the panel's side tables go here, not into gene_panel/results
+    S.R = tempfile.mkdtemp()      # the panel's side tables (not needed here) never touch gene_panel/results
     P.load(S)
     P.step_baseline(S)
     P.step_expression(S)
@@ -60,8 +60,12 @@ def run(args, outdir):
     g = u.groupby("cell_line_id")
     pl = g[["r2", "z_line"]].mean()                       # the method's per_line: mean over the used wells
     pl["n_wells"] = g.size()
-    for p_ in sorted(u["plate"].unique(), key=lambda s: (len(s), s)):
-        pl[f"log2FC_{p_}"] = u[u["plate"] == p_].set_index("cell_line_id")["r2"]
+    plates = sorted(u["plate"].unique(), key=lambda s: (len(s), s))
+    for p_ in plates:                                    # each replicate well alone, with the same per-line rule
+        w_ = u[u["plate"] == p_].set_index("cell_line_id")
+        pl[f"log2FC_{p_}"] = w_["r2"]
+        pl[f"up_{p_}"] = ((w_["z_line"] > T.Z_LINE) & (w_["r2"] > T.LFC_MIN)).reindex(pl.index)
+    pl["up_on_every_plate"] = pl[[f"up_{p_}" for p_ in plates]].eq(True).all(axis=1) & (pl["n_wells"] == len(plates))
     pl["log2FC_vs_DMSO_uncorrected"] = g["lfc_dmso"].mean()
     pl["up"] = (pl["z_line"] > T.Z_LINE) & (pl["r2"] > T.LFC_MIN)
     pl["down"] = (pl["z_line"] < -T.Z_LINE) & (pl["r2"] < -T.LFC_MIN)
@@ -83,6 +87,7 @@ def run(args, outdir):
                           "n_lines", "n_lines_up", "flags", "log2FC_vs_DMSO_uncorrected", "position_effect_removed",
                           "composition_shift_log2", "plates") if c in dd]].to_string(index=False))
     print(out.to_string())
+    shutil.rmtree(S.R, ignore_errors=True)
 
 
 if __name__ == "__main__":

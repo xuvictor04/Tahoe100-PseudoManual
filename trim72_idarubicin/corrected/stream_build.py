@@ -107,9 +107,11 @@ def plate_job(job):
                 if files[k] not in futs:
                     futs[files[k]] = pool.submit(download, rel_of[files[k]], files[k])
 
+        def dst_of(f):
+            return os.path.join(cells_dir, re.sub(r"[^\w.-]+", "__", os.path.relpath(f, root)))
+
         def finalize(f):
-            dst = os.path.join(cells_dir, re.sub(r"[^\w.-]+", "__", os.path.relpath(f, root)))
-            T._extract_one((f, dst))
+            T._extract_one((f, dst_of(f)))
             stub(f)
             state["n"] += 1
             if state["n"] % 25 == 0:
@@ -134,6 +136,10 @@ def plate_job(job):
         r = A._build_group((gid, name, files, G, pb, batch))
         if state["prev"] is not None:
             finalize(state["prev"])
+        for f in files:      # group reused after a crash between its write and the last extract: extract the rest
+            if not os.path.exists(dst_of(f)):
+                download(rel_of[f], f)
+                finalize(f)
         pool.shutdown()
         return name, r[2], r[3], None
     except Exception:  # noqa: BLE001
