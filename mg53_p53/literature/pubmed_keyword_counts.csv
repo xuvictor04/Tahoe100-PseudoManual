@@ -1,0 +1,21 @@
+keyword,regex,n_records_with_hit,n_records_screened
+p53,\bp53\b|\btp53\b|trp53,3,308
+MDM2,\bmdm2\b|\bhdm2\b,0,308
+apoptosis,apoptos|apoptot,44,308
+anthracycline,doxorubicin|adriamycin|anthracyclin|epirubicin|idarubicin|daunorubicin|daunomycin,4,308
+DNA_damage,dna damage|genotoxic|double[- ]strand break|\bγ-?h2ax\b|gamma-?h2ax|\batm\b|\batr\b,1,308
+cancer,cancer|tumou?r|carcinoma|neoplas|malignan|oncogen|metasta,37,308
+promoter_TF,promoter|transcription factor|myod|mef2|myogenin|\bmyf5\b|enhancer|e-box|transcriptional regulation,16,308
+expression_regulation,"upregulat|downregulat|up-regulat|down-regulat|induc(e|ed|es|tion) .{0,40}(mg53|trim72)",79,308
+glucocorticoid,glucocorticoid|dexamethasone|cortisol|corticosterone,2,308
+insulin_IRS1,\birs-?1\b|insulin receptor substrate|insulin resistance,36,308
+FAK,\bfak\b|focal adhesion kinase|\bptk2\b,8,308
+RISK_PI3K_AKT,\bpi3k\b|\bakt\b|\bgsk3|\berk1/2|\brisk\b pathway|reperfusion injury salvage kinase,37,308
+NFkB,nf-?κb|nf-?kappa ?b|nfkb|\bikk|\bikba,12,308
+oxidation_oligomer,oligomer|disulfide|cys242|c242|cysteine 242|redox|oxidi[sz],20,308
+secretion_serum,secret|serum mg53|circulating|myokine|cardiokine|recombinant human mg53|rhmg53,100,308
+ubiquitination,ubiquitin|e3 ligase|proteasom|degradation,70,308
+ischemia,ischemi|ischaemi|reperfusion|infarct,58,308
+cardiotoxicity,cardiotoxic|cardiomyopathy,12,308
+ferroptosis,ferroptos,3,308
+SUMO_ZNF,sumo|\bznf\b|zinc finger,1,308

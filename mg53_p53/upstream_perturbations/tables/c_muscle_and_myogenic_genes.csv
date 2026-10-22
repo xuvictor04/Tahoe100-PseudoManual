@@ -1,0 +1,27 @@
+gene,in_atlas,note,median_line_cpm,n_lines_expressing,spearman_with_TRIM72_z,partial_spearman,rank_partial_of_all_genes,idarubicin_5uM_fold,idarubicin_5uM_z,homoharringtonine_5uM_fold,homoharringtonine_5uM_z
+MYOD1,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,
+MYOG,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,
+MYF5,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,
+MYF6,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,
+MEF2A,True,,298.541,50,-0.190744,-0.189576,14536,0.789973,-7.72013,1.09947,3.13854
+MEF2C,True,,21.8475,40,-0.144786,-0.144598,13484,1.04952,1.10995,1.28254,5.7811
+MEF2D,True,,86.8304,50,-0.0499686,-0.0466736,10501,0.777413,-5.44498,0.71684,-7.32011
+DES,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,
+CKM,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,
+ACTA1,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,
+CAV3,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,
+CHRNA1,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,
+TRIM63,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,
+MSTN,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,
+MYH3,True,,3.0882,49,0.214386,0.215164,1843,3.04651,13.3959,1.54858,5.24851
+PYGM,True,,6.32162,50,0.667947,0.680261,3,3.43701,11.6888,1.69136,4.97094
+DYSF,True,,4.14449,50,0.199051,0.199416,2183,3.646,24.9231,3.55738,24.4482
+TTN,True,,4.66238,50,0.113965,0.111587,4806,3.26962,21.1822,2.07832,13.072
+NEB,True,,4.23906,50,0.127461,0.126073,4306,5.5162,22.2436,8.12983,27.2885
+TNNT1,True,,29.9366,44,0.0216382,0.0177496,8195,0.545455,-9.5545,0.293906,-19.3389
+FBXO32,True,,60.8175,45,0.0853451,0.0858842,5717,1.45572,7.7447,1.54258,8.93397
+PPARGC1A,True,,3.2883,50,0.063792,0.0596172,6680,1.40192,5.18538,5.30215,25.51
+CDKN1C,True,,4.70637,45,0.202704,0.204948,2060,1.97669,5.56513,4.36034,12.0339
+ID2,True,,27.2655,47,0.275332,0.276884,935,3.79975,15.6896,2.18834,9.20462
+PYCARD,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,
+ITGAM,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,

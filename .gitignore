@@ -22,3 +22,6 @@ __pycache__/
 
 # Temporary git worktrees made by Claude Code sessions
 .claude/worktrees/
+
+# Third-party papers and supplements fetched by the MG53 literature review (not ours to redistribute)
+mg53_p53/**/downloads/

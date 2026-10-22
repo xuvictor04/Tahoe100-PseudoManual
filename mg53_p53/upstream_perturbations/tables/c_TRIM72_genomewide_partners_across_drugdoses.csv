@@ -1,0 +1,201 @@
+gene,spearman_raw,spearman_partial_activity_cellloss,p_partial,median_line_cpm,q_partial,rank_partial,direction,gene_set
+FNDC7,0.745589,0.748037,4.50774e-203,2.54173,7.50178e-199,1,positive,all ranked genes
+LRRC23,0.688848,0.69046,7.85562e-161,64.1936,6.53667e-157,2,positive,all ranked genes
+PYGM,0.667947,0.680261,2.28892e-154,6.32162,1.26974e-150,3,positive,all ranked genes
+TEX14,0.661278,0.664405,7.99148e-145,15.2122,3.32486e-141,4,positive,all ranked genes
+FGF18,0.652116,0.65617,4.27701e-140,7.65327,1.42356e-136,5,positive,all ranked genes
+FAM222A,0.646639,0.655812,6.81612e-140,9.26233,1.89056e-136,6,positive,all ranked genes
+SELPLG,0.650461,0.653044,2.44033e-138,2.57472,5.80172e-135,7,positive,all ranked genes
+LDHC,0.651274,0.651915,1.03945e-137,3.90144,2.16231e-134,8,positive,all ranked genes
+LINC00910,0.638504,0.64543,3.78964e-134,32.797,7.00746e-131,9,positive,all ranked genes
+MIR9-1HG,0.643102,0.643163,6.36261e-133,3.95059,1.05887e-129,10,positive,all ranked genes
+SEMA4A,0.624321,0.629152,1.40993e-125,13.8318,2.1331e-122,11,positive,all ranked genes
+IDI2-AS1,0.614752,0.620184,4.53277e-121,13.4392,6.2862e-118,12,positive,all ranked genes
+ENSG00000283573,0.615471,0.615527,8.70001e-119,3.90509,1.11374e-115,13,positive,all ranked genes
+SLC9A1,0.589506,0.611024,1.29168e-116,55.6304,1.53543e-113,14,positive,all ranked genes
+VWCE,0.598885,0.606887,1.19002e-114,7.28263,1.32029e-111,15,positive,all ranked genes
+RRP12,0.60332,0.606315,2.21231e-114,57.3066,2.30108e-111,16,positive,all ranked genes
+ARL9,0.604043,0.605845,3.67793e-114,5.1028,3.60047e-111,17,positive,all ranked genes
+FOSB,0.56807,0.574197,4.27444e-100,51.7656,3.95196e-97,18,positive,all ranked genes
+HAP1,0.567906,0.56788,1.81068e-97,4.87853,1.58596e-94,19,positive,all ranked genes
+ENSG00000261341,0.56041,0.566896,4.5905e-97,7.4557,3.81975e-94,20,positive,all ranked genes
+CPNE9,0.558678,0.563402,1.219e-95,1.92558,9.66028e-93,21,positive,all ranked genes
+MPDU1,0.554856,0.555812,1.32262e-92,17.8474,9.91412e-90,22,positive,all ranked genes
+LINC00654,0.55533,0.555773,1.37018e-92,2.8552,9.91412e-90,23,positive,all ranked genes
+FAM53C,0.552697,0.553359,1.21785e-91,49.6358,8.4448e-89,24,positive,all ranked genes
+BZW2,0.551176,0.551311,7.67044e-91,133.649,5.10606e-88,25,positive,all ranked genes
+SMIM41,0.542978,0.550478,1.61535e-90,3.5036,1.03395e-87,26,positive,all ranked genes
+PRKCG,0.546245,0.549439,4.07552e-90,7.35599,2.51203e-87,27,positive,all ranked genes
+KLHL18,0.536355,0.544907,2.22769e-88,45.0406,1.32404e-85,28,positive,all ranked genes
+ENSG00000260144,0.537865,0.544443,3.34519e-88,4.23088,1.91968e-85,29,positive,all ranked genes
+LGMN,0.537347,0.544098,4.52306e-88,42.489,2.50909e-85,30,positive,all ranked genes
+CCDC62,0.537203,0.539039,3.61904e-86,11.3485,1.94284e-83,31,positive,all ranked genes
+ENSG00000258465,0.539269,0.538894,4.09728e-86,8.36552,2.13084e-83,32,positive,all ranked genes
+AZU1,0.530257,0.537213,1.72826e-85,1.50403,8.71569e-83,33,positive,all ranked genes
+ENSG00000260177,0.527674,0.535955,5.04828e-85,2.2525,2.47099e-82,34,positive,all ranked genes
+ENSG00000268465,0.534429,0.535895,5.31055e-85,2.23387,2.52509e-82,35,positive,all ranked genes
+PIK3R3,0.523121,0.5358,5.75588e-85,44.3893,2.66082e-82,36,positive,all ranked genes
+IMPA1P1,0.532517,0.535223,9.39401e-85,2.80332,4.22527e-82,37,positive,all ranked genes
+GRIK5,0.51899,0.529774,9.14865e-83,1.82253,4.00663e-80,38,positive,all ranked genes
+USP50,0.528899,0.529564,1.08934e-82,4.84009,4.64842e-80,39,positive,all ranked genes
+ETF1,0.508931,0.528041,3.85726e-82,159.429,1.60481e-79,40,positive,all ranked genes
+ENSG00000289254,0.522964,0.525891,2.27123e-81,4.33296,9.21896e-79,41,positive,all ranked genes
+MYOCOS,0.524345,0.525681,2.6989e-81,4.67273,1.06941e-78,42,positive,all ranked genes
+ENSG00000284716,0.523917,0.524578,6.66559e-81,2.90854,2.57974e-78,43,positive,all ranked genes
+C19orf38,0.522984,0.52387,1.18886e-80,4.15108,4.49658e-78,44,positive,all ranked genes
+GRAMD2A,0.509726,0.522342,4.12597e-80,1.23573,1.52587e-77,45,positive,all ranked genes
+ENSG00000205890,0.519626,0.521872,6.04573e-80,3.1795,2.18724e-77,46,positive,all ranked genes
+PITRM1-AS1,0.520025,0.521376,9.0313e-80,7.03932,3.19785e-77,47,positive,all ranked genes
+RFPL3S,0.518332,0.518701,7.80278e-79,3.28005,2.70529e-76,48,positive,all ranked genes
+ENSG00000141979,0.514695,0.516558,4.32712e-78,7.63733,1.46963e-75,49,positive,all ranked genes
+ROPN1L,0.514189,0.514086,3.07578e-77,3.93229,1.02374e-74,50,positive,all ranked genes
+STPG4,0.511713,0.512848,8.16541e-77,17.0828,2.61324e-74,51,positive,all ranked genes
+CCDC181,0.501959,0.508616,2.22919e-75,4.0438,6.99967e-73,52,positive,all ranked genes
+FOS,0.498828,0.50768,4.60349e-75,78.2421,1.41873e-72,53,positive,all ranked genes
+LINC01619,0.501701,0.506983,7.88284e-75,113.544,2.3852e-72,54,positive,all ranked genes
+ATP6V1D,0.501845,0.505391,2.68564e-74,68.7469,7.98116e-72,55,positive,all ranked genes
+PILRA,0.500949,0.504893,3.93533e-74,13.4272,1.14898e-71,56,positive,all ranked genes
+LAT2,0.502476,0.502749,2.02156e-73,8.53116,5.80048e-71,57,positive,all ranked genes
+ENSG00000288000,0.501037,0.501443,5.44953e-73,27.1143,1.53714e-70,58,positive,all ranked genes
+GNL2,0.49889,0.500037,1.57806e-72,102.169,4.37701e-70,59,positive,all ranked genes
+ENSG00000261058,0.496624,0.499734,1.98312e-72,3.27166,5.41034e-70,60,positive,all ranked genes
+TMPRSS9,0.488908,0.499506,2.35288e-72,3.55992,6.31558e-70,61,positive,all ranked genes
+PHKG1,0.497366,0.498927,3.63788e-72,8.15151,9.60977e-70,62,positive,all ranked genes
+ENSG00000286138,0.49409,0.498092,6.80784e-72,2.07782,1.77025e-69,63,positive,all ranked genes
+ENSG00000287975,0.493112,0.497682,9.25274e-72,2.94599,2.36899e-69,64,positive,all ranked genes
+ALDH8A1,0.491766,0.496007,3.22971e-71,4.56549,8.14376e-69,65,positive,all ranked genes
+POLG2,0.495389,0.495112,6.27777e-71,42.305,1.55932e-68,66,positive,all ranked genes
+NASP,0.488069,0.49487,7.51051e-71,114.398,1.83809e-68,67,positive,all ranked genes
+ENSG00000289726,0.491556,0.494838,7.69361e-71,2.21681,1.85561e-68,68,positive,all ranked genes
+HCN2,0.492522,0.492664,3.82961e-70,6.1217,9.10463e-68,69,positive,all ranked genes
+PHYHD1,0.483531,0.492217,5.32292e-70,2.82883,1.24766e-67,70,positive,all ranked genes
+ENSG00000290241,0.49123,0.492016,6.16801e-70,2.7281,1.42567e-67,71,positive,all ranked genes
+TINCR,0.487912,0.491498,9.02115e-70,7.03955,2.05657e-67,72,positive,all ranked genes
+FUS,0.484344,0.490924,1.37338e-69,257.881,3.08862e-67,73,positive,all ranked genes
+ENSG00000255946,0.483665,0.483914,2.18503e-67,5.42343,4.84844e-65,74,positive,all ranked genes
+SRSF7,0.483324,0.483684,2.57555e-67,70.5188,5.63977e-65,75,positive,all ranked genes
+SPTY2D1,0.477307,0.483424,3.1004e-67,93.7455,6.70089e-65,76,positive,all ranked genes
+KIF9,0.483282,0.483292,3.40697e-67,9.90239,7.26907e-65,77,positive,all ranked genes
+ENSG00000256448,0.475408,0.480529,2.42371e-66,5.91946,5.10575e-64,78,positive,all ranked genes
+CHAF1B,0.47438,0.479614,4.62217e-66,14.1352,9.49655e-64,79,positive,all ranked genes
+CYCS,0.478461,0.479328,5.65262e-66,81.6749,1.14721e-63,80,positive,all ranked genes
+BRD2,0.478705,0.479272,5.87949e-66,293.235,1.17887e-63,81,positive,all ranked genes
+ENSG00000258851,0.468787,0.479246,5.98859e-66,2.47478,1.18645e-63,82,positive,all ranked genes
+TENT5C,0.471614,0.478443,1.05327e-65,5.14173,2.06219e-63,83,positive,all ranked genes
+RAB7A,0.472127,0.478075,1.36366e-65,479.696,2.63885e-63,84,positive,all ranked genes
+ENSG00000258378,0.476249,0.477572,1.93917e-65,5.9369,3.6292e-63,85,positive,all ranked genes
+SON,0.472801,0.477571,1.94087e-65,299.708,3.6292e-63,86,positive,all ranked genes
+TOB2,0.475423,0.475556,7.9174e-65,72.3212,1.46401e-62,87,positive,all ranked genes
+SKP1,0.473467,0.474579,1.55946e-64,164.973,2.85192e-62,88,positive,all ranked genes
+SPX,0.463972,0.473674,2.91679e-64,1.5091,5.27622e-62,89,positive,all ranked genes
+ZNF546,0.473698,0.473244,3.92568e-64,13.9649,7.02486e-62,90,positive,all ranked genes
+IQCN,0.463653,0.47273,5.59374e-64,6.28679,9.9033e-62,91,positive,all ranked genes
+ERCC1,0.471542,0.472593,6.15011e-64,44.6443,1.07737e-61,92,positive,all ranked genes
+HEXIM1,0.472444,0.472129,8.4594e-64,44.2679,1.46647e-61,93,positive,all ranked genes
+ENSG00000250519,0.471985,0.47161,1.20856e-63,11.5237,2.06244e-61,94,positive,all ranked genes
+POR,0.467432,0.471603,1.21451e-63,63.3895,2.06244e-61,95,positive,all ranked genes
+MYLK2,0.469682,0.471539,1.26931e-63,2.27178,2.13372e-61,96,positive,all ranked genes
+ENSG00000229021,0.470166,0.470792,2.11693e-63,6.20026,3.48812e-61,97,positive,all ranked genes
+PPIEL-1,0.469701,0.469248,6.0725e-63,6.5743,9.8115e-61,98,positive,all ranked genes
+PPP1R36,0.464127,0.468215,1.22541e-62,2.48678,1.94944e-60,99,positive,all ranked genes
+TXLNG,0.454078,0.46821,1.22997e-62,75.8457,1.94944e-60,100,positive,all ranked genes
+TMBIM4,-0.501931,-0.513538,4.74148e-77,39.468,1.54721e-74,16642,negative,all ranked genes
+TTC8,-0.480321,-0.480153,3.16027e-66,21.6132,6.57416e-64,16641,negative,all ranked genes
+GUSBP2-1,-0.477569,-0.477646,1.84136e-65,14.9634,3.52228e-63,16640,negative,all ranked genes
+PEX2,-0.463802,-0.470808,2.09439e-63,25.4118,3.48548e-61,16639,negative,all ranked genes
+NIPSNAP3A,-0.452041,-0.47066,2.31686e-63,7.92519,3.78012e-61,16638,negative,all ranked genes
+FBXL5,-0.462382,-0.462532,5.58941e-61,81.2729,7.95033e-59,16637,negative,all ranked genes
+PIGB,-0.462026,-0.461559,1.06756e-60,22.5994,1.48053e-58,16636,negative,all ranked genes
+NHLRC2,-0.456163,-0.456966,2.19878e-59,64.2487,2.85875e-57,16635,negative,all ranked genes
+ACTR10,-0.455533,-0.455426,6.00337e-59,41.6476,7.68523e-57,16634,negative,all ranked genes
+DTWD1,-0.450735,-0.454106,1.41342e-58,34.6052,1.75538e-56,16633,negative,all ranked genes
+HGSNAT,-0.449061,-0.449563,2.62004e-57,51.7415,3.07061e-55,16632,negative,all ranked genes
+NADK2,-0.448245,-0.448006,7.05284e-57,34.8465,8.03927e-55,16631,negative,all ranked genes
+DRAM2,-0.445096,-0.446255,2.1355e-56,23.4935,2.36926e-54,16630,negative,all ranked genes
+TBC1D13,-0.439931,-0.444929,4.91774e-56,9.05302,5.34909e-54,16629,negative,all ranked genes
+C1RL,-0.444659,-0.444764,5.45714e-56,25.6801,5.89725e-54,16628,negative,all ranked genes
+DYNC2LI1,-0.441899,-0.442959,1.68798e-55,23.7906,1.76675e-53,16627,negative,all ranked genes
+PCTP,-0.435265,-0.442403,2.38698e-55,16.5828,2.48276e-53,16626,negative,all ranked genes
+DENND6A,-0.435692,-0.440787,6.51079e-55,54.1578,6.64739e-53,16625,negative,all ranked genes
+KCTD18,-0.435697,-0.440081,1.00757e-54,11.2666,1.01624e-52,16624,negative,all ranked genes
+ZNF133,-0.439623,-0.439821,1.18343e-54,35.5566,1.17932e-52,16623,negative,all ranked genes
+LYPLAL1,-0.437119,-0.439635,1.3272e-54,47.8144,1.31472e-52,16622,negative,all ranked genes
+CNOT11,-0.434958,-0.438043,3.53575e-54,24.2567,3.46129e-52,16621,negative,all ranked genes
+ALG5,-0.428318,-0.437286,5.62233e-54,27.1996,5.43993e-52,16620,negative,all ranked genes
+AGO4,-0.436923,-0.437192,5.95644e-54,46.0382,5.72989e-52,16619,negative,all ranked genes
+MTX2,-0.43156,-0.434307,3.45201e-53,88.9053,3.1565e-51,16618,negative,all ranked genes
+FBXL4,-0.428511,-0.430809,2.84072e-52,81.1874,2.43687e-50,16617,negative,all ranked genes
+SLC35A1,-0.430525,-0.430468,3.48294e-52,22.9282,2.97246e-50,16616,negative,all ranked genes
+PKIG,-0.423999,-0.42998,4.66385e-52,41.0824,3.93989e-50,16615,negative,all ranked genes
+LMBRD1,-0.427671,-0.428855,9.12046e-52,66.1609,7.58914e-50,16614,negative,all ranked genes
+NUDT16-DT,-0.420549,-0.424416,1.25525e-50,10.9767,9.99517e-49,16613,negative,all ranked genes
+LRRC23,0.688848,0.69046,7.85562e-161,64.1936,6.53667e-157,2,positive,genes >= 10 CPM (median line)
+TEX14,0.661278,0.664405,7.99148e-145,15.2122,3.32486e-141,4,positive,genes >= 10 CPM (median line)
+LINC00910,0.638504,0.64543,3.78964e-134,32.797,7.00746e-131,9,positive,genes >= 10 CPM (median line)
+SEMA4A,0.624321,0.629152,1.40993e-125,13.8318,2.1331e-122,11,positive,genes >= 10 CPM (median line)
+IDI2-AS1,0.614752,0.620184,4.53277e-121,13.4392,6.2862e-118,12,positive,genes >= 10 CPM (median line)
+SLC9A1,0.589506,0.611024,1.29168e-116,55.6304,1.53543e-113,14,positive,genes >= 10 CPM (median line)
+RRP12,0.60332,0.606315,2.21231e-114,57.3066,2.30108e-111,16,positive,genes >= 10 CPM (median line)
+FOSB,0.56807,0.574197,4.27444e-100,51.7656,3.95196e-97,18,positive,genes >= 10 CPM (median line)
+MPDU1,0.554856,0.555812,1.32262e-92,17.8474,9.91412e-90,22,positive,genes >= 10 CPM (median line)
+FAM53C,0.552697,0.553359,1.21785e-91,49.6358,8.4448e-89,24,positive,genes >= 10 CPM (median line)
+BZW2,0.551176,0.551311,7.67044e-91,133.649,5.10606e-88,25,positive,genes >= 10 CPM (median line)
+KLHL18,0.536355,0.544907,2.22769e-88,45.0406,1.32404e-85,28,positive,genes >= 10 CPM (median line)
+LGMN,0.537347,0.544098,4.52306e-88,42.489,2.50909e-85,30,positive,genes >= 10 CPM (median line)
+CCDC62,0.537203,0.539039,3.61904e-86,11.3485,1.94284e-83,31,positive,genes >= 10 CPM (median line)
+PIK3R3,0.523121,0.5358,5.75588e-85,44.3893,2.66082e-82,36,positive,genes >= 10 CPM (median line)
+ETF1,0.508931,0.528041,3.85726e-82,159.429,1.60481e-79,40,positive,genes >= 10 CPM (median line)
+STPG4,0.511713,0.512848,8.16541e-77,17.0828,2.61324e-74,51,positive,genes >= 10 CPM (median line)
+FOS,0.498828,0.50768,4.60349e-75,78.2421,1.41873e-72,53,positive,genes >= 10 CPM (median line)
+LINC01619,0.501701,0.506983,7.88284e-75,113.544,2.3852e-72,54,positive,genes >= 10 CPM (median line)
+ATP6V1D,0.501845,0.505391,2.68564e-74,68.7469,7.98116e-72,55,positive,genes >= 10 CPM (median line)
+PILRA,0.500949,0.504893,3.93533e-74,13.4272,1.14898e-71,56,positive,genes >= 10 CPM (median line)
+ENSG00000288000,0.501037,0.501443,5.44953e-73,27.1143,1.53714e-70,58,positive,genes >= 10 CPM (median line)
+GNL2,0.49889,0.500037,1.57806e-72,102.169,4.37701e-70,59,positive,genes >= 10 CPM (median line)
+POLG2,0.495389,0.495112,6.27777e-71,42.305,1.55932e-68,66,positive,genes >= 10 CPM (median line)
+NASP,0.488069,0.49487,7.51051e-71,114.398,1.83809e-68,67,positive,genes >= 10 CPM (median line)
+FUS,0.484344,0.490924,1.37338e-69,257.881,3.08862e-67,73,positive,genes >= 10 CPM (median line)
+SRSF7,0.483324,0.483684,2.57555e-67,70.5188,5.63977e-65,75,positive,genes >= 10 CPM (median line)
+SPTY2D1,0.477307,0.483424,3.1004e-67,93.7455,6.70089e-65,76,positive,genes >= 10 CPM (median line)
+CHAF1B,0.47438,0.479614,4.62217e-66,14.1352,9.49655e-64,79,positive,genes >= 10 CPM (median line)
+CYCS,0.478461,0.479328,5.65262e-66,81.6749,1.14721e-63,80,positive,genes >= 10 CPM (median line)
+BRD2,0.478705,0.479272,5.87949e-66,293.235,1.17887e-63,81,positive,genes >= 10 CPM (median line)
+RAB7A,0.472127,0.478075,1.36366e-65,479.696,2.63885e-63,84,positive,genes >= 10 CPM (median line)
+SON,0.472801,0.477571,1.94087e-65,299.708,3.6292e-63,86,positive,genes >= 10 CPM (median line)
+TOB2,0.475423,0.475556,7.9174e-65,72.3212,1.46401e-62,87,positive,genes >= 10 CPM (median line)
+SKP1,0.473467,0.474579,1.55946e-64,164.973,2.85192e-62,88,positive,genes >= 10 CPM (median line)
+ZNF546,0.473698,0.473244,3.92568e-64,13.9649,7.02486e-62,90,positive,genes >= 10 CPM (median line)
+ERCC1,0.471542,0.472593,6.15011e-64,44.6443,1.07737e-61,92,positive,genes >= 10 CPM (median line)
+HEXIM1,0.472444,0.472129,8.4594e-64,44.2679,1.46647e-61,93,positive,genes >= 10 CPM (median line)
+ENSG00000250519,0.471985,0.47161,1.20856e-63,11.5237,2.06244e-61,94,positive,genes >= 10 CPM (median line)
+POR,0.467432,0.471603,1.21451e-63,63.3895,2.06244e-61,95,positive,genes >= 10 CPM (median line)
+TXLNG,0.454078,0.46821,1.22997e-62,75.8457,1.94944e-60,100,positive,genes >= 10 CPM (median line)
+JUN,0.462032,0.467524,1.95758e-62,181.436,3.04468e-60,102,positive,genes >= 10 CPM (median line)
+PNO1,0.465369,0.464978,1.08975e-61,28.7094,1.63384e-59,106,positive,genes >= 10 CPM (median line)
+ABHD5,0.461412,0.464676,1.33412e-61,35.5593,1.98237e-59,107,positive,genes >= 10 CPM (median line)
+ADIPOR2,0.444261,0.463564,2.80838e-61,151.086,4.09974e-59,109,positive,genes >= 10 CPM (median line)
+CXCL8,0.461892,0.46172,9.59047e-61,131.552,1.34121e-58,113,positive,genes >= 10 CPM (median line)
+ENSG00000290146,0.458617,0.460645,1.95656e-60,12.4501,2.66894e-58,115,positive,genes >= 10 CPM (median line)
+PHKG2,0.459446,0.4601,2.80573e-60,14.1578,3.79617e-58,116,positive,genes >= 10 CPM (median line)
+SERTAD1,0.459714,0.459578,3.95764e-60,16.0938,5.31154e-58,117,positive,genes >= 10 CPM (median line)
+BLZF1,0.434679,0.458491,8.09574e-60,149.439,1.07783e-57,118,positive,genes >= 10 CPM (median line)
+TMBIM4,-0.501931,-0.513538,4.74148e-77,39.468,1.54721e-74,16642,negative,genes >= 10 CPM (median line)
+TTC8,-0.480321,-0.480153,3.16027e-66,21.6132,6.57416e-64,16641,negative,genes >= 10 CPM (median line)
+GUSBP2-1,-0.477569,-0.477646,1.84136e-65,14.9634,3.52228e-63,16640,negative,genes >= 10 CPM (median line)
+PEX2,-0.463802,-0.470808,2.09439e-63,25.4118,3.48548e-61,16639,negative,genes >= 10 CPM (median line)
+FBXL5,-0.462382,-0.462532,5.58941e-61,81.2729,7.95033e-59,16637,negative,genes >= 10 CPM (median line)
+PIGB,-0.462026,-0.461559,1.06756e-60,22.5994,1.48053e-58,16636,negative,genes >= 10 CPM (median line)
+NHLRC2,-0.456163,-0.456966,2.19878e-59,64.2487,2.85875e-57,16635,negative,genes >= 10 CPM (median line)
+ACTR10,-0.455533,-0.455426,6.00337e-59,41.6476,7.68523e-57,16634,negative,genes >= 10 CPM (median line)
+DTWD1,-0.450735,-0.454106,1.41342e-58,34.6052,1.75538e-56,16633,negative,genes >= 10 CPM (median line)
+HGSNAT,-0.449061,-0.449563,2.62004e-57,51.7415,3.07061e-55,16632,negative,genes >= 10 CPM (median line)
+NADK2,-0.448245,-0.448006,7.05284e-57,34.8465,8.03927e-55,16631,negative,genes >= 10 CPM (median line)
+DRAM2,-0.445096,-0.446255,2.1355e-56,23.4935,2.36926e-54,16630,negative,genes >= 10 CPM (median line)
+C1RL,-0.444659,-0.444764,5.45714e-56,25.6801,5.89725e-54,16628,negative,genes >= 10 CPM (median line)
+DYNC2LI1,-0.441899,-0.442959,1.68798e-55,23.7906,1.76675e-53,16627,negative,genes >= 10 CPM (median line)
+PCTP,-0.435265,-0.442403,2.38698e-55,16.5828,2.48276e-53,16626,negative,genes >= 10 CPM (median line)
+DENND6A,-0.435692,-0.440787,6.51079e-55,54.1578,6.64739e-53,16625,negative,genes >= 10 CPM (median line)
+KCTD18,-0.435697,-0.440081,1.00757e-54,11.2666,1.01624e-52,16624,negative,genes >= 10 CPM (median line)
+ZNF133,-0.439623,-0.439821,1.18343e-54,35.5566,1.17932e-52,16623,negative,genes >= 10 CPM (median line)
+LYPLAL1,-0.437119,-0.439635,1.3272e-54,47.8144,1.31472e-52,16622,negative,genes >= 10 CPM (median line)
+CNOT11,-0.434958,-0.438043,3.53575e-54,24.2567,3.46129e-52,16621,negative,genes >= 10 CPM (median line)

@@ -1,0 +1,3 @@
+run_date	2026-10-22
+main_query	(TRIM72[tiab] OR MG53[tiab] OR "mitsugumin 53"[tiab] OR "mitsugumin-53"[tiab] OR mitsugumin53[tiab] OR "tripartite motif containing 72"[tiab] OR "tripartite motif-containing 72"[tiab] OR "tripartite motif protein 72"[tiab])
+n_records	308

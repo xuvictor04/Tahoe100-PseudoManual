@@ -1,0 +1,36 @@
+compound,drugs,raiser,z_max,z_min,best_up,max_n_sig_genes,moa_fine,targets,curated_classes
+idarubicin,Idarubicin (hydrochloride),True,15.8886,2.94857,Idarubicin (hydrochloride) 5 uM (z 15.89),11472,DNA synthesis/repair inhibitor,TOP2A,"DNA-damaging cytotoxic (TOP1/TOP2/alkylating/antimetabolite) | TOP2 poison (anthracyclines, mitoxantrone, amsacrine) | anthracycline (TOP2 poison)"
+homoharringtonine,Homoharringtonine,True,14.7672,-0.10063,Homoharringtonine 5 uM (z 14.77),11993,Protein synthesis inhibitor,,ribosome-binding translation inhibitor (harringtonines)
+auranofin,Auranofin,True,8.42889,0.0355154,Auranofin 5 uM (z 8.43),8581,unclear,"TXNRD1, TXNRD2","thiol-reactive / redox (TXNRD, arsenical, fumarate, quinone)"
+dinaciclib,Dinaciclib,True,7.40142,5.54586,Dinaciclib 5 uM (z 7.40),13164,CDK inhibitor,"CDK1, CDK2, CDK5, CDK9",protein kinase inhibitor (any curated kinase class) | transcriptional CDK (CDK9-active) inhibitor
+epirubicin,Epirubicin (hydrochloride),True,6.49342,-0.274381,Epirubicin (hydrochloride) 5 uM (z 6.49),6752,DNA synthesis/repair inhibitor,TOP2A,"DNA-damaging cytotoxic (TOP1/TOP2/alkylating/antimetabolite) | TOP2 poison (anthracyclines, mitoxantrone, amsacrine) | anthracycline (TOP2 poison)"
+harringtonine,Harringtonine,True,5.50664,-0.0953252,Harringtonine 5 uM (z 5.51),9773,Protein synthesis inhibitor,,ribosome-binding translation inhibitor (harringtonines)
+doxorubicin,Doxorubicin (hydrochloride),True,4.71622,-0.772613,Doxorubicin (hydrochloride) 5 uM (z 4.72),7317,DNA synthesis/repair inhibitor,"TOP1, TOP2A, TOP2B","DNA-damaging cytotoxic (TOP1/TOP2/alkylating/antimetabolite) | TOP2 poison (anthracyclines, mitoxantrone, amsacrine) | anthracycline (TOP2 poison)"
+mitoxantrone,Mitoxantrone (dihydrochloride),True,4.5216,-0.910371,Mitoxantrone (dihydrochloride) 5 uM (z 4.52),4951,DNA synthesis/repair inhibitor,"PRKCA, TOP2A, TOP2B","DNA-damaging cytotoxic (TOP1/TOP2/alkylating/antimetabolite) | TOP2 poison (anthracyclines, mitoxantrone, amsacrine)"
+panobinostat,Panobinostat,True,4.43044,0.745191,Panobinostat 5 uM (z 4.43),10622,HDAC inhibitor,"HDAC1, HDAC10, HDAC11, HDAC2, HDAC3, HDAC6, HDAC8",HDAC inhibitor (pan / class I)
+topotecan,Topotecan (hydrochloride),True,4.03221,-0.342587,Topotecan (hydrochloride) 5 uM (z 4.03),8958,DNA synthesis/repair inhibitor,TOP1,DNA-damaging cytotoxic (TOP1/TOP2/alkylating/antimetabolite) | TOP1 inhibitor
+tak-901,TAK-901,True,3.06719,0.111909,TAK-901 0.05 uM (z 3.07),8188,unclear,AURKB,mitotic kinase (Aurora / PLK) inhibitor | protein kinase inhibitor (any curated kinase class)
+ouabain,Ouabain (Octahydrate),True,2.92578,0.55715,Ouabain (Octahydrate) 5 uM (z 2.93),9763,unclear,,cardiac glycoside (Na/K-ATPase)
+digitoxin,Digitoxin,False,2.36997,-1.84338,Digitoxin 5 uM (z 2.37),9759,unclear,,cardiac glycoside (Na/K-ATPase)
+ex229,EX229,False,2.2012,0.168366,EX229 0.05 uM (z 2.20),2133,unclear,PRKAA1,
+abemaciclib,Abemaciclib,False,2.01628,-0.368614,Abemaciclib 0.05 uM (z 2.02),2427,CDK inhibitor,"CDK4, CDK6",CDK4/6 inhibitor | protein kinase inhibitor (any curated kinase class)
+lonafarnib,Lonafarnib,False,1.98691,-1.8923,Lonafarnib 5 uM (z 1.99),4176,RAS inhibitor,"HRAS, KRAS, NRAS",
+ng25,NG25,False,1.39457,-2.76962,NG25 0.05 uM (z 1.39),2239,Other MAPK inhibitor,"ABL1, ABL2, EPHA2, EPHB2, EPHB4, FER, LYN, MAP3K7, MAP4K2, RAF1, SRC, ZAK, ZKSCAN1",p38 / JNK / other MAPK-family inhibitor | protein kinase inhibitor (any curated kinase class)
+tucidinostat,Tucidinostat,False,1.35338,0.148008,Tucidinostat 5 uM (z 1.35),6657,HDAC inhibitor,"HDAC1, HDAC10, HDAC11, HDAC2, HDAC3, HDAC8",HDAC inhibitor (pan / class I)
+niclosamide,Niclosamide (olamine),False,1.34849,0.557268,Niclosamide (olamine) 0.5 uM (z 1.35),7764,unclear,STAT3,
+tak-733,TAK-733,False,1.3034,0.490665,TAK-733 0.05 uM (z 1.30),1903,MEK inhibitor,MAP2K1,MEK inhibitor | RAF/MEK/ERK inhibitor (any) | protein kinase inhibitor (any curated kinase class)
+belinostat,Belinostat,False,1.24234,-1.28842,Belinostat 0.05 uM (z 1.24),9818,HDAC inhibitor,HDAC6,HDAC inhibitor (pan / class I)
+bortezomib,Bortezomib,False,1.08182,0.222215,Bortezomib 5 uM (z 1.08),5863,Proteasome inhibitor,PSMB5,proteasome inhibitor
+fedratinib,Fedratinib (hydrochloride hydrate),False,0.990218,0.567285,Fedratinib (hydrochloride hydrate) 5 uM (z 0.99),1767,JAK/STAT inhibitor,"FLT3, JAK2, RET",JAK inhibitor | protein kinase inhibitor (any curated kinase class)
+c-kit-in-1,c-Kit-IN-1,False,0.880113,0.511445,c-Kit-IN-1 5 uM (z 0.88),5673,Multi-TK inhibitor,"KDR, KIT, MET, PDGFRA, PDGFRB",BCR-ABL / multi-RTK inhibitor (ponatinib-like) | protein kinase inhibitor (any curated kinase class) | receptor tyrosine kinase inhibitor (any of the above RTK classes)
+selinexor,Selinexor,False,0.853015,-1.40682,Selinexor 0.05 uM (z 0.85),6067,unclear,XPO1,
+ponatinib,Ponatinib,False,0.84101,-4.20599,Ponatinib 0.05 uM (z 0.84),3510,Multi-TK inhibitor,"ABL1, FGFR1, KDR, KIT, PDGFRA, SRC",BCR-ABL / multi-RTK inhibitor (ponatinib-like) | protein kinase inhibitor (any curated kinase class) | receptor tyrosine kinase inhibitor (any of the above RTK classes)
+brivudine,Brivudine,False,0.838731,-1.81544,Brivudine 0.05 uM (z 0.84),4140,unclear,,
+ph-797804,PH-797804,False,0.810886,-0.699865,PH-797804 5 uM (z 0.81),6555,Other MAPK inhibitor,MAPK14,p38 / JNK / other MAPK-family inhibitor | protein kinase inhibitor (any curated kinase class)
+cobimetinib,Cobimetinib,False,0.748484,-0.604945,Cobimetinib 0.05 uM (z 0.75),2969,MEK inhibitor,MAP2K1,MEK inhibitor | RAF/MEK/ERK inhibitor (any) | protein kinase inhibitor (any curated kinase class)
+docetaxel,Docetaxel; Docetaxel (Trihydrate),False,0.638798,0.0636262,Docetaxel (Trihydrate) 0.5 uM (z 1.62),7282,Microtubule inhibitor,"TUBB1, TUBB2A, TUBB2B, TUBB3, TUBB4A, TUBB4B",microtubule agent
+belumosudil,Belumosudil; Belumosudil (mesylate),False,0.60562,-0.619359,Belumosudil (mesylate) 0.5 uM (z 0.77),2394,unclear,"ROCK1, ROCK2",
+venetoclax,venetoclax,False,0.533975,-0.755972,venetoclax 0.5 uM (z 0.53),1797,unclear,BCL2,
+ipatasertib,Ipatasertib,False,0.330249,-0.763655,Ipatasertib 0.5 uM (z 0.33),2158,PI3K/AKT inhibitor,"AKT1, AKT2, AKT3",PI3K / AKT / mTOR inhibitor | protein kinase inhibitor (any curated kinase class)
+ixazomib citrate,Ixazomib citrate,False,0.20808,-0.489508,Ixazomib citrate 0.5 uM (z 0.21),7136,Proteasome inhibitor,"PSMB1, PSMB2, PSMB5",proteasome inhibitor
+trametinib,Trametinib; Trametinib (DMSO_TF solvate),False,-2.57374,-4.14551,Trametinib 0.5 uM (z -1.31),1994,MEK inhibitor,"MAP2K1, MAP2K2",MEK inhibitor | RAF/MEK/ERK inhibitor (any) | protein kinase inhibitor (any curated kinase class)

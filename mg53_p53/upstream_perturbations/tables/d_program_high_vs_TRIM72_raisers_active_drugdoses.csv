@@ -1,0 +1,61 @@
+program,direction,n_active_drugdoses,n_program_high,n_program_high_and_TRIM72_raiser,frac_program_high_raising_TRIM72,n_TRIM72_raisers,frac_raisers_with_program_high,frac_nonraisers_with_program_high,odds_ratio,fisher_p,raisers_with_program_high,fisher_q
+FOS,up,123,8,8,1,17,0.470588,0,inf,2.36048e-08,Auranofin 5; Dinaciclib 0.05; Dinaciclib 0.5; Dinaciclib 5; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Panobinostat 5,8.14721e-07
+HEXIM1,up,123,16,11,0.6875,17,0.647059,0.0471698,37.0333,2.71574e-08,Dinaciclib 0.5; Dinaciclib 5; Doxorubicin (hydrochloride) 5; Epirubicin (hydrochloride) 5; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Idarubicin (hydrochloride) 5; Mitoxantrone (dihydrochloride) 5; Panobinostat 5; Topotecan (hydrochloride) 5,8.14721e-07
+S_PHASE,up,123,25,12,0.48,17,0.705882,0.122642,17.1692,1.25083e-06,Dinaciclib 0.05; Dinaciclib 0.5; Dinaciclib 5; Doxorubicin (hydrochloride) 5; Epirubicin (hydrochloride) 5; Harringtonine 5; Homoharringtonine 5; Idarubicin (hydrochloride) 5; Mitoxantrone (dihydrochloride) 5; Ouabain (Octahydrate) 5; Panobinostat 5; Topotecan (hydrochloride) 5,2.50167e-05
+P53_ACTIVITY,up,123,19,10,0.526316,17,0.588235,0.0849057,15.3968,6.98824e-06,Dinaciclib 0.05; Doxorubicin (hydrochloride) 5; Epirubicin (hydrochloride) 5; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Idarubicin (hydrochloride) 0.5; Idarubicin (hydrochloride) 5; Mitoxantrone (dihydrochloride) 5; Topotecan (hydrochloride) 5,0.000100706
+IEG_SCORE,up,123,9,7,0.777778,17,0.411765,0.0188679,36.4,8.422e-06,Dinaciclib 0.05; Dinaciclib 0.5; Dinaciclib 5; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Ouabain (Octahydrate) 5,0.000100706
+PMAIP1,up,123,24,11,0.458333,17,0.647059,0.122642,13.1154,1.00706e-05,Auranofin 5; Dinaciclib 0.05; Dinaciclib 0.5; Epirubicin (hydrochloride) 5; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Idarubicin (hydrochloride) 0.5; Idarubicin (hydrochloride) 5; Ouabain (Octahydrate) 5; Topotecan (hydrochloride) 5,0.000100706
+BTG2,up,123,13,8,0.615385,17,0.470588,0.0471698,17.9556,2.10741e-05,Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Idarubicin (hydrochloride) 0.5; Idarubicin (hydrochloride) 5; Mitoxantrone (dihydrochloride) 5; Ouabain (Octahydrate) 5; Topotecan (hydrochloride) 5,0.000158056
+ATF3,up,123,13,8,0.615385,17,0.470588,0.0471698,17.9556,2.10741e-05,Auranofin 5; Dinaciclib 0.5; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Idarubicin (hydrochloride) 5; Ouabain (Octahydrate) 5; Panobinostat 5,0.000158056
+EGR1,up,123,11,7,0.636364,17,0.411765,0.0377358,17.85,6.58225e-05,Dinaciclib 0.05; Dinaciclib 0.5; Dinaciclib 5; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Panobinostat 5,0.000394935
+TP53,up,123,11,7,0.636364,17,0.411765,0.0377358,17.85,6.58225e-05,Dinaciclib 5; Doxorubicin (hydrochloride) 5; Epirubicin (hydrochloride) 5; Harringtonine 5; Homoharringtonine 5; Idarubicin (hydrochloride) 5; Topotecan (hydrochloride) 5,0.000394935
+SHORT_LIVED_mRNA_SCORE,up,123,6,5,0.833333,17,0.294118,0.00943396,43.75,0.00015727,Dinaciclib 0.05; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Idarubicin (hydrochloride) 5,0.000857837
+INFLAMMASOME,down,123,21,9,0.428571,17,0.529412,0.113208,8.8125,0.000239909,Auranofin 5; Doxorubicin (hydrochloride) 5; Epirubicin (hydrochloride) 5; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Idarubicin (hydrochloride) 5; Ouabain (Octahydrate) 5; Panobinostat 5,0.00110727
+PROTEASOME,up,123,21,9,0.428571,17,0.529412,0.113208,8.8125,0.000239909,Auranofin 5; Dinaciclib 0.05; Dinaciclib 0.5; Dinaciclib 5; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Ouabain (Octahydrate) 5; Topotecan (hydrochloride) 5,0.00110727
+GADD45A,up,123,18,8,0.444444,17,0.470588,0.0943396,8.53333,0.000490417,Auranofin 5; Dinaciclib 0.05; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Idarubicin (hydrochloride) 5; Ouabain (Octahydrate) 5; Topotecan (hydrochloride) 5,0.00210179
+PPM1D,up,123,19,8,0.421053,17,0.470588,0.103774,7.67677,0.000783914,Doxorubicin (hydrochloride) 5; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Idarubicin (hydrochloride) 5; Ouabain (Octahydrate) 5; Panobinostat 5; Topotecan (hydrochloride) 5,0.00313566
+MCL1,up,123,11,6,0.545455,17,0.352941,0.0471698,11.0182,0.000879655,Auranofin 5; Dinaciclib 0.05; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Ouabain (Octahydrate) 5,0.00329871
+DDIT3,down,123,5,4,0.8,17,0.235294,0.00943396,32.3077,0.00119622,Dinaciclib 0.05; Dinaciclib 0.5; Dinaciclib 5; Topotecan (hydrochloride) 5,0.00422194
+MYC,down,123,12,6,0.5,17,0.352941,0.0566038,9.09091,0.00161356,Dinaciclib 5; Doxorubicin (hydrochloride) 5; Epirubicin (hydrochloride) 5; Idarubicin (hydrochloride) 0.5; Idarubicin (hydrochloride) 5; Panobinostat 5,0.00537853
+JUN,up,123,17,7,0.411765,17,0.411765,0.0943396,6.72,0.00237369,Dinaciclib 0.05; Dinaciclib 0.5; Dinaciclib 5; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Ouabain (Octahydrate) 5,0.00749586
+SESN2,down,123,6,4,0.666667,17,0.235294,0.0188679,16,0.00327411,Dinaciclib 0.05; Dinaciclib 0.5; Dinaciclib 5; Harringtonine 5,0.00982232
+G2M_PHASE,up,123,18,7,0.388889,17,0.411765,0.103774,6.04545,0.00357213,Dinaciclib 0.05; Dinaciclib 0.5; Dinaciclib 5; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Ouabain (Octahydrate) 5,0.0102061
+FERRO_MARKERS,down,123,15,6,0.4,17,0.352941,0.0849057,5.87879,0.00672301,Doxorubicin (hydrochloride) 5; Harringtonine 5; Homoharringtonine 5; Idarubicin (hydrochloride) 5; Panobinostat 5; Topotecan (hydrochloride) 5,0.0181597
+CDKN1A,up,123,25,8,0.32,17,0.470588,0.160377,4.65359,0.00696123,Auranofin 5; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Idarubicin (hydrochloride) 0.5; Mitoxantrone (dihydrochloride) 5; Ouabain (Octahydrate) 5; Topotecan (hydrochloride) 5,0.0181597
+NFKB,down,123,12,5,0.416667,17,0.294118,0.0660377,5.89286,0.0120979,Auranofin 5; Dinaciclib 5; Doxorubicin (hydrochloride) 5; Epirubicin (hydrochloride) 5; Idarubicin (hydrochloride) 5,0.0302447
+DDIT3,up,123,8,4,0.5,17,0.235294,0.0377358,7.84615,0.0127082,Auranofin 5; Homoharringtonine 0.5; Homoharringtonine 5; Panobinostat 5,0.0304997
+IFN,down,123,34,9,0.264706,17,0.529412,0.235849,3.645,0.0186542,Auranofin 5; Dinaciclib 0.05; Dinaciclib 0.5; Dinaciclib 5; Filgotinib 5; Homoharringtonine 5; Ouabain (Octahydrate) 5; Panobinostat 5; Topotecan (hydrochloride) 5,0.0430481
+UPR,down,123,9,4,0.444444,17,0.235294,0.0471698,6.21538,0.0208541,Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Mitoxantrone (dihydrochloride) 5,0.0463425
+NRF2,up,123,14,5,0.357143,17,0.294118,0.0849057,4.49074,0.025463,Auranofin 5; Dinaciclib 0.05; Dinaciclib 0.5; Dinaciclib 5; Homoharringtonine 0.5,0.0545636
+MDM2,down,123,10,4,0.4,17,0.235294,0.0566038,5.12821,0.0316796,Auranofin 5; Dinaciclib 0.5; Dinaciclib 5; Panobinostat 5,0.065544
+HEAT_SHOCK,up,123,25,7,0.28,17,0.411765,0.169811,3.42222,0.0449066,Auranofin 5; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Idarubicin (hydrochloride) 5; Ouabain (Octahydrate) 5; Panobinostat 5,0.0894012
+MDM2,up,123,16,5,0.3125,17,0.294118,0.103774,3.59848,0.0461906,Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Idarubicin (hydrochloride) 0.5; Mitoxantrone (dihydrochloride) 5,0.0894012
+ISR,down,123,7,3,0.428571,17,0.176471,0.0377358,5.46429,0.0545288,Harringtonine 5; Homoharringtonine 5; Mitoxantrone (dihydrochloride) 5,0.0991432
+PPM1D,down,123,7,3,0.428571,17,0.176471,0.0377358,5.46429,0.0545288,Auranofin 5; Dinaciclib 0.5; Dinaciclib 5,0.0991432
+NFKB,up,123,17,5,0.294118,17,0.294118,0.113208,3.26389,0.0596358,Dinaciclib 0.05; Harringtonine 5; Homoharringtonine 0.5; Homoharringtonine 5; Ouabain (Octahydrate) 5,0.10524
+MYC,up,123,12,4,0.333333,17,0.235294,0.0754717,3.76923,0.0619992,Dinaciclib 0.05; Harringtonine 5; Homoharringtonine 0.5; Ouabain (Octahydrate) 5,0.106284
+NRF2,down,123,4,2,0.5,17,0.117647,0.0188679,6.93333,0.0915667,Homoharringtonine 5; Idarubicin (hydrochloride) 5,0.152611
+UPR,up,123,2,1,0.5,17,0.0588235,0.00943396,6.5625,0.258297,Auranofin 5,0.418859
+S_PHASE,down,123,10,0,0,17,0,0.0943396,0,0.354475,,0.551612
+FOS,down,123,9,0,0,17,0,0.0849057,0,0.358548,,0.551612
+FERRO_MARKERS,up,123,12,3,0.25,17,0.176471,0.0849057,2.30952,0.370255,Auranofin 5; Dinaciclib 0.05; Dinaciclib 5,0.555382
+P53_ACTIVITY,down,123,4,1,0.25,17,0.0588235,0.0283019,2.14583,0.452815,Auranofin 5,0.662656
+SESN2,up,123,22,4,0.181818,17,0.235294,0.169811,1.50427,0.504123,Auranofin 5; Idarubicin (hydrochloride) 0.5; Idarubicin (hydrochloride) 5; Panobinostat 5,0.720176
+MCL1,down,123,24,2,0.0833333,17,0.117647,0.207547,0.509091,0.521171,Dinaciclib 5; Panobinostat 5,0.72407
+CDKN1A,down,123,5,1,0.2,17,0.0588235,0.0377358,1.59375,0.530984,Panobinostat 5,0.72407
+IFN,up,123,6,0,0,17,0,0.0566038,0,0.59458,,0.792773
+INFLAMMASOME,up,123,3,0,0,17,0,0.0283019,0,1,,1
+ISR,up,123,12,1,0.0833333,17,0.0588235,0.103774,0.539773,1,Auranofin 5,1
+HEAT_SHOCK,down,123,1,0,0,17,0,0.00943396,0,1,,1
+PMAIP1,down,123,1,0,0,17,0,0.00943396,0,1,,1
+ATF3,down,123,1,0,0,17,0,0.00943396,0,1,,1
+PROTEASOME,down,123,0,0,,17,0,0,,1,,1
+G2M_PHASE,down,123,9,1,0.111111,17,0.0588235,0.0754717,0.765625,1,Idarubicin (hydrochloride) 0.5,1
+EGR1,down,123,29,4,0.137931,17,0.235294,0.235849,0.996923,1,Doxorubicin (hydrochloride) 5; Epirubicin (hydrochloride) 5; Idarubicin (hydrochloride) 5; Topotecan (hydrochloride) 5,1
+JUN,down,123,6,1,0.166667,17,0.0588235,0.0471698,1.2625,1,Doxorubicin (hydrochloride) 5,1
+HEXIM1,down,123,2,0,0,17,0,0.0188679,0,1,,1
+TP53,down,123,14,2,0.142857,17,0.117647,0.113208,1.04444,1,Ouabain (Octahydrate) 5; Panobinostat 5,1
+GADD45A,down,123,0,0,,17,0,0,,1,,1
+BTG2,down,123,3,0,0,17,0,0.0283019,0,1,,1
+IEG_SCORE,down,123,10,1,0.1,17,0.0588235,0.0849057,0.673611,1,Doxorubicin (hydrochloride) 5,1
+SHORT_LIVED_mRNA_SCORE,down,123,11,1,0.0909091,17,0.0588235,0.0943396,0.6,1,Panobinostat 5,1

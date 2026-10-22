@@ -1,0 +1,55 @@
+role,drug,conc,TRIM72_z,n_sig_genes
+raiser,Idarubicin (hydrochloride),5,15.8886,11472
+raiser,Homoharringtonine,5,14.7672,11993
+raiser,Auranofin,5,8.42889,8581
+raiser,Dinaciclib,5,7.40142,13164
+raiser,Epirubicin (hydrochloride),5,6.49342,6752
+raiser,Harringtonine,5,5.50664,9773
+raiser,Doxorubicin (hydrochloride),5,4.71622,7317
+raiser,Mitoxantrone (dihydrochloride),5,4.5216,4951
+raiser,Panobinostat,5,4.43044,10622
+raiser,Topotecan (hydrochloride),5,4.03221,8958
+raiser,Filgotinib,5,3.7874,1393
+raiser,Lactate (calcium),5,3.3407,90
+raiser,Adagrasib,0.05,3.07428,321
+raiser,TAK-901,0.05,3.06719,1712
+raiser,Cyclosporin A,0.05,3.00171,30
+raiser,Ouabain (Octahydrate),5,2.92578,9763
+control,Abemaciclib,0.5,-0.368614,1347
+control,Artesunate,0.5,0.224315,313
+control,Asciminib,0.05,-0.178412,92
+control,BAY1125976,5,0.517181,335
+control,Belinostat,0.5,-1.28842,5244
+control,Belinostat,5,0.589194,9818
+control,Bicalutamide,0.5,-0.123379,30
+control,Bortezomib,0.05,0.222215,5863
+control,Bortezomib,0.5,1.00155,1691
+control,Cobimetinib,0.05,0.748484,308
+control,Cobimetinib,0.5,-0.136814,1728
+control,Daptomycin,0.5,1.83286,1373
+control,Digitoxin,0.5,-0.536266,8363
+control,Dihydroartemisinin,0.5,0.539596,90
+control,Docetaxel,0.05,-0.786794,7282
+control,Entecavir (monohydrate),5,-0.211248,30
+control,Gallic acid (hydrate),0.5,-0.560888,30
+control,HI-TOPK-032,5,1.62329,1347
+control,Irinotecan,0.5,-0.864429,30
+control,Ixazomib citrate,5,-0.166066,7136
+control,Lonafarnib,5,1.98691,4176
+control,Methylprednisolone succinate,0.5,0.0383572,323
+control,Mifepristone,5,-0.0545118,30
+control,Niclosamide (olamine),5,1.34197,7764
+control,PH-797804,5,0.810886,6555
+control,Palmatine (chloride),0.5,0.599291,90
+control,Peretinoin,5,1.09892,1459
+control,Ponatinib,0.5,-1.31169,1701
+control,Rutin (trihydrate),0.05,-0.268705,90
+control,Sapanisertib,0.05,-0.864254,328
+control,Selinexor,5,-1.40682,6067
+control,Trametinib (DMSO_TF solvate),0.5,-2.32611,1357
+control,Tucidinostat,0.5,0.906939,5512
+control,Tucidinostat,5,1.35338,6657
+control,Vilanterol,0.5,1.95015,92
+control,Vinblastine (sulfate),0.5,1.20421,1701
+control,XRK3F2,0.5,-0.72496,1745
+control,c-Kit-IN-1,0.05,0.593681,5673
