@@ -19,10 +19,26 @@ Which drug-doses raise or lower TRIM72 mRNA, and what do they have in common?
   (d2) per cell line (the gene panel's own per-(well, line) corrected effects): is the TRIM72 rise of the raisers
       larger in TP53-wild-type lines (p53 upstream of TRIM72?), with CDKN1A / MDM2 as positive controls.
 
-Everything is read-only on /home/user/tahoe_data; outputs go to tables/ next to this script.
+Everything is read-only on /home/user/tahoe_data; outputs go to tables/ next to this script:
+  a_TRIM72_drugdose_ranking.csv          every drug-dose: fold, z, q, flags, dose pattern, activity, cell loss, plates,
+                                         plate baseline, within-plate z / rank, pseudocount-free pooled fold, panel lines
+  a_TRIM72_plate_baseline_and_spread.csv per plate: TRIM72 baseline CPM, spread of effects, plate factor
+  a_TRIM72_plate_batch_checks.csv        how the baseline batch moves fold changes and ranks
+  a_TRIM72_plate6_vs_plate14_pairs.csv   the same 92 drug-doses on a low- (6) and a high-baseline (14) plate
+  a_TRIM72_top30_three_rankings.csv      top 30 by z, fold change and within-plate z, with all three ranks
+  b_TRIM72_class_enrichment_compound_level.csv / _drugdose_level.csv, b_class_members.csv,
+  b_TRIM72_compound_level.csv, b_activity_strata_compounds.csv, b_top_activity_stratum_compounds.csv
+  c_TRIM72_specificity_in_raisers.csv, c_genes_coinduced_with_TRIM72_in_raisers.csv,
+  c_raisers_and_matched_controls.csv, c_TRIM72_genomewide_partners_across_drugdoses.csv,
+  c_muscle_and_myogenic_genes.csv
+  d_program_scores_by_drugdose.csv, d_TRIM72_vs_programs_correlations.csv, d_TRIM72_multivariable_rank_model.csv,
+  d_program_high_vs_TRIM72_raisers_active_drugdoses.csv, d_top20_drugdoses_per_program_with_TRIM72.csv,
+  d_TRIM72_raiser_program_profile.csv
+  d2_TRIM72_raisers_TP53_WT_vs_altered.csv, d2_TRIM72_TP53_contrast_across_drugdoses.csv,
+  d2_TRIM72_TP53_contrast_by_drugdose.csv, d2_per_line_effects_raisers.csv
 
-    python3 trim72_upstream_landscape.py                 # all parts (~3-4 min, < 4 GB)
-    python3 trim72_upstream_landscape.py --skip-per-line # without part d2 (~1 min)
+    python3 trim72_upstream_landscape.py                 # all parts (~40 s on 4 CPUs, peak ~2 GB)
+    python3 trim72_upstream_landscape.py --skip-per-line # without part d2 (~15 s)
 
 All associations; Tahoe has no MG53 perturbation, so nothing here is causal for MG53 -> p53.
 """
@@ -33,6 +49,7 @@ import shutil
 import sys
 import tempfile
 import time
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -58,6 +75,7 @@ HIGH_BASELINE_CPM = 5.0                        # plates whose median line reads 
 MIN_LINES_RANKED = 25                          # genes expressed in >= half of the 50 lines enter gene ranks
 SEED = 20261022
 
+warnings.filterwarnings("ignore", category=pd.errors.PerformanceWarning)
 pd.set_option("display.width", 250)
 pd.set_option("display.max_columns", 50)
 pd.set_option("display.max_colwidth", 80)
@@ -805,6 +823,19 @@ def part_c(D, t):
     gpi = gp.set_index("gene")
     for sname in MUSCLE:
         cc = D.col.get(sname)
+        pf = os.path.join(GR, f"{sname}_drug_effects_by_dose.csv")
+        if cc is None and os.path.exists(pf):        # a gene-panel gene below the atlas floor: the panel's own z
+            pz = pd.read_csv(pf, usecols=["drug", "conc", "z_corrected", "fold_change"])
+            pz["key"] = list(zip(pz["drug"], pz["conc"].astype(float).round(4)))
+            zz = D.dd["key"].map(pz.set_index("key")["z_corrected"]).to_numpy(dtype=float)
+            ff = D.dd["key"].map(pz.set_index("key")["fold_change"]).to_numpy(dtype=float)
+            ok = np.isfinite(zz)
+            rows.append({"gene": sname, "in_atlas": False,
+                         "spearman_with_TRIM72_z": float(stats.spearmanr(D.z[ok, D.c], zz[ok]).statistic),
+                         "idarubicin_5uM_fold": ff[ida5], "idarubicin_5uM_z": zz[ida5],
+                         "homoharringtonine_5uM_fold": ff[hht5], "homoharringtonine_5uM_z": zz[hht5],
+                         "note": "below the atlas's 2-CPM pooled floor; values from the gene panel's corrected table"})
+            continue
         if cc is None:
             rows.append({"gene": sname, "in_atlas": False, "note": "below the atlas's 2-CPM pooled floor: not testable"})
             continue
@@ -1086,7 +1117,9 @@ def part_d2(D, t):
                            "auc_wt_gt_altered": mw.statistic / (len(wt) * len(al)), "p_mannwhitney": mw.pvalue,
                            "frac_altered_lines_up_1.2x": float((al >= LFC_MIN).mean()),
                            "frac_wt_lines_up_1.2x": float((wt >= LFC_MIN).mean())}
-        return pd.DataFrame(rows).T
+        out_ = pd.DataFrame(list(rows.values()))
+        out_.index = pd.MultiIndex.from_tuples(list(rows.keys()), names=["drug", "conc"])
+        return out_
 
     keys_all = sorted(set(per[GENE].index.droplevel(2)))
     sel = t[t["sig_up"] | (t["z"] >= 3)]
@@ -1096,11 +1129,25 @@ def part_d2(D, t):
         cdf = contrast(per[g], sel_keys)
         cdf.columns = [f"{g}_{c}" for c in cdf.columns]
         out.append(cdf)
-    rt = pd.concat(out, axis=1)
-    rt.index = pd.MultiIndex.from_tuples(rt.index, names=["drug", "conc"])
-    rt = rt.reset_index()
+    rt = pd.concat(out, axis=1).reset_index()
     rt["TRIM72_z_all_lines"] = [float(t.loc[(t["drug"] == a) & (t["conc"].round(4) == b), "z"].iloc[0])
                                 for a, b in zip(rt["drug"], rt["conc"])]
+    # general responsiveness: the atlas's per-line response strength to each drug-dose's consensus (DD_beta, 1 =
+    # typical line); a WT-altered gap in beta would make any gene look WT-leaning
+    beta = np.asarray(D.fx.DD_beta, dtype=float)
+    lid = D.fx.lines["cell_line_id"].astype(str).to_numpy()
+    lg = np.array([grp.get(x, "") for x in lid])
+    row_of = {k: i for i, k in enumerate(D.dd["key"])}
+    bw, bp = [], []
+    for a_, b_ in zip(rt["drug"], rt["conc"]):
+        i = row_of.get((a_, round(float(b_), 4)))
+        v = beta[i] if i is not None else np.full(len(lid), np.nan)
+        w_, al_ = v[(lg == "WT") & np.isfinite(v)], v[(lg == "altered") & np.isfinite(v)]
+        ok = len(w_) >= 3 and len(al_) >= 3
+        bw.append(np.median(w_) - np.median(al_) if ok else np.nan)
+        bp.append(stats.mannwhitneyu(w_, al_).pvalue if ok else np.nan)
+    rt["consensus_beta_wt_minus_altered"] = bw
+    rt["consensus_beta_p_mannwhitney"] = bp
     rt[f"{GENE}_q_mannwhitney"] = bh(rt[f"{GENE}_p_mannwhitney"].to_numpy())
     rt["CDKN1A_q_mannwhitney"] = bh(rt["CDKN1A_p_mannwhitney"].to_numpy())
     save(rt.sort_values("TRIM72_z_all_lines", ascending=False), "d2_TRIM72_raisers_TP53_WT_vs_altered.csv")
@@ -1112,14 +1159,20 @@ def part_d2(D, t):
         columns={"diff_wt_minus_altered": "CDKN1A_diff"})
     pw = pd.read_csv(os.path.join(GR, "p53_wt_vs_altered.csv"),
                      usecols=["drug", "conc", "extra_log2_p53_induction_in_WT", "z_wt_more", "all_lines_P53_ACTIVITY_z"])
-    pw["key"] = list(zip(pw["drug"], pw["conc"].astype(float).round(4)))
-    pw = pw.set_index("key")
+    pwd = {(a, round(float(b), 4)): r for a, b, r in zip(pw["drug"], pw["conc"], pw.itertuples())}
     j = ct.join(cc, how="inner")
-    j["p53_targets_extra_in_WT"] = [pw["extra_log2_p53_induction_in_WT"].get(k, np.nan) for k in j.index]
-    j["p53_wt_more_z"] = [pw["z_wt_more"].get(k, np.nan) for k in j.index]
-    j["P53_ACTIVITY_z"] = [pw["all_lines_P53_ACTIVITY_z"].get(k, np.nan) for k in j.index]
-    j["TRIM72_z"] = [D.z[D.dd.index[D.dd["key"] == k][0], D.c] if (D.dd["key"] == k).any() else np.nan
-                     for k in j.index]
+    keys = list(j.index)
+    j["p53_targets_extra_in_WT"] = [pwd[k].extra_log2_p53_induction_in_WT if k in pwd else np.nan for k in keys]
+    j["p53_wt_more_z"] = [pwd[k].z_wt_more if k in pwd else np.nan for k in keys]
+    j["P53_ACTIVITY_z"] = [pwd[k].all_lines_P53_ACTIVITY_z if k in pwd else np.nan for k in keys]
+    j["TRIM72_z"] = [float(D.z[row_of[k], D.c]) if k in row_of else np.nan for k in keys]
+    bdiff = []
+    for k in keys:
+        i = row_of.get(k)
+        v = beta[i] if i is not None else np.full(len(lid), np.nan)
+        w_, al_ = v[(lg == "WT") & np.isfinite(v)], v[(lg == "altered") & np.isfinite(v)]
+        bdiff.append(np.median(w_) - np.median(al_) if len(w_) >= 3 and len(al_) >= 3 else np.nan)
+    j["consensus_beta_wt_minus_altered"] = bdiff
     rows = []
     for lab, m in (("all drug-doses", np.ones(len(j), bool)),
                    ("P53_ACTIVITY z >= 3 (p53-activating)", (j["P53_ACTIVITY_z"] >= 3).to_numpy()),
@@ -1130,15 +1183,21 @@ def part_d2(D, t):
             r1 = stats.spearmanr(s["TRIM72_diff"], s["CDKN1A_diff"])
             r2 = stats.spearmanr(s["TRIM72_diff"], s["p53_targets_extra_in_WT"], nan_policy="omit")
             wsr = stats.wilcoxon(s["TRIM72_diff"]) if len(s) >= 6 else None
+            sb = s.dropna(subset=["consensus_beta_wt_minus_altered"])
+            r3 = stats.spearmanr(sb["TRIM72_diff"], sb["consensus_beta_wt_minus_altered"]) if len(sb) >= 5 else None
             rows.append({"subset": lab, "n_drugdoses": len(s), "median_TRIM72_wt_minus_altered": s["TRIM72_diff"].median(),
                          "median_CDKN1A_wt_minus_altered": s["CDKN1A_diff"].median(),
                          "wilcoxon_p_TRIM72_diff_ne_0": wsr.pvalue if wsr is not None else np.nan,
                          "spearman_TRIM72_diff_vs_CDKN1A_diff": r1.statistic, "p1": r1.pvalue,
-                         "spearman_TRIM72_diff_vs_p53_targets_extra_in_WT": r2.statistic, "p2": r2.pvalue})
+                         "spearman_TRIM72_diff_vs_p53_targets_extra_in_WT": r2.statistic, "p2": r2.pvalue,
+                         "n_with_beta": len(sb),
+                         "median_consensus_beta_wt_minus_altered": sb["consensus_beta_wt_minus_altered"].median()
+                         if len(sb) else np.nan,
+                         "spearman_TRIM72_diff_vs_beta_diff": r3.statistic if r3 is not None else np.nan,
+                         "p3": r3.pvalue if r3 is not None else np.nan})
     save(pd.DataFrame(rows), "d2_TRIM72_TP53_contrast_across_drugdoses.csv")
     jj = j.reset_index()
-    jj[["drug", "conc"]] = pd.DataFrame(jj["index"].tolist(), index=jj.index)
-    save(jj.drop(columns="index")[["drug", "conc", "TRIM72_z", "TRIM72_diff", "TRIM72_p", "CDKN1A_diff",
+    save(jj[["drug", "conc", "TRIM72_z", "TRIM72_diff", "TRIM72_p", "CDKN1A_diff", "consensus_beta_wt_minus_altered",
                                    "p53_targets_extra_in_WT", "p53_wt_more_z", "P53_ACTIVITY_z"]]
          .sort_values("TRIM72_z", ascending=False), "d2_TRIM72_TP53_contrast_by_drugdose.csv")
     # per line for the strongest raisers (for plots / checks)

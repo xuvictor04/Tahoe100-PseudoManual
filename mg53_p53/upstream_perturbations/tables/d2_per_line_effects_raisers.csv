@@ -1,0 +1,1930 @@
+drug,conc,gene,cell_line_id,cell_line,tp53_group,p53_functional_call,log2FC_corrected
+Adagrasib,0.05,TRIM72,CVCL_0023,A549,WT,responsive,0.116015
+Adagrasib,0.05,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),-0.0731367
+Adagrasib,0.05,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,0.40014
+Adagrasib,0.05,TRIM72,CVCL_0099,SNU-1,WT,responsive,0.290847
+Adagrasib,0.05,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),0.389884
+Adagrasib,0.05,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,0.411976
+Adagrasib,0.05,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.378901
+Adagrasib,0.05,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,0.25435
+Adagrasib,0.05,TRIM72,CVCL_0292,HCT15,altered,unresponsive,0.364808
+Adagrasib,0.05,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,0.346903
+Adagrasib,0.05,TRIM72,CVCL_0320,HT-29,altered,unresponsive,0.238573
+Adagrasib,0.05,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,0.0305256
+Adagrasib,0.05,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,0.114811
+Adagrasib,0.05,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.196842
+Adagrasib,0.05,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,0.338024
+Adagrasib,0.05,TRIM72,CVCL_0371,KATO III,altered,unresponsive,0.340134
+Adagrasib,0.05,TRIM72,CVCL_0397,LS 180,WT,responsive,0.369358
+Adagrasib,0.05,TRIM72,CVCL_0399,LoVo,WT,responsive,0.639673
+Adagrasib,0.05,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),-0.160503
+Adagrasib,0.05,TRIM72,CVCL_0459,NCI-H460,WT,responsive,-0.0244406
+Adagrasib,0.05,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,-0.152161
+Adagrasib,0.05,TRIM72,CVCL_0504,RKO,WT,responsive,0.223948
+Adagrasib,0.05,TRIM72,CVCL_0546,SW480,altered,unresponsive,0.270775
+Adagrasib,0.05,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),0.42413
+Adagrasib,0.05,TRIM72,CVCL_1056,A498,WT,responsive,0.15315
+Adagrasib,0.05,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,0.0741069
+Adagrasib,0.05,TRIM72,CVCL_1097,C32,WT,responsive,0.326437
+Adagrasib,0.05,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,0.180865
+Adagrasib,0.05,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,0.0526313
+Adagrasib,0.05,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-0.355923
+Adagrasib,0.05,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.126596
+Adagrasib,0.05,TRIM72,CVCL_1285,HOP62,altered,unresponsive,0.286859
+Adagrasib,0.05,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.369127
+Adagrasib,0.05,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,0.397135
+Adagrasib,0.05,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,0.141554
+Adagrasib,0.05,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,-0.286062
+Adagrasib,0.05,TRIM72,CVCL_1531,NCI-H2122,altered,unresponsive,0.930356
+Adagrasib,0.05,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,-0.0735486
+Adagrasib,0.05,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,-0.202953
+Adagrasib,0.05,TRIM72,CVCL_1571,NCI-H596,altered,not measured,0
+Adagrasib,0.05,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,0.231916
+Adagrasib,0.05,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,0.313801
+Adagrasib,0.05,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,0.0434259
+Adagrasib,0.05,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,0.136372
+Adagrasib,0.05,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,0.322059
+Adagrasib,0.05,TRIM72,CVCL_1717,SW1417,altered,unresponsive,-0.256208
+Adagrasib,0.05,TRIM72,CVCL_1724,SW48,WT,responsive,0.41774
+Adagrasib,0.05,TRIM72,CVCL_1731,SW 900,altered,unresponsive,0.312811
+Adagrasib,0.05,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,0.117202
+Adagrasib,0.05,CDKN1A,CVCL_0023,A549,WT,responsive,-0.0281368
+Adagrasib,0.05,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,-0.259752
+Adagrasib,0.05,CDKN1A,CVCL_0099,SNU-1,WT,responsive,-0.0288022
+Adagrasib,0.05,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),-0.0345191
+Adagrasib,0.05,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,-0.0623347
+Adagrasib,0.05,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),-0.0893872
+Adagrasib,0.05,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,0.0551063
+Adagrasib,0.05,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,-0.162615
+Adagrasib,0.05,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,-0.113509
+Adagrasib,0.05,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,0.00931943
+Adagrasib,0.05,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,-0.0341903
+Adagrasib,0.05,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,-0.0648158
+Adagrasib,0.05,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),-0.0714353
+Adagrasib,0.05,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,-0.0538428
+Adagrasib,0.05,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,-0.111667
+Adagrasib,0.05,CDKN1A,CVCL_0397,LS 180,WT,responsive,-0.107773
+Adagrasib,0.05,CDKN1A,CVCL_0399,LoVo,WT,responsive,-0.0346266
+Adagrasib,0.05,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,-0.0637796
+Adagrasib,0.05,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,-0.0719417
+Adagrasib,0.05,CDKN1A,CVCL_0504,RKO,WT,responsive,-0.08267
+Adagrasib,0.05,CDKN1A,CVCL_0546,SW480,altered,unresponsive,-0.0414081
+Adagrasib,0.05,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),0.00706241
+Adagrasib,0.05,CDKN1A,CVCL_1056,A498,WT,responsive,-0.0435436
+Adagrasib,0.05,CDKN1A,CVCL_1097,C32,WT,responsive,-0.017167
+Adagrasib,0.05,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,-0.0455334
+Adagrasib,0.05,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.0266132
+Adagrasib,0.05,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),0.0586305
+Adagrasib,0.05,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.00302197
+Adagrasib,0.05,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,-0.572361
+Adagrasib,0.05,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),-0.0166164
+Adagrasib,0.05,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,-0.124039
+Adagrasib,0.05,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,-0.18565
+Adagrasib,0.05,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,-0.456199
+Adagrasib,0.05,CDKN1A,CVCL_1531,NCI-H2122,altered,unresponsive,-1.01216
+Adagrasib,0.05,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,-0.52829
+Adagrasib,0.05,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,-0.019807
+Adagrasib,0.05,CDKN1A,CVCL_1571,NCI-H596,altered,not measured,0
+Adagrasib,0.05,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,-0.535528
+Adagrasib,0.05,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,-0.0388865
+Adagrasib,0.05,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,-0.140014
+Adagrasib,0.05,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,-0.157233
+Adagrasib,0.05,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,-0.293432
+Adagrasib,0.05,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,-0.0379289
+Adagrasib,0.05,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,-0.0868282
+Adagrasib,0.05,CDKN1A,CVCL_1724,SW48,WT,responsive,-0.0141897
+Adagrasib,0.05,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,-0.0553014
+Adagrasib,0.05,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,-0.00438771
+Auranofin,5,TRIM72,CVCL_0023,A549,WT,responsive,1.67233
+Auranofin,5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),2.69662
+Auranofin,5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,5.53396
+Auranofin,5,TRIM72,CVCL_0099,SNU-1,WT,responsive,1.22327
+Auranofin,5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),5.17289
+Auranofin,5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,1.3633
+Auranofin,5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),1.47043
+Auranofin,5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,2.04043
+Auranofin,5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,1.62592
+Auranofin,5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,2.66227
+Auranofin,5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,4.23654
+Auranofin,5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,4.39492
+Auranofin,5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,3.37903
+Auranofin,5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),1.97729
+Auranofin,5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,3.8782
+Auranofin,5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,2.28322
+Auranofin,5,TRIM72,CVCL_0397,LS 180,WT,responsive,3.86801
+Auranofin,5,TRIM72,CVCL_0399,LoVo,WT,responsive,4.22953
+Auranofin,5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),3.2233
+Auranofin,5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,4.51679
+Auranofin,5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,4.20692
+Auranofin,5,TRIM72,CVCL_0504,RKO,WT,responsive,3.42911
+Auranofin,5,TRIM72,CVCL_0546,SW480,altered,unresponsive,5.00602
+Auranofin,5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),2.50868
+Auranofin,5,TRIM72,CVCL_1056,A498,WT,responsive,2.45153
+Auranofin,5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,0.697062
+Auranofin,5,TRIM72,CVCL_1097,C32,WT,responsive,4.98256
+Auranofin,5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,0.739886
+Auranofin,5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,2.02949
+Auranofin,5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),1.85832
+Auranofin,5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),2.7131
+Auranofin,5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,4.62331
+Auranofin,5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.725026
+Auranofin,5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,0.348068
+Auranofin,5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,1.93642
+Auranofin,5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,0.799845
+Auranofin,5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,2.50757
+Auranofin,5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,4.13549
+Auranofin,5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,4.54056
+Auranofin,5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,3.85937
+Auranofin,5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,1.40115
+Auranofin,5,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,0.488262
+Auranofin,5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,3.78252
+Auranofin,5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,3.94844
+Auranofin,5,TRIM72,CVCL_1724,SW48,WT,responsive,3.3122
+Auranofin,5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,3.22163
+Auranofin,5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,3.93486
+Auranofin,5,CDKN1A,CVCL_0023,A549,WT,responsive,-0.252738
+Auranofin,5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,1.76903
+Auranofin,5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,1.45187
+Auranofin,5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),-0.43124
+Auranofin,5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,1.39025
+Auranofin,5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),1.9471
+Auranofin,5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,1.30933
+Auranofin,5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,1.10159
+Auranofin,5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,2.34592
+Auranofin,5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,1.98745
+Auranofin,5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,1.23331
+Auranofin,5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,1.21625
+Auranofin,5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.619986
+Auranofin,5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,1.6705
+Auranofin,5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,2.50109
+Auranofin,5,CDKN1A,CVCL_0397,LS 180,WT,responsive,-0.475739
+Auranofin,5,CDKN1A,CVCL_0399,LoVo,WT,responsive,0.749408
+Auranofin,5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,0.466285
+Auranofin,5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,1.13971
+Auranofin,5,CDKN1A,CVCL_0504,RKO,WT,responsive,0.882755
+Auranofin,5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,1.95921
+Auranofin,5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),1.07393
+Auranofin,5,CDKN1A,CVCL_1056,A498,WT,responsive,-0.670691
+Auranofin,5,CDKN1A,CVCL_1097,C32,WT,responsive,0.329313
+Auranofin,5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,0.236694
+Auranofin,5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,1.06598
+Auranofin,5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-0.409413
+Auranofin,5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),-0.296301
+Auranofin,5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,1.30885
+Auranofin,5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),-0.525136
+Auranofin,5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,1.06353
+Auranofin,5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,0.771771
+Auranofin,5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,1.98965
+Auranofin,5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.0564842
+Auranofin,5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,1.25038
+Auranofin,5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,0.863621
+Auranofin,5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,2.19292
+Auranofin,5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,1.19665
+Auranofin,5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,1.38645
+Auranofin,5,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,0.96886
+Auranofin,5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,2.29375
+Auranofin,5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,1.45305
+Auranofin,5,CDKN1A,CVCL_1724,SW48,WT,responsive,-0.494714
+Auranofin,5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,2.07416
+Auranofin,5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,-0.509655
+Cyclosporin A,0.05,TRIM72,CVCL_0023,A549,WT,responsive,-0.307242
+Cyclosporin A,0.05,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),0.945166
+Cyclosporin A,0.05,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,1.49599
+Cyclosporin A,0.05,TRIM72,CVCL_0099,SNU-1,WT,responsive,1.25224
+Cyclosporin A,0.05,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),0.0723751
+Cyclosporin A,0.05,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,-0.523724
+Cyclosporin A,0.05,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.213079
+Cyclosporin A,0.05,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,2.31886
+Cyclosporin A,0.05,TRIM72,CVCL_0292,HCT15,altered,unresponsive,1.2583
+Cyclosporin A,0.05,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,1.09939
+Cyclosporin A,0.05,TRIM72,CVCL_0320,HT-29,altered,unresponsive,0.945359
+Cyclosporin A,0.05,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,0.0894617
+Cyclosporin A,0.05,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,1.3967
+Cyclosporin A,0.05,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),1.39168
+Cyclosporin A,0.05,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,-0.982324
+Cyclosporin A,0.05,TRIM72,CVCL_0371,KATO III,altered,unresponsive,0.037144
+Cyclosporin A,0.05,TRIM72,CVCL_0397,LS 180,WT,responsive,0.953078
+Cyclosporin A,0.05,TRIM72,CVCL_0399,LoVo,WT,responsive,1.33225
+Cyclosporin A,0.05,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),1.13257
+Cyclosporin A,0.05,TRIM72,CVCL_0459,NCI-H460,WT,responsive,1.20765
+Cyclosporin A,0.05,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,0.388816
+Cyclosporin A,0.05,TRIM72,CVCL_0504,RKO,WT,responsive,1.12194
+Cyclosporin A,0.05,TRIM72,CVCL_0546,SW480,altered,unresponsive,0.0942181
+Cyclosporin A,0.05,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),0.87532
+Cyclosporin A,0.05,TRIM72,CVCL_1056,A498,WT,responsive,0.483113
+Cyclosporin A,0.05,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,1.50928
+Cyclosporin A,0.05,TRIM72,CVCL_1097,C32,WT,responsive,2.9994
+Cyclosporin A,0.05,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,1.23435
+Cyclosporin A,0.05,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,1.21679
+Cyclosporin A,0.05,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),1.96261
+Cyclosporin A,0.05,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),1.29396
+Cyclosporin A,0.05,TRIM72,CVCL_1285,HOP62,altered,unresponsive,-0.825896
+Cyclosporin A,0.05,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),1.10457
+Cyclosporin A,0.05,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,1.05023
+Cyclosporin A,0.05,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,1.20036
+Cyclosporin A,0.05,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,1.00771
+Cyclosporin A,0.05,TRIM72,CVCL_1531,NCI-H2122,altered,unresponsive,0.0609294
+Cyclosporin A,0.05,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,1.28555
+Cyclosporin A,0.05,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,-0.607345
+Cyclosporin A,0.05,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,-0.314926
+Cyclosporin A,0.05,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,0.747144
+Cyclosporin A,0.05,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,0.99109
+Cyclosporin A,0.05,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,1.45499
+Cyclosporin A,0.05,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,0.804084
+Cyclosporin A,0.05,TRIM72,CVCL_1717,SW1417,altered,unresponsive,-0.644717
+Cyclosporin A,0.05,TRIM72,CVCL_1724,SW48,WT,responsive,-0.081138
+Cyclosporin A,0.05,TRIM72,CVCL_1731,SW 900,altered,unresponsive,0.773925
+Cyclosporin A,0.05,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,0.860292
+Cyclosporin A,0.05,CDKN1A,CVCL_0023,A549,WT,responsive,0.216355
+Cyclosporin A,0.05,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,0.185205
+Cyclosporin A,0.05,CDKN1A,CVCL_0099,SNU-1,WT,responsive,0.189329
+Cyclosporin A,0.05,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),0.239406
+Cyclosporin A,0.05,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,0.287971
+Cyclosporin A,0.05,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),-0.00186491
+Cyclosporin A,0.05,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,0.249029
+Cyclosporin A,0.05,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,0.253218
+Cyclosporin A,0.05,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,0.109278
+Cyclosporin A,0.05,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-0.100683
+Cyclosporin A,0.05,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,0.18617
+Cyclosporin A,0.05,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,-0.00285506
+Cyclosporin A,0.05,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.0319645
+Cyclosporin A,0.05,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,-0.0488739
+Cyclosporin A,0.05,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,0.300916
+Cyclosporin A,0.05,CDKN1A,CVCL_0397,LS 180,WT,responsive,0.123611
+Cyclosporin A,0.05,CDKN1A,CVCL_0399,LoVo,WT,responsive,0.110699
+Cyclosporin A,0.05,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,0.210285
+Cyclosporin A,0.05,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.155401
+Cyclosporin A,0.05,CDKN1A,CVCL_0504,RKO,WT,responsive,0.181415
+Cyclosporin A,0.05,CDKN1A,CVCL_0546,SW480,altered,unresponsive,0.133328
+Cyclosporin A,0.05,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),0.039722
+Cyclosporin A,0.05,CDKN1A,CVCL_1056,A498,WT,responsive,0.381131
+Cyclosporin A,0.05,CDKN1A,CVCL_1097,C32,WT,responsive,0.153961
+Cyclosporin A,0.05,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,-0.152178
+Cyclosporin A,0.05,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,0.22001
+Cyclosporin A,0.05,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-0.0606396
+Cyclosporin A,0.05,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.0679231
+Cyclosporin A,0.05,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,0.0270535
+Cyclosporin A,0.05,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.132256
+Cyclosporin A,0.05,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,0.220085
+Cyclosporin A,0.05,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,0.138255
+Cyclosporin A,0.05,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,0.118758
+Cyclosporin A,0.05,CDKN1A,CVCL_1531,NCI-H2122,altered,unresponsive,1.47062
+Cyclosporin A,0.05,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,-0.049427
+Cyclosporin A,0.05,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,0.0703335
+Cyclosporin A,0.05,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,0.756247
+Cyclosporin A,0.05,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,0.311772
+Cyclosporin A,0.05,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,0.326183
+Cyclosporin A,0.05,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,-0.0100629
+Cyclosporin A,0.05,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,0.595264
+Cyclosporin A,0.05,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,0.209445
+Cyclosporin A,0.05,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,0.0207624
+Cyclosporin A,0.05,CDKN1A,CVCL_1724,SW48,WT,responsive,0.138062
+Cyclosporin A,0.05,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,0.152461
+Cyclosporin A,0.05,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,-0.00590777
+Dinaciclib,0.05,TRIM72,CVCL_0023,A549,WT,responsive,1.53548
+Dinaciclib,0.05,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),1.98184
+Dinaciclib,0.05,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,2.45269
+Dinaciclib,0.05,TRIM72,CVCL_0099,SNU-1,WT,responsive,2.95236
+Dinaciclib,0.05,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),1.7956
+Dinaciclib,0.05,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,-1.00355
+Dinaciclib,0.05,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),1.52627
+Dinaciclib,0.05,TRIM72,CVCL_0292,HCT15,altered,unresponsive,1.9567
+Dinaciclib,0.05,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,0.487426
+Dinaciclib,0.05,TRIM72,CVCL_0320,HT-29,altered,unresponsive,1.62062
+Dinaciclib,0.05,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,3.82798
+Dinaciclib,0.05,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,2.2092
+Dinaciclib,0.05,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),2.11707
+Dinaciclib,0.05,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,0.453482
+Dinaciclib,0.05,TRIM72,CVCL_0371,KATO III,altered,unresponsive,3.53099
+Dinaciclib,0.05,TRIM72,CVCL_0397,LS 180,WT,responsive,4.12893
+Dinaciclib,0.05,TRIM72,CVCL_0399,LoVo,WT,responsive,2.51843
+Dinaciclib,0.05,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),2.07523
+Dinaciclib,0.05,TRIM72,CVCL_0459,NCI-H460,WT,responsive,1.03746
+Dinaciclib,0.05,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,2.94484
+Dinaciclib,0.05,TRIM72,CVCL_0504,RKO,WT,responsive,2.46781
+Dinaciclib,0.05,TRIM72,CVCL_0546,SW480,altered,unresponsive,3.07855
+Dinaciclib,0.05,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),2.79446
+Dinaciclib,0.05,TRIM72,CVCL_1056,A498,WT,responsive,0.977411
+Dinaciclib,0.05,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,0.63416
+Dinaciclib,0.05,TRIM72,CVCL_1097,C32,WT,responsive,1.52189
+Dinaciclib,0.05,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,0.402773
+Dinaciclib,0.05,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,3.02409
+Dinaciclib,0.05,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),2.46894
+Dinaciclib,0.05,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),2.67104
+Dinaciclib,0.05,TRIM72,CVCL_1285,HOP62,altered,unresponsive,1.6867
+Dinaciclib,0.05,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),2.0205
+Dinaciclib,0.05,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,0.687487
+Dinaciclib,0.05,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,1.89969
+Dinaciclib,0.05,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,-1.07428
+Dinaciclib,0.05,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,1.90923
+Dinaciclib,0.05,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,0.374894
+Dinaciclib,0.05,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,2.86437
+Dinaciclib,0.05,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,1.29961
+Dinaciclib,0.05,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,1.33902
+Dinaciclib,0.05,TRIM72,CVCL_1717,SW1417,altered,unresponsive,3.1061
+Dinaciclib,0.05,TRIM72,CVCL_1724,SW48,WT,responsive,0.839513
+Dinaciclib,0.05,TRIM72,CVCL_1731,SW 900,altered,unresponsive,1.76974
+Dinaciclib,0.05,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,2.64203
+Dinaciclib,0.05,CDKN1A,CVCL_0023,A549,WT,responsive,0.304788
+Dinaciclib,0.05,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,-0.145792
+Dinaciclib,0.05,CDKN1A,CVCL_0099,SNU-1,WT,responsive,1.50515
+Dinaciclib,0.05,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),-0.833395
+Dinaciclib,0.05,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,0.340363
+Dinaciclib,0.05,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),1.38387
+Dinaciclib,0.05,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,-3.44923
+Dinaciclib,0.05,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,0.78806
+Dinaciclib,0.05,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,0.515771
+Dinaciclib,0.05,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,0.185326
+Dinaciclib,0.05,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,-0.120747
+Dinaciclib,0.05,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.406239
+Dinaciclib,0.05,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,0.239198
+Dinaciclib,0.05,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,-0.281747
+Dinaciclib,0.05,CDKN1A,CVCL_0397,LS 180,WT,responsive,-0.500534
+Dinaciclib,0.05,CDKN1A,CVCL_0399,LoVo,WT,responsive,-0.101576
+Dinaciclib,0.05,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,0.766152
+Dinaciclib,0.05,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.0409049
+Dinaciclib,0.05,CDKN1A,CVCL_0504,RKO,WT,responsive,-0.460754
+Dinaciclib,0.05,CDKN1A,CVCL_0546,SW480,altered,unresponsive,0.908822
+Dinaciclib,0.05,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),-0.129618
+Dinaciclib,0.05,CDKN1A,CVCL_1056,A498,WT,responsive,1.136
+Dinaciclib,0.05,CDKN1A,CVCL_1097,C32,WT,responsive,-0.253241
+Dinaciclib,0.05,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,-0.632294
+Dinaciclib,0.05,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.65428
+Dinaciclib,0.05,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-0.596939
+Dinaciclib,0.05,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),1.03559
+Dinaciclib,0.05,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,0.228363
+Dinaciclib,0.05,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),-0.31236
+Dinaciclib,0.05,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,0.687083
+Dinaciclib,0.05,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,0.483838
+Dinaciclib,0.05,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,0.526405
+Dinaciclib,0.05,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.851488
+Dinaciclib,0.05,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,-0.594976
+Dinaciclib,0.05,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,-1.0232
+Dinaciclib,0.05,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,1.40048
+Dinaciclib,0.05,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,0.157051
+Dinaciclib,0.05,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,0.882288
+Dinaciclib,0.05,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,0.153589
+Dinaciclib,0.05,CDKN1A,CVCL_1724,SW48,WT,responsive,-0.421221
+Dinaciclib,0.05,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,0.00119567
+Dinaciclib,0.05,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,-1.04792
+Dinaciclib,0.5,TRIM72,CVCL_0023,A549,WT,responsive,2.85404
+Dinaciclib,0.5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),1.9004
+Dinaciclib,0.5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,2.73298
+Dinaciclib,0.5,TRIM72,CVCL_0099,SNU-1,WT,responsive,3.21876
+Dinaciclib,0.5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),4.07306
+Dinaciclib,0.5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,-0.553092
+Dinaciclib,0.5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.478379
+Dinaciclib,0.5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,2.39367
+Dinaciclib,0.5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,3.46767
+Dinaciclib,0.5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,-0.740429
+Dinaciclib,0.5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,0.163573
+Dinaciclib,0.5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,4.30155
+Dinaciclib,0.5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,0.140872
+Dinaciclib,0.5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),1.21124
+Dinaciclib,0.5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,-0.253162
+Dinaciclib,0.5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,2.71251
+Dinaciclib,0.5,TRIM72,CVCL_0397,LS 180,WT,responsive,0.971501
+Dinaciclib,0.5,TRIM72,CVCL_0399,LoVo,WT,responsive,0.695605
+Dinaciclib,0.5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),-0.180727
+Dinaciclib,0.5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,2.92489
+Dinaciclib,0.5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,2.07379
+Dinaciclib,0.5,TRIM72,CVCL_0504,RKO,WT,responsive,2.8388
+Dinaciclib,0.5,TRIM72,CVCL_0546,SW480,altered,unresponsive,2.33419
+Dinaciclib,0.5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),2.32585
+Dinaciclib,0.5,TRIM72,CVCL_1056,A498,WT,responsive,1.98803
+Dinaciclib,0.5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,-0.290273
+Dinaciclib,0.5,TRIM72,CVCL_1097,C32,WT,responsive,0.925839
+Dinaciclib,0.5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,0.252907
+Dinaciclib,0.5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,2.44346
+Dinaciclib,0.5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),2.20529
+Dinaciclib,0.5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.920609
+Dinaciclib,0.5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,3.13195
+Dinaciclib,0.5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.0923883
+Dinaciclib,0.5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,-1.23925
+Dinaciclib,0.5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,1.87634
+Dinaciclib,0.5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,-0.420755
+Dinaciclib,0.5,TRIM72,CVCL_1531,NCI-H2122,altered,unresponsive,-0.222363
+Dinaciclib,0.5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,1.87743
+Dinaciclib,0.5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,1.97927
+Dinaciclib,0.5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,4.02489
+Dinaciclib,0.5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,4.08548
+Dinaciclib,0.5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,-0.444522
+Dinaciclib,0.5,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,0.677407
+Dinaciclib,0.5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,2.40514
+Dinaciclib,0.5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,2.0104
+Dinaciclib,0.5,TRIM72,CVCL_1724,SW48,WT,responsive,1.9394
+Dinaciclib,0.5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,1.09149
+Dinaciclib,0.5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,0.29496
+Dinaciclib,0.5,CDKN1A,CVCL_0023,A549,WT,responsive,-0.260578
+Dinaciclib,0.5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,-0.253937
+Dinaciclib,0.5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,0.196309
+Dinaciclib,0.5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),-0.637852
+Dinaciclib,0.5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,-0.128208
+Dinaciclib,0.5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.0341043
+Dinaciclib,0.5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,2.3724
+Dinaciclib,0.5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,-0.1076
+Dinaciclib,0.5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,0.991979
+Dinaciclib,0.5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-0.780097
+Dinaciclib,0.5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,0.887844
+Dinaciclib,0.5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,0.191648
+Dinaciclib,0.5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.0848638
+Dinaciclib,0.5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,0.37274
+Dinaciclib,0.5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,0.625413
+Dinaciclib,0.5,CDKN1A,CVCL_0397,LS 180,WT,responsive,-1.43194
+Dinaciclib,0.5,CDKN1A,CVCL_0399,LoVo,WT,responsive,-0.360479
+Dinaciclib,0.5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,1.10319
+Dinaciclib,0.5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.0160522
+Dinaciclib,0.5,CDKN1A,CVCL_0504,RKO,WT,responsive,-0.414259
+Dinaciclib,0.5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,1.41211
+Dinaciclib,0.5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),-0.594093
+Dinaciclib,0.5,CDKN1A,CVCL_1056,A498,WT,responsive,1.00888
+Dinaciclib,0.5,CDKN1A,CVCL_1097,C32,WT,responsive,0.546391
+Dinaciclib,0.5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,-0.968757
+Dinaciclib,0.5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.877431
+Dinaciclib,0.5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-1.23781
+Dinaciclib,0.5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),-0.084784
+Dinaciclib,0.5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,0.409006
+Dinaciclib,0.5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),-0.541432
+Dinaciclib,0.5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,-0.627791
+Dinaciclib,0.5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,0.850214
+Dinaciclib,0.5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,0.838061
+Dinaciclib,0.5,CDKN1A,CVCL_1531,NCI-H2122,altered,unresponsive,0.376612
+Dinaciclib,0.5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.325142
+Dinaciclib,0.5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,-0.889578
+Dinaciclib,0.5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,0.195448
+Dinaciclib,0.5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,0.705778
+Dinaciclib,0.5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,1.18465
+Dinaciclib,0.5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,1.27496
+Dinaciclib,0.5,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,0.614571
+Dinaciclib,0.5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,0.193346
+Dinaciclib,0.5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,0.0631323
+Dinaciclib,0.5,CDKN1A,CVCL_1724,SW48,WT,responsive,0.231366
+Dinaciclib,0.5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,0.965176
+Dinaciclib,0.5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,-0.652627
+Dinaciclib,5,TRIM72,CVCL_0023,A549,WT,responsive,2.55891
+Dinaciclib,5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),1.88525
+Dinaciclib,5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,3.92956
+Dinaciclib,5,TRIM72,CVCL_0099,SNU-1,WT,responsive,3.29813
+Dinaciclib,5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),2.44594
+Dinaciclib,5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,2.45923
+Dinaciclib,5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),1.02676
+Dinaciclib,5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,0.617183
+Dinaciclib,5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,1.0255
+Dinaciclib,5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,-0.256228
+Dinaciclib,5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,2.80217
+Dinaciclib,5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,1.65599
+Dinaciclib,5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),2.33676
+Dinaciclib,5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,2.76974
+Dinaciclib,5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,1.98559
+Dinaciclib,5,TRIM72,CVCL_0397,LS 180,WT,responsive,2.70092
+Dinaciclib,5,TRIM72,CVCL_0399,LoVo,WT,responsive,3.46838
+Dinaciclib,5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),1.51553
+Dinaciclib,5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,2.04355
+Dinaciclib,5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,3.36581
+Dinaciclib,5,TRIM72,CVCL_0546,SW480,altered,unresponsive,3.69495
+Dinaciclib,5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),3.06949
+Dinaciclib,5,TRIM72,CVCL_1056,A498,WT,responsive,2.75664
+Dinaciclib,5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,0.977417
+Dinaciclib,5,TRIM72,CVCL_1097,C32,WT,responsive,1.97019
+Dinaciclib,5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,2.03587
+Dinaciclib,5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,4.76993
+Dinaciclib,5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),2.97526
+Dinaciclib,5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),2.97832
+Dinaciclib,5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,3.39788
+Dinaciclib,5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.0825543
+Dinaciclib,5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,0.609975
+Dinaciclib,5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,2.47805
+Dinaciclib,5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,-1.2054
+Dinaciclib,5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,2.51472
+Dinaciclib,5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,2.55994
+Dinaciclib,5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,3.75441
+Dinaciclib,5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,1.35037
+Dinaciclib,5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,3.16543
+Dinaciclib,5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,3.87325
+Dinaciclib,5,TRIM72,CVCL_1724,SW48,WT,responsive,1.29634
+Dinaciclib,5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,2.5415
+Dinaciclib,5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,2.47527
+Dinaciclib,5,CDKN1A,CVCL_0023,A549,WT,responsive,0.587307
+Dinaciclib,5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,0.289042
+Dinaciclib,5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,0.879038
+Dinaciclib,5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),-1.50049
+Dinaciclib,5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,0.191121
+Dinaciclib,5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),-0.151925
+Dinaciclib,5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,0.374557
+Dinaciclib,5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,0.24225
+Dinaciclib,5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-0.0587382
+Dinaciclib,5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,0.99634
+Dinaciclib,5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,0.786789
+Dinaciclib,5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),-0.0767925
+Dinaciclib,5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,-0.318179
+Dinaciclib,5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,0.0980728
+Dinaciclib,5,CDKN1A,CVCL_0397,LS 180,WT,responsive,-2.57728
+Dinaciclib,5,CDKN1A,CVCL_0399,LoVo,WT,responsive,-1.16059
+Dinaciclib,5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,0.94142
+Dinaciclib,5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,-0.246661
+Dinaciclib,5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,-0.10871
+Dinaciclib,5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),-0.440732
+Dinaciclib,5,CDKN1A,CVCL_1056,A498,WT,responsive,0.720023
+Dinaciclib,5,CDKN1A,CVCL_1097,C32,WT,responsive,0.409175
+Dinaciclib,5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,-1.36102
+Dinaciclib,5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.861919
+Dinaciclib,5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-1.49323
+Dinaciclib,5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),-0.00340915
+Dinaciclib,5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,0.302596
+Dinaciclib,5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),-1.1245
+Dinaciclib,5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,-3.18436
+Dinaciclib,5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,0.843596
+Dinaciclib,5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,0.689223
+Dinaciclib,5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,-0.188349
+Dinaciclib,5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,-0.992245
+Dinaciclib,5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,1.06252
+Dinaciclib,5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,0.353812
+Dinaciclib,5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,1.63923
+Dinaciclib,5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,0.161766
+Dinaciclib,5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,0.278563
+Dinaciclib,5,CDKN1A,CVCL_1724,SW48,WT,responsive,-2.23888
+Dinaciclib,5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,0.923753
+Dinaciclib,5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,-0.771792
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0023,A549,WT,responsive,1.73069
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),3.25747
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,1.18316
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0099,SNU-1,WT,responsive,1.58235
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),4.55082
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,0.595136
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),1.39902
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,0.923794
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,1.75988
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,1.7942
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,-1.43404
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,4.39414
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,1.85296
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),2.71626
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,4.33644
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,1.00175
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0397,LS 180,WT,responsive,-1.14944
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0399,LoVo,WT,responsive,0.461103
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),6.02363
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,4.42347
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,1.41461
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0504,RKO,WT,responsive,2.73995
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_0546,SW480,altered,unresponsive,2.7245
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),1.92796
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1056,A498,WT,responsive,3.30388
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,0.677174
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1097,C32,WT,responsive,3.42888
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,0.757653
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,1.5382
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),0.765022
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),2.21227
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,4.53069
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),2.49776
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,-2.73848
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,1.55491
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,-1.29584
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,0.119945
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,1.57808
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,1.58244
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,1.38826
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,-0.529467
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,0.416263
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,2.4369
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,-1.36463
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1724,SW48,WT,responsive,2.76124
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,1.49167
+Doxorubicin (hydrochloride),5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,2.87169
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0023,A549,WT,responsive,1.91981
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,-0.529426
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,1.23205
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),-0.361869
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,0.0347826
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.518213
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,-0.328773
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,-0.058423
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,0.001544
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-1.11376
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,-0.451685
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,-0.0191829
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),1.13385
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,-0.558548
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,0.955025
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0397,LS 180,WT,responsive,0.376011
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0399,LoVo,WT,responsive,0.773865
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,0.865372
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.0525432
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0504,RKO,WT,responsive,0.262941
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,-0.042727
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),0.345672
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1056,A498,WT,responsive,1.39198
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1097,C32,WT,responsive,-0.258831
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,1.57855
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.32412
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),0.63254
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.0127614
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,-0.363941
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),-0.886688
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,-0.218924
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,-0.604796
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,0.361041
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,-1.18571
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,-0.245816
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,0.156168
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,-0.107585
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,0.300539
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,0.463172
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,1.07487
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,-0.45838
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,0.401244
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1724,SW48,WT,responsive,-1.61361
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,-0.107181
+Doxorubicin (hydrochloride),5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,-0.735844
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0023,A549,WT,responsive,1.85941
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),3.45703
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,1.74876
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0099,SNU-1,WT,responsive,3.29578
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),4.38092
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,0.0431291
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),2.17517
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,2.06357
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,1.54349
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,1.64529
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,1.69691
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,3.27641
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,1.76324
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),3.50838
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,3.15936
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,2.22044
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0397,LS 180,WT,responsive,3.49239
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0399,LoVo,WT,responsive,2.68331
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),5.7259
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,4.61722
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,1.47107
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0504,RKO,WT,responsive,4.27099
+Epirubicin (hydrochloride),5,TRIM72,CVCL_0546,SW480,altered,unresponsive,3.46461
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),3.27351
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1056,A498,WT,responsive,3.13412
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,1.81498
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1097,C32,WT,responsive,4.7458
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,1.61383
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,1.90491
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-0.019239
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),3.36234
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,3.75831
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),3.31758
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,1.67785
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,2.04345
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,0.739171
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1531,NCI-H2122,altered,unresponsive,-0.0391249
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,3.01994
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,3.10251
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1571,NCI-H596,altered,not measured,0.0563128
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,2.22777
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,1.64669
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,0.225312
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,-1.136
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,1.98123
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,1.47342
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1724,SW48,WT,responsive,3.63064
+Epirubicin (hydrochloride),5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,2.11296
+Epirubicin (hydrochloride),5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,3.27678
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0023,A549,WT,responsive,1.69897
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,-0.0244917
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,0.628474
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),-0.276698
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,0.164383
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.465872
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,0.0806144
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,-0.00596088
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,0.239423
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-0.927281
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,-3.35574e-05
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,-0.225447
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.911843
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,-0.0713596
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,0.613168
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0397,LS 180,WT,responsive,0.198704
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0399,LoVo,WT,responsive,1.06347
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,0.988761
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,-0.189253
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0504,RKO,WT,responsive,-0.588617
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,-0.272997
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),0.131745
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1056,A498,WT,responsive,1.64332
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1097,C32,WT,responsive,-0.711307
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,1.33795
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.377757
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),0.690315
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.0454114
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,-0.60827
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),-0.948005
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,-0.191317
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,-0.19822
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,0.184488
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1531,NCI-H2122,altered,unresponsive,0.200572
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.443047
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,-0.517314
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1571,NCI-H596,altered,not measured,0.0684844
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,1.38987
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,-0.0628492
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,-0.127636
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,0.469009
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,0.11402
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,-0.974721
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,0.17989
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1724,SW48,WT,responsive,-1.91285
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,0.0875767
+Epirubicin (hydrochloride),5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,-1.01144
+Filgotinib,5,TRIM72,CVCL_0023,A549,WT,responsive,1.20057
+Filgotinib,5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),1.42223
+Filgotinib,5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,0.500445
+Filgotinib,5,TRIM72,CVCL_0099,SNU-1,WT,responsive,1.66695
+Filgotinib,5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),1.31473
+Filgotinib,5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,2.00737
+Filgotinib,5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),1.145
+Filgotinib,5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,1.066
+Filgotinib,5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,1.53407
+Filgotinib,5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,1.24136
+Filgotinib,5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,1.1568
+Filgotinib,5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,1.22413
+Filgotinib,5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,2.23009
+Filgotinib,5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.641693
+Filgotinib,5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,0.939856
+Filgotinib,5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,0.866241
+Filgotinib,5,TRIM72,CVCL_0397,LS 180,WT,responsive,1.12996
+Filgotinib,5,TRIM72,CVCL_0399,LoVo,WT,responsive,2.78258
+Filgotinib,5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),1.67688
+Filgotinib,5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,2.29877
+Filgotinib,5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,0.872908
+Filgotinib,5,TRIM72,CVCL_0504,RKO,WT,responsive,1.00518
+Filgotinib,5,TRIM72,CVCL_0546,SW480,altered,unresponsive,1.94161
+Filgotinib,5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),1.13441
+Filgotinib,5,TRIM72,CVCL_1056,A498,WT,responsive,3.58477
+Filgotinib,5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,2.23061
+Filgotinib,5,TRIM72,CVCL_1097,C32,WT,responsive,-1.30417
+Filgotinib,5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,3.80031
+Filgotinib,5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,0.906247
+Filgotinib,5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-0.836081
+Filgotinib,5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),1.75282
+Filgotinib,5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,2.90349
+Filgotinib,5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.962444
+Filgotinib,5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,1.19973
+Filgotinib,5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,1.26967
+Filgotinib,5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,1.4502
+Filgotinib,5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,0.671912
+Filgotinib,5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,0.0205416
+Filgotinib,5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,0.320027
+Filgotinib,5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,1.69074
+Filgotinib,5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,0.403186
+Filgotinib,5,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,1.52803
+Filgotinib,5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,0.784841
+Filgotinib,5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,0.603812
+Filgotinib,5,TRIM72,CVCL_1724,SW48,WT,responsive,2.0154
+Filgotinib,5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,2.45016
+Filgotinib,5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,1.83058
+Filgotinib,5,CDKN1A,CVCL_0023,A549,WT,responsive,-0.0306707
+Filgotinib,5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,-0.569682
+Filgotinib,5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,0.0568368
+Filgotinib,5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),-0.146009
+Filgotinib,5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,-0.29565
+Filgotinib,5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),-0.732
+Filgotinib,5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,0.0533506
+Filgotinib,5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,0.213522
+Filgotinib,5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,-0.462151
+Filgotinib,5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,0.164066
+Filgotinib,5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,0.00171536
+Filgotinib,5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,-0.354889
+Filgotinib,5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),-0.0904941
+Filgotinib,5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,-0.518018
+Filgotinib,5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,0.0913884
+Filgotinib,5,CDKN1A,CVCL_0397,LS 180,WT,responsive,-0.632209
+Filgotinib,5,CDKN1A,CVCL_0399,LoVo,WT,responsive,-0.473379
+Filgotinib,5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,-0.489316
+Filgotinib,5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,-0.0326737
+Filgotinib,5,CDKN1A,CVCL_0504,RKO,WT,responsive,0.555516
+Filgotinib,5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,0.31563
+Filgotinib,5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),-0.142199
+Filgotinib,5,CDKN1A,CVCL_1056,A498,WT,responsive,0.0564849
+Filgotinib,5,CDKN1A,CVCL_1097,C32,WT,responsive,-0.290332
+Filgotinib,5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,0.324475
+Filgotinib,5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.243456
+Filgotinib,5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-0.981014
+Filgotinib,5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.0905904
+Filgotinib,5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,0.210131
+Filgotinib,5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.171683
+Filgotinib,5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,-0.11485
+Filgotinib,5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,0.0180356
+Filgotinib,5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,-0.233822
+Filgotinib,5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.0481483
+Filgotinib,5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,0.13199
+Filgotinib,5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,0.306512
+Filgotinib,5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,0.125757
+Filgotinib,5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,-0.391796
+Filgotinib,5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,-0.0610254
+Filgotinib,5,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,0.258682
+Filgotinib,5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,-0.215053
+Filgotinib,5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,-0.235173
+Filgotinib,5,CDKN1A,CVCL_1724,SW48,WT,responsive,0.013807
+Filgotinib,5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,-0.145843
+Filgotinib,5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,0.0568787
+Harringtonine,5,TRIM72,CVCL_0023,A549,WT,responsive,-0.618628
+Harringtonine,5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),1.91227
+Harringtonine,5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,4.14752
+Harringtonine,5,TRIM72,CVCL_0099,SNU-1,WT,responsive,3.205
+Harringtonine,5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),2.9931
+Harringtonine,5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,-0.482546
+Harringtonine,5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),-2.26404
+Harringtonine,5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,2.242
+Harringtonine,5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,1.10663
+Harringtonine,5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,2.80203
+Harringtonine,5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,-2.65104
+Harringtonine,5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,4.57418
+Harringtonine,5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,0.0438306
+Harringtonine,5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),1.56443
+Harringtonine,5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,2.96908
+Harringtonine,5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,0.996869
+Harringtonine,5,TRIM72,CVCL_0397,LS 180,WT,responsive,-0.172505
+Harringtonine,5,TRIM72,CVCL_0399,LoVo,WT,responsive,2.82054
+Harringtonine,5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),5.39936
+Harringtonine,5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,1.84601
+Harringtonine,5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,2.50981
+Harringtonine,5,TRIM72,CVCL_0504,RKO,WT,responsive,-0.825898
+Harringtonine,5,TRIM72,CVCL_0546,SW480,altered,unresponsive,2.01623
+Harringtonine,5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),2.82544
+Harringtonine,5,TRIM72,CVCL_1056,A498,WT,responsive,4.82264
+Harringtonine,5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,0.802874
+Harringtonine,5,TRIM72,CVCL_1097,C32,WT,responsive,6.17942
+Harringtonine,5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,0.164583
+Harringtonine,5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,0.177928
+Harringtonine,5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-0.703972
+Harringtonine,5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),-0.184094
+Harringtonine,5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,2.21147
+Harringtonine,5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),2.60199
+Harringtonine,5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,2.02644
+Harringtonine,5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,6.01183
+Harringtonine,5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,0.0392721
+Harringtonine,5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,2.14144
+Harringtonine,5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,1.97742
+Harringtonine,5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,3.509
+Harringtonine,5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,1.18786
+Harringtonine,5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,-1.20039
+Harringtonine,5,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,-0.608629
+Harringtonine,5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,1.10638
+Harringtonine,5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,0.627921
+Harringtonine,5,TRIM72,CVCL_1724,SW48,WT,responsive,1.69451
+Harringtonine,5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,0.864827
+Harringtonine,5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,3.4643
+Harringtonine,5,CDKN1A,CVCL_0023,A549,WT,responsive,0.633772
+Harringtonine,5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,2.02593
+Harringtonine,5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,0.59168
+Harringtonine,5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),0.0158232
+Harringtonine,5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,-0.128136
+Harringtonine,5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.529765
+Harringtonine,5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,0.831881
+Harringtonine,5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,-0.583315
+Harringtonine,5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,1.84576
+Harringtonine,5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-0.160299
+Harringtonine,5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,2.48651
+Harringtonine,5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,1.20787
+Harringtonine,5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),1.37431
+Harringtonine,5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,1.7541
+Harringtonine,5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,2.47783
+Harringtonine,5,CDKN1A,CVCL_0397,LS 180,WT,responsive,-0.649156
+Harringtonine,5,CDKN1A,CVCL_0399,LoVo,WT,responsive,-0.420662
+Harringtonine,5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,0.443173
+Harringtonine,5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.868053
+Harringtonine,5,CDKN1A,CVCL_0504,RKO,WT,responsive,0.0409073
+Harringtonine,5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,0.193886
+Harringtonine,5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),-0.650737
+Harringtonine,5,CDKN1A,CVCL_1056,A498,WT,responsive,1.72306
+Harringtonine,5,CDKN1A,CVCL_1097,C32,WT,responsive,0.354636
+Harringtonine,5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,0.094503
+Harringtonine,5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,0.224568
+Harringtonine,5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-0.633343
+Harringtonine,5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),-0.706916
+Harringtonine,5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,1.70103
+Harringtonine,5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.133777
+Harringtonine,5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,0.392514
+Harringtonine,5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,1.72186
+Harringtonine,5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,0.889573
+Harringtonine,5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.718074
+Harringtonine,5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,0.49312
+Harringtonine,5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,0.227839
+Harringtonine,5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,1.72391
+Harringtonine,5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,2.45545
+Harringtonine,5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,0.582264
+Harringtonine,5,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,1.45317
+Harringtonine,5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,0.0863661
+Harringtonine,5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,1.12635
+Harringtonine,5,CDKN1A,CVCL_1724,SW48,WT,responsive,-0.7748
+Harringtonine,5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,0.94337
+Harringtonine,5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,-0.0164162
+Homoharringtonine,0.5,TRIM72,CVCL_0023,A549,WT,responsive,2.49447
+Homoharringtonine,0.5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),4.27375
+Homoharringtonine,0.5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,3.18152
+Homoharringtonine,0.5,TRIM72,CVCL_0099,SNU-1,WT,responsive,4.91486
+Homoharringtonine,0.5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),3.09486
+Homoharringtonine,0.5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,2.33544
+Homoharringtonine,0.5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),-0.339517
+Homoharringtonine,0.5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,1.1142
+Homoharringtonine,0.5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,2.96573
+Homoharringtonine,0.5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,2.36583
+Homoharringtonine,0.5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,1.06773
+Homoharringtonine,0.5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,5.05501
+Homoharringtonine,0.5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,1.7413
+Homoharringtonine,0.5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),1.4093
+Homoharringtonine,0.5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,1.73836
+Homoharringtonine,0.5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,2.55339
+Homoharringtonine,0.5,TRIM72,CVCL_0397,LS 180,WT,responsive,3.59758
+Homoharringtonine,0.5,TRIM72,CVCL_0399,LoVo,WT,responsive,4.46792
+Homoharringtonine,0.5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),5.35967
+Homoharringtonine,0.5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,5.26425
+Homoharringtonine,0.5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,1.97873
+Homoharringtonine,0.5,TRIM72,CVCL_0504,RKO,WT,responsive,0.364041
+Homoharringtonine,0.5,TRIM72,CVCL_0546,SW480,altered,unresponsive,2.71519
+Homoharringtonine,0.5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),2.39833
+Homoharringtonine,0.5,TRIM72,CVCL_1056,A498,WT,responsive,4.80586
+Homoharringtonine,0.5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,1.88459
+Homoharringtonine,0.5,TRIM72,CVCL_1097,C32,WT,responsive,7.64064
+Homoharringtonine,0.5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,0.0897449
+Homoharringtonine,0.5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,0.578637
+Homoharringtonine,0.5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),1.61777
+Homoharringtonine,0.5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),2.74272
+Homoharringtonine,0.5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,3.33191
+Homoharringtonine,0.5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),3.33026
+Homoharringtonine,0.5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,2.11199
+Homoharringtonine,0.5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,4.67127
+Homoharringtonine,0.5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,1.19351
+Homoharringtonine,0.5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,2.75843
+Homoharringtonine,0.5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,2.57388
+Homoharringtonine,0.5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,0.984365
+Homoharringtonine,0.5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,4.52342
+Homoharringtonine,0.5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,0.93391
+Homoharringtonine,0.5,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,1.51984
+Homoharringtonine,0.5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,3.05791
+Homoharringtonine,0.5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,2.16043
+Homoharringtonine,0.5,TRIM72,CVCL_1724,SW48,WT,responsive,2.81417
+Homoharringtonine,0.5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,1.45203
+Homoharringtonine,0.5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,4.26602
+Homoharringtonine,0.5,CDKN1A,CVCL_0023,A549,WT,responsive,0.977778
+Homoharringtonine,0.5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,1.83259
+Homoharringtonine,0.5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,1.19103
+Homoharringtonine,0.5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),1.01741
+Homoharringtonine,0.5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,1.3891
+Homoharringtonine,0.5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.928956
+Homoharringtonine,0.5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,1.93776
+Homoharringtonine,0.5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,-0.628016
+Homoharringtonine,0.5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,1.61592
+Homoharringtonine,0.5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-0.482792
+Homoharringtonine,0.5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,2.12828
+Homoharringtonine,0.5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,0.967258
+Homoharringtonine,0.5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.626549
+Homoharringtonine,0.5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,0.84588
+Homoharringtonine,0.5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,2.15403
+Homoharringtonine,0.5,CDKN1A,CVCL_0397,LS 180,WT,responsive,0.65973
+Homoharringtonine,0.5,CDKN1A,CVCL_0399,LoVo,WT,responsive,0.75296
+Homoharringtonine,0.5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,1.10561
+Homoharringtonine,0.5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.793465
+Homoharringtonine,0.5,CDKN1A,CVCL_0504,RKO,WT,responsive,0.916327
+Homoharringtonine,0.5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,-0.0299888
+Homoharringtonine,0.5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),-0.418914
+Homoharringtonine,0.5,CDKN1A,CVCL_1056,A498,WT,responsive,2.10496
+Homoharringtonine,0.5,CDKN1A,CVCL_1097,C32,WT,responsive,1.6797
+Homoharringtonine,0.5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,0.519953
+Homoharringtonine,0.5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.153462
+Homoharringtonine,0.5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),1.42375
+Homoharringtonine,0.5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.979958
+Homoharringtonine,0.5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,1.23396
+Homoharringtonine,0.5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.582705
+Homoharringtonine,0.5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,0.89691
+Homoharringtonine,0.5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,0.803282
+Homoharringtonine,0.5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,0.823943
+Homoharringtonine,0.5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.899577
+Homoharringtonine,0.5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,-0.0386744
+Homoharringtonine,0.5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,-1.47568
+Homoharringtonine,0.5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,0.996811
+Homoharringtonine,0.5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,2.75587
+Homoharringtonine,0.5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,0.507045
+Homoharringtonine,0.5,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,1.9463
+Homoharringtonine,0.5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,0.486466
+Homoharringtonine,0.5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,1.33236
+Homoharringtonine,0.5,CDKN1A,CVCL_1724,SW48,WT,responsive,0.548496
+Homoharringtonine,0.5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,0.985371
+Homoharringtonine,0.5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,0.954268
+Homoharringtonine,5,TRIM72,CVCL_0023,A549,WT,responsive,2.54902
+Homoharringtonine,5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),4.09058
+Homoharringtonine,5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,5.08981
+Homoharringtonine,5,TRIM72,CVCL_0099,SNU-1,WT,responsive,3.64967
+Homoharringtonine,5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),3.54765
+Homoharringtonine,5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,2.28103
+Homoharringtonine,5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.110265
+Homoharringtonine,5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,4.79303
+Homoharringtonine,5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,2.99657
+Homoharringtonine,5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,2.3844
+Homoharringtonine,5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,1.74339
+Homoharringtonine,5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,5.34452
+Homoharringtonine,5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,3.2428
+Homoharringtonine,5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),2.57139
+Homoharringtonine,5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,4.35158
+Homoharringtonine,5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,2.97322
+Homoharringtonine,5,TRIM72,CVCL_0397,LS 180,WT,responsive,4.60722
+Homoharringtonine,5,TRIM72,CVCL_0399,LoVo,WT,responsive,4.69541
+Homoharringtonine,5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),4.548
+Homoharringtonine,5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,5.59282
+Homoharringtonine,5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,3.7503
+Homoharringtonine,5,TRIM72,CVCL_0504,RKO,WT,responsive,1.96424
+Homoharringtonine,5,TRIM72,CVCL_0546,SW480,altered,unresponsive,3.92572
+Homoharringtonine,5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),0.923591
+Homoharringtonine,5,TRIM72,CVCL_1056,A498,WT,responsive,4.69414
+Homoharringtonine,5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,1.67724
+Homoharringtonine,5,TRIM72,CVCL_1097,C32,WT,responsive,7.10916
+Homoharringtonine,5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,2.04377
+Homoharringtonine,5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,3.15512
+Homoharringtonine,5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),1.07922
+Homoharringtonine,5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),1.91246
+Homoharringtonine,5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,4.97089
+Homoharringtonine,5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),4.2802
+Homoharringtonine,5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,3.25773
+Homoharringtonine,5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,7.45053
+Homoharringtonine,5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,2.6591
+Homoharringtonine,5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,4.29641
+Homoharringtonine,5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,2.66108
+Homoharringtonine,5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,3.17136
+Homoharringtonine,5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,4.9593
+Homoharringtonine,5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,1.44055
+Homoharringtonine,5,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,4.10707
+Homoharringtonine,5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,3.27623
+Homoharringtonine,5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,2.84137
+Homoharringtonine,5,TRIM72,CVCL_1724,SW48,WT,responsive,3.12348
+Homoharringtonine,5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,1.80221
+Homoharringtonine,5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,4.43333
+Homoharringtonine,5,CDKN1A,CVCL_0023,A549,WT,responsive,-0.294471
+Homoharringtonine,5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,1.38245
+Homoharringtonine,5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,1.30026
+Homoharringtonine,5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),-0.302851
+Homoharringtonine,5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,0.883715
+Homoharringtonine,5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.544037
+Homoharringtonine,5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,1.59374
+Homoharringtonine,5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,0.156993
+Homoharringtonine,5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,1.97296
+Homoharringtonine,5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,0.0556583
+Homoharringtonine,5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,2.29021
+Homoharringtonine,5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,1.1774
+Homoharringtonine,5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),1.08172
+Homoharringtonine,5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,2.329
+Homoharringtonine,5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,2.62465
+Homoharringtonine,5,CDKN1A,CVCL_0397,LS 180,WT,responsive,-0.075498
+Homoharringtonine,5,CDKN1A,CVCL_0399,LoVo,WT,responsive,1.26668
+Homoharringtonine,5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,0.724816
+Homoharringtonine,5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.219546
+Homoharringtonine,5,CDKN1A,CVCL_0504,RKO,WT,responsive,-2.15354
+Homoharringtonine,5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,0.864869
+Homoharringtonine,5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),-0.0763712
+Homoharringtonine,5,CDKN1A,CVCL_1056,A498,WT,responsive,2.10018
+Homoharringtonine,5,CDKN1A,CVCL_1097,C32,WT,responsive,1.86391
+Homoharringtonine,5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,0.336217
+Homoharringtonine,5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,0.861757
+Homoharringtonine,5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-1.17277
+Homoharringtonine,5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.344913
+Homoharringtonine,5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,2.05022
+Homoharringtonine,5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.840651
+Homoharringtonine,5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,0.595526
+Homoharringtonine,5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,2.14322
+Homoharringtonine,5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,1.32492
+Homoharringtonine,5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.909676
+Homoharringtonine,5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,0.798953
+Homoharringtonine,5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,-0.10021
+Homoharringtonine,5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,1.35385
+Homoharringtonine,5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,2.80707
+Homoharringtonine,5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,0.435491
+Homoharringtonine,5,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,2.32201
+Homoharringtonine,5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,0.913979
+Homoharringtonine,5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,1.88149
+Homoharringtonine,5,CDKN1A,CVCL_1724,SW48,WT,responsive,-0.187134
+Homoharringtonine,5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,1.92692
+Homoharringtonine,5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,0.898215
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0023,A549,WT,responsive,1.09779
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),0.610906
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,1.34667
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0099,SNU-1,WT,responsive,0.580494
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),0.636466
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,0.181952
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.356766
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,1.12524
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0292,HCT15,altered,unresponsive,1.22788
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,0.955037
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0320,HT-29,altered,unresponsive,0.286148
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,0.801217
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,0.219373
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),1.72479
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,0.184017
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0371,KATO III,altered,unresponsive,1.14765
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0397,LS 180,WT,responsive,0.368006
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0399,LoVo,WT,responsive,1.53524
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),2.21572
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0459,NCI-H460,WT,responsive,0.759491
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,0.506291
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0504,RKO,WT,responsive,1.51197
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_0546,SW480,altered,unresponsive,0.543268
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),1.74495
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1056,A498,WT,responsive,1.17482
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,0.97899
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1097,C32,WT,responsive,1.43618
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,0.663948
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,0.515704
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),0.760808
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.669845
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1285,HOP62,altered,unresponsive,-0.0689055
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),1.05204
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,0.886604
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,1.09636
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,1.07979
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,1.60312
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,1.08971
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,1.44021
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,1.19249
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,0.728237
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,1.96804
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,1.10071
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1717,SW1417,altered,unresponsive,0.30019
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1724,SW48,WT,responsive,0.661183
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_1731,SW 900,altered,unresponsive,0.700516
+Idarubicin (hydrochloride),0.05,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,1.6347
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0023,A549,WT,responsive,1.39372
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,0.395723
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0099,SNU-1,WT,responsive,2.3944
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),1.05479
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,-0.14176
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.230167
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,-0.00282696
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,0.220369
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,0.255478
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-0.101208
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,0.117516
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,-0.287821
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.439111
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,0.0320854
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,0.239572
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0397,LS 180,WT,responsive,1.14343
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0399,LoVo,WT,responsive,0.577785
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,1.21044
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.187149
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0504,RKO,WT,responsive,0.924335
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_0546,SW480,altered,unresponsive,0.337318
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),1.0171
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1056,A498,WT,responsive,1.09644
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1097,C32,WT,responsive,1.05649
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,0.345734
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,0.0891664
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),1.93629
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),1.2222
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,0.368659
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),1.1957
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,-0.0251487
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,-0.130823
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,0.0977182
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.178332
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,0.189292
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,0.377154
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,0.13414
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,0.198419
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,0.242437
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,-0.815917
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,0.328236
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,-0.0503943
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1724,SW48,WT,responsive,1.57748
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,0.106254
+Idarubicin (hydrochloride),0.05,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,0.92064
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0023,A549,WT,responsive,1.35822
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),0.461809
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,1.7989
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0099,SNU-1,WT,responsive,2.03232
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),0.907635
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,2.17523
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),2.36486
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,0.755527
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,1.23738
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,1.71279
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,-0.860711
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,1.84057
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,1.30946
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),1.85372
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,-0.724943
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,0.26672
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0397,LS 180,WT,responsive,1.73248
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0399,LoVo,WT,responsive,1.33381
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),1.10591
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,1.37421
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,0.112534
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0504,RKO,WT,responsive,1.03799
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_0546,SW480,altered,unresponsive,1.64275
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),1.41755
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1056,A498,WT,responsive,2.02284
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,0.646458
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1097,C32,WT,responsive,2.02374
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,0.295005
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,0.544754
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),1.31586
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.613553
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,1.10749
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),1.55484
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,-0.181483
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,1.21555
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,0.806471
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,1.22724
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,1.56954
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,0.857463
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,1.07692
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,0.443433
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,0.619472
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,0.675868
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,0.722723
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1724,SW48,WT,responsive,0.213022
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,1.049
+Idarubicin (hydrochloride),0.5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,0.407879
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0023,A549,WT,responsive,2.21203
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,0.87515
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,2.94104
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),2.3121
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,0.470612
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),1.06798
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,0.305026
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,0.496156
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,0.58867
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-0.173714
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,0.84316
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,0.330926
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),1.53723
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,0.119509
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,0.992998
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0397,LS 180,WT,responsive,2.21165
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0399,LoVo,WT,responsive,1.61559
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,2.12581
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.27041
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0504,RKO,WT,responsive,1.69331
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,0.77598
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),1.81632
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1056,A498,WT,responsive,2.68847
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1097,C32,WT,responsive,2.08645
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,1.62107
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.112799
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),2.9147
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),1.88884
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,0.823128
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),1.75782
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,0.00197765
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,-0.252658
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,0.0936238
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.233229
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,0.722944
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,0.396265
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,0.254459
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,0.498602
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,0.975308
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,0.804228
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,-0.0376313
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,0.5931
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1724,SW48,WT,responsive,2.42734
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,0.452276
+Idarubicin (hydrochloride),0.5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,1.6229
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0023,A549,WT,responsive,4.85894
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),2.26029
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,3.39487
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0099,SNU-1,WT,responsive,4.32286
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),4.67287
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,4.66752
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),3.19958
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,3.84507
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,2.62775
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,2.59013
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,3.60243
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,4.2461
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,4.41464
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),3.59621
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,4.15552
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,4.07311
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0397,LS 180,WT,responsive,3.62282
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0399,LoVo,WT,responsive,2.92113
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),5.43896
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,4.6349
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,4.13251
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0504,RKO,WT,responsive,3.53188
+Idarubicin (hydrochloride),5,TRIM72,CVCL_0546,SW480,altered,unresponsive,3.77523
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),-2.16923
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1056,A498,WT,responsive,2.75941
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,1.88564
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1097,C32,WT,responsive,4.26396
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,3.19757
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,4.22549
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),3.86359
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),2.25906
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,4.02111
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),3.25431
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,2.04047
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,3.93595
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,1.90063
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1531,NCI-H2122,altered,unresponsive,1.03761
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,3.11036
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,4.61221
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,4.43443
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,3.2801
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,1.72641
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,2.78211
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,3.77931
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,4.34051
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1724,SW48,WT,responsive,3.3368
+Idarubicin (hydrochloride),5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,3.23267
+Idarubicin (hydrochloride),5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,3.58331
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0023,A549,WT,responsive,0.608244
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,0.539542
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,1.82535
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),0.162103
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,-0.650612
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.584174
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,-0.103228
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,-0.359818
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,-0.00065574
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-0.91678
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,-0.167432
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,0.1492
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.973142
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,-0.566236
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,0.798225
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0397,LS 180,WT,responsive,0.282874
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0399,LoVo,WT,responsive,0.611239
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,0.547862
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,-0.590499
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0504,RKO,WT,responsive,0.539727
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,0.885521
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),-0.425542
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1056,A498,WT,responsive,0.581243
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1097,C32,WT,responsive,0.794323
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,0.365192
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.331157
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),0.0961555
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.473909
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,0.210623
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),-0.258063
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,0.0999286
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,-0.355684
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,-0.276454
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1531,NCI-H2122,altered,unresponsive,-1.25137
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,-0.567331
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,-0.358535
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,0.720804
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,0.0298603
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,0.588155
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,-0.375861
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,0.130144
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,0.694887
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,0.0678369
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1724,SW48,WT,responsive,-0.855393
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,0.0219862
+Idarubicin (hydrochloride),5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,-0.523121
+Lactate (calcium),5,TRIM72,CVCL_0023,A549,WT,responsive,1.12716
+Lactate (calcium),5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),0.896348
+Lactate (calcium),5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,1.82606
+Lactate (calcium),5,TRIM72,CVCL_0099,SNU-1,WT,responsive,2.07019
+Lactate (calcium),5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),1.57529
+Lactate (calcium),5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,1.05637
+Lactate (calcium),5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.315557
+Lactate (calcium),5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,1.31121
+Lactate (calcium),5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,0.709653
+Lactate (calcium),5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,0.955638
+Lactate (calcium),5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,0.508661
+Lactate (calcium),5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,1.64773
+Lactate (calcium),5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,1.85346
+Lactate (calcium),5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),2.02876
+Lactate (calcium),5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,1.02808
+Lactate (calcium),5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,0.125569
+Lactate (calcium),5,TRIM72,CVCL_0397,LS 180,WT,responsive,0.373253
+Lactate (calcium),5,TRIM72,CVCL_0399,LoVo,WT,responsive,1.35401
+Lactate (calcium),5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),1.10635
+Lactate (calcium),5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,1.51626
+Lactate (calcium),5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,-0.201651
+Lactate (calcium),5,TRIM72,CVCL_0504,RKO,WT,responsive,1.04262
+Lactate (calcium),5,TRIM72,CVCL_0546,SW480,altered,unresponsive,1.08083
+Lactate (calcium),5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),1.06066
+Lactate (calcium),5,TRIM72,CVCL_1056,A498,WT,responsive,1.34705
+Lactate (calcium),5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,0.328971
+Lactate (calcium),5,TRIM72,CVCL_1097,C32,WT,responsive,2.31261
+Lactate (calcium),5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,0.923121
+Lactate (calcium),5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,1.71946
+Lactate (calcium),5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),0.464525
+Lactate (calcium),5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),1.12645
+Lactate (calcium),5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,1.58607
+Lactate (calcium),5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),1.30662
+Lactate (calcium),5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,1.46481
+Lactate (calcium),5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,1.03985
+Lactate (calcium),5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,1.2936
+Lactate (calcium),5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,0.54796
+Lactate (calcium),5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,1.28538
+Lactate (calcium),5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,0.99481
+Lactate (calcium),5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,2.30796
+Lactate (calcium),5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,-0.0171493
+Lactate (calcium),5,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,0.863493
+Lactate (calcium),5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,-0.590802
+Lactate (calcium),5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,-0.947671
+Lactate (calcium),5,TRIM72,CVCL_1724,SW48,WT,responsive,0.639673
+Lactate (calcium),5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,1.40701
+Lactate (calcium),5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,1.70586
+Lactate (calcium),5,CDKN1A,CVCL_0023,A549,WT,responsive,-0.343885
+Lactate (calcium),5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,0.120227
+Lactate (calcium),5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,0.0804675
+Lactate (calcium),5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),-0.111253
+Lactate (calcium),5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,-0.00617385
+Lactate (calcium),5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.158621
+Lactate (calcium),5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,0.49456
+Lactate (calcium),5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,-0.124549
+Lactate (calcium),5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,-0.0921268
+Lactate (calcium),5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,0.299174
+Lactate (calcium),5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,0.052213
+Lactate (calcium),5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,-0.0120432
+Lactate (calcium),5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.0224242
+Lactate (calcium),5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,0.060262
+Lactate (calcium),5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,-0.180004
+Lactate (calcium),5,CDKN1A,CVCL_0397,LS 180,WT,responsive,-0.168984
+Lactate (calcium),5,CDKN1A,CVCL_0399,LoVo,WT,responsive,0.01578
+Lactate (calcium),5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,0.115524
+Lactate (calcium),5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.0888126
+Lactate (calcium),5,CDKN1A,CVCL_0504,RKO,WT,responsive,0.284487
+Lactate (calcium),5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,0.398625
+Lactate (calcium),5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),0.30104
+Lactate (calcium),5,CDKN1A,CVCL_1056,A498,WT,responsive,0.074821
+Lactate (calcium),5,CDKN1A,CVCL_1097,C32,WT,responsive,0.13167
+Lactate (calcium),5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,0.366034
+Lactate (calcium),5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.0796676
+Lactate (calcium),5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-0.560262
+Lactate (calcium),5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.208931
+Lactate (calcium),5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,0.13199
+Lactate (calcium),5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.230041
+Lactate (calcium),5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,-0.0288217
+Lactate (calcium),5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,0.299318
+Lactate (calcium),5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,0.0315673
+Lactate (calcium),5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.258414
+Lactate (calcium),5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,0.0341022
+Lactate (calcium),5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,-0.00276375
+Lactate (calcium),5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,-0.0407443
+Lactate (calcium),5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,0.249505
+Lactate (calcium),5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,0.226258
+Lactate (calcium),5,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,-1.31986
+Lactate (calcium),5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,-0.798666
+Lactate (calcium),5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,0.160749
+Lactate (calcium),5,CDKN1A,CVCL_1724,SW48,WT,responsive,-0.391762
+Lactate (calcium),5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,0.326821
+Lactate (calcium),5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,0.130591
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0023,A549,WT,responsive,1.7786
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),0.754863
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,0.911575
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0099,SNU-1,WT,responsive,2.03075
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),2.87727
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,-0.354784
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),1.04013
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,0.66302
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,0.347544
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,0.841968
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,0.534291
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,1.84716
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,2.0028
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),1.54185
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,1.8874
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,0.254576
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0397,LS 180,WT,responsive,1.32215
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0399,LoVo,WT,responsive,0.717982
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),2.46745
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,1.78804
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,1.20735
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0504,RKO,WT,responsive,0.766508
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_0546,SW480,altered,unresponsive,0.872717
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),0.763204
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1056,A498,WT,responsive,1.54629
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,0.706757
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1097,C32,WT,responsive,1.27105
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,0.578093
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,1.66201
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),0.475325
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.344279
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,1.79504
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.597107
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,-0.737124
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,0.686353
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,0.173773
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,0.556725
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,1.98437
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,1.37116
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,1.05292
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,0.055573
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,1.36451
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,0.28748
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,1.17115
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1724,SW48,WT,responsive,0.914594
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,0.638002
+Mitoxantrone (dihydrochloride),5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,1.14178
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0023,A549,WT,responsive,1.26139
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,0.66394
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,1.55592
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),0.317413
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,0.215497
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.950975
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,-0.210183
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,-0.0185527
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,0.337567
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-0.191022
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,0.661281
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,0.0580537
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.622764
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,0.0779042
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,0.229594
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0397,LS 180,WT,responsive,1.08712
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0399,LoVo,WT,responsive,0.88273
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,1.09034
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.35223
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0504,RKO,WT,responsive,1.30934
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,0.412856
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),1.27627
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1056,A498,WT,responsive,1.44057
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1097,C32,WT,responsive,0.973641
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,1.07151
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.156189
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),0.970347
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),1.13889
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,0.5076
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.899419
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,-0.0751183
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,0.00417733
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,0.148701
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.244496
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,0.513427
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,-0.685184
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,0.384257
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,0.598151
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,0.471178
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,0.253094
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,-1.21713
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,0.110422
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1724,SW48,WT,responsive,0.896885
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,0.26748
+Mitoxantrone (dihydrochloride),5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,0.309562
+Ouabain (Octahydrate),5,TRIM72,CVCL_0023,A549,WT,responsive,2.29377
+Ouabain (Octahydrate),5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),-1.43231
+Ouabain (Octahydrate),5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,0.543766
+Ouabain (Octahydrate),5,TRIM72,CVCL_0099,SNU-1,WT,responsive,3.65219
+Ouabain (Octahydrate),5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),2.77582
+Ouabain (Octahydrate),5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,2.77583
+Ouabain (Octahydrate),5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),-0.910791
+Ouabain (Octahydrate),5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,4.70737
+Ouabain (Octahydrate),5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,0.4411
+Ouabain (Octahydrate),5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,-0.956269
+Ouabain (Octahydrate),5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,-0.730012
+Ouabain (Octahydrate),5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,2.86344
+Ouabain (Octahydrate),5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,1.51773
+Ouabain (Octahydrate),5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.00567639
+Ouabain (Octahydrate),5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,-0.0170625
+Ouabain (Octahydrate),5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,0.582195
+Ouabain (Octahydrate),5,TRIM72,CVCL_0397,LS 180,WT,responsive,4.21411
+Ouabain (Octahydrate),5,TRIM72,CVCL_0399,LoVo,WT,responsive,2.99605
+Ouabain (Octahydrate),5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),2.68678
+Ouabain (Octahydrate),5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,2.96985
+Ouabain (Octahydrate),5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,0.714359
+Ouabain (Octahydrate),5,TRIM72,CVCL_0504,RKO,WT,responsive,3.04512
+Ouabain (Octahydrate),5,TRIM72,CVCL_0546,SW480,altered,unresponsive,1.57415
+Ouabain (Octahydrate),5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),-0.883269
+Ouabain (Octahydrate),5,TRIM72,CVCL_1056,A498,WT,responsive,1.44481
+Ouabain (Octahydrate),5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,0.524172
+Ouabain (Octahydrate),5,TRIM72,CVCL_1097,C32,WT,responsive,3.07385
+Ouabain (Octahydrate),5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,-1.00922
+Ouabain (Octahydrate),5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,0.892627
+Ouabain (Octahydrate),5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),4.12181
+Ouabain (Octahydrate),5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),-0.704518
+Ouabain (Octahydrate),5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,1.09317
+Ouabain (Octahydrate),5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.780198
+Ouabain (Octahydrate),5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,-0.957555
+Ouabain (Octahydrate),5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,2.73391
+Ouabain (Octahydrate),5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,-2.33519
+Ouabain (Octahydrate),5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,0.821815
+Ouabain (Octahydrate),5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,1.37753
+Ouabain (Octahydrate),5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,1.35352
+Ouabain (Octahydrate),5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,0.0607985
+Ouabain (Octahydrate),5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,1.12855
+Ouabain (Octahydrate),5,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,-0.621296
+Ouabain (Octahydrate),5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,0.947726
+Ouabain (Octahydrate),5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,0.26
+Ouabain (Octahydrate),5,TRIM72,CVCL_1724,SW48,WT,responsive,0.863444
+Ouabain (Octahydrate),5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,1.7947
+Ouabain (Octahydrate),5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,1.63055
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0023,A549,WT,responsive,0.247226
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,0.834087
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,1.867
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),0.920734
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,1.35205
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.611997
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,0.342007
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,1.09094
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,0.494222
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-0.204454
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,0.539654
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,0.666091
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.76452
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,0.8462
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,1.02702
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0397,LS 180,WT,responsive,0.260424
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0399,LoVo,WT,responsive,0.0437552
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,0.392642
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.0970019
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0504,RKO,WT,responsive,0.693938
+Ouabain (Octahydrate),5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,0.901459
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),0.0648667
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1056,A498,WT,responsive,1.25583
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1097,C32,WT,responsive,0.0949064
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,-0.129163
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,0.306266
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),0.167712
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.750727
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,0.615291
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),1.08003
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,1.02345
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,-0.112032
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,0.582049
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.83415
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,0.684317
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,0.448708
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,0.775612
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,0.375081
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,-0.0215982
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,0.363361
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,0.55737
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,1.22729
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1724,SW48,WT,responsive,0.570854
+Ouabain (Octahydrate),5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,0.904698
+Ouabain (Octahydrate),5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,0.259541
+Panobinostat,5,TRIM72,CVCL_0023,A549,WT,responsive,3.33255
+Panobinostat,5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),0.158658
+Panobinostat,5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,3.6299
+Panobinostat,5,TRIM72,CVCL_0099,SNU-1,WT,responsive,2.24706
+Panobinostat,5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),1.78753
+Panobinostat,5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,1.24211
+Panobinostat,5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.765051
+Panobinostat,5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,0.997516
+Panobinostat,5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,0.605721
+Panobinostat,5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,1.43041
+Panobinostat,5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,0.460608
+Panobinostat,5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,2.74859
+Panobinostat,5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,1.55182
+Panobinostat,5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),3.47895
+Panobinostat,5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,2.22873
+Panobinostat,5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,1.06666
+Panobinostat,5,TRIM72,CVCL_0397,LS 180,WT,responsive,2.43624
+Panobinostat,5,TRIM72,CVCL_0399,LoVo,WT,responsive,1.23968
+Panobinostat,5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),2.19789
+Panobinostat,5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,3.23791
+Panobinostat,5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,2.15075
+Panobinostat,5,TRIM72,CVCL_0504,RKO,WT,responsive,-0.319622
+Panobinostat,5,TRIM72,CVCL_0546,SW480,altered,unresponsive,1.22318
+Panobinostat,5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),2.73383
+Panobinostat,5,TRIM72,CVCL_1056,A498,WT,responsive,3.261
+Panobinostat,5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,1.14661
+Panobinostat,5,TRIM72,CVCL_1097,C32,WT,responsive,2.4108
+Panobinostat,5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,-0.350244
+Panobinostat,5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,1.85618
+Panobinostat,5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),1.00865
+Panobinostat,5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),1.55042
+Panobinostat,5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,1.0498
+Panobinostat,5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.287094
+Panobinostat,5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,-0.587374
+Panobinostat,5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,2.16682
+Panobinostat,5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,2.07311
+Panobinostat,5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,2.22268
+Panobinostat,5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,0.890489
+Panobinostat,5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,1.79712
+Panobinostat,5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,2.54067
+Panobinostat,5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,0.0187792
+Panobinostat,5,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,0.511432
+Panobinostat,5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,-1.52975
+Panobinostat,5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,0.944676
+Panobinostat,5,TRIM72,CVCL_1724,SW48,WT,responsive,1.48011
+Panobinostat,5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,0.143005
+Panobinostat,5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,-0.478955
+Panobinostat,5,CDKN1A,CVCL_0023,A549,WT,responsive,-2.0915
+Panobinostat,5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,-0.0996128
+Panobinostat,5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,0.844526
+Panobinostat,5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),-1.34454
+Panobinostat,5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,-0.476027
+Panobinostat,5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),-0.0838087
+Panobinostat,5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,-0.808188
+Panobinostat,5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,1.84621
+Panobinostat,5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,0.461709
+Panobinostat,5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-0.239995
+Panobinostat,5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,-0.157662
+Panobinostat,5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,-0.562937
+Panobinostat,5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.0907829
+Panobinostat,5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,-0.390756
+Panobinostat,5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,0.604322
+Panobinostat,5,CDKN1A,CVCL_0397,LS 180,WT,responsive,-2.38469
+Panobinostat,5,CDKN1A,CVCL_0399,LoVo,WT,responsive,-1.46081
+Panobinostat,5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,-0.459711
+Panobinostat,5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.737752
+Panobinostat,5,CDKN1A,CVCL_0504,RKO,WT,responsive,-1.5371
+Panobinostat,5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,-0.17975
+Panobinostat,5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),-0.18097
+Panobinostat,5,CDKN1A,CVCL_1056,A498,WT,responsive,-0.493909
+Panobinostat,5,CDKN1A,CVCL_1097,C32,WT,responsive,-1.74679
+Panobinostat,5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,-0.885076
+Panobinostat,5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.791905
+Panobinostat,5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-2.36497
+Panobinostat,5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),-1.25161
+Panobinostat,5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,-0.866393
+Panobinostat,5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),-1.40084
+Panobinostat,5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,-0.646248
+Panobinostat,5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,-0.562914
+Panobinostat,5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,1.54032
+Panobinostat,5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,-0.420675
+Panobinostat,5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,-1.11389
+Panobinostat,5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,-0.935839
+Panobinostat,5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,0.159427
+Panobinostat,5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,1.31837
+Panobinostat,5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,0.58794
+Panobinostat,5,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,0.879255
+Panobinostat,5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,-0.103976
+Panobinostat,5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,-0.283192
+Panobinostat,5,CDKN1A,CVCL_1724,SW48,WT,responsive,-1.74063
+Panobinostat,5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,0.183345
+Panobinostat,5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,-1.56911
+TAK-901,0.05,TRIM72,CVCL_0023,A549,WT,responsive,1.67012
+TAK-901,0.05,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),0.531361
+TAK-901,0.05,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,1.05392
+TAK-901,0.05,TRIM72,CVCL_0099,SNU-1,WT,responsive,2.19901
+TAK-901,0.05,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),3.1313
+TAK-901,0.05,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,1.18765
+TAK-901,0.05,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),-0.906336
+TAK-901,0.05,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,1.27419
+TAK-901,0.05,TRIM72,CVCL_0292,HCT15,altered,unresponsive,0.76684
+TAK-901,0.05,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,0.343037
+TAK-901,0.05,TRIM72,CVCL_0320,HT-29,altered,unresponsive,0.909068
+TAK-901,0.05,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,0.430788
+TAK-901,0.05,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,0.592201
+TAK-901,0.05,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.767999
+TAK-901,0.05,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,0.79709
+TAK-901,0.05,TRIM72,CVCL_0371,KATO III,altered,unresponsive,1.24125
+TAK-901,0.05,TRIM72,CVCL_0397,LS 180,WT,responsive,0.781585
+TAK-901,0.05,TRIM72,CVCL_0399,LoVo,WT,responsive,1.32423
+TAK-901,0.05,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),0.300188
+TAK-901,0.05,TRIM72,CVCL_0459,NCI-H460,WT,responsive,1.05097
+TAK-901,0.05,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,1.3141
+TAK-901,0.05,TRIM72,CVCL_0504,RKO,WT,responsive,1.64475
+TAK-901,0.05,TRIM72,CVCL_0546,SW480,altered,unresponsive,1.72595
+TAK-901,0.05,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),1.37842
+TAK-901,0.05,TRIM72,CVCL_1056,A498,WT,responsive,1.6393
+TAK-901,0.05,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,1.39029
+TAK-901,0.05,TRIM72,CVCL_1097,C32,WT,responsive,0.0757161
+TAK-901,0.05,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,1.5574
+TAK-901,0.05,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,1.01387
+TAK-901,0.05,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),0.711821
+TAK-901,0.05,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),0.662227
+TAK-901,0.05,TRIM72,CVCL_1285,HOP62,altered,unresponsive,1.33213
+TAK-901,0.05,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.989296
+TAK-901,0.05,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,0.0800215
+TAK-901,0.05,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,0.0277158
+TAK-901,0.05,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,0.566495
+TAK-901,0.05,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,1.09636
+TAK-901,0.05,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,2.4045
+TAK-901,0.05,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,1.89884
+TAK-901,0.05,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,1.03183
+TAK-901,0.05,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,0.904347
+TAK-901,0.05,TRIM72,CVCL_1715,SW 1088,altered,unresponsive,2.17724
+TAK-901,0.05,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,1.51829
+TAK-901,0.05,TRIM72,CVCL_1717,SW1417,altered,unresponsive,1.96139
+TAK-901,0.05,TRIM72,CVCL_1724,SW48,WT,responsive,0.0990296
+TAK-901,0.05,TRIM72,CVCL_1731,SW 900,altered,unresponsive,1.23181
+TAK-901,0.05,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,0.662155
+TAK-901,0.05,CDKN1A,CVCL_0023,A549,WT,responsive,-0.34248
+TAK-901,0.05,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,0.239368
+TAK-901,0.05,CDKN1A,CVCL_0099,SNU-1,WT,responsive,-0.365484
+TAK-901,0.05,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),0.924663
+TAK-901,0.05,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,0.282605
+TAK-901,0.05,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),-1.69748
+TAK-901,0.05,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,0.153811
+TAK-901,0.05,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,0.0407581
+TAK-901,0.05,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,-0.51195
+TAK-901,0.05,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-0.107999
+TAK-901,0.05,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,0.0752454
+TAK-901,0.05,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,-0.573582
+TAK-901,0.05,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),0.143573
+TAK-901,0.05,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,-0.13552
+TAK-901,0.05,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,0.12082
+TAK-901,0.05,CDKN1A,CVCL_0397,LS 180,WT,responsive,0.620844
+TAK-901,0.05,CDKN1A,CVCL_0399,LoVo,WT,responsive,0.0916295
+TAK-901,0.05,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,-0.283533
+TAK-901,0.05,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.602588
+TAK-901,0.05,CDKN1A,CVCL_0504,RKO,WT,responsive,-0.287606
+TAK-901,0.05,CDKN1A,CVCL_0546,SW480,altered,unresponsive,-0.401146
+TAK-901,0.05,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),-0.284254
+TAK-901,0.05,CDKN1A,CVCL_1056,A498,WT,responsive,-0.416471
+TAK-901,0.05,CDKN1A,CVCL_1097,C32,WT,responsive,-0.140427
+TAK-901,0.05,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,0.51173
+TAK-901,0.05,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.227386
+TAK-901,0.05,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),-0.255543
+TAK-901,0.05,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),-0.0180645
+TAK-901,0.05,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,-0.390435
+TAK-901,0.05,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),0.80446
+TAK-901,0.05,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,0.050477
+TAK-901,0.05,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,0.0902996
+TAK-901,0.05,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,-0.032012
+TAK-901,0.05,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.22885
+TAK-901,0.05,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,0.0442815
+TAK-901,0.05,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,-0.078814
+TAK-901,0.05,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,-0.39844
+TAK-901,0.05,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,0.249285
+TAK-901,0.05,CDKN1A,CVCL_1715,SW 1088,altered,unresponsive,-1.14344
+TAK-901,0.05,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,0.132422
+TAK-901,0.05,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,-1.00212
+TAK-901,0.05,CDKN1A,CVCL_1724,SW48,WT,responsive,3.404
+TAK-901,0.05,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,-0.0120502
+TAK-901,0.05,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,0.00567722
+Topotecan (hydrochloride),5,TRIM72,CVCL_0023,A549,WT,responsive,1.45265
+Topotecan (hydrochloride),5,TRIM72,CVCL_0028,AN3 CA,altered,uncertain (within 2 SE of the cut),0.785846
+Topotecan (hydrochloride),5,TRIM72,CVCL_0069,SK-MEL-2,altered,unresponsive,0.406632
+Topotecan (hydrochloride),5,TRIM72,CVCL_0099,SNU-1,WT,responsive,1.12422
+Topotecan (hydrochloride),5,TRIM72,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),4.19969
+Topotecan (hydrochloride),5,TRIM72,CVCL_0152,AsPC-1,altered,unresponsive,1.7407
+Topotecan (hydrochloride),5,TRIM72,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),0.430897
+Topotecan (hydrochloride),5,TRIM72,CVCL_0218,COLO 205,altered,unresponsive,0.547286
+Topotecan (hydrochloride),5,TRIM72,CVCL_0292,HCT15,altered,unresponsive,1.70216
+Topotecan (hydrochloride),5,TRIM72,CVCL_0293,HEC-1-A,altered,unresponsive,-0.369679
+Topotecan (hydrochloride),5,TRIM72,CVCL_0320,HT-29,altered,unresponsive,1.48697
+Topotecan (hydrochloride),5,TRIM72,CVCL_0332,HS-578T,altered,unresponsive,0.077694
+Topotecan (hydrochloride),5,TRIM72,CVCL_0334,Hs 766T,WT,unresponsive,0.93055
+Topotecan (hydrochloride),5,TRIM72,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),2.32226
+Topotecan (hydrochloride),5,TRIM72,CVCL_0366,SNU-423,altered,unresponsive,-0.350044
+Topotecan (hydrochloride),5,TRIM72,CVCL_0371,KATO III,altered,unresponsive,1.26047
+Topotecan (hydrochloride),5,TRIM72,CVCL_0397,LS 180,WT,responsive,0.0676552
+Topotecan (hydrochloride),5,TRIM72,CVCL_0399,LoVo,WT,responsive,-0.950949
+Topotecan (hydrochloride),5,TRIM72,CVCL_0428,MIA PaCa-2,altered,uncertain (within 2 SE of the cut),5.24322
+Topotecan (hydrochloride),5,TRIM72,CVCL_0459,NCI-H460,WT,responsive,3.06567
+Topotecan (hydrochloride),5,TRIM72,CVCL_0480,PANC-1,altered,unresponsive,0.224835
+Topotecan (hydrochloride),5,TRIM72,CVCL_0504,RKO,WT,responsive,2.18662
+Topotecan (hydrochloride),5,TRIM72,CVCL_0546,SW480,altered,unresponsive,1.13997
+Topotecan (hydrochloride),5,TRIM72,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),1.85459
+Topotecan (hydrochloride),5,TRIM72,CVCL_1056,A498,WT,responsive,1.62455
+Topotecan (hydrochloride),5,TRIM72,CVCL_1094,C-33 A,altered,unresponsive,0.613372
+Topotecan (hydrochloride),5,TRIM72,CVCL_1097,C32,WT,responsive,2.68294
+Topotecan (hydrochloride),5,TRIM72,CVCL_1098,HepG2/C3A,WT,responsive,1.23686
+Topotecan (hydrochloride),5,TRIM72,CVCL_1119,CFPAC-1,altered,unresponsive,4.45632
+Topotecan (hydrochloride),5,TRIM72,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),2.20045
+Topotecan (hydrochloride),5,TRIM72,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),1.33646
+Topotecan (hydrochloride),5,TRIM72,CVCL_1285,HOP62,altered,unresponsive,1.3719
+Topotecan (hydrochloride),5,TRIM72,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),3.24158
+Topotecan (hydrochloride),5,TRIM72,CVCL_1478,NCI-H1573,altered,unresponsive,2.61997
+Topotecan (hydrochloride),5,TRIM72,CVCL_1495,NCI-H1792,altered,unresponsive,0.22587
+Topotecan (hydrochloride),5,TRIM72,CVCL_1517,NCI-H2030,altered,unresponsive,-0.0723252
+Topotecan (hydrochloride),5,TRIM72,CVCL_1547,NCI-H23,altered,unresponsive,0.311708
+Topotecan (hydrochloride),5,TRIM72,CVCL_1550,NCI-H2347,altered,unresponsive,2.64442
+Topotecan (hydrochloride),5,TRIM72,CVCL_1635,Panc 03.27,altered,unresponsive,1.2959
+Topotecan (hydrochloride),5,TRIM72,CVCL_1666,RPMI-7951,altered,unresponsive,1.80746
+Topotecan (hydrochloride),5,TRIM72,CVCL_1693,SHP-77,altered,unresponsive,0.219525
+Topotecan (hydrochloride),5,TRIM72,CVCL_1716,SW 1271,altered,unresponsive,1.44328
+Topotecan (hydrochloride),5,TRIM72,CVCL_1717,SW1417,altered,unresponsive,3.21384
+Topotecan (hydrochloride),5,TRIM72,CVCL_1724,SW48,WT,responsive,0.723302
+Topotecan (hydrochloride),5,TRIM72,CVCL_1731,SW 900,altered,unresponsive,1.39366
+Topotecan (hydrochloride),5,TRIM72,CVCL_C466,hTERT-HPNE,WT,responsive,1.41357
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0023,A549,WT,responsive,1.56642
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0069,SK-MEL-2,altered,unresponsive,1.18365
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0099,SNU-1,WT,responsive,3.96627
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0131,A-172,WT,uncertain (within 2 SE of the cut),1.15928
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0152,AsPC-1,altered,unresponsive,0.264511
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0179,BT-474,altered,uncertain (within 2 SE of the cut),1.11551
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0218,COLO 205,altered,unresponsive,0.149744
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0292,HCT15,altered,unresponsive,0.134708
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0293,HEC-1-A,altered,unresponsive,0.77522
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0320,HT-29,altered,unresponsive,-0.071434
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0332,HS-578T,altered,unresponsive,0.612914
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0334,Hs 766T,WT,unresponsive,-0.0371706
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0359,J82,altered,uncertain (within 2 SE of the cut),1.20232
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0366,SNU-423,altered,unresponsive,1.33605
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0371,KATO III,altered,unresponsive,1.0601
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0397,LS 180,WT,responsive,1.68604
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0399,LoVo,WT,responsive,1.23362
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0459,NCI-H460,WT,responsive,2.02202
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0480,PANC-1,altered,unresponsive,0.296517
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0504,RKO,WT,responsive,1.91146
+Topotecan (hydrochloride),5,CDKN1A,CVCL_0546,SW480,altered,unresponsive,0.0850215
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1055,A-427,WT,uncertain (within 2 SE of the cut),1.92963
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1056,A498,WT,responsive,1.80124
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1097,C32,WT,responsive,2.09687
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1098,HepG2/C3A,WT,responsive,1.84903
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1119,CFPAC-1,altered,unresponsive,-0.0996008
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1125,CHP-212,WT,uncertain (within 2 SE of the cut),0.913865
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1239,H4,WT,uncertain (within 2 SE of the cut),1.06912
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1285,HOP62,altered,unresponsive,0.36089
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1381,LOX-IMVI,WT,uncertain (within 2 SE of the cut),1.52147
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1478,NCI-H1573,altered,unresponsive,1.44567
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1495,NCI-H1792,altered,unresponsive,-0.910025
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1517,NCI-H2030,altered,unresponsive,1.10445
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1547,NCI-H23,altered,unresponsive,0.032748
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1550,NCI-H2347,altered,unresponsive,0.383454
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1577,NCI-H661,altered,unresponsive,0.00407779
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1635,Panc 03.27,altered,unresponsive,1.21433
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1666,RPMI-7951,altered,unresponsive,0.59967
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1693,SHP-77,altered,unresponsive,-0.119022
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1716,SW 1271,altered,unresponsive,-0.352245
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1717,SW1417,altered,unresponsive,1.50221
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1724,SW48,WT,responsive,1.07686
+Topotecan (hydrochloride),5,CDKN1A,CVCL_1731,SW 900,altered,unresponsive,1.38
+Topotecan (hydrochloride),5,CDKN1A,CVCL_C466,hTERT-HPNE,WT,responsive,1.20755

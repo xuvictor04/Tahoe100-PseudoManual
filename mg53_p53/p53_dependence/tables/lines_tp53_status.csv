@@ -1,0 +1,51 @@
+cell_line_id,cell_name,organ,tp53_group,tp53_class,tp53_changes,p53_responsiveness_log2,p53_responsiveness_se,functional_call,basal_p53_activity_log2,discordant,TRIM72_expressed,TRIM72_cpm_dmso
+CVCL_0428,MIA PaCa-2,Pancreas,altered,altered: missense only,p.R248W,0.466762,0.137852,uncertain (within 2 SE of the cut),-0.473911,,True,3.78728
+CVCL_0131,A-172,CNS/Brain,WT,WT,,0.722968,0.10396,uncertain (within 2 SE of the cut),1.10171,,True,4.34457
+CVCL_1239,H4,CNS/Brain,WT,WT,,0.706648,0.0813799,uncertain (within 2 SE of the cut),0.751173,,True,20.9539
+CVCL_1731,SW 900,Lung,altered,altered: truncating / splice / deletion,p.Q167*,0.307369,0.0280631,unresponsive,-0.345583,,True,15.8782
+CVCL_0480,PANC-1,Pancreas,altered,altered: missense only,p.R273H,0.256388,0.02243,unresponsive,-0.342992,,True,1.41288
+CVCL_1715,SW 1088,CNS/Brain,altered,altered: missense only,p.R273C,0.256044,0.0586655,unresponsive,-0.695352,,True,10.2344
+CVCL_1716,SW 1271,Lung,altered,altered: missense only,p.C277F,0.0409434,0.0799553,unresponsive,0.169565,,True,7.09061
+CVCL_1097,C32,Skin,WT,WT,,1.03869,0.0608336,responsive,0.872298,,True,5.57887
+CVCL_0023,A549,Lung,WT,WT,,0.976308,0.0809759,responsive,1.44427,,True,2.00635
+CVCL_1381,LOX-IMVI,Skin,WT,WT,,0.716,0.097823,uncertain (within 2 SE of the cut),0.964511,,True,8.72624
+CVCL_0332,HS-578T,Breast,altered,altered: missense only,p.V157F,0.327071,0.031363,unresponsive,-0.410607,,True,2.23197
+CVCL_1495,NCI-H1792,Lung,altered,altered: truncating / splice / deletion,Splice_site,0.170337,0.0318911,unresponsive,-0.481835,,True,1.83134
+CVCL_1550,NCI-H2347,Lung,altered,altered: truncating / splice / deletion,Thr125Thr; p.T125T,0.411308,0.062134,unresponsive,0.613233,,True,1.10086
+CVCL_1577,NCI-H661,Lung,altered,altered: missense only,p.R158L; p.S215I,0.198226,0.0755127,unresponsive,-0.0288505,,False,0.92798
+CVCL_0179,BT-474,Breast,altered,altered: missense only,p.E285K,0.498875,0.0572831,uncertain (within 2 SE of the cut),-0.208088,,True,14.1811
+CVCL_1478,NCI-H1573,Lung,altered,altered: missense only,p.R248L,0.221295,0.0238793,unresponsive,-0.685082,,True,23.548
+CVCL_1119,CFPAC-1,Pancreas,altered,altered: missense only,p.C242R,0.268889,0.0493789,unresponsive,-0.448353,,True,2.52938
+CVCL_0152,AsPC-1,Pancreas,altered,altered: truncating / splice / deletion,p.C135fs,0.288299,0.0427402,unresponsive,-0.565493,,True,4.19348
+CVCL_1517,NCI-H2030,Lung,altered,altered: missense only,p.G262V,0.204369,0.0270746,unresponsive,-0.0224558,,True,17.0973
+CVCL_1547,NCI-H23,Lung,altered,altered: missense only,p.M246I,0.312948,0.0593058,unresponsive,0.136708,,True,6.50908
+CVCL_1098,HepG2/C3A,Liver,WT,WT,,0.894626,0.0784294,responsive,0.79371,,True,13.2413
+CVCL_1285,HOP62,Lung,altered,altered: truncating / splice / deletion,Splice_site,0.339879,0.0367311,unresponsive,-0.38118,,True,6.4732
+CVCL_0366,SNU-423,Liver,altered,altered: truncating / splice / deletion,Splice_site,0.13599,0.0391566,unresponsive,-0.161284,,True,2.8391
+CVCL_1717,SW1417,Bowel,altered,altered: truncating / splice / deletion,p.C238fs,0.194375,0.0319229,unresponsive,-0.0917137,,True,1.34125
+CVCL_1666,RPMI-7951,Skin,altered,altered: truncating / splice / deletion,p.S166*,0.284418,0.0498273,unresponsive,-0.145409,,True,5.49352
+CVCL_1571,NCI-H596,Lung,altered,altered: missense only,p.G245C,,,not measured,0.0950998,,True,12.1312
+CVCL_0028,AN3 CA,Uterus,altered,altered: truncating / splice / deletion,p.G389W; p.R213Q; p.S90fs,0.468977,0.0759951,uncertain (within 2 SE of the cut),0.299698,,True,9.5789
+CVCL_C466,hTERT-HPNE,Pancreas,WT,WT,,0.937982,0.0539543,responsive,0.910523,,True,10.7551
+CVCL_0292,HCT15,Bowel,altered,altered: truncating / splice / deletion,Splice_site; p.S241F,0.167405,0.081994,unresponsive,-0.063694,,True,19.2558
+CVCL_0099,SNU-1,Esophagus/Stomach,WT,WT,,1.05613,0.113208,responsive,0.33759,,True,2.90253
+CVCL_1531,NCI-H2122,Lung,altered,altered: missense only,p.C176F; p.Q16L,0.263996,0.0160495,unresponsive,0.639711,,True,13.9006
+CVCL_1693,SHP-77,Lung,altered,altered: missense only,p.C176W,0.151371,0.0653818,unresponsive,-0.171575,,True,7.64611
+CVCL_0218,COLO 205,Bowel,altered,altered: truncating / splice / deletion,p.Y103fs; p.Y107fs,0.168028,0.0374765,unresponsive,-0.627406,,True,5.0234
+CVCL_1125,CHP-212,Peripheral Nervous System,WT,WT,,0.55649,0.115218,uncertain (within 2 SE of the cut),0.983633,,True,2.65502
+CVCL_0459,NCI-H460,Lung,WT,WT,,1.24641,0.0595486,responsive,0.683204,,True,1.87559
+CVCL_0069,SK-MEL-2,Skin,altered,altered: missense only,p.G245S,0.121607,0.0410171,unresponsive,-0.121144,,True,2.75994
+CVCL_0397,LS 180,Bowel,WT,WT,,0.948143,0.05548,responsive,1.11987,,True,1.32491
+CVCL_0371,KATO III,Esophagus/Stomach,altered,altered: truncating / splice / deletion,DEL,0.187618,0.0361715,unresponsive,-0.119684,,True,2.38452
+CVCL_0359,J82,Bladder/Urinary Tract,altered,altered: missense only,p.E271K; p.K320N,0.595494,0.0686157,uncertain (within 2 SE of the cut),-0.293995,,True,6.20212
+CVCL_1094,C-33 A,Cervix,altered,altered: missense only,p.R273C,0.238313,0.0442327,unresponsive,-0.373541,,True,23.4522
+CVCL_0293,HEC-1-A,Uterus,altered,altered: missense only,p.R248Q,0.290136,0.0180861,unresponsive,-0.511556,,True,21.4732
+CVCL_1056,A498,Kidney,WT,WT,,1.10423,0.0523468,responsive,1.20822,,True,9.40281
+CVCL_0546,SW480,Bowel,altered,altered: missense only,p.P309S; p.R273H,0.22384,0.0385681,unresponsive,-0.27306,,True,2.26663
+CVCL_0320,HT-29,Bowel,altered,altered: missense only,p.R273H,0.0545397,0.0755207,unresponsive,0.0812758,,True,3.63299
+CVCL_0334,Hs 766T,Pancreas,WT,WT,,0.160859,0.0321292,unresponsive,-0.281508,annotated wild type but unresponsive,True,2.17352
+CVCL_0399,LoVo,Bowel,WT,WT,,1.03459,0.0855056,responsive,1.02382,,True,12.2741
+CVCL_1635,Panc 03.27,Pancreas,altered,altered: truncating / splice / deletion,375+5G>T,0.260606,0.036348,unresponsive,-0.197149,,True,1.874
+CVCL_0504,RKO,Bowel,WT,WT,,1.36924,0.0616024,responsive,0.520933,,True,10.64
+CVCL_1724,SW48,Bowel,WT,WT,,1.06336,0.0767728,responsive,0.850558,,True,14.4445
+CVCL_1055,A-427,Lung,WT,WT,,0.662603,0.0838438,uncertain (within 2 SE of the cut),0.789047,,True,6.94514

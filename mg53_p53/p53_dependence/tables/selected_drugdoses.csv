@@ -1,0 +1,88 @@
+drug,conc,role,screen_hit,dna_damaging
+Apalutamide,0.05,TRIM72 WT-vs-altered screen hit,True,False
+Apalutamide,0.5,TRIM72 WT-vs-altered screen hit,True,False
+Apalutamide,5,TRIM72 WT-vs-altered screen hit,True,False
+Digitoxin,0.05,TRIM72 WT-vs-altered screen hit,True,False
+Digitoxin,0.5,TRIM72 WT-vs-altered screen hit,True,False
+Digitoxin,5,TRIM72 WT-vs-altered screen hit,True,False
+Flumatinib (mesylate),0.05,TRIM72 WT-vs-altered screen hit,True,False
+Flumatinib (mesylate),0.5,TRIM72 WT-vs-altered screen hit,True,False
+Flumatinib (mesylate),5,TRIM72 WT-vs-altered screen hit,True,False
+Fumaric acid,0.05,TRIM72 WT-vs-altered screen hit,True,False
+Fumaric acid,0.5,TRIM72 WT-vs-altered screen hit,True,False
+Fumaric acid,5,TRIM72 WT-vs-altered screen hit,True,False
+Futibatinib,0.05,TRIM72 WT-vs-altered screen hit,True,False
+Futibatinib,0.5,TRIM72 WT-vs-altered screen hit,True,False
+Futibatinib,5,TRIM72 WT-vs-altered screen hit,True,False
+Pralsetinib,0.05,TRIM72 WT-vs-altered screen hit,True,False
+Pralsetinib,0.5,TRIM72 WT-vs-altered screen hit,True,False
+Pralsetinib,5,TRIM72 WT-vs-altered screen hit,True,False
+Sunitinib,0.05,TRIM72 WT-vs-altered screen hit,True,False
+Sunitinib,0.5,TRIM72 WT-vs-altered screen hit,True,False
+Sunitinib,5,TRIM72 WT-vs-altered screen hit,True,False
+venetoclax,0.05,TRIM72 WT-vs-altered screen hit,True,False
+venetoclax,0.5,TRIM72 WT-vs-altered screen hit,True,False
+venetoclax,5,TRIM72 WT-vs-altered screen hit,True,False
+Auranofin,0.05,TRIM72 raiser,False,False
+Auranofin,0.5,TRIM72 raiser,False,False
+Auranofin,5,TRIM72 raiser,False,False
+Dinaciclib,0.05,TRIM72 raiser + p53 activator,False,False
+Dinaciclib,0.5,TRIM72 raiser + p53 activator,False,False
+Dinaciclib,5,TRIM72 raiser + p53 activator,False,False
+Doxorubicin (hydrochloride),0.05,TRIM72 raiser + p53 activator,False,True
+Doxorubicin (hydrochloride),0.5,TRIM72 raiser + p53 activator,False,True
+Doxorubicin (hydrochloride),5,TRIM72 raiser + p53 activator,False,True
+Epirubicin (hydrochloride),0.05,TRIM72 raiser + p53 activator,True,True
+Epirubicin (hydrochloride),0.5,TRIM72 raiser + p53 activator,True,True
+Epirubicin (hydrochloride),5,TRIM72 raiser + p53 activator,True,True
+Homoharringtonine,0.05,TRIM72 raiser + p53 activator,True,False
+Homoharringtonine,0.5,TRIM72 raiser + p53 activator,True,False
+Homoharringtonine,5,TRIM72 raiser + p53 activator,True,False
+Idarubicin (hydrochloride),0.05,TRIM72 raiser + p53 activator,False,True
+Idarubicin (hydrochloride),0.5,TRIM72 raiser + p53 activator,False,True
+Idarubicin (hydrochloride),5,TRIM72 raiser + p53 activator,False,True
+Mitoxantrone (dihydrochloride),0.05,TRIM72 raiser + p53 activator,False,True
+Mitoxantrone (dihydrochloride),0.5,TRIM72 raiser + p53 activator,False,True
+Mitoxantrone (dihydrochloride),5,TRIM72 raiser + p53 activator,False,True
+Topotecan (hydrochloride),0.05,TRIM72 raiser + p53 activator,False,True
+Topotecan (hydrochloride),0.5,TRIM72 raiser + p53 activator,False,True
+Topotecan (hydrochloride),5,TRIM72 raiser + p53 activator,False,True
+Amsacrine,0.05,p53 activator,False,True
+Amsacrine,0.5,p53 activator,False,True
+Amsacrine,5,p53 activator,False,True
+Cytarabine,0.05,p53 activator,False,True
+Cytarabine,0.5,p53 activator,False,True
+Cytarabine,5,p53 activator,False,True
+Cytarabine (hydrochloride),0.05,p53 activator,True,True
+Cytarabine (hydrochloride),0.5,p53 activator,True,True
+Cytarabine (hydrochloride),5,p53 activator,True,True
+Docetaxel,0.05,p53 activator,False,False
+Docetaxel,0.5,p53 activator,False,False
+Docetaxel,5,p53 activator,False,False
+Gemcitabine,0.05,p53 activator,False,True
+Gemcitabine,0.5,p53 activator,False,True
+Gemcitabine,5,p53 activator,False,True
+Harringtonine,0.05,p53 activator,False,False
+Harringtonine,0.5,p53 activator,False,False
+Harringtonine,5,p53 activator,False,False
+Irinotecan,0.05,p53 activator,False,True
+Irinotecan,0.5,p53 activator,False,True
+Irinotecan,5,p53 activator,False,True
+Irinotecan (hydrochloride),0.05,p53 activator,False,True
+Irinotecan (hydrochloride),0.5,p53 activator,False,True
+Irinotecan (hydrochloride),5,p53 activator,False,True
+Ouabain (Octahydrate),0.05,p53 activator,True,False
+Ouabain (Octahydrate),0.5,p53 activator,True,False
+Ouabain (Octahydrate),5,p53 activator,True,False
+PH-797804,0.05,p53 activator,False,False
+PH-797804,0.5,p53 activator,False,False
+PH-797804,5,p53 activator,False,False
+Selinexor,0.05,p53 activator,False,False
+Selinexor,0.5,p53 activator,False,False
+Selinexor,5,p53 activator,False,False
+TAK-901,0.05,p53 activator,False,False
+TAK-901,0.5,p53 activator,False,False
+TAK-901,5,p53 activator,False,False
+Triamcinolone,0.05,p53 activator,False,False
+Triamcinolone,0.5,p53 activator,False,False
+Triamcinolone,5,p53 activator,False,False

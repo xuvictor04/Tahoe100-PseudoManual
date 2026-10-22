@@ -1,0 +1,6 @@
+variant,TRIM72_n_partners_absr_ge_0.3,matched_genes_median_n_partners_absr_ge_0.3,matched_genes_p90_n_partners,TRIM72_pctile_n_partners,TRIM72_max_r,matched_genes_median_max_r,TRIM72_pctile_max_r,TRIM72_n_q_lt_0.05_and_absr_ge_0.3,n_matched_genes,TRIM72_top100_pct_sense_exposed,pct_sense_exposed_all_genes,matched_genes_top100_pct_sense_exposed_median,matched_sense_exposed_genes_top100_pct_sense_exposed_median,matched_unexposed_genes_top100_pct_sense_exposed_median,n_matched_sense_exposed,TRIM72_pctile_top100_sense_vs_matched,TRIM72_pctile_top100_sense_vs_matched_sense_exposed,n_drugdoses,n_permutations
+raw,5881,5330,7639,59.67,0.8627,0.7037,97.33,5881,300,47,4.224,4,11,2,39,99,92.31,1086,1000
+covariates,1404,2797,5333,29,0.8068,0.6104,99.67,1404,300,51,4.224,3,12,2,39,98.67,94.87,1086,1000
+minus_1pc,2894,2878,5373,50.67,0.8082,0.6287,97,2894,300,41,4.224,2,10,1,39,98.67,89.74,1086,1000
+minus_3pc,1178,833.5,2905,62.67,0.7615,0.5234,99.33,1178,300,51,4.224,2,11,1,39,98,89.74,1086,1000
+minus_10pc,660,13.5,127.2,100,0.66,0.3656,99.33,660,300,43,4.224,2,8,1,39,96.67,84.62,1086,1000

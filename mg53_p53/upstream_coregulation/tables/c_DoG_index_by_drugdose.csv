@@ -1,0 +1,1133 @@
+drug,conc,plates,n_sig_genes,cells_log2_vs_plate,flags,moa_fine,DoG_sense_index_z,DoG_antisense_index_z,DoG_sense_index_log2,DoG_antisense_index_log2,DoG_sense_index_robust_z,TRIM72_z,TRIM72_lfc,rank_sense_index
+Adagrasib,0.05,"plate1,plate10,plate11,plate12,plate14,plate2,plate3,plate4,plate5,plate6,plate7,plate8,plate9",321,0.2092,position not correctable,RAS inhibitor,1.972,0.3396,0.08732,0.01551,7.628,3.074,0.2945,1
+Filgotinib,5,plate12,1393,0.8474,,JAK/STAT inhibitor,1.431,0.06957,0.2517,0.01756,5.542,3.787,1.224,2
+TAK-901,0.05,plate1,1712,-0.5,,unclear,1.275,-0.3469,0.2288,-0.06391,4.942,3.067,1.051,3
+ERK5-IN-2,5,plate3,149,1.443,plate-row cell shift; noisy plate (z scaled),Other MAPK inhibitor,1.255,-0.04625,0.3744,-0.02814,4.864,1.882,1.164,4
+PF-06260933,5,plate3,1191,-0.6796,noisy plate (z scaled),Other MAPK inhibitor,1.002,0.07433,0.317,0.01022,3.889,2.782,1.716,5
+Homoharringtonine,5,"plate14,plate6",11993,-0.4323,cell-cycle shift; composition shift,Protein synthesis inhibitor,0.9887,-1.65,0.1478,-0.1685,3.836,14.77,3.359,6
+5-Azacytidine,5,plate12,1424,-0.5216,,DNA methyltransferase inhibitor,0.9512,0.1573,0.1515,0.0174,3.692,2.24,0.7277,7
+Homoharringtonine,0.5,plate5,10075,-0.3528,cell-cycle shift,Protein synthesis inhibitor,0.878,-0.8389,0.163,-0.1264,3.409,7.931,2.553,8
+Cinacalcet,5,plate12,8,0.4978,,unclear,0.8229,-0.05231,0.1356,-0.01434,3.197,1.763,0.5748,9
+Auranofin,5,plate12,8581,-0.9434,,unclear,0.8072,-0.7619,0.1561,-0.1164,3.136,8.429,2.713,10
+Panobinostat,5,plate12,10622,-0.3679,cell-cycle shift,HDAC inhibitor,0.801,-0.1191,0.1403,-0.0126,3.113,4.43,1.43,11
+S-Adenosyl-L-methionine (disulfate tosylate),5,"plate14,plate6",106,0.1743,,unclear,0.7626,0.05787,0.08794,0.008247,2.964,2.692,0.6199,12
+Abemaciclib,0.05,plate13,77,0.1345,unreliable plate only,CDK inhibitor,0.7267,-0.1277,0.118,-0.02749,2.826,2.016,0.656,13
+Volasertib,0.5,plate2,54,-0.06879,noisy plate (z scaled),unclear,0.7181,-0.01474,0.1566,-0.01523,2.793,1.468,0.669,14
+TAK-733,0.05,plate1,162,0.2194,,MEK inhibitor,0.7138,-0.08111,0.1193,-0.02542,2.776,1.303,0.4519,15
+crizotinib,5,plate9,213,0.2137,,Multi-TK inhibitor,0.7085,0.03538,0.1134,0.002634,2.756,0.1899,0.07249,16
+GSK1059615,5,plate3,1602,1.23,plate-row cell shift; noisy plate (z scaled),PI3K/AKT inhibitor,0.6866,-0.2337,0.1949,-0.08665,2.672,-0.02283,-0.004858,17
+Dabrafenib,5,plate3,34,1.838,plate-row cell shift; noisy plate (z scaled),RAF inhibitor,0.6369,-0.0797,0.1838,-0.04023,2.48,-0.03308,-0.01115,18
+Crizotinib (hydrochloride),5,plate12,98,0.4976,,Multi-TK inhibitor,0.634,0.05601,0.1004,0.008734,2.468,2.156,0.7009,19
+Lonafarnib,0.5,plate2,41,0.6441,noisy plate (z scaled),RAS inhibitor,0.629,-0.05927,0.1302,-0.02746,2.449,0.1794,0.08979,20
+Sapanisertib,5,plate3,232,1.548,plate-row cell shift; noisy plate (z scaled),MTOR inhibitor,0.6171,-0.07908,0.1728,-0.04324,2.403,0.1086,0.07578,21
+Methylprednisolone succinate,0.05,plate13,12,0.1892,unreliable plate only,Glucocorticoid receptor agonist,0.6061,0.01711,0.1002,-0.002868,2.361,1.336,0.4378,22
+Raltitrexed,5,"plate14,plate6",142,0.3959,cell-cycle shift,DNA synthesis/repair inhibitor,0.6035,0.1629,0.06567,0.01912,2.351,1.737,0.4031,23
+DTP3,0.05,plate13,15,0.4051,unreliable plate only,unclear,0.5971,-0.004896,0.09648,-0.00862,2.326,1.609,0.5254,24
+Dihydroartemisinin,5,plate12,451,-0.6801,,unclear,0.5964,-0.02522,0.09275,-0.01536,2.324,-0.6554,-0.2011,25
+ML264,5,plate3,0,0.7665,plate-row cell shift; noisy plate (z scaled),unclear,0.5919,-0.04637,0.1763,-0.02357,2.306,1.144,0.7108,26
+Paclitaxel,5,plate3,3,1.728,plate-row cell shift; noisy plate (z scaled),Microtubule inhibitor,0.582,0.03012,0.1683,-0.005118,2.268,0.8688,0.5422,27
+Mebendazole,5,plate9,1202,1.225,,Microtubule inhibitor,0.5714,0.2063,0.08487,0.03821,2.227,2.574,0.8679,28
+Hexylresorcinol,5,"plate14,plate6",15,0.4636,,unclear,0.5596,0.2722,0.05877,0.02549,2.182,0.01234,0.01195,29
+Phenytoin (sodium),0.5,plate8,7,-0.4825,,unclear,0.557,0.0965,0.08756,0.01428,2.171,-0.2021,-0.05567,30
+Daptomycin,0.5,plate13,1373,-0.7146,unreliable plate only,unclear,0.5461,-0.01613,0.0901,-0.002249,2.129,1.833,0.5971,31
+c-Kit-IN-1,0.5,plate2,81,0.1824,noisy plate (z scaled),Multi-TK inhibitor,0.5421,-0.06991,0.1133,-0.03564,2.114,0.5114,0.2391,32
+Auranofin,0.5,plate11,140,0.1309,,unclear,0.5369,0.05022,0.08418,0.008454,2.094,1.249,0.5824,33
+Ropivacaine (hydrochloride monohydrate),5,"plate14,plate6",37,0.004803,,unclear,0.5349,0.164,0.06086,0.01883,2.086,1.528,0.3557,34
+BAY1125976,5,plate3,335,1.471,plate-row cell shift; noisy plate (z scaled),PI3K/AKT inhibitor,0.5342,-0.1631,0.1563,-0.06218,2.084,0.5172,0.3265,35
+Temuterkib,5,plate3,0,0.6949,plate-row cell shift; noisy plate (z scaled),Other MAPK inhibitor,0.5319,-0.1034,0.1607,-0.03275,2.075,0.6603,0.4143,36
+Torkinib,0.05,plate1,6,-0.1683,,MTOR inhibitor,0.5316,0.01236,0.09388,-0.005442,2.074,1.102,0.3834,37
+Idarubicin (hydrochloride),0.05,plate4,33,0.04831,,DNA synthesis/repair inhibitor,0.5283,0.07848,0.08985,0.01563,2.061,2.949,0.955,38
+Pyridoxine,0.05,plate4,17,0.06581,,unclear,0.5282,0.01671,0.09225,0.004722,2.061,2.706,0.8773,39
+Futibatinib,0.05,plate1,53,0.02031,,Other TK inhibitor,0.5253,0.1233,0.08328,0.01898,2.049,1.473,0.5095,40
+Pimozide,5,plate12,30,0.001695,,unclear,0.5232,-0.02216,0.08269,-0.002686,2.041,1.308,0.4288,41
+Malotilate,0.5,plate11,24,0.04676,,unclear,0.5207,0.248,0.08147,0.04318,2.032,0.9007,0.4225,42
+Tubulin inhibitor 6,0.5,plate2,0,0.6092,noisy plate (z scaled),Microtubule inhibitor,0.5106,0.01876,0.1136,-0.002981,1.992,0.3651,0.1733,43
+Naproxen,0.05,plate7,45,-0.7424,,Cyclooxygenase inhibitor,0.5082,-0.07861,0.09506,-0.01499,1.983,2.339,0.8206,44
+Methotrexate,5,plate12,10,0.4185,,DNA synthesis/repair inhibitor,0.5008,0.09086,0.0775,0.01335,1.955,1.376,0.4504,45
+Topotecan (hydrochloride),0.5,plate8,3368,0.1066,cell-cycle shift,DNA synthesis/repair inhibitor,0.4949,0.8717,0.07472,0.1352,1.932,-0.3426,-0.1007,46
+Ivermectin,5,plate12,19,0.1826,,unclear,0.4943,0.01863,0.07314,-0.007315,1.93,0.2073,0.07564,47
+Isocorydine,0.05,plate4,8,0.2663,,unclear,0.4889,0.02574,0.07991,0.004134,1.909,1.784,0.5815,48
+Daptomycin,0.05,plate13,58,-0.1345,unreliable plate only,unclear,0.4888,-0.01809,0.08042,-0.00291,1.908,2.198,0.7142,49
+Clobetasol propionate,5,plate12,612,-0.155,,unclear,0.4843,0.07891,0.07836,0.005827,1.891,0.3811,0.1314,50
+Peretinoin,5,plate9,1459,-0.3489,,Retinoic receptor agonist,0.4835,-0.02877,0.08543,-0.005561,1.888,1.099,0.3757,51
+c-Kit-IN-1,0.05,plate13,5673,0.02637,unreliable plate only,Multi-TK inhibitor,0.483,-0.2038,0.06365,-0.03631,1.886,0.5937,0.1996,52
+BI-78D3,5,plate3,0,1.051,plate-row cell shift; noisy plate (z scaled),Other MAPK inhibitor,0.4801,0.02929,0.1419,0.007863,1.875,1.009,0.6282,53
+Goserelin (acetate),5,"plate14,plate6",10,0.235,,unclear,0.4776,0.1212,0.0463,0.00694,1.865,-0.4988,-0.104,54
+Vinblastine (sulfate),0.5,plate5,1701,-0.8844,,Microtubule inhibitor,0.4725,0.01549,0.0765,-0.007039,1.845,1.204,0.3955,55
+Doxorubicin (hydrochloride),5,plate9,7317,-0.6521,cell-cycle shift,DNA synthesis/repair inhibitor,0.4655,-0.446,0.1153,-0.06961,1.818,4.716,1.582,56
+Chlorhexidine (diacetate),5,"plate14,plate6",127,0.3389,,unclear,0.4651,-0.1446,0.05689,-0.0125,1.817,0.7736,0.1846,57
+Gemfibrozil,0.05,plate4,2,-0.156,,unclear,0.4625,-0.03193,0.07968,-0.007652,1.807,1.847,0.6017,58
+Imiquimod (hydrochloride),0.05,plate10,18,-0.01704,,unclear,0.4533,0.2801,0.06497,0.0355,1.771,-1.004,-0.313,59
+Cloxacillin (sodium),0.05,plate4,19,0.3049,,unclear,0.4509,-0.002997,0.06784,0.001373,1.762,2.137,0.6947,60
+Asciminib,0.05,plate10,92,-0.2396,,Other TK inhibitor,0.4489,0.228,0.06332,0.02669,1.754,-0.1784,-0.04808,61
+Anethole trithione,0.5,plate5,211,0.7813,,unclear,0.4488,0.02477,0.06054,-0.002679,1.754,-0.2414,-0.06827,62
+PH-797804,0.05,plate1,63,0.2215,,Other MAPK inhibitor,0.4485,0.06583,0.07008,0.006002,1.753,-0.6999,-0.2286,63
+palbociclib,0.5,plate2,281,0.06862,cell-cycle shift; noisy plate (z scaled),CDK inhibitor,0.4484,-0.07131,0.08926,-0.02745,1.752,0.3461,0.1647,64
+EX229,0.05,plate1,543,-0.3483,,unclear,0.4468,-0.09964,0.07231,-0.01868,1.746,2.201,0.7568,65
+ML264,0.05,plate1,5,-0.2107,,unclear,0.446,0.09714,0.07282,0.01782,1.743,1.332,0.4617,66
+Pyridoxine,0.5,plate5,140,-1.076,low cells (technical?),unclear,0.4407,0.1239,0.07756,0.01103,1.723,1.339,0.4388,67
+Lucanthone,5,plate9,13,0.5075,,unclear,0.4406,-0.009669,0.07567,0.001381,1.723,0.3113,0.113,68
+Gefitinib,5,plate12,142,0.8261,,EGFR/ERBB inhibitor,0.4399,-0.1816,0.07259,-0.02431,1.72,2.676,0.8677,69
+AZD1390,0.05,plate1,13,0.1177,,unclear,0.4385,-0.203,0.07995,-0.03484,1.714,1.094,0.3807,70
+Fulvestrant,5,plate12,0,0.9377,,unclear,0.4359,0.00754,0.07216,0.0002325,1.704,1.941,0.6319,71
+Atazanavir (sulfate),0.5,plate11,13,-0.2733,,unclear,0.4332,0.1611,0.07397,0.03208,1.694,1.205,0.5622,72
+Gemcitabine,0.05,plate1,85,0.4325,,DNA synthesis/repair inhibitor,0.4253,0.2994,0.0475,0.03482,1.664,0.8032,0.2021,73
+Lapatinib ditosylate,0.5,plate2,9,0.2847,noisy plate (z scaled),EGFR/ERBB inhibitor,0.4232,0.13,0.08689,0.02038,1.656,0.1406,0.07235,74
+Artemether,0.05,plate10,7,0.5797,,unclear,0.4181,-0.07658,0.06917,-0.009529,1.636,1.871,0.6093,75
+Fluvoxamine (maleate),5,"plate14,plate6",15,-0.0444,,unclear,0.4176,-0.01154,0.0496,-0.003452,1.634,2.796,0.6434,76
+Orlistat,5,plate9,3,0.46,,unclear,0.4153,-0.1358,0.07048,-0.02443,1.625,0.5703,0.1994,77
+Methylthiouracil,5,plate12,9,0.911,,unclear,0.415,0.0386,0.06895,0.009048,1.624,2.291,0.744,78
+Larotrectinib,5,"plate14,plate6",94,-0.8755,,Other TK inhibitor,0.4148,0.3509,0.04381,0.03858,1.623,-0.2901,-0.05665,79
+Demeclocycline,5,"plate14,plate6",136,-0.3371,,unclear,0.4137,-0.1804,0.05372,-0.01729,1.619,0.2559,0.06719,80
+Tucatinib,0.5,plate2,10,0.1732,noisy plate (z scaled),EGFR/ERBB inhibitor,0.4067,0.04091,0.08209,-0.003271,1.592,0.08445,0.04711,81
+AT7519,5,plate3,6,0.4915,noisy plate (z scaled),CDK inhibitor,0.4046,0.1656,0.1219,0.04619,1.584,1.139,0.7078,82
+LY-2584702 (tosylate salt),0.05,plate1,3,-0.4536,,MTOR inhibitor,0.4033,0.07851,0.06427,0.009637,1.579,1.191,0.4138,83
+Isocorydine,5,"plate14,plate6",10,0.02776,,unclear,0.3992,0.1424,0.04071,0.01474,1.563,0.9376,0.2218,84
+Topotecan (hydrochloride),0.05,plate7,490,-0.9571,,DNA synthesis/repair inhibitor,0.3986,0.4942,0.07221,0.07634,1.561,0.763,0.2738,85
+PH-797804,5,plate3,6555,0.2581,plate-row cell shift; composition shift; noisy plate (z scaled),Other MAPK inhibitor,0.3972,-0.3196,0.0823,-0.1304,1.555,0.8109,0.5067,86
+Captopril,0.5,plate11,3,0.3929,,unclear,0.3956,-0.08028,0.06555,-0.006383,1.549,0.8749,0.4107,87
+Goserelin (acetate),0.05,plate4,0,0.5531,,unclear,0.3911,-0.07533,0.06337,-0.01322,1.532,0.9627,0.318,88
+L-Eflornithine (monohydrochloride),0.5,plate11,9,-0.2842,,unclear,0.389,0.1357,0.06199,0.02001,1.524,0.9802,0.459,89
+Peretinoin,0.5,plate8,1323,-0.3866,,Retinoic receptor agonist,0.3858,-0.03315,0.06581,-0.005669,1.511,1.112,0.366,90
+Sodium Salicylate,0.05,plate4,2,-0.02549,,Cyclooxygenase inhibitor,0.3826,0.04678,0.06212,0.007053,1.499,0.3837,0.1323,91
+Hydroxyurea,0.05,plate7,87,-0.8483,,DNA synthesis/repair inhibitor,0.3822,0.1419,0.07495,0.02403,1.497,1.11,0.3941,92
+Phenytoin (sodium),5,plate9,2,0.1762,,unclear,0.382,0.03492,0.06818,0.006808,1.497,1.608,0.5457,93
+Minodronic acid,0.5,plate2,8,0.7944,noisy plate (z scaled),unclear,0.382,0.1144,0.08504,0.02384,1.496,0.0945,0.05163,94
+Budesonide,5,plate12,566,-0.1714,,Glucocorticoid receptor agonist,0.3769,-0.03014,0.0551,-0.0203,1.477,-0.8706,-0.2701,95
+Volasertib,5,plate3,0,-0.5863,noisy plate (z scaled),unclear,0.3767,0.1646,0.1196,0.04875,1.476,1.703,1.054,96
+Citalopram (hydrobromide),5,plate12,1,0.08991,,unclear,0.3732,0.08582,0.0612,0.01354,1.463,0.7721,0.2568,97
+Pentagastrin,5,"plate14,plate6",9,0.4865,,unclear,0.3718,-0.105,0.04246,-0.01783,1.457,-0.8433,-0.1822,98
+Delamanid,0.5,plate11,4,0.01824,,unclear,0.3653,0.03888,0.06275,0.008471,1.432,0.2947,0.1444,99
+Dapagliflozin,5,plate12,2,0.4929,,Glucose transporter inhibitor,0.3653,-0.04701,0.06353,-0.007313,1.432,1.853,0.6037,100
+Lucanthone,0.05,plate7,82,1.22,,unclear,0.3648,0.04115,0.04845,0.003905,1.43,-1.592,-0.543,101
+Vilanterol,5,"plate14,plate6",138,-0.1133,,Adrenoceptor agonist,0.364,0.1494,0.04157,0.01947,1.427,2.846,0.6547,102
+Encorafenib,0.05,plate1,1,0.3817,,RAF inhibitor,0.3638,0.07685,0.06548,0.01221,1.426,0.2547,0.09567,103
+Methyl aminolevulinate (hydrochloride),0.5,plate11,3,0.8463,,unclear,0.3608,0.05256,0.05204,0.00938,1.415,0.4046,0.1948,104
+Vismodegib,5,plate12,2,-0.4394,,Sonic inhibitor,0.3605,0.1615,0.0541,0.01988,1.414,-0.2771,-0.07974,105
+Hydroxyurea,5,plate9,21,0.1684,,DNA synthesis/repair inhibitor,0.36,-0.09874,0.058,-0.02311,1.412,0.5581,0.1953,106
+Belinostat,5,plate12,9818,-0.1336,cell-cycle shift,HDAC inhibitor,0.3585,-0.0541,0.06367,0.005458,1.406,0.5892,0.1982,107
+S-Adenosyl-L-methionine (disulfate tosylate),0.05,plate4,56,-0.0133,,unclear,0.3572,0.07709,0.05726,0.01051,1.401,2.128,0.6919,108
+Rutin (trihydrate),0.05,plate7,90,0.9718,,unclear,0.3557,0.01612,0.04954,-0.002117,1.395,-0.2687,-0.08406,109
+Abemaciclib,5,plate3,2427,0.3409,noisy plate (z scaled),CDK inhibitor,0.3555,-0.08586,0.09297,-0.01729,1.394,1.007,0.6272,110
+Fulvestrant,0.05,plate10,4,-0.06089,,unclear,0.3552,0.1283,0.05154,0.0181,1.393,-0.532,-0.1615,111
+ULK-101,0.05,plate1,123,-0.185,,unclear,0.3538,0.08838,0.06113,0.003864,1.388,0.1552,0.06185,112
+RMC-6236,5,plate3,511,1.443,plate-row cell shift; noisy plate (z scaled),RAS inhibitor,0.3534,-0.2057,0.1026,-0.07032,1.386,0.117,0.08095,113
+Rimonabant,5,"plate14,plate6",7,-0.08924,,unclear,0.3518,0.012,0.04207,0.0004625,1.38,1.575,0.3665,114
+Quinestrol,0.5,plate5,3,0.698,,unclear,0.3493,-0.03437,0.05841,-0.007944,1.37,0.8954,0.2964,115
+Omeprazole,0.05,plate10,112,0.8478,,unclear,0.348,-0.08988,0.06285,-0.006092,1.365,2.003,0.6517,116
+9-ING-41,5,plate3,2,1.483,plate-row cell shift; noisy plate (z scaled),GSK3 inhibitor,0.3458,-0.1182,0.1001,-0.04238,1.357,0.8792,0.5486,117
+4EGI-1,0.5,plate2,174,0.5502,cell-cycle shift; noisy plate (z scaled),Protein synthesis inhibitor,0.3394,0.04005,0.07009,-0.01182,1.332,-0.9294,-0.4086,118
+Lopinavir,0.5,plate11,6,0.6278,,unclear,0.3377,0.04884,0.05293,0.005142,1.326,1.108,0.5178,119
+NG25,0.5,plate2,6,-0.4447,noisy plate (z scaled),Other MAPK inhibitor,0.3373,-0.07538,0.07447,-0.02678,1.324,0.661,0.3063,120
+Tirabrutinib,0.05,plate7,17,0.6241,,Other TK inhibitor,0.3343,-0.04642,0.04721,-0.01845,1.313,-1.057,-0.3576,121
+Anastrozole,0.5,plate2,0,0.9044,noisy plate (z scaled),unclear,0.3339,0.06197,0.07337,0.008559,1.311,0.1722,0.08657,122
+Clopidogrel,0.05,plate10,80,0.7245,,unclear,0.3333,0.2,0.04514,0.0372,1.309,1.589,0.5188,123
+SBI-0640756,5,plate3,33,-0.6845,noisy plate (z scaled),Protein synthesis inhibitor,0.3321,0.08444,0.1085,0.01927,1.304,1.283,0.7964,124
+Clopidogrel,0.5,plate11,12,0.4919,,unclear,0.3319,0.09183,0.04954,0.01582,1.303,0.3108,0.1518,125
+Gallic acid (hydrate),0.5,plate5,30,-0.3255,,Cyclooxygenase inhibitor,0.3275,0.1937,0.0565,0.0274,1.286,-0.5609,-0.1708,126
+BI-78D3,0.05,plate1,3,-0.3238,,Other MAPK inhibitor,0.3273,0.1113,0.05591,0.01594,1.286,1.316,0.456,127
+9-ING-41,0.05,plate1,7,0.3571,,GSK3 inhibitor,0.3272,-0.1791,0.06245,-0.02594,1.285,1.44,0.4984,128
+Fenofibrate,0.05,plate7,131,0.816,,unclear,0.327,0.01708,0.04152,-0.007412,1.285,-1.719,-0.5873,129
+Lactate (calcium),5,plate12,90,-0.1725,,unclear,0.3269,-0.08226,0.06764,-0.001955,1.284,3.341,1.081,130
+Encorafenib,5,plate3,120,1.737,plate-row cell shift; noisy plate (z scaled),RAF inhibitor,0.3218,-0.01274,0.08981,-0.01007,1.264,-0.9894,-0.5979,131
+Ranolazine,0.5,plate11,26,0.5335,,unclear,0.321,0.02019,0.04515,0.006312,1.261,0.7681,0.3617,132
+Pentamidine (isethionate),5,"plate14,plate6",56,-0.09134,,unclear,0.3161,-0.00847,0.03346,-0.0005419,1.242,1.165,0.2733,133
+Menadione,5,plate9,32,-0.5342,,unclear,0.3157,0.158,0.0489,0.02298,1.241,-1.215,-0.396,134
+Topotecan (hydrochloride),5,plate9,8958,-1.252,toxic; cell-cycle shift,DNA synthesis/repair inhibitor,0.3155,0.9703,0.0628,0.1572,1.24,4.032,1.354,135
+Rucaparib (phosphate),5,plate9,5,1.28,,DNA synthesis/repair inhibitor,0.3144,-0.04582,0.04898,-0.004065,1.236,1.071,0.3664,136
+Crizotinib (hydrochloride),0.05,plate10,0,-0.01771,,Multi-TK inhibitor,0.3142,0.07414,0.05017,0.01124,1.235,1.218,0.3999,137
+EX229,5,plate3,2133,-0.02598,noisy plate (z scaled),unclear,0.3136,-0.367,0.0985,-0.1095,1.233,1.152,0.716,138
+Selinexor,0.05,plate4,932,0.6445,cell-cycle shift,unclear,0.313,-0.0259,0.05611,-0.009843,1.231,0.853,0.2828,139
+TAK-733,0.5,plate2,9,-1.017,low cells (technical?); noisy plate (z scaled),MEK inhibitor,0.3126,-0.09992,0.06999,-0.0244,1.229,0.4907,0.2297,140
+LY2090314,0.05,plate1,7,-0.001369,,GSK3 inhibitor,0.3126,-0.08977,0.05732,-0.01536,1.229,0.7285,0.2566,141
+MK-8353,5,plate3,2,-0.1867,noisy plate (z scaled),Other MAPK inhibitor,0.3108,0.03424,0.09986,0.01542,1.222,1.641,1.016,142
+Aliskiren,0.05,plate4,1,0.4867,,unclear,0.3105,0.03128,0.05432,0.003949,1.221,2.076,0.6751,143
+Demeclocycline,0.05,plate4,3,-0.07887,,unclear,0.3093,0.03027,0.05836,0.007717,1.216,2.703,0.8761,144
+RMC-6236,0.05,plate1,30,-0.1857,,RAS inhibitor,0.3092,-0.1316,0.05752,-0.02322,1.216,0.8293,0.2908,145
+Capivasertib,0.05,plate1,0,0.06016,,PI3K/AKT inhibitor,0.3056,0.05016,0.05156,0.004921,1.202,0.93,0.3251,146
+Pitavastatin (Calcium),5,plate9,1158,-0.8283,cell-cycle shift,unclear,0.3032,0.06545,0.05022,0.00623,1.192,-1.176,-0.3831,147
+Valdecoxib,5,plate12,0,-0.0716,,Cyclooxygenase inhibitor,0.3028,0.02976,0.04531,-0.001059,1.191,0.7135,0.238,148
+Monocrotaline,5,plate9,3,-0.1241,,unclear,0.301,0.002218,0.05403,-0.0004469,1.184,0.8487,0.2923,149
+Clonidine (hydrochloride),5,"plate14,plate6",4,0.5635,,Adrenoceptor agonist,0.3001,0.1197,0.02958,0.009765,1.181,-0.9684,-0.2105,150
+(R)-Verapamil (hydrochloride),5,"plate14,plate6",1,0.2425,,unclear,0.2996,-0.02955,0.03396,-0.003796,1.179,1.222,0.2863,151
+Tucatinib,5,plate3,0,1.177,noisy plate (z scaled),EGFR/ERBB inhibitor,0.2995,0.02491,0.09337,0.01178,1.178,1.035,0.6445,152
+Tomivosertib,0.05,plate1,7,0.03772,,Protein synthesis inhibitor,0.2978,0.1309,0.04521,0.01889,1.172,0.4988,0.1786,153
+Dapagliflozin,0.5,plate11,0,0.8935,,Glucose transporter inhibitor,0.296,-0.0258,0.04882,-0.003741,1.165,0.7437,0.3505,154
+Capivasertib,0.5,plate2,5,0.4021,noisy plate (z scaled),PI3K/AKT inhibitor,0.2957,0.07359,0.05707,-0.008717,1.164,-0.5407,-0.2339,155
+Nafamostat (mesylate),5,plate12,0,0.2397,,unclear,0.2952,-0.1566,0.04991,-0.02631,1.162,0.7454,0.2483,156
+ERK5-IN-2,0.05,plate1,2,0.01044,,Other MAPK inhibitor,0.2944,-0.057,0.05259,-0.01425,1.159,1.513,0.5231,157
+Trimetrexate,0.5,plate5,26,0.133,,DNA synthesis/repair inhibitor,0.2938,0.1187,0.04705,0.01649,1.156,-0.03931,-0.003461,158
+Talc,0.5,plate11,5,-0.1408,,unclear,0.2878,0.2227,0.04527,0.03338,1.133,0.3728,0.1803,159
+Pentoxifylline,0.5,plate11,24,-0.1483,,unclear,0.2854,0.0299,0.04703,0.002066,1.124,0.94,0.4406,160
+(S)-Crizotinib,5,plate9,65,0.1297,,unclear,0.2838,-0.1423,0.04397,-0.02292,1.118,0.3573,0.1283,161
+Pitavastatin (Calcium),0.5,plate8,864,-1.287,low cells (technical?),unclear,0.2834,-0.1317,0.04739,-0.02274,1.116,-0.6745,-0.2072,162
+Filgotinib,0.05,plate10,101,0.07222,,JAK/STAT inhibitor,0.2833,0.1133,0.05607,0.02432,1.116,0.9179,0.3036,163
+Triamcinolone,5,"plate14,plate6",496,-0.1983,,Glucocorticoid receptor agonist,0.2822,0.1735,0.03253,0.01156,1.112,0.05572,0.02179,164
+Tadalafil,5,plate9,49,-0.4581,,unclear,0.2808,-0.1651,0.04602,-0.02932,1.106,-0.4279,-0.1336,165
+Piroxicam,0.5,plate11,2,0.2575,,Cyclooxygenase inhibitor,0.2805,0.1538,0.04296,0.02386,1.105,0.3558,0.1724,166
+Naproxen,5,plate9,27,-0.2637,,Cyclooxygenase inhibitor,0.2796,-0.02553,0.0463,-0.002462,1.102,1.437,0.4884,167
+Furosemide,5,"plate14,plate6",4,-0.0374,,unclear,0.2789,0.06918,0.03136,0.006285,1.099,1.256,0.294,168
+venetoclax,0.5,plate2,40,0.4428,noisy plate (z scaled),unclear,0.2782,-0.1313,0.05868,-0.04531,1.096,0.534,0.2492,169
+Tucatinib,0.05,plate1,1,0.1957,,EGFR/ERBB inhibitor,0.2781,-0.08155,0.04902,-0.01147,1.096,0.9011,0.3152,170
+Ipatasertib,5,plate3,157,1.387,plate-row cell shift; noisy plate (z scaled),PI3K/AKT inhibitor,0.2746,0.02885,0.07825,0.004012,1.082,-0.7637,-0.4594,171
+Irinotecan (hydrochloride),0.05,plate7,13,-0.416,,DNA synthesis/repair inhibitor,0.2725,-0.1797,0.05314,-0.03504,1.074,1.8,0.6336,172
+Thymol,0.5,plate5,437,-0.8527,,unclear,0.2706,0.2004,0.05068,0.02975,1.067,0.7632,0.254,173
+Norepinephrine (hydrochloride),0.5,plate5,3,0.7237,,Adrenoceptor agonist,0.2699,-0.06395,0.04105,-0.01038,1.064,-0.1154,-0.02788,174
+XRK3F2,5,plate3,40,1.227,plate-row cell shift; noisy plate (z scaled),unclear,0.2694,-0.1485,0.07723,-0.0444,1.062,-0.2515,-0.1451,175
+Radotinib,0.05,plate4,1,0.2489,,Other TK inhibitor,0.2642,-0.1048,0.04486,-0.01529,1.042,0.8341,0.2767,176
+Daptomycin,5,plate13,1546,-0.04015,unreliable plate only,unclear,0.2629,-0.05159,0.0398,-0.01691,1.037,-0.6098,-0.1865,177
+PF-06260933,0.05,plate13,8,0.4515,unreliable plate only,Other MAPK inhibitor,0.2628,-0.03101,0.03932,-0.01153,1.037,-0.1144,-0.02754,178
+Ropivacaine (hydrochloride monohydrate),0.5,plate5,67,-0.9136,,unclear,0.2603,0.2718,0.04433,0.03712,1.027,0.02144,0.01603,179
+Entrectinib,0.05,plate10,0,0.1018,,Other TK inhibitor,0.2584,0.1901,0.03434,0.02565,1.02,-1.126,-0.3519,180
+Fluvoxamine,0.5,plate8,29,-0.0815,,unclear,0.2572,0.1662,0.03209,0.01461,1.015,-0.7087,-0.2182,181
+XRK3F2,0.05,plate1,19,0.004523,,unclear,0.2551,-0.1193,0.04411,-0.01943,1.007,-0.3193,-0.09929,182
+Uridine,0.05,plate10,1,0.406,,unclear,0.2543,-0.07481,0.04877,-0.01225,1.004,1.102,0.3627,183
+Clofarabine,0.5,plate8,4,-0.7787,,DNA synthesis/repair inhibitor,0.2524,-0.02923,0.03953,-0.01443,0.9968,0.6166,0.2069,184
+Balsalazide (sodium hydrate),5,"plate14,plate6",9,0.287,,JAK/STAT inhibitor,0.2523,-0.0321,0.0256,-0.007785,0.9965,0.5168,0.1264,185
+Cytarabine,5,plate9,371,-0.5549,cell-cycle shift,DNA synthesis/repair inhibitor,0.2521,0.1195,0.04363,0.01717,0.9957,-0.2415,-0.07141,186
+Selinexor,5,"plate14,plate6",6067,-1.11,low cells (technical?); cell-cycle shift,unclear,0.2517,0.5245,0.03082,0.04681,0.9941,-1.407,-0.31,187
+Bexarotene,0.5,plate11,43,0.2191,,Retinoic receptor agonist,0.2517,0.04084,0.03725,0.00762,0.9939,1.134,0.5297,188
+Benproperine (phosphate),0.05,plate7,55,0.3479,,unclear,0.2505,-0.2096,0.03509,-0.03808,0.9893,-0.4591,-0.1501,189
+Procainamide (hydrochloride),0.5,plate8,1,-0.5182,,DNA methyltransferase inhibitor,0.2493,-0.01467,0.04166,-0.006358,0.9846,-0.2627,-0.07512,190
+Uridine,5,plate12,6,0.9843,,unclear,0.2492,-0.003567,0.04089,-0.001757,0.9842,2.278,0.74,191
+Sapanisertib,0.05,plate1,328,0.4241,cell-cycle shift,MTOR inhibitor,0.249,-0.005198,0.04483,-0.00548,0.9838,-0.8643,-0.2844,192
+Nimesulide,0.5,plate13,1,-0.3629,unreliable plate only,Cyclooxygenase inhibitor,0.2479,0.0615,0.04309,0.0089,0.9793,0.3098,0.1085,193
+Diphenhydramine,0.05,plate7,69,0.53,,unclear,0.2479,-0.08786,0.03167,-0.02353,0.9793,0.4284,0.1578,194
+Aspirin,5,plate12,0,-0.2368,,Cyclooxygenase inhibitor,0.2476,0.1101,0.03639,0.01263,0.9782,-0.08774,-0.019,195
+MK-3903,0.05,plate1,1,-0.2273,,unclear,0.2474,-0.1842,0.04623,-0.03285,0.9773,1.53,0.529,196
+Cepharanthine,5,"plate14,plate6",364,-0.8961,,unclear,0.2466,-0.3348,0.03148,-0.03785,0.9745,-0.0865,-0.01047,197
+Epirubicin (hydrochloride),0.05,plate7,45,-1.297,low cells (technical?),DNA synthesis/repair inhibitor,0.2463,0.05107,0.04898,0.007961,0.9733,1.312,0.4644,198
+Dabrafenib,0.05,plate1,3,0.09903,,RAF inhibitor,0.2453,-0.004884,0.0416,-0.00194,0.9694,0.2501,0.09411,199
+Cilostazol,5,plate9,17,0.358,,unclear,0.2445,0.005644,0.04152,0.002911,0.9662,-0.3003,-0.09102,200
+Tetracycline (hydrochloride),0.05,plate7,4,0.2969,,unclear,0.2427,0.009998,0.05024,0.007158,0.9594,1.408,0.4977,201
+Acetohexamide,0.5,plate5,9,-0.2475,,unclear,0.2413,-0.01631,0.04417,-0.004389,0.9538,0.4417,0.1509,202
+Bosentan (hydrate),0.05,plate7,12,-0.2507,,unclear,0.2408,0.1062,0.03867,0.01521,0.9518,-0.6669,-0.2222,203
+Paclitaxel,0.05,plate1,0,0.2458,,Microtubule inhibitor,0.2389,-0.02629,0.05008,-0.004925,0.9447,0.9743,0.3401,204
+DT-061,0.05,plate1,0,-0.4679,,unclear,0.2374,-0.05358,0.04382,-0.01321,0.939,0.8977,0.3141,205
+MK-8353,0.5,plate2,18,0.05017,noisy plate (z scaled),Other MAPK inhibitor,0.2359,-0.02293,0.05088,-0.01693,0.9332,-0.06739,-0.02114,206
+18β-Glycyrrhetinic acid,0.5,plate5,15,-0.5432,,unclear,0.2319,0.1075,0.04027,0.01719,0.9178,1.231,0.4042,207
+Fumaric acid,0.5,plate8,13,0.5997,,unclear,0.2312,-0.05248,0.03694,-0.01096,0.9148,1.41,0.4616,208
+Nevirapine,5,plate9,1,0.4313,,unclear,0.2303,-0.07737,0.03964,-0.01181,0.9114,-0.3736,-0.1155,209
+Everolimus,0.5,plate2,0,-0.4691,noisy plate (z scaled),MTOR inhibitor,0.2298,0.1099,0.03637,0.009767,0.9093,-0.004327,0.007775,210
+Palmatine (chloride),5,"plate14,plate6",16,-0.04118,,unclear,0.2261,-0.01372,0.03003,-0.0009901,0.8951,1.322,0.309,211
+Regorafenib,0.05,plate1,3,-0.3732,,Multi-TK inhibitor,0.2256,0.03593,0.04554,0.006795,0.8931,0.4387,0.1582,212
+Fluvoxamine,5,plate9,5,-0.322,,unclear,0.2254,0.1934,0.0349,0.03331,0.8924,0.2421,0.08991,213
+Berbamine,0.5,plate5,33,0.3198,,unclear,0.2252,0.1304,0.03049,0.01977,0.8919,-0.1926,-0.05265,214
+HI-TOPK-032,5,plate3,1347,-0.3837,noisy plate (z scaled),unclear,0.2246,0.06662,0.06077,0.009965,0.8894,1.623,1.005,215
+Darolutamide,0.5,plate11,2,0.106,,Androgen receptor antagonist,0.2233,0.1119,0.03628,0.02079,0.8845,0.8615,0.4045,216
+Dapagliflozin,0.05,plate10,18,0.4338,,Glucose transporter inhibitor,0.2227,-0.2346,0.0412,-0.03914,0.8822,-0.295,-0.08549,217
+Idoxuridine,0.5,plate11,4,-0.2267,,DNA synthesis/repair inhibitor,0.2221,-0.009188,0.03681,-0.004993,0.8799,-0.6954,-0.31,218
+Decitabine,5,plate9,28,0.1797,,DNA methyltransferase inhibitor,0.2221,0.03688,0.03586,0.003624,0.8798,-0.1835,-0.05205,219
+Ixazomib citrate,5,plate12,7136,-0.6685,cell-cycle shift,Proteasome inhibitor,0.2206,0.03338,0.02541,-0.00854,0.8741,-0.1661,-0.04412,220
+Glycyrrhizic acid,0.5,plate8,269,-1.103,low cells (technical?),unclear,0.22,-0.2219,0.03904,-0.04688,0.8716,1.297,0.4252,221
+Larotrectinib,0.5,plate5,6,-0.1361,,Other TK inhibitor,0.218,0.1314,0.03502,0.02361,0.8642,-0.6473,-0.1985,222
+Oleic acid,0.5,plate2,1,0.4224,noisy plate (z scaled),unclear,0.2174,0.04259,0.05092,0.006792,0.8615,0.3012,0.1446,223
+Atazanavir (sulfate),5,plate12,2,-0.09879,,unclear,0.2163,0.01323,0.03562,0.006275,0.8575,1.532,0.5007,224
+Drospirenone,5,plate12,8,0.6536,,unclear,0.2159,0.01991,0.03959,0.004344,0.8558,0.6659,0.2228,225
+Infigratinib,0.5,plate2,1,0.274,noisy plate (z scaled),Other TK inhibitor,0.2158,-0.02969,0.04396,-0.01457,0.8556,0.4547,0.2135,226
+Procainamide (hydrochloride),0.05,plate7,2,-0.3076,,DNA methyltransferase inhibitor,0.2156,-0.03258,0.03284,-0.008435,0.8547,-0.1599,-0.0463,227
+Altretamine,0.5,plate8,1,-0.09432,,DNA synthesis/repair inhibitor,0.2155,-0.0761,0.03663,-0.01756,0.8545,-0.4846,-0.1463,228
+BAY1125976,0.05,plate1,1,0.2678,,PI3K/AKT inhibitor,0.2139,0.009349,0.04295,0.007534,0.8484,1.431,0.4951,229
+Bergenin,0.5,plate5,31,-0.3055,,unclear,0.2126,0.04974,0.03676,0.005049,0.843,0.3478,0.1207,230
+Vismodegib,0.5,plate11,1,-0.3033,,Sonic inhibitor,0.2095,0.1339,0.03672,0.01974,0.8312,0.8843,0.4151,231
+Tomivosertib,5,plate3,212,0.5435,plate-row cell shift; noisy plate (z scaled),Protein synthesis inhibitor,0.2088,-0.02526,0.04954,-0.02096,0.8284,0.2205,0.1445,232
+ETC-206,5,plate3,0,0.2342,noisy plate (z scaled),Protein synthesis inhibitor,0.2088,0.09096,0.06235,0.02966,0.8283,0.8252,0.5155,233
+Crizotinib (hydrochloride),0.5,plate11,22,-0.6887,,Multi-TK inhibitor,0.2055,0.01921,0.04174,0.0013,0.8158,1.378,0.6418,234
+Mitoxantrone (dihydrochloride),0.05,plate4,21,-0.6753,,DNA synthesis/repair inhibitor,0.2015,0.0543,0.03518,0.009217,0.8002,-0.9104,-0.2829,235
+Almonertinib (hydrochloride),0.05,plate4,27,-0.3565,,EGFR/ERBB inhibitor,0.1993,0.005078,0.03753,-0.0003973,0.7918,0.335,0.1166,236
+olaparib,0.05,plate13,26,-0.02363,unreliable plate only,DNA synthesis/repair inhibitor,0.1967,-0.1248,0.02954,-0.0254,0.7817,-0.606,-0.1853,237
+Valdecoxib,0.5,plate11,8,-0.6153,,Cyclooxygenase inhibitor,0.1953,0.001731,0.03837,0.003558,0.7765,0.8556,0.4019,238
+Irinotecan (hydrochloride),0.5,plate8,35,0.4511,,DNA synthesis/repair inhibitor,0.1946,-0.002093,0.02197,-0.004538,0.7738,0.0242,0.01691,239
+Tranilast,5,plate9,0,0.3903,,unclear,0.1929,-0.008941,0.03557,-0.00381,0.7671,-0.2328,-0.06851,240
+Vilanterol,0.5,plate5,92,-0.422,,Adrenoceptor agonist,0.1927,-0.008857,0.03468,0.003428,0.7665,1.95,0.6347,241
+Bestatin,5,plate9,2,0.1739,,unclear,0.192,-0.07052,0.0314,-0.01634,0.7638,0.1803,0.06929,242
+Artemether,0.5,plate11,4,-0.1455,,unclear,0.191,-0.1199,0.03486,-0.01565,0.7597,0.6724,0.3178,243
+Niclosamide (olamine),0.5,plate8,919,0.6995,,unclear,0.1892,-0.1224,0.02226,-0.02258,0.753,1.348,0.4417,244
+(S)-Crizotinib,0.05,plate7,35,0.9197,,unclear,0.1879,-0.03388,0.02178,-0.007948,0.7481,-1.296,-0.4405,245
+Saquinavir,0.5,plate5,58,-0.544,,unclear,0.1873,0.1479,0.03376,0.01921,0.7455,0.6307,0.2115,246
+Arbutin,0.5,plate8,32,-0.1044,,unclear,0.1858,0.02309,0.03457,0.0001729,0.7399,0.421,0.1442,247
+Ropivacaine (hydrochloride monohydrate),0.05,plate4,22,-0.03603,,unclear,0.1856,0.04488,0.03532,0.01067,0.7391,0.4625,0.1575,248
+Piroxicam,5,plate12,0,0.1618,,Cyclooxygenase inhibitor,0.1855,0.1336,0.02888,0.01897,0.7386,-0.5402,-0.1642,249
+Ranolazine,0.05,plate10,7,-0.2525,,unclear,0.1846,-0.2033,0.03681,-0.03153,0.7351,1.1,0.3622,250
+Vandetanib,0.5,plate11,9,-0.4028,,Multi-TK inhibitor,0.1838,0.04017,0.03373,0.007867,0.732,0.3679,0.178,251
+Finasteride,5,plate9,21,-0.06267,,unclear,0.1824,-0.1044,0.03813,-0.02375,0.7266,0.07932,0.03561,252
+Decitabine,0.05,plate7,23,-0.2734,,DNA methyltransferase inhibitor,0.1823,0.1177,0.03318,0.02499,0.7261,-0.9898,-0.3342,253
+Vinblastine (sulfate),5,"plate14,plate6",1754,-0.2327,,Microtubule inhibitor,0.1818,0.04786,0.01746,0.0002879,0.7242,0.6298,0.152,254
+Dimethyl fumarate,0.5,plate8,0,0.7136,,unclear,0.18,0.01521,0.02949,0.002813,0.7176,-0.6359,-0.1949,255
+OTS514,0.05,plate1,56,-0.1833,transcription drop,Other MAPK inhibitor,0.1791,0.2624,0.01775,0.04643,0.714,-0.6744,-0.2199,256
+Relugolix,5,"plate14,plate6",0,0.3059,,unclear,0.179,0.05455,0.01811,0.004671,0.7135,-0.08323,-0.009729,257
+Rutin (trihydrate),5,plate9,3,-0.07149,,unclear,0.1778,0.2711,0.02085,0.0389,0.709,-1.038,-0.337,258
+Ivermectin,0.05,plate10,4,0.07528,,unclear,0.1774,-0.113,0.02578,-0.02084,0.7074,0.01684,0.01455,259
+Pexidartinib (hydrochloride),0.05,plate7,18,0.3684,,Multi-TK inhibitor,0.1773,0.05159,0.02463,0.001797,0.7069,-1.109,-0.3755,260
+Pravastatin (sodium),0.5,plate8,11,0.6373,,unclear,0.1769,0.03895,0.02505,0.005776,0.7056,-0.6729,-0.2067,261
+Norepinephrine (hydrochloride),0.05,plate4,0,-0.1066,,Adrenoceptor agonist,0.1768,-0.06994,0.03209,-0.01152,0.705,0.6123,0.2056,262
+Erlotinib,0.05,plate7,186,0.6586,,EGFR/ERBB inhibitor,0.1755,-0.06123,0.01832,-0.01718,0.7002,-1.441,-0.4908,263
+Aspirin,0.5,plate11,3,-0.07994,,Cyclooxygenase inhibitor,0.1755,-0.08552,0.03152,-0.01061,0.7,1.074,0.5019,264
+Tolcapone,5,"plate14,plate6",6,0.3056,,unclear,0.1753,-0.1129,0.02332,-0.01053,0.6992,1.595,0.3709,265
+Hesperidin,5,plate9,8,-0.3589,,unclear,0.1751,0.2891,0.02817,0.05157,0.6987,0.3496,0.1258,266
+Goserelin (acetate),0.5,plate5,4,0.5232,,unclear,0.1744,-0.003757,0.02541,0.002027,0.6958,0.205,0.0749,267
+"Dapagliflozin ((2S)-1,2-propanediol, hydrate)",5,plate9,5,-0.08587,,Glucose transporter inhibitor,0.1738,0.09358,0.024,0.01751,0.6935,0.1257,0.05108,268
+APTO-253,5,plate3,4,0.3287,noisy plate (z scaled),unclear,0.1736,0.1869,0.05951,0.06318,0.6927,0.6105,0.3837,269
+Captopril,0.05,plate10,4,-0.5553,,unclear,0.1724,-0.1078,0.02513,-0.02376,0.6882,-0.8608,-0.267,270
+Abiraterone acetate,0.5,plate11,1,0.489,,unclear,0.1724,-0.0304,0.02123,-0.007709,0.6881,-0.9249,-0.4154,271
+Pioglitazone,0.5,plate11,16,-0.6109,,unclear,0.1721,0.1297,0.03458,0.01843,0.6868,0.5001,0.2387,272
+Quinidine (15% dihydroquinidine),0.05,plate7,3,0.5268,,unclear,0.1707,0.1682,0.02469,0.02618,0.6817,0.3822,0.1417,273
+Lumateperone (tosylate),0.05,plate4,1,0.3044,,unclear,0.1706,-0.03843,0.02596,-0.008879,0.6813,0.926,0.3062,274
+Orlistat,0.5,plate8,2,-0.1973,,unclear,0.1698,-0.1644,0.03189,-0.02165,0.6783,1.26,0.4134,275
+Hexylresorcinol,0.05,plate4,0,0.2073,,unclear,0.1697,0.104,0.0227,0.01424,0.6777,-0.8404,-0.2605,276
+IQ 1,0.05,plate1,2,0.2324,,unclear,0.1693,-0.04216,0.0259,-0.001552,0.6761,0.2467,0.09295,277
+Lucanthone,0.5,plate8,1,-0.1424,,unclear,0.1689,0.05105,0.02639,0.008771,0.6746,-0.478,-0.1442,278
+L-Thyroxine (sodium salt pentahydrate),0.5,plate5,25,-0.6318,,unclear,0.1688,-0.06034,0.02802,-0.01549,0.6744,1.293,0.4241,279
+5-Azacytidine,0.05,plate10,0,0.01853,,DNA methyltransferase inhibitor,0.168,0.05759,0.02739,0.01359,0.6712,0.37,0.1278,280
+Folic acid,5,"plate14,plate6",45,-0.2256,,unclear,0.1666,0.02361,0.01676,-0.005926,0.6659,-1.676,-0.371,281
+Talc,5,plate12,0,0.1034,,unclear,0.1664,-0.06877,0.02878,-0.01038,0.6648,-0.08911,-0.01944,282
+Trimetrexate,5,"plate14,plate6",27,-0.09469,,DNA synthesis/repair inhibitor,0.1663,-0.03511,0.02023,-0.01023,0.6645,0.5817,0.1411,283
+Menadione,0.5,plate8,5,-0.8593,,unclear,0.1652,0.01056,0.02859,0.0001504,0.6605,-0.1503,-0.03907,284
+Artesunate,0.5,plate5,313,0.8198,,JAK/STAT inhibitor,0.164,-0.09302,0.01679,-0.01473,0.6559,0.2243,0.08111,285
+Naproxen,0.5,plate8,10,0.6624,,Cyclooxygenase inhibitor,0.1627,-0.0181,0.02488,-0.0004454,0.6507,1.179,0.3874,286
+Gemfibrozil,0.5,plate5,1,0.285,,unclear,0.1626,0.02557,0.02557,0.004419,0.6503,0.1128,0.04533,287
+Larotrectinib,0.05,plate4,97,0.3083,,Other TK inhibitor,0.1625,0.08256,0.02684,0.01976,0.65,-0.4117,-0.1229,288
+Canagliflozin,0.05,plate7,76,-0.5953,,Glucose transporter inhibitor,0.1621,0.2099,0.02782,0.03682,0.6484,0.4981,0.1819,289
+Betamethasone dipropionate,0.05,plate7,430,-0.5526,,Glucocorticoid receptor agonist,0.162,0.02667,0.03444,0.0008888,0.6479,0.3508,0.1309,290
+Auranofin,0.05,plate10,9,-0.2094,,unclear,0.1602,0.04684,0.02198,0.003916,0.641,0.03552,0.02054,291
+Dexamethasone,0.5,plate11,579,0.2551,,Glucocorticoid receptor agonist,0.1599,0.21,0.01131,0.0244,0.6398,-1.463,-0.6624,292
+Sinomenine,0.05,plate4,0,-0.4185,,unclear,0.1593,0.0008473,0.02703,-0.009112,0.6376,-0.3279,-0.09602,293
+Artesunate,5,"plate14,plate6",519,0.3183,cell-cycle shift,JAK/STAT inhibitor,0.1593,-0.04285,0.01349,-0.003653,0.6374,-0.3051,-0.06005,294
+Thymopentin,5,plate9,2,-0.1638,,unclear,0.1589,-0.007551,0.02451,-0.00627,0.6359,-1.469,-0.4809,295
+ETC-206,0.5,plate2,0,0.5353,noisy plate (z scaled),Protein synthesis inhibitor,0.1579,0.03431,0.03499,0.008927,0.6321,0.3726,0.1766,296
+Monocrotaline,0.05,plate7,23,-0.5011,,unclear,0.1576,0.08037,0.03299,0.01476,0.6309,0.3528,0.1315,297
+Delamanid,0.05,plate10,6,-0.06605,,unclear,0.1565,0.005991,0.02231,-0.002276,0.6267,-0.5705,-0.1739,298
+AT7519,0.5,plate2,0,0.405,noisy plate (z scaled),CDK inhibitor,0.1558,-0.05599,0.03693,-0.01458,0.6241,0.359,0.1705,299
+Voriconazole,0.05,plate10,3,-0.1166,,unclear,0.1552,0.1027,0.02019,0.01438,0.6219,-0.2515,-0.07154,300
+Tolcapone,0.05,plate4,2,0.2815,,unclear,0.1534,-0.1709,0.03124,-0.02625,0.6149,1.84,0.5993,301
+Methotrexate,0.05,plate10,9,-1.016,low cells (technical?),DNA synthesis/repair inhibitor,0.1529,-0.1611,0.02864,-0.02726,0.6131,-0.5154,-0.1562,302
+Orlistat,0.05,plate7,52,-0.8204,,unclear,0.1526,-0.006271,0.03085,-0.008845,0.6117,0.1006,0.04403,303
+Gefitinib,0.05,plate10,1,0.5038,,EGFR/ERBB inhibitor,0.1515,-0.221,0.02823,-0.03084,0.6075,2.171,0.7055,304
+Sildenafil,0.5,plate8,5,-0.4303,,unclear,0.1496,-0.1167,0.02462,-0.0264,0.6,0.05057,0.02537,305
+Dihydroartemisinin,0.5,plate11,90,0.03147,,unclear,0.1482,0.07444,0.02608,0.01253,0.5947,0.5396,0.2568,306
+Penfluridol,0.5,plate8,5,-0.8862,,unclear,0.1475,0.0773,0.0214,0.009983,0.5921,-0.8389,-0.26,307
+Citalopram (hydrobromide),0.05,plate10,207,0.8846,,unclear,0.147,0.08284,0.02616,0.01505,0.5901,0.614,0.2061,308
+Bimatoprost,5,"plate14,plate6",4,-0.1682,,unclear,0.1454,0.09013,0.01953,0.01029,0.5841,0.4697,0.1157,309
+MK-8353,0.05,plate1,1,0.08877,,Other MAPK inhibitor,0.1453,0.006829,0.02598,0.004945,0.5837,0.8412,0.2949,310
+BI-3406,0.5,plate2,132,0.5472,noisy plate (z scaled),RAS inhibitor,0.1446,-0.07307,0.02794,-0.01869,0.5809,-0.6027,-0.2618,311
+Ritonavir,5,"plate14,plate6",37,-0.1473,,unclear,0.1436,0.08134,0.01765,0.012,0.5772,1.223,0.2865,312
+5-Fluorouracil,0.5,plate11,7,0.1039,,DNA synthesis/repair inhibitor,0.143,0.2371,0.02182,0.04446,0.5746,0.4931,0.2355,313
+Roxadustat,5,plate9,66,0.1385,,unclear,0.1429,-0.02296,0.01983,-0.00838,0.5743,-0.5869,-0.1866,314
+Quinestrol,0.05,plate4,0,0.654,,unclear,0.1421,-0.1209,0.02571,-0.02034,0.5712,0.801,0.2661,315
+Thymopentin,0.05,plate7,0,0.09699,,unclear,0.1415,-0.02233,0.02559,-0.0005015,0.569,0.6035,0.2185,316
+Balsalazide (sodium hydrate),0.5,plate5,0,0.4634,,JAK/STAT inhibitor,0.1408,-0.07083,0.02057,-0.01538,0.5664,0.1266,0.04977,317
+Fenofibrate,5,plate9,2,-0.08243,,unclear,0.1396,0.03788,0.02337,0.005262,0.5618,-0.1271,-0.03324,318
+Imiquimod (maleate),0.5,plate8,24,-1.297,low cells (technical?),unclear,0.1389,0.02183,0.02611,0.0001924,0.559,-0.8855,-0.2749,319
+Sivelestat (sodium tetrahydrate),5,plate9,51,1.202,plate-row cell shift,unclear,0.1386,-0.1638,0.02496,-0.02974,0.5578,0.2515,0.09306,320
+Valdecoxib,0.05,plate10,12,-1,low cells (technical?),Cyclooxygenase inhibitor,0.1378,0.04289,0.02858,0.00913,0.5548,0.4727,0.1608,321
+"Dapagliflozin ((2S)-1,2-propanediol, hydrate)",0.5,plate8,25,-0.9413,,Glucose transporter inhibitor,0.1377,-0.08437,0.02794,-0.02416,0.5542,0.01705,0.01462,322
+Finasteride,0.5,plate8,0,-0.2938,,unclear,0.1368,0.1105,0.02229,0.01624,0.5509,0.1132,0.04546,323
+Tolmetin,0.5,plate8,0,0.4799,,Cyclooxygenase inhibitor,0.1361,-0.01088,0.02638,-0.004406,0.5481,-0.1969,-0.05401,324
+Doxorubicin (hydrochloride),0.5,plate8,213,-0.738,,DNA synthesis/repair inhibitor,0.136,0.1259,0.01978,0.01178,0.5479,-0.7726,-0.2387,325
+Cyclosporin A,0.5,plate11,22,-0.3176,,unclear,0.1357,0.01868,0.02936,0.008352,0.5465,1.214,0.5661,326
+Fenofibrate,0.5,plate8,0,-0.2153,,unclear,0.1348,-0.03539,0.02136,-0.006969,0.5432,0.2649,0.09411,327
+S-Adenosyl-L-methionine (disulfate tosylate),0.5,plate5,25,0.6504,,unclear,0.1346,0.03032,0.02149,0.005643,0.5425,0.6432,0.2155,328
+Digitoxin,0.05,plate10,2869,-0.6838,cell-cycle shift,unclear,0.134,-0.1446,-0.0005941,-0.03833,0.5398,-1.843,-0.5822,329
+(S)-Crizotinib,0.5,plate8,16,-0.03876,,unclear,0.1335,-0.1644,0.02736,-0.01957,0.5381,1.53,0.5,330
+Docetaxel (Trihydrate),0.05,plate7,28,-0.3152,,Microtubule inhibitor,0.1334,0.1378,0.02397,0.02088,0.5378,0.8768,0.3133,331
+γ-Oryzanol,0.5,plate11,1,-0.1487,,DNA methyltransferase inhibitor,0.1331,-0.08596,0.02801,-0.01479,0.5365,0.9956,0.4661,332
+Cytarabine,0.05,plate7,70,0.398,,DNA synthesis/repair inhibitor,0.1323,0.1192,0.02477,0.01908,0.5334,0.8493,0.3038,333
+Sonidegib,0.05,plate13,20,0.3603,unreliable plate only,Sonic inhibitor,0.1311,-0.06902,0.02369,-0.01588,0.529,0.118,0.04699,334
+Raltitrexed,0.05,plate4,0,-0.002539,,DNA synthesis/repair inhibitor,0.1309,-0.0539,0.02068,-0.006449,0.528,1.088,0.3582,335
+Meloxicam,5,plate12,2,-0.4897,,Cyclooxygenase inhibitor,0.1297,0.05008,0.0208,0.006155,0.5235,-0.627,-0.192,336
+Pemetrexed,5,plate9,9,-0.901,,DNA synthesis/repair inhibitor,0.1282,0.0312,0.02241,0.00567,0.5175,0.1717,0.06642,337
+Ivermectin,0.5,plate11,18,-0.8611,,unclear,0.1267,-0.05195,0.02246,-0.01296,0.5118,0.2845,0.1397,338
+Rosiglitazone,5,plate9,43,-0.4232,,unclear,0.1261,0.0619,0.0277,0.01749,0.5096,-0.3649,-0.1126,339
+Bendamustine,0.5,plate8,3,-0.2253,,DNA synthesis/repair inhibitor,0.1261,0.08046,0.02067,0.008729,0.5094,-0.849,-0.2632,340
+Sinomenine,0.5,plate5,13,0.5259,,unclear,0.1254,0.02837,0.01271,0.008425,0.5068,0.07171,0.03215,341
+Perindopril (erbumine),0.05,plate10,1,0.9322,,unclear,0.1253,-0.07567,0.02296,-0.00958,0.5066,0.2562,0.09133,342
+Trimetrexate,0.05,plate4,16,-0.21,,DNA synthesis/repair inhibitor,0.1241,-0.02406,0.02585,-0.008166,0.502,0.6127,0.2057,343
+Proglumide,5,plate12,0,-0.1626,,unclear,0.1237,0.1179,0.01681,0.01515,0.5005,-0.02424,0.001375,344
+Acetohexamide,5,"plate14,plate6",13,-0.3171,,unclear,0.1222,-0.2047,0.01959,-0.02264,0.4947,0.7682,0.1834,345
+Docetaxel (Trihydrate),5,plate9,44,0.02252,,Microtubule inhibitor,0.1219,-0.1235,0.02395,-0.02325,0.4933,0.3065,0.1114,346
+Sulfatinib,0.5,plate8,0,0.084,,Multi-TK inhibitor,0.1218,0.01431,0.01774,-0.005004,0.493,0.09562,0.03982,347
+LY2090314,0.5,plate2,0,0.267,noisy plate (z scaled),GSK3 inhibitor,0.1212,-0.08607,0.02856,-0.02997,0.4907,-0.07238,-0.02339,348
+OTS514,0.5,plate2,4,0.0202,noisy plate (z scaled),Other MAPK inhibitor,0.1202,-0.05074,0.02031,-0.0288,0.487,-0.6511,-0.2835,349
+Olanzapine,0.05,plate4,0,0.3,,unclear,0.1199,-0.02235,0.02316,0.0007746,0.4856,1.925,0.6265,350
+Futibatinib,0.5,plate2,0,0.2298,transcription drop; noisy plate (z scaled),Other TK inhibitor,0.1163,0.03373,0.02372,0.005813,0.4716,0.4902,0.2295,351
+Pimitespib,5,plate3,18,-0.8516,noisy plate (z scaled),unclear,0.1148,0.2458,0.03494,0.07168,0.466,0.7033,0.4407,352
+Macitentan,0.5,plate8,0,0.144,,unclear,0.114,0.1841,0.01536,0.02643,0.4629,0.05968,0.0283,353
+Rifaximin,5,plate9,43,-0.1011,,unclear,0.1139,-0.08021,0.02116,-0.0156,0.4625,-0.2101,-0.06094,354
+Panobinostat,0.5,plate11,10266,0.1843,cell-cycle shift,HDAC inhibitor,0.1123,-0.1237,0.02589,-0.007291,0.4565,1.225,0.5713,355
+Tofacitinib,0.5,plate5,253,0.04658,,JAK/STAT inhibitor,0.1121,0.06414,0.01523,0.006345,0.4557,0.3879,0.1336,356
+LJI308,0.05,plate1,35,-0.1043,,Other MAPK inhibitor,0.1115,0.1041,0.01459,0.02131,0.4533,0.9227,0.3226,357
+Sunitinib,0.5,plate11,4,0.04202,,Multi-TK inhibitor,0.1109,0.2235,0.01776,0.03011,0.4511,0.2286,0.1141,358
+Pasireotide (acetate),0.5,plate5,15,0.01535,,unclear,0.1108,0.1268,0.01446,0.01744,0.4507,0.5196,0.1758,359
+Belumosudil,0.05,plate7,1,0.2688,,unclear,0.1097,0.04149,0.01437,0.008658,0.4464,0.1822,0.07237,360
+Selinexor,0.5,plate5,2568,-0.1107,cell-cycle shift,unclear,0.1088,0.2129,0.01939,0.02906,0.443,0.1324,0.05163,361
+Tubulin inhibitor 6,0.05,plate1,0,-0.0916,,Microtubule inhibitor,0.108,-0.02185,0.01968,0.0006989,0.4399,0.1023,0.04389,362
+Oxaliplatin,0.5,plate2,7,0.7389,noisy plate (z scaled),DNA synthesis/repair inhibitor,0.1064,0.02238,0.01798,-0.007732,0.4335,-0.6981,-0.3046,363
+Levobupivacaine (hydrochloride),5,plate9,9,0.0234,,unclear,0.1058,0.01152,0.02492,0.007416,0.4311,-0.2811,-0.08463,364
+Pimozide,0.5,plate11,141,-0.7195,transcription drop,unclear,0.1049,-0.0895,0.02393,-0.02698,0.4279,-0.2401,-0.101,365
+AZD2858,5,plate3,3,-1.131,toxic; noisy plate (z scaled),GSK3 inhibitor,0.1031,0.3029,0.03097,0.0812,0.4209,0.9029,0.5632,366
+Pexidartinib (hydrochloride),5,plate9,57,0.4391,,Multi-TK inhibitor,0.1029,0.01177,0.0151,-0.0005198,0.4202,-0.4822,-0.1517,367
+Tofacitinib (citrate),0.05,plate4,61,-0.2523,,JAK/STAT inhibitor,0.1024,0.09881,0.01711,0.01138,0.4182,-0.4848,-0.1464,368
+Fingolimod (hydrochloride),0.05,plate10,5,0.1704,,unclear,0.1023,0.05291,0.01643,0.005686,0.4176,0.4837,0.1643,369
+Methylthiouracil,0.5,plate11,1,0.3964,,unclear,0.1019,0.02838,0.01645,0.0005118,0.416,-0.5602,-0.248,370
+8-Hydroxyquinoline,5,"plate14,plate6",6,0.146,,unclear,0.1014,0.1512,0.008741,0.01634,0.4142,0.2692,0.07022,371
+Phenytoin (sodium),0.05,plate7,0,-0.1278,,unclear,0.101,0.06714,0.01295,0.007683,0.4126,0.1622,0.06541,372
+Imiquimod (maleate),5,plate9,8,-0.7925,,unclear,0.1008,-0.0007111,0.02161,0.003183,0.4118,0.2136,0.0804,373
+Dexamethasone,0.05,plate10,374,-0.1672,,Glucocorticoid receptor agonist,0.1003,0.177,0.0127,0.02185,0.4101,-1.032,-0.3218,374
+Raltitrexed,0.5,plate5,75,-0.73,,DNA synthesis/repair inhibitor,0.1001,0.1645,0.01556,0.02154,0.4092,0.02983,0.01872,375
+Olanzapine,5,"plate14,plate6",5,-0.1591,,unclear,0.09991,-0.06725,0.01436,-0.002012,0.4086,0.8776,0.2082,376
+Cysteamine (hydrochloride),0.05,plate4,2,-0.01229,,unclear,0.09894,0.01672,0.01341,0.003226,0.4048,1.014,0.3344,377
+Brimonidine,0.05,plate10,0,0.4944,,Adrenoceptor agonist,0.09881,0.09737,0.01632,0.01503,0.4043,0.1532,0.05828,378
+Verapamil,5,plate9,2,0.2876,,unclear,0.09844,-0.109,0.01785,-0.0189,0.4029,-0.02221,0.001743,379
+Folic acid,0.5,plate5,0,0.8946,,unclear,0.09787,-0.009069,0.01152,-0.003693,0.4007,-0.6183,-0.1892,380
+Bisoprolol (hemifumarate),0.5,plate8,17,-0.7606,,Adrenoceptor agonist,0.09787,0.1579,0.01702,0.01929,0.4007,0.1865,0.06899,381
+Proglumide,0.5,plate11,0,-0.01847,,unclear,0.09726,-0.04017,0.01674,-0.0061,0.3983,0.1283,0.06805,382
+Idoxuridine,5,plate12,1,0.2816,,DNA synthesis/repair inhibitor,0.09507,0.03022,0.01611,0.00563,0.3899,0.03005,0.01879,383
+Cinacalcet,0.05,plate10,0,-0.5346,,unclear,0.09493,0.04128,0.014,0.005648,0.3893,-0.2483,-0.0705,384
+Cloxacillin (sodium),5,"plate14,plate6",0,0.2801,,unclear,0.09462,-0.04339,0.009776,-0.003417,0.3882,0.1906,0.05238,385
+Vandetanib,0.05,plate10,4,-0.1867,,Multi-TK inhibitor,0.09401,-0.07366,0.01441,-0.0112,0.3858,-0.04997,-0.00688,386
+Malotilate,5,plate12,11,0.106,,unclear,0.0939,0.06262,0.007116,0.01213,0.3854,-0.03605,-0.002413,387
+Ixazomib,0.5,plate2,0,0.4294,noisy plate (z scaled),Proteasome inhibitor,0.0926,-0.09892,0.02291,-0.02402,0.3803,0.5883,0.2736,388
+Vemurafenib,0.5,plate2,0,1.096,noisy plate (z scaled),RAF inhibitor,0.09183,-0.01418,0.01706,-0.0127,0.3774,-0.2579,-0.1068,389
+Penfluridol,0.05,plate7,0,-0.03825,,unclear,0.09179,-0.08369,0.01055,-0.01568,0.3772,-0.4683,-0.1533,390
+Chlorhexidine (diacetate),0.05,plate4,0,0.124,,unclear,0.09115,-0.06357,0.01869,-0.008838,0.3748,0.6254,0.2098,391
+Irinotecan,0.05,plate1,1,0.312,,DNA synthesis/repair inhibitor,0.09017,0.1586,0.0112,0.02256,0.371,-0.1272,-0.03404,392
+Proglumide,0.05,plate10,14,-0.5473,,unclear,0.08978,-0.07679,0.02576,-0.01129,0.3695,0.3113,0.109,393
+Fingolimod (hydrochloride),0.5,plate11,8,0.5184,,unclear,0.08969,-0.07537,0.01174,-0.0171,0.3691,-0.387,-0.1685,394
+Simotinib,5,plate9,339,-1.114,toxic,EGFR/ERBB inhibitor,0.08845,0.08988,0.02535,0.01976,0.3643,1.637,0.5554,395
+Neratinib,0.05,plate10,29,-0.7934,,EGFR/ERBB inhibitor,0.08801,0.06744,0.01983,0.006891,0.3627,-0.4025,-0.12,396
+Almonertinib (mesylate),0.5,plate8,19,1.176,,EGFR/ERBB inhibitor,0.08789,-0.05767,0.006699,-0.01311,0.3622,-0.5161,-0.1564,397
+Atazanavir (sulfate),0.05,plate10,1,0.3175,,unclear,0.08768,-0.01732,0.0154,-0.000967,0.3614,-0.0302,-0.0005383,398
+Cyclosporin A,0.05,plate10,30,0.7013,,unclear,0.08762,0.1343,0.0138,0.0338,0.3612,3.002,0.9721,399
+c-Kit-IN-1,5,plate3,1878,-0.2398,noisy plate (z scaled),Multi-TK inhibitor,0.08718,-0.1303,0.02043,-0.03637,0.3595,0.8801,0.5492,400
+Neratinib,0.5,plate11,27,0.5873,,EGFR/ERBB inhibitor,0.08683,-0.03999,0.01369,-0.007769,0.3581,-0.781,-0.3493,401
+Edoxaban (tosylate monohydrate),0.5,plate13,6,-0.6347,unreliable plate only,unclear,0.08609,0.02908,0.01479,0.003425,0.3553,-0.2819,-0.08127,402
+Demeclocycline,0.5,plate5,2,0.3914,,unclear,0.08404,-0.08499,0.01312,-0.01679,0.3474,-0.9355,-0.291,403
+Sulfisoxazole,0.5,plate5,1,0.07815,,unclear,0.08368,0.09738,0.006453,0.01347,0.346,-1.307,-0.4102,404
+Tolcapone,0.5,plate5,2,0.6411,,unclear,0.08367,-0.03069,0.01191,-0.006643,0.3459,-0.8255,-0.2557,405
+AZD-8055,0.5,plate2,115,0.251,noisy plate (z scaled),MTOR inhibitor,0.08329,-0.08844,0.01845,-0.01625,0.3445,-0.4517,-0.1939,406
+Erdafitinib,5,plate3,0,0.4607,noisy plate (z scaled),Other TK inhibitor,0.08195,0.014,0.02691,0.01169,0.3393,-0.2268,-0.13,407
+Uridine,0.5,plate11,1,0.7413,,unclear,0.08184,0.02414,0.01254,0.006329,0.3389,0.4129,0.1987,408
+Lidocaine (hydrochloride),0.5,plate5,44,-0.5193,,unclear,0.08079,-0.04666,0.01439,-0.01595,0.3348,0.3462,0.1202,409
+Imiquimod (maleate),0.05,plate7,14,-0.4524,,unclear,0.0802,0.1982,0.0151,0.03511,0.3325,0.3374,0.1262,410
+Peretinoin,0.05,plate7,227,0.4954,,Retinoic receptor agonist,0.08002,0.07085,0.02149,0.01771,0.3318,1.896,0.6668,411
+Ribociclib,0.5,plate13,15,-0.08918,unreliable plate only,CDK inhibitor,0.07944,0.116,0.01448,0.01893,0.3296,0.05712,0.02747,412
+Perindopril (erbumine),5,plate12,18,0.3263,,unclear,0.07844,0.01286,0.01327,0.00157,0.3257,-0.07151,-0.01379,413
+Lidocaine (hydrochloride),5,"plate14,plate6",21,-0.5397,,unclear,0.07824,-0.02231,0.01318,-0.0009844,0.325,1.267,0.2965,414
+Acetazolamide,0.05,plate10,3,-0.1906,,unclear,0.07682,0.09615,0.006378,0.009515,0.3195,-0.2115,-0.0587,415
+LB-100,5,plate3,0,0.1493,noisy plate (z scaled),unclear,0.07635,0.08349,0.02477,0.02285,0.3177,0.8511,0.5314,416
+Bestatin,0.5,plate8,1,0.769,,unclear,0.07545,0.1085,0.00402,0.01885,0.3142,-0.5053,-0.153,417
+Ataluren,0.05,plate10,1,0.4735,,unclear,0.07464,0.1317,0.008165,0.01412,0.3111,-1.05,-0.3276,418
+LB-100,0.5,plate2,0,0.1585,noisy plate (z scaled),unclear,0.07443,0.04213,0.01786,0.01119,0.3103,0.4871,0.2281,419
+Triclosan,0.5,plate5,0,0.141,,unclear,0.07422,-0.02973,0.01033,-0.008078,0.3095,0.7486,0.2493,420
+BI-3406,5,plate3,127,0.8638,noisy plate (z scaled),RAS inhibitor,0.07212,-0.08269,0.02243,-0.03156,0.3014,-0.4634,-0.2752,421
+Pasireotide (acetate),5,"plate14,plate6",74,0.1624,,unclear,0.07153,0.1468,0.003416,0.01647,0.2991,0.2647,0.06919,422
+Triamcinolone,0.05,plate4,215,-0.0185,,Glucocorticoid receptor agonist,0.07151,0.1406,0.0158,0.02098,0.299,0.7297,0.2432,423
+Busulfan,0.5,plate5,1,0.112,,DNA synthesis/repair inhibitor,0.07123,-0.04456,0.008404,-0.009965,0.298,-1.66,-0.5233,424
+Glycyrrhizic acid,5,plate9,29,0.1214,,unclear,0.0712,0.04565,0.003567,0.009374,0.2978,0.6481,0.2253,425
+Bestatin,0.05,plate7,3,-0.2731,,unclear,0.07102,0.08612,0.01374,0.01266,0.2971,0.3315,0.1242,426
+Lactate (calcium),0.5,plate11,178,-0.3721,,unclear,0.07074,-0.1656,0.02091,-0.02837,0.296,-0.6324,-0.2811,427
+Pentoxifylline,5,plate12,5,0.4292,,unclear,0.07066,0.1169,0.005529,0.01655,0.2957,-0.09416,-0.02105,428
+Sacubitril/Valsartan,0.05,plate7,1,0.07738,,unclear,0.07026,-0.1064,0.01162,-0.01805,0.2942,1.065,0.3784,429
+Bisoprolol (hemifumarate),0.05,plate7,15,0.000662,,Adrenoceptor agonist,0.06996,0.03004,0.01503,0.004069,0.293,-0.2513,-0.07802,430
+Canagliflozin (hemihydrate),0.5,plate11,670,-1.148,low cells (technical?),Glucose transporter inhibitor,0.06987,0.1916,0.02327,0.03162,0.2927,1.189,0.5549,431
+Methyl aminolevulinate (hydrochloride),0.05,plate10,0,-0.14,,unclear,0.06939,0.03722,0.009634,0.005541,0.2908,-0.01825,0.003297,432
+Niclosamide (olamine),0.05,plate7,3,0.6658,,unclear,0.06928,0.09912,0.01287,0.0213,0.2904,0.5573,0.2025,433
+Nimesulide,0.05,plate13,1,-0.3752,unreliable plate only,Cyclooxygenase inhibitor,0.06857,0.09935,0.0154,0.01893,0.2877,0.9179,0.3036,434
+Chlorhexidine (diacetate),0.5,plate5,5,0.4946,,unclear,0.06725,-0.1174,0.01079,-0.02204,0.2826,-0.4303,-0.1289,435
+Relugolix,0.5,plate5,5,0.6684,,unclear,0.06669,0.1359,0.002904,0.02354,0.2804,0.3957,0.1361,436
+Pentamidine (isethionate),0.5,plate5,4,0.5554,,unclear,0.06648,-0.04217,0.007838,-0.0112,0.2796,0.1931,0.0711,437
+DT-061,0.5,plate2,0,0.4923,noisy plate (z scaled),unclear,0.06609,-0.05084,0.01431,-0.02194,0.2781,-0.1301,-0.04931,438
+Lonafarnib,5,plate3,4176,-1.97,toxic; noisy plate (z scaled),RAS inhibitor,0.06498,-0.2786,0.0375,-0.09395,0.2738,1.987,1.228,439
+Acetohexamide,0.05,plate4,3,-0.1337,,unclear,0.06338,0.00472,0.004948,-0.00276,0.2677,-0.6913,-0.2126,440
+γ-Oryzanol,0.05,plate10,0,0.4385,,DNA methyltransferase inhibitor,0.06235,-0.09165,0.01893,-0.008476,0.2637,2.025,0.6589,441
+Perindopril (erbumine),0.5,plate11,0,0.7996,,unclear,0.06227,0.05254,0.005638,0.008573,0.2634,-0.09551,-0.03469,442
+Tetracycline (hydrochloride),5,plate9,2,1.032,plate-row cell shift,unclear,0.06223,-0.0803,0.008687,-0.01743,0.2632,-0.7713,-0.2481,443
+Filgotinib,0.5,plate11,36,-0.2676,,JAK/STAT inhibitor,0.06222,0.2179,0.01882,0.04289,0.2632,0.5257,0.2504,444
+Hydroxyfasudil,0.05,plate13,51,0.5702,unreliable plate only,unclear,0.06167,-0.03395,0.007854,-0.01182,0.261,-1.301,-0.4082,445
+Cytarabine (hydrochloride),0.05,plate7,107,0.4981,,DNA synthesis/repair inhibitor,0.06101,0.2998,0.01307,0.05649,0.2585,0.6939,0.2498,446
+Tranilast,0.5,plate8,6,0.1398,,unclear,0.06072,0.008903,0.01825,0.007056,0.2574,0.6016,0.2022,447
+Cytarabine (hydrochloride),0.5,plate8,242,-0.08118,cell-cycle shift,DNA synthesis/repair inhibitor,0.06069,0.3366,0.01126,0.05075,0.2573,-1.96,-0.6196,448
+Bicalutamide,0.05,plate10,3,0.4079,,Androgen receptor antagonist,0.06004,-0.008639,0.01547,0.00318,0.2548,-0.1565,-0.04105,449
+Mitoxantrone (dihydrochloride),0.5,plate5,512,-0.1864,cell-cycle shift,DNA synthesis/repair inhibitor,0.05967,0.1682,0.01436,0.02785,0.2533,-0.5631,-0.1715,450
+Allopurinol,0.05,plate10,18,0.8809,,unclear,0.0596,0.1164,0.001074,0.02113,0.2531,1.556,0.5083,451
+Imiquimod (hydrochloride),0.5,plate11,1,0.6317,,unclear,0.05934,0.01331,0.007209,-0.001612,0.2521,0.04761,0.031,452
+Carbidopa (monohydrate),0.5,plate13,7,-0.2218,unreliable plate only,unclear,0.05865,-0.04754,0.01183,-0.006104,0.2494,1.243,0.408,453
+Pyridoxine (hydrochloride),0.5,plate5,32,0.924,,unclear,0.05835,0.08874,-0.004192,0.01263,0.2482,-1.119,-0.3499,454
+Nimesulide,5,plate13,345,-1.182,toxic; unreliable plate only,Cyclooxygenase inhibitor,0.05803,0.2461,0.02113,0.04593,0.247,0.8497,0.2817,455
+Lenalidomide (hemihydrate),0.5,plate5,44,-0.5138,,unclear,0.05766,0.2252,0.008,0.03401,0.2456,0.3283,0.1145,456
+Simotinib,0.05,plate7,21,-0.1352,,EGFR/ERBB inhibitor,0.05722,0.08898,0.0133,0.02052,0.2439,-0.1465,-0.04168,457
+Ribociclib,5,plate13,0,0.1283,unreliable plate only,CDK inhibitor,0.05693,-0.05382,0.007079,-0.01036,0.2428,0.1523,0.058,458
+AZD-7648,0.05,plate1,0,0.2562,,DNA synthesis/repair inhibitor,0.05687,-0.01384,0.01179,-0.001053,0.2426,0.1252,0.05169,459
+Rimonabant,0.05,plate4,1,0.4189,,unclear,0.05672,-0.1739,0.01423,-0.02554,0.242,1.454,0.4755,460
+Erythromycin,0.05,plate10,1,-0.2081,,unclear,0.05653,-0.01322,0.006574,-0.007816,0.2412,-0.5149,-0.156,461
+Pravastatin (sodium),0.05,plate7,8,-0.1829,,unclear,0.05652,-0.1751,0.01474,-0.03201,0.2412,0.8449,0.3022,462
+Belumosudil (mesylate),0.05,plate1,1,0.04549,,unclear,0.05597,0.0831,0.01062,0.01283,0.2391,0.5504,0.1961,463
+Bisoprolol (hemifumarate),5,plate9,40,-0.01973,,Adrenoceptor agonist,0.05596,0.009861,0.009556,-0.001512,0.239,0.1592,0.06224,464
+Glasdegib,0.05,plate13,4,0.07478,unreliable plate only,Sonic inhibitor,0.05444,-0.09314,0.01647,-0.01183,0.2332,0.07853,0.03434,465
+Hesperidin,0.05,plate7,31,0.4611,,unclear,0.05401,-0.01216,0.008382,0.002673,0.2315,0.1969,0.07745,466
+8-Hydroxyquinoline,0.5,plate5,17,0.2402,,unclear,0.05322,0.04479,0.001297,0.004968,0.2285,-0.3637,-0.1075,467
+Neratinib (maleate),0.5,plate5,513,-0.3265,cell-cycle shift,EGFR/ERBB inhibitor,0.05266,0.2426,0.01224,0.04504,0.2263,-1.27,-0.3982,468
+Pemigatinib,5,plate3,0,0.104,noisy plate (z scaled),Other TK inhibitor,0.05216,-0.005675,0.01866,-0.004057,0.2244,0.235,0.1533,469
+Hexylresorcinol,0.5,plate5,10,0.234,,unclear,0.05049,0.03237,0.005999,0.007141,0.2179,0.5228,0.1768,470
+Nafamostat (mesylate),0.05,plate10,2,-0.2631,,unclear,0.04918,0.1221,0.002248,0.01258,0.2129,-0.3425,-0.1007,471
+Entecavir (monohydrate),0.5,plate8,32,0.9129,,unclear,0.04898,-0.01521,-0.0003753,-0.005485,0.2121,0.1532,0.0583,472
+(R)-Verapamil (hydrochloride),0.05,plate4,100,0.3383,,unclear,0.04874,-0.1032,0.009862,-0.01137,0.2112,0,0.009151,473
+Mifepristone,5,plate9,30,0.07575,,unclear,0.04773,0.06584,0.005289,0.009807,0.2073,-0.05451,-0.009033,474
+Bendamustine,0.05,plate7,1,-0.06799,,DNA synthesis/repair inhibitor,0.04689,-0.06203,0.008313,-0.01457,0.204,0.3277,0.1228,475
+Furosemide,0.05,plate4,4,-0.2779,,unclear,0.04683,-0.1329,0.009286,-0.02203,0.2038,1.901,0.619,476
+Roxadustat,0.05,plate7,36,-0.4825,,unclear,0.0466,0.1835,0.01274,0.0248,0.203,-0.1631,-0.04744,477
+Rifaximin,0.5,plate8,6,0.05619,,unclear,0.04645,-0.1509,0.005642,-0.02422,0.2024,-0.176,-0.04732,478
+Gallic acid,5,"plate14,plate6",13,0.2751,,Cyclooxygenase inhibitor,0.0458,0.02078,0.0008951,-0.002585,0.1998,-1.093,-0.2387,479
+Acetazolamide,0.5,plate11,0,-0.2277,,unclear,0.04573,-0.02475,0.01123,-0.003698,0.1996,-0.07242,-0.02409,480
+Dexmedetomidine,5,plate9,2,0.1346,,Adrenoceptor agonist,0.04559,0.02957,0.01129,0.001535,0.1991,-0.2644,-0.07903,481
+Methyl aminolevulinate (hydrochloride),5,plate12,0,0.2098,,unclear,0.04421,0.05352,0.002284,0.00746,0.1937,-0.2512,-0.07144,482
+Abiraterone acetate,5,plate12,2,-0.04695,,unclear,0.04401,0.1088,0.007933,0.01367,0.1929,-0.5442,-0.1654,483
+Apalutamide,0.5,plate8,93,0.4808,,Androgen receptor antagonist,0.04397,-0.1494,0.01777,-0.0235,0.1928,0.2635,0.09368,484
+Clotrimazole,0.05,plate4,1,-0.06657,,unclear,0.0437,0.09946,0.01114,0.01836,0.1918,0.7686,0.2557,485
+Sacubitril/Valsartan,5,plate9,0,0.2907,,unclear,0.04289,-0.1591,0.005796,-0.03071,0.1886,-0.8936,-0.2889,486
+Diammonium Glycyrrhizinate,5,"plate14,plate6",8,0.251,,unclear,0.04243,0.07401,0.004008,0.009094,0.1869,1.666,0.387,487
+Medroxyprogesterone acetate,0.5,plate5,465,-0.5555,,unclear,0.0424,0.1761,0.003664,0.02739,0.1867,-0.03746,-0.002866,488
+NVP-BHG712,0.05,plate1,28,0.3311,,unclear,0.04238,-0.03076,0.003168,-0.01292,0.1867,-0.5024,-0.1615,489
+Aspirin,0.05,plate10,0,0.3383,,Cyclooxygenase inhibitor,0.04013,-0.02236,0.005995,-0.003537,0.178,0.5723,0.1927,490
+Irinotecan (hydrochloride),5,plate9,137,0.6994,plate-row cell shift,DNA synthesis/repair inhibitor,0.03974,0.08763,0.00145,0.01215,0.1765,-0.6085,-0.1938,491
+Abemaciclib,0.5,plate2,1347,0.09817,noisy plate (z scaled),CDK inhibitor,0.03912,-0.1734,-0.007025,-0.05696,0.1741,-0.3686,-0.1565,492
+Allopurinol,5,plate12,0,0.3839,,unclear,0.03903,0.01129,0.008747,0.001069,0.1737,0.1699,0.06366,493
+Trifluridine,5,"plate14,plate6",115,-0.1569,cell-cycle shift,DNA synthesis/repair inhibitor,0.03862,0.2402,0.007363,0.02844,0.1722,0.7829,0.1867,494
+Estrone sulfate (potassium),0.5,plate11,16,-0.4516,,unclear,0.03774,0.001311,0.01096,-0.0003344,0.1688,0.0155,0.01626,495
+Ribociclib,0.05,plate13,433,0.1121,unreliable plate only; position not correctable,CDK inhibitor,0.03766,-0.000877,0.01117,0.004656,0.1685,-0.3816,-0.1133,496
+Docetaxel,5,"plate14,plate6",134,-0.1283,,Microtubule inhibitor,0.03695,0.1058,0.003128,0.01584,0.1657,0.4325,0.1073,497
+Rucaparib (phosphate),0.5,plate8,1,0.2146,,DNA synthesis/repair inhibitor,0.03527,0.06079,0.00398,0.01235,0.1592,-1.05,-0.3276,498
+Triclosan,0.05,plate4,0,-0.04509,,unclear,0.03476,-0.02215,0.006185,-0.004675,0.1573,0.611,0.2051,499
+Triclosan,5,"plate14,plate6",2,0.1775,,unclear,0.03411,0.01845,0.003531,-0.001547,0.1548,0.1291,0.03843,500
+Ixazomib citrate,0.5,plate11,5967,-0.3155,,Proteasome inhibitor,0.03293,-0.1252,-0.002076,-0.02868,0.1502,0.2081,0.1047,501
+Quinidine (15% dihydroquinidine),5,plate9,1,0.01946,,unclear,0.03114,-0.107,0.009511,-0.01766,0.1433,-0.3943,-0.1224,502
+Acetazolamide,5,plate12,0,-0.178,,unclear,0.02904,-0.0354,0.006511,-0.005431,0.1352,-0.2066,-0.05711,503
+Asciminib,0.5,plate11,5,0.6199,,Other TK inhibitor,0.02707,-0.03494,-0.001365,-0.00755,0.1276,-0.6192,-0.2751,504
+Piroxicam,0.05,plate10,104,0.5335,,Cyclooxygenase inhibitor,0.02674,-0.0248,-0.003645,-0.001545,0.1263,0.1304,0.05097,505
+Pimozide,0.05,plate10,185,-1.384,low cells (technical?),unclear,0.0261,-0.2565,0.01161,-0.04202,0.1239,1.142,0.3756,506
+LY2090314,5,plate3,0,0.6019,noisy plate (z scaled),GSK3 inhibitor,0.02579,0.07334,0.007326,0.03049,0.1227,0.05816,0.04484,507
+Ataluren,5,plate12,1,0.8333,,unclear,0.02563,-0.04914,0.006576,-0.009418,0.1221,0.3482,0.1208,508
+Trifluridine,0.05,plate4,0,0.1533,,DNA synthesis/repair inhibitor,0.02529,0.142,0.002468,0.02542,0.1208,0.8975,0.2971,509
+Oxaliplatin,0.05,plate1,5,0.1961,,DNA synthesis/repair inhibitor,0.02507,-0.03017,0.002711,-0.01141,0.1199,-0.1775,-0.05113,510
+Posaconazole,5,plate9,70,1.155,plate-row cell shift,unclear,0.02479,-0.07127,0.001003,-0.01502,0.1188,0.1826,0.07005,511
+Brivudine,0.05,plate1,3,0.06369,,unclear,0.02431,-0.05126,0.004408,-0.009409,0.117,0.8387,0.294,512
+Ciclopirox,0.5,plate5,19,0.4457,,unclear,0.02281,0.06093,-0.003218,0.006343,0.1112,-1.138,-0.3559,513
+Captopril,5,plate12,11,0.06042,,unclear,0.02124,-0.06192,-0.002128,-0.01545,0.1051,-0.6373,-0.1953,514
+Omeprazole (sodium),0.05,plate10,0,0.2857,,unclear,0.0201,0.03399,-0.0002255,-0.0006246,0.1007,-0.8921,-0.277,515
+Regorafenib,0.5,plate2,0,0.5781,noisy plate (z scaled),Multi-TK inhibitor,0.0176,0.06173,0.0011,0.001326,0.09108,-0.5864,-0.2544,516
+Flutamide,0.05,plate10,3,0.2313,,Androgen receptor antagonist,0.01754,0.1292,-0.001289,0.02247,0.09087,-1.841,-0.5815,517
+Rucaparib (phosphate),0.05,plate7,3,0.4035,,DNA synthesis/repair inhibitor,0.01675,-0.03939,-0.002258,-0.009026,0.08782,-1.078,-0.3647,518
+Cinacalcet,0.5,plate11,4,-0.2999,,unclear,0.01581,0.02433,0.001365,0.003107,0.08418,-0.1623,-0.06537,519
+Everolimus,0.05,plate1,4,-0.2927,,MTOR inhibitor,0.01579,0.1439,0.003439,0.01575,0.0841,-0.06525,-0.00652,520
+Altretamine,0.05,plate7,1,-0.1366,,DNA synthesis/repair inhibitor,0.01554,-0.1103,0.01061,-0.01548,0.08315,0.2572,0.09837,521
+Tazarotene,0.5,plate11,20,-0.2118,,Retinoic receptor agonist,0.01508,-0.128,0.004462,-0.02089,0.08136,0.481,0.2299,522
+Drospirenone,0.05,plate10,6,-0.07448,,unclear,0.01488,0.08487,0.00443,0.0168,0.08059,0.07226,0.03233,523
+Pitavastatin (Calcium),0.05,plate7,35,-0.4385,,unclear,0.01433,-0.03148,0.003561,-0.004699,0.07847,-0.4816,-0.1579,524
+Omeprazole (sodium),0.5,plate11,1,0.5915,,unclear,0.01418,-0.05666,0.00136,-0.01473,0.0779,0.6927,0.3271,525
+Trifluridine,0.5,plate5,216,-0.007768,cell-cycle shift,DNA synthesis/repair inhibitor,0.01412,0.197,-0.001939,0.03723,0.07766,-0.04767,-0.00614,526
+Ponatinib,0.05,plate10,83,0.769,,Multi-TK inhibitor,0.01384,0.2717,0.005558,0.0516,0.07659,0.841,0.2789,527
+Tubulin inhibitor 6,5,plate3,2,-0.3275,noisy plate (z scaled),Microtubule inhibitor,0.01333,0.02783,0.01045,0.01936,0.07463,0.3495,0.2236,528
+Belumosudil (mesylate),0.5,plate2,0,0.01611,noisy plate (z scaled),unclear,0.01145,-0.02573,0.006511,0.003953,0.06738,0.7716,0.356,529
+Resveratrol,0.05,plate4,5,-0.5481,,unclear,0.01129,0.01674,0.008228,0.002874,0.06676,0.7347,0.2448,530
+Terfenadine,5,"plate14,plate6",137,-0.04753,,unclear,0.01065,-0.07943,0.00136,-0.008348,0.0643,1.217,0.2852,531
+Malotilate,0.05,plate10,29,0.002538,,unclear,0.01023,-0.1563,0.001736,-0.02455,0.06267,1.17,0.3846,532
+Finasteride,0.05,plate7,3,-0.319,,unclear,0.009854,0.04646,0.003522,0.007503,0.06122,-0.7257,-0.2426,533
+APTO-253,0.5,plate2,0,0.4249,noisy plate (z scaled),unclear,0.008772,0.07343,0.009313,0.03242,0.05704,0.4247,0.2001,534
+Anastrozole,0.05,plate1,0,0.5227,,unclear,0.007815,0.01512,0.0008803,0.0002564,0.05335,-0.1821,-0.05272,535
+Gallic acid,0.5,plate5,0,0.9178,,Cyclooxygenase inhibitor,0.005813,-0.06003,-0.00542,-0.01065,0.04563,-0.2757,-0.07929,536
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",4951,-0.557,,DNA synthesis/repair inhibitor,0.005276,-0.5538,0.02365,-0.05361,0.04356,4.522,1.035,537
+Bergenin,0.05,plate4,0,0.2925,,unclear,0.004579,0.0009158,0.001294,-0.0004223,0.04087,-0.4794,-0.1447,538
+Dexmedetomidine,0.5,plate8,1,0.247,,Adrenoceptor agonist,0.004233,0.1136,0.0001473,0.01497,0.03954,0.03155,0.01927,539
+Mifepristone,0.5,plate8,64,0.1736,,unclear,0.003929,-0.1276,0.01001,-0.01557,0.03836,1.893,0.6165,540
+ULK-101,5,plate3,2,-0.5576,noisy plate (z scaled),unclear,0.003012,-0.05657,0.0008524,-0.0239,0.03483,-0.4428,-0.2626,541
+Almonertinib (hydrochloride),0.5,plate5,12,-0.1453,,EGFR/ERBB inhibitor,0.00219,0.02766,0.006164,0.001721,0.03166,0.1709,0.06398,542
+CP21R7,5,plate3,0,-0.3989,noisy plate (z scaled),GSK3 inhibitor,0.001701,-0.01765,0.008495,-0.003383,0.02977,-0.1774,-0.09969,543
+Betamethasone dipropionate,0.5,plate8,466,-0.749,,Glucocorticoid receptor agonist,0.001357,0.05036,0.00802,0.005081,0.02844,0.3537,0.1226,544
+Azithromycin (hydrate),0.5,plate5,8,-0.3895,,unclear,0.001167,0.09152,0.000254,0.01606,0.02771,0.5606,0.189,545
+Hydroxyfasudil,5,plate3,1,-0.7654,noisy plate (z scaled),unclear,-0.0001007,0.09579,0.004731,0.03105,0.02282,0.2522,0.1639,546
+Cloxacillin (sodium),0.5,plate5,5,0.5444,,unclear,-0.0003007,0.04581,-0.004758,0.01107,0.02205,-0.2379,-0.06718,547
+Tranilast,0.05,plate7,4,-0.0006623,,unclear,-0.00033,0.1502,0.006714,0.02919,0.02194,-0.5021,-0.165,548
+Vinblastine (sulfate),0.05,plate4,178,0.321,,Microtubule inhibitor,-0.0003863,0.02639,-0.004092,0.001849,0.02172,-0.002115,0.008472,549
+Eplerenone,0.5,plate8,0,0.01446,,unclear,-0.001607,0.1063,0.001149,0.01593,0.01701,0.8006,0.266,550
+Irinotecan,0.5,plate2,30,-0.1232,noisy plate (z scaled),DNA synthesis/repair inhibitor,-0.001922,-0.1024,-0.00474,-0.04016,0.0158,-0.8644,-0.3794,551
+Ciclopirox,0.05,plate4,1,-0.1497,,unclear,-0.002548,0.004484,0.003403,0.001844,0.01339,1.341,0.4393,552
+Canagliflozin (hemihydrate),5,plate12,5,1.062,,Glucose transporter inhibitor,-0.002628,-0.1821,0.007771,-0.02692,0.01307,0.9247,0.3058,553
+Darinaparsin,0.5,plate5,7,0.1672,,unclear,-0.003218,-0.002717,0.004267,0.001329,0.0108,0.2523,0.09009,554
+Esmolol (hydrochloride),5,plate12,120,0.6542,,unclear,-0.003278,-0.07323,0.006677,-0.007534,0.01057,0.5789,0.1949,555
+Daidzin,0.5,plate8,0,0.8828,,unclear,-0.00334,-0.2766,0.003213,-0.04454,0.01033,0.27,0.09578,556
+Almonertinib (mesylate),0.05,plate7,15,-0.2246,,EGFR/ERBB inhibitor,-0.003537,-0.1816,0.001039,-0.03602,0.00957,0.01606,0.01472,557
+Rimonabant,0.5,plate5,1,0.4307,,unclear,-0.00368,-0.1166,0.003121,-0.0198,0.009017,0.2927,0.1031,558
+Brimonidine,0.5,plate11,17,-0.451,,Adrenoceptor agonist,-0.003762,0.07736,0.007129,0.01475,0.008701,0.09609,0.05325,559
+Dorzolamide (hydrochloride),5,plate9,1,0.2241,,unclear,-0.003765,0.1368,-0.002905,0.0233,0.00869,0.2239,0.08383,560
+BI-3406,0.05,plate1,5,0.1468,,RAS inhibitor,-0.004228,0.002348,0.0006371,-0.0002228,0.006903,-0.5685,-0.1839,561
+Bimatoprost,0.05,plate4,0,-0.007134,,unclear,-0.004994,0.08624,-0.002142,0.01011,0.003949,-0.6157,-0.1884,562
+Doxycycline (monohydrate),0.05,plate7,3,-0.2929,,unclear,-0.005109,0.002924,-0.0003538,0.004299,0.003505,-0.189,-0.05643,563
+Hydroxyurea,0.5,plate8,43,-0.7501,,DNA synthesis/repair inhibitor,-0.005366,-0.08838,0.004946,-0.01454,0.002516,0.9103,0.3012,564
+Voriconazole,0.5,plate11,2,0.4459,,unclear,-0.005817,-0.01469,0.001937,0.002977,0.0007754,0.8909,0.418,565
+Penfluridol,5,plate9,84,-0.6589,,unclear,-0.005904,-0.08812,0.004313,-0.0121,0.0004396,1.049,0.3589,566
+RMC-6236,0.5,plate2,34,0.6071,noisy plate (z scaled),RAS inhibitor,-0.006132,-0.00668,0.0002766,0.006966,-0.0004396,0.04289,0.02843,567
+Ligustrazine,0.05,plate7,0,0.1403,,unclear,-0.00693,0.07143,5.204e-05,0.015,-0.003519,0.03438,0.02108,568
+Megestrol,0.05,plate4,574,0.06112,cell-cycle shift,unclear,-0.008145,0.05602,0.0005715,0.01682,-0.008202,0.7126,0.2377,569
+olaparib,0.5,plate2,0,0.6326,noisy plate (z scaled),DNA synthesis/repair inhibitor,-0.008484,-0.1165,0.001409,-0.02912,-0.009511,0.09199,0.0505,570
+Erythromycin,0.5,plate11,8,-0.2396,,unclear,-0.009112,0.06692,-0.001646,0.009062,-0.01193,0.5559,0.2643,571
+Carbidopa (monohydrate),0.05,plate13,306,0.6488,unreliable plate only; position not correctable,unclear,-0.009632,0.06022,-0.005074,0.01582,-0.01394,-0.5864,-0.179,572
+Salicylic acid,5,"plate14,plate6",3,-0.3926,,Cyclooxygenase inhibitor,-0.00983,0.2389,-0.006603,0.02193,-0.0147,-1.071,-0.2338,573
+Canagliflozin,5,plate9,16,-0.616,,Glucose transporter inhibitor,-0.01042,-0.0804,0.003642,-0.01898,-0.01696,-0.05721,-0.009933,574
+Berberine (chloride hydrate),0.5,plate5,8,0.001708,,unclear,-0.01107,0.026,-0.006756,0.001123,-0.01948,0.06286,0.02932,575
+Pyridoxine (hydrochloride),0.05,plate4,152,0.1559,,unclear,-0.01146,0.07422,-0.01168,0.008505,-0.021,-1.741,-0.5492,576
+Torkinib,0.5,plate2,0,0.4721,noisy plate (z scaled),MTOR inhibitor,-0.01382,0.1421,-0.006207,0.03027,-0.03008,-0.291,-0.1217,577
+Nafamostat (mesylate),0.5,plate11,3,-0.1587,,unclear,-0.01436,-0.009972,0.002335,-0.0013,-0.03218,0.04891,0.0316,578
+Sulfatinib,0.05,plate7,1,-0.1483,,Multi-TK inhibitor,-0.01488,-0.156,0.0008177,-0.02609,-0.03416,0.1432,0.05883,579
+crizotinib,0.5,plate8,1,0.1269,,Multi-TK inhibitor,-0.01539,-0.09809,-0.002151,-0.01688,-0.03613,-0.5212,-0.1581,580
+Vitamin K4,5,plate12,3,-0.03732,,unclear,-0.01676,0.05587,0.001684,0.007705,-0.04142,0.385,0.1326,581
+Monocrotaline,0.5,plate8,4,0.1562,,unclear,-0.01702,-0.05312,-0.005343,-0.0067,-0.04243,-0.7988,-0.2471,582
+Plicamycin,0.5,plate13,1,0.04699,unreliable plate only,unclear,-0.01723,0.149,-0.003412,0.02564,-0.04323,0.4905,0.1665,583
+Ritonavir,0.5,plate5,28,-0.3934,,unclear,-0.01772,0.06269,-0.007388,0.01284,-0.04513,0.5227,0.1768,584
+L-Thyroxine (sodium salt pentahydrate),5,plate6,22,0.4392,,unclear,-0.01854,-0.1042,-0.003783,-0.01943,-0.0483,1.083,0.3567,585
+Lipoic acid,0.5,plate5,0,0.5946,,unclear,-0.01941,-0.02822,-0.006718,-0.003978,-0.05166,-0.04431,-0.005063,586
+TAK-733,5,plate3,1903,0.001377,noisy plate (z scaled),MEK inhibitor,-0.02038,-0.1554,-0.01349,-0.03779,-0.05539,0.5379,0.3392,587
+Pravastatin (sodium),5,plate9,134,1.184,plate-row cell shift,unclear,-0.02064,-0.0166,-0.0163,-0.007055,-0.05641,-1.556,-0.5099,588
+Oxaprozin,5,plate12,3,-0.1724,,Cyclooxygenase inhibitor,-0.02077,0.08158,8.823e-05,0.009298,-0.05691,-0.9205,-0.2861,589
+Vismodegib,0.05,plate10,5,-0.6,,Sonic inhibitor,-0.02088,0.06244,0.002411,0.007676,-0.05732,-0.4848,-0.1464,590
+Esmolol (hydrochloride),0.05,plate10,1,0.7619,,unclear,-0.02276,0.06586,-0.001105,0.009499,-0.06458,0.7716,0.2567,591
+DTP3,0.5,plate2,0,0.5438,noisy plate (z scaled),unclear,-0.02289,-0.1112,-0.006341,-0.03294,-0.06506,0.08825,0.04882,592
+Benproperine (phosphate),0.5,plate8,0,-0.05762,,unclear,-0.02422,-0.01679,-0.006338,0.002308,-0.07021,-0.01189,0.005338,593
+Silodosin,0.5,plate8,0,-0.3421,,unclear,-0.02425,-0.09206,-0.001262,-0.01439,-0.07031,-2.011,-0.6359,594
+Capivasertib,5,plate3,3,-0.395,noisy plate (z scaled),PI3K/AKT inhibitor,-0.02451,0.1643,-0.006226,0.05255,-0.07133,0.5243,0.3308,595
+vincristine,0.05,plate1,75,-0.1747,,Microtubule inhibitor,-0.02704,-0.002757,-0.01241,-0.006854,-0.08108,0.1451,0.05845,596
+Pralsetinib,0.5,plate2,1,-0.4833,noisy plate (z scaled),Other TK inhibitor,-0.0278,-0.03855,-0.006095,-0.008982,-0.08401,-0.4678,-0.2011,597
+Paclitaxel,0.5,plate2,0,0.7851,noisy plate (z scaled),Microtubule inhibitor,-0.02848,-0.01986,-0.004279,0.002976,-0.08664,0.1432,0.0735,598
+Diphenhydramine,0.5,plate8,111,0.5802,,unclear,-0.02862,-0.02065,0.0008555,-0.002644,-0.08716,0.4383,0.1497,599
+Pexidartinib (hydrochloride),0.5,plate8,11,0.3453,,Multi-TK inhibitor,-0.02862,-0.04692,-0.0001695,-0.001866,-0.08718,-0.2066,-0.05712,600
+Fluvoxamine,0.05,plate7,8,0.3975,,unclear,-0.02929,0.06398,-0.009164,0.01382,-0.08975,0.3632,0.1352,601
+Silodosin,0.05,plate7,0,-0.1029,,unclear,-0.02966,-0.03481,-0.00352,-0.004505,-0.0912,-0.01237,0.004858,602
+Terfenadine,0.05,plate4,0,0.3908,,unclear,-0.02996,-0.1709,-0.001626,-0.02796,-0.09234,0.5514,0.186,603
+Ipatasertib,0.05,plate1,62,-0.2837,,PI3K/AKT inhibitor,-0.03006,0.2075,-0.007347,0.03765,-0.09272,-0.05309,-0.008883,604
+Betamethasone dipropionate,5,plate9,472,0.4316,,Glucocorticoid receptor agonist,-0.03072,0.1032,-0.004596,0.02092,-0.09527,0.004827,0.01076,605
+Irinotecan,5,plate3,53,1.107,noisy plate (z scaled),DNA synthesis/repair inhibitor,-0.03107,0.259,-0.01348,0.08114,-0.0966,-0.08222,-0.0413,606
+Clonidine (hydrochloride),0.05,plate4,0,0.6689,,Adrenoceptor agonist,-0.03181,-0.1155,-0.007518,-0.01863,-0.09946,0.1205,0.04782,607
+AT7519,0.05,plate1,1,0.3337,,CDK inhibitor,-0.03243,0.1229,-0.006889,0.02433,-0.1019,0.2809,0.1046,608
+Diammonium Glycyrrhizinate,0.5,plate5,36,0.0006361,,unclear,-0.03345,0.1025,-0.007712,0.02101,-0.1058,0.2931,0.1032,609
+5-Fluorouracil,0.05,plate10,0,-0.144,,DNA synthesis/repair inhibitor,-0.03441,-0.1116,-0.001793,-0.01251,-0.1095,0.6375,0.2137,610
+Oxaliplatin,5,plate3,6,0.2824,noisy plate (z scaled),DNA synthesis/repair inhibitor,-0.03566,0.08813,-0.008132,0.03342,-0.1143,0.01623,0.01911,611
+Ornidazole,0.5,plate13,0,-0.2589,unreliable plate only,unclear,-0.03646,-0.02934,-0.00507,-0.003225,-0.1174,-0.06055,-0.01027,612
+5-Azacytidine,0.5,plate11,8,-0.4082,,DNA methyltransferase inhibitor,-0.03681,0.02597,-0.003542,0.006221,-0.1188,0.5991,0.2841,613
+Gallic acid,0.05,plate4,8,-0.653,,Cyclooxygenase inhibitor,-0.03792,0.02576,-0.007985,-0.003577,-0.123,-1.71,-0.5394,614
+Sulfisoxazole,0.05,plate4,0,-0.09027,,unclear,-0.03832,-0.01525,-0.005702,0.0005471,-0.1246,-0.1603,-0.04229,615
+Simotinib,0.5,plate8,10,-0.6374,,EGFR/ERBB inhibitor,-0.03838,-0.2201,-0.0001644,-0.0333,-0.1248,0.2508,0.0896,616
+Doxorubicin (hydrochloride),0.05,plate7,11,0.1457,,DNA synthesis/repair inhibitor,-0.04004,0.03866,-0.006319,0.009631,-0.1312,0.1482,0.06055,617
+Bicalutamide,5,plate12,1,0.6622,,Androgen receptor antagonist,-0.04063,-0.04701,0.002374,-0.003057,-0.1335,0.5832,0.1962,618
+Baicalin,0.05,plate4,3,0.1907,,unclear,-0.04068,0.1036,-0.008463,0.01579,-0.1337,0.2878,0.1015,619
+Flumatinib (mesylate),0.05,plate7,5,0.07555,,Other TK inhibitor,-0.04173,-0.1073,-0.005336,-0.02578,-0.1377,0.4944,0.1807,620
+Carbamazepine,0.05,plate10,2,-0.1404,,HDAC inhibitor,-0.04175,0.1525,-0.006635,0.0228,-0.1378,-1.02,-0.3182,621
+Doxycycline (monohydrate),5,plate9,36,-0.3558,,unclear,-0.04206,0.04413,-0.009548,0.002023,-0.139,-1.058,-0.3438,622
+Fedratinib (hydrochloride hydrate),0.5,plate11,18,0.08881,,JAK/STAT inhibitor,-0.04213,-0.09,-0.002897,-0.0116,-0.1393,0.5673,0.2695,623
+Zileuton,0.5,plate11,4,0.4355,,unclear,-0.04215,0.09501,-0.005513,0.01107,-0.1393,0.9561,0.448,624
+Indacaterol (maleate),0.05,plate10,3,0.06296,,Adrenoceptor agonist,-0.04336,-0.002108,-0.01233,-0.008692,-0.144,-0.9183,-0.2854,625
+Fedratinib (hydrochloride hydrate),0.05,plate10,1,0.001069,,JAK/STAT inhibitor,-0.04557,0.08408,-0.007999,0.01776,-0.1525,0.8205,0.2724,626
+Belzutifan,0.5,plate2,0,-0.2949,noisy plate (z scaled),unclear,-0.046,-0.1088,-0.009501,-0.02168,-0.1542,-0.01479,0.002501,627
+Menadione,0.05,plate7,18,-0.5848,,unclear,-0.04626,0.01229,-0.003046,0.001502,-0.1552,-0.3768,-0.1216,628
+Oxaprozin,0.05,plate10,13,-0.4357,,Cyclooxygenase inhibitor,-0.04637,-0.09926,-0.009458,-0.01984,-0.1556,-0.7159,-0.2205,629
+Esmolol (hydrochloride),0.5,plate11,10,-0.2716,,unclear,-0.04777,0.1161,-0.0009511,0.02167,-0.161,0.5686,0.2701,630
+Everolimus,5,plate3,22,0.3003,noisy plate (z scaled),MTOR inhibitor,-0.04802,0.05591,-0.007336,0.01147,-0.162,-0.5195,-0.2162,631
+Verapamil,0.05,plate7,5,0.4436,,unclear,-0.04835,0.04142,-0.01253,0.007369,-0.1633,-1.234,-0.4188,632
+Procainamide (hydrochloride),5,plate9,7,-0.1787,,DNA methyltransferase inhibitor,-0.04844,-0.09038,-0.000382,-0.01036,-0.1636,0.7244,0.2508,633
+Adagrasib,0.5,plate8,0,-0.2299,,RAS inhibitor,-0.04923,-0.04091,-0.007706,-0.008419,-0.1667,-0.8932,-0.2774,634
+Capmatinib,0.5,plate2,11,0.316,noisy plate (z scaled),EGFR/ERBB inhibitor,-0.04991,-0.02102,-0.01688,-0.02189,-0.1693,-0.8634,-0.3789,635
+Benztropine (mesylate),5,plate12,0,-0.0711,,unclear,-0.0504,0.2441,-0.007762,0.04138,-0.1712,-0.8809,-0.2734,636
+Berbamine (dihydrochloride),0.5,plate8,7,0.9215,,unclear,-0.05186,-0.2036,-0.008029,-0.03298,-0.1768,0.1227,0.04851,637
+Entecavir (monohydrate),0.05,plate7,6,-0.09691,,unclear,-0.05243,-0.08397,-0.008061,-0.0122,-0.179,0.3016,0.1138,638
+Asciminib,5,plate12,7,-0.4251,,Other TK inhibitor,-0.05516,-0.05874,-0.007949,-0.006661,-0.1895,-0.5598,-0.1704,639
+Artemether,5,plate12,4,0.4219,,unclear,-0.05545,-0.04042,-0.01366,-0.007546,-0.1906,-0.3357,-0.09853,640
+Palmatine (chloride),0.05,plate4,203,0.5227,,unclear,-0.05569,-0.05414,-0.005371,0.0001147,-0.1916,-0.5214,-0.1581,641
+Tadalafil,0.05,plate7,2,-0.2041,,unclear,-0.05616,-0.0825,-0.01044,-0.01255,-0.1934,-1.397,-0.4753,642
+Elagolix sodium,0.05,plate4,1,-0.04836,,unclear,-0.05652,0.1716,-0.01225,0.02518,-0.1948,-1.356,-0.4257,643
+Rifaximin,0.05,plate7,6,0.1686,,unclear,-0.05727,-0.09455,-0.01459,-0.01526,-0.1977,-0.5497,-0.1815,644
+Vemurafenib,0.05,plate1,1,0.1949,,RAF inhibitor,-0.05806,-0.02937,-0.003882,-0.004575,-0.2007,0.1498,0.06005,645
+NG25,0.05,plate1,35,-0.3049,,Other MAPK inhibitor,-0.05855,0.1381,-0.00911,0.02657,-0.2026,1.395,0.4828,646
+Baicalin,5,"plate14,plate6",12,0.3876,,unclear,-0.05906,-0.1353,-0.005634,-0.01908,-0.2046,-0.4745,-0.09848,647
+Infigratinib,5,plate3,281,0.4547,noisy plate (z scaled),Other TK inhibitor,-0.05981,0.01129,-0.01669,0.004543,-0.2075,-0.2394,-0.1377,648
+Darolutamide,0.05,plate10,1,0.5827,,Androgen receptor antagonist,-0.06018,0.08343,-0.007321,0.02202,-0.2089,1.88,0.6122,649
+Doxycycline (monohydrate),0.5,plate8,51,-0.5125,,unclear,-0.06103,-0.03476,-0.005292,-0.004637,-0.2122,0.9027,0.2987,650
+Relugolix,0.05,plate4,0,-0.06279,,unclear,-0.06112,0.1153,-0.01634,0.01651,-0.2125,-1.758,-0.5549,651
+Lumateperone (tosylate),0.5,plate5,9,0.2915,,unclear,-0.06133,-0.1793,-0.0135,-0.02943,-0.2133,-0.3516,-0.1037,652
+LJI308,5,plate3,4,-0.3143,noisy plate (z scaled),Other MAPK inhibitor,-0.06145,-0.03345,-0.01811,-0.0106,-0.2138,0.6071,0.3817,653
+Tirabrutinib,0.5,plate8,50,0.3848,,Other TK inhibitor,-0.06151,-0.09709,-0.005108,-0.01417,-0.214,-0.975,-0.3036,654
+Pemetrexed,0.05,plate7,1,0.1786,,DNA synthesis/repair inhibitor,-0.06151,0.04307,-0.01423,0.009422,-0.214,-0.7785,-0.2609,655
+Gefitinib,0.5,plate11,0,0.4147,,EGFR/ERBB inhibitor,-0.0616,-0.2226,-0.009857,-0.03392,-0.2144,0.2278,0.1137,656
+Verteporfin,0.05,plate7,27,0.07004,,unclear,-0.06184,-0.179,-0.003429,-0.02388,-0.2153,0.3515,0.1311,657
+Pentoxifylline,0.05,plate10,13,0.09098,transcription drop,unclear,-0.06259,-0.07295,-0.008487,-0.008381,-0.2182,2.597,0.8423,658
+L-Thyroxine (sodium salt pentahydrate),0.05,plate4,67,-0.2397,,unclear,-0.06345,0.02264,-0.0219,-0.0001479,-0.2215,-2.298,-0.7281,659
+Amsacrine,0.5,plate5,31,0.6456,,DNA synthesis/repair inhibitor,-0.06381,0.07236,-0.01232,0.01188,-0.2229,-0.9065,-0.2817,660
+Bortezomib,0.5,plate2,1691,-0.1815,noisy plate (z scaled),Proteasome inhibitor,-0.06478,0.06156,-0.01202,0.003982,-0.2266,1.002,0.4594,661
+Belumosudil (mesylate),5,plate3,67,-0.2593,noisy plate (z scaled),unclear,-0.0649,0.1601,-0.01087,0.05744,-0.2271,-0.1048,-0.05514,662
+Clofarabine,5,plate9,1,-0.5171,,DNA synthesis/repair inhibitor,-0.06508,0.09028,-0.009044,0.01839,-0.2278,0.1048,0.04412,663
+Rimonabant (Hydrochloride),0.5,plate13,1,-0.7197,unreliable plate only,unclear,-0.06551,-0.08279,-0.004235,-0.01521,-0.2294,-0.334,-0.09799,664
+AZD1390,0.5,plate2,5,-0.2826,noisy plate (z scaled),unclear,-0.06564,-0.005171,-0.009935,0.01144,-0.2299,0.4736,0.2221,665
+Daidzin,0.05,plate7,1,0.1142,,unclear,-0.06584,-0.2763,-0.0084,-0.05037,-0.2307,1.081,0.384,666
+Fedratinib (hydrochloride hydrate),5,plate12,1767,0.08991,,JAK/STAT inhibitor,-0.06605,-0.09417,-0.01273,-0.01909,-0.2315,0.9902,0.3268,667
+(R)-Verapamil (hydrochloride),0.5,plate5,9,-0.2037,,unclear,-0.06703,-0.02959,-0.004218,-0.0002914,-0.2353,0.3832,0.1321,668
+Ivabradine (hydrochloride),0.05,plate13,0,-0.2177,unreliable plate only,unclear,-0.06742,-0.04573,-0.007141,-0.01067,-0.2368,-0.1227,-0.03022,669
+Bergenin,5,"plate14,plate6",4,0.1785,,unclear,-0.06778,0.01596,-0.007631,-0.0001751,-0.2382,-0.5843,-0.1234,670
+Rosiglitazone,0.5,plate8,4,0.02253,,unclear,-0.06808,-0.05189,-0.01041,-0.00583,-0.2394,-0.2404,-0.06797,671
+Aliskiren,0.5,plate5,13,0.1487,,unclear,-0.06809,-0.1514,-0.001151,-0.01816,-0.2394,0.8034,0.2669,672
+Nevirapine,0.5,plate8,0,0.02162,,unclear,-0.06907,-0.05018,-0.01175,-0.005449,-0.2432,-0.1118,-0.02671,673
+crizotinib,0.05,plate7,1,-0.1879,,Multi-TK inhibitor,-0.06973,-0.003563,-0.01412,-0.0003152,-0.2457,-0.8442,-0.2837,674
+Sildenafil,5,plate9,1,1.138,plate-row cell shift,unclear,-0.07036,-0.1429,-0.01253,-0.02874,-0.2481,-0.9512,-0.3081,675
+Cytarabine,0.5,plate8,150,0.7313,cell-cycle shift,DNA synthesis/repair inhibitor,-0.0711,0.1485,-0.006302,0.0291,-0.251,-0.2478,-0.07034,676
+Lipoic acid,5,"plate14,plate6",6,0.1943,,unclear,-0.07258,0.1328,-0.01059,0.01427,-0.2567,-1.404,-0.3094,677
+Verapamil,0.5,plate8,0,-0.1134,,unclear,-0.07259,-0.02383,-0.01362,-0.00673,-0.2568,-1.637,-0.5158,678
+Fingolimod (hydrochloride),5,plate12,144,-1.126,toxic,unclear,-0.07278,0.1776,-0.007983,0.03563,-0.2575,1.051,0.3463,679
+Loperamide (hydrochloride),5,plate12,22,-0.1396,,unclear,-0.07297,-0.09657,-0.002383,-0.009581,-0.2582,0.5425,0.1832,680
+Delamanid,5,plate12,0,0.3311,,unclear,-0.07379,0.1113,-0.02022,0.0134,-0.2614,-2.199,-0.6964,681
+Nevirapine,0.05,plate7,7,-0.1712,,unclear,-0.07484,0.0297,-0.01376,0.008542,-0.2654,-0.09898,-0.02518,682
+Methylthiouracil,0.05,plate10,2,1.131,,unclear,-0.07547,-0.2324,-0.009374,-0.02989,-0.2679,0.5879,0.1977,683
+Pasireotide (acetate),0.05,plate4,6,0.2143,,unclear,-0.07547,0.003507,-0.01286,0.00467,-0.2679,0.1213,0.04806,684
+ML264,0.5,plate2,0,0.279,noisy plate (z scaled),unclear,-0.07564,0.04084,-0.01102,0.02403,-0.2685,0.561,0.2613,685
+Quinidine (15% dihydroquinidine),0.5,plate8,18,0.1968,,unclear,-0.0764,0.0746,-0.01808,0.0131,-0.2715,-0.167,-0.04442,686
+Adenosine,5,"plate14,plate6",6,-0.1271,,unclear,-0.07818,-0.002576,-0.007644,0.0007717,-0.2783,-0.1416,-0.02296,687
+8-Hydroxyquinoline,0.05,plate4,1,-0.111,,unclear,-0.07827,-0.0671,-0.01182,-0.009046,-0.2787,0.7644,0.2544,688
+Quinestrol,5,"plate14,plate6",30,0.3526,,unclear,-0.07915,-0.02342,-0.008582,-0.004053,-0.2821,0.1318,0.03904,689
+Bestatin (hydrochloride),5,plate12,1,0.09242,,unclear,-0.07975,0.06201,-0.01158,0.007822,-0.2844,-0.8159,-0.2526,690
+Sacubitril/Valsartan,0.5,plate8,1,0.5976,,unclear,-0.08031,0.001205,-0.01789,0.002424,-0.2865,0.4556,0.1553,691
+Fusidic acid,5,"plate14,plate6",10,0.1873,,unclear,-0.08123,-0.2186,-0.01094,-0.02792,-0.2901,-0.4039,-0.08246,692
+Talc,0.05,plate10,7,-0.6625,,unclear,-0.08135,0.02052,-0.01236,-0.005497,-0.2906,-0.2295,-0.06446,693
+Clobetasol propionate,0.5,plate11,843,-0.3999,,unclear,-0.08204,0.08102,-0.007956,0.0114,-0.2932,-0.9092,-0.4082,694
+Fusidic acid,0.05,plate4,1,0.6014,,unclear,-0.08218,-0.2203,-0.01272,-0.03545,-0.2938,-0.4129,-0.1233,695
+Artesunate,0.05,plate4,39,0.3815,,JAK/STAT inhibitor,-0.0834,-0.2426,-0.0105,-0.04162,-0.2985,-0.4794,-0.1446,696
+Sunitinib,0.05,plate10,11,-0.4715,,Multi-TK inhibitor,-0.08427,0.133,-0.01666,0.01684,-0.3018,-0.3613,-0.1068,697
+Mozavaptan,5,plate9,3,-0.3793,,unclear,-0.0844,0.06643,-0.0169,0.01217,-0.3023,-0.6257,-0.1996,698
+Apalutamide,5,plate9,1,-0.1708,,Androgen receptor antagonist,-0.08478,0.07353,-0.01039,0.01125,-0.3038,-0.2423,-0.07169,699
+Anastrozole,5,plate3,5,0.3323,noisy plate (z scaled),unclear,-0.08537,0.1181,-0.02573,0.03793,-0.306,0.3138,0.2017,700
+Vortioxetine,0.05,plate10,3,0.009258,,unclear,-0.08575,0.1445,-0.01794,0.02151,-0.3075,-1.414,-0.4446,701
+Entecavir (monohydrate),5,plate9,30,1.216,plate-row cell shift,unclear,-0.08645,-0.02302,-0.01578,-0.005421,-0.3102,-0.2112,-0.06132,702
+GSK1059615,0.05,plate1,1,0.1408,,PI3K/AKT inhibitor,-0.08729,-0.08333,-0.01449,-0.01225,-0.3135,-0.03581,-0.003012,703
+Anethole trithione,0.05,plate4,11,0.4217,,unclear,-0.08741,-0.0344,-0.02223,-0.01106,-0.3139,-1.434,-0.4509,704
+Adenine,0.05,plate4,0,0.3126,,unclear,-0.08775,-0.107,-0.01304,-0.02567,-0.3152,-1.271,-0.3986,705
+Alpelisib,0.05,plate1,2,-0.3495,,PI3K/AKT inhibitor,-0.0883,0.09594,-0.01664,0.01662,-0.3173,-0.6103,-0.1982,706
+Pemigatinib,0.05,plate1,17,-0.3006,,Other TK inhibitor,-0.08993,0.2362,-0.01721,0.03778,-0.3236,-0.089,-0.02108,707
+Palmatine (chloride),0.5,plate5,90,-0.8175,,unclear,-0.09103,0.1126,-0.004972,0.01273,-0.3279,0.5993,0.2014,708
+Belzutifan,5,plate3,843,-0.5893,noisy plate (z scaled),unclear,-0.09207,-0.08652,-0.01703,-0.01559,-0.3319,0.6673,0.4186,709
+4EGI-1,0.05,plate1,2,-0.1574,,Protein synthesis inhibitor,-0.09207,0.01839,-0.01398,0.0007863,-0.3319,-0.1977,-0.058,710
+Bosentan (hydrate),0.5,plate8,52,0.2118,,unclear,-0.09376,-0.07083,-0.01737,-0.009129,-0.3384,0.5846,0.1967,711
+Omeprazole,5,plate12,32,0.695,,unclear,-0.09509,-0.1182,-0.008426,-0.01302,-0.3435,-0.4401,-0.132,712
+Tetracycline (hydrochloride),0.5,plate8,6,0.08929,,unclear,-0.09576,-0.04696,-0.01928,-0.00952,-0.3461,0.4795,0.163,713
+Ivabradine (hydrochloride),0.5,plate13,8,-0.8008,transcription drop; unreliable plate only,unclear,-0.09577,0.1291,-0.0123,0.02296,-0.3462,1.276,0.4184,714
+Berbamine (dihydrochloride),5,plate9,64,0.7518,plate-row cell shift,unclear,-0.09634,-0.2235,-0.01648,-0.03579,-0.3484,-0.9176,-0.2969,715
+Sulfisoxazole,5,"plate14,plate6",16,-0.04205,,unclear,-0.09692,0.0331,-0.008634,0.005563,-0.3506,-1.094,-0.2391,716
+Econazole,5,plate12,124,0.01845,,unclear,-0.09697,0.07647,-0.01414,0.01021,-0.3508,-0.9878,-0.3077,717
+Drospirenone,0.5,plate11,83,-0.4988,,unclear,-0.09717,-0.00833,-0.005252,0.001155,-0.3516,0.2964,0.1452,718
+Loperamide (hydrochloride),0.05,plate10,8,-0.2917,,unclear,-0.09725,-0.04378,-0.01572,-0.0073,-0.3519,-0.2102,-0.05829,719
+Dorzolamide (hydrochloride),0.05,plate7,17,-0.248,,unclear,-0.0978,-0.1005,-0.01037,-0.009624,-0.354,0.2798,0.1062,720
+Volasertib,0.05,plate1,0,0.07376,,unclear,-0.09853,0.07431,-0.01104,0.01632,-0.3568,0.8082,0.2837,721
+Saquinavir,0.05,plate4,63,-0.6988,,unclear,-0.09899,0.07516,-0.004724,0.01425,-0.3586,0.2656,0.09434,722
+Resveratrol,0.5,plate5,6,-0.0672,,unclear,-0.09973,0.05488,-0.01217,0.01074,-0.3614,0.1647,0.06199,723
+Lumateperone (tosylate),5,"plate14,plate6",7,0.154,,unclear,-0.09977,-0.2249,-0.009693,-0.02772,-0.3616,-0.1506,-0.025,724
+Epirubicin (hydrochloride),5,plate9,6752,0.2429,cell-cycle shift,DNA synthesis/repair inhibitor,-0.1004,-0.8315,0.02421,-0.1238,-0.364,6.493,2.175,725
+Triamcinolone,0.5,plate5,474,-0.0006364,,Glucocorticoid receptor agonist,-0.1014,0.2242,-0.0141,0.03204,-0.3678,-0.9795,-0.3051,726
+Adenine,5,"plate14,plate6",14,0.08894,,unclear,-0.103,-0.07591,-0.01152,-0.01247,-0.3742,-1.275,-0.28,727
+Terfenadine,0.5,plate5,54,0.04513,,unclear,-0.1036,-0.07379,-0.01504,-0.009264,-0.3762,0.5787,0.1948,728
+Osimertinib (mesylate),0.05,plate10,2,-0.2086,,EGFR/ERBB inhibitor,-0.1041,0.1128,-0.01596,0.01452,-0.3785,-0.7888,-0.2439,729
+Adenosine,0.5,plate5,9,0.6299,,unclear,-0.1045,-0.172,-0.01416,-0.03098,-0.3797,-1.238,-0.388,730
+Alpelisib,0.5,plate2,2,0.1057,noisy plate (z scaled),PI3K/AKT inhibitor,-0.1045,-0.1063,-0.02246,-0.02776,-0.3797,-0.8979,-0.3945,731
+Sildenafil,0.05,plate7,3,0.06313,,unclear,-0.1046,-0.02395,-0.01784,-0.005783,-0.3803,-0.4429,-0.1445,732
+Tofacitinib (citrate),0.5,plate5,296,-0.3343,,JAK/STAT inhibitor,-0.105,0.03676,-0.008409,0.008636,-0.3818,-0.1114,-0.02659,733
+Temsirolimus,0.5,plate5,429,-0.9757,,MTOR inhibitor,-0.1053,-0.05327,-0.007644,-0.01243,-0.383,-0.5717,-0.1743,734
+Allantoin,0.05,plate4,20,-0.3612,transcription drop,unclear,-0.1055,-0.04165,-0.01444,-0.01165,-0.3838,-1.243,-0.3897,735
+Cepharanthine,0.05,plate4,1,0.2352,,unclear,-0.1061,-0.09867,-0.01638,-0.01749,-0.3858,-1.073,-0.3351,736
+Gemcitabine,0.5,plate2,62,-0.3699,noisy plate (z scaled),DNA synthesis/repair inhibitor,-0.1067,0.06174,-0.01253,0.01196,-0.3883,0.4769,0.1607,737
+Rosiglitazone,0.05,plate7,1,0.4557,,unclear,-0.107,-0.03249,-0.02223,-0.006597,-0.3896,-0.284,-0.08936,738
+Idoxuridine,0.05,plate10,3,-0.06544,,DNA synthesis/repair inhibitor,-0.1076,-0.1309,-0.01285,-0.01944,-0.3916,0.7151,0.2386,739
+venetoclax,5,plate3,1797,-0.3143,noisy plate (z scaled),unclear,-0.111,0.03702,-0.03871,0.01473,-0.4047,0.2163,0.1418,740
+"Dapagliflozin ((2S)-1,2-propanediol, hydrate)",0.05,plate7,151,-0.7589,,Glucose transporter inhibitor,-0.112,-0.1086,-0.0112,-0.0198,-0.4087,1.166,0.4136,741
+Celecoxib,5,plate3,0,-0.03517,noisy plate (z scaled),Cyclooxygenase inhibitor,-0.112,0.09572,-0.02811,0.03625,-0.4089,0.4978,0.3146,742
+Amsacrine,0.05,plate4,1,0.1713,,DNA synthesis/repair inhibitor,-0.1135,0.1326,-0.0235,0.01646,-0.4147,-1.398,-0.4393,743
+Dabrafenib,0.5,plate2,0,-0.2439,noisy plate (z scaled),RAF inhibitor,-0.1138,0.002868,-0.02697,0.003408,-0.4158,-0.2698,-0.1121,744
+Econazole,0.05,plate10,0,0.1835,,unclear,-0.1138,-0.02819,-0.01739,-0.007175,-0.4159,-0.3177,-0.09277,745
+Tadalafil,0.5,plate8,2,0.5886,,unclear,-0.1148,-0.1015,-0.02354,-0.01326,-0.4197,-0.7472,-0.2305,746
+Baicalin,0.5,plate5,5,0.06636,,unclear,-0.115,-0.07654,-0.01769,-0.01321,-0.4204,0.6946,0.232,747
+Ligustrazine,5,plate9,1,-0.4039,,unclear,-0.1162,0.1467,-0.02016,0.02425,-0.425,-1.623,-0.5322,748
+Rutin (trihydrate),0.5,plate8,1,0.1647,,unclear,-0.1169,-0.02875,-0.01587,-0.001735,-0.4275,-0.0251,0.001099,749
+Berbamine (dihydrochloride),0.05,plate7,2,-0.007164,,unclear,-0.117,-0.1894,-0.02146,-0.03239,-0.428,-0.9913,-0.3347,750
+Sonidegib,5,plate3,7,-0.9888,noisy plate (z scaled),Sonic inhibitor,-0.1177,-0.04307,-0.0326,-0.01695,-0.4306,0.1241,0.08531,751
+Larotrectinib sulfate,0.5,plate13,94,-0.4771,unreliable plate only,Other TK inhibitor,-0.1182,-0.1712,-0.009502,-0.02156,-0.4327,-0.5079,-0.1538,752
+Bimiralisib,5,plate3,1002,1.483,plate-row cell shift; noisy plate (z scaled),PI3K/AKT inhibitor,-0.1193,-0.1986,-0.03977,-0.06328,-0.437,-1.361,-0.8257,753
+Berbamine,5,"plate14,plate6",112,0.2541,,unclear,-0.1198,-0.2355,-0.01199,-0.02112,-0.4389,0.6397,0.1542,754
+Ivabradine (hydrochloride),5,plate13,21,-0.00825,unreliable plate only,unclear,-0.1205,0.1223,-0.02275,0.0199,-0.4417,-0.2225,-0.06224,755
+Methotrexate,0.5,plate11,15,0.2473,,DNA synthesis/repair inhibitor,-0.1221,0.003677,-0.01802,0.003568,-0.4479,0.4445,0.2132,756
+Rapamycin,0.05,plate4,45,-0.165,,MTOR inhibitor,-0.1222,-0.09445,-0.01401,-0.01037,-0.4482,-0.952,-0.2962,757
+Cilostazol,0.05,plate7,7,0.02174,,unclear,-0.1223,0.1362,-0.02498,0.02448,-0.4484,-1.055,-0.3567,758
+Dihydroartemisinin,0.05,plate10,149,-0.3617,,unclear,-0.1227,-0.175,-0.01005,-0.02472,-0.45,-0.1142,-0.02747,759
+Aprepitant,0.5,plate11,1,0.04924,,unclear,-0.1232,0.01269,-0.01901,0.001165,-0.4518,-0.5474,-0.2421,760
+Levobupivacaine (hydrochloride),0.5,plate8,2,-0.0146,,unclear,-0.1242,0.1005,-0.01986,0.0202,-0.4558,0.1565,0.05936,761
+Epirubicin (hydrochloride),0.5,plate8,196,-0.3574,,DNA synthesis/repair inhibitor,-0.1255,-0.1086,-0.02033,-0.0222,-0.461,-0.2744,-0.07887,762
+Mebendazole,0.05,plate7,4,0.1599,,Microtubule inhibitor,-0.1258,-0.09242,-0.01801,-0.0187,-0.462,1.023,0.3641,763
+Bentamapimod,5,plate3,54,0.7006,plate-row cell shift; noisy plate (z scaled),Other MAPK inhibitor,-0.1259,0.02632,-0.03436,0.008706,-0.4622,-0.6184,-0.3703,764
+Diphenhydramine,5,plate9,40,0.1903,,unclear,-0.1262,0.07716,-0.02926,0.007731,-0.4635,-0.4349,-0.1359,765
+Ralimetinib dimesylate,0.05,plate13,265,0.1328,unreliable plate only,Other MAPK inhibitor,-0.1281,0.03487,-0.02014,0.0008469,-0.471,-2.023,-0.6397,766
+Flumatinib (mesylate),0.5,plate8,33,0.4696,,Other TK inhibitor,-0.1282,0.06716,-0.02652,0.01078,-0.4713,0.1157,0.04625,767
+Vortioxetine,0.5,plate11,20,0.5546,,unclear,-0.1283,0.1182,-0.03012,0.01415,-0.4715,-1.801,-0.8176,768
+Pimitespib,0.5,plate2,5,-0.004867,noisy plate (z scaled),unclear,-0.1286,0.01589,-0.03003,0.01883,-0.4728,0.7008,0.3242,769
+Tirabrutinib,5,plate9,4,0.7817,,Other TK inhibitor,-0.1301,-0.01516,-0.03081,-0.003812,-0.4785,-2.34,-0.7714,770
+Lapatinib ditosylate,5,plate3,3,1.084,noisy plate (z scaled),EGFR/ERBB inhibitor,-0.1317,-0.01434,-0.03577,0.006084,-0.4848,-0.0552,-0.02472,771
+Bortezomib,0.05,plate1,5863,-0.6144,cell-cycle shift,Proteasome inhibitor,-0.1319,-0.1605,-0.02019,-0.04452,-0.4855,0.2222,0.08463,772
+Erlotinib,0.5,plate8,4,0.5222,,EGFR/ERBB inhibitor,-0.1322,-0.1176,-0.02148,-0.01472,-0.4865,0.06093,0.0287,773
+Olanzapine,0.5,plate5,2,0.394,,unclear,-0.1325,-0.1145,-0.0211,-0.01675,-0.4878,-0.3058,-0.08895,774
+Glasdegib,0.5,plate13,2,0.2068,unreliable plate only,Sonic inhibitor,-0.1336,-0.06254,-0.0181,-0.006872,-0.492,-0.1766,-0.04751,775
+γ-Oryzanol,5,plate12,0,-0.01338,,DNA methyltransferase inhibitor,-0.1337,0.03733,-0.01718,0.00723,-0.4925,0.4276,0.1463,776
+Docetaxel,0.5,plate5,101,0.2824,cell-cycle shift,Microtubule inhibitor,-0.134,0.02103,-0.02661,0.004047,-0.4935,-0.7123,-0.2193,777
+Clopidogrel,5,plate12,3,-0.07533,,unclear,-0.1348,0.02119,-0.02076,0.006487,-0.4969,-1.098,-0.3432,778
+Macitentan,5,plate9,5,-0.4911,,unclear,-0.136,0.0798,-0.01875,0.009705,-0.5014,-0.7627,-0.2453,779
+Gemfibrozil,5,"plate14,plate6",1,0.411,,unclear,-0.1371,0.03559,-0.01449,0.006111,-0.5056,0.8616,0.2046,780
+Retinoic acid,0.05,plate4,648,0.2272,,Retinoic receptor agonist,-0.1373,0.07436,-0.02149,0.01907,-0.5065,-0.2756,-0.07926,781
+Tomivosertib,0.5,plate2,0,0.1428,noisy plate (z scaled),Protein synthesis inhibitor,-0.1382,-0.01492,-0.03242,0.00262,-0.51,0.1188,0.06256,782
+Lopinavir,0.05,plate10,2,-0.1991,,unclear,-0.1384,-0.1327,-0.02387,-0.02272,-0.5104,-0.5018,-0.1518,783
+Trametinib (DMSO_TF solvate),0.05,plate7,1546,0.9029,,MEK inhibitor,-0.1389,0.01869,-0.04367,-0.001772,-0.5124,-3.066,-1.054,784
+Berberine (chloride hydrate),5,"plate14,plate6",24,0.5573,,unclear,-0.1398,-0.2172,-0.0188,-0.02495,-0.516,-0.3971,-0.08092,785
+Glycyrrhizic acid,0.05,plate7,218,-0.6638,,unclear,-0.14,0.08453,-0.01481,0.01658,-0.5168,0.879,0.3141,786
+L-Eflornithine (monohydrochloride),5,plate12,34,-0.2518,,unclear,-0.1402,-0.07856,-0.01752,-0.004741,-0.5173,-0.2075,-0.05742,787
+Dimethyl fumarate,0.05,plate7,4,-0.07762,,unclear,-0.1409,-0.1251,-0.02217,-0.01583,-0.5201,-0.01592,0.00363,788
+Ferulic acid,5,plate9,4,-0.2474,,Other TK inhibitor,-0.1413,-0.05775,-0.02288,-0.009138,-0.5218,-1.316,-0.4298,789
+Tazarotene,0.05,plate10,4,-0.03289,,Retinoic receptor agonist,-0.1417,-0.08466,-0.02535,-0.01326,-0.5233,-0.1601,-0.04222,790
+Darinaparsin,5,"plate14,plate6",793,-0.3306,cell-cycle shift,unclear,-0.1418,0.3261,-0.01235,0.04426,-0.5239,1.408,0.3286,791
+vincristine,5,plate3,567,-0.6316,noisy plate (z scaled),Microtubule inhibitor,-0.1419,0.1995,-0.04135,0.05398,-0.524,-0.4551,-0.2701,792
+Fumaric acid,0.05,plate7,5,0.04557,,unclear,-0.1422,-0.1985,-0.02125,-0.03335,-0.5251,-0.02498,0.0004843,793
+Lidocaine (hydrochloride),0.05,plate4,239,-1.815,low cells (technical?),unclear,-0.1447,-0.05568,-0.02068,-0.01374,-0.535,-0.5014,-0.1517,794
+Sivelestat (sodium tetrahydrate),0.05,plate7,13,0.522,,unclear,-0.1449,-0.006485,-0.02894,0.005101,-0.5357,0.1934,0.07623,795
+Tazarotene,5,plate12,8,0.03831,,Retinoic receptor agonist,-0.145,0.05752,-0.03479,-0.0005153,-0.5362,-0.8761,-0.2719,796
+NVP-BHG712,5,plate3,8,0.08566,plate-row cell shift; noisy plate (z scaled),unclear,-0.1465,-0.006677,-0.03509,0.00559,-0.5418,0.05145,0.04072,797
+Belinostat,0.05,plate10,178,-0.02189,,HDAC inhibitor,-0.1483,0.2081,-0.02321,0.03256,-0.5489,1.242,0.4077,798
+Silodosin,5,plate9,83,-0.6424,,unclear,-0.1485,0.09542,-0.02162,0.0183,-0.5494,0.578,0.202,799
+Clonidine (hydrochloride),0.5,plate5,0,0.6269,,Adrenoceptor agonist,-0.1487,0.0617,-0.02527,0.01204,-0.5504,-0.4537,-0.1364,800
+Oxaprozin,0.5,plate11,118,-0.8661,,Cyclooxygenase inhibitor,-0.1501,0.04697,-0.01853,0.003298,-0.5558,-1.115,-0.5027,801
+Neratinib (maleate),5,"plate14,plate6",503,0.2226,,EGFR/ERBB inhibitor,-0.1502,0.1566,-0.02199,0.01614,-0.5561,-2.745,-0.6136,802
+Azithromycin (hydrate),0.05,plate4,0,-0.141,,unclear,-0.1504,0.09389,-0.03039,0.01626,-0.5567,-1.35,-0.4239,803
+Hesperidin,0.5,plate8,5,-0.3439,,unclear,-0.1508,0.1137,-0.02493,0.01667,-0.5585,-0.2875,-0.08307,804
+Lipoic acid,0.05,plate4,0,0.3218,,unclear,-0.1515,-0.005554,-0.02496,0.0006713,-0.5613,0.4256,0.1457,805
+Daidzin,5,plate9,3,0.9321,plate-row cell shift,unclear,-0.1519,-0.1141,-0.03195,-0.02606,-0.5626,-0.2977,-0.09016,806
+Canagliflozin (hemihydrate),0.05,plate10,9,-0.09248,,Glucose transporter inhibitor,-0.152,-0.161,-0.02389,-0.02332,-0.563,-0.2711,-0.07783,807
+Ornidazole,0.05,plate13,0,0.4046,unreliable plate only,unclear,-0.1521,-0.1337,-0.02104,-0.01698,-0.5633,-0.4791,-0.1446,808
+Cilostazol,0.5,plate8,0,0.3607,,unclear,-0.1523,0.003137,-0.02574,0.004227,-0.5641,0.7301,0.2434,809
+Bimatoprost,0.5,plate5,54,-0.4556,,unclear,-0.1528,-0.2032,-0.01394,-0.02667,-0.5661,0.6025,0.2024,810
+Fusidic acid,0.5,plate5,3,0.1439,,unclear,-0.153,-0.1399,-0.02256,-0.01736,-0.5669,-0.5271,-0.1599,811
+Aliskiren,5,"plate14,plate6",4,0.021,,unclear,-0.1543,0.01504,-0.01285,0.005627,-0.572,0.5075,0.1243,812
+Levobupivacaine (hydrochloride),0.05,plate7,1,0.4004,,unclear,-0.1546,0.02437,-0.03051,0.004871,-0.5731,-0.7087,-0.2367,813
+Fulvestrant,0.5,plate11,8,-0.4382,,unclear,-0.1548,0.03984,-0.02447,0.00406,-0.5737,-0.1699,-0.06884,814
+Indacaterol (maleate),5,plate12,0,-0.001956,,Adrenoceptor agonist,-0.1559,-0.06966,-0.02448,-0.01292,-0.5779,0.2253,0.08142,815
+Megestrol,5,"plate14,plate6",32,0.0574,,unclear,-0.1559,0.05637,-0.01699,0.005502,-0.5782,-0.07091,-0.006935,816
+Cobimetinib,0.05,plate7,308,-0.5631,,MEK inhibitor,-0.1564,-0.03248,-0.01994,-0.005524,-0.58,0.7485,0.2688,817
+Salicylic acid,0.5,plate5,1,0.5591,,Cyclooxygenase inhibitor,-0.1566,-0.0394,-0.02493,-0.008737,-0.5808,-0.9775,-0.3044,818
+Adenine,0.5,plate5,1,0.1182,,unclear,-0.1568,0.02115,-0.0252,0.002851,-0.5814,-0.6494,-0.1992,819
+Bentamapimod,0.05,plate1,131,-0.4024,,Other MAPK inhibitor,-0.1575,0.1228,-0.02217,0.01555,-0.5841,-0.7705,-0.2526,820
+Belumosudil,0.5,plate8,0,0.7238,,unclear,-0.1577,0.01469,-0.02905,0.003121,-0.5849,0.08484,0.03637,821
+CP21R7,0.5,plate2,0,-0.7432,plate-row cell shift; noisy plate (z scaled),GSK3 inhibitor,-0.1587,-0.01469,-0.02883,0.004042,-0.5888,-0.1886,-0.07564,822
+Citalopram (hydrobromide),0.5,plate11,27,-0.8722,,unclear,-0.1589,0.03079,-0.02057,0.006304,-0.5896,-0.5473,-0.2421,823
+DTP3,5,plate3,25,-0.3037,noisy plate (z scaled),unclear,-0.1598,0.2124,-0.04732,0.07212,-0.5931,-0.4343,-0.2574,824
+Darinaparsin,0.05,plate4,2,-0.2981,,unclear,-0.1616,0.04864,-0.02576,0.006073,-0.6002,-0.6491,-0.1991,825
+L-Eflornithine (monohydrochloride),0.05,plate10,1,0.3572,,unclear,-0.1641,0.08424,-0.03006,0.01275,-0.6095,-0.5624,-0.1713,826
+Furosemide,0.5,plate5,16,-0.2317,,unclear,-0.1642,0.1001,-0.02683,0.01733,-0.6102,0.5898,0.1983,827
+Plicamycin,0.05,plate13,0,0.2875,unreliable plate only,unclear,-0.1643,0.01886,-0.0251,0.005649,-0.6105,0.089,0.0377,828
+Elagolix sodium,5,"plate14,plate6",4,-0.2497,,unclear,-0.1645,0.06676,-0.02083,0.008927,-0.6113,0.3283,0.08362,829
+Oleic acid,5,plate3,0,-0.2024,noisy plate (z scaled),unclear,-0.1657,0.1419,-0.04445,0.04538,-0.6158,0.4937,0.3121,830
+Retinoic acid,0.5,plate5,78,-0.04353,,Retinoic receptor agonist,-0.1657,0.1745,-0.02566,0.02512,-0.6159,-0.1556,-0.04078,831
+Medroxyprogesterone acetate,0.05,plate4,108,-0.05283,,unclear,-0.1657,0.08293,-0.03277,0.006577,-0.6159,-2.222,-0.7036,832
+vincristine,0.5,plate2,1207,-1.447,low cells (technical?); noisy plate (z scaled),Microtubule inhibitor,-0.1662,0.02455,-0.02833,0.01715,-0.618,0.5693,0.2651,833
+Folic acid,0.05,plate4,0,0.1846,,unclear,-0.1673,-0.1093,-0.02846,-0.02582,-0.6219,-2.249,-0.7125,834
+Resveratrol,5,"plate14,plate6",18,0.01889,,unclear,-0.1696,0.2565,-0.02066,0.02814,-0.631,-0.2465,-0.04676,835
+PF-06260933,0.5,plate2,4,-0.4717,plate-row cell shift; noisy plate (z scaled),Other MAPK inhibitor,-0.1712,-0.198,-0.02671,-0.03316,-0.637,0.2746,0.1326,836
+Omeprazole,0.5,plate11,88,-0.8173,,unclear,-0.1713,0.1066,-0.02165,0.02266,-0.6376,-0.2997,-0.1284,837
+BI-78D3,0.5,plate2,14,-0.6605,noisy plate (z scaled),Other MAPK inhibitor,-0.172,0.2535,-0.03169,0.07122,-0.64,0.5489,0.2559,838
+Ixazomib citrate,0.05,plate10,11,-0.09845,,Proteasome inhibitor,-0.1729,-0.1137,-0.0281,-0.02017,-0.6437,-0.4895,-0.1479,839
+Bimiralisib,0.05,plate1,153,0.1842,,PI3K/AKT inhibitor,-0.1751,-0.1661,-0.02413,-0.03294,-0.652,-0.1844,-0.05347,840
+Bendamustine,5,plate9,257,-0.5702,,DNA synthesis/repair inhibitor,-0.176,0.1604,-0.02037,0.03922,-0.6558,0.7075,0.2452,841
+Fluvoxamine (maleate),0.05,plate4,7,-0.2583,,unclear,-0.1763,-0.01666,-0.02847,-0.004514,-0.6566,-0.6156,-0.1883,842
+Dexmedetomidine,0.05,plate7,9,0.1606,,Adrenoceptor agonist,-0.1773,-0.04261,-0.02656,-0.009906,-0.6607,0.08608,0.03901,843
+Gallic acid (hydrate),0.05,plate4,185,0.006286,,Cyclooxygenase inhibitor,-0.1782,0.1641,-0.0252,0.03301,-0.6641,-1.074,-0.3355,844
+Fostamatinib (disodium hexahydrate),0.05,plate13,1,0.2162,unreliable plate only,Other TK inhibitor,-0.1819,-0.05048,-0.02503,-0.00405,-0.6784,0.4903,0.1664,845
+Cysteamine (hydrochloride),0.5,plate5,16,-0.7155,,unclear,-0.1827,0.007826,-0.03025,-0.002308,-0.6814,-0.5692,-0.1734,846
+Plicamycin,5,plate13,3,-0.4994,unreliable plate only,unclear,-0.1829,0.06202,-0.02908,0.01371,-0.6822,0.01044,0.0125,847
+Flutamide,0.5,plate11,19,-0.2381,,Androgen receptor antagonist,-0.185,0.08612,-0.02597,0.01727,-0.6901,0.0008315,0.009532,848
+Tofacitinib (citrate),5,"plate14,plate6",197,-0.09184,,JAK/STAT inhibitor,-0.1858,0.1203,-0.01931,0.009748,-0.6934,-0.4284,-0.08802,849
+Ralimetinib dimesylate,5,plate3,45,0.5158,plate-row cell shift; noisy plate (z scaled),Other MAPK inhibitor,-0.186,-0.0815,-0.05077,-0.02313,-0.6941,-1.077,-0.6518,850
+Elimusertib hydrochloride,0.5,plate2,35,0.2432,noisy plate (z scaled),unclear,-0.189,-0.005817,-0.04442,-0.01007,-0.7058,-0.2421,-0.09967,851
+ETC-206,0.05,plate1,0,-0.02523,,Protein synthesis inhibitor,-0.1891,0.01487,-0.03404,0.006335,-0.706,-0.7269,-0.2378,852
+Macitentan,0.05,plate7,0,0.4005,,unclear,-0.1894,0.04319,-0.03124,0.008077,-0.7073,-1.187,-0.4025,853
+Pemetrexed,0.5,plate8,23,-0.6827,,DNA synthesis/repair inhibitor,-0.19,0.04667,-0.03232,-0.0008017,-0.7097,-0.4607,-0.1386,854
+Berberine (chloride hydrate),0.05,plate4,1,-0.08242,,unclear,-0.1911,0.07465,-0.03074,0.01742,-0.7137,-0.4393,-0.1318,855
+Isocorydine,0.5,plate5,108,-0.7042,,unclear,-0.1911,0.07806,-0.02059,0.01667,-0.7137,-0.07162,-0.01382,856
+5-Fluorouracil,5,plate12,5,0.1006,,DNA synthesis/repair inhibitor,-0.1925,0.05672,-0.03503,0.01267,-0.7191,-0.1903,-0.0519,857
+Clofarabine,0.05,plate7,8,-0.1955,,DNA synthesis/repair inhibitor,-0.193,-0.03279,-0.0332,-0.00398,-0.721,0.08907,0.04005,858
+Bexarotene,0.05,plate10,25,0.01354,,Retinoic receptor agonist,-0.1937,-0.1424,-0.03144,-0.01748,-0.7239,-0.05775,-0.009376,859
+Brimonidine,5,plate12,94,0.6731,,Adrenoceptor agonist,-0.1965,-0.2456,-0.01938,-0.03521,-0.7347,-0.02719,0.0004265,860
+Megestrol,0.5,plate5,18,-0.3112,,unclear,-0.1969,0.2162,-0.02695,0.03797,-0.736,0.5944,0.1998,861
+Estrone sulfate (potassium),0.05,plate10,5,-0.01208,,unclear,-0.1973,0.04089,-0.03401,0.009652,-0.7379,-0.6523,-0.2001,862
+Voriconazole,5,plate12,6,-0.08175,,unclear,-0.1988,0.01435,-0.03462,0.002125,-0.7436,-0.4833,-0.1459,863
+Trametinib,0.05,"plate1,plate10",1142,-0.389,,MEK inhibitor,-0.1998,-0.1463,-0.02667,-0.02142,-0.7476,-2.797,-0.635,864
+Temuterkib,0.5,plate2,1,-0.5698,noisy plate (z scaled),Other MAPK inhibitor,-0.2,0.05204,-0.03627,0.03212,-0.7482,0.6445,0.2989,865
+Cabozantinib (S-malate),0.05,plate10,87,-0.325,,Multi-TK inhibitor,-0.2003,0.02813,-0.02383,0.00598,-0.7494,-1.842,-0.5817,866
+Adenosine,0.05,plate4,1,-0.1832,,unclear,-0.2011,0.04943,-0.02924,0.008823,-0.7525,-0.128,-0.03192,867
+Sodium Salicylate,0.5,plate5,14,-0.1423,,Cyclooxygenase inhibitor,-0.2016,-0.02935,-0.02901,-0.009122,-0.7542,-2.171,-0.6873,868
+Vemurafenib,5,plate3,0,1.009,noisy plate (z scaled),RAF inhibitor,-0.2026,-0.07893,-0.05917,-0.02208,-0.7582,-0.778,-0.4682,869
+SBI-0640756,0.05,plate1,0,0.2229,,Protein synthesis inhibitor,-0.2029,-0.1196,-0.02846,-0.01578,-0.7595,-0.3452,-0.1081,870
+Entrectinib,0.5,plate11,3,0.7163,,Other TK inhibitor,-0.2043,-0.02829,-0.03957,-0.008285,-0.7647,-0.9864,-0.4436,871
+Vortioxetine,5,plate12,37,-1.287,toxic,unclear,-0.2046,0.1299,-0.0294,0.02412,-0.766,-0.06112,-0.01046,872
+Pyridoxine (hydrochloride),5,"plate14,plate6",118,-0.1449,,unclear,-0.2065,0.2916,-0.03201,0.03113,-0.7733,-2.604,-0.5815,873
+Roxadustat,0.5,plate8,3,-0.08637,,unclear,-0.2067,0.2057,-0.0353,0.0362,-0.7738,-0.5221,-0.1584,874
+Zileuton,5,plate12,0,-0.06641,,unclear,-0.2075,0.03376,-0.03328,0.001623,-0.7772,0.07689,0.03382,875
+18β-Glycyrrhetinic acid,0.05,plate4,10,-0.3107,,unclear,-0.2076,0.09865,-0.03057,0.01961,-0.7776,-0.6265,-0.1918,876
+AZD1390,5,plate3,16,-0.02747,noisy plate (z scaled),unclear,-0.2091,-0.05596,-0.05558,-0.01849,-0.7833,-0.4708,-0.2797,877
+Ouabain (Octahydrate),0.05,plate10,3491,0.699,cell-cycle shift,unclear,-0.2096,-0.1383,-0.05085,-0.02224,-0.7853,0.5571,0.1879,878
+Ranolazine,5,plate12,4,-0.293,,unclear,-0.2121,0.08765,-0.04108,0.008818,-0.7948,-1.209,-0.3787,879
+Hydroxyfasudil,0.5,plate2,11,-0.7245,noisy plate (z scaled),unclear,-0.2127,0.02598,-0.03934,0.01802,-0.797,0.9028,0.415,880
+Bosentan (hydrate),5,plate9,301,-0.9533,,unclear,-0.2152,-0.05486,-0.03441,-0.01392,-0.8068,0.3219,0.1165,881
+Osimertinib (mesylate),0.5,plate11,15,0.3414,,EGFR/ERBB inhibitor,-0.217,0.04531,-0.03358,0.006612,-0.8138,0.04036,0.02767,882
+Sulfatinib,5,plate9,239,0.4402,,Multi-TK inhibitor,-0.219,-0.08371,-0.03336,-0.0002228,-0.8216,2.124,0.7175,883
+Bestatin (hydrochloride),0.05,plate10,119,-0.3923,,unclear,-0.2207,0.04648,-0.02441,0.009478,-0.828,-0.2731,-0.07847,884
+Vilanterol,0.05,plate4,24,-0.8862,,Adrenoceptor agonist,-0.2231,0.06063,-0.03665,0.005051,-0.8373,-1.391,-0.437,885
+Gallic acid (hydrate),5,"plate14,plate6",9,-0.07653,,Cyclooxygenase inhibitor,-0.2238,-0.03252,-0.02306,-0.006104,-0.84,-0.6384,-0.1357,886
+Pralsetinib,0.05,plate1,22,-0.04629,,Other TK inhibitor,-0.2266,0.04275,-0.02834,0.007512,-0.8509,-0.1754,-0.05042,887
+Posaconazole,0.05,plate7,1,0.05277,,unclear,-0.2269,-0.1921,-0.03737,-0.03406,-0.852,-0.768,-0.2572,888
+LJI308,0.5,plate2,2,-1.119,low cells (technical?); plate-row cell shift; noisy plate (z scaled),Other MAPK inhibitor,-0.2276,0.03993,-0.04808,0.01584,-0.8547,0.09427,0.05153,889
+Dexamethasone,5,plate12,448,-0.2786,,Glucocorticoid receptor agonist,-0.2283,0.2825,-0.04346,0.03848,-0.8573,-2.305,-0.7302,890
+Ferulic acid,0.5,plate8,39,-1.212,low cells (technical?),Other TK inhibitor,-0.2294,-0.06558,-0.0359,-0.02002,-0.8616,-1.113,-0.348,891
+Ornidazole,5,plate13,1,0.2426,unreliable plate only,unclear,-0.2301,0.09322,-0.03583,0.02216,-0.8644,-1.197,-0.375,892
+MK-3903,0.5,plate2,1,-0.8508,plate-row cell shift; noisy plate (z scaled),unclear,-0.2307,0.002849,-0.04563,0.009742,-0.8665,0.382,0.1809,893
+Allantoin,0.5,plate5,24,-0.06055,,unclear,-0.2316,-0.08975,-0.03159,-0.01188,-0.87,-0.2974,-0.08625,894
+HI-TOPK-032,0.5,plate2,42,0.00485,noisy plate (z scaled),unclear,-0.232,0.1171,-0.05052,0.03518,-0.8714,0.2789,0.1345,895
+Flumatinib (mesylate),5,plate9,225,0.1338,,Other TK inhibitor,-0.2322,0.2796,-0.04608,0.0372,-0.8723,-0.1687,-0.04711,896
+Riluzole hydrochloride,0.5,plate5,23,-0.2821,,unclear,-0.2339,0.05265,-0.03511,0.0111,-0.8791,0.274,0.09704,897
+Docetaxel (Trihydrate),0.5,plate8,829,-0.4428,,Microtubule inhibitor,-0.2357,-0.1945,-0.02222,-0.02357,-0.8858,1.616,0.5275,898
+Benztropine (mesylate),0.5,plate11,19,0.3553,,unclear,-0.2363,0.007883,-0.04555,-0.00307,-0.8882,-2.301,-1.047,899
+AZD2858,0.5,plate2,1277,-3.301,toxic; plate-row cell shift; noisy plate (z scaled),GSK3 inhibitor,-0.2371,0.01648,-0.0514,0.00136,-0.8914,0.1742,0.08744,900
+Tofacitinib,0.05,plate4,24,-0.2763,,JAK/STAT inhibitor,-0.2382,-0.004719,-0.03525,0.002815,-0.8954,0.5723,0.1927,901
+Rimonabant (Hydrochloride),5,plate13,1,0.1902,unreliable plate only,unclear,-0.2383,-0.1122,-0.03772,-0.01886,-0.8958,-0.3795,-0.1126,902
+Temsirolimus,5,"plate14,plate6",68,0.03362,,MTOR inhibitor,-0.2403,-0.1206,-0.02389,-0.0139,-0.9035,-0.2619,-0.05025,903
+Apalutamide,0.05,plate7,12,-0.1001,,Androgen receptor antagonist,-0.2404,0.05237,-0.03827,0.01274,-0.9042,-0.1813,-0.05375,904
+Glasdegib,5,plate13,1,-0.03493,unreliable plate only,Sonic inhibitor,-0.2433,-0.01613,-0.04591,-0.008434,-0.9153,-1.325,-0.416,905
+Eplerenone,0.05,plate7,4,0.3061,,unclear,-0.2434,0.1044,-0.04354,0.01878,-0.9157,-1.141,-0.3868,906
+Azithromycin (hydrate),5,"plate14,plate6",32,-0.255,,unclear,-0.2442,0.3451,-0.02762,0.04429,-0.9185,0.42,0.1044,907
+Entrectinib,5,plate12,569,-0.8202,,Other TK inhibitor,-0.2483,0.0462,-0.02518,0.01915,-0.9346,1.444,0.4724,908
+Fumaric acid,5,plate9,77,0.962,plate-row cell shift,unclear,-0.2488,-0.05543,-0.05151,-0.01447,-0.9362,-0.1244,-0.03233,909
+Pioglitazone,0.05,plate10,2,-0.001069,,unclear,-0.2501,-0.06931,-0.04042,-0.01222,-0.9416,-0.9541,-0.2969,910
+Balsalazide (sodium hydrate),0.05,plate4,4,-0.08855,,JAK/STAT inhibitor,-0.2505,0.09876,-0.05199,0.01013,-0.9428,-2.809,-0.8921,911
+Cytarabine (hydrochloride),5,plate9,366,-0.02857,cell-cycle shift,DNA synthesis/repair inhibitor,-0.2511,0.2915,-0.04225,0.05523,-0.9451,-1.438,-0.4704,912
+Cobimetinib,0.5,plate8,1728,-0.8192,,MEK inhibitor,-0.2521,-0.2325,-0.03207,-0.03093,-0.949,-0.1368,-0.03474,913
+Ferulic acid,0.05,plate7,6,0.1287,,Other TK inhibitor,-0.2522,-0.0009274,-0.04361,0.0003129,-0.9496,-0.8017,-0.2689,914
+Sodium Salicylate,5,"plate14,plate6",27,0.1129,,Cyclooxygenase inhibitor,-0.2533,0.2035,-0.02582,0.02367,-0.9536,-1.726,-0.3824,915
+Ralimetinib dimesylate,0.5,plate2,6,-1.035,low cells (technical?); plate-row cell shift; noisy plate (z scaled),Other MAPK inhibitor,-0.2548,-0.032,-0.04901,0.01524,-0.9594,-0.01248,0.00354,916
+Carbidopa (monohydrate),5,plate13,5,0.2431,unreliable plate only,unclear,-0.255,-0.08325,-0.0439,-0.01658,-0.9601,-0.5643,-0.1719,917
+ERK5-IN-2,0.5,plate2,7,-1.397,low cells (technical?); plate-row cell shift; noisy plate (z scaled),Other MAPK inhibitor,-0.2552,0.1455,-0.05099,0.0402,-0.9609,0.6057,0.2814,918
+Mozavaptan,0.05,plate7,10,-0.2918,,unclear,-0.2563,-0.07517,-0.037,-0.01042,-0.9654,0.251,0.09623,919
+Vitamin K4,0.5,plate11,0,-0.1196,,unclear,-0.2572,-0.1274,-0.03973,-0.0187,-0.9687,-0.8768,-0.3933,920
+Eplerenone,5,plate9,2,0.3485,,unclear,-0.2574,0.08945,-0.04251,0.01721,-0.9695,-0.3409,-0.1046,921
+LY-2584702 (tosylate salt),5,plate3,1089,-1.702,toxic; noisy plate (z scaled),MTOR inhibitor,-0.2574,0.3144,-0.06151,0.09017,-0.9696,0.1309,0.08945,922
+Econazole,0.5,plate11,1,0.4523,,unclear,-0.2587,-0.1884,-0.04954,-0.0336,-0.9745,-1.801,-0.8175,923
+Pentagastrin,0.5,plate5,6,-0.4227,,unclear,-0.2591,-0.1399,-0.03806,-0.02603,-0.9762,-1.358,-0.4264,924
+Ciclopirox,5,"plate14,plate6",46,-0.4276,,unclear,-0.2592,-0.1226,-0.03026,-0.01946,-0.9763,-1.233,-0.2705,925
+Lactate (calcium),0.05,plate10,131,0.2472,,unclear,-0.2625,-0.2031,-0.03525,-0.02824,-0.9894,1.017,0.3353,926
+Arbutin,0.05,plate7,107,-0.1407,,unclear,-0.2643,-0.2027,-0.03464,-0.03796,-0.9962,-0.2313,-0.07109,927
+Neratinib (maleate),0.05,plate4,4,0.3437,,EGFR/ERBB inhibitor,-0.2654,0.05787,-0.03784,0.01365,-1,-0.6659,-0.2045,928
+Lenalidomide (hemihydrate),5,"plate14,plate6",9,-0.2235,,unclear,-0.2658,0.0291,-0.03114,0.0009703,-1.002,-0.0867,-0.01052,929
+Loperamide (hydrochloride),0.5,plate11,24,0.6295,,unclear,-0.2662,-0.08273,-0.04986,-0.01673,-1.004,-2.115,-0.9616,930
+Canagliflozin,0.5,plate8,2,0.07256,,Glucose transporter inhibitor,-0.267,-0.03303,-0.04327,-0.002504,-1.007,-0.06201,-0.01074,931
+Posaconazole,0.5,plate8,11,-0.1865,,unclear,-0.2681,0.02376,-0.04106,0.00659,-1.011,0.2706,0.09595,932
+Altretamine,5,plate9,1,0.08168,,DNA synthesis/repair inhibitor,-0.2682,0.08266,-0.04658,0.02436,-1.011,-0.5048,-0.1592,933
+Larotrectinib sulfate,5,plate13,21,0.1881,unreliable plate only,Other TK inhibitor,-0.2685,-0.1152,-0.045,-0.02082,-1.012,-0.9074,-0.2819,934
+Tirabrutinib (hydrochloride),0.5,plate11,98,0.4442,,Other TK inhibitor,-0.2691,-0.09826,-0.05476,-0.02529,-1.015,-1.975,-0.8973,935
+Ritonavir,0.05,plate4,3,-0.009231,,unclear,-0.2704,-0.06512,-0.04882,-0.009266,-1.02,-2.43,-0.7703,936
+ULK-101,0.5,plate2,8,-0.8871,plate-row cell shift; noisy plate (z scaled),unclear,-0.2716,0.02095,-0.05465,0.01736,-1.024,0.04226,0.02815,937
+Ataluren,0.5,plate11,7,-0.138,,unclear,-0.2721,0.0295,-0.04158,0.0008295,-1.026,-1.742,-0.7905,938
+Mifepristone,0.05,plate7,18,-0.2032,,unclear,-0.2727,0.05202,-0.04379,0.008842,-1.029,-0.5729,-0.1896,939
+Almonertinib (hydrochloride),5,"plate14,plate6",51,-0.5333,,EGFR/ERBB inhibitor,-0.2728,0.01766,-0.02664,0.001454,-1.029,0.1449,0.04201,940
+Mebendazole,0.5,plate8,65,-0.2398,,Microtubule inhibitor,-0.2739,0.0184,-0.04221,0.00373,-1.033,0.8217,0.2728,941
+Phenylephrine (hydrochloride),0.5,plate11,18,0.6296,,Adrenoceptor agonist,-0.2746,0.04955,-0.05247,0.00592,-1.036,-1.911,-0.8681,942
+Capmatinib,5,plate3,135,-0.4671,noisy plate (z scaled),EGFR/ERBB inhibitor,-0.2747,-0.003476,-0.06853,0.008547,-1.036,0.1363,0.09277,943
+Busulfan,0.05,plate4,270,0.002535,,DNA synthesis/repair inhibitor,-0.2784,-0.187,-0.03884,-0.02549,-1.051,-0.3607,-0.1066,944
+Pentamidine (isethionate),0.05,plate4,2,-0.2523,,unclear,-0.2787,0.05251,-0.04855,0.003588,-1.052,-2.433,-0.7713,945
+Belinostat,0.5,plate11,5244,-0.9158,cell-cycle shift,HDAC inhibitor,-0.2797,0.1481,-0.0427,0.02307,-1.056,-1.288,-0.5822,946
+Oleic acid,0.05,plate1,1,-0.006218,,unclear,-0.28,-0.0275,-0.04809,-0.005772,-1.057,-0.9198,-0.3033,947
+Bentamapimod,0.5,plate2,0,-0.1256,noisy plate (z scaled),Other MAPK inhibitor,-0.2813,0.03466,-0.05931,0.01896,-1.062,-0.06992,-0.02228,948
+Abiraterone acetate,0.05,plate10,167,0.4185,,unclear,-0.2826,-0.1262,-0.03491,-0.02077,-1.067,0.2983,0.1048,949
+Allopurinol,0.5,plate11,1,0.182,,unclear,-0.2827,-0.0611,-0.05306,-0.01913,-1.067,-1.014,-0.4563,950
+Cepharanthine,0.5,plate5,15,-0.4839,,unclear,-0.2833,-0.074,-0.04033,-0.01014,-1.069,-1.1,-0.3439,951
+Mozavaptan,0.5,plate8,10,-0.3661,,unclear,-0.2853,-0.07538,-0.05309,-0.02158,-1.077,-1.338,-0.42,952
+Torkinib,5,plate3,19,-1.169,toxic; noisy plate (z scaled),MTOR inhibitor,-0.2863,0.2353,-0.07741,0.06832,-1.081,-0.1799,-0.1012,953
+IQ 1,0.5,plate2,1,-0.847,plate-row cell shift; noisy plate (z scaled),unclear,-0.2881,-0.05229,-0.06,-0.002314,-1.088,-0.6003,-0.2607,954
+Sivelestat (sodium tetrahydrate),0.5,plate8,70,-0.3258,,unclear,-0.2902,-0.03065,-0.04262,-3.306e-05,-1.096,0.5302,0.1792,955
+Erythromycin,5,plate12,39,-0.5858,,unclear,-0.2903,-0.0707,-0.04626,-0.01018,-1.097,-0.1512,-0.03934,956
+Larotrectinib sulfate,0.05,plate13,60,-0.2035,unreliable plate only,Other TK inhibitor,-0.2918,-0.07066,-0.0458,-0.01064,-1.102,-2.255,-0.7143,957
+Salicylic acid,0.05,plate4,0,0.2006,,Cyclooxygenase inhibitor,-0.2926,0.02418,-0.04835,0.0008314,-1.105,0.02011,0.0156,958
+Rapamycin,0.5,plate5,209,-0.4099,,MTOR inhibitor,-0.2935,-0.172,-0.03558,-0.02743,-1.109,-1.51,-0.4751,959
+Meloxicam,0.5,plate11,4,-0.1659,,Cyclooxygenase inhibitor,-0.2938,-0.0748,-0.04537,-0.01136,-1.11,-0.5491,-0.2429,960
+OTS514,5,plate3,64,-0.851,noisy plate (z scaled),Other MAPK inhibitor,-0.2982,0.1816,-0.08846,0.05987,-1.127,-1.065,-0.6444,961
+Estrone sulfate (potassium),5,plate12,108,0.02297,,unclear,-0.299,-0.1717,-0.03698,-0.01781,-1.13,-0.2236,-0.06256,962
+Cysteamine (hydrochloride),5,"plate14,plate6",2,0.302,,unclear,-0.3027,-0.1269,-0.0328,-0.01127,-1.144,-0.9635,-0.2094,963
+9-ING-41,0.5,plate2,662,-1.156,low cells (technical?); plate-row cell shift; noisy plate (z scaled),GSK3 inhibitor,-0.3043,0.2596,-0.05945,0.07756,-1.151,0.9963,0.457,964
+LY-2584702 (tosylate salt),0.5,plate2,20,-1.423,low cells (technical?); plate-row cell shift; noisy plate (z scaled),MTOR inhibitor,-0.305,0.1048,-0.06355,0.0355,-1.153,-0.1198,-0.04472,965
+NVP-BHG712,0.5,plate2,12,-0.9609,plate-row cell shift; noisy plate (z scaled),unclear,-0.3059,0.002605,-0.06359,0.01369,-1.157,-0.1659,-0.06541,966
+TAK-901,5,plate3,8188,0.9253,plate-row cell shift; cell-cycle shift; composition shift; noisy plate (z scaled),unclear,-0.3083,-0.456,-0.1264,-0.1435,-1.166,0.9305,0.5801,967
+Decitabine,0.5,plate8,138,-0.6571,,DNA methyltransferase inhibitor,-0.3098,-0.001258,-0.04282,0.006957,-1.172,0.1559,0.05915,968
+Rimonabant (Hydrochloride),0.05,plate13,23,0.104,unreliable plate only,unclear,-0.31,-0.03937,-0.05047,-0.01045,-1.173,-0.7593,-0.2344,969
+EX229,0.5,plate2,605,-0.1551,plate-row cell shift; noisy plate (z scaled),unclear,-0.3117,-0.1119,-0.06742,-0.01457,-1.179,0.1684,0.08483,970
+Temuterkib,0.05,plate1,3,-0.02804,,Other MAPK inhibitor,-0.3132,-0.09719,-0.05489,-0.01269,-1.185,-0.3184,-0.09899,971
+Ixazomib,5,plate3,255,-0.4439,noisy plate (z scaled),Proteasome inhibitor,-0.3138,-0.02528,-0.08573,-0.0005419,-1.187,0.4569,0.2895,972
+Pioglitazone,5,plate12,7,0.433,,unclear,-0.3142,0.01714,-0.05719,-0.0004341,-1.188,-1.253,-0.3929,973
+Riluzole hydrochloride,0.05,plate4,6,0.2392,,unclear,-0.315,0.1131,-0.05672,0.01874,-1.192,-1.743,-0.5498,974
+Gemcitabine,5,plate3,34,-0.1783,noisy plate (z scaled),DNA synthesis/repair inhibitor,-0.3156,0.1451,-0.06163,0.03626,-1.194,-0.2574,-0.1025,975
+Thymopentin,0.5,plate8,0,-0.1056,,unclear,-0.3195,-0.008111,-0.0562,-0.002321,-1.209,-2.073,-0.656,976
+Bestatin (hydrochloride),0.5,plate11,12,0.54,,unclear,-0.3208,-0.07365,-0.04759,-0.009619,-1.214,-0.8678,-0.3891,977
+Phenylephrine (hydrochloride),5,plate12,294,-0.2443,,Adrenoceptor agonist,-0.3267,0.03653,-0.04902,0.003462,-1.237,-0.07985,-0.01647,978
+Fostamatinib (disodium hexahydrate),0.5,plate13,0,-0.2781,unreliable plate only,Other TK inhibitor,-0.3286,-0.009495,-0.05724,-0.0007763,-1.244,-1.864,-0.589,979
+Minodronic acid,0.05,plate1,10,0.1575,,unclear,-0.3299,-0.0942,-0.05724,-0.0149,-1.249,-2.309,-0.775,980
+Riluzole hydrochloride,5,"plate14,plate6",3,0.3851,,unclear,-0.3304,0.0247,-0.03782,0.007706,-1.251,-0.637,-0.1353,981
+Homoharringtonine,0.05,plate4,4014,0.02916,,Protein synthesis inhibitor,-0.3307,0.03911,-0.05662,0.0101,-1.252,-0.1006,-0.02313,982
+Phenylephrine (hydrochloride),0.05,plate10,3,0.06359,,Adrenoceptor agonist,-0.331,0.1174,-0.06035,0.01474,-1.253,-0.8988,-0.2792,983
+Busulfan,5,"plate14,plate6",9,-0.243,,DNA synthesis/repair inhibitor,-0.3313,-0.1013,-0.03403,-0.006171,-1.254,-0.1079,-0.01533,984
+Capmatinib,0.05,plate1,0,-0.1317,,EGFR/ERBB inhibitor,-0.3322,-0.01265,-0.05046,0.003083,-1.258,0.2545,0.09561,985
+Sonidegib,0.5,plate2,53,-1.228,low cells (technical?); plate-row cell shift; noisy plate (z scaled),Sonic inhibitor,-0.3325,0.07335,-0.07512,0.02689,-1.259,-0.04557,-0.01133,986
+Tolmetin,0.05,plate7,4,0.5953,,Cyclooxygenase inhibitor,-0.3326,-0.1416,-0.05215,-0.01937,-1.259,-0.2759,-0.08657,987
+Darolutamide,5,plate12,5,0.03981,,Androgen receptor antagonist,-0.3366,0.1519,-0.05138,0.02753,-1.275,0.001082,0.009498,988
+Osimertinib (mesylate),5,plate12,551,-0.6183,,EGFR/ERBB inhibitor,-0.3377,0.1533,-0.04794,0.02203,-1.279,-0.1253,-0.03103,989
+AZD2858,0.05,plate1,2,0.1996,,GSK3 inhibitor,-0.3415,-0.03982,-0.05728,-0.004244,-1.294,-0.2931,-0.0904,990
+Tolmetin,5,plate9,2,-0.02217,,Cyclooxygenase inhibitor,-0.3416,-0.04195,-0.0512,-0.001579,-1.294,-0.8166,-0.2632,991
+Temsirolimus,0.05,plate4,352,0.27,,MTOR inhibitor,-0.3424,-0.2478,-0.04889,-0.03459,-1.297,-1.292,-0.4054,992
+Thymol,5,"plate14,plate6",120,-0.3283,,unclear,-0.3426,-0.006487,-0.03555,0.006206,-1.298,-0.5952,-0.1259,993
+Methylprednisolone succinate,5,plate3,3,-0.2507,noisy plate (z scaled),Glucocorticoid receptor agonist,-0.3439,0.03767,-0.09591,0.01907,-1.303,-0.6892,-0.4137,994
+Fostamatinib (disodium hexahydrate),5,plate13,3,-0.1641,unreliable plate only,Other TK inhibitor,-0.3445,-0.02665,-0.05672,-0.001191,-1.305,0.1757,0.0655,995
+CP21R7,0.05,plate1,1,-0.01453,,GSK3 inhibitor,-0.3477,-0.2189,-0.05763,-0.03311,-1.318,-0.5735,-0.1856,996
+Bicalutamide,0.5,plate11,30,-0.334,,Androgen receptor antagonist,-0.3484,-0.04282,-0.04607,-0.001302,-1.32,-0.1234,-0.04748,997
+Aprepitant,0.05,plate10,57,0.09853,,unclear,-0.3486,0.08441,-0.06166,0.01472,-1.321,-0.966,-0.3007,998
+Tofacitinib,5,"plate14,plate6",291,-0.06552,,JAK/STAT inhibitor,-0.3495,-0.09771,-0.03549,-0.01057,-1.325,-0.8171,-0.1762,999
+Thymol,0.05,plate4,12,-0.7503,,unclear,-0.3499,-0.02432,-0.05601,-0.007422,-1.326,-1.869,-0.5904,1000
+Allantoin,5,"plate14,plate6",20,0.1587,,unclear,-0.3583,-0.2041,-0.03454,-0.01372,-1.359,0.4561,0.1126,1001
+Neratinib,5,plate12,279,-0.4874,,EGFR/ERBB inhibitor,-0.3586,0.2124,-0.05799,0.03324,-1.36,-2.145,-0.6789,1002
+Sunitinib,5,plate12,1157,-1.26,toxic,Multi-TK inhibitor,-0.3595,0.008444,-0.05257,0.001097,-1.363,-0.73,-0.225,1003
+Futibatinib,5,plate3,16,-0.6675,noisy plate (z scaled),Other TK inhibitor,-0.3599,-0.09588,-0.1063,-0.03337,-1.365,-0.9049,-0.5461,1004
+AZD-8055,0.05,plate1,27,0.4184,,MTOR inhibitor,-0.3608,-0.1655,-0.05788,-0.02184,-1.368,-1.024,-0.3388,1005
+Tirabrutinib (hydrochloride),0.05,plate10,12,0.6805,,Other TK inhibitor,-0.363,0.09484,-0.06606,0.01618,-1.377,-0.7126,-0.2194,1006
+Minodronic acid,5,plate3,10,0.1909,noisy plate (z scaled),unclear,-0.3652,0.1528,-0.1113,0.05237,-1.385,-0.7871,-0.4738,1007
+Medroxyprogesterone acetate,5,"plate14,plate6",115,-0.06656,,unclear,-0.3655,-0.2341,-0.04075,-0.0268,-1.387,-1.726,-0.3824,1008
+Aprepitant,5,plate12,1,-0.04175,,unclear,-0.3661,-0.0103,-0.05855,-0.001734,-1.389,-0.9328,-0.2901,1009
+Edoxaban (tosylate monohydrate),0.05,plate13,0,0.5211,unreliable plate only,unclear,-0.3683,0.01495,-0.05762,0.0005813,-1.397,-0.6721,-0.2065,1010
+Norepinephrine (hydrochloride),5,"plate14,plate6",27,-0.1903,,Adrenoceptor agonist,-0.3685,-0.5272,-0.03266,-0.05327,-1.398,-0.4343,-0.08935,1011
+Imiquimod (hydrochloride),5,plate12,827,-1.669,toxic,unclear,-0.3691,0.1745,-0.05351,0.02648,-1.4,-0.5119,-0.1551,1012
+Rapamycin,5,"plate14,plate6",190,-0.0162,,MTOR inhibitor,-0.3703,-0.1008,-0.03615,-0.00733,-1.405,-1.947,-0.4324,1013
+Adagrasib,5,plate9,245,0.524,,RAS inhibitor,-0.3759,-0.1779,-0.05584,-0.009866,-1.427,0.2807,0.1028,1014
+DT-061,5,plate3,33,-0.4978,noisy plate (z scaled),unclear,-0.379,0.184,-0.1112,0.06007,-1.439,-0.5792,-0.3463,1015
+Budesonide,0.5,plate11,411,-0.3126,,Glucocorticoid receptor agonist,-0.3798,-0.2434,-0.05318,-0.03796,-1.442,-0.7487,-0.3345,1016
+Afatinib,0.5,"plate2,plate8",43,0.4833,noisy plate (z scaled),EGFR/ERBB inhibitor,-0.3815,-0.3231,-0.0379,-0.03163,-1.448,0.1533,0.004761,1017
+Indacaterol (maleate),0.5,plate11,0,0.3679,,Adrenoceptor agonist,-0.3826,-0.2163,-0.06753,-0.03883,-1.452,-1.2,-0.5415,1018
+Celecoxib,0.5,plate2,233,-0.8494,noisy plate (z scaled),Cyclooxygenase inhibitor,-0.3833,0.1669,-0.07678,0.05377,-1.455,-0.1512,-0.05883,1019
+Clotrimazole,5,"plate14,plate6",23,-0.03384,,unclear,-0.3852,0.008254,-0.04411,8.143e-05,-1.462,-2.129,-0.4737,1020
+Sinomenine,5,"plate14,plate6",0,-0.104,,unclear,-0.3854,-0.06608,-0.04313,-0.008628,-1.463,-1.293,-0.284,1021
+Diammonium Glycyrrhizinate,0.05,plate4,137,0.045,,unclear,-0.388,-0.09274,-0.05895,-0.01053,-1.473,-0.9597,-0.2987,1022
+Zileuton,0.05,plate10,1,-0.1448,,unclear,-0.3909,0.0243,-0.06351,0.001438,-1.484,-2.149,-0.6803,1023
+Omeprazole (sodium),5,plate12,14,-0.2829,,unclear,-0.3911,-0.05333,-0.06127,-0.006176,-1.485,0.5387,0.182,1024
+Benproperine (phosphate),5,plate9,36,-0.07873,,unclear,-0.3931,-0.2316,-0.06801,-0.03179,-1.493,-1.831,-0.6016,1025
+Edoxaban (tosylate monohydrate),5,plate13,35,0.2978,unreliable plate only,unclear,-0.3941,0.04095,-0.06954,0.006959,-1.497,-0.4449,-0.1336,1026
+Digitoxin,0.5,plate11,8363,0.1281,cell-cycle shift,unclear,-0.3942,-0.5715,-0.1088,-0.1078,-1.497,-0.5363,-0.237,1027
+Fluvoxamine (maleate),0.5,plate5,23,-0.4869,,unclear,-0.3943,-0.173,-0.06197,-0.0277,-1.498,-0.2728,-0.07835,1028
+PH-797804,0.5,plate2,86,-0.9011,plate-row cell shift; noisy plate (z scaled),Other MAPK inhibitor,-0.3958,-0.06743,-0.08573,-0.01717,-1.503,-0.3423,-0.1447,1029
+AZD-7648,0.5,plate2,72,-1.249,low cells (technical?); noisy plate (z scaled),DNA synthesis/repair inhibitor,-0.398,0.1406,-0.0752,0.04606,-1.512,-0.1302,-0.04936,1030
+Lopinavir,5,plate12,20,-0.6093,,unclear,-0.3996,0.05396,-0.06907,0.002155,-1.518,-1.449,-0.4557,1031
+Cyclosporin A,5,plate12,42,-0.001697,,unclear,-0.4,0.003226,-0.06511,0.004213,-1.52,-0.546,-0.166,1032
+Retinoic acid,5,"plate14,plate6",113,0.3022,,Retinoic receptor agonist,-0.4061,0.1602,-0.04937,0.01699,-1.543,-1.152,-0.2522,1033
+4EGI-1,5,plate3,137,-0.4423,noisy plate (z scaled),Protein synthesis inhibitor,-0.4063,0.06119,-0.1149,0.02913,-1.544,-0.48,-0.2854,1034
+Tirabrutinib (hydrochloride),5,plate12,10,0.1142,,Other TK inhibitor,-0.4075,0.1085,-0.06937,0.0115,-1.549,-2.183,-0.6911,1035
+Almonertinib (mesylate),5,plate9,94,1.325,plate-row cell shift,EGFR/ERBB inhibitor,-0.4136,-0.09075,-0.07603,-0.01482,-1.572,-1.259,-0.4107,1036
+IQ 1,5,plate3,32,-0.5087,noisy plate (z scaled),unclear,-0.4144,-0.03044,-0.1196,-0.005591,-1.575,-1.322,-0.8019,1037
+Bortezomib,5,plate3,3848,-1.368,toxic; cell-cycle shift; noisy plate (z scaled),Proteasome inhibitor,-0.4186,-0.01682,-0.1005,-0.02705,-1.591,1.082,0.6729,1038
+olaparib,5,plate3,3,-0.3168,noisy plate (z scaled),DNA synthesis/repair inhibitor,-0.4198,-0.07277,-0.1132,-0.01179,-1.596,0.3258,0.2091,1039
+MK-3903,5,plate3,56,-0.2183,noisy plate (z scaled),unclear,-0.4222,-0.04585,-0.1204,-0.01161,-1.605,-1.136,-0.6878,1040
+Dorzolamide (hydrochloride),0.5,plate8,10,0.04933,,unclear,-0.4249,-0.1166,-0.06598,-0.01071,-1.616,0.5527,0.1864,1041
+Clotrimazole,0.5,plate5,11,-0.4499,,unclear,-0.4261,-0.01161,-0.06356,0.002231,-1.62,-1.189,-0.3723,1042
+Celecoxib,0.05,plate1,1,-0.5211,,Cyclooxygenase inhibitor,-0.4296,-0.06914,-0.0723,-0.01037,-1.634,-1.039,-0.3437,1043
+Meloxicam,0.05,plate10,57,-0.006045,,Cyclooxygenase inhibitor,-0.4339,-0.2173,-0.05985,-0.03352,-1.65,0.4126,0.1415,1044
+Radotinib,0.5,plate5,43,-0.8554,,Other TK inhibitor,-0.4352,-0.04573,-0.067,-0.002266,-1.655,-1.506,-0.4739,1045
+Erdafitinib,0.05,plate1,6,0.08755,,Other TK inhibitor,-0.4359,0.1526,-0.07596,0.03259,-1.658,-1.835,-0.6141,1046
+Methylprednisolone succinate,0.5,plate2,323,-1.297,low cells (technical?); noisy plate (z scaled),Glucocorticoid receptor agonist,-0.4381,0.1172,-0.08632,0.0408,-1.667,0.03836,0.02639,1047
+Sapanisertib,0.5,plate2,842,-0.5002,plate-row cell shift; noisy plate (z scaled),MTOR inhibitor,-0.4397,-0.1176,-0.0895,-0.01202,-1.673,0.2183,0.1073,1048
+Budesonide,0.05,plate10,531,-0.1336,,Glucocorticoid receptor agonist,-0.4426,-0.09748,-0.06622,-0.01525,-1.684,0.8546,0.2833,1049
+Anethole trithione,5,"plate14,plate6",193,-0.08918,cell-cycle shift,unclear,-0.4457,0.01757,-0.05833,-0.002788,-1.696,-3.215,-0.7202,1050
+venetoclax,0.05,plate1,154,0.211,,unclear,-0.447,0.08674,-0.07533,0.01874,-1.701,-0.756,-0.2476,1051
+Cabozantinib (S-malate),0.5,plate11,69,-0.3745,,Multi-TK inhibitor,-0.448,-0.06077,-0.06578,-0.00806,-1.705,-0.7684,-0.3435,1052
+Flutamide,5,plate12,18,-0.3531,,Androgen receptor antagonist,-0.4517,0.09023,-0.0682,0.02264,-1.719,-1.026,-0.3201,1053
+Benztropine (mesylate),0.05,plate10,208,0.02973,,unclear,-0.4522,-0.1587,-0.06136,-0.02586,-1.721,-2.562,-0.8127,1054
+Ligustrazine,0.5,plate8,2,0.1776,,unclear,-0.4547,0.07815,-0.07543,0.01143,-1.731,-1.174,-0.3674,1055
+18β-Glycyrrhetinic acid,5,"plate14,plate6",34,-0.4358,,unclear,-0.4571,-0.004299,-0.05042,-0.002106,-1.74,-1.743,-0.3863,1056
+Pimitespib,0.05,plate1,26,-0.2409,,unclear,-0.4597,0.07539,-0.08461,0.01845,-1.75,-0.4049,-0.1284,1057
+Trametinib,5,"plate12,plate3",1994,0.9549,cell-cycle shift; noisy plate (z scaled),MEK inhibitor,-0.4613,-0.2888,-0.07635,-0.05967,-1.756,-2.462,-0.8828,1058
+Arbutin,5,plate9,215,0.1716,,unclear,-0.4642,0.03583,-0.07418,0.01306,-1.767,-0.3032,-0.092,1059
+Lenalidomide (hemihydrate),0.05,plate4,12,-0.4597,,unclear,-0.4745,0.1482,-0.0783,0.01477,-1.807,-1.972,-0.6234,1060
+XRK3F2,0.5,plate2,1745,-2.241,low cells (technical?); plate-row cell shift; noisy plate (z scaled),unclear,-0.4796,0.2299,-0.1011,0.06883,-1.827,-0.725,-0.3167,1061
+Elimusertib hydrochloride,5,plate3,427,-1.024,toxic; noisy plate (z scaled),unclear,-0.48,-0.03603,-0.1383,-0.008892,-1.828,-0.8674,-0.5231,1062
+Binimetinib,5,"plate12,plate3",1486,0.144,noisy plate (z scaled),MEK inhibitor,-0.4887,-0.278,-0.08042,-0.04156,-1.862,-0.4031,-0.3102,1063
+Berbamine,0.05,plate4,302,0.3501,,unclear,-0.4893,-0.03733,-0.08292,-0.001543,-1.864,-2.072,-0.6557,1064
+Trametinib (DMSO_TF solvate),0.5,plate8,1357,0.4191,,MEK inhibitor,-0.4909,-0.108,-0.08207,-0.009675,-1.87,-2.326,-0.7371,1065
+Pentagastrin,0.05,plate4,2,-0.4788,,unclear,-0.4948,-0.1638,-0.08229,-0.03501,-1.885,-2.29,-0.7256,1066
+Clobetasol propionate,0.05,plate10,1512,-0.3945,,unclear,-0.5023,-0.1406,-0.06397,-0.01879,-1.914,-1.009,-0.3147,1067
+AZD-7648,5,plate3,196,-0.4441,noisy plate (z scaled),DNA synthesis/repair inhibitor,-0.5062,0.1359,-0.1429,0.05405,-1.929,-0.8628,-0.5202,1068
+Vandetanib,5,plate12,30,0.05777,,Multi-TK inhibitor,-0.5116,-0.09134,-0.08597,-0.01612,-1.95,-1.529,-0.4813,1069
+palbociclib,0.05,plate1,80,-0.5255,,CDK inhibitor,-0.5152,0.01062,-0.0875,0.009399,-1.964,-0.5561,-0.1798,1070
+Binimetinib,0.5,"plate11,plate2",1273,0.04721,noisy plate (z scaled),MEK inhibitor,-0.5204,-0.2718,-0.07197,-0.02566,-1.984,-1.309,-0.4086,1071
+AZD-8055,5,plate3,156,0.6962,noisy plate (z scaled),MTOR inhibitor,-0.521,-0.1962,-0.1542,-0.04848,-1.986,-1.764,-1.073,1072
+Dimethyl fumarate,5,plate9,300,0.9449,plate-row cell shift,unclear,-0.5222,0.1403,-0.1015,0.02125,-1.991,-2.27,-0.7482,1073
+TAK-901,0.5,plate2,151,-1.201,low cells (technical?); plate-row cell shift; noisy plate (z scaled),unclear,-0.5246,-0.008129,-0.1097,0.02041,-2,0.1119,0.05946,1074
+Saquinavir,5,"plate14,plate6",232,-0.7667,,unclear,-0.5301,-0.1603,-0.0549,-0.01808,-2.022,-1.149,-0.2514,1075
+Elimusertib hydrochloride,0.05,plate1,887,-0.3242,,unclear,-0.5378,-0.1414,-0.08805,-0.02281,-2.051,-0.8223,-0.2702,1076
+GSK1059615,0.5,plate2,830,-1.248,low cells (technical?); plate-row cell shift; noisy plate (z scaled),PI3K/AKT inhibitor,-0.5412,0.1496,-0.1148,0.05177,-2.064,-1.406,-0.6228,1077
+Carbamazepine,0.5,plate11,24,-0.3244,,HDAC inhibitor,-0.546,0.05166,-0.08888,0.005726,-2.083,-2.2,-1.001,1078
+Erlotinib,5,plate9,108,-0.2078,,EGFR/ERBB inhibitor,-0.5547,-0.1513,-0.0903,-0.02437,-2.116,-1.851,-0.6084,1079
+APTO-253,0.05,plate1,0,0.001368,,unclear,-0.5547,-0.0616,-0.09352,-0.007556,-2.116,-1.654,-0.5525,1080
+Carbamazepine,5,plate12,149,-0.8317,,HDAC inhibitor,-0.5626,0.03047,-0.0813,0.01273,-2.146,-0.4242,-0.1269,1081
+Bimiralisib,0.5,plate2,753,-1.259,low cells (technical?); plate-row cell shift; noisy plate (z scaled),PI3K/AKT inhibitor,-0.5636,0.1458,-0.115,0.05548,-2.151,-1.091,-0.4812,1082
+Verteporfin,0.5,plate8,82,-0.2986,,unclear,-0.5639,-0.2099,-0.08221,-0.03162,-2.152,0.5426,0.1832,1083
+Afatinib,5,"plate3,plate9",437,0.4087,noisy plate (z scaled),EGFR/ERBB inhibitor,-0.5683,0.05985,-0.08804,-0.009255,-2.169,-1.338,-0.6093,1084
+BAY1125976,0.5,plate2,154,-1.046,low cells (technical?); plate-row cell shift; noisy plate (z scaled),PI3K/AKT inhibitor,-0.5701,-0.0206,-0.1169,0.00371,-2.176,0.3309,0.1579,1085
+Amsacrine,5,"plate14,plate6",442,-0.357,,DNA synthesis/repair inhibitor,-0.5707,0.2221,-0.05941,0.02918,-2.178,-1.761,-0.3903,1086
+Tucidinostat,0.05,plate4,500,0.2151,,HDAC inhibitor,-0.5749,-0.2394,-0.07597,-0.03408,-2.194,0.148,0.05663,1087
+Cobimetinib,5,plate9,2969,-0.5953,,MEK inhibitor,-0.5813,-0.4552,-0.07956,-0.06745,-2.219,-0.6049,-0.1926,1088
+Harringtonine,0.5,plate8,7179,0.4529,cell-cycle shift,Protein synthesis inhibitor,-0.5828,-0.0431,-0.1032,0.00393,-2.225,0.8487,0.2814,1089
+palbociclib,5,plate3,147,0.0155,noisy plate (z scaled),CDK inhibitor,-0.5873,-0.0739,-0.1695,-0.004351,-2.242,-0.7757,-0.4668,1090
+Panobinostat,0.05,plate10,6637,0.3769,cell-cycle shift,HDAC inhibitor,-0.59,-0.4311,-0.06773,-0.0551,-2.252,0.7452,0.2482,1091
+Regorafenib,5,plate3,61,0.2209,noisy plate (z scaled),Multi-TK inhibitor,-0.6047,0.05437,-0.1773,0.02844,-2.309,-1.624,-0.9871,1092
+LB-100,0.05,plate1,5,0.5212,,unclear,-0.6058,-0.04655,-0.108,-0.008379,-2.313,-1.439,-0.4798,1093
+Alpelisib,5,plate3,182,-0.1956,noisy plate (z scaled),PI3K/AKT inhibitor,-0.6103,0.01359,-0.1784,0.01012,-2.331,-1.43,-0.8681,1094
+Pyridoxine,5,"plate14,plate6",9,-0.1902,,unclear,-0.618,-0.2574,-0.06713,-0.0328,-2.36,-0.118,-0.01761,1095
+Harringtonine,0.05,plate7,1431,-1.022,low cells (technical?),Protein synthesis inhibitor,-0.6264,0.005405,-0.1031,0.002203,-2.393,-0.09533,-0.02392,1096
+Elagolix sodium,0.5,plate5,21,-0.3536,,unclear,-0.6343,-0.2175,-0.09682,-0.03207,-2.423,0.5168,0.1749,1097
+Lapatinib ditosylate,0.05,plate1,9,-0.08648,,EGFR/ERBB inhibitor,-0.6349,-0.01625,-0.1027,0.002277,-2.425,-1.32,-0.4392,1098
+Brivudine,5,plate3,4140,1.141,plate-row cell shift; noisy plate (z scaled),unclear,-0.6578,-0.1905,-0.1784,-0.04054,-2.514,-1.815,-1.105,1099
+Afatinib,0.05,"plate1,plate7",12,-0.2823,,EGFR/ERBB inhibitor,-0.6625,-0.1451,-0.07273,-0.01337,-2.532,-0.2256,-0.04228,1100
+Binimetinib,0.05,"plate1,plate10",1014,0.3416,,MEK inhibitor,-0.6688,-0.2705,-0.07662,-0.031,-2.556,-1.501,-0.3574,1101
+Ipatasertib,0.5,plate2,2158,-1.225,low cells (technical?); plate-row cell shift; noisy plate (z scaled),PI3K/AKT inhibitor,-0.684,0.01311,-0.137,0.01596,-2.615,0.3302,0.1576,1102
+Lonafarnib,0.05,plate1,10,0.4856,,RAS inhibitor,-0.691,-0.06554,-0.1201,-0.009424,-2.642,-1.892,-0.6336,1103
+Idarubicin (hydrochloride),5,"plate14,plate6",11472,-0.8228,cell-cycle shift,DNA synthesis/repair inhibitor,-0.7208,-1.902,0.001796,-0.201,-2.757,15.89,3.613,1104
+Niclosamide (olamine),5,plate9,7764,-1.2,toxic; cell-cycle shift,unclear,-0.728,-0.2584,-0.115,-0.03926,-2.784,1.342,0.4568,1105
+Dinaciclib,0.05,plate7,11885,-2.137,toxic; transcription drop; cell-cycle shift; composition shift,CDK inhibitor,-0.7335,0.1598,-0.06078,0.02818,-2.806,5.546,1.933,1106
+Ouabain (Octahydrate),5,plate12,9763,-0.1089,cell-cycle shift; composition shift,unclear,-0.7449,-0.9667,-0.1653,-0.1656,-2.85,2.926,0.9477,1107
+Ouabain (Octahydrate),0.5,plate11,7518,-0.4518,cell-cycle shift,unclear,-0.7632,-0.8115,-0.1512,-0.1356,-2.92,0.9692,0.454,1108
+Ixazomib,0.05,plate1,131,-0.7728,,Proteasome inhibitor,-0.7664,0.02066,-0.1291,0.001697,-2.933,0.06854,0.03243,1109
+Ponatinib,0.5,plate11,1701,-0.1682,,Multi-TK inhibitor,-0.7711,-0.1715,-0.1105,-0.02487,-2.951,-1.312,-0.5929,1110
+Brivudine,0.5,plate2,201,-0.05164,noisy plate (z scaled),unclear,-0.7716,-0.1005,-0.1644,-0.01287,-2.953,-1.019,-0.4487,1111
+Vitamin K4,0.05,plate10,210,0.112,,unclear,-0.7875,-0.1686,-0.114,-0.02,-3.014,-0.881,-0.2735,1112
+Docetaxel,0.05,plate4,7282,-1.675,low cells (technical?); transcription drop; cell-cycle shift,Microtubule inhibitor,-0.8051,0.2875,-0.1206,0.05418,-3.082,-0.7868,-0.2432,1113
+Bexarotene,5,plate12,99,0.1231,,Retinoic receptor agonist,-0.8198,-0.1152,-0.1422,-0.0235,-3.139,-1.618,-0.5098,1114
+Trametinib,0.5,"plate11,plate2",1803,-0.1417,noisy plate (z scaled),MEK inhibitor,-0.8244,-0.3422,-0.1157,-0.03504,-3.156,-1.314,-0.4103,1115
+Trametinib (DMSO_TF solvate),5,plate9,1909,-0.09351,,MEK inhibitor,-0.8776,-0.2372,-0.1403,-0.02931,-3.361,-2.648,-0.874,1116
+Harringtonine,5,plate9,9773,0.9131,cell-cycle shift; composition shift,Protein synthesis inhibitor,-0.8832,-0.3348,-0.1432,-0.04273,-3.383,5.507,1.846,1117
+Infigratinib,0.05,plate1,81,0.1302,,Other TK inhibitor,-0.9079,0.1478,-0.1554,0.02996,-3.478,-2.615,-0.8791,1118
+Cabozantinib (S-malate),5,plate12,626,0.1928,,Multi-TK inhibitor,-0.9093,0.03273,-0.1483,0.003754,-3.484,-3.151,-1.002,1119
+Radotinib,5,"plate14,plate6",824,-0.232,,Other TK inhibitor,-0.9473,0.2699,-0.1087,0.0337,-3.63,-2.789,-0.6236,1120
+Ponatinib,5,plate12,3510,0.415,,Multi-TK inhibitor,-0.9565,0.0995,-0.1467,0.01666,-3.666,-4.206,-1.34,1121
+Dinaciclib,5,plate9,13164,-2.48,toxic; transcription drop; cell-cycle shift; composition shift,CDK inhibitor,-1.006,0.126,-0.08316,0.02046,-3.855,7.401,2.478,1122
+Pralsetinib,5,plate3,806,-0.8699,noisy plate (z scaled),Other TK inhibitor,-1.067,0.1419,-0.3195,0.05158,-4.093,-2.499,-1.524,1123
+Belumosudil,5,plate9,2394,-0.1511,,unclear,-1.152,-0.272,-0.185,-0.04194,-4.422,-0.7711,-0.2481,1124
+HI-TOPK-032,0.05,plate1,174,-1.227,low cells (technical?),unclear,-1.293,-0.1055,-0.2247,-0.02262,-4.965,-2.843,-0.9567,1125
+Verteporfin,5,plate9,1167,-0.5749,,unclear,-1.33,-0.5637,-0.2064,-0.09449,-5.108,0.09913,0.04222,1126
+NG25,5,plate3,2239,-0.001378,cell-cycle shift; noisy plate (z scaled),Other MAPK inhibitor,-1.368,-0.1066,-0.4313,-0.04183,-5.255,-2.77,-1.69,1127
+Digitoxin,5,plate12,9759,-1.511,toxic; transcription drop; cell-cycle shift,unclear,-1.384,-0.8032,-0.2377,-0.1292,-5.314,2.37,0.7694,1128
+Tucidinostat,0.5,plate5,5512,-0.04386,cell-cycle shift,HDAC inhibitor,-1.527,-0.9738,-0.1847,-0.124,-5.866,0.9069,0.3001,1129
+Idarubicin (hydrochloride),0.5,plate5,3579,0.2123,cell-cycle shift,DNA synthesis/repair inhibitor,-1.907,-1.201,-0.2638,-0.169,-7.332,3.419,1.106,1130
+Dinaciclib,0.5,plate8,12822,-1.795,toxic; transcription drop; cell-cycle shift; composition shift,CDK inhibitor,-2.367,-0.2826,-0.3026,-0.03065,-9.105,5.86,1.889,1131
+Tucidinostat,5,"plate14,plate6",6657,0.04726,,HDAC inhibitor,-2.855,-1.855,-0.2517,-0.1741,-10.99,1.353,0.3161,1132

@@ -1,0 +1,5 @@
+metric,TRIM72,members_median,members_min,other_genes_median,other_genes_iqr,auc_members_vs_other,p_members_vs_other,n_members,n_other,TRIM72_percentile_among_other_genes,TRIM72_percentile_among_members,TRIM72_rank_all_genes_desc,n_genes
+m1_spearman_delta_z_vs_p53score_delta_z,0.0254786,0.526436,0.215234,-0.00626413,-0.092 to 0.050,0.998853,1.96891e-12,21,83,69.8795,0,54,113
+m2_mean_delta_z_top_p53_drugdoses,0.489223,7.20302,3.82102,0.00699338,-0.789 to 1.014,0.998279,2.0866e-12,21,83,56.6265,0,65,113
+m3_across_line_spearman_with_p53score_reference_wells,0.110009,0.561375,0.389807,0.0106624,-0.027 to 0.114,1,1.6445e-12,21,84,73.8095,0,51,114
+m4_basal_wt_minus_altered_log2,0.246832,0.947042,-0.137508,-0.107861,-0.296 to 0.139,0.923249,2.17079e-09,21,85,78.8235,9.52381,44,115

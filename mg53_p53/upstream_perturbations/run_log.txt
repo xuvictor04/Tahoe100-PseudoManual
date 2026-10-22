@@ -1,0 +1,51 @@
+[16:32:03] Loading the atlas effects (read-only) ...
+[16:32:03]   1132 drug-doses, 16646 columns; TRIM72 = column 10805 (median line 3.95 CPM); ranked genes (expressed in >= 25 lines): 16643; level-matched (0.99-15.8 CPM): 7612
+[16:32:03] Part a: ranking of every drug-dose and the plate-baseline batch ...
+[16:32:04]   high-baseline plates (median line >= 5 CPM in drug wells): ['plate1', 'plate14', 'plate2', 'plate3']
+[16:32:04]   atlas z vs panel z for TRIM72: Pearson r = 1.0000 (max |diff| 1.86e-06)
+[16:32:04]   wrote tables/a_TRIM72_drugdose_ranking.csv (1132 rows)
+[16:32:04]   wrote tables/a_TRIM72_plate_baseline_and_spread.csv (14 rows)
+[16:32:04]   wrote tables/a_TRIM72_plate6_vs_plate14_pairs.csv (92 rows)
+[16:32:04]   wrote tables/a_TRIM72_plate_batch_checks.csv (22 rows)
+[16:32:04]   wrote tables/a_TRIM72_top30_three_rankings.csv (39 rows)
+[16:32:04] Part b: class enrichment (compound level, 20000 stratified permutations) ...
+[16:32:04]   wrote tables/b_activity_strata_compounds.csv (10 rows)
+[16:32:06]   wrote tables/b_TRIM72_class_enrichment_compound_level.csv (189 rows)
+[16:32:06]   wrote tables/b_class_members.csv (1188 rows)
+[16:32:06]   wrote tables/b_TRIM72_compound_level.csv (359 rows)
+[16:32:06]   wrote tables/b_top_activity_stratum_compounds.csv (35 rows)
+[16:32:09]   wrote tables/b_TRIM72_class_enrichment_drugdose_level.csv (62 rows)
+[16:32:09] Part c: specificity of TRIM72 within each raiser, co-induced genes, genome-wide partners ...
+[16:32:09]   wrote tables/c_TRIM72_specificity_in_raisers.csv (21 rows)
+[16:32:09]   raiser drug-doses (best per compound): 16; activity-matched controls: 38
+[16:32:10]   wrote tables/c_genes_coinduced_with_TRIM72_in_raisers.csv (300 rows)
+[16:32:10]   wrote tables/c_raisers_and_matched_controls.csv (54 rows)
+[16:32:16]   wrote tables/c_TRIM72_genomewide_partners_across_drugdoses.csv (200 rows)
+[16:32:16]   top-100 positive partners: median line 7.3 CPM (all ranked genes 15.4)
+[16:32:16]   wrote tables/c_muscle_and_myogenic_genes.csv (26 rows)
+[16:32:16] Part d: TRIM72 vs stress / p53 / cell-cycle programs across drug-doses ...
+[16:32:16]   IEG_SCORE: 14 of 14 members found
+[16:32:16]   SHORT_LIVED_mRNA_SCORE: 3 of 3 members found
+[16:32:17]   wrote tables/d_program_scores_by_drugdose.csv (1132 rows)
+[16:32:17]   wrote tables/d_TRIM72_vs_programs_correlations.csv (34 rows)
+[16:32:17]   wrote tables/d_program_high_vs_TRIM72_raisers_active_drugdoses.csv (60 rows)
+[16:32:17]   wrote tables/d_top20_drugdoses_per_program_with_TRIM72.csv (200 rows)
+[16:32:17]   of the 20 strongest drug-doses per program, TRIM72 raisers: ATF3 8, HEAT_SHOCK 6, HEXIM1 12, IEG_SCORE 9, ISR 1, NFKB 5, NRF2 5, P53_ACTIVITY 9, S_PHASE 10, UPR 3
+[16:32:18]   wrote tables/d_TRIM72_multivariable_rank_model.csv (16 rows)
+[16:32:18]   wrote tables/d_TRIM72_raiser_program_profile.csv (21 rows)
+[16:32:18] Part d2: per-line TRIM72 effects by TP53 status (gene panel machinery, in memory) ...
+[16:32:18] Excluding 15 failed wells (almost no cells recovered; same drug fine elsewhere)
+[16:32:19] Unreliable plates (kept per well; left out of the reference spread, the plate-factor peers and the drug-doses that also have a well elsewhere): plate13
+[16:32:19]   composition: applied (median-of-ratios shift per well x line from /home/user/tahoe_data/atlas/effects); plate factors: imported from the atlas; 'wells disagree' imported from the atlas
+[16:32:19]   50 lines: TP53 wild type 17, altered 33, unknown 0; MTAP-null 6 (MTAP across all wells below 24% of the median line (largest gap in the data, 1.6x))
+[16:32:19]   ambient RNA fraction af = 0.098 (median MTAP of the 6 MTAP-null lines / pooled MTAP = 0.098); a line expresses a gene at >= 25% of the median line, >= 1 CPM and >= 2 x af x its pooled CPM
+[16:32:31]   plate factors imported from the atlas (plate_scale.csv); > 1.2: plate3 5 uM x1.91, plate2 0.5 uM x1.40
+[16:32:32]   TRIM72: 1 lines excluded (not expressed); 1132 drug-doses
+[16:32:32]   CDKN1A: 3 lines excluded (not expressed); 1132 drug-doses
+[16:32:33]   MDM2: 0 lines excluded (not expressed); 1132 drug-doses
+[16:32:33]   wrote tables/d2_TRIM72_raisers_TP53_WT_vs_altered.csv (21 rows)
+[16:32:39]   wrote tables/d2_TRIM72_TP53_contrast_across_drugdoses.csv (4 rows)
+[16:32:39]   wrote tables/d2_TRIM72_TP53_contrast_by_drugdose.csv (1132 rows)
+[16:32:39]   wrote tables/d2_per_line_effects_raisers.csv (1929 rows)
+[16:32:39] done in 36 s; tables in /home/user/Tahoe100-PseudoManual/mg53_p53/upstream_perturbations/tables
+peak RSS GB 2.045404

@@ -1,0 +1,82 @@
+gene,token,median_line_cpm_quiet_wells,pooled_cpm,rho_median_over_plates,rho_plate_q25,rho_plate_q75,n_plates_same_sign,null_sd_line_perm,p_perm_lines,p_norm_calibrated,rho_organ_adjusted,p_perm_within_organ,q_perm_lines,q_organ_adjusted,in_atlas,is_TF_Lambert2018,TF_DBD_family,HGNC_gene_groups,signalling_category,cytoband,gene_sets
+ACTA1,8439,0.1152,0.1414,0.5826,0.5458,0.6147,13,0.1252,0.0004998,3.246e-06,0.5476,0.000999,0.00923,0.09962,False,False,,Actins,,1q42.13,
+FUS,1836,258.2,252.3,0.4877,0.3863,0.5548,13,0.1336,0.0004998,0.0002606,0.5028,0.000999,0.05111,0.09962,True,False,,Zinc fingers RANBP2-type|RNA binding motif containing|Heterogeneous nuclear ribonucleoproteins|FET protein family,,16p11.2,
+ATP2A1,17031,7.165,7.542,0.4685,0.4445,0.5178,13,0.1321,0.0009995,0.0003907,0.4452,0.000999,0.06102,0.09962,True,False,,ATPases Ca2+ transporting,,16p11.2,
+ZNF668,12079,7.199,7.142,0.4049,0.3558,0.4493,13,0.1298,0.001999,0.001814,0.4179,0.001998,0.113,0.1398,True,True,C2H2 ZF,Zinc fingers C2H2-type,,16p11.2,
+MYH3,3626,2.9,3.163,0.3864,0.3659,0.4058,13,0.1351,0.002999,0.00423,0.3571,0.008991,0.1536,0.23,True,False,,"Myosin heavy chains, class II",,17p13.1,
+SRF,4091,24.11,26.49,0.3806,0.2918,0.4224,13,0.1331,0.003498,0.004233,0.3692,0.005994,0.1536,0.2054,True,True,MADS box,MADS box family,,6p21.1,
+CKM,2987,0.5591,0.6452,0.3241,0.2311,0.373,13,0.1187,0.004998,0.006315,0.3295,0.003996,0.1796,0.1711,False,False,,Creatine kinase family,protein kinase,19q13.32,
+MSTN,7649,0.08917,0.12,0.3067,0.2911,0.369,13,0.1262,0.01699,0.01507,0.2951,0.02897,0.2471,0.3622,False,False,,Transforming growth factor beta superfamily,cytokine / growth factor,2q32.2,
+MYOG,5241,0.02377,0.03271,0.2968,0.2167,0.333,13,0.1222,0.01549,0.01513,0.2881,0.01299,0.2471,0.2724,False,True,bHLH,Basic helix-loop-helix proteins|Myogenic regulatory family,,1q32.1,
+KAT8,2832,19.35,19.87,0.2886,0.2794,0.3058,13,0.1336,0.03198,0.03079,0.2703,0.04795,0.3165,0.4277,True,False,,MSL histone acetyltransferase complex|NSL histone acetyltransferase complex|MYST type domain containing lysine acetyltransferases|Zinc fingers MYST C2HC-type,,16p11.2,
+PAX3,7165,1.63,19.89,0.2665,0.2409,0.2868,13,0.1355,0.05297,0.04929,0.2494,0.1009,0.3725,0.5471,True,True,Homeodomain; Paired box,PRD class homeoboxes and pseudogenes|Paired boxes,,2q36.1,
+BCKDK,2831,10.51,11.38,0.2467,0.2158,0.2791,13,0.1304,0.05497,0.05848,0.3078,0.03297,0.3936,0.3799,True,False,,Pyruvate dehydrogenase kinase family|Branched chain alpha-keto acid dehydrogenase complex subunits,protein kinase,16p11.2,
+AKT1,8208,17.41,17.96,0.2309,0.181,0.2596,13,0.1315,0.08046,0.07911,0.2449,0.07293,0.4397,0.4941,True,False,,Pleckstrin homology domain containing|AKT kinase family,protein kinase,14q32.33,
+CAV3,15249,1.669,1.666,0.2127,0.1937,0.2541,13,0.1202,0.08446,0.07688,0.1834,0.1309,0.4371,0.5927,False,False,,Caveolins,,3p25.3,
+TEAD4,17548,36.23,47.39,0.2002,0.1552,0.2396,13,0.1357,0.1379,0.1401,0.2011,0.1688,0.5321,0.6361,True,True,TEA,TEA domain transcription factors,,12p13.33,
+NFATC1,6417,12.72,20.09,0.1923,0.1034,0.2074,13,0.1351,0.1594,0.1547,0.2248,0.1189,0.55,0.5743,True,True,Rel,Nuclear factors of activated T-cells|IPT domain containing,,18q23,
+AEN,14966,17.11,20.24,0.1915,0.1641,0.2006,13,0.1301,0.1404,0.1412,0.1268,0.3397,0.5335,0.7797,True,False,,Exonucleases|MicroRNA protein coding host genes,,15q26.1,P53_ACTIVITY; P53_EXT
+TIGAR,1417,33.53,35.55,0.1776,0.1255,0.1986,13,0.1291,0.1599,0.1688,0.1322,0.3477,0.5677,0.7845,True,False,,Sugar phosphatases,phosphatase,12p13.32,P53_EXT
+MDM4,17773,100.2,103,0.1493,0.1279,0.1715,13,0.1313,0.2594,0.2556,0.1094,0.4565,0.654,0.8342,True,False,,Ring finger proteins|Zinc fingers RANBP2-type|RING finger E3 ubiquitin protein ligases,E3 ligase / ubiquitin,1q32.1,
+MYF6,3842,0.0009255,0.001076,0.1467,0.1169,0.2265,13,0.106,0.1669,0.1663,0.139,0.2617,0.5637,0.7189,False,True,bHLH,Basic helix-loop-helix proteins|Myogenic regulatory family,,12q21.31,
+HDAC4,1031,102.6,145.1,0.1453,0.1238,0.1779,13,0.1325,0.2864,0.2729,0.1007,0.4585,0.6673,0.8353,True,False,,"Histone deacetylases, class IIA|MicroRNA protein coding host genes|NCoR/SMRT transcriptional repression complex subunits",,2q37.3,
+MYF5,3843,0.001006,0.001065,0.1348,0.1251,0.2221,13,0.1055,0.2039,0.2012,0.1423,0.2338,0.6031,0.694,False,True,bHLH,Basic helix-loop-helix proteins|Myogenic regulatory family,,12q21.31,
+PPARGC1A,3710,3.365,14.37,0.1343,0.08418,0.1487,13,0.1381,0.3483,0.3307,0.04327,0.7962,0.7077,0.9547,True,False,,RNA binding motif containing,,4p15.2,
+PRSS8,701,1.001,12.82,0.1186,0.07947,0.1599,10,0.131,0.3733,0.3655,0.1304,0.3477,0.7321,0.7845,True,False,,Serine proteases,,16p11.2,
+TNNT2,4783,0.6383,3.464,0.1052,0.07438,0.1707,12,0.1304,0.4403,0.4199,0.1114,0.4006,0.7652,0.8099,True,False,,Troponin complex subunits,,1q32.1,
+IGF1,376,0.4196,0.6636,0.1048,0.04106,0.1365,11,0.1237,0.3983,0.3969,0.01559,0.9091,0.7521,0.981,False,False,,Neuropeptides|Insulin family,,12q23.2,
+ZMAT3,13340,28.8,37.59,0.1022,0.05777,0.1505,11,0.1328,0.4483,0.4414,0.01515,0.9131,0.7782,0.9818,True,False,,Zinc fingers matrin-type,,3q26.32,P53_ACTIVITY
+RYR1,17003,2.339,4.357,0.09983,0.06756,0.1663,12,0.1258,0.4253,0.4276,0.08606,0.5345,0.7693,0.8709,True,False,,Ryanodine receptors|Protein phosphatase 1 regulatory subunits,phosphatase; receptor (non-olfactory),19q13.2,
+PAX7,238,0.5087,2.459,0.09647,0.07035,0.1585,13,0.1288,0.4593,0.4537,0.1105,0.4426,0.7836,0.8273,True,True,Homeodomain; Paired box,PRD class homeoboxes and pseudogenes|Paired boxes,,1p36.13,
+PRSS53,9346,5.053,5.36,0.09157,0.0231,0.2585,10,0.1334,0.4913,0.4925,0.08702,0.5564,0.8042,0.8796,True,False,,Serine proteases,,16p11.2,
+MDM2,7127,182.3,289,0.091,0.02752,0.1458,12,0.1349,0.5087,0.5001,0.04455,0.7433,0.808,0.9392,True,False,,Ring finger proteins|Zinc fingers RANBP2-type|RING finger E3 ubiquitin protein ligases,E3 ligase / ubiquitin,12q15,P53_ACTIVITY
+BTG2,10341,8.162,10.53,0.08908,0.02867,0.1456,11,0.1285,0.4888,0.4882,0.08815,0.5295,0.8028,0.8684,True,False,,BTG/Tob family,,1q32.1,P53_EXT
+TP53,8121,60.25,62.42,0.08379,0.05988,0.1105,13,0.1304,0.5322,0.5203,0.07815,0.5784,0.8177,0.8897,True,True,p53,p53 transcription factor family,,17p13.1,
+MEF2B,22600,13.71,14.55,0.0837,0.05546,0.1341,13,0.1298,0.5247,0.5192,0.05795,0.6783,0.8169,0.9217,True,True,MADS box,Myocyte enhancer factor 2 proteins|MADS box family,,19p13.11,
+BAX,1723,10.61,11.98,0.08341,0.06295,0.1114,12,0.132,0.5357,0.5275,0.02768,0.8362,0.822,0.9644,True,False,,BCL2 family,,19q13.33,P53_ACTIVITY
+XPC,9799,60.39,64.81,0.08245,0.06478,0.1214,13,0.1322,0.5197,0.533,-0.004283,0.975,0.8242,0.9944,True,False,,Xeroderma pigmentosum complementation groups,,3p25.1,P53_ACTIVITY; P53_EXT
+TCF12,7925,310.3,307.4,0.07995,0.02425,0.1553,10,0.1343,0.5602,0.5516,0.02572,0.8771,0.8342,0.9733,True,True,bHLH,Basic helix-loop-helix proteins,,15q21.3,
+VKORC1,12081,49.63,48.65,0.07736,-0.0351,0.1966,8,0.1325,0.5442,0.5593,0.05892,0.6883,0.8381,0.9242,True,False,,Vitamin K epoxide reductase complex subunit 1 family,,16p11.2,
+EDA2R,6394,1.106,8.749,0.07121,0.06353,0.09609,13,0.1308,0.5997,0.5863,-0.009202,0.9351,0.8511,0.9862,True,False,,Tumor necrosis factor receptor superfamily,receptor (non-olfactory),Xq12,P53_ACTIVITY; P53_EXT
+ATF3,10823,71.36,77.4,0.0691,0.01119,0.09801,11,0.1288,0.5897,0.5917,0.1103,0.4116,0.8527,0.8153,True,True,bZIP,Activating transcription factor 3 family,,1q32.3,ISR_ATF4
+TRIAP1,12903,9.718,11.21,0.06651,0.03846,0.1096,11,0.1324,0.6277,0.6154,-0.001076,0.993,0.8654,0.9981,True,False,,,,12q24.31,P53_ACTIVITY; P53_EXT
+SIX4,2361,15.42,18.44,0.0593,0.03635,0.08149,11,0.1317,0.6537,0.6524,0.136,0.3407,0.88,0.7801,True,True,Homeodomain,SINE class homeoboxes,,14q23.1,
+HDAC5,3601,53.73,52.42,0.04912,0.02012,0.08293,11,0.137,0.7166,0.7198,0.05725,0.6653,0.9078,0.9188,True,False,,"Histone deacetylases, class IIA",,17q21.31,
+SIX1,5853,8.151,9.321,0.04845,0.001585,0.09128,10,0.135,0.7166,0.7197,0.1557,0.2757,0.9077,0.7301,True,True,Homeodomain,SINE class homeoboxes,,14q23.1,
+FDXR,10598,10.36,15.67,0.04519,0.02204,0.04912,11,0.1353,0.7266,0.7384,-0.001261,0.994,0.9157,0.9981,True,False,,Mitochondrial respiratory chain complex assembly factors|Mitochondrial iron-sulfur assembly components|Flavoproteins|Oxidoreductases,,17q25.1,P53_ACTIVITY
+SPATA18,10901,0.7162,3.12,0.04317,0.0006242,0.0715,10,0.1338,0.7551,0.747,0.01294,0.9301,0.9194,0.9843,True,False,,,,4q12,P53_ACTIVITY; P53_EXT
+MYOCD,8057,0.5076,1.137,0.04279,-0.003313,0.05652,9,0.1256,0.7316,0.7334,0.04483,0.7662,0.9131,0.9476,False,False,,Myocardin family,,17p12,
+TCF3,1160,50.23,52.42,0.04269,0.03529,0.07179,11,0.1312,0.7396,0.7449,0.02292,0.8841,0.9184,0.9752,True,True,bHLH,Basic helix-loop-helix proteins,,19p13.3,
+MYOD1,6106,0.004769,0.03362,0.03856,-0.02022,0.127,8,0.1223,0.7516,0.7526,-0.02945,0.8282,0.9219,0.9631,False,True,bHLH,Basic helix-loop-helix proteins|Myogenic regulatory family,,11p15.1,
+TNFRSF10B,5109,194.1,209.1,0.01253,0.002257,0.03731,10,0.132,0.9195,0.9243,0.001424,0.991,0.9809,0.9979,True,False,,CD molecules|Tumor necrosis factor receptor superfamily,receptor (non-olfactory),8p21.3,P53_EXT
+TEAD1,16373,354.2,382.8,0.009652,-0.03289,0.03962,7,0.133,0.9415,0.9421,-0.05597,0.6893,0.9844,0.9242,True,True,TEA,TEA domain transcription factors,,11p15.3,
+SESN1,1498,44.26,44.31,0.00389,-0.01743,0.069,7,0.132,0.9765,0.9765,-0.04863,0.7103,0.9935,0.9298,True,False,,Sestrin family,,6q21,P53_ACTIVITY
+MEF2D,4586,85.63,87.94,-0.007635,-0.02713,0.04788,7,0.1337,0.9545,0.9545,0.0724,0.5934,0.9872,0.8943,True,True,MADS box,Myocyte enhancer factor 2 proteins|MADS box family,,1q22,
+FOXO3,4836,230.5,244,-0.01666,-0.05786,-0.00437,10,0.134,0.9115,0.901,0.04182,0.7592,0.9729,0.9445,True,True,Forkhead,Forkhead boxes,,6q21,
+ACER2,14202,14.09,16.1,-0.02809,-0.05095,0.01801,8,0.1329,0.8276,0.8326,-0.0929,0.5045,0.9519,0.8591,True,False,,Alkaline ceramidases,,9p22.1,P53_ACTIVITY; P53_EXT
+CDKN1A,5575,57.81,66.61,-0.02905,-0.06651,0.0183,8,0.1357,0.8341,0.8304,0.0128,0.9311,0.9509,0.9848,True,False,,Cyclin dependent kinase inhibitor 1 family,,6p21.2,P53_ACTIVITY
+DES,13803,0.03553,0.2235,-0.03078,-0.1051,0.02915,9,0.1161,0.7791,0.7908,-0.09603,0.4665,0.9368,0.8404,False,False,,Intermediate filaments Type III,,2q35,
+POLH,12875,59.22,59.72,-0.03088,-0.09071,0.01532,8,0.1292,0.8191,0.8111,-0.125,0.3477,0.9434,0.7845,True,False,,DNA polymerases|Xeroderma pigmentosum complementation groups|Zinc fingers UBZ3 CCHH-type,,6p21.1,P53_ACTIVITY; P53_EXT
+TCF4,17149,19.58,75.7,-0.03309,-0.08427,-0.006387,10,0.1346,0.8191,0.8058,-0.1022,0.4276,0.9422,0.8207,True,True,bHLH,Basic helix-loop-helix proteins,,18q21.2,
+ZNF646,12080,10.12,10.24,-0.04,-0.07092,0.02857,8,0.132,0.7666,0.7619,-0.02823,0.8392,0.9262,0.9644,True,True,C2H2 ZF,Zinc fingers C2H2-type,,16p11.2,
+RRM2B,642,46.73,54.42,-0.04115,-0.08437,0.04701,8,0.1343,0.7546,0.7592,-0.1153,0.3886,0.9247,0.8032,True,False,,Ribonucleotide reductase subunits,,8q22.3,P53_ACTIVITY; P53_EXT
+DYSF,7120,4.201,7.82,-0.04442,-0.09474,0.1069,7,0.1347,0.7306,0.7416,0.0166,0.9021,0.9168,0.9793,True,False,,Ferlin family,,2p13.2,
+FOXO1,9337,89.1,146.1,-0.04567,-0.0957,0.02598,8,0.1318,0.7131,0.729,0.004124,0.981,0.9114,0.9955,True,True,Forkhead,Forkhead boxes,,13q14.11,
+TNNT1,3028,29.87,39.14,-0.04682,-0.09714,0.07909,9,0.1342,0.7266,0.7272,-0.08173,0.5554,0.9108,0.8794,True,False,,Troponin complex subunits,,19q13.42,
+MEF2C,1532,21.4,40.25,-0.06555,-0.1139,-0.03059,13,0.1356,0.6352,0.6287,-0.05865,0.6663,0.871,0.9188,True,True,MADS box,Myocyte enhancer factor 2 proteins|MADS box family,,5q14.3,
+STX4,2829,22.13,22.63,-0.07429,-0.1151,-0.06036,13,0.1321,0.5647,0.5739,-0.05072,0.6923,0.8455,0.9242,True,False,,Syntaxins,,16p11.2,
+PHLDA3,13656,9.96,13.49,-0.08687,-0.1681,-0.03491,11,0.1328,0.5287,0.513,-0.1488,0.2577,0.814,0.7131,True,False,,,,1q32.1,P53_ACTIVITY; P53_EXT
+RPS27L,15876,55.77,64.12,-0.09551,-0.1184,-0.00533,10,0.1333,0.4838,0.4737,-0.1568,0.2637,0.7942,0.7193,True,False,,S ribosomal proteins,,15q22.2,P53_ACTIVITY; P53_EXT
+BBC3,3079,17.14,22.46,-0.1054,-0.1441,-0.04576,12,0.1332,0.4373,0.4287,-0.1744,0.2428,0.7695,0.7048,True,False,,BCL2 homology region 3 (BH3) only|MicroRNA protein coding host genes,,19q13.32,P53_ACTIVITY
+PRKAA1,6568,74.12,80.78,-0.1218,-0.2371,-0.08946,13,0.1333,0.3618,0.3609,-0.1341,0.3636,0.7295,0.7913,True,False,,Protein kinase AMP-activated catalytic subunit alpha family,protein kinase,5p13.1,
+DDB2,6924,53.9,67.59,-0.1263,-0.1492,-0.1077,13,0.1333,0.3418,0.3431,-0.162,0.2667,0.7162,0.7223,True,False,,WD repeat domain containing|Xeroderma pigmentosum complementation groups|Nucleotide excision repair,,11p11.2,P53_ACTIVITY; P53_EXT
+PIK3CA,5205,152.2,157.7,-0.1359,-0.1754,-0.1281,13,0.129,0.2939,0.292,-0.1324,0.3726,0.679,0.7947,True,False,,Phosphatidylinositol 3-kinase family,protein kinase,3q26.32,
+HDAC9,638,222.4,282.4,-0.1377,-0.1619,-0.108,13,0.136,0.3108,0.3115,-0.1196,0.4156,0.6901,0.8178,True,False,,"Histone deacetylases, class IIA",,7p21.1,
+MYC,7390,50.4,74.22,-0.1383,-0.1572,-0.1122,13,0.1332,0.2989,0.2989,-0.1344,0.3327,0.6823,0.7754,True,True,bHLH,Basic helix-loop-helix proteins,,8q24.21,
+PMAIP1,8155,69.56,80.64,-0.1414,-0.2286,-0.08869,13,0.134,0.3023,0.2913,-0.1251,0.4156,0.6789,0.8178,True,False,,BCL2 homology region 3 (BH3) only,,18q21.32,
+CCNG1,4171,60.69,64.99,-0.1589,-0.2061,-0.09244,13,0.1327,0.2419,0.2312,-0.1729,0.2178,0.6307,0.6807,True,False,,Cyclins,,5q34,P53_EXT
+TP53INP1,11477,8.771,9.952,-0.1794,-0.2123,-0.1031,13,0.1316,0.1844,0.1726,-0.2578,0.06394,0.5717,0.472,True,False,,,,8q22.1,P53_ACTIVITY; P53_EXT
+TP53I3,4367,5.375,6.592,-0.1951,-0.205,-0.1781,13,0.1298,0.1299,0.1329,-0.1543,0.2677,0.5244,0.7236,True,False,,Oxidoreductases,,2p23.3,P53_ACTIVITY; P53_EXT
+MEF2A,1038,299.6,344.2,-0.1954,-0.2729,-0.1443,13,0.1349,0.1449,0.1476,-0.1512,0.2987,0.5419,0.7512,True,True,MADS box,Myocyte enhancer factor 2 proteins|MADS box family,,15q26.3,
+CDKN1C,6175,4.823,6.07,-0.1998,-0.2085,-0.168,13,0.1339,0.1499,0.1356,-0.2633,0.06394,0.5278,0.472,True,False,,Cyclin dependent kinase inhibitor 1 family,,11p15.4,
+PLK3,13581,17.64,20.11,-0.3359,-0.3564,-0.3159,13,0.1328,0.01149,0.01141,-0.3076,0.02897,0.2228,0.3622,True,False,,Polo like kinase family,protein kinase,1p34.1,P53_ACTIVITY; P53_EXT

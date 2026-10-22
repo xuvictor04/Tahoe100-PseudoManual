@@ -1,0 +1,61 @@
+drug,conc,wells,gene,n_lines,spearman_between_wells,p,median_log2_well1,median_log2_well2
+Homoharringtonine,5,plate6 / plate14,TRIM72,47,0.815333,3.00134e-12,4.35024,2.36756
+Homoharringtonine,5,plate6 / plate14,P53_SCORE,48,0.879722,1.86071e-16,0.669841,0.581385
+Homoharringtonine,5,plate6 / plate14,MDM2,48,0.870061,9.87413e-16,0.503186,0.427387
+Homoharringtonine,5,plate6 / plate14,CDKN1A,45,0.893808,1.42156e-16,0.91007,0.979555
+Homoharringtonine,5,plate6 / plate14,TP53I3,48,0.523122,0.000136275,0.336466,0.343869
+Homoharringtonine,5,plate6 / plate14,FDXR,45,0.670751,4.6172e-07,0.552431,0.139695
+Idarubicin (hydrochloride),5,plate6 / plate14,TRIM72,46,0.631946,2.47412e-06,4.6852,2.67072
+Idarubicin (hydrochloride),5,plate6 / plate14,P53_SCORE,47,0.860777,8.63915e-15,0.293005,0.277874
+Idarubicin (hydrochloride),5,plate6 / plate14,MDM2,47,0.879278,4.27643e-16,0.0697405,0.107051
+Idarubicin (hydrochloride),5,plate6 / plate14,CDKN1A,44,0.753488,3.58073e-09,0.126218,0.135762
+Idarubicin (hydrochloride),5,plate6 / plate14,TP53I3,47,0.755088,8.66286e-10,-0.16849,-0.291387
+Idarubicin (hydrochloride),5,plate6 / plate14,FDXR,44,0.583369,3.23858e-05,1.25892,0.809898
+Mitoxantrone (dihydrochloride),5,plate6 / plate14,TRIM72,47,0.187558,0.206788,1.96948,0.100144
+Mitoxantrone (dihydrochloride),5,plate6 / plate14,P53_SCORE,48,0.266717,0.0668747,0.31791,-0.0354905
+Mitoxantrone (dihydrochloride),5,plate6 / plate14,MDM2,48,-0.0344116,0.816387,0.605786,-0.0791343
+Mitoxantrone (dihydrochloride),5,plate6 / plate14,CDKN1A,45,0.127009,0.405746,0.810578,0.0874755
+Mitoxantrone (dihydrochloride),5,plate6 / plate14,TP53I3,48,0.10964,0.458194,0.912911,-0.0107296
+Mitoxantrone (dihydrochloride),5,plate6 / plate14,FDXR,45,-0.260211,0.0842926,0.737012,-0.208162
+Amsacrine,5,plate6 / plate14,TRIM72,47,-0.335916,0.0209748,-0.396189,-0.384377
+Amsacrine,5,plate6 / plate14,P53_SCORE,48,0.824034,6.26182e-13,0.327334,0.12299
+Amsacrine,5,plate6 / plate14,MDM2,48,0.852149,1.57332e-14,0.430026,0.136079
+Amsacrine,5,plate6 / plate14,CDKN1A,45,0.828195,2.22323e-12,0.429383,0.212402
+Amsacrine,5,plate6 / plate14,TP53I3,48,0.427812,0.0024204,0.586805,0.343477
+Amsacrine,5,plate6 / plate14,FDXR,45,0.778656,3.02831e-10,0.592437,0.258033
+Docetaxel,5,plate6 / plate14,TRIM72,47,0.385291,0.00748588,0.258674,-0.0441588
+Docetaxel,5,plate6 / plate14,P53_SCORE,48,0.43096,0.00222902,0.0863201,0.0468889
+Docetaxel,5,plate6 / plate14,MDM2,48,0.422818,0.00275388,0.0534875,-0.00342655
+Docetaxel,5,plate6 / plate14,CDKN1A,45,0.202503,0.182179,0.036865,0.213943
+Docetaxel,5,plate6 / plate14,TP53I3,48,0.0238819,0.871999,0.288031,0.0929581
+Docetaxel,5,plate6 / plate14,FDXR,45,0.138603,0.363873,0.174909,-0.0576531
+Gemcitabine,0.05,plate1 / plate1,TRIM72,47,-0.0827937,0.580077,-0.0659981,0.470125
+Gemcitabine,0.05,plate1 / plate1,P53_SCORE,48,0.370821,0.00946928,0.150362,0.0326612
+Gemcitabine,0.05,plate1 / plate1,MDM2,48,0.139275,0.345118,0.194442,0.0251454
+Gemcitabine,0.05,plate1 / plate1,CDKN1A,45,0.278393,0.0640606,0.240363,0.0627856
+Gemcitabine,0.05,plate1 / plate1,TP53I3,48,-0.0454842,0.758862,0.394848,-0.0171912
+Gemcitabine,0.05,plate1 / plate1,FDXR,45,0.37668,0.0107584,0.561712,0.116791
+Gemcitabine,0.5,plate2 / plate2,TRIM72,47,-0.117021,0.433421,0.206365,0.1151
+Gemcitabine,0.5,plate2 / plate2,P53_SCORE,48,-0.367455,0.0101911,0.0319299,0.165126
+Gemcitabine,0.5,plate2 / plate2,MDM2,48,-0.304711,0.0352202,0.237711,-0.120782
+Gemcitabine,0.5,plate2 / plate2,CDKN1A,45,-0.0953887,0.533085,0.161976,0.215748
+Gemcitabine,0.5,plate2 / plate2,TP53I3,48,-0.0606817,0.682018,0.119132,0.35063
+Gemcitabine,0.5,plate2 / plate2,FDXR,45,-0.110935,0.468158,0.216084,0.255912
+Gemcitabine,5,plate3 / plate3,TRIM72,46,-0.129571,0.390762,-0.319365,0.118902
+Gemcitabine,5,plate3 / plate3,P53_SCORE,47,-0.320999,0.0278081,0.056748,0.206656
+Gemcitabine,5,plate3 / plate3,MDM2,47,-0.263414,0.0736169,-0.0760187,0.120408
+Gemcitabine,5,plate3 / plate3,CDKN1A,44,0.283862,0.0618546,-0.0339884,0.368325
+Gemcitabine,5,plate3 / plate3,TP53I3,47,0.0449815,0.764005,0.33909,0.363932
+Gemcitabine,5,plate3 / plate3,FDXR,44,0.0186047,0.904589,0.0595601,0.537038
+Selinexor,5,plate6 / plate14,TRIM72,46,0.4716,0.000938128,-0.232468,-0.376078
+Selinexor,5,plate6 / plate14,P53_SCORE,46,0.834598,5.72879e-13,0.30079,0.198488
+Selinexor,5,plate6 / plate14,MDM2,46,0.885908,2.81101e-16,0.615681,0.460091
+Selinexor,5,plate6 / plate14,CDKN1A,43,0.86122,1.26729e-13,0.0347635,0.150227
+Selinexor,5,plate6 / plate14,TP53I3,46,0.652174,9.09098e-07,1.23513,1.21223
+Selinexor,5,plate6 / plate14,FDXR,43,0.593174,2.76682e-05,0.841136,0.74606
+Triamcinolone,5,plate6 / plate14,TRIM72,47,0.00682239,0.963698,-0.110507,0.154086
+Triamcinolone,5,plate6 / plate14,P53_SCORE,48,0.282458,0.0517567,0.0120262,0.0824161
+Triamcinolone,5,plate6 / plate14,MDM2,48,0.321103,0.0260598,0.0665683,0.19988
+Triamcinolone,5,plate6 / plate14,CDKN1A,45,0.296179,0.0482122,-0.16552,0.0882949
+Triamcinolone,5,plate6 / plate14,TP53I3,48,0.348241,0.0152852,0.363845,0.255512
+Triamcinolone,5,plate6 / plate14,FDXR,45,0.363768,0.014035,0.163479,0.347004

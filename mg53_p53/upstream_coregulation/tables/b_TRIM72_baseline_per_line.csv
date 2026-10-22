@@ -1,0 +1,51 @@
+cell_line_id,cell_name,organ,TRIM72_log2cpm_vs_plate_mean,TRIM72_log2cpm_sd_over_plates,TRIM72_cpm_median_over_plates,TRIM72_mean_rank_within_plate,TRIM72_counts_total,cells_total,tp53_status,tp53_group,tp53_changes,basal_p53_activity_log2,p53_responsiveness_log2,functional_call,FUS_log2cpm_vs_plate_mean
+CVCL_0023,A549,Lung,-1.373,0.2987,0.7015,8.077,7737,2.211e+06,wild type (no TP53 driver call),WT,,1.444,0.9763,responsive,-0.2285
+CVCL_0028,AN3 CA,other,0.6247,0.4605,4.129,34.62,5872,4.954e+05,altered,altered,p.G389W; p.R213Q; p.S90fs,0.2997,0.469,uncertain (within 2 SE of the cut),0.24
+CVCL_0069,SK-MEL-2,Skin,-0.5161,0.2293,1.438,19.54,8474,1.318e+06,altered,altered,p.G245S,-0.1211,0.1216,unresponsive,0.01188
+CVCL_0099,SNU-1,other,-0.536,0.3806,1.74,21.15,3400,1.022e+06,wild type (no TP53 driver call),WT,,0.3376,1.056,responsive,0.1372
+CVCL_0131,A-172,CNS/Brain,-1.147,0.2707,0.8413,10.92,1.26e+04,2.013e+06,wild type (no TP53 driver call),WT,,1.102,0.723,uncertain (within 2 SE of the cut),0.01751
+CVCL_0152,AsPC-1,Pancreas,-0.6955,0.6462,1.376,17.62,8687,1.957e+06,altered,altered,p.C135fs,-0.5655,0.2883,unresponsive,0.1141
+CVCL_0179,BT-474,other,1.25,0.3623,5.963,40.15,2.92e+04,1.093e+06,altered,altered,p.E285K,-0.2081,0.4989,uncertain (within 2 SE of the cut),-0.05741
+CVCL_0218,COLO 205,Bowel,-0.04469,0.7496,1.727,25.69,8854,1.257e+06,altered,altered,p.Y103fs; p.Y107fs,-0.6274,0.168,unresponsive,-0.2315
+CVCL_0292,HCT15,Bowel,2.182,0.3247,10.05,47.77,3.842e+04,1.263e+06,altered,altered,Splice_site; p.S241F,-0.06369,0.1674,unresponsive,0.3341
+CVCL_0293,HEC-1-A,other,1.958,0.1138,7.69,46.31,1.067e+05,2.164e+06,altered,altered,p.R248Q,-0.5116,0.2901,unresponsive,-0.04599
+CVCL_0320,HT-29,Bowel,0.05341,0.6537,2.254,27.85,1.436e+04,1.864e+06,altered,altered,p.R273H,0.08128,0.05454,unresponsive,-0.4786
+CVCL_0332,HS-578T,other,-1.153,0.3605,0.9504,11.23,8437,1.466e+06,altered,altered,p.V157F,-0.4106,0.3271,unresponsive,-0.5122
+CVCL_0334,Hs 766T,Pancreas,-0.7577,0.3897,1.312,17.54,5547,2.063e+06,wild type (no TP53 driver call),WT,,-0.2815,0.1609,unresponsive,-0.3552
+CVCL_0359,J82,other,-0.3876,0.5151,1.185,20.54,2.176e+04,2.012e+06,altered,altered,p.E271K; p.K320N,-0.294,0.5955,uncertain (within 2 SE of the cut),0.3113
+CVCL_0366,SNU-423,other,-1.004,0.2478,0.882,14,8936,1.303e+06,altered,altered,Splice_site,-0.1613,0.136,unresponsive,-0.03014
+CVCL_0371,KATO III,other,-0.9188,0.3799,1.128,14.77,8458,1.915e+06,altered,altered,DEL,-0.1197,0.1876,unresponsive,-0.4412
+CVCL_0397,LS 180,Bowel,-1.438,0.3654,0.954,7.308,5865,1.563e+06,wild type (no TP53 driver call),WT,,1.12,0.9481,responsive,-0.4666
+CVCL_0399,LoVo,Bowel,0.6768,0.5107,2.869,35.92,6.062e+04,2.609e+06,wild type (no TP53 driver call),WT,,1.024,1.035,responsive,-0.02964
+CVCL_0428,MIA PaCa-2,Pancreas,-0.1681,0.6167,1.391,22.69,1.397e+04,2.015e+06,altered,altered,p.R248W,-0.4739,0.4668,uncertain (within 2 SE of the cut),0.2249
+CVCL_0459,NCI-H460,Lung,-1.175,0.1042,0.9831,10.85,1.56e+04,4.909e+06,wild type (no TP53 driver call),WT,,0.6832,1.246,responsive,-0.2675
+CVCL_0480,PANC-1,Pancreas,-1.487,0.22,0.8704,6.154,1.266e+04,3.424e+06,altered,altered,p.R273H,-0.343,0.2564,unresponsive,-0.06082
+CVCL_0504,RKO,Bowel,0.6359,0.2726,2.687,34.85,2.443e+04,1.9e+06,wild type (no TP53 driver call),WT,,0.5209,1.369,responsive,0.1766
+CVCL_0546,SW480,Bowel,-0.8967,0.3556,1.312,15.23,1.842e+04,5.131e+06,altered,altered,p.P309S; p.R273H,-0.2731,0.2238,unresponsive,-0.2076
+CVCL_1055,A-427,Lung,0.163,0.2015,2.175,28.31,1.962e+04,1.234e+06,wild type (no TP53 driver call),WT,,0.789,0.6626,uncertain (within 2 SE of the cut),0.3133
+CVCL_1056,A498,other,0.1967,0.7175,2.333,29.46,5.356e+04,2.325e+06,wild type (no TP53 driver call),WT,,1.208,1.104,responsive,0.5494
+CVCL_1094,C-33 A,other,2.268,0.3086,12.68,48.31,3.855e+04,1.265e+06,altered,altered,p.R273C,-0.3735,0.2383,unresponsive,0.3084
+CVCL_1097,C32,Skin,0.1229,0.7557,2.02,27.46,2.369e+04,1.726e+06,wild type (no TP53 driver call),WT,,0.8723,1.039,responsive,0.1438
+CVCL_1098,HepG2/C3A,other,0.7116,0.2951,3.824,34.92,1.711e+04,1.092e+06,wild type (no TP53 driver call),WT,,0.7937,0.8946,responsive,0.1276
+CVCL_1119,CFPAC-1,Pancreas,-0.662,0.1311,1.207,18.85,1.177e+04,2.016e+06,altered,altered,p.C242R,-0.4484,0.2689,unresponsive,0.08308
+CVCL_1125,CHP-212,other,-0.9175,0.2711,1.064,15.08,1244,4.523e+05,wild type (no TP53 driver call),WT,,0.9836,0.5565,uncertain (within 2 SE of the cut),-0.1858
+CVCL_1239,H4,CNS/Brain,1.763,0.4119,7.056,45.23,2.607e+04,8.938e+05,wild type (no TP53 driver call),WT,,0.7512,0.7066,uncertain (within 2 SE of the cut),0.1271
+CVCL_1285,HOP62,Lung,-0.5557,0.3695,1.072,18.77,2.107e+04,2.825e+06,altered,altered,Splice_site,-0.3812,0.3399,unresponsive,-0.004878
+CVCL_1381,LOX-IMVI,Skin,0.9192,0.1839,4.186,36.77,3.06e+04,1.898e+06,wild type (no TP53 driver call),WT,,0.9645,0.716,uncertain (within 2 SE of the cut),-0.003033
+CVCL_1478,NCI-H1573,Lung,2.414,0.4793,14.01,48.54,9.371e+04,1.73e+06,altered,altered,p.R248L,-0.6851,0.2213,unresponsive,0.08003
+CVCL_1495,NCI-H1792,Lung,-1.697,0.4213,0.6329,5.308,5411,1.574e+06,altered,altered,Splice_site,-0.4818,0.1703,unresponsive,-0.6368
+CVCL_1517,NCI-H2030,Lung,1.866,0.4082,8.777,46.15,9.024e+04,1.714e+06,altered,altered,p.G262V,-0.02246,0.2044,unresponsive,0.3392
+CVCL_1531,NCI-H2122,Lung,1.008,0.3596,5.826,38.85,315,2.464e+04,altered,altered,p.C176F; p.Q16L,0.6397,0.264,unresponsive,-0.06277
+CVCL_1547,NCI-H23,Lung,0.5506,0.5212,2.943,32.77,2.181e+04,1.557e+06,altered,altered,p.M246I,0.1367,0.3129,unresponsive,0.4922
+CVCL_1550,NCI-H2347,Lung,-2.104,0.2324,0.5081,1.923,7192,1.898e+06,altered,altered,Thr125Thr; p.T125T,0.6132,0.4113,unresponsive,-0.5812
+CVCL_1571,NCI-H596,Lung,0.8155,0.263,3.804,36.23,110,1.558e+04,altered,altered,p.G245C,0.0951,,not measured,0.01993
+CVCL_1577,NCI-H661,Lung,-1.742,0.4122,0.7506,4.154,390,1.092e+05,altered,altered,p.R158L; p.S215I,-0.02885,0.1982,unresponsive,0.1288
+CVCL_1635,Panc 03.27,Pancreas,-1.725,0.26,0.5061,4.538,5054,1.447e+06,altered,altered,375+5G>T,-0.1971,0.2606,unresponsive,-0.4716
+CVCL_1666,RPMI-7951,Skin,-0.1161,0.1978,2.046,24.69,9344,1.386e+06,altered,altered,p.S166*,-0.1454,0.2844,unresponsive,-0.1779
+CVCL_1693,SHP-77,Lung,1.529,0.5062,8.074,42.31,2.218e+04,1.854e+06,altered,altered,p.C176W,-0.1716,0.1514,unresponsive,0.2702
+CVCL_1715,SW 1088,CNS/Brain,0.3224,0.7022,3.193,30.38,2401,1.34e+05,altered,altered,p.R273C,-0.6954,0.256,unresponsive,0.5768
+CVCL_1716,SW 1271,Lung,0.1242,0.2608,1.982,27.38,1600,1.807e+05,altered,altered,p.C277F,0.1696,0.04094,unresponsive,0.4074
+CVCL_1717,SW1417,Bowel,-1.531,0.5374,0.8803,6.923,5080,1.638e+06,altered,altered,p.C238fs,-0.09171,0.1944,unresponsive,0.03243
+CVCL_1724,SW48,Bowel,1.258,0.3285,5.819,40.15,1.597e+04,8.256e+05,wild type (no TP53 driver call),WT,,0.8506,1.063,responsive,0.03311
+CVCL_1731,SW 900,Lung,0.8536,0.269,3.717,37.38,2.617e+04,1.46e+06,altered,altered,p.Q167*,-0.3456,0.3074,unresponsive,-0.2519
+CVCL_C466,hTERT-HPNE,Pancreas,0.4826,0.4494,2.382,33.38,2.149e+04,1.467e+06,wild type (no TP53 driver call),WT,,0.9105,0.938,responsive,0.1883

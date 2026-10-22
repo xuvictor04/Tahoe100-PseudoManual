@@ -1,0 +1,5 @@
+subset,n_drugdoses,median_TRIM72_wt_minus_altered,median_CDKN1A_wt_minus_altered,wilcoxon_p_TRIM72_diff_ne_0,spearman_TRIM72_diff_vs_CDKN1A_diff,p1,spearman_TRIM72_diff_vs_p53_targets_extra_in_WT,p2,n_with_beta,median_consensus_beta_wt_minus_altered,spearman_TRIM72_diff_vs_beta_diff,p3
+all drug-doses,1132,-3.78489e-06,-0.00561211,0.43831,-0.0271305,0.361784,0.0349557,0.239934,489,0.0311185,0.00697394,0.877748
+P53_ACTIVITY z >= 3 (p53-activating),50,0.0784959,0.437784,0.0206659,-0.0035054,0.980725,0.243794,0.0879843,50,0.129266,0.13066,0.36577
+p53 WT-selective induction z >= 3,47,0.100666,0.526694,0.00245012,-0.0957447,0.522049,0.089963,0.547594,46,0.144408,0.1144,0.449027
+TRIM72 raisers (z >= 3),19,0.284439,0.0161788,3.8147e-05,0.0982456,0.689053,0.161404,0.509171,19,0.0853114,0.349123,0.142909

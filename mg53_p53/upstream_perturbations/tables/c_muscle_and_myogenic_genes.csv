@@ -23,5 +23,5 @@ FBXO32,True,,60.8175,45,0.0853451,0.0858842,5717,1.45572,7.7447,1.54258,8.93397
 PPARGC1A,True,,3.2883,50,0.063792,0.0596172,6680,1.40192,5.18538,5.30215,25.51
 CDKN1C,True,,4.70637,45,0.202704,0.204948,2060,1.97669,5.56513,4.36034,12.0339
 ID2,True,,27.2655,47,0.275332,0.276884,935,3.79975,15.6896,2.18834,9.20462
-PYCARD,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,
+PYCARD,False,below the atlas's 2-CPM pooled floor; values from the gene panel's corrected table,,,0.0480327,,,0.547757,-4.42134,0.373967,-7.23857
 ITGAM,False,below the atlas's 2-CPM pooled floor: not testable,,,,,,,,,

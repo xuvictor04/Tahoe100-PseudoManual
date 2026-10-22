@@ -1,0 +1,501 @@
+variant,direction,rank,gene,r,q,p_perm,pct_vs_matched_genes,r_raw,r_lfc_raw,rho_spearman_raw,median_line_cpm,DoG_class,up_same_strand_gene,up_gene_distance_bp,is_TF,TF_family,signalling,gene_sets,cytoband
+raw,positive,1,FNDC7,0.8627,2.139e-106,0.000999,100,0.8627,0.8483,0.7453,2.542,sense_exposed,PRPF38B,9975,False,,,,1p13.3
+raw,positive,2,MIR9-1HG,0.7814,5.372e-93,0.000999,100,0.7814,0.7497,0.6439,3.951,sense_exposed,MEF2D,6740,False,,,,1q22
+raw,positive,3,LDHC,0.7761,8.983e-94,0.000999,100,0.7761,0.7481,0.6521,3.901,sense_exposed,LDHA,3861,False,,,,11p15.1
+raw,positive,4,SELPLG,0.7734,8.983e-94,0.000999,100,0.7734,0.7677,0.6505,2.575,sense_exposed,CORO1C,1.122e+04,False,,cytokine / growth factor,,12q24.11
+raw,positive,5,SEMA4A,0.7697,1.996e-80,0.000999,100,0.7697,0.7347,0.6309,13.83,sense_exposed,LMNA,7281,False,,,,1q22
+raw,positive,6,TEX14,0.7663,5.173e-84,0.000999,100,0.7663,0.7279,0.6581,15.21,unexposed,TRIM37,2.906e+05,False,,protein kinase,,17q22
+raw,positive,7,FGF18,0.7633,2.499e-82,0.000999,100,0.7633,0.7332,0.6546,7.653,sense_exposed,NPM1,7685,False,,cytokine / growth factor,,5q35.1
+raw,positive,8,IDI2-AS1,0.7564,3.389e-80,0.000999,100,0.7564,0.7199,0.6161,13.44,other,GTPBP4,2550,False,,,,10p15.3
+raw,positive,9,LINC00910,0.7548,8.081e-78,0.000999,100,0.7548,0.7243,0.6406,32.8,unexposed,ETV4,1.386e+05,False,,,,17q21.31
+raw,positive,10,ENSG00000289726,0.7448,4.432e-71,0.000999,98,0.7448,0.6879,0.5036,2.217,other,RMND5B,1286,False,,,,
+raw,positive,11,PEBP4,0.737,5.968e-71,0.000999,97,0.737,0.6946,0.4662,3.926,other,TNFRSF10B,2.013e+04,False,,,,8p21.3
+raw,positive,12,GRIK5,0.7349,1.174e-68,0.000999,98.67,0.7349,0.6975,0.5186,1.823,sense_exposed,POU2F2,1.587e+04,False,,receptor (non-olfactory),,19q13.2
+raw,positive,13,CCDC62,0.7344,6.683e-73,0.000999,98.67,0.7344,0.7082,0.5411,11.35,sense_exposed,DENR,3123,False,,,,12q24.31
+raw,positive,14,NUP210L,0.7315,1.055e-66,0.000999,97.33,0.7315,0.6807,0.4613,5.69,sense_exposed,TPM3,192,False,,,,1q21.3
+raw,positive,15,LRRC23,0.7312,1.604e-82,0.000999,100,0.7312,0.7049,0.6903,64.19,other,USP5,6823,False,,,,12p13.31
+raw,positive,16,USP50,0.7289,4.264e-78,0.000999,100,0.7289,0.6965,0.5368,4.84,sense_exposed,TRPM7,5765,False,,E3 ligase / ubiquitin,,15q21.1
+raw,positive,17,GRAMD2A,0.7226,2.376e-76,0.000999,99.67,0.7226,0.6814,0.5109,1.236,sense_exposed,PKM,1194,False,,,,15q23
+raw,positive,18,CPNE9,0.7172,3.02e-73,0.000999,99.67,0.7172,0.6907,0.5579,1.926,sense_exposed,MTMR14,1297,False,,,,3p25.3
+raw,positive,19,ENSG00000283573,0.7142,7.635e-88,0.000999,100,0.7142,0.6955,0.62,3.905,sense_exposed,VEGFA,1.066e+04,False,,,,
+raw,positive,20,ENSG00000289254,0.7123,7.873e-73,0.000999,99.67,0.7123,0.6793,0.5288,4.333,sense_exposed,DAPK3,6999,False,,,,
+raw,positive,21,ARL9,0.7072,4.117e-78,0.000999,100,0.7072,0.693,0.6012,5.103,sense_exposed,SRP72,1318,False,,small GTPase / GAP / GEF,,4q12
+raw,positive,22,STPG4,0.7053,5.253e-63,0.000999,98.33,0.7053,0.6537,0.5203,17.08,sense_exposed,CALM2,4776,False,,,,2p21
+raw,positive,23,ENSG00000280046,0.7043,7.3e-64,0.000999,99,0.7043,0.6648,0.4713,3.423,other,KDM6B,4135,False,,,,
+raw,positive,24,ENSG00000268465,0.7028,4.142e-77,0.000999,100,0.7028,0.6738,0.5281,2.234,other,GRWD1,7455,False,,,,
+raw,positive,25,SLC8A2,0.7015,8.127e-68,0.000999,97.33,0.7015,0.635,0.4277,3.147,sense_exposed,NAPA,1.235e+04,False,,,,19q13.32
+raw,positive,26,CATSPERD,0.6988,4.395e-66,0.000999,95.33,0.6988,0.6363,0.4203,2.171,other,RPL36,2.876e+04,False,,,,19p13.3
+raw,positive,27,ENSG00000260144,0.696,4.889e-69,0.000999,99,0.696,0.6395,0.5354,4.231,sense_exposed,ARIH1,2196,False,,,,
+raw,positive,28,LINC02936,0.694,4.88e-69,0.000999,99,0.694,0.6321,0.4571,5.977,sense_exposed,SLC35F5,834,False,,,,2q14.1
+raw,positive,29,POLG2,0.6887,8.628e-61,0.000999,98.33,0.6887,0.6321,0.5129,42.31,other,DDX5,1182,False,,,,17q23.3
+raw,positive,30,AOX1,0.6882,2.617e-71,0.000999,99,0.6882,0.6342,0.4602,3.785,sense_exposed,SGO2,1768,False,,,,2q33.1
+raw,positive,31,ROPN1L,0.6878,1.174e-68,0.000999,99,0.6878,0.6441,0.518,3.932,sense_exposed,MARCHF6,1136,False,,,,5p15.2
+raw,positive,32,FAM222A,0.6856,5.833e-62,0.000999,99.33,0.6856,0.6592,0.6514,9.262,other,MVK,1.132e+05,False,,,,12q24.11
+raw,positive,33,IMPA1P1,0.6845,4.171e-78,0.000999,100,0.6845,0.6628,0.5361,2.803,other,IMPA1,2.974e+04,False,,,,8q21.13
+raw,positive,34,ENSG00000266313,0.6841,4.126e-66,0.000999,97.33,0.6841,0.6386,0.4342,2.081,sense_exposed,WSB1,1.678e+04,False,,,,
+raw,positive,35,SLC4A10,0.683,1.976e-64,0.000999,97.33,0.683,0.6184,0.4677,2.715,sense_exposed,PSMD14,1.261e+04,False,,,,2q24.2
+raw,positive,36,SYT16,0.6801,3.489e-58,0.000999,94.33,0.6801,0.6083,0.3492,2.228,sense_exposed,SNAPC1,1.541e+04,False,,,,14q23.2
+raw,positive,37,ALDH8A1,0.6795,2.213e-68,0.000999,99.67,0.6795,0.6345,0.4893,4.565,sense_exposed,HBS1L,8209,False,,,,6q23.3
+raw,positive,38,MYOCOS,0.6789,2.208e-67,0.000999,100,0.6789,0.637,0.522,4.673,sense_exposed,PRRC2C,7110,False,,,,1q24.3
+raw,positive,39,PPP1R36,0.6788,7.459e-74,0.000999,98.67,0.6788,0.6373,0.4643,2.487,other,HSPA2,3717,False,,phosphatase,,14q23.3
+raw,positive,40,ENSG00000288755,0.678,4.136e-62,0.000999,100,0.678,0.6427,0.4707,3.765,unexposed,PITRM1-AS1,6.176e+05,False,,,,
+raw,positive,41,DDX5,0.6764,1.537e-56,0.000999,99.33,0.6764,0.6114,0.3972,277.3,other,SMURF2,3.408e+04,False,,,,17q23.3
+raw,positive,42,CFAP53,0.6752,6.297e-54,0.000999,95,0.6752,0.6013,0.3925,7.222,other,MBD1,202,False,,,,18q21.1
+raw,positive,43,CCDC181,0.6735,1.118e-66,0.000999,97,0.6735,0.6312,0.4984,4.044,other,SLC19A2,2870,False,,,,1q24.2
+raw,positive,44,AZU1,0.6729,1.974e-73,0.000999,100,0.6729,0.6425,0.5296,1.504,sense_exposed,PTBP1,1.277e+04,False,,,,19p13.3
+raw,positive,45,LINC00880,0.6726,3.154e-60,0.000999,97,0.6726,0.6369,0.4318,3.427,sense_exposed,CCNL1,1.692e+04,False,,,,3q25.31
+raw,positive,46,NPHS1,0.6726,4.181e-54,0.000999,93.33,0.6726,0.5974,0.3234,2.826,other,NFKBID,1.784e+04,False,,,,19q13.12
+raw,positive,47,ENSG00000258378,0.6724,2.244e-67,0.000999,98.67,0.6724,0.5736,0.4865,5.937,other,ARID4A,2.456e+04,False,,,,
+raw,positive,48,ENSG00000281021,0.671,1.089e-69,0.000999,99.67,0.671,0.6173,0.407,2.774,sense_exposed,KATNA1,4009,False,,,,
+raw,positive,49,ENSG00000258851,0.6703,2.93e-64,0.000999,100,0.6703,0.63,0.4729,2.475,other,MARK3,4.959e+04,False,,,,
+raw,positive,50,ENSG00000229021,0.6702,3.48e-63,0.000999,95.67,0.6702,0.6255,0.4684,6.2,unexposed,SNX27,2.954e+05,False,,,,
+raw,negative,1,ARNT,-0.6393,3.874e-67,0.000999,2,-0.6393,-0.5529,-0.4153,79.45,other,CERS2,8.233e+04,True,bHLH,,,1q21.3
+raw,negative,2,SLC35A3,-0.6368,1.562e-55,0.000999,4,-0.6368,-0.5331,-0.3694,83.96,other,AGL,4.492e+04,False,,,,1p21.2
+raw,negative,3,PKIG,-0.6306,2.199e-51,0.000999,0,-0.6306,-0.5848,-0.4267,41.08,other,TTPAL,3.714e+04,False,,,,20q13.12
+raw,negative,4,DENND6A,-0.6254,1.837e-57,0.000999,1.333,-0.6254,-0.5293,-0.4322,54.16,unexposed,PDHB,7.32e+05,False,,,,3p14.3
+raw,negative,5,ZFP64,-0.6241,1.001e-45,0.000999,5.333,-0.6241,-0.5474,-0.4106,52.2,unexposed,ENSG00000259723,1.249e+06,True,C2H2 ZF,,,20q13.2
+raw,negative,6,PEX2,-0.6178,3.216e-61,0.000999,0,-0.6178,-0.5533,-0.4591,25.41,unexposed,PKIA-AS1,1.167e+06,False,,E3 ligase / ubiquitin,,8q21.13
+raw,negative,7,PIK3CB,-0.6137,5.627e-55,0.000999,7.667,-0.6137,-0.5165,-0.2669,119.8,other,COPB2,5.19e+05,False,,protein kinase,,3q22.3
+raw,negative,8,HEATR6,-0.6106,9.969e-50,0.000999,0.6667,-0.6106,-0.556,-0.4067,26.86,other,USP32,9.825e+04,False,,,,17q23.1
+raw,negative,9,TRIP4,-0.6099,3.802e-56,0.000999,0,-0.6099,-0.5327,-0.4181,42.51,unexposed,SNX1,2.412e+05,False,,,,15q22.31
+raw,negative,10,ZNF133,-0.6094,1.239e-50,0.000999,2,-0.6094,-0.5414,-0.4434,35.56,other,KAT14,9.942e+04,True,C2H2 ZF,,,20p11.23
+raw,negative,11,FBXL4,-0.6088,1.155e-46,0.000999,4,-0.6088,-0.5254,-0.4279,81.19,unexposed,FAXC,3.232e+05,False,,,,6q16.1-q16.2
+raw,negative,12,GUSBP18,-0.6075,6.74e-49,0.000999,3.333,-0.6075,-0.5355,-0.2969,26.63,other,RAD1,6.758e+05,False,,,,5p13.2
+raw,negative,13,KATNAL1,-0.6072,6.384e-44,0.000999,5,-0.6072,-0.5178,-0.3672,40.99,unexposed,HMGB1,1.492e+05,False,,,,13q12.3
+raw,negative,14,GALNT11,-0.6047,4.886e-54,0.000999,6.333,-0.6047,-0.4994,-0.3144,97.67,other,NUB1,6.445e+05,False,,,,7q36.1
+raw,negative,15,FYCO1,-0.6045,1.351e-48,0.000999,3,-0.6045,-0.5175,-0.3514,29.59,unexposed,ALS2CL,6.731e+05,False,,,,3p21.31
+raw,negative,16,PIGB,-0.6034,2.361e-46,0.000999,4.667,-0.6034,-0.5495,-0.47,22.6,other,MAPK6,3.252e+06,False,,,,15q21.3
+raw,negative,17,UBAC2,-0.6022,2.164e-45,0.000999,7.667,-0.6022,-0.4948,-0.2869,136.6,unexposed,FARP1,7.456e+05,False,,,,13q32.3
+raw,negative,18,NOD1,-0.6013,2.922e-44,0.000999,4.667,-0.6013,-0.5426,-0.3868,24.61,other,GGCT,1.77e+04,False,,,,7p14.3
+raw,negative,19,CDIN1,-0.6007,1.247e-44,0.000999,3,-0.6007,-0.5159,-0.2471,64.07,other,DPH6-DT,7.194e+05,False,,,,15q14
+raw,negative,20,ARMH3,-0.5987,3.365e-51,0.000999,8,-0.5987,-0.4902,-0.2831,92.19,other,LDB1,5.023e+04,False,,,,10q24.32
+raw,negative,21,GUSBP2-1,-0.5964,4.762e-51,0.000999,1,-0.5964,-0.5754,-0.4828,14.96,unexposed,H2BC11,1.227e+05,False,,,,
+raw,negative,22,TMLHE,-0.596,1.678e-47,0.000999,7.333,-0.596,-0.5389,-0.4093,30.59,unexposed,,,False,,,,Xq28
+raw,negative,23,TAMM41,-0.5941,2.795e-44,0.000999,3,-0.5941,-0.5203,-0.389,27.25,unexposed,RAF1,7.352e+05,False,,,,3p25.2
+raw,negative,24,BTBD3,-0.5932,8.316e-53,0.000999,4.667,-0.5932,-0.5009,-0.3001,55.19,unexposed,SLX4IP,1.252e+06,False,,,,20p12.2
+raw,negative,25,ARHGEF10L,-0.5922,6.047e-47,0.000999,7.333,-0.5922,-0.4937,-0.2382,35.73,unexposed,PADI1,2.934e+05,False,,,,1p36.13
+raw,negative,26,DANT2,-0.5916,6.31e-44,0.000999,7.667,-0.5916,-0.5173,-0.3126,140.5,other,KLHL13,1.929e+06,False,,,,Xq23
+raw,negative,27,EPS15,-0.5914,4.512e-47,0.000999,3.333,-0.5914,-0.4662,-0.3196,125.9,other,NRDC,2.681e+05,False,,,,1p32.3
+raw,negative,28,MINK1,-0.5891,3.852e-48,0.000999,3.667,-0.5891,-0.4721,-0.2769,83.53,other,PLD2,9713,False,,,,17p13.2
+raw,negative,29,FOXK1,-0.5881,1.008e-44,0.000999,4.333,-0.5881,-0.44,-0.2826,125.7,unexposed,SDK1,4.132e+05,True,Forkhead,,,7p22.1
+raw,negative,30,LMBRD1,-0.5881,2.315e-50,0.000999,1,-0.5881,-0.5181,-0.4258,66.16,unexposed,LINC00472,1.32e+06,False,,,,6q13
+raw,negative,31,BLTP1,-0.5872,2.154e-45,0.000999,10,-0.5872,-0.496,-0.2743,196.3,unexposed,EXOSC9,3.353e+05,False,,,,4q27
+raw,negative,32,DNAAF9,-0.5843,1.212e-41,0.000999,9.333,-0.5843,-0.4836,-0.2423,126.7,other,C20orf27,3.433e+05,False,,,,20p13
+raw,negative,33,SPIN1,-0.5841,3.222e-44,0.000999,5.667,-0.5841,-0.4923,-0.3175,104.1,unexposed,CTSL,6.56e+05,False,,,,9q22.1
+raw,negative,34,PIGU,-0.5819,1.089e-44,0.000999,4,-0.5819,-0.468,-0.2623,54.23,other,GGT7,1.459e+05,False,,,,20q11.22
+raw,negative,35,FAM168A,-0.5811,1.88e-50,0.000999,12.33,-0.5811,-0.4487,-0.1703,191.2,other,RAB6A,7.738e+04,False,,,,11q13.4
+raw,negative,36,TMEM168,-0.5808,2.128e-60,0.000999,3,-0.5808,-0.5205,-0.3814,61.07,other,BMT2,9654,False,,,,7q31.1
+raw,negative,37,CLMN,-0.5795,2.417e-41,0.000999,8.333,-0.5795,-0.4709,-0.1665,81.54,other,SYNE3,8.721e+04,False,,,,14q32.13
+raw,negative,38,HDAC8,-0.5791,3.319e-43,0.000999,5,-0.5791,-0.5041,-0.2384,204.1,other,PHKA1,5713,False,,,,Xq13.1
+raw,negative,39,LPIN3,-0.5781,1.355e-43,0.000999,4.667,-0.5781,-0.5021,-0.379,14.1,other,PLCG1,1.44e+05,False,,,,20q12
+raw,negative,40,ZNF652,-0.5779,1.402e-41,0.000999,9,-0.5779,-0.5033,-0.2985,119.9,other,PHB1,4.154e+04,True,C2H2 ZF,,,17q21.32
+raw,negative,41,ANKIB1,-0.5775,3.01e-44,0.000999,9,-0.5775,-0.5019,-0.24,317.2,other,AKAP9,1.338e+05,False,,E3 ligase / ubiquitin,,7q21.2
+raw,negative,42,ACTR10,-0.5773,1.88e-50,0.000999,0,-0.5773,-0.5449,-0.4543,41.65,unexposed,NAA30,7.841e+05,False,,,,14q23.1
+raw,negative,43,HACE1,-0.5773,2.061e-43,0.000999,8.667,-0.5773,-0.4614,-0.2297,66.64,unexposed,BVES,2.369e+05,False,,E3 ligase / ubiquitin,,6q16.3
+raw,negative,44,GRAMD1A,-0.5768,1.064e-45,0.000999,2,-0.5768,-0.4918,-0.2784,39.43,unexposed,ZNF181,2.441e+05,False,,,,19q13.11
+raw,negative,45,YEATS2,-0.5763,2.153e-45,0.000999,12.67,-0.5763,-0.4411,-0.2156,280.9,other,KLHL24,4631,False,,,,3q27.1
+raw,negative,46,ANKRD36B,-0.5761,1.947e-43,0.000999,6.333,-0.5761,-0.4936,-0.3818,52.8,other,ACTR1B,6.539e+04,False,,,,2q11.2
+raw,negative,47,EXOC2,-0.5747,8.59e-51,0.000999,7.667,-0.5747,-0.4599,-0.2392,95.94,unexposed,GMDS,9.297e+05,False,,,,6p25.3
+raw,negative,48,ANKRD36,-0.5744,2.107e-44,0.000999,9.333,-0.5744,-0.4728,-0.3238,127.6,unexposed,CNNM3,2.756e+05,False,,,,2q11.2
+raw,negative,49,POT1,-0.5743,4.759e-45,0.000999,7.333,-0.5743,-0.4839,-0.3179,60.17,unexposed,GRM8,1.507e+06,False,,,,7q31.33
+raw,negative,50,PHYKPL,-0.5743,2.953e-41,0.000999,4.667,-0.5743,-0.5146,-0.3439,54.3,other,CLK4,3.695e+05,False,,,,5q35.3
+covariates,positive,1,FNDC7,0.8068,7.536e-123,0.000999,100,0.8627,0.8483,0.7453,2.542,sense_exposed,PRPF38B,9975,False,,,,1p13.3
+covariates,positive,2,IDI2-AS1,0.7309,6.231e-94,0.000999,100,0.7564,0.7199,0.6161,13.44,other,GTPBP4,2550,False,,,,10p15.3
+covariates,positive,3,MIR9-1HG,0.7262,7.977e-103,0.000999,100,0.7814,0.7497,0.6439,3.951,sense_exposed,MEF2D,6740,False,,,,1q22
+covariates,positive,4,VWCE,0.7249,8.819e-95,0.000999,100,0.6097,0.6091,0.5965,7.283,sense_exposed,DDB1,3894,False,,,,11q12.2
+covariates,positive,5,PYGM,0.7225,1.274e-98,0.000999,100,0.6682,0.6643,0.6686,6.322,sense_exposed,SF1,4615,False,,,,11q13.1
+covariates,positive,6,ENSG00000283573,0.7148,7.988e-93,0.000999,100,0.7142,0.6955,0.62,3.905,sense_exposed,VEGFA,1.066e+04,False,,,,
+covariates,positive,7,LRRC23,0.7137,7.174e-97,0.000999,100,0.7312,0.7049,0.6903,64.19,other,USP5,6823,False,,,,12p13.31
+covariates,positive,8,LDHC,0.6992,3.874e-96,0.000999,100,0.7761,0.7481,0.6521,3.901,sense_exposed,LDHA,3861,False,,,,11p15.1
+covariates,positive,9,SEMA4A,0.6991,5.586e-93,0.000999,100,0.7697,0.7347,0.6309,13.83,sense_exposed,LMNA,7281,False,,,,1q22
+covariates,positive,10,SELPLG,0.6861,5.182e-91,0.000999,100,0.7734,0.7677,0.6505,2.575,sense_exposed,CORO1C,1.122e+04,False,,cytokine / growth factor,,12q24.11
+covariates,positive,11,FGF18,0.6859,1.757e-87,0.000999,100,0.7633,0.7332,0.6546,7.653,sense_exposed,NPM1,7685,False,,cytokine / growth factor,,5q35.1
+covariates,positive,12,ARL9,0.6798,2.402e-85,0.000999,100,0.7072,0.693,0.6012,5.103,sense_exposed,SRP72,1318,False,,small GTPase / GAP / GEF,,4q12
+covariates,positive,13,LINC00910,0.676,3.314e-77,0.000999,100,0.7548,0.7243,0.6406,32.8,unexposed,ETV4,1.386e+05,False,,,,17q21.31
+covariates,positive,14,MYOCOS,0.6659,1.361e-78,0.000999,100,0.6789,0.637,0.522,4.673,sense_exposed,PRRC2C,7110,False,,,,1q24.3
+covariates,positive,15,AZU1,0.6642,9.362e-84,0.000999,100,0.6729,0.6425,0.5296,1.504,sense_exposed,PTBP1,1.277e+04,False,,,,19p13.3
+covariates,positive,16,ENSG00000289254,0.6627,1.46e-79,0.000999,99.67,0.7123,0.6793,0.5288,4.333,sense_exposed,DAPK3,6999,False,,,,
+covariates,positive,17,LINC02936,0.6617,5.16e-78,0.000999,100,0.694,0.6321,0.4571,5.977,sense_exposed,SLC35F5,834,False,,,,2q14.1
+covariates,positive,18,TEX14,0.6521,7.076e-77,0.000999,100,0.7663,0.7279,0.6581,15.21,unexposed,TRIM37,2.906e+05,False,,protein kinase,,17q22
+covariates,positive,19,PPIEL,0.6437,2.01e-76,0.000999,100,0.6088,0.569,0.4459,9.69,other,PABPC4,2002,False,,,,1p34.3
+covariates,positive,20,STPG4,0.6431,2.055e-71,0.000999,99.33,0.7053,0.6537,0.5203,17.08,sense_exposed,CALM2,4776,False,,,,2p21
+covariates,positive,21,C19orf38,0.6413,2.404e-77,0.000999,99.33,0.6693,0.6202,0.5333,4.151,sense_exposed,DNM2,2358,False,,,,19p13.2
+covariates,positive,22,USP50,0.6396,7.319e-77,0.000999,99.67,0.7289,0.6965,0.5368,4.84,sense_exposed,TRPM7,5765,False,,E3 ligase / ubiquitin,,15q21.1
+covariates,positive,23,CCDC62,0.6392,1.474e-73,0.000999,99.33,0.7344,0.7082,0.5411,11.35,sense_exposed,DENR,3123,False,,,,12q24.31
+covariates,positive,24,PPIEL-1,0.6381,3.823e-82,0.000999,100,0.664,0.609,0.4812,6.574,other,PABPC4,1011,False,,,,
+covariates,positive,25,HCLS1,0.6381,6.667e-71,0.000999,99.33,0.5967,0.5125,0.4639,3.917,sense_exposed,GOLGB1,2262,False,,,,3q13.33
+covariates,positive,26,ENSG00000289726,0.634,1.303e-71,0.000999,99.33,0.7448,0.6879,0.5036,2.217,other,RMND5B,1286,False,,,,
+covariates,positive,27,IMPA1P1,0.63,1.281e-81,0.000999,100,0.6845,0.6628,0.5361,2.803,other,IMPA1,2.974e+04,False,,,,8q21.13
+covariates,positive,28,PILRA,0.6279,3.345e-70,0.000999,99.33,0.6568,0.6097,0.5051,13.43,other,STAG3,1.531e+05,False,,,,7q22.1
+covariates,positive,29,ENSG00000258465,0.6263,1.401e-74,0.000999,100,0.6253,0.6219,0.5448,8.366,other,COPA,3450,False,,,,
+covariates,positive,30,ENSG00000289997,0.6239,5.207e-81,0.000999,100,0.6451,0.5982,0.4311,4.694,other,ENSG00000288033,856,False,,,,
+covariates,positive,31,NUP210L,0.6237,1.234e-70,0.000999,99.67,0.7315,0.6807,0.4613,5.69,sense_exposed,TPM3,192,False,,,,1q21.3
+covariates,positive,32,ENSG00000258378,0.6227,1.337e-71,0.000999,99,0.6724,0.5736,0.4865,5.937,other,ARID4A,2.456e+04,False,,,,
+covariates,positive,33,ADCY10P1,0.6209,1.911e-66,0.000999,100,0.5789,0.5016,0.3836,11.89,other,ZFAND3,2.946e+06,False,,,,6p21.1
+covariates,positive,34,ENSG00000268465,0.6185,3.764e-81,0.000999,100,0.7028,0.6738,0.5281,2.234,other,GRWD1,7455,False,,,,
+covariates,positive,35,GRAMD2A,0.6176,3.319e-75,0.000999,100,0.7226,0.6814,0.5109,1.236,sense_exposed,PKM,1194,False,,,,15q23
+covariates,positive,36,PITRM1-AS1,0.6159,6.941e-72,0.000999,99.67,0.5684,0.5798,0.5246,7.039,other,PFKP,689,False,,,,10p15.2
+covariates,positive,37,GRIK5,0.6131,1.319e-67,0.000999,100,0.7349,0.6975,0.5186,1.823,sense_exposed,POU2F2,1.587e+04,False,,receptor (non-olfactory),,19q13.2
+covariates,positive,38,PEBP4,0.6108,1.032e-65,0.000999,99.67,0.737,0.6946,0.4662,3.926,other,TNFRSF10B,2.013e+04,False,,,,8p21.3
+covariates,positive,39,ALDH8A1,0.6106,1.303e-71,0.000999,100,0.6795,0.6345,0.4893,4.565,sense_exposed,HBS1L,8209,False,,,,6q23.3
+covariates,positive,40,PHYHD1,0.6084,1.25e-66,0.000999,99.67,0.6137,0.5914,0.4864,2.829,sense_exposed,LRRC8A,2924,False,,,,9q34.11
+covariates,positive,41,ROPN1L,0.6045,3.679e-72,0.000999,100,0.6878,0.6441,0.518,3.932,sense_exposed,MARCHF6,1136,False,,,,5p15.2
+covariates,positive,42,GCNA,0.6036,3.511e-70,0.000999,100,0.4381,0.4469,0.4324,19.01,sense_exposed,OGT,2544,False,,,,Xq13.1
+covariates,positive,43,ENSG00000249476,0.602,3.306e-64,0.000999,99.67,0.1826,0.1798,0.3944,17.33,sense_exposed,PJA2,3447,False,,,,
+covariates,positive,44,ENSG00000266313,0.601,6.08e-65,0.000999,100,0.6841,0.6386,0.4342,2.081,sense_exposed,WSB1,1.678e+04,False,,,,
+covariates,positive,45,ENSG00000274949,0.601,7.944e-63,0.000999,99.33,0.5736,0.4777,0.4291,4.033,no coordinates,,,False,,,,
+covariates,positive,46,LINC00880,0.5996,7.618e-61,0.000999,99,0.6726,0.6369,0.4318,3.427,sense_exposed,CCNL1,1.692e+04,False,,,,3q25.31
+covariates,positive,47,HPX,0.5946,1.515e-67,0.000999,99.67,0.6418,0.6173,0.4659,2.04,other,TRIM3,5996,False,,,,11p15.4
+covariates,positive,48,ENSG00000287975,0.593,1.512e-67,0.000999,99,0.5415,0.5326,0.4925,2.946,sense_exposed,CHD7,493,False,,,,
+covariates,positive,49,PRKCG,0.5925,2.448e-71,0.000999,100,0.6138,0.5825,0.5515,7.356,sense_exposed,MYADM,1065,False,,protein kinase,,19q13.42
+covariates,positive,50,ENSG00000286230,0.5915,2.847e-66,0.000999,99.67,0.6216,0.5874,0.4235,2.052,sense_exposed,PPP6R1,1.25e+04,False,,,,
+covariates,negative,1,PEX2,-0.5246,9.481e-54,0.000999,0,-0.6178,-0.5533,-0.4591,25.41,unexposed,PKIA-AS1,1.167e+06,False,,E3 ligase / ubiquitin,,8q21.13
+covariates,negative,2,PKIG,-0.5018,1.382e-44,0.000999,0.3333,-0.6306,-0.5848,-0.4267,41.08,other,TTPAL,3.714e+04,False,,,,20q13.12
+covariates,negative,3,ARNT,-0.486,1.261e-45,0.000999,5.667,-0.6393,-0.5529,-0.4153,79.45,other,CERS2,8.233e+04,True,bHLH,,,1q21.3
+covariates,negative,4,BTBD3,-0.4753,3.984e-41,0.000999,5,-0.5932,-0.5009,-0.3001,55.19,unexposed,SLX4IP,1.252e+06,False,,,,20p12.2
+covariates,negative,5,TRIP4,-0.4502,1.571e-36,0.000999,0,-0.6099,-0.5327,-0.4181,42.51,unexposed,SNX1,2.412e+05,False,,,,15q22.31
+covariates,negative,6,DENND6A,-0.4493,1.101e-39,0.000999,0,-0.6254,-0.5293,-0.4322,54.16,unexposed,PDHB,7.32e+05,False,,,,3p14.3
+covariates,negative,7,RBL1,-0.4436,8.284e-35,0.000999,0,-0.3822,-0.3331,-0.1755,50.34,other,MROH8,5192,False,,,,20q11.23
+covariates,negative,8,SLC35A3,-0.4401,8.293e-34,0.000999,2.333,-0.6368,-0.5331,-0.3694,83.96,other,AGL,4.492e+04,False,,,,1p21.2
+covariates,negative,9,USP30,-0.4368,1.922e-38,0.000999,0.3333,-0.4802,-0.4338,-0.4206,15.49,unexposed,ISCU,4.537e+05,False,,E3 ligase / ubiquitin,,12q24.11
+covariates,negative,10,CEP57L1,-0.4316,5.365e-34,0.000999,0.6667,-0.3753,-0.3595,-0.3146,42.67,unexposed,ARMC2,1.206e+05,False,,,,6q21
+covariates,negative,11,TBC1D13,-0.428,4.392e-36,0.000999,0,-0.2641,-0.3047,-0.4414,9.053,other,PKN3,6.63e+04,False,,,,9q34.11
+covariates,negative,12,ZNF559,-0.4277,1.145e-33,0.000999,0.6667,-0.5574,-0.5141,-0.3812,15.48,other,ZNF317,1.603e+05,True,C2H2 ZF,,,19p13.2
+covariates,negative,13,DLD,-0.4252,2.156e-34,0.000999,0.6667,-0.08172,-0.05421,-0.2551,43.26,unexposed,CBLL1,1.291e+05,False,,,,7q31.1
+covariates,negative,14,RPP30,-0.4154,4.732e-31,0.000999,4.333,-0.1294,-0.06936,-0.1888,30.55,other,KIF20B,1.097e+06,False,,,,10q23.31
+covariates,negative,15,TMEM168,-0.4145,6.209e-33,0.000999,3.667,-0.5808,-0.5205,-0.3814,61.07,other,BMT2,9654,False,,,,7q31.1
+covariates,negative,16,C5orf22,-0.4125,2.226e-31,0.000999,0.6667,-0.06921,-0.07471,-0.3031,23.37,unexposed,CDH6,2.031e+05,False,,,,5p13.3
+covariates,negative,17,VPS33B,-0.4124,5.535e-34,0.000999,0,-0.3102,-0.2603,-0.3963,10.49,other,FAM174B,1.595e+06,False,,,,15q26.1
+covariates,negative,18,MICU2,-0.4124,2.078e-31,0.000999,4.333,-0.3427,-0.2966,-0.3244,96.62,unexposed,SACS,1.684e+06,False,,,,13q12.11
+covariates,negative,19,GUSBP18,-0.411,1.788e-30,0.000999,2.667,-0.6075,-0.5355,-0.2969,26.63,other,RAD1,6.758e+05,False,,,,5p13.2
+covariates,negative,20,BCL9,-0.4089,1.696e-31,0.000999,1.333,-0.5426,-0.4557,-0.3112,26.6,other,CHD1L,2.456e+05,False,,,,1q21.2
+covariates,negative,21,ENSG00000290548,-0.4083,3.175e-29,0.000999,1,-0.5663,-0.5003,-0.3701,18.18,other,RAD1,6.493e+05,False,,,,
+covariates,negative,22,BLMH,-0.4062,1.49e-32,0.000999,2,0.04561,0.05301,-0.0774,26.37,other,CRLF3,4.772e+05,False,,,,17q11.2
+covariates,negative,23,KRAS,-0.4059,8.17e-32,0.000999,1,-0.337,-0.2836,-0.1944,105.3,other,LMNTD1,8.283e+04,False,,small GTPase / GAP / GEF,,12p12.1
+covariates,negative,24,FANCL,-0.4053,8.929e-30,0.000999,0.3333,-0.5506,-0.4926,-0.3945,77.88,unexposed,BCL11A,2.209e+06,False,,E3 ligase / ubiquitin,,2p16.1
+covariates,negative,25,PCTP,-0.405,5.677e-31,0.000999,0,-0.5508,-0.4912,-0.4265,16.58,unexposed,STXBP4,5.773e+05,False,,,,17q22
+covariates,negative,26,ACTR10,-0.4029,1.338e-32,0.000999,0,-0.5773,-0.5449,-0.4543,41.65,unexposed,NAA30,7.841e+05,False,,,,14q23.1
+covariates,negative,27,CASP2,-0.4012,6.125e-29,0.000999,1.667,-0.3844,-0.2868,-0.2245,27.41,other,GSTK1,1.573e+04,False,,phosphatase,,7q34
+covariates,negative,28,EPS15,-0.3995,4.101e-29,0.000999,10,-0.5914,-0.4662,-0.3196,125.9,other,NRDC,2.681e+05,False,,,,1p32.3
+covariates,negative,29,STX7,-0.3988,7.399e-30,0.000999,4.667,-0.5389,-0.4598,-0.3718,62.86,unexposed,VNN1,1.668e+05,False,,,,6q23.2
+covariates,negative,30,XPO7,-0.3977,1.253e-29,0.000999,3,-0.5715,-0.4184,-0.2917,75.06,unexposed,ATP6V1B2,1.686e+06,False,,,,8p21.3
+covariates,negative,31,TBC1D2B,-0.3974,7.041e-31,0.000999,2.667,-0.5094,-0.451,-0.3578,32.95,unexposed,SKIC8,1.916e+05,False,,,,15q24.3-q25.1
+covariates,negative,32,UBXN2B,-0.3973,7.077e-31,0.000999,14.67,-0.3762,-0.2922,-0.2835,39.17,unexposed,FAM110B,2.071e+05,False,,,,8q12.1
+covariates,negative,33,SAAL1,-0.3972,4.567e-28,0.000999,1.667,-0.1036,-0.08414,-0.199,14.27,unexposed,SAA2-SAA4,1.253e+05,False,,,,11p15.1
+covariates,negative,34,GNPTAB,-0.3967,6.351e-29,0.000999,2,-0.4892,-0.4446,-0.3358,52.44,unexposed,WASHC3,1.808e+05,False,,,,12q23.2
+covariates,negative,35,RHOT1,-0.396,1.063e-29,0.000999,3.333,-0.4958,-0.3963,-0.2337,77.81,other,LRRC37B,8.893e+04,False,,small GTPase / GAP / GEF,,17q11.2
+covariates,negative,36,RTCA,-0.3953,1.232e-30,0.000999,0.3333,-0.4829,-0.3653,-0.3174,45.21,unexposed,TRMT13,1.15e+05,False,,,,1p21.2
+covariates,negative,37,GUSBP2-1,-0.3945,2.181e-29,0.000999,0.3333,-0.5964,-0.5754,-0.4828,14.96,unexposed,H2BC11,1.227e+05,False,,,,
+covariates,negative,38,AP3S2,-0.3943,8.592e-30,0.000999,7.333,-0.3273,-0.2827,-0.3405,54.63,other,ARPIN,368,False,,,,15q26.1
+covariates,negative,39,DDX19B,-0.3941,9.446e-28,0.000999,2.667,-0.4743,-0.3998,-0.253,32.98,other,PDPR,1.271e+05,False,,,,16q22.1
+covariates,negative,40,HEATR6,-0.3936,1.36e-30,0.000999,0.3333,-0.6106,-0.556,-0.4067,26.86,other,USP32,9.825e+04,False,,,,17q23.1
+covariates,negative,41,DTWD1,-0.3935,9.388e-32,0.000999,0,-0.5728,-0.5325,-0.4442,34.61,unexposed,GALK2,2.531e+05,False,,,,15q21.2
+covariates,negative,42,MPPE1,-0.3928,4.005e-29,0.000999,0,-0.3761,-0.3809,-0.4117,9.161,other,AFG3L2,4.197e+05,False,,,,18p11.21
+covariates,negative,43,GIT2,-0.3926,8.612e-30,0.000999,3,-0.4828,-0.4442,-0.4056,52.12,other,C12orf76,2.396e+04,False,,,,12q24.11
+covariates,negative,44,NDUFS4,-0.3925,1.45e-29,0.000999,5,-0.4238,-0.2852,-0.1345,84.9,other,FST,7.35e+04,False,,,,5q11.2
+covariates,negative,45,LRIG3,-0.3924,5.294e-30,0.000999,1,-0.3236,-0.3278,-0.2946,11.83,unexposed,TAFA2,2.787e+06,False,,,,12q14.1
+covariates,negative,46,NDUFAF5,-0.391,7.595e-30,0.000999,13.67,-0.2195,-0.1404,-0.3132,20.99,unexposed,SPTLC3,6.139e+05,False,,,,20p12.1
+covariates,negative,47,TMEM245,-0.3905,2.36e-26,0.000999,1.667,-0.3738,-0.3568,-0.2709,122.5,other,EPB41L4B,5.149e+04,False,,,,9q31.3
+covariates,negative,48,FAM102B,-0.3901,6.642e-28,0.000999,7.333,-0.437,-0.3736,-0.2525,36.82,unexposed,NTNG1,1.075e+06,False,,,,
+covariates,negative,49,DCTN4,-0.3899,3.861e-28,0.000999,15,-0.3696,-0.2539,-0.288,81.62,other,TNIP1,2.708e+05,False,,,,5q33.1
+covariates,negative,50,NSFL1C,-0.3887,4.613e-30,0.000999,9.667,-0.0404,0.02069,0.007873,45.8,other,SNRPB,9.878e+05,False,,,,20p13
+minus_1pc,positive,1,FNDC7,0.8082,1.535e-112,0.000999,100,0.8627,0.8483,0.7453,2.542,sense_exposed,PRPF38B,9975,False,,,,1p13.3
+minus_1pc,positive,2,FGF18,0.7458,8.437e-96,0.000999,100,0.7633,0.7332,0.6546,7.653,sense_exposed,NPM1,7685,False,,cytokine / growth factor,,5q35.1
+minus_1pc,positive,3,IDI2-AS1,0.7326,3.059e-89,0.000999,100,0.7564,0.7199,0.6161,13.44,other,GTPBP4,2550,False,,,,10p15.3
+minus_1pc,positive,4,SEMA4A,0.7224,1.015e-84,0.000999,100,0.7697,0.7347,0.6309,13.83,sense_exposed,LMNA,7281,False,,,,1q22
+minus_1pc,positive,5,MIR9-1HG,0.6956,1.139e-87,0.000999,100,0.7814,0.7497,0.6439,3.951,sense_exposed,MEF2D,6740,False,,,,1q22
+minus_1pc,positive,6,LDHC,0.6938,3.99e-91,0.000999,100,0.7761,0.7481,0.6521,3.901,sense_exposed,LDHA,3861,False,,,,11p15.1
+minus_1pc,positive,7,SELPLG,0.6806,9.92e-84,0.000999,100,0.7734,0.7677,0.6505,2.575,sense_exposed,CORO1C,1.122e+04,False,,cytokine / growth factor,,12q24.11
+minus_1pc,positive,8,PYGM,0.677,2.5e-86,0.000999,100,0.6682,0.6643,0.6686,6.322,sense_exposed,SF1,4615,False,,,,11q13.1
+minus_1pc,positive,9,LINC00910,0.671,1.394e-78,0.000999,100,0.7548,0.7243,0.6406,32.8,unexposed,ETV4,1.386e+05,False,,,,17q21.31
+minus_1pc,positive,10,ENSG00000289254,0.6672,6.912e-76,0.000999,99.67,0.7123,0.6793,0.5288,4.333,sense_exposed,DAPK3,6999,False,,,,
+minus_1pc,positive,11,LRRC23,0.6631,2.167e-79,0.000999,100,0.7312,0.7049,0.6903,64.19,other,USP5,6823,False,,,,12p13.31
+minus_1pc,positive,12,TEX14,0.6607,1.222e-77,0.000999,100,0.7663,0.7279,0.6581,15.21,unexposed,TRIM37,2.906e+05,False,,protein kinase,,17q22
+minus_1pc,positive,13,PPIEL,0.6531,1.242e-73,0.000999,99.67,0.6088,0.569,0.4459,9.69,other,PABPC4,2002,False,,,,1p34.3
+minus_1pc,positive,14,ENSG00000283573,0.6401,5.502e-74,0.000999,100,0.7142,0.6955,0.62,3.905,sense_exposed,VEGFA,1.066e+04,False,,,,
+minus_1pc,positive,15,CCDC62,0.6357,1.921e-67,0.000999,99,0.7344,0.7082,0.5411,11.35,sense_exposed,DENR,3123,False,,,,12q24.31
+minus_1pc,positive,16,INTS6,0.633,1.012e-68,0.000999,100,0.461,0.4169,0.4218,217.3,unexposed,DHRS12,2.977e+05,False,,,,13q14.3
+minus_1pc,positive,17,CEMIP2,0.6328,8.55e-69,0.000999,99.33,0.495,0.4141,0.372,120.8,other,ABHD17B,4.321e+04,False,,,,9q21.13
+minus_1pc,positive,18,MYOCOS,0.6325,5.044e-68,0.000999,100,0.6789,0.637,0.522,4.673,sense_exposed,PRRC2C,7110,False,,,,1q24.3
+minus_1pc,positive,19,ENSG00000289726,0.6286,2.314e-63,0.000999,98.33,0.7448,0.6879,0.5036,2.217,other,RMND5B,1286,False,,,,
+minus_1pc,positive,20,ALDH8A1,0.6263,1.292e-68,0.000999,99.67,0.6795,0.6345,0.4893,4.565,sense_exposed,HBS1L,8209,False,,,,6q23.3
+minus_1pc,positive,21,USP50,0.6221,4.497e-67,0.000999,100,0.7289,0.6965,0.5368,4.84,sense_exposed,TRPM7,5765,False,,E3 ligase / ubiquitin,,15q21.1
+minus_1pc,positive,22,STPG4,0.6215,1.097e-64,0.000999,98,0.7053,0.6537,0.5203,17.08,sense_exposed,CALM2,4776,False,,,,2p21
+minus_1pc,positive,23,VWCE,0.6211,1.172e-68,0.000999,99.33,0.6097,0.6091,0.5965,7.283,sense_exposed,DDB1,3894,False,,,,11q12.2
+minus_1pc,positive,24,GRIK5,0.6197,3.67e-61,0.000999,99.33,0.7349,0.6975,0.5186,1.823,sense_exposed,POU2F2,1.587e+04,False,,receptor (non-olfactory),,19q13.2
+minus_1pc,positive,25,ADCY10P1,0.6185,2.262e-64,0.000999,98.33,0.5789,0.5016,0.3836,11.89,other,ZFAND3,2.946e+06,False,,,,6p21.1
+minus_1pc,positive,26,ENSG00000280046,0.6184,2.756e-62,0.000999,99,0.7043,0.6648,0.4713,3.423,other,KDM6B,4135,False,,,,
+minus_1pc,positive,27,FAM222A,0.6177,1.584e-62,0.000999,99,0.6856,0.6592,0.6514,9.262,other,MVK,1.132e+05,False,,,,12q24.11
+minus_1pc,positive,28,ENSG00000268465,0.614,6.235e-69,0.000999,100,0.7028,0.6738,0.5281,2.234,other,GRWD1,7455,False,,,,
+minus_1pc,positive,29,NUP210L,0.6139,7.497e-58,0.000999,97,0.7315,0.6807,0.4613,5.69,sense_exposed,TPM3,192,False,,,,1q21.3
+minus_1pc,positive,30,PEBP4,0.6138,1.414e-60,0.000999,99,0.737,0.6946,0.4662,3.926,other,TNFRSF10B,2.013e+04,False,,,,8p21.3
+minus_1pc,positive,31,ENSG00000205890,0.6134,6.305e-59,0.000999,100,0.6359,0.6411,0.5172,3.18,other,THOC6,4726,False,,,,
+minus_1pc,positive,32,SLC9A1,0.6124,5.704e-60,0.000999,99.33,0.6336,0.6082,0.5862,55.63,other,MAP3K6,1.882e+05,False,,phosphatase,,1p36.11
+minus_1pc,positive,33,FOSB,0.6093,1.155e-67,0.000999,99.67,0.656,0.6056,0.5723,51.77,other,POLR1G,5.725e+04,True,bZIP,,,19q13.32
+minus_1pc,positive,34,KLHL15,0.6076,2.357e-63,0.000999,98.67,0.508,0.4482,0.3692,44.49,unexposed,ENSG00000228933,2.989e+06,False,,,,Xp22.11
+minus_1pc,positive,35,LINC02936,0.6066,1.815e-63,0.000999,98.67,0.694,0.6321,0.4571,5.977,sense_exposed,SLC35F5,834,False,,,,2q14.1
+minus_1pc,positive,36,PILRA,0.6052,2.714e-62,0.000999,99,0.6568,0.6097,0.5051,13.43,other,STAG3,1.531e+05,False,,,,7q22.1
+minus_1pc,positive,37,ARL9,0.6022,1.016e-61,0.000999,100,0.7072,0.693,0.6012,5.103,sense_exposed,SRP72,1318,False,,small GTPase / GAP / GEF,,4q12
+minus_1pc,positive,38,RFPL3S,0.5961,5.665e-57,0.000999,99.67,0.6602,0.6252,0.5152,3.28,sense_exposed,RTCB,5469,False,,,,22q12.3
+minus_1pc,positive,39,ABHD5,0.5959,1.833e-58,0.000999,97.33,0.6691,0.6136,0.4673,35.56,unexposed,SNRK,2.653e+05,False,,,,3p21.33
+minus_1pc,positive,40,GRAMD2A,0.5946,3.813e-63,0.000999,99.67,0.7226,0.6814,0.5109,1.236,sense_exposed,PKM,1194,False,,,,15q23
+minus_1pc,positive,41,CPNE9,0.5945,5.343e-58,0.000999,99.33,0.7172,0.6907,0.5579,1.926,sense_exposed,MTMR14,1297,False,,,,3p25.3
+minus_1pc,positive,42,ENSG00000288755,0.5941,1.41e-58,0.000999,100,0.678,0.6427,0.4707,3.765,unexposed,PITRM1-AS1,6.176e+05,False,,,,
+minus_1pc,positive,43,ENSG00000260144,0.5919,1.909e-60,0.000999,99.33,0.696,0.6395,0.5354,4.231,sense_exposed,ARIH1,2196,False,,,,
+minus_1pc,positive,44,FUS,0.5903,5.245e-58,0.000999,99.67,0.6355,0.5659,0.4863,257.9,other,KAT8,4.874e+04,False,,,,16p11.2
+minus_1pc,positive,45,ROPN1L,0.5896,2.424e-63,0.000999,98.67,0.6878,0.6441,0.518,3.932,sense_exposed,MARCHF6,1136,False,,,,5p15.2
+minus_1pc,positive,46,POLG2,0.5894,1.337e-57,0.000999,98,0.6887,0.6321,0.5129,42.31,other,DDX5,1182,False,,,,17q23.3
+minus_1pc,positive,47,IL34,0.5892,2.538e-54,0.000999,96,0.667,0.6201,0.415,5.673,sense_exposed,SF3B3,2198,False,,cytokine / growth factor,,16q22.1
+minus_1pc,positive,48,RRP12,0.5886,7.79e-58,0.000999,99.67,0.6129,0.5939,0.6031,57.31,other,EXOSC1,1938,False,,,,10q24.1
+minus_1pc,positive,49,NXF1,0.5873,5.146e-56,0.000999,97,0.6231,0.5563,0.4001,33.53,other,STX5,558,False,,,,11q12.3
+minus_1pc,positive,50,IMPA1P1,0.5868,4.861e-67,0.000999,99.67,0.6845,0.6628,0.5361,2.803,other,IMPA1,2.974e+04,False,,,,8q21.13
+minus_1pc,negative,1,PKIG,-0.5814,5.861e-54,0.000999,0,-0.6306,-0.5848,-0.4267,41.08,other,TTPAL,3.714e+04,False,,,,20q13.12
+minus_1pc,negative,2,NTPCR,-0.5772,1.16e-53,0.000999,0.6667,-0.4375,-0.4102,-0.2814,21.58,unexposed,DISC1,9.093e+05,False,,,,1q42.2
+minus_1pc,negative,3,BLVRA,-0.546,1.518e-46,0.000999,3,-0.3749,-0.2865,-0.09778,26.07,other,STK17A,1.073e+05,False,,,,7p13
+minus_1pc,negative,4,TP53TG1,-0.5459,4.77e-50,0.000999,0,-0.09445,-0.1067,-0.1528,2.644,unexposed,ABCB1,1.564e+05,False,,,,7q21.12
+minus_1pc,negative,5,SRI,-0.5446,2.552e-45,0.000999,5.667,-0.4387,-0.3465,-0.1413,38.7,other,STEAP4,4.39e+04,False,,,,7q21.12
+minus_1pc,negative,6,PEX2,-0.5375,8.88e-56,0.000999,0,-0.6178,-0.5533,-0.4591,25.41,unexposed,PKIA-AS1,1.167e+06,False,,E3 ligase / ubiquitin,,8q21.13
+minus_1pc,negative,7,ESD,-0.5352,3.82e-45,0.000999,4.667,-0.2524,-0.1946,-0.1007,37.3,other,SUCLA2,9.46e+05,False,,,,13q14.2
+minus_1pc,negative,8,HDHD3,-0.5349,1.526e-46,0.000999,0,-0.2074,-0.1813,-0.1828,4.612,other,ALAD,8831,False,,,,9q32
+minus_1pc,negative,9,ASB13,-0.5229,7.838e-44,0.000999,0.6667,-0.5544,-0.4789,-0.3338,5.592,other,ENSG00000226647,4.555e+04,False,,,,10p15.1
+minus_1pc,negative,10,MAPK3,-0.5162,1.109e-43,0.000999,2.667,-0.4338,-0.3797,-0.3271,9.391,other,SMG1P5,1.44e+05,False,,protein kinase,,16p11.2
+minus_1pc,negative,11,SNTA1,-0.5086,2.984e-42,0.000999,0.6667,-0.3626,-0.2922,-0.2311,8.607,unexposed,NECAB3,2.132e+05,False,,,,20q11.21
+minus_1pc,negative,12,DPY30,-0.5077,6.277e-43,0.000999,3.667,-0.136,-0.08294,0.02624,30.35,other,FAM98A,1.493e+06,False,,,,2p22.3
+minus_1pc,negative,13,HEXD,-0.5057,3.535e-42,0.000999,0.6667,-0.4197,-0.3851,-0.2818,12.52,unexposed,SLC16A3,1.571e+05,False,,,,17q25.3
+minus_1pc,negative,14,POFUT1,-0.5049,3.134e-40,0.000999,2,-0.3207,-0.2485,-0.3197,30.45,other,TM9SF4,3.384e+04,False,,,,20q11.21
+minus_1pc,negative,15,DNAJC19,-0.5018,1.394e-39,0.000999,4.667,-0.1063,-0.06607,-0.01129,12.26,unexposed,DCUN1D1,1.948e+06,False,,,,3q26.33
+minus_1pc,negative,16,C2orf68,-0.5014,6.79e-39,0.000999,1.667,-0.3373,-0.3012,-0.2267,13.92,other,ST3GAL5,2.251e+05,False,,,,2p11.2
+minus_1pc,negative,17,CEBPZOS,-0.4947,2.955e-42,0.000999,2.667,-0.007296,0.0107,-0.04721,38.52,other,GPATCH11,9.217e+04,False,,,,2p22.2
+minus_1pc,negative,18,NIPSNAP3A,-0.4944,2.005e-39,0.000999,4,-0.4185,-0.3827,-0.451,7.925,other,SMC2,6.032e+05,False,,,,9q31.1
+minus_1pc,negative,19,PCTP,-0.4936,2.123e-38,0.000999,0.3333,-0.5508,-0.4912,-0.4265,16.58,unexposed,STXBP4,5.773e+05,False,,,,17q22
+minus_1pc,negative,20,COA5,-0.4914,1.987e-41,0.000999,1,-0.2013,-0.1771,-0.1574,11.56,other,MGAT4A,1.056e+04,False,,,,2q11.2
+minus_1pc,negative,21,PKN1,-0.4914,1.489e-38,0.000999,4.333,-0.3238,-0.2603,-0.1222,28.6,other,ADGRE5,2.432e+04,False,,protein kinase,,19p13.12
+minus_1pc,negative,22,TMEM276,-0.49,1.42e-37,0.000999,4,-0.08312,-0.07677,-0.002007,2.764,other,RECQL4,4.439e+04,False,,,,8q24.3
+minus_1pc,negative,23,RWDD3,-0.4887,3.513e-37,0.000999,2.333,-0.4988,-0.457,-0.3979,19.29,other,TLCD4,3.646e+04,False,,,,1p21.3
+minus_1pc,negative,24,PXMP4,-0.4862,3.826e-37,0.000999,1,-0.2398,-0.266,-0.2711,4.28,other,EIF2S2,3.679e+05,False,,,,20q11.22
+minus_1pc,negative,25,TMEM218,-0.486,9.443e-40,0.000999,1.333,-0.1773,-0.1804,-0.187,4.336,other,FEZ1,3.31e+05,False,,,,11q24.2
+minus_1pc,negative,26,TMEM254,-0.4851,3.428e-41,0.000999,0.6667,-0.2657,-0.2665,-0.3071,8.101,other,PPIF,7.233e+05,False,,,,10q22.3
+minus_1pc,negative,27,CHPT1,-0.4843,4.408e-36,0.000999,3.333,-0.3805,-0.3696,-0.2998,26.9,unexposed,UTP20,3.103e+05,False,,,,12q23.2
+minus_1pc,negative,28,DTWD1,-0.4829,2.08e-41,0.000999,0.3333,-0.5728,-0.5325,-0.4442,34.61,unexposed,GALK2,2.531e+05,False,,,,15q21.2
+minus_1pc,negative,29,HEATR6,-0.4815,1.107e-37,0.000999,0,-0.6106,-0.556,-0.4067,26.86,other,USP32,9.825e+04,False,,,,17q23.1
+minus_1pc,negative,30,IFNLR1,-0.4803,3.6e-43,0.000999,0,-0.5579,-0.4805,-0.3121,7.209,unexposed,STPG1,1.679e+05,False,,receptor (non-olfactory),,1p36.11
+minus_1pc,negative,31,MRPS21,-0.4791,5.15e-41,0.000999,4.667,0.03638,0.04293,0.04558,32.33,unexposed,PLEKHO1,1.291e+05,False,,,,1q21.2
+minus_1pc,negative,32,RAB4A,-0.4789,1.195e-39,0.000999,2.333,-0.1398,-0.0831,-0.03281,34.49,other,RHOU,5.244e+05,False,,small GTPase / GAP / GEF,,1q42.13
+minus_1pc,negative,33,SP2-DT,-0.4783,4.501e-39,0.000999,0.6667,0.08919,0.01879,-0.1261,2.093,no coordinates,,,False,,,,
+minus_1pc,negative,34,SHARPIN,-0.4763,8.795e-38,0.000999,2.667,-0.1112,-0.08568,-0.07505,18.19,other,BOP1,1.539e+05,False,,E3 ligase / ubiquitin,,8q24.3
+minus_1pc,negative,35,NDUFB7,-0.4721,3.539e-39,0.000999,6.333,-0.02784,0.01829,0.03643,13.22,other,ADGRE2,1.591e+05,False,,,,19p13.12
+minus_1pc,negative,36,IRAK1BP1,-0.4716,6.884e-36,0.000999,0,-0.3298,-0.3393,-0.3007,14.11,unexposed,MYO6,2.948e+06,False,,,,6q14.1
+minus_1pc,negative,37,C12orf76,-0.4715,9.992e-36,0.000999,0,-0.1326,-0.1405,-0.1364,9.298,other,ANAPC7,2.989e+05,False,,,,12q24.11
+minus_1pc,negative,38,SFXN4,-0.4705,1.527e-36,0.000999,2.667,-0.4347,-0.3217,-0.2149,12.01,other,PRDX3,1975,False,,,,10q26.11
+minus_1pc,negative,39,ZFP64,-0.4704,9.704e-34,0.000999,5,-0.6241,-0.5474,-0.4106,52.2,unexposed,ENSG00000259723,1.249e+06,True,C2H2 ZF,,,20q13.2
+minus_1pc,negative,40,MIR210HG,-0.4696,2.804e-34,0.000999,5,-0.3343,-0.2472,-0.08747,4.72,other,IRF7,4.401e+04,False,,,,11p15.5
+minus_1pc,negative,41,GRAMD1A,-0.4695,3.67e-38,0.000999,2.333,-0.5768,-0.4918,-0.2784,39.43,unexposed,ZNF181,2.441e+05,False,,,,19q13.11
+minus_1pc,negative,42,GUSBP2-1,-0.4678,1.411e-37,0.000999,1.333,-0.5964,-0.5754,-0.4828,14.96,unexposed,H2BC11,1.227e+05,False,,,,
+minus_1pc,negative,43,ATP5F1C,-0.4665,1.656e-39,0.000999,4,-0.0538,-0.007903,-0.005488,56.78,other,ITIH2,2.942e+04,False,,,,10p14
+minus_1pc,negative,44,KIAA1522,-0.4653,7.923e-38,0.000999,1.667,-0.3659,-0.3215,-0.2097,26.72,other,RBBP4,3.58e+04,False,,,,
+minus_1pc,negative,45,C19orf12,-0.465,1.021e-34,0.000999,4.333,-0.5499,-0.4921,-0.3183,18.49,other,TSHZ3,1.434e+06,False,,,,19q12
+minus_1pc,negative,46,CKLF,-0.465,6.539e-36,0.000999,5.333,-0.2449,-0.1496,-0.04933,32.53,other,BEAN1,5.903e+04,False,,,,16q21
+minus_1pc,negative,47,PHYKPL,-0.4647,9.364e-34,0.000999,4.333,-0.5743,-0.5146,-0.3439,54.3,other,CLK4,3.695e+05,False,,,,5q35.3
+minus_1pc,negative,48,GSTK1,-0.4645,6.138e-35,0.000999,8,-0.0279,-0.03554,-0.02629,15.99,unexposed,EPHB6,3.713e+05,False,,,,7q34
+minus_1pc,negative,49,ST3GAL4,-0.4644,6.19e-36,0.000999,3,-0.5305,-0.4366,-0.1865,30.94,other,DCPS,4672,False,,,,11q24.2
+minus_1pc,negative,50,ZNF358,-0.4641,4.986e-36,0.000999,4.667,-0.1616,-0.132,-0.07432,4.381,other,ARHGEF18,4.281e+04,True,C2H2 ZF,,,19p13.2
+minus_3pc,positive,1,FNDC7,0.7615,3.826e-109,0.000999,100,0.8627,0.8483,0.7453,2.542,sense_exposed,PRPF38B,9975,False,,,,1p13.3
+minus_3pc,positive,2,PYGM,0.6985,4.029e-92,0.000999,100,0.6682,0.6643,0.6686,6.322,sense_exposed,SF1,4615,False,,,,11q13.1
+minus_3pc,positive,3,ENSG00000249476,0.6961,7.073e-89,0.000999,100,0.1826,0.1798,0.3944,17.33,sense_exposed,PJA2,3447,False,,,,
+minus_3pc,positive,4,VWCE,0.691,1.59e-85,0.000999,100,0.6097,0.6091,0.5965,7.283,sense_exposed,DDB1,3894,False,,,,11q12.2
+minus_3pc,positive,5,IDI2-AS1,0.6844,2.237e-84,0.000999,100,0.7564,0.7199,0.6161,13.44,other,GTPBP4,2550,False,,,,10p15.3
+minus_3pc,positive,6,MIR9-1HG,0.6818,1.184e-91,0.000999,100,0.7814,0.7497,0.6439,3.951,sense_exposed,MEF2D,6740,False,,,,1q22
+minus_3pc,positive,7,C19orf38,0.675,7.968e-89,0.000999,99.67,0.6693,0.6202,0.5333,4.151,sense_exposed,DNM2,2358,False,,,,19p13.2
+minus_3pc,positive,8,FGF18,0.6738,4.697e-88,0.000999,100,0.7633,0.7332,0.6546,7.653,sense_exposed,NPM1,7685,False,,cytokine / growth factor,,5q35.1
+minus_3pc,positive,9,SEMA4A,0.6651,5.901e-85,0.000999,100,0.7697,0.7347,0.6309,13.83,sense_exposed,LMNA,7281,False,,,,1q22
+minus_3pc,positive,10,ENSG00000283573,0.6645,3.827e-79,0.000999,100,0.7142,0.6955,0.62,3.905,sense_exposed,VEGFA,1.066e+04,False,,,,
+minus_3pc,positive,11,PITRM1-AS1,0.6466,1.359e-79,0.000999,100,0.5684,0.5798,0.5246,7.039,other,PFKP,689,False,,,,10p15.2
+minus_3pc,positive,12,PPIEL,0.6344,8.48e-76,0.000999,100,0.6088,0.569,0.4459,9.69,other,PABPC4,2002,False,,,,1p34.3
+minus_3pc,positive,13,ENSG00000289254,0.6308,4.655e-78,0.000999,99.67,0.7123,0.6793,0.5288,4.333,sense_exposed,DAPK3,6999,False,,,,
+minus_3pc,positive,14,LRRC23,0.6296,2.966e-74,0.000999,100,0.7312,0.7049,0.6903,64.19,other,USP5,6823,False,,,,12p13.31
+minus_3pc,positive,15,SELPLG,0.6277,1.362e-77,0.000999,100,0.7734,0.7677,0.6505,2.575,sense_exposed,CORO1C,1.122e+04,False,,cytokine / growth factor,,12q24.11
+minus_3pc,positive,16,PILRA,0.6239,7.782e-74,0.000999,100,0.6568,0.6097,0.5051,13.43,other,STAG3,1.531e+05,False,,,,7q22.1
+minus_3pc,positive,17,LDHC,0.6224,4.898e-77,0.000999,100,0.7761,0.7481,0.6521,3.901,sense_exposed,LDHA,3861,False,,,,11p15.1
+minus_3pc,positive,18,ADCY10P1,0.618,7.926e-67,0.000999,100,0.5789,0.5016,0.3836,11.89,other,ZFAND3,2.946e+06,False,,,,6p21.1
+minus_3pc,positive,19,HCLS1,0.6107,1.762e-67,0.000999,99.67,0.5967,0.5125,0.4639,3.917,sense_exposed,GOLGB1,2262,False,,,,3q13.33
+minus_3pc,positive,20,AZU1,0.6059,6.959e-71,0.000999,100,0.6729,0.6425,0.5296,1.504,sense_exposed,PTBP1,1.277e+04,False,,,,19p13.3
+minus_3pc,positive,21,MYOCOS,0.6035,3.486e-64,0.000999,99.67,0.6789,0.637,0.522,4.673,sense_exposed,PRRC2C,7110,False,,,,1q24.3
+minus_3pc,positive,22,LINC00910,0.6026,3.015e-64,0.000999,100,0.7548,0.7243,0.6406,32.8,unexposed,ETV4,1.386e+05,False,,,,17q21.31
+minus_3pc,positive,23,ARL9,0.5891,1.51e-62,0.000999,100,0.7072,0.693,0.6012,5.103,sense_exposed,SRP72,1318,False,,small GTPase / GAP / GEF,,4q12
+minus_3pc,positive,24,ENSG00000258378,0.5862,2.964e-63,0.000999,100,0.6724,0.5736,0.4865,5.937,other,ARID4A,2.456e+04,False,,,,
+minus_3pc,positive,25,ENSG00000274949,0.5858,1.121e-59,0.000999,100,0.5736,0.4777,0.4291,4.033,no coordinates,,,False,,,,
+minus_3pc,positive,26,USP50,0.5846,2.64e-63,0.000999,100,0.7289,0.6965,0.5368,4.84,sense_exposed,TRPM7,5765,False,,E3 ligase / ubiquitin,,15q21.1
+minus_3pc,positive,27,LINC02936,0.5844,1.246e-60,0.000999,99.67,0.694,0.6321,0.4571,5.977,sense_exposed,SLC35F5,834,False,,,,2q14.1
+minus_3pc,positive,28,PPIEL-1,0.5821,1.328e-71,0.000999,100,0.664,0.609,0.4812,6.574,other,PABPC4,1011,False,,,,
+minus_3pc,positive,29,ENSG00000287975,0.5803,3.486e-64,0.000999,100,0.5415,0.5326,0.4925,2.946,sense_exposed,CHD7,493,False,,,,
+minus_3pc,positive,30,C5AR1,0.5777,2.876e-67,0.000999,99.67,0.4656,0.3902,0.3881,10.74,other,INAFM1,1.227e+04,False,,receptor (non-olfactory),,19q13.32
+minus_3pc,positive,31,INTS6,0.574,1.839e-63,0.000999,100,0.461,0.4169,0.4218,217.3,unexposed,DHRS12,2.977e+05,False,,,,13q14.3
+minus_3pc,positive,32,MPDU1,0.573,1.312e-59,0.000999,99.67,0.6449,0.6181,0.5542,17.85,other,CD68,699,False,,,,17p13.1
+minus_3pc,positive,33,COL20A1,0.5682,1.086e-56,0.000999,99.67,0.5266,0.4979,0.4034,3.173,sense_exposed,ARFGAP1,3395,False,,,,20q13.33
+minus_3pc,positive,34,TEX14,0.5673,7.529e-61,0.000999,100,0.7663,0.7279,0.6581,15.21,unexposed,TRIM37,2.906e+05,False,,protein kinase,,17q22
+minus_3pc,positive,35,LINC02236,0.5653,4.09e-60,0.000999,100,0.305,0.3434,0.3086,4.957,sense_exposed,TENT4A,8840,False,,,,5p15.31
+minus_3pc,positive,36,ROPN1L,0.5651,1.369e-66,0.000999,100,0.6878,0.6441,0.518,3.932,sense_exposed,MARCHF6,1136,False,,,,5p15.2
+minus_3pc,positive,37,MPP4,0.564,2.706e-55,0.000999,99.67,0.6691,0.6106,0.4495,3.716,sense_exposed,ALS2,1554,False,,,,2q33.1
+minus_3pc,positive,38,ALDH8A1,0.564,1.023e-58,0.000999,100,0.6795,0.6345,0.4893,4.565,sense_exposed,HBS1L,8209,False,,,,6q23.3
+minus_3pc,positive,39,AVIL,0.5632,1.485e-59,0.000999,98.67,0.1366,0.07004,0.2721,19.51,other,CTDSP2,1191,False,,,,12q14.1
+minus_3pc,positive,40,ENSG00000289726,0.5615,1.452e-58,0.000999,99.67,0.7448,0.6879,0.5036,2.217,other,RMND5B,1286,False,,,,
+minus_3pc,positive,41,ARF4,0.561,3.973e-56,0.000999,100,0.1998,0.2695,0.4066,184.8,other,DENND6A,2.723e+04,False,,small GTPase / GAP / GEF,,3p14.3
+minus_3pc,positive,42,ENSG00000205890,0.5587,6.365e-60,0.000999,99,0.6359,0.6411,0.5172,3.18,other,THOC6,4726,False,,,,
+minus_3pc,positive,43,STPG4,0.5585,6.01e-57,0.000999,99,0.7053,0.6537,0.5203,17.08,sense_exposed,CALM2,4776,False,,,,2p21
+minus_3pc,positive,44,FOSB,0.558,5.721e-60,0.000999,99.33,0.656,0.6056,0.5723,51.77,other,POLR1G,5.725e+04,True,bZIP,,,19q13.32
+minus_3pc,positive,45,IMPA1P1,0.5555,2.394e-61,0.000999,100,0.6845,0.6628,0.5361,2.803,other,IMPA1,2.974e+04,False,,,,8q21.13
+minus_3pc,positive,46,GARIN1A,0.5542,4.138e-55,0.000999,98.33,0.2856,0.2321,0.3111,10.87,sense_exposed,ENSG00000242588,8214,False,,,,7q32.1
+minus_3pc,positive,47,ERI2,0.5536,1.194e-56,0.000999,100,0.5205,0.4615,0.357,26.99,other,CRYM,3.379e+05,False,,,,16p12.3
+minus_3pc,positive,48,FAM151B,0.5507,1.117e-54,0.000999,100,0.6012,0.506,0.3554,11.04,sense_exposed,ZFYVE16,4575,False,,,,5q14.1
+minus_3pc,positive,49,PRKCG,0.5486,8.117e-61,0.000999,100,0.6138,0.5825,0.5515,7.356,sense_exposed,MYADM,1065,False,,protein kinase,,19q13.42
+minus_3pc,positive,50,ENSG00000261341,0.5482,4.787e-53,0.000999,100,0.5176,0.5161,0.557,7.456,other,C19orf48,5052,False,,,,
+minus_3pc,negative,1,NDUFAF5,-0.4992,6.876e-49,0.000999,0,-0.2195,-0.1404,-0.3132,20.99,unexposed,SPTLC3,6.139e+05,False,,,,20p12.1
+minus_3pc,negative,2,VPS33B,-0.4911,4.11e-51,0.000999,0,-0.3102,-0.2603,-0.3963,10.49,other,FAM174B,1.595e+06,False,,,,15q26.1
+minus_3pc,negative,3,TBC1D13,-0.4878,4.877e-51,0.000999,0,-0.2641,-0.3047,-0.4414,9.053,other,PKN3,6.63e+04,False,,,,9q34.11
+minus_3pc,negative,4,UBA3,-0.4874,1.517e-48,0.000999,0,-0.07076,-0.1526,-0.219,58.2,other,FRMD4B,8.837e+04,False,,E3 ligase / ubiquitin,,3p14.1
+minus_3pc,negative,5,MPPE1,-0.4855,2.742e-47,0.000999,0,-0.3761,-0.3809,-0.4117,9.161,other,AFG3L2,4.197e+05,False,,,,18p11.21
+minus_3pc,negative,6,PKIG,-0.483,4.189e-44,0.000999,1,-0.6306,-0.5848,-0.4267,41.08,other,TTPAL,3.714e+04,False,,,,20q13.12
+minus_3pc,negative,7,RPP30,-0.4767,3.256e-41,0.000999,0.3333,-0.1294,-0.06936,-0.1888,30.55,other,KIF20B,1.097e+06,False,,,,10q23.31
+minus_3pc,negative,8,MTFMT,-0.47,2.241e-40,0.000999,0,-0.08105,-0.1555,-0.2741,17.9,other,UBAP1L,6.211e+04,False,,,,15q22.31
+minus_3pc,negative,9,PEX2,-0.4686,1.144e-44,0.000999,0,-0.6178,-0.5533,-0.4591,25.41,unexposed,PKIA-AS1,1.167e+06,False,,E3 ligase / ubiquitin,,8q21.13
+minus_3pc,negative,10,IRAK1BP1,-0.4656,3.963e-37,0.000999,0.3333,-0.3298,-0.3393,-0.3007,14.11,unexposed,MYO6,2.948e+06,False,,,,6q14.1
+minus_3pc,negative,11,AP3S2,-0.4652,1.389e-44,0.000999,0,-0.3273,-0.2827,-0.3405,54.63,other,ARPIN,368,False,,,,15q26.1
+minus_3pc,negative,12,TP53TG1,-0.4625,1.332e-42,0.000999,0,-0.09445,-0.1067,-0.1528,2.644,unexposed,ABCB1,1.564e+05,False,,,,7q21.12
+minus_3pc,negative,13,C5orf22,-0.4565,1.284e-40,0.000999,0,-0.06921,-0.07471,-0.3031,23.37,unexposed,CDH6,2.031e+05,False,,,,5p13.3
+minus_3pc,negative,14,HSF2,-0.4547,2.72e-41,0.000999,0,0.08687,0.04674,-0.1192,19.38,antisense_exposed_only,GJA1,9.498e+05,True,HSF,,,6q22.31
+minus_3pc,negative,15,METTL14,-0.4499,1.012e-38,0.000999,0,-0.09697,-0.1118,-0.2309,44.42,other,ENSG00000291201,5521,False,,,,4q26
+minus_3pc,negative,16,VPS16,-0.4492,4.323e-41,0.000999,0,-0.07014,-0.1336,-0.3448,11.45,other,EBF4,8.046e+04,False,,,,20p13
+minus_3pc,negative,17,AGFG1,-0.4486,5.127e-37,0.000999,0,-0.2248,-0.1629,-0.273,135.6,unexposed,MFF,1.109e+05,False,,,,2q36.3
+minus_3pc,negative,18,SAAL1,-0.4461,2.338e-35,0.000999,0.6667,-0.1036,-0.08414,-0.199,14.27,unexposed,SAA2-SAA4,1.253e+05,False,,,,11p15.1
+minus_3pc,negative,19,HDHD3,-0.4428,1.253e-35,0.000999,0.3333,-0.2074,-0.1813,-0.1828,4.612,other,ALAD,8831,False,,,,9q32
+minus_3pc,negative,20,NTPCR,-0.4425,2.312e-42,0.000999,0.3333,-0.4375,-0.4102,-0.2814,21.58,unexposed,DISC1,9.093e+05,False,,,,1q42.2
+minus_3pc,negative,21,PCGF6,-0.4394,1.084e-38,0.000999,0,-0.1397,-0.1209,-0.2019,16.65,other,ATP5MK,3.782e+04,True,Unknown,E3 ligase / ubiquitin,,10q24.33
+minus_3pc,negative,22,MRPS14,-0.4337,5.005e-35,0.000999,0.3333,0.1218,0.04948,-0.1356,11.38,antisense_exposed_only,KIAA0040,1.335e+05,False,,,,1q25.1
+minus_3pc,negative,23,ARNT,-0.4273,7.818e-37,0.000999,0.3333,-0.6393,-0.5529,-0.4153,79.45,other,CERS2,8.233e+04,True,bHLH,,,1q21.3
+minus_3pc,negative,24,RNFT1,-0.4235,9.277e-34,0.000999,0,-0.004661,-0.1079,-0.3272,11.9,other,HEATR6,7.623e+04,False,,E3 ligase / ubiquitin,,17q23.1
+minus_3pc,negative,25,ACOT8,-0.423,1.157e-33,0.000999,0,-0.1393,-0.2419,-0.2943,11.22,other,PLTP,4.01e+04,False,,,,20q13.12
+minus_3pc,negative,26,TERF1,-0.4204,1.752e-34,0.000999,0.3333,-0.1644,-0.1731,-0.2127,37.19,other,KCNB2,7.005e+04,True,Myb/SANT,,,8q21.11
+minus_3pc,negative,27,ELMO2,-0.4195,6.646e-35,0.000999,0,-0.005402,-0.04239,-0.1675,31.15,unexposed,SLC13A3,1.248e+05,False,,,,20q13.12
+minus_3pc,negative,28,TRIP4,-0.4183,3.878e-33,0.000999,0,-0.6099,-0.5327,-0.4181,42.51,unexposed,SNX1,2.412e+05,False,,,,15q22.31
+minus_3pc,negative,29,RBM45,-0.4132,6.918e-31,0.000999,0.3333,-0.1445,-0.2009,-0.3136,6.263,unexposed,AGPS,5.454e+05,False,,,,2q31.2
+minus_3pc,negative,30,FBXO3,-0.4131,1.163e-31,0.000999,1,-0.01177,-0.01981,-0.1054,36.29,other,ABTB2,3.764e+05,False,,,,11p13
+minus_3pc,negative,31,NDUFB6,-0.4127,8.114e-32,0.000999,3.333,0.192,0.1702,0.07942,27.71,other,APTX,3.134e+05,False,,,,9p21.1
+minus_3pc,negative,32,PCTP,-0.4117,6.033e-34,0.000999,2.333,-0.5508,-0.4912,-0.4265,16.58,unexposed,STXBP4,5.773e+05,False,,,,17q22
+minus_3pc,negative,33,NDUFA9,-0.4096,3.99e-32,0.000999,0,-0.1048,-0.04477,-0.2653,40.35,other,DYRK4,3.233e+04,False,,,,12p13.3
+minus_3pc,negative,34,XPA,-0.4093,9.912e-33,0.000999,0.3333,0.002162,-0.103,-0.2093,26.05,other,TRMO,1.971e+05,True,Unknown,,,9q22.33
+minus_3pc,negative,35,ZNF45,-0.4083,3.138e-30,0.000999,1,-0.3468,-0.3468,-0.3484,13.59,other,ZNF235,2.934e+05,True,C2H2 ZF,,,19q13.31
+minus_3pc,negative,36,UBXN2B,-0.4064,1.709e-30,0.000999,1,-0.3762,-0.2922,-0.2835,39.17,unexposed,FAM110B,2.071e+05,False,,,,8q12.1
+minus_3pc,negative,37,USP30,-0.4055,4.208e-35,0.000999,0,-0.4802,-0.4338,-0.4206,15.49,unexposed,ISCU,4.537e+05,False,,E3 ligase / ubiquitin,,12q24.11
+minus_3pc,negative,38,C6orf89,-0.4049,2.521e-32,0.000999,0.6667,-0.1096,-0.1879,-0.3915,43.88,other,CDKN1A,1.469e+05,False,,,,6p21.2
+minus_3pc,negative,39,NDFIP1,-0.4042,1.52e-32,0.000999,0.3333,-0.2468,-0.1724,-0.2172,112.7,unexposed,RNF14,1.055e+05,False,,,,5q31.3
+minus_3pc,negative,40,TRAPPC2,-0.4037,4.419e-33,0.000999,0,-0.1358,-0.1878,-0.2859,13.59,other,GEMIN8,2.635e+05,False,,,,Xp22.2
+minus_3pc,negative,41,COMMD2,-0.4036,3.113e-32,0.000999,8.333,-0.1177,-0.05696,-0.0263,28.45,other,ANKUB1,6549,False,,,,3q25.1
+minus_3pc,negative,42,PXMP4,-0.4025,1.139e-32,0.000999,1.333,-0.2398,-0.266,-0.2711,4.28,other,EIF2S2,3.679e+05,False,,,,20q11.22
+minus_3pc,negative,43,HARS2,-0.4019,1.071e-33,0.000999,0,-0.2342,-0.1489,-0.2791,15.87,other,WDR55,1.73e+04,False,,,,5q31.3
+minus_3pc,negative,44,SRI,-0.4002,1.451e-32,0.000999,0.6667,-0.4387,-0.3465,-0.1413,38.7,other,STEAP4,4.39e+04,False,,,,7q21.12
+minus_3pc,negative,45,GIPC1,-0.399,6.454e-28,0.000999,7.333,-0.03211,-0.004106,-0.1428,27.27,other,DNAJB1,1.762e+04,False,,,,19p13.12
+minus_3pc,negative,46,THOC1,-0.399,2.297e-31,0.000999,0.3333,-0.0585,-0.007889,-0.09739,87.01,unexposed,ENOSF1,3.996e+05,False,,,,18p11.32
+minus_3pc,negative,47,ESD,-0.3989,3.433e-30,0.000999,0.3333,-0.2524,-0.1946,-0.1007,37.3,other,SUCLA2,9.46e+05,False,,,,13q14.2
+minus_3pc,negative,48,BLMH,-0.3982,1.766e-29,0.000999,1,0.04561,0.05301,-0.0774,26.37,other,CRLF3,4.772e+05,False,,,,17q11.2
+minus_3pc,negative,49,SOAT1,-0.3981,4.046e-28,0.000999,6.667,0.07523,0.06457,-0.1301,37.77,unexposed,TOR3A,1.954e+05,False,,,,1q25.2
+minus_3pc,negative,50,ASAP3,-0.3945,2.764e-31,0.000999,3,-0.1741,-0.2098,-0.3358,5.992,other,ID3,7.28e+04,False,,,,1p36.12
+minus_10pc,positive,1,FNDC7,0.66,3.006e-83,0.000999,100,0.8627,0.8483,0.7453,2.542,sense_exposed,PRPF38B,9975,False,,,,1p13.3
+minus_10pc,positive,2,PYGM,0.6469,6.45e-81,0.000999,100,0.6682,0.6643,0.6686,6.322,sense_exposed,SF1,4615,False,,,,11q13.1
+minus_10pc,positive,3,LRRC23,0.6377,5.837e-82,0.000999,100,0.7312,0.7049,0.6903,64.19,other,USP5,6823,False,,,,12p13.31
+minus_10pc,positive,4,VWCE,0.6367,8.197e-75,0.000999,100,0.6097,0.6091,0.5965,7.283,sense_exposed,DDB1,3894,False,,,,11q12.2
+minus_10pc,positive,5,FGF18,0.6224,4.426e-73,0.000999,100,0.7633,0.7332,0.6546,7.653,sense_exposed,NPM1,7685,False,,cytokine / growth factor,,5q35.1
+minus_10pc,positive,6,ARL9,0.6102,8.197e-75,0.000999,100,0.7072,0.693,0.6012,5.103,sense_exposed,SRP72,1318,False,,small GTPase / GAP / GEF,,4q12
+minus_10pc,positive,7,LDHC,0.6098,3.302e-77,0.000999,100,0.7761,0.7481,0.6521,3.901,sense_exposed,LDHA,3861,False,,,,11p15.1
+minus_10pc,positive,8,ENSG00000283573,0.6055,3.867e-70,0.000999,100,0.7142,0.6955,0.62,3.905,sense_exposed,VEGFA,1.066e+04,False,,,,
+minus_10pc,positive,9,MIR9-1HG,0.6028,2.098e-79,0.000999,100,0.7814,0.7497,0.6439,3.951,sense_exposed,MEF2D,6740,False,,,,1q22
+minus_10pc,positive,10,IDI2-AS1,0.6002,8.312e-69,0.000999,100,0.7564,0.7199,0.6161,13.44,other,GTPBP4,2550,False,,,,10p15.3
+minus_10pc,positive,11,ENSG00000249476,0.5973,2.062e-67,0.000999,100,0.1826,0.1798,0.3944,17.33,sense_exposed,PJA2,3447,False,,,,
+minus_10pc,positive,12,FAM222A,0.5957,8.631e-70,0.000999,99.67,0.6856,0.6592,0.6514,9.262,other,MVK,1.132e+05,False,,,,12q24.11
+minus_10pc,positive,13,IQCN,0.5844,3.245e-66,0.000999,100,0.5553,0.5088,0.4729,6.287,other,JUND,5194,False,,,,19p13.11
+minus_10pc,positive,14,SELPLG,0.5634,4.945e-66,0.000999,100,0.7734,0.7677,0.6505,2.575,sense_exposed,CORO1C,1.122e+04,False,,cytokine / growth factor,,12q24.11
+minus_10pc,positive,15,HCLS1,0.5543,3.84e-58,0.000999,100,0.5967,0.5125,0.4639,3.917,sense_exposed,GOLGB1,2262,False,,,,3q13.33
+minus_10pc,positive,16,SEC31A,0.5525,6.952e-58,0.000999,100,-0.1382,-0.00917,0.2292,427.8,other,LIN54,8807,False,,,,4q21.22
+minus_10pc,positive,17,ENSG00000288000,0.5481,4.159e-61,0.000999,99.67,0.5242,0.5222,0.5008,27.11,other,LPIN3,2.097e+06,False,,,,
+minus_10pc,positive,18,C19orf38,0.5422,1.844e-59,0.000999,99.67,0.6693,0.6202,0.5333,4.151,sense_exposed,DNM2,2358,False,,,,19p13.2
+minus_10pc,positive,19,PITRM1-AS1,0.5367,1.091e-56,0.000999,100,0.5684,0.5798,0.5246,7.039,other,PFKP,689,False,,,,10p15.2
+minus_10pc,positive,20,ROPN1L,0.5358,1.054e-59,0.000999,100,0.6878,0.6441,0.518,3.932,sense_exposed,MARCHF6,1136,False,,,,5p15.2
+minus_10pc,positive,21,ENSG00000258465,0.5336,5.5e-58,0.000999,100,0.6253,0.6219,0.5448,8.366,other,COPA,3450,False,,,,
+minus_10pc,positive,22,CDKL2,0.5306,1.896e-60,0.000999,100,0.5325,0.4961,0.4123,6.234,sense_exposed,G3BP2,1.113e+04,False,,protein kinase,,4q21.1
+minus_10pc,positive,23,USP50,0.5302,1.091e-56,0.000999,100,0.7289,0.6965,0.5368,4.84,sense_exposed,TRPM7,5765,False,,E3 ligase / ubiquitin,,15q21.1
+minus_10pc,positive,24,C3orf20,0.5298,9.622e-53,0.000999,100,0.619,0.5527,0.4414,6.231,other,CCDC174,201,False,,,,
+minus_10pc,positive,25,SEMA4A,0.525,9.565e-58,0.000999,100,0.7697,0.7347,0.6309,13.83,sense_exposed,LMNA,7281,False,,,,1q22
+minus_10pc,positive,26,PRKCG,0.5234,1.839e-57,0.000999,99.67,0.6138,0.5825,0.5515,7.356,sense_exposed,MYADM,1065,False,,protein kinase,,19q13.42
+minus_10pc,positive,27,TMEM25,0.5233,4.979e-57,0.000999,99.67,0.4536,0.3807,0.3702,4.325,sense_exposed,KMT2A,3804,False,,,,11q23.3
+minus_10pc,positive,28,FAM53C,0.5169,5.83e-55,0.000999,99.67,0.5319,0.4925,0.5488,49.64,unexposed,KIF20A,1.438e+05,False,,,,5q31.2
+minus_10pc,positive,29,PPIEL,0.5159,9.719e-55,0.000999,100,0.6088,0.569,0.4459,9.69,other,PABPC4,2002,False,,,,1p34.3
+minus_10pc,positive,30,ARF4,0.5153,5.055e-52,0.000999,100,0.1998,0.2695,0.4066,184.8,other,DENND6A,2.723e+04,False,,small GTPase / GAP / GEF,,3p14.3
+minus_10pc,positive,31,IFRD1,0.5139,1.134e-53,0.000999,99.67,0.4867,0.4363,0.4334,156.2,other,ZNF277,6.637e+04,False,,,,7q31.1
+minus_10pc,positive,32,MYOCOS,0.5139,3.153e-53,0.000999,100,0.6789,0.637,0.522,4.673,sense_exposed,PRRC2C,7110,False,,,,1q24.3
+minus_10pc,positive,33,ENSG00000289254,0.5129,8.387e-53,0.000999,99.33,0.7123,0.6793,0.5288,4.333,sense_exposed,DAPK3,6999,False,,,,
+minus_10pc,positive,34,C5AR1,0.5093,1.542e-51,0.000999,99.67,0.4656,0.3902,0.3881,10.74,other,INAFM1,1.227e+04,False,,receptor (non-olfactory),,19q13.32
+minus_10pc,positive,35,WDR5B-DT,0.5062,4.621e-53,0.000999,100,0.06027,0.1606,0.3771,25.18,other,FAM162A,3186,False,,,,3q21.1
+minus_10pc,positive,36,ENSG00000284716,0.5045,3.312e-48,0.000999,100,0.5855,0.5856,0.5315,2.909,sense_exposed,ERRFI1,3262,False,,,,
+minus_10pc,positive,37,PILRA,0.5034,2.826e-50,0.000999,99.67,0.6568,0.6097,0.5051,13.43,other,STAG3,1.531e+05,False,,,,7q22.1
+minus_10pc,positive,38,BZW2,0.5013,3.456e-53,0.000999,100,0.652,0.6043,0.5522,133.6,other,ENSG00000229618,2.893e+06,False,,,,7p21.1
+minus_10pc,positive,39,SCUBE2,0.5009,2.488e-50,0.000999,99.67,0.4113,0.4099,0.3533,11.16,sense_exposed,DENND5A,711,False,,,,11p15.4
+minus_10pc,positive,40,LINC00654,0.5,7.245e-51,0.000999,100,0.5826,0.6059,0.5612,2.855,sense_exposed,GPCPD1,1.766e+04,False,,,,20p12.3
+minus_10pc,positive,41,ALDH8A1,0.4998,1.015e-48,0.000999,100,0.6795,0.6345,0.4893,4.565,sense_exposed,HBS1L,8209,False,,,,6q23.3
+minus_10pc,positive,42,GCNA,0.4978,6.059e-51,0.000999,100,0.4381,0.4469,0.4324,19.01,sense_exposed,OGT,2544,False,,,,Xq13.1
+minus_10pc,positive,43,FOSB,0.4976,4.376e-49,0.000999,99,0.656,0.6056,0.5723,51.77,other,POLR1G,5.725e+04,True,bZIP,,,19q13.32
+minus_10pc,positive,44,ENSG00000228643,0.4955,4.126e-51,0.000999,100,0.6148,0.5785,0.3996,3.113,sense_exposed,ACP1,5713,False,,,,
+minus_10pc,positive,45,LINC00910,0.4921,1.05e-47,0.000999,99.67,0.7548,0.7243,0.6406,32.8,unexposed,ETV4,1.386e+05,False,,,,17q21.31
+minus_10pc,positive,46,SLC9A1,0.4915,1.875e-50,0.000999,100,0.6336,0.6082,0.5862,55.63,other,MAP3K6,1.882e+05,False,,phosphatase,,1p36.11
+minus_10pc,positive,47,SMG1P7,0.4909,4.014e-46,0.000999,100,0.3227,0.312,0.2684,7.626,other,EXOSC6,168,False,,,,16q22.1
+minus_10pc,positive,48,SPDYA,0.4908,1.926e-49,0.000999,100,0.248,0.2731,0.3622,233.3,other,FOSL2,3.652e+05,False,,,,2p23.2
+minus_10pc,positive,49,LGMN,0.4893,1.191e-46,0.000999,99.67,0.4986,0.5097,0.5384,42.49,other,ITPK1,1.76e+05,False,,,,14q32.12
+minus_10pc,positive,50,ENSG00000141979,0.4893,1.323e-46,0.000999,100,0.6009,0.5761,0.524,7.637,other,SMIM7,2540,False,,,,
+minus_10pc,negative,1,PHC2,-0.4889,2.881e-44,0.000999,0.3333,-0.2859,-0.1726,-0.2463,85.54,other,CSMD2,8.29e+04,False,,,,1p35.1
+minus_10pc,negative,2,LUZP1,-0.4702,9.77e-43,0.000999,0,0.2071,0.1632,-0.003425,116.8,other,LINC01355,1.032e+05,False,,,,1p36.12
+minus_10pc,negative,3,CAB39,-0.4489,4.842e-42,0.000999,0.3333,-0.09717,-0.0878,-0.284,152.5,unexposed,SP100,1.671e+05,False,,,,2q37.1
+minus_10pc,negative,4,SCYL3,-0.4411,2.043e-39,0.000999,0.3333,-0.2467,-0.3293,-0.4223,11.96,other,KIFAP3,2.68e+04,False,,protein kinase,,1q24.2
+minus_10pc,negative,5,PGS1,-0.4348,1.88e-38,0.000999,0,-0.1016,-0.1012,-0.2888,29.41,unexposed,BIRC5,1.53e+05,False,,,,17q25.3
+minus_10pc,negative,6,IL4R,-0.4312,1.29e-38,0.000999,0.3333,-0.3254,-0.2671,-0.2967,40.56,other,ZKSCAN2-DT,1.958e+06,False,,receptor (non-olfactory),,16p12.1
+minus_10pc,negative,7,GPAT3,-0.4291,1.945e-39,0.000999,0,-0.2303,-0.09602,-0.2056,53.5,other,MRPS18C,5.978e+04,False,,,,4q21.23
+minus_10pc,negative,8,AGFG1,-0.4254,7.02e-34,0.000999,0.3333,-0.2248,-0.1629,-0.273,135.6,unexposed,MFF,1.109e+05,False,,,,2q36.3
+minus_10pc,negative,9,MIR31HG,-0.4244,8.761e-38,0.000999,0.3333,-0.314,-0.206,-0.1953,152.2,unexposed,CDKN2A,3.75e+05,False,,,,9p21.3
+minus_10pc,negative,10,BCAR3,-0.4183,2.587e-34,0.000999,0.3333,-0.4127,-0.2973,-0.2201,159.5,other,DNTTIP2,1.88e+04,False,,,,1p22.1
+minus_10pc,negative,11,SMURF1,-0.4169,3.136e-36,0.000999,0,-0.2396,-0.1602,-0.1707,244.9,other,KPNA7,2.94e+04,False,,E3 ligase / ubiquitin,,7q22.1
+minus_10pc,negative,12,STX1A,-0.4115,2.058e-33,0.000999,0,-0.2136,-0.07605,-0.1436,40.79,other,ABHD11,1.638e+04,False,,,,7q11.23
+minus_10pc,negative,13,GTPBP10,-0.4025,1.256e-34,0.000999,0,-0.1364,-0.2046,-0.4167,39.53,other,CFAP69,2.416e+04,False,,,,7q21.13
+minus_10pc,negative,14,CDK17,-0.4019,5.733e-35,0.000999,0,-0.05441,-0.0347,-0.1353,143.5,other,IKBIP,2.213e+06,False,,protein kinase,,12q23.1
+minus_10pc,negative,15,PTPN12,-0.3942,1.868e-30,0.000999,0.6667,-0.3816,-0.2117,-0.2188,373.1,other,CCDC146,2.075e+05,False,,phosphatase; receptor (non-olfactory),,7q11.23
+minus_10pc,negative,16,CREB1,-0.3922,1.268e-32,0.000999,0.3333,-0.2444,-0.2829,-0.3591,102.5,unexposed,ENSG00000229321,6.028e+05,True,bZIP,,,2q33.3
+minus_10pc,negative,17,FRMD8,-0.3914,5.897e-32,0.000999,0,-0.2131,-0.1363,-0.08255,32.8,other,DPF2,3.233e+04,False,,,,11q13.1
+minus_10pc,negative,18,ABHD17C,-0.3907,6.548e-31,0.000999,0,-0.4545,-0.3705,-0.2884,34.64,other,ARNT2,8.175e+04,False,,,,15q25.1
+minus_10pc,negative,19,MIR100HG,-0.3898,2.465e-34,0.000999,0,-0.3618,-0.2856,-0.226,119.7,unexposed,HSPA8,5.008e+05,False,,,,11q24.1
+minus_10pc,negative,20,ZFAND6,-0.3898,1.485e-33,0.000999,0.3333,-0.01469,-0.03057,-0.1309,186.7,unexposed,TMED3,6.315e+05,False,,,,15q25.1
+minus_10pc,negative,21,ZNF398,-0.3891,1.284e-33,0.000999,0.6667,-0.01784,-0.1009,-0.3182,26.59,unexposed,CUL1,3.252e+05,True,C2H2 ZF,,,7q36.1
+minus_10pc,negative,22,CLCF1,-0.3885,1.07e-30,0.000999,0,0.05275,0.07439,0.04553,14.5,other,PPP1CA,2.388e+04,False,,cytokine / growth factor,,11q13.2
+minus_10pc,negative,23,GABPB1,-0.3877,1.913e-31,0.000999,0.3333,0.1343,0.114,-0.09632,57.77,other,USP50,1.386e+05,False,,,,15q21.2
+minus_10pc,negative,24,PLEK2,-0.3854,8.225e-29,0.000999,0.3333,-0.3237,-0.1472,-0.1235,14.6,other,PIGH,1.697e+05,False,,,,14q23.3-q24.1
+minus_10pc,negative,25,CD59,-0.3835,2.45e-32,0.000999,0.3333,0.1,0.1507,0.01093,131.4,other,FBXO3,2541,False,,receptor (non-olfactory),,11p13
+minus_10pc,negative,26,UBE2G1,-0.3796,1.44e-33,0.000999,0.3333,-0.1184,-0.07578,-0.1026,121.3,other,MYBBP1A,1.722e+05,False,,E3 ligase / ubiquitin,,17p13.2
+minus_10pc,negative,27,EML4,-0.3788,1.667e-28,0.000999,0.3333,0.05597,0.08925,-0.02148,166.6,unexposed,MAP4K3-DT,2.504e+06,False,,,,2p21
+minus_10pc,negative,28,NHLRC2,-0.3784,2.445e-30,0.000999,0.3333,-0.1821,-0.2575,-0.4524,64.25,unexposed,CASP7,1.228e+05,False,,,,10q25.3
+minus_10pc,negative,29,VPS16,-0.3783,4.388e-29,0.000999,0,-0.07014,-0.1336,-0.3448,11.45,other,EBF4,8.046e+04,False,,,,20p13
+minus_10pc,negative,30,SATB2,-0.3748,2.043e-31,0.000999,0.6667,0.1075,0.004146,-0.05309,109.5,unexposed,FTCDNL1,2.87e+05,True,CUT; Homeodomain,,,2q33.1
+minus_10pc,negative,31,B4GALT5,-0.3737,2.666e-29,0.000999,1,-0.3288,-0.2106,-0.2901,203.1,unexposed,SPATA2,1.894e+05,False,,,,20q13.13
+minus_10pc,negative,32,RFWD3,-0.3734,1.556e-30,0.000999,0,0.1955,0.1982,0.03161,61.97,other,MLKL,4943,False,,E3 ligase / ubiquitin,,16q23.1
+minus_10pc,negative,33,CNOT11,-0.3731,3.906e-30,0.000999,0,-0.3706,-0.3672,-0.4366,24.26,other,RPL31,2.288e+05,False,,,,2q11.2
+minus_10pc,negative,34,ITGB5,-0.3724,2.717e-25,0.000999,0.6667,-0.3342,-0.2084,-0.2584,126.9,other,MUC13,4022,False,,,,3q21.2
+minus_10pc,negative,35,SUZ12P1,-0.3722,1.767e-28,0.000999,0.3333,-0.004815,-0.04228,-0.2253,57.5,other,ENSG00000290450,3.922e+04,False,,,,17q11.2
+minus_10pc,negative,36,TUBB6,-0.3718,5.031e-28,0.000999,0.3333,-0.1636,-0.07842,-0.08212,62.87,unexposed,IMPA2,2.751e+05,False,,,,18p11.21
+minus_10pc,negative,37,SFMBT1,-0.3714,2.731e-27,0.000999,0.3333,-0.02321,-0.06424,-0.1471,57.94,other,RFT1,1385,False,,,,3p21.1
+minus_10pc,negative,38,FBXL5,-0.3699,1.154e-29,0.000999,0.3333,-0.4523,-0.4294,-0.4599,81.27,unexposed,PROM1,2.814e+05,False,,,,4p15.32
+minus_10pc,negative,39,HIF1A,-0.3691,2.939e-26,0.000999,0.3333,0.05269,0.04758,-0.2519,229,unexposed,PRKCH,1.444e+05,True,bHLH,,,14q23.2
+minus_10pc,negative,40,PCGF6,-0.364,2.031e-27,0.000999,0,-0.1397,-0.1209,-0.2019,16.65,other,ATP5MK,3.782e+04,True,Unknown,E3 ligase / ubiquitin,,10q24.33
+minus_10pc,negative,41,PLIN3,-0.3633,7.05e-27,0.000999,0,-0.1568,-0.1181,0.01462,75.12,other,PTPRS,2.908e+05,False,,,,19p13.3
+minus_10pc,negative,42,ENSG00000227598,-0.3606,6.564e-26,0.000999,0.3333,0.07286,-0.03252,-0.1884,19.58,unexposed,THBS2,2.217e+06,False,,,,
+minus_10pc,negative,43,LINC01629,-0.3575,1.373e-29,0.000999,0,-0.02894,-0.01363,-0.112,1.071,other,GPATCH2L,7.052e+05,False,,,,14q24.3
+minus_10pc,negative,44,FAM89A,-0.3574,2.129e-26,0.000999,0.6667,0.1467,0.0852,-0.03809,8.562,unexposed,C1orf131,1.835e+05,False,,,,1q42.2
+minus_10pc,negative,45,PPP1R26-AS1,-0.3559,7.062e-30,0.000999,0,-0.2417,-0.2609,-0.2497,11.33,unexposed,CAMSAP1,3.277e+05,False,,,,9q34.3
+minus_10pc,negative,46,ZNF670,-0.3551,8.198e-26,0.000999,1,0.2818,0.1894,-0.09651,22.59,other,ZNF669,1.922e+04,True,C2H2 ZF,,,1q44
+minus_10pc,negative,47,STARD3,-0.3537,5.532e-26,0.000999,0,-0.3204,-0.2411,-0.2207,25.56,other,PPP1R1B,432,False,,,,17q12
+minus_10pc,negative,48,WBP4,-0.3521,1.778e-25,0.000999,0,0.3379,0.1768,-0.04573,42.08,unexposed,SLC25A15,2.481e+05,False,,,,13q14.11
+minus_10pc,negative,49,ZBED4,-0.3512,5.002e-25,0.000999,0.3333,-0.1683,-0.08324,-0.1461,30.03,unexposed,TAFA5,1.003e+06,True,BED ZF,,,22q13.33
+minus_10pc,negative,50,ZNF282,-0.3498,2.717e-25,0.000999,0.3333,-0.3217,-0.3147,-0.3627,25.33,other,ZNF398,1.246e+04,True,C2H2 ZF,,,7q36.1

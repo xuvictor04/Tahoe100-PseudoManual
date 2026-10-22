@@ -25,3 +25,5 @@ __pycache__/
 
 # Third-party papers and supplements fetched by the MG53 literature review (not ours to redistribute)
 mg53_p53/**/downloads/
+mg53_p53/**/cache/
+mg53_p53/**/external/
