@@ -1,0 +1,4 @@
+variant,TRIM72_top100_pct_DoG_E116,matched_median_E116,TRIM72_pctile_E116,TRIM72_top100_pct_DoG_E110,matched_median_E110,TRIM72_pctile_E110,matched_DoG_exposed_E110_median,TRIM72_pctile_vs_matched_DoG_exposed_E110,n_matched,n_matched_DoG_exposed_E110,TRIM72_n_absr_ge_0.3,matched_median_n_absr_ge_0.3,fisher_E116_module_exposed,fisher_E116_rest_pct_exposed,fisher_E116_OR,fisher_E116_p,fisher_E110_module_exposed,fisher_E110_rest_pct_exposed,fisher_E110_OR,fisher_E110_p
+pearson_minus0pc,47,3.5,100,47,3,99.67,8.5,100,300,26,5881,5403,217/637,18.78,2.234,6.302e-15,211/640,18.74,2.133,2.552e-13
+pearson_minus3pc,51,2,99.67,50,2,99,12,88.46,300,26,1178,920.5,115/120,18.97,98.23,1.439e-71,115/120,18.68,100.1,3.003e-72
+pearson_minus10pc,43,2,97.67,44,1,97.67,12,80.77,300,26,660,15,51/52,20.92,192.7,5.778e-33,51/52,20.64,196.1,3.001e-33

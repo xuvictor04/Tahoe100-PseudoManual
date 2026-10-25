@@ -1,0 +1,9 @@
+drug,annotation,pct_low_DoG_up,pct_low_unexposed_up,pct_all_low_up,TRIM72_z,TRIM72_lfc,TRIM72_z_pctile_all_genes,TRIM72_z_pctile_DoG_exposed,TRIM72_z_pctile_low_genes_within2x,n_DoG_exposed
+Idarubicin (hydrochloride),E116,45.33,47.64,40.16,15.89,3.613,88.51,80.51,80.45,703
+Idarubicin (hydrochloride),E110,44.5,48.39,40.16,15.89,3.613,88.51,80.72,80.45,690
+Homoharringtonine,E116,35,27.46,25.73,14.77,3.359,86.38,84.78,87.07,703
+Homoharringtonine,E110,33.67,27.88,25.73,14.77,3.359,86.38,85.07,87.07,690
+Auranofin,E116,23.83,16.02,16.73,8.429,2.713,90.66,85.63,88.18,703
+Auranofin,E110,23.01,16.47,16.73,8.429,2.713,90.66,86.67,88.18,690
+Dinaciclib,E116,63.67,70.9,61.83,7.401,2.478,63.86,54.77,54.59,703
+Dinaciclib,E110,62.94,71.06,61.83,7.401,2.478,63.86,54.93,54.59,690

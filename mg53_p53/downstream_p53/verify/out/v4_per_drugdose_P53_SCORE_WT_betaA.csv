@@ -1,0 +1,14 @@
+drug,conc,rho,group,adjust,outcome
+Idarubicin (hydrochloride),5.0,-0.21675087750056524,WT,beta+A,P53_SCORE
+Homoharringtonine,5.0,0.24666892112015038,WT,beta+A,P53_SCORE
+Auranofin,5.0,-0.021086916683588933,WT,beta+A,P53_SCORE
+Homoharringtonine,0.5,-0.20624859422627467,WT,beta+A,P53_SCORE
+Dinaciclib,5.0,-0.2539224209977749,WT,beta+A,P53_SCORE
+Epirubicin (hydrochloride),5.0,0.19382234215483327,WT,beta+A,P53_SCORE
+Dinaciclib,0.5,-0.08525956979489675,WT,beta+A,P53_SCORE
+Dinaciclib,0.05,-0.4283325353625332,WT,beta+A,P53_SCORE
+Harringtonine,5.0,-0.12852188186837987,WT,beta+A,P53_SCORE
+Doxorubicin (hydrochloride),5.0,-0.10255569968935949,WT,beta+A,P53_SCORE
+Mitoxantrone (dihydrochloride),5.0,0.057428436316585896,WT,beta+A,P53_SCORE
+Panobinostat,5.0,-0.09283775306225965,WT,beta+A,P53_SCORE
+Topotecan (hydrochloride),5.0,0.07477999506601067,WT,beta+A,P53_SCORE

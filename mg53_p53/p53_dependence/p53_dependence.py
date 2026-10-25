@@ -21,8 +21,27 @@ What it does (all numbers are recomputed from the gene panel's extract; nothing 
 
     python3 p53_dependence.py [--data /home/user/tahoe_data] [--recompute] [--perm 10000]
 
-Outputs (this script's folder, tables/): see the TABLES dict at the end of main(). Associations only: Tahoe has no
-MG53 perturbation, so nothing here is causal for MG53 -> p53.
+Outputs (this script's folder, tables/; log2 effects are the method-v3 corrected r2, per line = mean of used wells):
+  key_results.csv                         headline rows: strongest TRIM72 raisers + selinexor, TRIM72 next to the
+                                          controls, per scope (both wells, each well alone)
+  wt_vs_altered_selected_long.csv         every selected drug-dose x scope x gene: medians WT / altered / missense /
+                                          truncating, difference of medians, bootstrap CI, Mann-Whitney, permutation
+                                          (also within organ), critical |diff| at alpha 0.05, Wilcoxon 'altered > 0',
+                                          responsiveness Spearman / partial / OLS, BH FDR within gene
+  wt_vs_altered_selected_wide.csv         one row per selected drug-dose: TRIM72 vs CDKN1A, MDM2, P53 score
+  per_line_effects_selected.csv           per line r2 and z_line (all genes: mean of used wells; TRIM72: also per well)
+  selected_drugdoses.csv                  the drug-doses tested and why (raiser / p53 activator / screen hit)
+  lines_tp53_status.csv                   TP53 group / class, functional responsiveness, TRIM72 untreated level
+  trim72_levels_by_tp53_group.csv         TRIM72 CPM untreated (plate baseline) and treated per group, per well
+  trim72_pooled_fold_change_no_pseudocount.csv  summed-count CPM ratios per group (no pseudocount), permutation
+  trim72_inducibility_pooled_sets.csv     per-line inducibility pooled over TRIM72-raising drug-doses
+  replicate_wells_per_line_agreement.csv  plate 6 vs plate 14 (and same-plate duplicates): line-to-line agreement
+  screen_all_drugdoses_wt_minus_altered.csv  all 1,132 drug-doses: per-well WT-minus-altered, Stouffer z, BH FDR
+  screen_summary_by_gene.csv              per gene: screen hits by direction, spread of z, Spearman with P53 score
+  p53_activators_dna_damage_vs_not.csv / p53_activators_summary.csv   strong p53 activators, DNA-damaging or not
+  target_likeness_by_gene.csv / target_likeness_summary.csv           does TRIM72 behave like a p53 target?
+  checks.csv                              agreement with the panel's own tables and the earlier per-line table
+Associations only: Tahoe has no MG53 perturbation, so nothing here is causal for MG53 -> p53.
 """
 import argparse
 import contextlib
@@ -225,7 +244,9 @@ def diff_medians(v, lab):
 
 def perm_medians(v, lab, B, rng, strata=None):
     """Two-sided permutation p of the difference of medians (WT - altered); labels shuffled over lines (within
-    strata when given). Also the 95th percentile of |null difference| (the smallest difference this test detects)."""
+    strata when given). Also the 95th percentile of |null difference|: the critical |difference| at alpha 0.05, i.e.
+    the smallest observed difference that this test calls significant (a difference must be larger still to be
+    found with high power)."""
     obs = diff_medians(v, lab)
     n1 = int(lab.sum())
     if strata is None:
@@ -368,7 +389,7 @@ def compare(v, lab, cls, organ, B, rng):
     u = stats.mannwhitneyu(v[lab == 1], v[lab == 0], alternative="two-sided")
     out["auc_wt_gt_altered"] = float(u.statistic / (n1 * n0))
     out["p_mannwhitney"] = float(u.pvalue)
-    out["p_perm"], out["detectable_abs_diff_95"] = perm_medians(v, lab, B, rng)
+    out["p_perm"], out["critical_abs_diff_p05"] = perm_medians(v, lab, B, rng)
     out["p_perm_within_organ"], _ = perm_medians(v, lab, B, rng, strata=organ)
     alt = v[lab == 0]
     out["p_altered_lines_above_0"] = float(stats.wilcoxon(alt, alternative="greater").pvalue) \
@@ -590,6 +611,14 @@ def activators_table(screen):
     rows.append({"comparison": "all drug-doses: TRIM72 up (z>=3, >=1.2x) among strong p53 activators vs the rest "
                                "(Fisher; statistic = odds ratio)", "n": a + b + c + d, "statistic": float(orr),
                  "p": float(p), "detail": f"activators {a}/{a + b} up; others {c}/{c + d} up"})
+    # among the strong activators only: does TRIM72 rise more where the p53 response is stronger / more WT-selective?
+    for xa, ya in (("TRIM72_all_lines_z_corrected", "P53_ACTIVITY_all_lines_z"),
+                   ("TRIM72_all_lines_z_corrected", "P53_SCORE_wt_minus_altered_z"),
+                   ("TRIM72_wt_minus_altered_z", "P53_SCORE_wt_minus_altered_z")):
+        ok4 = t[xa].notna() & t[ya].notna()
+        rho, p = stats.spearmanr(t.loc[ok4, xa], t.loc[ok4, ya])
+        rows.append({"comparison": f"strong p53 activators only: Spearman {xa} vs {ya}", "n": int(ok4.sum()),
+                     "statistic": float(rho), "p": float(p)})
     for cl in ("DNA-damaging (panel DNA_DAMAGE list)", "not DNA-damaging"):
         x = t[t["class"] == cl]
         rows.append({"comparison": f"strong p53 activators, {cl}: TRIM72 up", "n": len(x),
@@ -826,6 +855,80 @@ def replicate_agreement(D, pick, genes):
     return pd.DataFrame(rows)
 
 
+# ============================================================================= summaries
+def per_line_check(D):
+    """Independent check: idarubicin 5 uM per-line TRIM72 (mean of the used wells) against the earlier corrected
+    table (trim72_idarubicin/corrected/TRIM72_idarubicin_5uM_per_line_corrected.csv, made by its own script)."""
+    f = os.path.join(REPO, "trim72_idarubicin", "corrected", "TRIM72_idarubicin_5uM_per_line_corrected.csv")
+    if not os.path.exists(f):
+        return {"check": "idarubicin 5 uM per-line TRIM72 vs trim72_idarubicin/corrected (max |diff|)",
+                "value": np.nan, "n": 0, "note": "reference table not found"}
+    ref = pd.read_csv(f).set_index("cell_line_id")
+    Wd = D.W.loc[~D.W["is_dmso"].astype(bool) & D.W["used"].astype(bool)]
+    ss = list(Wd.index[(Wd["drug"] == "Idarubicin (hydrochloride)") & np.isclose(Wd["conc"].astype(float), 5.0)])
+    r2, zl = per_line_values(D, GENE, ss)
+    mine = pd.DataFrame({"r2": r2, "z": zl}, index=D.lines).join(ref[["log2FC_corrected", "z_line"]]).dropna()
+    return {"check": "idarubicin 5 uM per-line TRIM72 r2 vs trim72_idarubicin/corrected (max |diff|)",
+            "value": float(np.max(np.abs(mine["r2"] - mine["log2FC_corrected"]))), "n": len(mine),
+            "note": f"z_line max |diff| {float(np.max(np.abs(mine['z'] - mine['z_line']))):.2e}; wells {ss}"}
+
+
+def screen_summary(screen, genes):
+    """Per gene, over all drug-doses: how many have a WT-minus-altered difference at FDR < 0.10 in each direction,
+    the spread of the per-drug-dose z (about 1 when there is no TP53-group structure) and the Spearman of the gene's
+    WT-minus-altered z with the P53 score's."""
+    rows = []
+    for g in genes:
+        z, f = screen[f"{g}_wt_minus_altered_z"], screen[f"{g}_fdr"]
+        ok = z.notna() & screen[f"{SCORE}_wt_minus_altered_z"].notna()
+        rho, p = stats.spearmanr(z[ok], screen.loc[ok, f"{SCORE}_wt_minus_altered_z"]) if g != SCORE else (1.0, 0.0)
+        rows.append({"gene": g, "n_drugdoses": int(z.notna().sum()),
+                     "n_fdr10_wt_higher": int(((f < 0.10) & (z > 0)).sum()),
+                     "n_fdr10_altered_higher": int(((f < 0.10) & (z < 0)).sum()),
+                     "sd_of_z": float(np.nanstd(z)), "frac_abs_z_gt_3": float(np.mean(np.abs(z[z.notna()]) > 3)),
+                     "spearman_z_with_P53_SCORE_z": float(rho), "p_spearman": float(p)})
+    return pd.DataFrame(rows)
+
+
+KEY_DOSES = [("Idarubicin (hydrochloride)", 5.0), ("Idarubicin (hydrochloride)", 0.5),
+             ("Idarubicin (hydrochloride)", 0.05), ("Homoharringtonine", 5.0), ("Homoharringtonine", 0.5),
+             ("Auranofin", 5.0), ("Dinaciclib", 5.0), ("Epirubicin (hydrochloride)", 5.0),
+             ("Doxorubicin (hydrochloride)", 5.0), ("Topotecan (hydrochloride)", 5.0),
+             ("Mitoxantrone (dihydrochloride)", 5.0), ("Selinexor", 5.0), ("Selinexor", 0.5)]
+
+
+def key_results(cmp_, wide):
+    """The headline rows of wt_vs_altered_selected_long.csv: the strongest TRIM72 raisers and selinexor, TRIM72 next
+    to the positive controls, every scope (mean of the used wells, and each well alone when there are two)."""
+    genes = [GENE] + CONTROLS + [SCORE]
+    x = cmp_[cmp_["gene"].isin(genes)].copy()
+    keep = np.zeros(len(x), bool)
+    for d, c in KEY_DOSES:
+        keep |= ((x["drug"] == d) & np.isclose(x["conc"].astype(float), c)).to_numpy()
+    x = x[keep].copy()
+    x["order"] = [[k for k, (d, c) in enumerate(KEY_DOSES) if d == a and np.isclose(c, b)][0]
+                  for a, b in zip(x["drug"], x["conc"].astype(float))]
+    x["gorder"] = x["gene"].map({g: i for i, g in enumerate(genes)})
+    for nm, col in (("fc_wt", "median_wt_log2"), ("fc_altered", "median_altered_log2"),
+                    ("fc_truncating_splice_deletion", "median_truncating_log2"), ("fc_missense", "median_missense_log2")):
+        x[nm] = 2.0 ** x[col]
+    x["ratio_wt_over_altered"] = 2.0 ** x["diff_wt_minus_altered_log2"]
+    w = wide.set_index(["drug", "conc"])
+    k = pd.MultiIndex.from_frame(x[["drug", "conc"]])
+    x["TRIM72_panel_fold_change_all_lines"] = w["TRIM72_panel_fold_change"].reindex(k).to_numpy()
+    x["P53_ACTIVITY_panel_z_all_lines"] = w["P53_ACTIVITY_panel_z"].reindex(k).to_numpy()
+    cols = ["drug", "conc", "scope", "plates", "dna_damaging", "gene", "TRIM72_panel_fold_change_all_lines",
+            "P53_ACTIVITY_panel_z_all_lines", "n_wt", "n_altered", "fc_wt", "fc_altered",
+            "fc_truncating_splice_deletion", "fc_missense", "diff_wt_minus_altered_log2", "ratio_wt_over_altered",
+            "ci95_low", "ci95_high", "p_perm", "p_mannwhitney", "fdr_perm", "p_perm_within_organ",
+            "critical_abs_diff_p05", "p_altered_lines_above_0", "frac_wt_lines_up", "frac_altered_lines_up",
+            "spearman_vs_responsiveness_ldo", "p_spearman_responsiveness", "partial_spearman_given_baseline",
+            "p_partial", "wt_minus_altered_adjusted_for_baseline", "p_adjusted", "spearman_vs_p53score_same_wells",
+            "p_spearman_p53score"]
+    x["sorder"] = (x["scope"] != "mean of used wells").astype(int)
+    return x.sort_values(["order", "sorder", "scope", "gorder"])[cols].reset_index(drop=True)
+
+
 # ============================================================================= main
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -863,6 +966,7 @@ def main():
                    "n": int((D.L['tp53_group'] == 'altered').sum()), "note": "WT count in value, altered in n"})
     checks.append({"check": "P53_ACTIVITY members used", "value": len(D.members), "n": len(D.members),
                    "note": ", ".join(D.members)})
+    checks.append(per_line_check(D))
 
     # ---- lines
     lines = D.L[["cell_name", "organ", "tp53_group", "tp53_class", "tp53_changes"]].copy()
@@ -956,6 +1060,8 @@ def main():
         "trim72_pooled_fold_change_no_pseudocount.csv": pooled,
         "trim72_inducibility_pooled_sets.csv": sets,
         "replicate_wells_per_line_agreement.csv": rep,
+        "screen_summary_by_gene.csv": screen_summary(screen, [GENE] + CONTROLS + [SCORE] + ["ATF3", "PMAIP1"]),
+        "key_results.csv": key_results(cmp_, wide),
         "checks.csv": pd.DataFrame(checks),
     }
     for name, df in TABLES.items():

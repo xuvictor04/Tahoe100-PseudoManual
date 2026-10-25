@@ -1,0 +1,19 @@
+drug,conc,role,TRIM72_fold_change,TRIM72_z,P53_ACTIVITY_z,flags,plates
+Idarubicin (hydrochloride),5.0,TRIM72 raiser + p53 reference activator,12.23764417054904,15.888560252299458,18.08182822278337,cell-cycle shift,"plate14,plate6"
+Homoharringtonine,5.0,TRIM72 raiser + p53 reference activator,10.259575374635746,14.767246119237484,20.618017343959064,cell-cycle shift; composition shift,"plate14,plate6"
+Auranofin,5.0,TRIM72 raiser,6.557283578929023,8.428894140578834,-7.802302744229055,position effect removed,plate12
+Homoharringtonine,0.5,TRIM72 raiser + p53 reference activator,5.870132248806464,7.931052086995409,17.39883320854771,cell-cycle shift,plate5
+Dinaciclib,5.0,TRIM72 raiser,5.571458148402741,7.401421738843604,0.588020913932793,toxic; transcription drop; cell-cycle shift; composition shift; position effect removed,plate9
+Epirubicin (hydrochloride),5.0,TRIM72 raiser,4.516394175381046,6.493420253312024,8.1030886000115,cell-cycle shift,plate9
+Dinaciclib,0.5,TRIM72 raiser,3.703560873681372,5.859698758724577,1.606325920833007,toxic; transcription drop; cell-cycle shift; composition shift; position effect removed,plate8
+Dinaciclib,0.05,TRIM72 raiser,3.818386360590315,5.545857560715505,6.959899808046387,toxic; transcription drop; cell-cycle shift; composition shift; position effect removed,plate7
+Harringtonine,5.0,TRIM72 raiser,3.5950414880972947,5.506636788436758,6.1796790875994,cell-cycle shift; composition shift; position effect removed,plate9
+Doxorubicin (hydrochloride),5.0,TRIM72 raiser + p53 reference activator,2.9945677043608603,4.716219880650819,10.00997585021103,cell-cycle shift,plate9
+Mitoxantrone (dihydrochloride),5.0,TRIM72 raiser + p53 reference activator,2.048848422435471,4.521597250678218,11.304784052211264,,"plate14,plate6"
+Panobinostat,5.0,TRIM72 raiser,2.6952397366677654,4.43043916116741,1.0532139720810614,cell-cycle shift; position effect removed,plate12
+Topotecan (hydrochloride),5.0,TRIM72 raiser,2.556519114632141,4.032208094146847,18.31207959580641,toxic; cell-cycle shift,plate9
+Idarubicin (hydrochloride),0.5,p53 reference activator,2.152346157649962,3.4188791282301723,14.925723155502231,cell-cycle shift,plate5
+Topotecan (hydrochloride),0.5,p53 reference activator,0.9325483986533456,-0.3425863411461812,11.577782914740284,cell-cycle shift,plate8
+Mitoxantrone (dihydrochloride),0.5,p53 reference activator,0.8879160617723351,-0.5631486483114344,10.501923265651111,cell-cycle shift,plate5
+Selinexor,5.0,p53 reference activator,0.8066594938902916,-1.4068237502796712,15.4972058658602,low cells (technical?); cell-cycle shift,"plate14,plate6"
+Amsacrine,5.0,p53 reference activator,0.7629799607393863,-1.7608879825778978,11.594416842437113,position effect removed,"plate14,plate6"

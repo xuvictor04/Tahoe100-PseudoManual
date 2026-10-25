@@ -1,28 +1,52 @@
 #!/usr/bin/env python3
 """MG53 (TRIM72) in Tahoe-100M: co-regulation, candidate upstream regulators, and a readthrough check of the locus.
 
-    python3 mg53_p53/upstream_coregulation/upstream_coregulation.py            # every step (prep pass ~10-15 min)
-    python3 .../upstream_coregulation.py --steps a        # one step: fetch, prep, a, b, c (comma list)
+    python3 mg53_p53/upstream_coregulation/upstream_coregulation.py     # every step (prep ~20 min once, then ~10 min)
+    python3 .../upstream_coregulation.py --steps a,b                    # steps: fetch, prep, a, b, c (comma list;
+                                                                        # c = c_dog, c_locus, c_genome_in_wells)
+Steps (all outputs in tables/; every number is computed here, nothing is typed in by hand)
+  fetch  Downloads (cached in external/): Lambert et al. 2018 human TF list (humantfs.ccbr.utoronto.ca v1.01,
+         DatabaseExtract 'Is TF?' == Yes), HGNC complete set (gene groups, cytobands), Ensembl GRCh38 gene coordinates
+         (BioMart) and the TRIM72 +-200 kb region (Ensembl REST overlap). Nothing else is downloaded.
+  prep   One read-only pass over /home/user/tahoe_data/atlas/pseudobulk/groupNNN.npy (mmap, row chunks; sample ->
+         plate from atlas/sample_map.csv; split (sample, line) rows summed) that writes cache/: per plate x line
+         summed counts of every gene over 'quiet' wells (DMSO + drug wells of drug-doses with < 1000 significant
+         genes, failed wells out) and over the DMSO wells; per (well, line) counts of the +-1 Mb locus genes and a
+         muscle / p53 list; full profiles of the TRIM72-raising 5 uM wells (and idarubicin 0.05 / 0.5 uM).
+  a      Genome-wide co-regulation across drug-doses (atlas DD_z, method v3; 1,086 drug-doses, unreliable-plate-only
+         and position-not-correctable ones left out): raw, covariate-partialled (cell loss, UMI, genes/cell,
+         composition, S/G2M/proteasome z, n significant genes, RMS z) and top-1/3/10-PC-removed correlations with
+         TRIM72; drug-block permutation null (whole drugs swapped, 1000x) -> BH q; 300 expression-matched random
+         genes as a second null; robustness within plate groups and without the 10 strongest TRIM72 drug-doses;
+         readthrough pairs (every DoG-exposed gene vs its upstream same-strand gene, vs level-matched random genes);
+         gene-set tests (p53 targets, stress programs, muscle TFs / structural genes, AP-1) vs level-matched sets.
+         a_coreg_genomewide.csv (all genes), a_top_partners.csv, a_regulator_partners_TF_signalling.csv,
+         a_null_summary.csv, a_pc_variance.csv, a_robustness_summary.csv, a_upstream_pair_coregulation.csv,
+         a_upstream_pair_summary.csv, a_gene_set_tests.csv, a_TRIM72_by_drugdose_global_removed.csv.
+  b      Untreated (baseline) covariation across the 50 lines: per plate (13 reliable plates) Spearman over lines of
+         TRIM72 vs every gene with >= 200 counts (quiet wells pooled per plate), median over plates, line-permutation
+         null (2000x, same permutation on every plate) -> BH q; organ-adjusted and DMSO-only versions; percentile
+         among genes of the same level; DoG-exposure of the partners; readthrough pairs at baseline; plate batch
+         (plates 1-3,14 vs 4-12) genome-wide and by DoG class; TP53 status / p53 activity / organ tests.
+         b_baseline_coexpression_genomewide.csv, b_baseline_focus_genes.csv, b_gene_set_tests.csv,
+         b_TRIM72_baseline_per_line.csv, b_TRIM72_baseline_tests.csv, b_upstream_pair_baseline.csv,
+         b_plate_batch_gap_genomewide.csv.
+  c      Locus / readthrough check. c_dog: every atlas gene classed by readthrough exposure (sense_exposed = an
+         expressed (>= 5 CPM) same-strand gene ends <= 20 kb upstream and is >= 8x its level; unexposed = none within
+         100 kb on either strand), a DoG index per drug-dose, TRIM72's rank among DoG-exposed genes per raiser
+         (c_DoG_gene_exposure_classes.csv, c_DoG_index_by_drugdose.csv, c_DoG_tests.csv, c_DoG_raisers_TRIM72_rank.csv).
+         c_locus: chr16p11.2 genes within 200 kb (Ensembl) with corrected effects (the atlas's per_line_columns
+         steps re-implemented on the cached counts; checked against the atlas in c_validation_locus_vs_atlas.csv)
+         under idarubicin and the other raisers, untreated plate batch per gene, correlation with TRIM72 across
+         drug-doses, per line in both idarubicin 5 uM wells (c_locus_neighbours_effects*.csv,
+         c_idarubicin5_per_line_locus.csv, c_idarubicin5_locus_tests.csv). c_genome_in_wells: line-matched observed /
+         expected counts of every gene in the raiser wells, reads added per locus gene, strand summary, and which
+         genes' per-line gains track TRIM72's (c_locus_obs_over_exp_raiser_wells.csv,
+         c_raiser_wells_genomewide_OE_summary.csv, c_locus_strand_summary_raiser_wells.csv,
+         c_per_line_gain_corr_with_TRIM72_genomewide.csv).
 
-Steps
-  fetch  Downloads (cached in external/): Lambert et al. 2018 human TF list (humantfs.ccbr.utoronto.ca v1.01),
-         HGNC complete set (gene groups), Ensembl GRCh38 gene coordinates (BioMart) and the TRIM72 +-200 kb region
-         (Ensembl REST). Nothing else is downloaded.
-  prep   One read-only pass over /home/user/tahoe_data/atlas/pseudobulk/groupNNN.npy (mmap, row chunks) that writes
-         cache/ (in this folder): per plate x line summed counts of every gene over 'quiet' wells (DMSO + drug wells
-         of drug-doses with < 1000 significant genes, failed wells left out) and over the DMSO wells; per (well, line)
-         counts of the locus / muscle-TF genes; full profiles of the TRIM72-raising 5 uM wells.
-  a      Genome-wide co-regulation across drug-doses (atlas DD_z / DD_lfc, method v3): raw, covariate-partialled and
-         PC-removed correlations with TRIM72, a drug-block permutation null and an expression-matched random-gene
-         null, BH q, TF / signalling annotation.
-  b      Untreated (baseline) covariation across the 50 lines: per plate Spearman over lines of TRIM72 vs every
-         gene (quiet wells pooled per plate), median over plates, line-permutation p, BH q; organ-adjusted version;
-         muscle TFs, p53 targets, TP53 status, organ.
-  c      Locus / readthrough check: chr16p11.2 neighbours (Ensembl coordinates) and their corrected per-line effects
-         (the atlas's per_line_columns steps, re-implemented on the cached counts) under idarubicin 5 uM and the other
-         TRIM72 raisers; a genome-wide downstream-of-gene (DoG) readthrough index per drug-dose.
-
-Nothing is written outside this folder; /home/user/tahoe_data is read only.
+All associations; there is no MG53 perturbation in Tahoe. Nothing is written outside this folder; /home/user/tahoe_data
+is read only.
 """
 import argparse
 import json
@@ -100,7 +124,6 @@ def curl(url, dest, get_query=None, timeout=300):
 def step_fetch():
     ensure_dir(EXT)
     files = {
-        "lambert_TF_names_v_1.01.txt": "http://humantfs.ccbr.utoronto.ca/download/v_1.01/TF_names_v_1.01.txt",
         "lambert_DatabaseExtract_v_1.01.csv":
             "http://humantfs.ccbr.utoronto.ca/download/v_1.01/DatabaseExtract_v_1.01.csv",
         "hgnc_complete_set.txt":
@@ -302,6 +325,58 @@ def annotate(df, sym_col="gene", ens_col=None):
     return df
 
 
+SETS_EXTRA = {
+    "MUSCLE_TF": ["MYOD1", "MYOG", "MYF5", "MYF6", "MEF2A", "MEF2B", "MEF2C", "MEF2D", "SRF", "MYOCD"],
+    "MUSCLE_STRUCTURAL": ["ACTA1", "CKM", "MYH3", "DES", "TNNT1", "TNNT2", "CAV3", "RYR1", "ATP2A1", "DYSF", "MYL11",
+                          "MSTN"],
+    "AP1_IEG": ["FOS", "FOSB", "JUN", "JUNB", "EGR1", "EGR2", "EGR3", "ATF3", "IER2", "NR4A1"]}
+
+
+def gene_set_tests(stat, sym, lvl, rng, label, B=2000):
+    """Mean of `stat` over each gene set's members vs B random sets in which every member is replaced by a random
+    gene of its level (within 2x; nearest levels when fewer). Returns rows (set, n, mean, null mean/sd, z, p)."""
+    import tahoe_gene_panel as Pn
+    sets = {"P53_ACTIVITY": list(Pn.P53_ACTIVITY)}
+    sets.update({k: list(v) for k, v in Pn.CONTEXT.items()})
+    sets.update(SETS_EXTRA)
+    sym = np.asarray(sym).astype(str)
+    stat = np.asarray(stat, dtype=float)
+    ok = np.isfinite(stat)
+    rows = []
+    for nm, members in sets.items():
+        idx = [int(np.flatnonzero(sym == g)[0]) for g in members if (sym == g).any() and ok[sym == g][0]]
+        if len(idx) < 3:
+            continue
+        allowed = ok & ~np.isin(np.arange(len(sym)), idx)
+        draws = np.stack([rng.choice(level_pool(lvl, i, allowed), size=B, replace=True) for i in idx],
+                         axis=1)                                                         # B x members
+        null = stat[draws].mean(axis=1)
+        obs = float(stat[idx].mean())
+        rows.append({"statistic": label, "gene_set": nm, "n_genes": len(idx),
+                     "genes": ", ".join(f"{sym[i]} {stat[i]:+.2f}" for i in idx), "mean_stat": obs,
+                     "null_mean": float(null.mean()), "null_sd": float(null.std()),
+                     "z_vs_level_matched": (obs - null.mean()) / null.std(),
+                     "p_two_sided_empirical": (1 + int((np.abs(null - null.mean()) >= abs(obs - null.mean())).sum()))
+                     / (B + 1)})
+    return rows
+
+
+def level_pool(lvl, i, allowed, k=20):
+    """Genes (indices) among `allowed` whose level is within 2x of gene i's; when fewer than k such genes exist
+    (very highly expressed genes), the k genes of the nearest level."""
+    a = np.flatnonzero(allowed)
+    d = np.abs(np.log2(np.maximum(lvl[a], 1e-6)) - np.log2(max(lvl[i], 1e-6)))
+    c = a[d <= 1]
+    if c.size < k:
+        c = a[np.argsort(d)[:k]]
+    return c
+
+
+def level_matched(lvl, i, allowed, k, rng):
+    """k random genes of gene i's level (level_pool), without replacement."""
+    return rng.choice(level_pool(lvl, i, allowed, k), size=k, replace=False)
+
+
 # ============================================================================= (a) genome-wide co-regulation
 def colcorr(y, X):
     """Pearson r of vector y with every column of X (columns centred here)."""
@@ -462,6 +537,80 @@ def step_a(B=1000, n_random=300):
                           float(100 * np.mean(frac_r[rnd_sense] < frac_t)) if rnd_sense.any() else np.nan,
                       "n_drugdoses": n, "n_permutations": B})
         log(f"  {name}: top partners", ", ".join(res.drop(index=t).nlargest(8, f"r_z_{name}")["gene"]))
+    # --- robustness: the same correlations within plate groups (TRIM72's untreated level is ~10x lower on plates
+    # 4-12 than on 1-3 / 14) and without the 10 drug-doses that raise TRIM72 most
+    pl = ddk["plates"].astype(str)
+    top10 = np.argsort(-Z[:, t])[:10]
+    subsets = {"all": np.ones(n, dtype=bool),
+               "plates4to12_only": pl.isin([f"plate{i}" for i in range(4, 13)]).to_numpy(),
+               "plates1to3_only": pl.isin(["plate1", "plate2", "plate3"]).to_numpy(),
+               "without_top10_TRIM72_drugdoses": ~np.isin(np.arange(n), top10)}
+    rob_cols = {}
+    rob_sum = []
+    for vname in ("raw", "covariates", "minus_3pc"):
+        X = variants[vname]
+        for sname, m in subsets.items():
+            r_s = colcorr(X[m, t], X[m])
+            rob_cols[f"r_{vname}_{sname}"] = r_s
+            rr = r_s.copy()
+            rr[t] = -np.inf
+            top = np.argsort(-rr)[:100]
+            rob_sum.append({"variant": vname, "subset": sname, "n_drugdoses": int(m.sum()),
+                            "top100_pct_sense_exposed": 100 * float(sense[top].mean()),
+                            "pct_sense_exposed_all_genes": 100 * float(sense.mean()),
+                            "top10_partners": ", ".join(gsym[top[:10]]),
+                            "r_FUS": float(r_s[gsym == "FUS"][0]),
+                            "rank_FUS": int((rr > r_s[gsym == "FUS"][0]).sum() + 1),
+                            "r_ATF3": float(r_s[gsym == "ATF3"][0]), "r_TP53": float(r_s[gsym == "TP53"][0]),
+                            "r_PMAIP1": float(r_s[gsym == "PMAIP1"][0])})
+    pd.DataFrame(rob_sum).to_csv(os.path.join(TAB, "a_robustness_summary.csv"), index=False, float_format="%.4g")
+    log("  robustness:", "; ".join(f"{d['variant']}/{d['subset']}: top100 {d['top100_pct_sense_exposed']:.0f}% DoG, "
+                                   f"FUS r {d['r_FUS']:.2f}" for d in rob_sum))
+    # --- readthrough pairs: every DoG-exposed gene vs its upstream same-strand expressed gene, against random
+    # partners of the upstream gene's level on another chromosome
+    pos_of = {int(c): k for k, c in enumerate(gi)}
+    upc = ex["up_col"].fillna(-1).astype(int).to_numpy()
+    se = np.flatnonzero(sense & np.isin(upc, gi))
+    gp = se
+    up = np.array([pos_of[c] for c in upc[se]])
+    pooled_lvl = genes["pooled_cpm"].to_numpy()[gi]
+    chrom = ex["chrom"].astype(str).to_numpy()
+    n_rand_pair = 20
+    rpart = np.full((len(gp), n_rand_pair), -1)
+    for k, (g_, u_) in enumerate(zip(gp, up)):
+        rpart[k] = level_matched(pooled_lvl, u_, chrom != chrom[g_], n_rand_pair, rng)
+    k_t = int(np.flatnonzero(gp == t)[0])
+    c_t = np.flatnonzero((pooled_lvl >= pooled_lvl[up[k_t]] / 2) & (pooled_lvl <= pooled_lvl[up[k_t]] * 2) &
+                         (chrom != chrom[t]))
+    pair = pd.DataFrame({"gene": gsym[gp], "upstream_gene": gsym[up], "distance_bp": ex["up_dist"].to_numpy()[gp],
+                         "gene_pooled_cpm": pooled_lvl[gp], "upstream_pooled_cpm": pooled_lvl[up]})
+    psum = []
+    from scipy.stats import wilcoxon
+    for vname in ("raw", "covariates", "minus_3pc", "minus_10pc"):
+        X = variants[vname]
+        obs = (X[:, gp] * X[:, up]).mean(axis=0)
+        rnd_r = np.stack([(X[:, gp] * X[:, rpart[:, j]]).mean(axis=0) for j in range(n_rand_pair)], axis=1)
+        pair[f"r_{vname}"] = obs
+        pair[f"r_random_median_{vname}"] = np.median(rnd_r, axis=1)
+        rt_ = (X[:, [t]] * X[:, c_t]).mean(axis=0)          # TRIM72 with every level-matched gene of FUS's level
+        d_ = obs - np.median(rnd_r, axis=1)
+        psum.append({"variant": vname, "n_pairs": len(gp), "median_r_DoG_gene_vs_upstream_gene": np.median(obs),
+                     "median_r_DoG_gene_vs_random_level_matched": np.median(rnd_r),
+                     "pct_pairs_obs_gt_random_median": 100 * float((d_ > 0).mean()),
+                     "wilcoxon_p_obs_vs_random": float(wilcoxon(d_).pvalue),
+                     "TRIM72_FUS_r": float(obs[k_t]),
+                     "TRIM72_FUS_pctile_among_DoG_pairs": 100 * float((obs < obs[k_t]).mean()),
+                     "TRIM72_FUS_pctile_vs_all_FUS_level_genes": 100 * float((rt_ < obs[k_t]).mean()),
+                     "n_FUS_level_genes": int(c_t.size)})
+    pair.sort_values("r_minus_3pc", ascending=False).to_csv(os.path.join(TAB, "a_upstream_pair_coregulation.csv"),
+                                                            index=False, float_format="%.4g")
+    pd.DataFrame(psum).to_csv(os.path.join(TAB, "a_upstream_pair_summary.csv"), index=False, float_format="%.4g")
+    log("  DoG pairs:", "; ".join(f"{d['variant']}: median r {d['median_r_DoG_gene_vs_upstream_gene']:.2f} vs random "
+                                  f"{d['median_r_DoG_gene_vs_random_level_matched']:.2f}, TRIM72-FUS "
+                                  f"{d['TRIM72_FUS_r']:.2f}" for d in psum))
+    for k_, v_ in rob_cols.items():
+        if not k_.endswith("_all"):
+            res[k_] = v_
     res["DoG_class"] = dog_cls
     res["up_same_strand_expressed_gene"] = ex["up_same_strand_gene"].to_numpy()
     res["up_gene_distance_bp"] = ex["up_dist"].to_numpy()
@@ -471,6 +620,11 @@ def step_a(B=1000, n_random=300):
     res = res.sort_values("r_z_minus_3pc", ascending=False)
     res.to_csv(os.path.join(TAB, "a_coreg_genomewide.csv"), index=False, float_format="%.5g")
     pd.DataFrame(nulls).to_csv(os.path.join(TAB, "a_null_summary.csv"), index=False, float_format="%.4g")
+    st_rows = []
+    for v_ in ("raw", "covariates", "minus_3pc", "minus_10pc"):
+        st_rows += gene_set_tests(res[f"r_z_{v_}"].to_numpy(), res["gene"].to_numpy(),
+                                  res["median_line_cpm"].to_numpy(), rng, f"r with TRIM72 across drug-doses ({v_})")
+    pd.DataFrame(st_rows).to_csv(os.path.join(TAB, "a_gene_set_tests.csv"), index=False, float_format="%.4g")
     # top partner lists per variant (positive and negative)
     rows = []
     for name in variants:
@@ -491,13 +645,16 @@ def step_a(B=1000, n_random=300):
                              "cytoband": rr["cytoband"]})
     pd.DataFrame(rows).to_csv(os.path.join(TAB, "a_top_partners.csv"), index=False, float_format="%.4g")
     # regulators: TFs and signalling genes among the partners (any variant with q < 0.05)
-    reg = res[(res["is_TF_Lambert2018"] | (res["signalling_category"] != "")) &
-              ((res["q_minus_3pc"] < 0.05) | (res["q_covariates"] < 0.05) | (res["q_minus_10pc"] < 0.05))].copy()
+    strong = np.zeros(len(res), dtype=bool)
+    for v_ in ("covariates", "minus_3pc", "minus_10pc"):
+        strong |= ((res[f"q_{v_}"] < 0.05) & (res[f"r_z_{v_}"].abs() >= 0.3)).to_numpy()
+    reg = res[(res["is_TF_Lambert2018"] | (res["signalling_category"] != "")).to_numpy() & strong].copy()
     reg["best_r_after_global_removal"] = reg[["r_z_covariates", "r_z_minus_3pc", "r_z_minus_10pc"]].abs().max(axis=1)
     cols = ["gene", "is_TF_Lambert2018", "TF_DBD_family", "signalling_category", "gene_sets", "median_line_cpm",
             "r_z_raw", "q_raw", "r_z_covariates", "q_covariates", "r_z_minus_1pc", "r_z_minus_3pc", "q_minus_3pc",
-            "pct_vs_matched_minus_3pc", "r_z_minus_10pc", "q_minus_10pc", "rho_z_raw_spearman", "cytoband",
-            "DoG_class", "up_same_strand_expressed_gene", "up_gene_distance_bp"]
+            "pct_vs_matched_minus_3pc", "r_z_minus_10pc", "q_minus_10pc", "rho_z_raw_spearman",
+            "r_minus_3pc_plates4to12_only", "r_minus_3pc_plates1to3_only", "r_minus_3pc_without_top10_TRIM72_drugdoses",
+            "cytoband", "DoG_class", "up_same_strand_expressed_gene", "up_gene_distance_bp"]
     reg.sort_values("r_z_minus_3pc", ascending=False)[cols].to_csv(
         os.path.join(TAB, "a_regulator_partners_TF_signalling.csv"), index=False, float_format="%.4g")
     # which drug-doses raise TRIM72 beyond the global components
@@ -546,12 +703,12 @@ def dog_exposure(g, expr_min=5.0, near=20_000, far=100_000):
                 c = same[(same["end"] < r.start)]
                 if len(c):
                     u = c.loc[c["end"].idxmax()]
-                    up = (u["symbol"], r.start - u["end"], u["pooled_cpm"])
+                    up = (u["symbol"], r.start - u["end"], u["pooled_cpm"], int(u["col"]))
             else:
                 c = same[(same["start"] > r.end)]
                 if len(c):
                     u = c.loc[c["start"].idxmin()]
-                    up = (u["symbol"], u["start"] - r.end, u["pooled_cpm"])
+                    up = (u["symbol"], u["start"] - r.end, u["pooled_cpm"], int(u["col"]))
         if opp is not None:
             if s == 1:      # convergent: minus-strand gene downstream, its 3' end (start) beyond our 3' end
                 c = opp[(opp["start"] > r.end)]
@@ -565,7 +722,7 @@ def dog_exposure(g, expr_min=5.0, near=20_000, far=100_000):
                     conv = (u["symbol"], r.start - u["end"], u["pooled_cpm"])
         rec.append({"col": r.col, "overlaps_same_strand_expressed_gene": inside,
                     "up_same_strand_gene": up[0] if up else "", "up_dist": up[1] if up else np.nan,
-                    "up_cpm": up[2] if up else np.nan,
+                    "up_cpm": up[2] if up else np.nan, "up_col": up[3] if up else -1,
                     "conv_opp_strand_gene": conv[0] if conv else "", "conv_dist": conv[1] if conv else np.nan,
                     "conv_cpm": conv[2] if conv else np.nan})
     X = G.merge(pd.DataFrame(rec), on="col", how="left").reset_index(drop=True)
@@ -668,6 +825,30 @@ def step_c_dog():
                          "estimate": rr["DoG_sense_index_z"], "rank_of_1132": int(rr["rank_sense_index"]),
                          "robust_z_vs_drugdoses": rr["DoG_sense_index_robust_z"],
                          "antisense_index": rr["DoG_antisense_index_z"]})
+    # TRIM72 among the DoG-exposed genes under each raiser: is it special, or one of many induced DoG-exposed genes?
+    Q = np.asarray(np.load(os.path.join(FXD, "DD_qup.npy"), mmap_mode="r"))[:, cols].astype(np.float64)
+    sense_m = (X["class"] == "sense_exposed").to_numpy()
+    unexp_m = (X["class"] == "unexposed").to_numpy()
+    lowm = (X["median_line_cpm"] <= 10).to_numpy()
+    rk = []
+    for d_ in ("Idarubicin (hydrochloride)", "Homoharringtonine", "Auranofin", "Dinaciclib",
+               "Epirubicin (hydrochloride)", "Doxorubicin (hydrochloride)", "Topotecan (hydrochloride)",
+               "Mitoxantrone (dihydrochloride)", "Harringtonine", "Panobinostat"):
+        rr_ = dd.index[(dd["drug"] == d_) & np.isclose(dd["conc"], 5.0)]
+        if not len(rr_):
+            continue
+        r_ = int(rr_[0])
+        z_, l_, q_ = Z[r_], Lf[r_], Q[r_]
+        up_call = (q_ < 0.05) & (l_ > 1)
+        top = np.flatnonzero(sense_m)[np.argsort(-z_[sense_m])[:8]]
+        rk.append({"drug": d_, "conc": 5.0, "plates": dd.loc[r_, "plates"], "TRIM72_z": z_[t], "TRIM72_log2FC": l_[t],
+                   "TRIM72_z_pctile_among_DoG_exposed": 100 * float((z_[sense_m] < z_[t]).mean()),
+                   "TRIM72_z_pctile_among_all_genes": 100 * float((z_ < z_[t]).mean()),
+                   "pct_low_DoG_exposed_up_q05_2x": 100 * float(up_call[sense_m & lowm].mean()),
+                   "pct_low_unexposed_up_q05_2x": 100 * float(up_call[unexp_m & lowm].mean()),
+                   "top_DoG_exposed_genes (upstream gene, z)": "; ".join(
+                       f"{X['symbol'].iloc[i]} ({X['up_same_strand_gene'].iloc[i]}, {z_[i]:.1f})" for i in top)})
+    pd.DataFrame(rk).to_csv(os.path.join(TAB, "c_DoG_raisers_TRIM72_rank.csv"), index=False, float_format="%.4g")
     cnt = X["class"].value_counts()
     for k, v in cnt.items():
         summ.append({"test": f"genes in class {k} (all atlas genes)", "n": int(v)})
@@ -714,7 +895,12 @@ def step_b(B=2000):
     sym = pd.Series(gm["gene_symbol"].values, index=gm["token_id"].values)
     t_tok = int(gm.loc[gm["gene_symbol"] == "TRIM72", "token_id"].iloc[0])
     extra = gm.loc[gm["gene_symbol"].isin(MUSCLE_TFS), "token_id"].astype(int).tolist()
-    toks = np.array(sorted(set(genes["token"].astype(int)) | set(extra)))
+    # every gene with >= 200 counts in the quiet wells of the reliable plates (atlas genes are >= 2 CPM; this adds
+    # the low genes so that each gene can be compared with genes of its own level) + the muscle list
+    csum = counts.sum(axis=(0, 1))
+    named = np.zeros(G, dtype=bool)
+    named[gm["token_id"].astype(int).to_numpy()] = True
+    toks = np.array(sorted(set(np.flatnonzero((csum >= 200) & named)) | set(genes["token"].astype(int)) | set(extra)))
     toks = toks[toks != t_tok]
     # within plate: log CPM (pseudo 0.5 count on the plate's line total), ranks over lines
     lt = np.log2((counts[:, :, toks] + 0.5) / tot[:, :, None] * 1e6)
@@ -768,9 +954,93 @@ def step_b(B=2000):
                         "n_plates_same_sign": (np.sign(rho_p) == np.sign(rho_med)[None]).sum(axis=0),
                         "null_sd_line_perm": null_sd, "p_perm_lines": p_perm, "p_norm_calibrated": p_norm,
                         "rho_organ_adjusted": rho_adj, "p_perm_within_organ": p_adj})
+    lvl_b = res["pooled_cpm"].to_numpy()
+    lb = np.log2(np.maximum(lvl_b, 1e-6))
+    order = np.argsort(lb)
+    pct = np.empty(len(res))
+    for i in range(len(res)):                         # percentile of rho among genes within 2x of the gene's level
+        lo, hi_ = np.searchsorted(lb[order], [lb[i] - 1, lb[i] + 1])
+        pct[i] = 100 * float((rho_med[order[lo:hi_]] < rho_med[i]).mean())
+    res["pct_rho_vs_level_matched_genes"] = pct
     res["q_perm_lines"] = bh(res["p_norm_calibrated"])
     res["q_organ_adjusted"] = bh(res["p_perm_within_organ"])
     res["in_atlas"] = res["token"].isin(genes["token"])
+    # robustness: DMSO wells only (2 per plate), the same per-plate Spearman over lines, median over plates
+    dq = np.load(os.path.join(CACHE, "plate_line_dmso.npz"))
+    dcounts, dtot = dq["counts"][use_p], dq["total"][use_p]
+    okp = (dtot > 0).all(axis=1)                        # plates where every line has DMSO counts
+    ZGd = np.nan_to_num(zrank(np.log2((dcounts[okp][:, :, toks] + 0.5) / dtot[okp][:, :, None] * 1e6), axis=1))
+    ZTd = zrank(np.log2((dcounts[okp][:, :, t_tok] + 0.5) / dtot[okp] * 1e6), axis=1)
+    res["rho_dmso_only_median_over_plates"] = np.median(np.einsum("pl,plg->pg", ZTd, ZGd) / L, axis=0)
+    res["n_plates_dmso"] = int(okp.sum())
+    del ZGd, dcounts
+    # readthrough exposure of every gene (as in c): DoG-exposed genes among TRIM72's untreated partners
+    Xd = dog_exposure(atlas_genes_with_coords())
+    cls_tok = dict(zip(Xd["token"].astype(int), Xd["class"]))
+    res["DoG_class"] = res["token"].map(cls_tok).fillna("not in atlas / no coordinates")
+    upsym = dict(zip(Xd["token"].astype(int), Xd["up_same_strand_gene"]))
+    res["up_same_strand_expressed_gene"] = res["token"].map(upsym).fillna("")
+    col2tok = dict(zip(genes["col"].astype(int), genes["token"].astype(int)))
+    tpos = {int(x): k for k, x in enumerate(toks)}
+    se = Xd[(Xd["class"] == "sense_exposed") & (Xd["up_col"] >= 0)]
+    pairs = [(tpos.get(int(a)), tpos.get(col2tok.get(int(b), -1)), sa, sb, d)
+             for a, b, sa, sb, d in zip(se["token"], se["up_col"], se["symbol"], se["up_same_strand_gene"], se["up_dist"])]
+    pairs = [p_ for p_ in pairs if p_[0] is not None and p_[1] is not None]
+    gp_ = np.array([p_[0] for p_ in pairs])
+    up_ = np.array([p_[1] for p_ in pairs])
+    lvl_t = pooled[toks]
+    obs = np.median((ZGn[:, :, gp_] * ZGn[:, :, up_]).mean(axis=1), axis=0)
+    rnd_med = np.zeros(len(gp_))
+    for k, (g_, u_) in enumerate(zip(gp_, up_)):
+        jj = level_matched(lvl_t, u_, (np.arange(len(toks)) != g_) & (np.arange(len(toks)) != u_), 20, rng)
+        rnd_med[k] = np.median(np.median((ZGn[:, :, [g_]] * ZGn[:, :, jj]).mean(axis=1), axis=0))
+    pr = pd.DataFrame({"gene": [p_[2] for p_ in pairs], "upstream_gene": [p_[3] for p_ in pairs],
+                       "distance_bp": [p_[4] for p_ in pairs], "gene_pooled_cpm": lvl_t[gp_],
+                       "upstream_pooled_cpm": lvl_t[up_], "rho_baseline_with_upstream_gene": obs,
+                       "rho_baseline_random_level_matched_median": rnd_med})
+    f_i = int(np.flatnonzero(sym.reindex(toks).values == "FUS")[0])
+    rho_tf = float(rho_med[f_i])
+    cf = np.flatnonzero((lvl_t >= lvl_t[f_i] / 2) & (lvl_t <= lvl_t[f_i] * 2))
+    xt = Xd[Xd["symbol"] == "TRIM72"].iloc[0]
+    pr = pd.concat([pd.DataFrame([{"gene": "TRIM72", "upstream_gene": xt["up_same_strand_gene"],
+                                   "distance_bp": xt["up_dist"],
+                                   "gene_pooled_cpm": float(pooled[t_tok]), "upstream_pooled_cpm": float(lvl_t[f_i]),
+                                   "rho_baseline_with_upstream_gene": rho_tf,
+                                   "rho_baseline_random_level_matched_median": float(np.median(rho_med[cf]))}]),
+                    pr], ignore_index=True)
+    pr.to_csv(os.path.join(TAB, "b_upstream_pair_baseline.csv"), index=False, float_format="%.4g")
+    from scipy.stats import wilcoxon, fisher_exact
+    d_ = obs - rnd_med
+    pair_tests = [
+        {"test": "baseline: DoG-exposed genes vs their upstream same-strand gene, Spearman over lines (median over "
+                 "plates); median over pairs vs level-matched random partners (Wilcoxon on the differences)",
+         "n1": len(gp_), "estimate": float(np.median(obs)), "unit": "median rho (pairs)",
+         "p": float(wilcoxon(d_).pvalue),
+         "groups": f"random partners median rho {np.median(rnd_med):.3f}; pairs above their random median "
+                   f"{100 * (d_ > 0).mean():.0f}%"},
+        {"test": "baseline: TRIM72 vs FUS (upstream same-strand gene, 17 kb), Spearman over lines, median over plates",
+         "n1": L, "estimate": rho_tf, "unit": "rho",
+         "p": float(res.loc[res["gene"] == "FUS", "p_norm_calibrated"].iloc[0]),
+         "groups": f"percentile among {cf.size} genes of FUS's level (within 2x): "
+                   f"{100 * (rho_med[cf] < rho_tf).mean():.1f}; among DoG pairs: {100 * (obs < rho_tf).mean():.1f}"}]
+    lv = res["pooled_cpm"].to_numpy()
+    classed = res["token"].isin(cls_tok).to_numpy()            # atlas genes with coordinates (have a DoG class)
+    top = res[classed].nlargest(100, "rho_median_over_plates")
+    lowm = (lv >= 1) & (lv <= 20) & classed
+    for nm_, sel_ in (("top 100 positive among classed atlas genes", res.index.isin(top.index)),
+                      ("q < 0.05 (line permutation), positive, classed atlas genes",
+                       ((res["q_perm_lines"] < 0.05) & (res["rho_median_over_plates"] > 0)).to_numpy() & classed)):
+        a_ = int((sel_ & (res["DoG_class"] == "sense_exposed")).sum())
+        b_ = int((sel_ & (res["DoG_class"] != "sense_exposed")).sum())
+        c_ = int((~sel_ & lowm & (res["DoG_class"] == "sense_exposed")).sum())
+        e_ = int((~sel_ & lowm & (res["DoG_class"] != "sense_exposed")).sum())
+        orr, pf_ = fisher_exact([[a_, b_], [c_, e_]])
+        pair_tests.append({"test": f"baseline partners of TRIM72 ({nm_}): DoG-exposed (sense) share vs other "
+                                   f"classed atlas genes at 1-20 CPM in the quiet wells (Fisher)", "n1": a_ + b_, "n2": c_ + e_,
+                           "estimate": orr,
+                           "unit": "odds ratio", "p": pf_,
+                           "groups": f"{100 * a_ / max(a_ + b_, 1):.1f}% of partners vs "
+                                     f"{100 * c_ / max(c_ + e_, 1):.1f}% of other 1-20 CPM genes"})
     res = annotate(res, "gene")
     res = res.sort_values("rho_median_over_plates", ascending=False)
     res.to_csv(os.path.join(TAB, "b_baseline_coexpression_genomewide.csv"), index=False, float_format="%.5g")
@@ -780,6 +1050,12 @@ def step_b(B=2000):
     focus = set(MUSCLE_TFS) | set(Pn.P53_ACTIVITY) | set(Pn.CONTEXT["P53_EXT"]) | \
         {"TP53", "MDM2", "MDM4", "FUS", "PYCARD", "ITGAM", "PYDC1", "KAT8", "BCKDK", "PRSS8", "PRSS36", "STX4",
          "VKORC1", "ZNF646", "ZNF668", "PRSS53", "ITGAX", "ATF3", "PMAIP1"}
+    st_rows = []
+    for c_, lab_ in (("rho_median_over_plates", "baseline rho with TRIM72 over lines (quiet wells)"),
+                     ("rho_organ_adjusted", "baseline rho with TRIM72 over lines, organ-adjusted"),
+                     ("rho_dmso_only_median_over_plates", "baseline rho with TRIM72 over lines (DMSO wells only)")):
+        st_rows += gene_set_tests(res[c_].to_numpy(), res["gene"].to_numpy(), res["pooled_cpm"].to_numpy(), rng, lab_)
+    pd.DataFrame(st_rows).to_csv(os.path.join(TAB, "b_gene_set_tests.csv"), index=False, float_format="%.4g")
     res[res["gene"].isin(focus)].to_csv(os.path.join(TAB, "b_baseline_focus_genes.csv"), index=False,
                                          float_format="%.4g")
     # per line consensus TRIM72 level (within-plate centred log CPM, mean over plates) and line features
@@ -806,7 +1082,7 @@ def step_b(B=2000):
     per.to_csv(os.path.join(TAB, "b_TRIM72_baseline_per_line.csv"), index=False, float_format="%.4g")
     # tests on line features
     from scipy.stats import mannwhitneyu, kruskal, spearmanr
-    tests = []
+    tests = list(pair_tests)
     v = per["TRIM72_log2cpm_vs_plate_mean"]
     if "tp53_group" in per:
         grp = per["tp53_group"].astype(str)
@@ -839,6 +1115,22 @@ def step_b(B=2000):
     gtab = gtab[expressed & gtab["gene"].notna()].copy()
     gtab["gap_rank_desc"] = gtab["plate_gap_log2_p1to3_14_vs_p4to12"].rank(ascending=False).astype(int)
     gtab["gap_percentile"] = 100 * gtab["plate_gap_log2_p1to3_14_vs_p4to12"].rank(pct=True)
+    gtab["DoG_class"] = gtab["token"].map(cls_tok).fillna("not in atlas / no coordinates")
+    gtab["up_same_strand_expressed_gene"] = gtab["token"].map(upsym).fillna("")
+    gv = gtab["plate_gap_log2_p1to3_14_vs_p4to12"]
+    lowg = gtab["pooled_cpm"] <= 20
+    for cl_ in ("sense_exposed", "antisense_exposed_only", "other"):
+        a_ = gv[lowg & (gtab["DoG_class"] == cl_)]
+        b_ = gv[lowg & (gtab["DoG_class"] == "unexposed")]
+        tests.append({"test": f"untreated plate batch (plates 1-3,14 minus 4-12, log2) of 2-20 CPM genes: {cl_} vs "
+                              f"unexposed (Mann-Whitney)", "n1": len(a_), "n2": len(b_),
+                      "estimate": float(a_.median() - b_.median()), "unit": "difference of medians (log2)",
+                      "p": float(mannwhitneyu(a_, b_).pvalue),
+                      "groups": f"medians {a_.median():.3f} vs {b_.median():.3f}"})
+    t100 = gtab.nsmallest(100, "gap_rank_desc")
+    tests.append({"test": "untreated plate batch: DoG-exposed (sense) share among the 100 genes with the largest gap",
+                  "n1": 100, "estimate": 100 * float((t100["DoG_class"] == "sense_exposed").mean()), "unit": "%",
+                  "groups": f"all genes >= 2 CPM: {100 * float((gtab['DoG_class'] == 'sense_exposed').mean()):.1f}%"})
     gtab.sort_values("gap_rank_desc").to_csv(os.path.join(TAB, "b_plate_batch_gap_genomewide.csv"), index=False,
                                              float_format="%.4g")
     tt = gtab[gtab["gene"] == "TRIM72"].iloc[0]
@@ -866,16 +1158,19 @@ def locus_table():
     return reg.sort_values("start").reset_index(drop=True)
 
 
-def corrected_effects(counts, tot, nc):
+def corrected_effects(counts, tot, nc, expressed=None):
     """The atlas's per_line_columns steps (method v3) on counts (atlas wells x lines x C): plate drug-well
     baseline per line, composition shift, two-pass leave-drug-out position correction on the column's own
     well-level values; returns per (well, line) r2, well-level W1/W2, per-well z (robust over reliable drug wells),
-    per drug-dose per-line means and Stouffer z."""
+    per drug-dose per-line means and Stouffer z. expressed (lines x C, bool): lines that do not express a column
+    are left out (as the atlas's expr_mask), so a well-level effect is the median over expressing lines only."""
     import tahoe_atlas as A
     fx = A.FX(os.path.join(DATA, "atlas"))
     A.MIN_CELLS = fx.info.get("min_cells", 30)
     w = fx.wells
     Y = A.log_cpm(counts, tot, nc)
+    if expressed is not None:
+        Y[:, ~expressed] = np.nan
     S = A.composition_matrix(fx)
     r1 = np.full_like(Y, np.nan)
     for p in fx.plates:
@@ -928,18 +1223,29 @@ def step_c_locus():
     counts[a_, b_] = sel[[str(t) for t in toks]].to_numpy(dtype=np.float32)
     tot[a_, b_] = sel["total_counts"].to_numpy()
     nc[a_, b_] = sel["n_cells"].to_numpy()
-    fx, r1, r2, W2, zw, per, ddl, ddz = corrected_effects(counts, tot, nc)
-    dd = fx.dd
     # baseline level per line (quiet wells, plates pooled except unreliable) and 'expressed' lines per gene
-    info = fx.info
+    info = json.load(open(os.path.join(FXD, "info.json")))
     use_p = [i for i, p in enumerate(meta["plates"]) if p not in info.get("unreliable_plates", [])]
     qc = q["counts"][use_p][:, :, toks].sum(axis=0)            # L x C
     qt = q["total"][use_p].sum(axis=0)
     line_cpm = qc / qt[:, None] * 1e6
     expressed = (line_cpm >= 1.0) & (qc >= 20)
+    fx, r1, r2, W2, zw, per, ddl, ddz = corrected_effects(counts, tot, nc, expressed)
+    dd = fx.dd
     reg["pooled_cpm_quiet_wells"] = qc.sum(axis=0) / qt.sum() * 1e6
     reg["median_line_cpm"] = np.median(line_cpm, axis=0)
     reg["n_lines_expressing_ge1cpm"] = expressed.sum(axis=0)
+    # untreated plate batch of each locus gene (quiet wells): median line CPM per plate, plates 1-3,14 vs 4-12
+    pn = [meta["plates"][i] for i in use_p]
+    cpm_p = q["counts"][use_p][:, :, toks] / q["total"][use_p][:, :, None] * 1e6       # P x L x C
+    mlc = np.median(cpm_p, axis=1)                                                       # P x C
+    hi = np.array([p_ in ("plate1", "plate2", "plate3", "plate14") for p_ in pn])
+    reg["median_line_cpm_plates_1to3_14"] = np.median(mlc[hi], axis=0)
+    reg["median_line_cpm_plates_4to12"] = np.median(mlc[~hi], axis=0)
+    reg["plate_gap_log2_p1to3_14_vs_p4to12"] = (np.log2(mlc[hi] + 0.1).mean(axis=0) -
+                                                np.log2(mlc[~hi] + 0.1).mean(axis=0))
+    reg["median_line_cpm_plate6"] = mlc[pn.index("plate6")]
+    reg["median_line_cpm_plate14"] = mlc[pn.index("plate14")]
     t_i = int(np.flatnonzero(reg["gene_symbol"].to_numpy() == "TRIM72")[0])
     raisers = [("Idarubicin (hydrochloride)", 5.0), ("Idarubicin (hydrochloride)", 0.5),
                ("Idarubicin (hydrochloride)", 0.05), ("Homoharringtonine", 5.0), ("Auranofin", 5.0),
@@ -969,7 +1275,31 @@ def step_c_locus():
                          "spearman_per_line_vs_TRIM72": rho, "n_lines_for_spearman": int(ok2.sum())})
     lg = pd.DataFrame(long)
     wide = reg[["label", "ensembl_id", "biotype", "start", "end", "strand", "rel_to_TRIM72", "same_strand_as_TRIM72",
-                "distance_bp", "pooled_cpm_quiet_wells", "median_line_cpm", "n_lines_expressing_ge1cpm"]].copy()
+                "distance_bp", "pooled_cpm_quiet_wells", "median_line_cpm", "n_lines_expressing_ge1cpm",
+                "median_line_cpm_plates_1to3_14", "median_line_cpm_plates_4to12", "plate_gap_log2_p1to3_14_vs_p4to12",
+                "median_line_cpm_plate6", "median_line_cpm_plate14"]].copy()
+    # check: this re-implementation against the atlas's own corrected effects for the locus genes the atlas holds
+    ag = pd.read_csv(os.path.join(FXD, "genes.csv"))
+    ag = ag[ag["kind"] == "gene"]
+    tok2col = dict(zip(ag["token"].astype(int), ag["col"].astype(int)))
+    A_l = np.load(os.path.join(FXD, "DD_lfc.npy"), mmap_mode="r")
+    A_z = np.load(os.path.join(FXD, "DD_z.npy"), mmap_mode="r")
+    val = []
+    for j, tk in enumerate(reg["token_id"].astype(int)):
+        if tk in tok2col:
+            al = np.asarray(A_l[:, tok2col[tk]], dtype=float)
+            az = np.asarray(A_z[:, tok2col[tk]], dtype=float)
+            m = np.isfinite(al) & np.isfinite(ddl[:, j])
+            mz = np.isfinite(az) & np.isfinite(ddz[:, j])
+            val.append({"gene": reg.loc[j, "label"], "n_drugdoses": int(m.sum()),
+                        "pearson_r_log2FC_vs_atlas": float(np.corrcoef(al[m], ddl[m, j])[0, 1]),
+                        "median_abs_diff_log2FC": float(np.median(np.abs(al[m] - ddl[m, j]))),
+                        "max_abs_diff_log2FC": float(np.max(np.abs(al[m] - ddl[m, j]))),
+                        "pearson_r_z_vs_atlas": float(np.corrcoef(az[mz], ddz[mz, j])[0, 1]),
+                        "n_lines_expressing_here": int(expressed[:, j].sum()),
+                        "n_lines_expressing_atlas": int(np.asarray(np.load(os.path.join(FXD, "expr_mask.npy"),
+                                                                           mmap_mode="r")[:, tok2col[tk]]).sum())})
+    pd.DataFrame(val).to_csv(os.path.join(TAB, "c_validation_locus_vs_atlas.csv"), index=False, float_format="%.4g")
     for drug, conc in raisers:
         x = lg[(lg["drug"] == drug) & (lg["conc"] == conc)].set_index("gene")
         if x.empty:
@@ -1058,9 +1388,11 @@ def step_c_locus():
 
 def step_c_genome_in_wells():
     """Line-matched observed / expected counts of every gene in each raiser well (full profiles from prep):
-    expected = sum over lines of the well's line total x the line's CPM in the plate's quiet wells. Ranks TRIM72 and
-    its neighbours among all genes and among genes of similar level."""
+    expected = sum over lines (>= 30 cells) of the well's line total x the line's CPM in the plate's quiet wells.
+    Ranks TRIM72 and its neighbours among all genes and among genes of similar level, gives the reads added (O - E,
+    CPM of the well), a strand summary of the locus, and, per line, whose gain tracks TRIM72's gain."""
     log("(c) genome-wide O/E in the raiser wells")
+    from scipy.stats import rankdata
     meta, q = load_prep()
     f = np.load(os.path.join(CACHE, "raiser_wells_full.npz"))
     plates = meta["plates"]
@@ -1068,54 +1400,126 @@ def step_c_genome_in_wells():
     gm = gene_meta()
     sym = pd.Series(gm["gene_symbol"].values, index=gm["token_id"].values)
     reg = locus_table()
-    loc_tok = {int(t): l for t, l in zip(reg["token_id"], reg["label"]) if pd.notna(t)}
+    loc = reg.dropna(subset=["token_id"])
+    loc_tok = {int(t): l for t, l in zip(loc["token_id"], loc["label"])}
+    loc_info = loc.set_index(loc["token_id"].astype(int))[["start", "strand", "rel_to_TRIM72", "distance_bp"]]
+    fus_end = int(reg.loc[reg["label"] == "FUS", "end"].iloc[0])
     g = atlas_genes_with_coords()
     Xc = dog_exposure(g)
     cls = dict(zip(Xc["token"].astype(int), Xc["class"]))
-    rows, summ = [], []
+    qc_all = q["counts"].astype(np.float64)
+    lvl = 1e6 * qc_all.sum(axis=(0, 1)) / q["total"].sum()
+    t_tok = int(gm.loc[gm["gene_symbol"] == "TRIM72", "token_id"].iloc[0])
+    rows, summ, strand_rows, gain_cols = [], [], [], {}
     for k, smp in enumerate(f["samples"]):
         p = sm.loc[str(smp), "plate"]
         pi = plates.index(p)
         cnt = f["counts"][k].astype(np.float64)          # L x G
         tw = f["total"][k]
         okl = f["cells"][k] >= 30
-        base = q["counts"][pi].astype(np.float64) / q["total"][pi][:, None]      # L x G fraction
+        base = qc_all[pi] / q["total"][pi][:, None]       # L x G fraction in the plate's quiet wells
         O = cnt[okl].sum(axis=0)
         E = (tw[okl][:, None] * base[okl]).sum(axis=0)
-        lvl = 1e6 * q["counts"].sum(axis=(0, 1)) / q["total"].sum()
         ok = (E >= 5)
         lr = np.log2((O + 0.5) / (E + 0.5))
         df = pd.DataFrame({"token": np.arange(len(O)), "gene": sym.reindex(np.arange(len(O))).values, "observed": O,
-                           "expected": E, "log2_obs_over_exp": lr, "pooled_cpm": lvl})
+                           "expected": E, "log2_obs_over_exp": lr, "added_cpm": 1e6 * (O - E) / tw[okl].sum(),
+                           "pooled_cpm": lvl})
         df = df[ok & df["gene"].notna()].copy()
+        med_all = df["log2_obs_over_exp"].median()
+        df["log2_OE_minus_well_median_gene"] = df["log2_obs_over_exp"] - med_all
         df["rank_desc_all"] = df["log2_obs_over_exp"].rank(ascending=False).astype(int)
-        # among genes of similar level (within 2x of the gene's pooled CPM): percentile
         df["lvl_bin"] = np.floor(np.log2(df["pooled_cpm"].clip(1e-3)))
         df["pct_within_level_bin"] = df.groupby("lvl_bin")["log2_obs_over_exp"].rank(pct=True) * 100
         df["DoG_class"] = df["token"].map(cls).fillna("not in atlas")
         lab = RAISERS[str(smp)]
+        # locus genes: all of them (also those with E < 5, flagged), so the strand picture is complete
         for t_, nm in loc_tok.items():
             r = df[df["token"] == t_]
+            rec = {"well": lab, "sample": str(smp), "gene": nm, "start": loc_info.loc[t_, "start"],
+                   "strand": loc_info.loc[t_, "strand"], "rel_to_TRIM72": loc_info.loc[t_, "rel_to_TRIM72"],
+                   "distance_bp": loc_info.loc[t_, "distance_bp"], "observed": O[t_], "expected": E[t_],
+                   "expected_ge_5": bool(E[t_] >= 5), "log2_obs_over_exp": lr[t_],
+                   "log2_OE_minus_well_median_gene": lr[t_] - med_all,
+                   "added_cpm": 1e6 * (O[t_] - E[t_]) / tw[okl].sum(), "pooled_cpm": lvl[t_]}
             if len(r):
-                rr = r.iloc[0]
-                rows.append({"well": lab, "sample": str(smp), "gene": nm, "observed": rr["observed"],
-                             "expected": rr["expected"], "log2_obs_over_exp": rr["log2_obs_over_exp"],
-                             "rank_of_genes": int(rr["rank_desc_all"]), "n_genes": len(df),
-                             "pct_within_level_bin": rr["pct_within_level_bin"], "pooled_cpm": rr["pooled_cpm"]})
+                rec.update({"rank_of_genes": int(r.iloc[0]["rank_desc_all"]), "n_genes": len(df),
+                            "pct_within_level_bin": r.iloc[0]["pct_within_level_bin"]})
+            rows.append(rec)
+        lw = pd.DataFrame([x for x in rows if x["sample"] == str(smp)])
+        lw = lw[lw["expected_ge_5"]]
+        downstream_plus = (lw["strand"] == 1) & (lw["start"] > fus_end) & (lw["gene"] != "TRIM72")
+        minus_win = (lw["strand"] == -1) & (lw["start"] > fus_end)
+        upstream = lw["start"] < fus_end
+        tr = lw[lw["gene"] == "TRIM72"]
+        strand_rows.append({
+            "well": lab, "sample": str(smp), "well_median_gene_log2OE": med_all,
+            "TRIM72_log2OE": float(tr["log2_obs_over_exp"].iloc[0]) if len(tr) else np.nan,
+            "FUS_log2OE": float(lw.loc[lw["gene"] == "FUS", "log2_obs_over_exp"].iloc[0]),
+            "plus_strand_downstream_of_FUS_genes": ", ".join(lw.loc[downstream_plus, "gene"]),
+            "plus_strand_downstream_of_FUS_median_log2OE": lw.loc[downstream_plus, "log2_obs_over_exp"].median(),
+            "minus_strand_downstream_of_FUS_genes": ", ".join(lw.loc[minus_win, "gene"]),
+            "minus_strand_downstream_of_FUS_median_log2OE": lw.loc[minus_win, "log2_obs_over_exp"].median(),
+            "genes_upstream_of_FUS_end": ", ".join(lw.loc[upstream, "gene"]),
+            "upstream_of_FUS_median_log2OE": lw.loc[upstream, "log2_obs_over_exp"].median(),
+            "added_cpm_PYCARD-AS1": float(lw.loc[lw["gene"] == "PYCARD-AS1", "added_cpm"].sum()),
+            "added_cpm_TRIM72": float(tr["added_cpm"].iloc[0]) if len(tr) else np.nan,
+            "added_cpm_ITGAM": float(lw.loc[lw["gene"] == "ITGAM", "added_cpm"].sum()),
+            "added_cpm_FUS": float(lw.loc[lw["gene"] == "FUS", "added_cpm"].sum())})
         low = df["pooled_cpm"].between(1, 10)
         summ.append({"well": lab, "sample": str(smp), "n_genes_E_ge_5": len(df),
-                     "median_log2OE_all": df["log2_obs_over_exp"].median(),
+                     "median_log2OE_all": med_all,
                      "median_log2OE_genes_1to10cpm": df.loc[low, "log2_obs_over_exp"].median(),
                      "median_log2OE_low_sense_exposed": df.loc[low & (df["DoG_class"] == "sense_exposed"),
                                                                "log2_obs_over_exp"].median(),
                      "median_log2OE_low_unexposed": df.loc[low & (df["DoG_class"] == "unexposed"),
                                                            "log2_obs_over_exp"].median(),
                      "median_log2OE_low_antisense_exposed": df.loc[low & (df["DoG_class"] == "antisense_exposed_only"),
-                                                                   "log2_obs_over_exp"].median()})
-    pd.DataFrame(rows).to_csv(os.path.join(TAB, "c_locus_obs_over_exp_raiser_wells.csv"), index=False,
-                              float_format="%.4g")
+                                                                   "log2_obs_over_exp"].median(),
+                     "TRIM72_log2OE": float(lr[t_tok]), "TRIM72_rank_of_genes": int(df.loc[df["token"] == t_tok,
+                                                                                          "rank_desc_all"].iloc[0]),
+                     "TRIM72_pct_within_level_bin": float(df.loc[df["token"] == t_tok, "pct_within_level_bin"].iloc[0])})
+        # per line: CPM gained in this well over the plate's quiet wells; which genes' gains track TRIM72's
+        if lab.startswith(("Idarubicin 5", "Homoharringtonine 5")):
+            cols = df["token"].to_numpy()
+            gain = 1e6 * (cnt[okl][:, cols] / tw[okl][:, None] - base[okl][:, cols])      # lines x genes
+            R = rankdata(gain, axis=0)
+            R = R - R.mean(axis=0)
+            sd = np.sqrt((R ** 2).sum(axis=0))
+            rt_ = R[:, list(cols).index(t_tok)]
+            rho = (rt_ @ R) / np.where(sd > 0, sd, np.nan) / np.sqrt((rt_ ** 2).sum())
+            gain_cols[lab] = pd.Series(rho, index=cols)
+            gain_cols[lab + " n_lines"] = int(okl.sum())
+    lt = pd.DataFrame(rows)
+    lt.to_csv(os.path.join(TAB, "c_locus_obs_over_exp_raiser_wells.csv"), index=False, float_format="%.4g")
     pd.DataFrame(summ).to_csv(os.path.join(TAB, "c_raiser_wells_genomewide_OE_summary.csv"), index=False,
                               float_format="%.4g")
+    pd.DataFrame(strand_rows).to_csv(os.path.join(TAB, "c_locus_strand_summary_raiser_wells.csv"), index=False,
+                                     float_format="%.4g")
+    # per-line gain correlation with TRIM72, genome-wide
+    wl = [k_ for k_ in gain_cols if not k_.endswith("n_lines")]
+    G = pd.concat({k_: gain_cols[k_] for k_ in wl}, axis=1)
+    G.columns = [f"rho_gain_vs_TRIM72_gain: {c_}" for c_ in G.columns]
+    G.insert(0, "gene", sym.reindex(G.index).values)
+    G.insert(1, "pooled_cpm", lvl[G.index.to_numpy()])
+    G.insert(2, "DoG_class", pd.Series(G.index).map(cls).fillna("not in atlas").values)
+    ida = [c_ for c_ in G.columns if "Idarubicin 5" in c_]
+    G["rho_mean_idarubicin_5uM_wells"] = G[ida].mean(axis=1)
+    G = G[G.index != t_tok].dropna(subset=["rho_mean_idarubicin_5uM_wells"])
+    G["rank_idarubicin"] = G["rho_mean_idarubicin_5uM_wells"].rank(ascending=False).astype(int)
+    G["pct_idarubicin_within_level_2x"] = np.nan
+    lv = np.log2(G["pooled_cpm"].clip(1e-3).to_numpy())
+    vals = G["rho_mean_idarubicin_5uM_wells"].to_numpy()
+    for t_, nm in loc_tok.items():
+        if t_ in G.index:
+            i_ = G.index.get_loc(t_)
+            m = np.abs(lv - lv[i_]) <= 1
+            G.iloc[i_, G.columns.get_loc("pct_idarubicin_within_level_2x")] = 100 * float((vals[m] < vals[i_]).mean())
+    G["in_TRIM72_locus_200kb"] = G.index.isin(list(loc_tok))
+    G.sort_values("rho_mean_idarubicin_5uM_wells", ascending=False).to_csv(
+        os.path.join(TAB, "c_per_line_gain_corr_with_TRIM72_genomewide.csv"), index_label="token", float_format="%.4g")
+    log("  per-line gain partners of TRIM72 (idarubicin 5 uM):",
+        ", ".join(G.nlargest(12, "rho_mean_idarubicin_5uM_wells")["gene"].astype(str)))
     log("(c) O/E done")
 
 

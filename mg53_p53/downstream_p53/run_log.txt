@@ -1,0 +1,30 @@
+[19:06:52] Excluding 15 failed wells (almost no cells recovered; same drug fine elsewhere)
+[19:06:52] Unreliable plates (kept per well; left out of the reference spread, the plate-factor peers and the drug-doses that also have a well elsewhere): plate13
+[19:06:52]   composition: applied (median-of-ratios shift per well x line from /home/user/tahoe_data/atlas/effects); plate factors: imported from the atlas; 'wells disagree' imported from the atlas
+[19:06:53]   50 lines: TP53 wild type 17, altered 33, unknown 0; MTAP-null 6 (MTAP across all wells below 24% of the median line (largest gap in the data, 1.6x))
+[19:06:53]   ambient RNA fraction af = 0.098 (median MTAP of the 6 MTAP-null lines / pooled MTAP = 0.098); a line expresses a gene at >= 25% of the median line, >= 1 CPM and >= 2 x af x its pooled CPM
+[19:07:06]   plate factors imported from the atlas (plate_scale.csv); > 1.2: plate3 5 uM x1.91, plate2 0.5 uM x1.40
+[19:07:07]   1/116 genes (17 s)
+[19:07:22]   26/116 genes (31 s)
+[19:07:40]   51/116 genes (49 s)
+[19:07:56]   76/116 genes (65 s)
+[19:08:11]   101/116 genes (80 s)
+[19:08:29] effects cache built in 98 s
+[19:08:48] cells cache: 381492 cells of 6 wells from 445 files (19 s)
+[19:08:49] (a) across lines within the same wells
+[19:12:57]   (a) 18 drug-doses, 2688 tests
+[19:12:57] (b) baseline: DMSO wells, within plates
+[19:13:00]   (b) 14 plates (4 high / 9 low TRIM72 baseline, reliable), 49 lines express TRIM72
+[19:13:00] (c) across drug-doses
+[19:14:07]   (c) 1132 drug-doses; categories: TRIM72 up + p53 activated 12; TRIM72 up, p53 NOT activated (z < 2) 9; p53 activated, TRIM72 NOT up (z < 2) 36; TRIM72 up, p53 in between 0; p53 activated, TRIM72 in between 2; neither 1073
+[19:14:07] (d) single cells: TRIM72-detected vs not, per line, idarubicin 5 uM and DMSO (plates 6, 14)
+[19:14:33]   (d) 21797 per-line fits; 47 lines
+                                                                                     check        value      n                                                                                                                                            note
+            TRIM72 idarubicin 5 uM per-line r2 vs trim72_idarubicin/corrected (max |diff|) 1.192093e-07     48                                                                                                                                             NaN
+               p53 responsiveness from the cache vs p53_functional_status.csv (max |diff|) 5.960465e-09     15                                                                                                                              15 reference wells
+                 TRIM72 drug-dose z: cache vs TRIM72_drug_effects_by_dose.csv (max |diff|) 0.000000e+00   1132                                                                                                                                             NaN
+            cells per well in cells_selected.parquet minus sample_map n_cells (max |diff|) 0.000000e+00 381492                                                 smp_2070 112874; smp_2069 95563; smp_2838 55432; smp_2010 42711; smp_2837 40140; smp_2778 34772
+basal p53 activity: within-plate (this script) vs panel basal_p53_activity_log2 (Spearman) 9.852101e-01     50                                                                                                                                             NaN
+                                                                   lines TP53-WT / altered 1.700000e+01     33                                                                                                                       WT in value, altered in n
+                                                                 P53_ACTIVITY members used 2.100000e+01     21 CDKN1A, MDM2, FDXR, ZMAT3, SESN1, BBC3, BAX, TP53I3, RRM2B, AEN, DDB2, XPC, PHLDA3, SPATA18, TRIAP1, RPS27L, ACER2, TP53INP1, PLK3, POLH, EDA2R
+[19:14:33] tables written to /home/user/Tahoe100-PseudoManual/mg53_p53/downstream_p53/tables; peak RSS 1.42 GB; wall 462 s

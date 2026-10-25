@@ -1,0 +1,29 @@
+well,test,n_lines,spearman_rho,p,median_TRIM72_cpm_well,median_TRIM72_cpm_plate_baseline,ratio,pooled_cpm_well,pooled_cpm_plate_baseline
+smp_2010,per line: TRIM72 CPM gained (idarubicin well - plate median) vs TRIM72 plate-baseline CPM,43,0.4858,0.0009584,,,,,
+smp_2010,per line: TRIM72 CPM gained (idarubicin well - plate median) vs FUS CPM in the idarubicin well,43,0.2519,0.1032,,,,,
+smp_2010,per line: TRIM72 CPM gained (idarubicin well - plate median) vs FUS plate-baseline CPM,43,0.4215,0.004881,,,,,
+smp_2010,per line: TRIM72 CPM gained (idarubicin well - plate median) vs PYCARD-AS1 CPM in the idarubicin well,43,0.797,1.607e-10,,,,,
+smp_2010,per line: TRIM72 CPM gained (idarubicin well - plate median) vs ITGAM CPM in the idarubicin well,43,0.7721,1.335e-09,,,,,
+smp_2010,per line: TRIM72 CPM gained (idarubicin well - plate median) vs PYCARD CPM in the idarubicin well,43,-0.2594,0.09305,,,,,
+smp_2010,per line: TRIM72 CPM in the idarubicin well vs its plate-baseline CPM,43,0.5711,6.344e-05,38.35,1.363,,,
+smp_2010,pooled over lines: FUS counts / TRIM72 counts in the well,43,,,,,10.17,433.5,243.4
+smp_2010,pooled over lines: PYCARD-AS1 counts / TRIM72 counts in the well,43,,,,,0.1878,8.004,0.9671
+smp_2010,pooled over lines: PYCARD counts / TRIM72 counts in the well,43,,,,,0.02386,1.017,2.823
+smp_2010,pooled over lines: PYDC1 counts / TRIM72 counts in the well,43,,,,,0.003516,0.1498,0
+smp_2010,pooled over lines: ITGAM counts / TRIM72 counts in the well,43,,,,,0.2853,12.16,1.334
+smp_2010,pooled over lines: KAT8 counts / TRIM72 counts in the well,43,,,,,0.4083,17.4,20.57
+smp_2010,pooled over lines: BCKDK counts / TRIM72 counts in the well,43,,,,,0.1366,5.821,11.79
+smp_2778,per line: TRIM72 CPM gained (idarubicin well - plate median) vs TRIM72 plate-baseline CPM,47,0.3395,0.01956,,,,,
+smp_2778,per line: TRIM72 CPM gained (idarubicin well - plate median) vs FUS CPM in the idarubicin well,47,0.42,0.003293,,,,,
+smp_2778,per line: TRIM72 CPM gained (idarubicin well - plate median) vs FUS plate-baseline CPM,47,0.1068,0.4747,,,,,
+smp_2778,per line: TRIM72 CPM gained (idarubicin well - plate median) vs PYCARD-AS1 CPM in the idarubicin well,47,0.4743,0.0007563,,,,,
+smp_2778,per line: TRIM72 CPM gained (idarubicin well - plate median) vs ITGAM CPM in the idarubicin well,47,0.3565,0.01391,,,,,
+smp_2778,per line: TRIM72 CPM gained (idarubicin well - plate median) vs PYCARD CPM in the idarubicin well,47,0.05182,0.7294,,,,,
+smp_2778,per line: TRIM72 CPM in the idarubicin well vs its plate-baseline CPM,47,0.6595,4.629e-07,54.72,11.39,,,
+smp_2778,pooled over lines: FUS counts / TRIM72 counts in the well,47,,,,,6.829,415.4,278.3
+smp_2778,pooled over lines: PYCARD-AS1 counts / TRIM72 counts in the well,47,,,,,0.194,11.8,2.571
+smp_2778,pooled over lines: PYCARD counts / TRIM72 counts in the well,47,,,,,0.01225,0.7451,1.186
+smp_2778,pooled over lines: PYDC1 counts / TRIM72 counts in the well,47,,,,,0.001588,0.09659,0
+smp_2778,pooled over lines: ITGAM counts / TRIM72 counts in the well,47,,,,,0.1806,10.98,1.609
+smp_2778,pooled over lines: KAT8 counts / TRIM72 counts in the well,47,,,,,0.3278,19.94,22.18
+smp_2778,pooled over lines: BCKDK counts / TRIM72 counts in the well,47,,,,,0.113,6.872,9.025

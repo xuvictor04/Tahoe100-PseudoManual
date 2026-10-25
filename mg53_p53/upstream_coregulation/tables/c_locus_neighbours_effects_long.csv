@@ -1,0 +1,397 @@
+drug,conc,plates,gene,pooled_log2FC_corrected,fold_change,z,median_per_line_log2FC_expressing,n_lines_expressing_measured,n_lines_up_1.2x,n_lines_down_1.2x,spearman_per_line_vs_TRIM72,n_lines_for_spearman
+Idarubicin (hydrochloride),5,"plate14,plate6",STX4,-0.2685,0.8302,-4.356,-0.3907,49,7,27,-0.2192,48
+Idarubicin (hydrochloride),5,"plate14,plate6",ENSG00000260911,0.8551,1.809,8.554,0.8389,49,40,4,0.02399,48
+Idarubicin (hydrochloride),5,"plate14,plate6",ENSG00000232748,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",ZNF668,0.9576,1.942,12.98,0.9334,49,43,0,0.2707,48
+Idarubicin (hydrochloride),5,"plate14,plate6",ENSG00000261124,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",ZNF646,0.7266,1.655,9.216,0.6612,49,39,4,0.0495,48
+Idarubicin (hydrochloride),5,"plate14,plate6",PRSS53,0.1954,1.145,1.699,0.1771,49,19,7,0.143,48
+Idarubicin (hydrochloride),5,"plate14,plate6",ENSG00000255439,0.2732,1.208,2.564,0.2511,48,23,11,-0.05932,47
+Idarubicin (hydrochloride),5,"plate14,plate6",VKORC1,0.004165,1.003,0.02426,0.03112,49,11,12,0.03246,48
+Idarubicin (hydrochloride),5,"plate14,plate6",ENSG00000280160,1.067,2.096,2.379,1.44,5,5,0,,5
+Idarubicin (hydrochloride),5,"plate14,plate6",BCKDK,-1.32,0.4006,-14.46,-1.281,49,2,47,-0.1068,48
+Idarubicin (hydrochloride),5,"plate14,plate6",KAT8,0.02511,1.018,0.5659,-0.003115,49,14,13,0.3143,48
+Idarubicin (hydrochloride),5,"plate14,plate6",ENSG00000262766,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",ENSG00000278133,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",ENSG00000261385,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",PRSS8,-1.072,0.4756,-9.743,-0.9487,23,3,16,-0.3439,22
+Idarubicin (hydrochloride),5,"plate14,plate6",PRSS36,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",ENSG00000263343,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",NDUFA3P6,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",FUS,0.7804,1.718,12.58,0.751,49,44,0,0.5277,48
+Idarubicin (hydrochloride),5,"plate14,plate6",ENSG00000260304,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",PYCARD-AS1,2.504,5.673,13.08,2.463,28,28,0,0.8697,28
+Idarubicin (hydrochloride),5,"plate14,plate6",PYCARD,-0.8684,0.5478,-4.414,-0.9585,20,2,16,-0.05564,20
+Idarubicin (hydrochloride),5,"plate14,plate6",TRIM72,3.613,12.24,15.89,3.599,48,47,1,,48
+Idarubicin (hydrochloride),5,"plate14,plate6",PYDC1,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",ITGAM,2.594,6.039,17.93,2.541,20,19,0,0.09023,20
+Idarubicin (hydrochloride),5,"plate14,plate6",ENSG00000289930,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",ITGAX,-0.6081,0.656,-3.868,-0.8226,23,4,17,-0.04743,23
+Idarubicin (hydrochloride),5,"plate14,plate6",ENSG00000261245,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",ITGAD,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",ENSG00000260757,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",COX6A2,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),5,"plate14,plate6",ENSG00000277543,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,STX4,-0.18,0.8827,-2.071,-0.18,48,2,17,0.184,47
+Idarubicin (hydrochloride),0.5,plate5,ENSG00000260911,0.2297,1.173,1.615,0.2297,48,23,7,-0.0126,47
+Idarubicin (hydrochloride),0.5,plate5,ENSG00000232748,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,ZNF668,0.0134,1.009,0.1305,0.0134,48,11,11,0.1662,47
+Idarubicin (hydrochloride),0.5,plate5,ENSG00000261124,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,ZNF646,0.3083,1.238,2.78,0.3083,48,29,3,-0.04163,47
+Idarubicin (hydrochloride),0.5,plate5,PRSS53,-0.1479,0.9026,-0.8524,-0.1479,48,5,19,-0.1611,47
+Idarubicin (hydrochloride),0.5,plate5,ENSG00000255439,-0.1236,0.9179,-0.8116,-0.1236,47,11,17,-0.05729,46
+Idarubicin (hydrochloride),0.5,plate5,VKORC1,-0.1346,0.911,-0.7299,-0.1346,48,3,17,0.2488,47
+Idarubicin (hydrochloride),0.5,plate5,ENSG00000280160,-0.1202,0.9201,-0.18,-0.1202,5,0,2,,5
+Idarubicin (hydrochloride),0.5,plate5,BCKDK,-0.1118,0.9254,-0.8699,-0.1118,48,6,18,-0.2373,47
+Idarubicin (hydrochloride),0.5,plate5,KAT8,-0.02808,0.9807,-0.4158,-0.02808,48,7,9,0.1491,47
+Idarubicin (hydrochloride),0.5,plate5,ENSG00000262766,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,ENSG00000278133,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,ENSG00000261385,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,PRSS8,-0.5678,0.6746,-3.638,-0.5678,22,2,18,0.1338,21
+Idarubicin (hydrochloride),0.5,plate5,PRSS36,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,ENSG00000263343,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,NDUFA3P6,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,FUS,0.1378,1.1,1.568,0.1378,48,13,0,0.2152,47
+Idarubicin (hydrochloride),0.5,plate5,ENSG00000260304,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,PYCARD-AS1,0.7831,1.721,2.897,0.7831,27,21,2,0.4115,27
+Idarubicin (hydrochloride),0.5,plate5,PYCARD,-0.2973,0.8138,-1.053,-0.2973,20,5,11,0.02857,20
+Idarubicin (hydrochloride),0.5,plate5,TRIM72,1.106,2.152,3.419,1.106,47,42,2,,47
+Idarubicin (hydrochloride),0.5,plate5,PYDC1,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,ITGAM,0.4015,1.321,1.968,0.4015,19,10,4,0.4825,19
+Idarubicin (hydrochloride),0.5,plate5,ENSG00000289930,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,ITGAX,-1.088,0.4703,-4.882,-1.088,22,0,17,0.05477,22
+Idarubicin (hydrochloride),0.5,plate5,ENSG00000261245,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,ITGAD,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,ENSG00000260757,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,COX6A2,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.5,plate5,ENSG00000277543,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,STX4,-0.0114,0.9921,-0.1477,-0.0114,48,4,3,-0.01284,47
+Idarubicin (hydrochloride),0.05,plate4,ENSG00000260911,0.03982,1.028,0.2683,0.03982,48,14,11,-0.1223,47
+Idarubicin (hydrochloride),0.05,plate4,ENSG00000232748,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,ZNF668,0.06398,1.045,0.6153,0.06398,48,15,7,-0.08765,47
+Idarubicin (hydrochloride),0.05,plate4,ENSG00000261124,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,ZNF646,-0.0452,0.9692,-0.3771,-0.0452,48,5,8,-0.1613,47
+Idarubicin (hydrochloride),0.05,plate4,PRSS53,-0.04809,0.9672,-0.2553,-0.04809,48,7,11,0.03134,47
+Idarubicin (hydrochloride),0.05,plate4,ENSG00000255439,-0.01813,0.9875,-0.1138,-0.01813,47,13,13,-0.1269,46
+Idarubicin (hydrochloride),0.05,plate4,VKORC1,0.107,1.077,0.5711,0.107,48,7,0,0.1782,47
+Idarubicin (hydrochloride),0.05,plate4,ENSG00000280160,0.1351,1.098,0.2203,0.1351,5,2,0,,5
+Idarubicin (hydrochloride),0.05,plate4,BCKDK,-0.02678,0.9816,-0.2115,-0.02678,48,4,11,-0.1203,47
+Idarubicin (hydrochloride),0.05,plate4,KAT8,0.07503,1.053,1.166,0.07503,48,11,1,0.2685,47
+Idarubicin (hydrochloride),0.05,plate4,ENSG00000262766,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,ENSG00000278133,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,ENSG00000261385,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,PRSS8,0.1106,1.08,0.734,0.1106,22,4,3,0.09481,21
+Idarubicin (hydrochloride),0.05,plate4,PRSS36,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,ENSG00000263343,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,NDUFA3P6,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,FUS,0.1379,1.1,1.57,0.1379,48,4,0,0.05805,47
+Idarubicin (hydrochloride),0.05,plate4,ENSG00000260304,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,PYCARD-AS1,0.2737,1.209,1.016,0.2737,27,14,9,0.3822,27
+Idarubicin (hydrochloride),0.05,plate4,PYCARD,-0.05607,0.9619,-0.1796,-0.05607,20,5,6,0.1353,20
+Idarubicin (hydrochloride),0.05,plate4,TRIM72,0.955,1.939,2.949,0.955,47,43,0,,47
+Idarubicin (hydrochloride),0.05,plate4,PYDC1,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,ITGAM,0.05724,1.04,0.2872,0.05724,19,5,7,0.3193,19
+Idarubicin (hydrochloride),0.05,plate4,ENSG00000289930,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,ITGAX,0.2877,1.221,1.271,0.2877,22,11,7,0.2208,22
+Idarubicin (hydrochloride),0.05,plate4,ENSG00000261245,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,ITGAD,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,ENSG00000260757,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,COX6A2,,,0,,0,0,0,,0
+Idarubicin (hydrochloride),0.05,plate4,ENSG00000277543,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",STX4,0.7382,1.668,11.88,0.738,48,36,4,0.03781,47
+Homoharringtonine,5,"plate14,plate6",ENSG00000260911,1.385,2.612,13.87,1.374,48,39,6,0.2809,47
+Homoharringtonine,5,"plate14,plate6",ENSG00000232748,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",ZNF668,-0.3792,0.7689,-5.137,-0.4139,48,10,25,0.2923,47
+Homoharringtonine,5,"plate14,plate6",ENSG00000261124,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",ZNF646,1.197,2.293,15.16,1.076,48,46,1,0.3744,47
+Homoharringtonine,5,"plate14,plate6",PRSS53,-1.182,0.4406,-9.96,-1.132,48,3,40,-0.1717,47
+Homoharringtonine,5,"plate14,plate6",ENSG00000255439,-1.414,0.3753,-13.22,-1.378,47,2,40,-0.3483,46
+Homoharringtonine,5,"plate14,plate6",VKORC1,-1.9,0.2679,-14.48,-1.946,48,0,47,-0.1869,47
+Homoharringtonine,5,"plate14,plate6",ENSG00000280160,1.292,2.449,2.877,1.504,5,3,2,,5
+Homoharringtonine,5,"plate14,plate6",BCKDK,-1.713,0.3051,-18.76,-1.62,48,0,47,0.1025,47
+Homoharringtonine,5,"plate14,plate6",KAT8,-0.3444,0.7877,-7.45,-0.3966,48,3,28,0.06568,47
+Homoharringtonine,5,"plate14,plate6",ENSG00000262766,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",ENSG00000278133,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",ENSG00000261385,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",PRSS8,-1.082,0.4724,-9.833,-1.095,22,4,17,0.3481,21
+Homoharringtonine,5,"plate14,plate6",PRSS36,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",ENSG00000263343,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",NDUFA3P6,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",FUS,1.131,2.19,18.23,1.148,48,42,1,0.4793,47
+Homoharringtonine,5,"plate14,plate6",ENSG00000260304,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",PYCARD-AS1,2.602,6.069,13.59,2.679,27,27,0,0.8083,27
+Homoharringtonine,5,"plate14,plate6",PYCARD,-1.419,0.374,-7.235,-1.55,20,0,18,0.5459,20
+Homoharringtonine,5,"plate14,plate6",TRIM72,3.359,10.26,14.77,3.258,47,46,0,,47
+Homoharringtonine,5,"plate14,plate6",PYDC1,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",ITGAM,5.157,35.69,35.63,5.292,19,19,0,0.5825,19
+Homoharringtonine,5,"plate14,plate6",ENSG00000289930,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",ITGAX,0.5254,1.439,3.301,0.4284,22,12,8,0.5855,22
+Homoharringtonine,5,"plate14,plate6",ENSG00000261245,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",ITGAD,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",ENSG00000260757,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",COX6A2,,,0,,0,0,0,,0
+Homoharringtonine,5,"plate14,plate6",ENSG00000277543,,,0,,0,0,0,,0
+Auranofin,5,plate12,STX4,0.9216,1.894,10.49,0.9216,48,47,0,0.07898,47
+Auranofin,5,plate12,ENSG00000260911,0.9486,1.93,6.711,0.9486,48,39,2,0.2249,47
+Auranofin,5,plate12,ENSG00000232748,,,0,,0,0,0,,0
+Auranofin,5,plate12,ZNF668,1.118,2.17,10.72,1.118,48,45,1,0.1226,47
+Auranofin,5,plate12,ENSG00000261124,,,0,,0,0,0,,0
+Auranofin,5,plate12,ZNF646,0.1727,1.127,1.569,0.1727,48,22,12,-0.03608,47
+Auranofin,5,plate12,PRSS53,0.08977,1.064,0.5696,0.08977,48,17,14,-0.1802,47
+Auranofin,5,plate12,ENSG00000255439,-0.5073,0.7035,-3.349,-0.5073,47,7,30,-0.1983,46
+Auranofin,5,plate12,VKORC1,-0.2782,0.8246,-1.503,-0.2782,48,1,26,-0.2024,47
+Auranofin,5,plate12,ENSG00000280160,1.066,2.093,1.679,1.066,5,4,1,,5
+Auranofin,5,plate12,BCKDK,-0.06559,0.9556,-0.512,-0.06559,48,10,14,-0.2027,47
+Auranofin,5,plate12,KAT8,0.6014,1.517,9.24,0.6014,48,39,1,0.2296,47
+Auranofin,5,plate12,ENSG00000262766,,,0,,0,0,0,,0
+Auranofin,5,plate12,ENSG00000278133,,,0,,0,0,0,,0
+Auranofin,5,plate12,ENSG00000261385,,,0,,0,0,0,,0
+Auranofin,5,plate12,PRSS8,-0.0286,0.9804,-0.1629,-0.0286,22,4,9,-0.1922,21
+Auranofin,5,plate12,PRSS36,,,0,,0,0,0,,0
+Auranofin,5,plate12,ENSG00000263343,,,0,,0,0,0,,0
+Auranofin,5,plate12,NDUFA3P6,,,0,,0,0,0,,0
+Auranofin,5,plate12,FUS,-0.07488,0.9494,-0.856,-0.07488,48,9,3,0.3878,47
+Auranofin,5,plate12,ENSG00000260304,,,0,,0,0,0,,0
+Auranofin,5,plate12,PYCARD-AS1,1.417,2.67,5.236,1.417,27,22,2,0.7613,27
+Auranofin,5,plate12,PYCARD,-0.5771,0.6703,-2.066,-0.5771,20,1,15,-0.3835,20
+Auranofin,5,plate12,TRIM72,2.713,6.557,8.429,2.713,47,47,0,,47
+Auranofin,5,plate12,PYDC1,,,0,,0,0,0,,0
+Auranofin,5,plate12,ITGAM,2.365,5.151,11.56,2.365,19,15,1,0.4579,19
+Auranofin,5,plate12,ENSG00000289930,,,0,,0,0,0,,0
+Auranofin,5,plate12,ITGAX,0.9244,1.898,4.118,0.9244,22,16,2,0.1959,22
+Auranofin,5,plate12,ENSG00000261245,,,0,,0,0,0,,0
+Auranofin,5,plate12,ITGAD,,,0,,0,0,0,,0
+Auranofin,5,plate12,ENSG00000260757,,,0,,0,0,0,,0
+Auranofin,5,plate12,COX6A2,,,0,,0,0,0,,0
+Auranofin,5,plate12,ENSG00000277543,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,STX4,0.9582,1.943,10.49,0.9582,44,36,2,0.01042,43
+Dinaciclib,5,plate9,ENSG00000260911,0.5379,1.452,3.654,0.5379,44,25,11,0.001661,43
+Dinaciclib,5,plate9,ENSG00000232748,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,ZNF668,-0.4949,0.7096,-4.56,-0.4949,44,11,26,0.2683,43
+Dinaciclib,5,plate9,ENSG00000261124,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,ZNF646,-0.5891,0.6648,-5.034,-0.5891,44,6,29,-0.2232,43
+Dinaciclib,5,plate9,PRSS53,-0.1313,0.913,-0.7244,-0.1313,44,19,19,0.01299,43
+Dinaciclib,5,plate9,ENSG00000255439,-0.05491,0.9627,-0.3434,-0.05491,44,19,15,0.04334,43
+Dinaciclib,5,plate9,VKORC1,0.1576,1.115,0.8112,0.1576,44,18,13,-0.1111,43
+Dinaciclib,5,plate9,ENSG00000280160,3.542,11.64,5.348,3.542,5,5,0,,5
+Dinaciclib,5,plate9,BCKDK,0.9028,1.87,6.718,0.9028,44,34,7,0.104,43
+Dinaciclib,5,plate9,KAT8,0.4266,1.344,6.308,0.4266,44,25,10,0.0891,43
+Dinaciclib,5,plate9,ENSG00000262766,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,ENSG00000278133,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,ENSG00000261385,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,PRSS8,-0.8477,0.5557,-5.234,-0.8477,20,5,13,0.2316,19
+Dinaciclib,5,plate9,PRSS36,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,ENSG00000263343,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,NDUFA3P6,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,FUS,0.1364,1.099,1.493,0.1364,44,14,7,0.01752,43
+Dinaciclib,5,plate9,ENSG00000260304,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,PYCARD-AS1,1.338,2.527,4.754,1.338,24,20,1,0.3296,24
+Dinaciclib,5,plate9,PYCARD,1.135,2.196,3.976,1.135,19,16,1,-0.05088,19
+Dinaciclib,5,plate9,TRIM72,2.478,5.571,7.401,2.478,43,40,1,,43
+Dinaciclib,5,plate9,PYDC1,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,ITGAM,1.433,2.7,6.737,1.433,18,15,1,-0.2838,18
+Dinaciclib,5,plate9,ENSG00000289930,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,ITGAX,0.5038,1.418,2.151,0.5038,18,12,3,-0.4386,18
+Dinaciclib,5,plate9,ENSG00000261245,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,ITGAD,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,ENSG00000260757,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,COX6A2,,,0,,0,0,0,,0
+Dinaciclib,5,plate9,ENSG00000277543,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,STX4,-0.1093,0.927,-1.216,-0.1093,50,11,15,-0.2374,49
+Epirubicin (hydrochloride),5,plate9,ENSG00000260911,-0.1816,0.8817,-1.252,-0.1816,50,12,23,-0.2641,49
+Epirubicin (hydrochloride),5,plate9,ENSG00000232748,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,ZNF668,-0.09925,0.9335,-0.9128,-0.09925,50,13,20,-0.1273,49
+Epirubicin (hydrochloride),5,plate9,ENSG00000261124,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,ZNF646,0.175,1.129,1.529,0.175,50,22,11,-0.01,49
+Epirubicin (hydrochloride),5,plate9,PRSS53,-0.3165,0.803,-1.79,-0.3165,50,11,28,-0.01173,49
+Epirubicin (hydrochloride),5,plate9,ENSG00000255439,-0.09121,0.9387,-0.5743,-0.09121,49,15,18,-0.3304,48
+Epirubicin (hydrochloride),5,plate9,VKORC1,-0.03776,0.9742,-0.2006,-0.03776,50,9,12,0.1559,49
+Epirubicin (hydrochloride),5,plate9,ENSG00000280160,-0.3451,0.7872,-0.5123,-0.3451,6,1,3,,6
+Epirubicin (hydrochloride),5,plate9,BCKDK,-0.6853,0.6219,-5.106,-0.6853,50,2,41,-0.1962,49
+Epirubicin (hydrochloride),5,plate9,KAT8,-0.1873,0.8782,-2.749,-0.1873,50,6,21,-0.06612,49
+Epirubicin (hydrochloride),5,plate9,ENSG00000262766,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,ENSG00000278133,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,ENSG00000261385,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,PRSS8,-0.6813,0.6236,-4.202,-0.6813,24,3,18,0.1314,23
+Epirubicin (hydrochloride),5,plate9,PRSS36,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,ENSG00000263343,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,NDUFA3P6,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,FUS,0.5983,1.514,6.557,0.5983,50,44,0,0.6742,49
+Epirubicin (hydrochloride),5,plate9,ENSG00000260304,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,PYCARD-AS1,0.7181,1.645,2.555,0.7181,29,23,3,0.2744,29
+Epirubicin (hydrochloride),5,plate9,PYCARD,-0.1687,0.8896,-0.5651,-0.1687,20,3,7,0.07068,20
+Epirubicin (hydrochloride),5,plate9,TRIM72,2.175,4.516,6.493,2.175,49,43,1,,49
+Epirubicin (hydrochloride),5,plate9,PYDC1,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,ITGAM,0.3706,1.293,1.748,0.3706,21,12,4,0.4922,21
+Epirubicin (hydrochloride),5,plate9,ENSG00000289930,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,ITGAX,-0.7004,0.6154,-3.027,-0.7004,24,2,16,-0.07565,24
+Epirubicin (hydrochloride),5,plate9,ENSG00000261245,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,ITGAD,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,ENSG00000260757,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,COX6A2,,,0,,0,0,0,,0
+Epirubicin (hydrochloride),5,plate9,ENSG00000277543,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,STX4,-0.4198,0.7475,-4.622,-0.4198,48,2,30,-0.3259,47
+Doxorubicin (hydrochloride),5,plate9,ENSG00000260911,-0.005901,0.9959,-0.05369,-0.005901,48,19,18,-0.04475,47
+Doxorubicin (hydrochloride),5,plate9,ENSG00000232748,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,ZNF668,-0.2179,0.8598,-2.006,-0.2179,48,13,22,0.1149,47
+Doxorubicin (hydrochloride),5,plate9,ENSG00000261124,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,ZNF646,0.3344,1.261,2.898,0.3344,48,28,10,0.125,47
+Doxorubicin (hydrochloride),5,plate9,PRSS53,0.1538,1.112,0.9163,0.1538,48,20,11,-0.004163,47
+Doxorubicin (hydrochloride),5,plate9,ENSG00000255439,-0.1562,0.8974,-0.988,-0.1562,47,14,19,-0.05643,46
+Doxorubicin (hydrochloride),5,plate9,VKORC1,-0.2798,0.8237,-1.454,-0.2798,48,1,26,-0.1377,47
+Doxorubicin (hydrochloride),5,plate9,ENSG00000280160,-1.576,0.3353,-2.369,-1.576,5,1,4,,5
+Doxorubicin (hydrochloride),5,plate9,BCKDK,-0.8655,0.5488,-6.449,-0.8655,48,4,39,-0.0133,47
+Doxorubicin (hydrochloride),5,plate9,KAT8,-0.3823,0.7672,-5.625,-0.3823,48,1,30,-0.1997,47
+Doxorubicin (hydrochloride),5,plate9,ENSG00000262766,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,ENSG00000278133,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,ENSG00000261385,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,PRSS8,-0.5259,0.6945,-3.239,-0.5259,22,3,16,0.2688,21
+Doxorubicin (hydrochloride),5,plate9,PRSS36,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,ENSG00000263343,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,NDUFA3P6,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,FUS,0.5302,1.444,5.811,0.5302,48,43,0,0.4406,47
+Doxorubicin (hydrochloride),5,plate9,ENSG00000260304,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,PYCARD-AS1,0.6742,1.596,2.399,0.6742,27,19,4,0.4109,27
+Doxorubicin (hydrochloride),5,plate9,PYCARD,-0.1821,0.8814,-0.6116,-0.1821,20,7,9,0.2301,20
+Doxorubicin (hydrochloride),5,plate9,TRIM72,1.582,2.995,4.716,1.582,47,40,6,,47
+Doxorubicin (hydrochloride),5,plate9,PYDC1,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,ITGAM,0.7645,1.699,3.598,0.7645,19,13,3,0.6684,19
+Doxorubicin (hydrochloride),5,plate9,ENSG00000289930,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,ITGAX,-0.3892,0.7636,-1.688,-0.3892,22,8,11,-0.01412,22
+Doxorubicin (hydrochloride),5,plate9,ENSG00000261245,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,ITGAD,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,ENSG00000260757,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,COX6A2,,,0,,0,0,0,,0
+Doxorubicin (hydrochloride),5,plate9,ENSG00000277543,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,STX4,-0.1152,0.9232,-1.281,-0.1152,47,14,17,0.03571,46
+Topotecan (hydrochloride),5,plate9,ENSG00000260911,0.7548,1.687,5.133,0.7548,47,34,7,-0.0124,46
+Topotecan (hydrochloride),5,plate9,ENSG00000232748,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,ZNF668,0.06466,1.046,0.5979,0.06466,47,20,16,0.2932,46
+Topotecan (hydrochloride),5,plate9,ENSG00000261124,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,ZNF646,0.1989,1.148,1.734,0.1989,47,19,10,-0.1257,46
+Topotecan (hydrochloride),5,plate9,PRSS53,-0.1437,0.9052,-0.7955,-0.1437,47,18,19,-0.0695,46
+Topotecan (hydrochloride),5,plate9,ENSG00000255439,0.2008,1.149,1.284,0.2008,46,22,19,-0.1909,45
+Topotecan (hydrochloride),5,plate9,VKORC1,0.1441,1.105,0.7411,0.1441,47,19,8,-0.3533,46
+Topotecan (hydrochloride),5,plate9,ENSG00000280160,-0.5972,0.661,-0.8923,-0.5972,5,2,3,,5
+Topotecan (hydrochloride),5,plate9,BCKDK,-0.3611,0.7786,-2.693,-0.3611,47,12,25,0.01301,46
+Topotecan (hydrochloride),5,plate9,KAT8,0.325,1.253,4.809,0.325,47,27,3,-0.005365,46
+Topotecan (hydrochloride),5,plate9,ENSG00000262766,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,ENSG00000278133,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,ENSG00000261385,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,PRSS8,-0.3558,0.7814,-2.185,-0.3558,21,6,14,-0.1323,20
+Topotecan (hydrochloride),5,plate9,PRSS36,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,ENSG00000263343,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,NDUFA3P6,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,FUS,0.4147,1.333,4.544,0.4147,47,35,0,0.3569,46
+Topotecan (hydrochloride),5,plate9,ENSG00000260304,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,PYCARD-AS1,1.48,2.789,5.259,1.48,26,23,1,0.4824,26
+Topotecan (hydrochloride),5,plate9,PYCARD,0.05136,1.036,0.2014,0.05136,20,8,9,0.2286,20
+Topotecan (hydrochloride),5,plate9,TRIM72,1.354,2.557,4.032,1.354,46,37,3,,46
+Topotecan (hydrochloride),5,plate9,PYDC1,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,ITGAM,0.5883,1.503,2.77,0.5883,19,15,0,0.2965,19
+Topotecan (hydrochloride),5,plate9,ENSG00000289930,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,ITGAX,-0.3832,0.7667,-1.663,-0.3832,21,7,11,-0.1247,21
+Topotecan (hydrochloride),5,plate9,ENSG00000261245,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,ITGAD,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,ENSG00000260757,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,COX6A2,,,0,,0,0,0,,0
+Topotecan (hydrochloride),5,plate9,ENSG00000277543,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",STX4,0.05799,1.041,0.9105,0.05419,48,7,5,-0.05042,47
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ENSG00000260911,-0.006181,0.9957,-0.08177,0.0471,48,13,11,0.08753,47
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ENSG00000232748,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ZNF668,0.1291,1.094,1.753,0.08199,48,14,5,-0.1374,47
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ENSG00000261124,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ZNF646,0.3379,1.264,4.306,0.3432,48,28,0,0.2612,47
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",PRSS53,-0.1076,0.9281,-0.8648,-0.2111,48,9,21,-0.1404,47
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ENSG00000255439,-0.2298,0.8528,-2.141,-0.3789,47,7,28,-0.08258,46
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",VKORC1,-0.3224,0.7997,-2.463,-0.3014,48,0,30,-0.221,47
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ENSG00000280160,-0.9595,0.5142,-2.116,-0.1263,5,1,2,,5
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",BCKDK,-0.1866,0.8786,-2.05,-0.2109,48,4,21,-0.2011,47
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",KAT8,0.03946,1.028,0.8772,0.02917,48,4,5,-0.01792,47
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ENSG00000262766,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ENSG00000278133,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ENSG00000261385,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",PRSS8,-0.3879,0.7643,-3.505,-0.3777,22,4,14,-0.1182,21
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",PRSS36,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ENSG00000263343,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",NDUFA3P6,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",FUS,0.1922,1.142,3.095,0.19,48,17,0,0.4732,47
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ENSG00000260304,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",PYCARD-AS1,0.3892,1.31,2.041,0.4123,27,15,5,0.5263,27
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",PYCARD,-0.1807,0.8823,-0.8921,-0.109,20,5,8,-0.2887,20
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",TRIM72,1.035,2.049,4.522,0.9116,47,42,2,,47
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",PYDC1,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ITGAM,0.8472,1.799,5.861,0.8395,19,17,0,0.3579,19
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ENSG00000289930,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ITGAX,-0.357,0.7808,-2.279,-0.4592,22,3,13,-0.109,22
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ENSG00000261245,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ITGAD,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ENSG00000260757,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",COX6A2,,,0,,0,0,0,,0
+Mitoxantrone (dihydrochloride),5,"plate14,plate6",ENSG00000277543,,,0,,0,0,0,,0
+Harringtonine,5,plate9,STX4,0.5045,1.419,5.517,0.5045,48,34,5,0.2677,47
+Harringtonine,5,plate9,ENSG00000260911,0.6245,1.542,4.244,0.6245,48,30,12,0.4034,47
+Harringtonine,5,plate9,ENSG00000232748,,,0,,0,0,0,,0
+Harringtonine,5,plate9,ZNF668,-0.2472,0.8425,-2.276,-0.2472,48,10,23,0.3393,47
+Harringtonine,5,plate9,ENSG00000261124,,,0,,0,0,0,,0
+Harringtonine,5,plate9,ZNF646,0.8965,1.862,7.727,0.8965,48,40,2,0.1403,47
+Harringtonine,5,plate9,PRSS53,-1.746,0.2981,-10.02,-1.746,48,0,46,-0.2292,47
+Harringtonine,5,plate9,ENSG00000255439,-2.127,0.229,-13.52,-2.127,47,0,45,-0.3529,46
+Harringtonine,5,plate9,VKORC1,-1.272,0.4142,-6.59,-1.272,48,0,43,-0.139,47
+Harringtonine,5,plate9,ENSG00000280160,-0.3974,0.7592,-0.5911,-0.3974,5,1,3,,5
+Harringtonine,5,plate9,BCKDK,-0.8585,0.5515,-6.396,-0.8585,48,1,42,0.02024,47
+Harringtonine,5,plate9,KAT8,-0.2693,0.8297,-3.958,-0.2693,48,5,25,0.04498,47
+Harringtonine,5,plate9,ENSG00000262766,,,0,,0,0,0,,0
+Harringtonine,5,plate9,ENSG00000278133,,,0,,0,0,0,,0
+Harringtonine,5,plate9,ENSG00000261385,,,0,,0,0,0,,0
+Harringtonine,5,plate9,PRSS8,-0.9716,0.51,-6.002,-0.9716,22,2,18,0.2818,21
+Harringtonine,5,plate9,PRSS36,,,0,,0,0,0,,0
+Harringtonine,5,plate9,ENSG00000263343,,,0,,0,0,0,,0
+Harringtonine,5,plate9,NDUFA3P6,,,0,,0,0,0,,0
+Harringtonine,5,plate9,FUS,1.027,2.038,11.26,1.027,48,48,0,0.3294,47
+Harringtonine,5,plate9,ENSG00000260304,,,0,,0,0,0,,0
+Harringtonine,5,plate9,PYCARD-AS1,1.004,2.006,3.571,1.004,27,20,3,0.583,27
+Harringtonine,5,plate9,PYCARD,-0.2967,0.8141,-1.011,-0.2967,20,2,10,-0.3669,20
+Harringtonine,5,plate9,TRIM72,1.846,3.595,5.507,1.846,47,33,8,,47
+Harringtonine,5,plate9,PYDC1,,,0,,0,0,0,,0
+Harringtonine,5,plate9,ITGAM,3.829,14.21,17.99,3.829,19,19,0,0.3456,19
+Harringtonine,5,plate9,ENSG00000289930,,,0,,0,0,0,,0
+Harringtonine,5,plate9,ITGAX,-0.7623,0.5895,-3.293,-0.7623,22,2,15,-0.1112,22
+Harringtonine,5,plate9,ENSG00000261245,,,0,,0,0,0,,0
+Harringtonine,5,plate9,ITGAD,,,0,,0,0,0,,0
+Harringtonine,5,plate9,ENSG00000260757,,,0,,0,0,0,,0
+Harringtonine,5,plate9,COX6A2,,,0,,0,0,0,,0
+Harringtonine,5,plate9,ENSG00000277543,,,0,,0,0,0,,0
+Panobinostat,5,plate12,STX4,-0.6227,0.6494,-7.12,-0.6227,48,0,42,-0.1451,47
+Panobinostat,5,plate12,ENSG00000260911,-0.6361,0.6435,-4.523,-0.6361,48,5,33,0.08985,47
+Panobinostat,5,plate12,ENSG00000232748,,,0,,0,0,0,,0
+Panobinostat,5,plate12,ZNF668,-0.5179,0.6984,-4.962,-0.5179,48,5,34,0.01145,47
+Panobinostat,5,plate12,ENSG00000261124,,,0,,0,0,0,,0
+Panobinostat,5,plate12,ZNF646,0.4839,1.399,4.349,0.4839,48,35,1,0.1822,47
+Panobinostat,5,plate12,PRSS53,-0.3814,0.7677,-2.25,-0.3814,48,12,26,-0.1626,47
+Panobinostat,5,plate12,ENSG00000255439,-0.8641,0.5494,-5.71,-0.8641,47,4,36,-0.1196,46
+Panobinostat,5,plate12,VKORC1,-0.5801,0.6689,-3.129,-0.5801,48,8,34,-0.291,47
+Panobinostat,5,plate12,ENSG00000280160,0.7677,1.703,1.212,0.7677,5,5,0,,5
+Panobinostat,5,plate12,BCKDK,0.03029,1.021,0.2303,0.03029,48,12,12,-0.2566,47
+Panobinostat,5,plate12,KAT8,-0.4311,0.7417,-6.599,-0.4311,48,0,31,0.3631,47
+Panobinostat,5,plate12,ENSG00000262766,,,0,,0,0,0,,0
+Panobinostat,5,plate12,ENSG00000278133,,,0,,0,0,0,,0
+Panobinostat,5,plate12,ENSG00000261385,,,0,,0,0,0,,0
+Panobinostat,5,plate12,PRSS8,-0.1026,0.9313,-0.6401,-0.1026,22,4,8,0.1442,21
+Panobinostat,5,plate12,PRSS36,,,0,,0,0,0,,0
+Panobinostat,5,plate12,ENSG00000263343,,,0,,0,0,0,,0
+Panobinostat,5,plate12,NDUFA3P6,,,0,,0,0,0,,0
+Panobinostat,5,plate12,FUS,0.3923,1.313,4.47,0.3923,48,29,3,-0.06186,47
+Panobinostat,5,plate12,ENSG00000260304,,,0,,0,0,0,,0
+Panobinostat,5,plate12,PYCARD-AS1,0.5024,1.417,1.861,0.5024,27,15,8,0.3834,27
+Panobinostat,5,plate12,PYCARD,-0.6562,0.6346,-2.353,-0.6562,20,1,17,-0.02556,20
+Panobinostat,5,plate12,TRIM72,1.43,2.695,4.43,1.43,47,39,5,,47
+Panobinostat,5,plate12,PYDC1,,,0,,0,0,0,,0
+Panobinostat,5,plate12,ITGAM,0.1268,1.092,0.6268,0.1268,19,6,7,0.1491,19
+Panobinostat,5,plate12,ENSG00000289930,,,0,,0,0,0,,0
+Panobinostat,5,plate12,ITGAX,2.27,4.824,10.14,2.27,22,21,1,0.432,22
+Panobinostat,5,plate12,ENSG00000261245,,,0,,0,0,0,,0
+Panobinostat,5,plate12,ITGAD,,,0,,0,0,0,,0
+Panobinostat,5,plate12,ENSG00000260757,,,0,,0,0,0,,0
+Panobinostat,5,plate12,COX6A2,,,0,,0,0,0,,0
+Panobinostat,5,plate12,ENSG00000277543,,,0,,0,0,0,,0

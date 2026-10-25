@@ -1,0 +1,14 @@
+drug,conc,rho,group,adjust,outcome
+Idarubicin (hydrochloride),5.0,0.24958949096880134,altered,none,TP53
+Homoharringtonine,5.0,0.23015873015873015,altered,none,TP53
+Auranofin,5.0,-0.25213675213675213,altered,none,TP53
+Homoharringtonine,0.5,0.14774114774114774,altered,none,TP53
+Dinaciclib,5.0,-0.03391304347826087,altered,none,TP53
+Epirubicin (hydrochloride),5.0,0.47783251231527096,altered,none,TP53
+Dinaciclib,0.5,0.20032840722495895,altered,none,TP53
+Dinaciclib,0.05,-0.057391304347826085,altered,none,TP53
+Harringtonine,5.0,-0.025030525030525032,altered,none,TP53
+Doxorubicin (hydrochloride),5.0,0.4792429792429792,altered,none,TP53
+Mitoxantrone (dihydrochloride),5.0,0.3901098901098901,altered,none,TP53
+Panobinostat,5.0,-0.017704517704517704,altered,none,TP53
+Topotecan (hydrochloride),5.0,0.5117948717948718,altered,none,TP53

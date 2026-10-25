@@ -4,5 +4,6 @@ TRIM72 drug-dose fold change vs TRIM72_drug_effects_by_dose.csv (max |log2 diff|
 "TRIM72 idarubicin 5 uM fold change / z (README: 12.2x, z 15.9)",12.2376,2,z 15.89
 lines: TP53 WT / altered,17,33,"WT count in value, altered in n"
 P53_ACTIVITY members used,21,21,"CDKN1A, MDM2, FDXR, ZMAT3, SESN1, BBC3, BAX, TP53I3, RRM2B, AEN, DDB2, XPC, PHLDA3, SPATA18, TRIAP1, RPS27L, ACER2, TP53INP1, PLK3, POLH, EDA2R"
+idarubicin 5 uM per-line TRIM72 r2 vs trim72_idarubicin/corrected (max |diff|),1.19209e-07,48,"z_line max |diff| 1.98e-07; wells ['smp_2010', 'smp_2778']"
 TRIM72 WT-minus-altered: drug-doses with FDR < 0.10 (all drug-doses),12,1132,Fumaric acid 0.05 (z -5.2); Sunitinib 0.05 (z -4.0); venetoclax 0.05 (z -3.6); Flumatinib (mesylate) 0.05 (z -3.5); Pralsetinib 5 (z -3.5); Cytarabine (hydrochloride) 5 (z -3.3); Homoharringtonine 0.5 (z 3.3); Apalutamide 0.05 (z 3.3); Futibatinib 5 (z 3.8); Epirubicin (hydrochloride) 5 (z 4.3); Digitoxin 0.5 (z 5.1); Ouabain (Octahydrate) 5 (z 6.5)
 CDKN1A WT-minus-altered: drug-doses with FDR < 0.10 and WT higher,57,1132,

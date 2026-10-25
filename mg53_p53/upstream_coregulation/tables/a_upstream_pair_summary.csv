@@ -1,0 +1,5 @@
+variant,n_pairs,median_r_DoG_gene_vs_upstream_gene,median_r_DoG_gene_vs_random_level_matched,pct_pairs_obs_gt_random_median,wilcoxon_p_obs_vs_random,TRIM72_FUS_r,TRIM72_FUS_pctile_among_DoG_pairs,TRIM72_FUS_pctile_vs_all_FUS_level_genes,n_FUS_level_genes
+raw,703,0.18,-0.0139,74.4,4.514e-51,0.6355,96.02,99.89,1740
+covariates,703,0.1466,-0.006931,74.25,6.515e-51,0.4634,90.18,99.54,1740
+minus_3pc,703,0.1787,0.003544,78.81,1.025e-65,0.4671,91.75,99.6,1740
+minus_10pc,703,0.1121,-0.0001909,82.22,1.467e-78,0.291,88.05,95.29,1740

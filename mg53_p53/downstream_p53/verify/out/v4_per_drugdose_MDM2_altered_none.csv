@@ -1,0 +1,14 @@
+drug,conc,rho,group,adjust,outcome
+Idarubicin (hydrochloride),5.0,0.06169354838709677,altered,none,MDM2
+Homoharringtonine,5.0,-0.2507230255839822,altered,none,MDM2
+Auranofin,5.0,0.09899888765294772,altered,none,MDM2
+Homoharringtonine,0.5,0.0985539488320356,altered,none,MDM2
+Dinaciclib,5.0,-0.04456654456654457,altered,none,MDM2
+Epirubicin (hydrochloride),5.0,-0.25146627565982405,altered,none,MDM2
+Dinaciclib,0.5,-0.044354838709677415,altered,none,MDM2
+Dinaciclib,0.05,-0.020757020757020756,altered,none,MDM2
+Harringtonine,5.0,-0.11546162402669632,altered,none,MDM2
+Doxorubicin (hydrochloride),5.0,-0.12347052280311457,altered,none,MDM2
+Mitoxantrone (dihydrochloride),5.0,0.12703003337041158,altered,none,MDM2
+Panobinostat,5.0,-0.11768631813125695,altered,none,MDM2
+Topotecan (hydrochloride),5.0,-0.014285714285714285,altered,none,MDM2

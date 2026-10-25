@@ -1,0 +1,10 @@
+test,n,rho,p
+all drug-doses: TRIM72 WT-minus-altered z vs P53 score WT-minus-altered z,1088,0.001110904761670496,0.9708032168723975
+all drug-doses: MDM2 WT-minus-altered z vs P53 score (without MDM2) WT-minus-altered z,1088,0.6696000572107242,1.883132908370936e-142
+all drug-doses: CDKN1A WT-minus-altered z vs P53 score (without CDKN1A) WT-minus-altered z,1088,0.5039809167639777,3.789244353065982e-71
+all drug-doses: TP53I3 WT-minus-altered z vs P53 score (without TP53I3) WT-minus-altered z,1088,0.2369004194620742,2.411286576951688e-15
+all drug-doses: SPATA18 WT-minus-altered z vs P53 score (without SPATA18) WT-minus-altered z,1088,0.3013023159190308,2.867271525320616e-24
+all drug-doses: EDA2R WT-minus-altered z vs P53 score (without EDA2R) WT-minus-altered z,1088,0.36534011617982864,1.0820437576186277e-35
+TRIM72-raising drug-doses (all-line TRIM72 robust z >= 3),24,0.21043478260869564,0.32364668696950194
+all drug-doses: TRIM72 all-line z vs P53 score all-line z,1089,0.15842397127604824,1.4785710608072651e-07
+strong p53 activators (all-line or WT-selective P53 z >= 5),36,0.30604890604890606,0.06947399290011018

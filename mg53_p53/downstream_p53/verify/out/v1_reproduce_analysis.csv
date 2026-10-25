@@ -1,0 +1,5 @@
+source,group,adjust,n,rho,p_perm
+analysis table a_per_line_effects,WT,none,17,0.01715686274509804,0.9487628092976755
+analysis table a_per_line_effects,WT,beta+A,17,-0.21675087750056538,0.40639840039990005
+analysis table a_per_line_effects,altered,none,31,-0.23588709677419356,0.1942014496375906
+analysis table a_per_line_effects,altered,beta+A,30,-0.2842471798493145,0.12021994501374657

@@ -1,0 +1,13 @@
+,0
+n,46.0
+spearman_fc,0.7464076472402096
+spearman_treated_cpm,0.6108541473943879
+spearman_dmso_cpm,0.8021584952204749
+spearman_fc_vs_dmso_allplates,-0.7678692568609312
+cv_treated_cpm_pl6,0.7035924792289734
+sd_log2_dmso_cpm_pl6,1.0457615852355957
+sd_log2_treated_cpm_pl14,0.6482788324356079
+sd_log2_dmso_cpm_pl14,1.190330982208252
+slope_log2treated_on_log2dmso,0.3252317011356354
+slope_se,0.05174190178513527
+r_treated_vs_dmso,0.6878324747085571

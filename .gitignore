@@ -27,3 +27,7 @@ __pycache__/
 mg53_p53/**/downloads/
 mg53_p53/**/cache/
 mg53_p53/**/external/
+mg53_p53/**/*cache*/
+mg53_p53/**/ext_download/
+mg53_p53/**/*.npz
+mg53_p53/**/*.npy

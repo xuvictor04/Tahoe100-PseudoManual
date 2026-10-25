@@ -1,0 +1,19 @@
+profiles without plate: 0
+19:43:40 reading group000.npy 5787
+19:45:15 reading group001.npy 5845
+19:46:56 reading group002.npy 4800
+19:48:05 reading group003.npy 6040
+19:49:16 reading group004.npy 8028
+19:50:38 reading group005.npy 7708
+19:52:04 reading group006.npy 5916
+19:53:13 reading group007.npy 6730
+19:54:29 reading group008.npy 6107
+19:55:39 reading group009.npy 5981
+19:56:58 reading group010.npy 5360
+19:58:10 reading group011.npy 5775
+19:59:28 reading group012.npy 5178
+20:00:57 reading group013.npy 5560
+20:02:14 sums written
+20:02:26 median baseline done plate6
+20:02:32 median baseline done plate14
+20:02:32 done

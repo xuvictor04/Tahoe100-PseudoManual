@@ -1,0 +1,8 @@
+check,value,n,note
+TRIM72 idarubicin 5 uM per-line r2 vs trim72_idarubicin/corrected (max |diff|),1.1920928955078125e-07,48,
+p53 responsiveness from the cache vs p53_functional_status.csv (max |diff|),5.9604645663569045e-09,15,15 reference wells
+TRIM72 drug-dose z: cache vs TRIM72_drug_effects_by_dose.csv (max |diff|),0.0,1132,
+cells per well in cells_selected.parquet minus sample_map n_cells (max |diff|),0.0,381492,smp_2070 112874; smp_2069 95563; smp_2838 55432; smp_2010 42711; smp_2837 40140; smp_2778 34772
+basal p53 activity: within-plate (this script) vs panel basal_p53_activity_log2 (Spearman),0.9852100840336133,50,
+lines TP53-WT / altered,17.0,33,"WT in value, altered in n"
+P53_ACTIVITY members used,21.0,21,"CDKN1A, MDM2, FDXR, ZMAT3, SESN1, BBC3, BAX, TP53I3, RRM2B, AEN, DDB2, XPC, PHLDA3, SPATA18, TRIAP1, RPS27L, ACER2, TP53INP1, PLK3, POLH, EDA2R"
