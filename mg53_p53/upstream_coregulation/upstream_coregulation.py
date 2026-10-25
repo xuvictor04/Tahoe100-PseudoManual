@@ -114,12 +114,31 @@ def ensure_dir(*p):
 
 
 # ============================================================================= fetch
-def curl(url, dest, get_query=None, timeout=300):
-    cmd = ["curl", "-sSL", "-m", str(timeout), "-o", dest]
+def curl(url, dest, get_query=None, timeout=300, tries=5):
+    """Download to dest via a temporary file. HTTP errors fail (curl -f) and are retried; an HTML page (a service
+    error such as Ensembl's '503 Service Unavailable') is never saved as data."""
+    tmp = dest + ".part"
+    cmd = ["curl", "-sSfL", "-m", str(timeout), "-o", tmp]
     if get_query is not None:
         cmd += ["-G", "--data-urlencode", "query=" + get_query]
     cmd.append(url)
-    subprocess.run(cmd, check=True)
+    err = ""
+    for k in range(tries):
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        if r.returncode == 0:
+            with open(tmp, "rb") as fh:
+                head = fh.read(512).lower()
+            if b"<html" not in head and b"<!doctype html" not in head and b"service unavailable" not in head:
+                os.replace(tmp, dest)
+                return True
+            err = "the server returned an HTML page instead of data"
+        else:
+            err = (r.stderr or "").strip()[-200:]
+        log(f"  download failed ({err}); retry {k + 1}/{tries - 1}" if k + 1 < tries else f"  download failed ({err})")
+        time.sleep(min(60, 10 * (k + 1)))
+    if os.path.exists(tmp):
+        os.remove(tmp)
+    return False
 
 
 def step_fetch():
@@ -137,7 +156,8 @@ def step_fetch():
         p = os.path.join(EXT, f)
         if not os.path.exists(p) or os.path.getsize(p) < 1000:
             log("download", url)
-            curl(url, p)
+            if not curl(url, p) and f != "ensembl_trim72_region.json":   # the region falls back on BioMart
+                raise SystemExit(f"could not download {url}; rerun the step later (finished files are kept)")
     p = os.path.join(EXT, "ensembl_biomart_genes_GRCh38.tsv")
     if not os.path.exists(p) or os.path.getsize(p) < 100000:
         q = ('<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query virtualSchemaName="default" '
@@ -147,7 +167,8 @@ def step_fetch():
              '<Attribute name="end_position"/><Attribute name="strand"/><Attribute name="gene_biotype"/>'
              '</Dataset></Query>')
         log("download Ensembl BioMart gene coordinates")
-        curl("https://www.ensembl.org/biomart/martservice", p, get_query=q)
+        if not curl("https://www.ensembl.org/biomart/martservice", p, get_query=q):
+            raise SystemExit("could not download the Ensembl BioMart gene coordinates; rerun the step later")
     log("fetch done")
 
 
@@ -1144,13 +1165,20 @@ def step_b(B=2000):
 
 # ============================================================================= (c) locus: corrected effects of neighbours
 def locus_table():
-    """Ensembl genes within 200 kb of TRIM72 (REST overlap result) joined to Tahoe tokens."""
-    with open(os.path.join(EXT, "ensembl_trim72_region.json")) as fh:
-        reg = pd.DataFrame(json.load(fh))
-    reg = reg.rename(columns={"id": "ensembl_id", "external_name": "ens_name"})
+    """Ensembl genes within 200 kb of TRIM72 (REST overlap result) joined to Tahoe tokens. Without a usable REST
+    result (Ensembl REST down), the same window is taken from the BioMart coordinates of the same release."""
+    c, s, e = TRIM72_REGION
+    p = os.path.join(EXT, "ensembl_trim72_region.json")
+    try:
+        with open(p) as fh:
+            reg = pd.DataFrame(json.load(fh))
+        reg = reg.rename(columns={"id": "ensembl_id", "external_name": "ens_name"})
+    except (OSError, ValueError):
+        log("  Ensembl REST region not available: taking the TRIM72 +-200 kb window from the BioMart coordinates")
+        b = load_coords()
+        reg = b[(b["chrom"] == c) & (b["end"] >= s - 200000) & (b["start"] <= e + 200000)].copy()
     gm = gene_meta()
     reg = reg.merge(gm, on="ensembl_id", how="left")
-    c, s, e = TRIM72_REGION
     reg["rel_to_TRIM72"] = np.where(reg["end"] < s, "upstream (5')", np.where(reg["start"] > e, "downstream (3')",
                                                                                "overlapping"))
     reg["same_strand_as_TRIM72"] = reg["strand"] == 1
