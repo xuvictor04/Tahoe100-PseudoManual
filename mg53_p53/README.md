@@ -164,8 +164,8 @@ python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M --steps literature   # opti
 Steps: `perturbations`, `coregulation` (one pass over `atlas/pseudobulk`, ~25 min the first time; downloads a TF list, HGNC and
 Ensembl coordinates once), `p53_dependence`, `downstream`, `summary`. Each step's tables go to `<out>/<step folder>/tables`,
 then `summary_tables.py` writes `<out>/SUMMARY.md` and `<out>/summary/*.csv`. The log is `<out>/run_mg53_p53.log`.
-Reproducibility: a from-scratch run of `run_mg53_p53.py` into an empty folder reproduced all 26
-`upstream_perturbations` tables exactly (the other steps are being checked the same way).
+Reproducibility: a from-scratch run of `run_mg53_p53.py` into an empty folder (~25 min here plus a one-time ~20 min
+pass over `atlas/pseudobulk`) reproduced all 98 step tables and the summary tables of this folder exactly.
 
 | Folder / file | What it holds |
 |---|---|

@@ -10,7 +10,7 @@ The short answers (written from the verified findings; see README.md for the evi
 |---|---|---|---|
 | Is TRIM72 a p53 target gene? | No | Not in the p53-target census or near TP53 ChIP peaks; behaves like a non-target on 4 metrics in Tahoe (T5) | strong |
 | Does TRIM72 induction need p53? | No | Rises in 31/31 TP53-altered lines under idarubicin 5 µM; selinexor activates p53 without raising TRIM72 (T5) | strong |
-| Could a small p53 contribution exist? | Not excluded | WT lines lean +0.2-0.45 log2 across raisers, also for drugs that do not activate p53 (T5) | moderate |
+| Could a small p53 contribution exist? | Not excluded | WT lines lean +0.16 to +0.45 log2 across raisers, also for drugs that do not activate p53 (T5) | moderate |
 | What raises TRIM72 mRNA? | Strong stress drugs | Anthracyclines/TOP2 poisons, harringtonines, auranofin, CDK9 and HDAC inhibitors; robust and replicated: idarubicin and homoharringtonine 5 µM (T1, T2) | moderate |
 | What moves with it? | AP-1 / immediate-early, ATF3, PMAIP1 | Co-responders across drugs and in single cells, not shown regulators; muscle TFs (MyoD/MEF2, the known promoter TFs) are silent in these lines (T3) | moderate |
 | Is it TRIM72's own promoter? | Unresolved | Part of TRIM72's reads look like readthrough from FUS (17-22 kb upstream, same strand); clean for homoharringtonine, not significant for idarubicin after level matching (T4) | moderate |
