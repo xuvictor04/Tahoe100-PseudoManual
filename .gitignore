@@ -31,3 +31,4 @@ mg53_p53/**/*cache*/
 mg53_p53/**/ext_download/
 mg53_p53/**/*.npz
 mg53_p53/**/*.npy
+mg53_perturbation/**/cache/

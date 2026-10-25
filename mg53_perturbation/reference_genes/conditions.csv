@@ -1,0 +1,23 @@
+condition,drug,drug_short,conc_uM,primary,plates,wells,n_wells,flags,n_sig_genes,cells_log2_vs_plate,composition_shift_log2,why
+Idarubicin 0.05 uM,Idarubicin (hydrochloride),Idarubicin,0.05,True,plate4,C12,1,,33,0.04831,-0.006687,primary: in the stability score
+Idarubicin 0.5 uM,Idarubicin (hydrochloride),Idarubicin,0.5,True,plate5,C12,1,cell-cycle shift,3579,0.2123,0.02494,primary: in the stability score
+Idarubicin 5 uM,Idarubicin (hydrochloride),Idarubicin,5,True,"plate14,plate6",C12,2,cell-cycle shift,1.147e+04,-0.8228,-0.02395,primary: in the stability score
+Doxorubicin 0.05 uM,Doxorubicin (hydrochloride),Doxorubicin,0.05,False,plate7,G3,1,,11,0.1457,0.03432,"0.05 uM: reported in reference_by_condition.csv, not scored"
+Doxorubicin 0.5 uM,Doxorubicin (hydrochloride),Doxorubicin,0.5,True,plate8,G3,1,,213,-0.738,0.03632,primary: in the stability score
+Doxorubicin 5 uM,Doxorubicin (hydrochloride),Doxorubicin,5,True,plate9,G3,1,cell-cycle shift,7317,-0.6521,0.01805,primary: in the stability score
+Epirubicin 0.05 uM,Epirubicin (hydrochloride),Epirubicin,0.05,False,plate7,C12,1,low cells (technical?),45,-1.297,-0.01288,"0.05 uM: reported in reference_by_condition.csv, not scored"
+Epirubicin 0.5 uM,Epirubicin (hydrochloride),Epirubicin,0.5,True,plate8,C12,1,,196,-0.3574,-0.002609,primary: in the stability score
+Epirubicin 5 uM,Epirubicin (hydrochloride),Epirubicin,5,True,plate9,C12,1,cell-cycle shift,6752,0.2429,-0.04414,primary: in the stability score
+Homoharringtonine 0.05 uM,Homoharringtonine,Homoharringtonine,0.05,False,plate4,G1,1,,4014,0.02916,0.01807,"0.05 uM: reported in reference_by_condition.csv, not scored"
+Homoharringtonine 0.5 uM,Homoharringtonine,Homoharringtonine,0.5,True,plate5,G1,1,cell-cycle shift,1.008e+04,-0.3528,-0.1459,primary: in the stability score
+Homoharringtonine 5 uM,Homoharringtonine,Homoharringtonine,5,True,"plate14,plate6",G1,2,cell-cycle shift; composition shift,1.199e+04,-0.4323,-0.3269,primary: in the stability score
+Auranofin 0.05 uM,Auranofin,Auranofin,0.05,False,plate10,C6,1,,9,-0.2094,-0.02002,"0.05 uM: reported in reference_by_condition.csv, not scored"
+Auranofin 0.5 uM,Auranofin,Auranofin,0.5,True,plate11,C6,1,,140,0.1309,-0.03811,primary: in the stability score
+Auranofin 5 uM,Auranofin,Auranofin,5,True,plate12,C6,1,,8581,-0.9434,-0.1548,primary: in the stability score
+Dinaciclib 0.05 uM,Dinaciclib,Dinaciclib,0.05,False,plate7,B3,1,toxic; transcription drop; cell-cycle shift; composition shift,1.188e+04,-2.137,-0.2423,"0.05 uM: reported in reference_by_condition.csv, not scored"
+Dinaciclib 0.5 uM,Dinaciclib,Dinaciclib,0.5,True,plate8,B3,1,toxic; transcription drop; cell-cycle shift; composition shift,1.282e+04,-1.795,-0.3573,primary: in the stability score
+Dinaciclib 5 uM,Dinaciclib,Dinaciclib,5,True,plate9,B3,1,toxic; transcription drop; cell-cycle shift; composition shift,1.316e+04,-2.48,-0.2805,primary: in the stability score
+Selinexor 0.05 uM,Selinexor,Selinexor,0.05,False,plate4,H3,1,cell-cycle shift,932,0.6445,-0.04051,"0.05 uM: reported in reference_by_condition.csv, not scored"
+Selinexor 0.5 uM,Selinexor,Selinexor,0.5,True,plate5,H3,1,cell-cycle shift,2568,-0.1107,-0.01459,primary: in the stability score
+Selinexor 5 uM,Selinexor,Selinexor,5,True,"plate14,plate6",H3,2,low cells (technical?); cell-cycle shift,6067,-1.11,-0.003719,primary: in the stability score
+DMSO (vs plate drug-well median),DMSO_TF,DMSO,,True,"plate4,plate5,plate6,plate7,plate8,plate9,plate10,plate11,plate12,plate14",,20,,,,,control: corrected frame only (the raw frame is referenced to DMSO)

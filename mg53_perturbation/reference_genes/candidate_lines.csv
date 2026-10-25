@@ -1,0 +1,15 @@
+cell_line_id,cell_line,tp53_group,tp53_changes,p53_responsiveness_log2,functional_call,why
+CVCL_0023,A549,WT,,0.9763,responsive,"named in the task; TP53-WT, p53-responsive"
+CVCL_0459,NCI-H460,WT,,1.246,responsive,"named in the task; TP53-WT, p53-responsive"
+CVCL_0292,HCT15,altered,Splice_site; p.S241F,0.1674,unresponsive,named in the task
+CVCL_0399,LoVo,WT,,1.035,responsive,"named in the task; TP53-WT, p53-responsive"
+CVCL_0504,RKO,WT,,1.369,responsive,"named in the task; TP53-WT, p53-responsive"
+CVCL_1724,SW48,WT,,1.063,responsive,"named in the task; TP53-WT, p53-responsive"
+CVCL_0428,MIA PaCa-2,altered,p.R248W,0.4668,uncertain (within 2 SE of the cut),named in the task
+CVCL_0480,PANC-1,altered,p.R273H,0.2564,unresponsive,named in the task
+CVCL_1056,A498,WT,,1.104,responsive,"TP53-WT, p53-responsive (functional_call == responsive)"
+CVCL_0099,SNU-1,WT,,1.056,responsive,"TP53-WT, p53-responsive (functional_call == responsive)"
+CVCL_1097,C32,WT,,1.039,responsive,"TP53-WT, p53-responsive (functional_call == responsive)"
+CVCL_0397,LS 180,WT,,0.9481,responsive,"TP53-WT, p53-responsive (functional_call == responsive)"
+CVCL_C466,hTERT-HPNE,WT,,0.938,responsive,"TP53-WT, p53-responsive (functional_call == responsive)"
+CVCL_1098,HepG2/C3A,WT,,0.8946,responsive,"TP53-WT, p53-responsive (functional_call == responsive)"
