@@ -20,7 +20,7 @@ citation: [literature/evidence_map.md](literature/evidence_map.md).
 | What moves with it? | AP-1 / immediate-early, ATF3, PMAIP1 | Co-responders across drugs and in single cells, not shown regulators; muscle TFs (MyoD/MEF2, the known promoter TFs) are silent in these lines (T3) | moderate |
 | Is it TRIM72's own promoter? | Unresolved | Part of TRIM72's reads look like readthrough from FUS (17-22 kb upstream, same strand); clean for homoharringtonine, not significant for idarubicin after level matching (T4) | moderate |
 | Does more TRIM72 go with less p53 output? | No detectable association | Per line, across drugs, untreated and in single cells; only strong associations are excluded (17 WT lines) (T6, T7) | null, limited power |
-| Does MG53 act on p53 protein? | Not testable here | Literature: MG53 binds p53 and drives its degradation (cardiomyocytes 2024, trophoblasts 2021); Tahoe has mRNA only and no MG53 perturbation | literature only |
+| Does MG53 lower p53 activity? | Not causally testable in Tahoe | p53 target mRNA is a valid read-out and was tested (row above), but TRIM72 only changes with drugs that also act on p53, and its mRNA may not mean MG53 protein. Needs an MG53 knockdown/overexpression with p53 target mRNA as read-out. Literature: MG53 binds p53 and drives its degradation (cardiomyocytes 2024, trophoblasts 2021) | literature; association only in Tahoe |
 
 ## 1. What raises TRIM72 mRNA?
 
@@ -147,8 +147,20 @@ would predict.
 **The literature** describes the link at the protein level: MG53 binds p53 and promotes its ubiquitination and degradation
 (Jiang et al. 2024, cardiomyocytes and doxorubicin cardiotoxicity, reported MDM2-independent; Li et al. 2021, trophoblasts),
 while a lung study found no direct binding and an indirect, membrane-repair route (Cong et al. 2020). Mechanisms of other TRIMs
-(TRIM24, 25, 28, 32, 39, 59, 65) should not be carried over to MG53. Testing the protein link needs MG53 perturbation with p53
-protein read-outs, ideally in cardiomyocytes, where MG53 is expressed (in rodents; it is scant in human heart).
+(TRIM24, 25, 28, 32, 39, 59, 65) should not be carried over to MG53. 
+
+**Why Tahoe cannot settle it, although p53 target mRNA is a good read-out of p53 activity.** The tests above use exactly that
+read-out. What Tahoe lacks is a way to change MG53 alone: TRIM72 only rises with drugs that also act on p53 directly
+(idarubicin damages DNA), so in those wells the p53 targets mix the drug's own effect with any MG53 effect, and the
+across-line comparison within the same wells can only exclude a strong MG53 effect. Second, MG53 acts as a protein, and TRIM72
+mRNA at ~4 CPM in cancer lines (part of it possibly readthrough from FUS) may carry little MG53 protein. Third, one 24 h
+time point may come before an MG53 protein effect shows in target transcription.
+
+**The direct test, still with mRNA read-outs:** perturb MG53 (TRIM72 knockdown or overexpression, or recombinant MG53) in a
+TP53-wild-type line, with a TP53-null line as control, with and without a p53 activator, and measure the p53 targets that
+separate wild-type from altered lines most clearly here (MDM2, TP53I3, FDXR, CDKN1A, BBC3). If MG53 lowers p53, these fall
+in the wild-type line only. A western blot for MG53 and p53 confirms the perturbation took. Cardiomyocytes are the most
+relevant cells for the anthracycline question (MG53 is expressed in rodent heart; it is scant in human heart).
 
 ## Running it on your system
 

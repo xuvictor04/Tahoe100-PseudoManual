@@ -239,8 +239,10 @@ def t8_answers():
          "same strand); clean for homoharringtonine, not significant for idarubicin after level matching (T4)", "moderate"),
         ("Does more TRIM72 go with less p53 output?", "No detectable association", "Per line, across drugs, untreated and in "
          "single cells; only strong associations are excluded (17 WT lines) (T6, T7)", "null, limited power"),
-        ("Does MG53 act on p53 protein?", "Not testable here", "Literature: MG53 binds p53 and drives its degradation "
-         "(cardiomyocytes 2024, trophoblasts 2021); Tahoe has mRNA only and no MG53 perturbation", "literature only"),
+        ("Does MG53 lower p53 activity?", "Not causally testable in Tahoe", "p53 target mRNA is a valid read-out and was "
+         "tested (row above), but TRIM72 only changes with drugs that also act on p53, and its mRNA may not mean MG53 "
+         "protein. Needs an MG53 knockdown/overexpression with p53 target mRNA as read-out. Literature: MG53 binds p53 and "
+         "drives its degradation (cardiomyocytes 2024, trophoblasts 2021)", "literature; association only in Tahoe"),
     ], columns=["Question", "Answer", "Basis", "Strength"])
 
 
