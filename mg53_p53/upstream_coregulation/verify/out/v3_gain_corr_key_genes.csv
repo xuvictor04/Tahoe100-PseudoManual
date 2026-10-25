@@ -1,0 +1,37 @@
+well,gene,n_lines,n_genes,rho_gain,rho_baseline_same_lines,rho_gain_partial_baselines,rho_log2fc,rank_rho_gain,rank_rho_gain_partial_baselines,rank_rho_log2fc,rank_rho_baseline_same_lines,pct_level_rho_gain,pct_level_rho_gain_partial_baselines,pct_level_rho_log2fc
+Idarubicin 5 (plate6),PYCARD-AS1,47,2.826e+04,0.7376,0.8554,0.7746,0.7295,1,1,1,1,99.98,99.98,99.98
+Idarubicin 5 (plate6),ITGAM,47,2.826e+04,0.6117,0.3907,0.6029,0.2745,5,7,2126,1683,99.94,99.94,91.07
+Idarubicin 5 (plate6),FUS,47,2.826e+04,-0.008673,0.3549,0.105,0.178,1.556e+04,7655,5043,2461,56.11,78.38,78.66
+Idarubicin 5 (plate6),PYCARD,47,2.826e+04,0.4665,-0.1263,0.0523,-0.1401,121,1.071e+04,2.236e+04,2.551e+04,99.28,53.96,14.65
+Idarubicin 5 (plate6),ITGAD,47,2.826e+04,0.1228,0.4635,0.09367,-0.1198,7728,8257,2.132e+04,702,70.71,69.09,20.95
+Idarubicin 5 (plate6),ITGAX,47,2.826e+04,-0.1489,0.025,-0.2114,-0.1929,2.323e+04,2.503e+04,2.446e+04,1.904e+04,10.73,7.404,8.242
+Idarubicin 5 (plate6),TRIM72 gain vs FUS CPM in well (Spearman),47,,0.2174,,,,,,,,,,
+Idarubicin 5 (plate6),TRIM72 gain vs FUS baseline CPM (Spearman),47,,0.392,,,,,,,,,,
+Idarubicin 5 (plate6),"TRIM72 gain vs PYCARD-AS1 gain (Pearson, CPM)",47,,0.6714,,,,,,,,,,
+Idarubicin 5 (plate14),PYCARD-AS1,49,2.751e+04,0.4698,0.7972,0.442,0.636,140,359,4,1,99.11,98.33,99.98
+Idarubicin 5 (plate14),ITGAM,49,2.751e+04,0.341,0.3638,0.2258,-0.2382,1306,5662,2.644e+04,875,93.03,74.68,2.515
+Idarubicin 5 (plate14),FUS,49,2.751e+04,0.3157,0.5898,0.4226,0.5126,1848,511,54,28,96.13,98.98,99.81
+Idarubicin 5 (plate14),PYCARD,49,2.751e+04,0.1242,-0.3436,0.09751,-0.1979,1.037e+04,1.306e+04,2.568e+04,2.732e+04,53.37,44.13,5.027
+Idarubicin 5 (plate14),ITGAD,49,2.751e+04,0.2697,0.3896,0.2605,0.02666,3151,4129,1.553e+04,643,85.61,82.13,41.27
+Idarubicin 5 (plate14),ITGAX,49,2.751e+04,0.02888,0.1278,0.4965,0.02005,1.641e+04,138,1.596e+04,8019,32.4,99.13,39.7
+Idarubicin 5 (plate14),TRIM72 gain vs FUS CPM in well (Spearman),49,,0.4377,,,,,,,,,,
+Idarubicin 5 (plate14),TRIM72 gain vs FUS baseline CPM (Spearman),49,,0.1195,,,,,,,,,,
+Idarubicin 5 (plate14),"TRIM72 gain vs PYCARD-AS1 gain (Pearson, CPM)",49,,0.3475,,,,,,,,,,
+Homoharringtonine 5 (plate6),PYCARD-AS1,48,2.84e+04,0.8596,0.8559,0.8522,0.8686,3,6,1,1,99.96,99.92,99.98
+Homoharringtonine 5 (plate6),ITGAM,48,2.84e+04,0.4958,0.3902,0.4969,0.4712,756,733,532,1667,95.58,95.93,96.95
+Homoharringtonine 5 (plate6),FUS,48,2.84e+04,0.231,0.3642,0.3229,0.2517,4946,2721,3752,2220,89.12,93.49,88.3
+Homoharringtonine 5 (plate6),PYCARD,48,2.84e+04,0.5218,-0.1352,0.2582,0.2597,596,4194,3529,2.583e+04,95.95,77.97,81.45
+Homoharringtonine 5 (plate6),ITGAD,48,2.84e+04,0.6691,0.4691,0.6538,0.5046,131,159,376,628,99.69,99.6,99.07
+Homoharringtonine 5 (plate6),ITGAX,48,2.84e+04,0.6131,0.01065,0.6899,0.3982,262,93,1103,1.992e+04,98.13,99.34,93.28
+Homoharringtonine 5 (plate6),TRIM72 gain vs FUS CPM in well (Spearman),48,,0.2795,,,,,,,,,,
+Homoharringtonine 5 (plate6),TRIM72 gain vs FUS baseline CPM (Spearman),48,,0.2212,,,,,,,,,,
+Homoharringtonine 5 (plate6),"TRIM72 gain vs PYCARD-AS1 gain (Pearson, CPM)",48,,0.8544,,,,,,,,,,
+Homoharringtonine 5 (plate14),PYCARD-AS1,48,2.9e+04,0.8637,0.8654,0.8234,0.8391,2,8,1,1,99.98,99.94,99.98
+Homoharringtonine 5 (plate14),ITGAM,48,2.9e+04,0.4649,0.4049,0.5164,0.4712,930,659,498,834,95.07,96.62,97.77
+Homoharringtonine 5 (plate14),FUS,48,2.9e+04,0.3321,0.6183,0.3728,0.3868,2435,1996,1156,51,94.19,94.13,95.7
+Homoharringtonine 5 (plate14),PYCARD,48,2.9e+04,0.4162,-0.334,0.231,0.1307,1354,5024,7623,2.879e+04,93.19,77.44,69.32
+Homoharringtonine 5 (plate14),ITGAD,48,2.9e+04,0.6344,0.422,0.6313,0.5123,204,218,312,678,99.56,99.6,99.36
+Homoharringtonine 5 (plate14),ITGAX,48,2.9e+04,0.5454,0.1674,0.6616,0.4897,496,162,415,7360,97.18,99.15,98.2
+Homoharringtonine 5 (plate14),TRIM72 gain vs FUS CPM in well (Spearman),48,,0.3592,,,,,,,,,,
+Homoharringtonine 5 (plate14),TRIM72 gain vs FUS baseline CPM (Spearman),48,,0.1959,,,,,,,,,,
+Homoharringtonine 5 (plate14),"TRIM72 gain vs PYCARD-AS1 gain (Pearson, CPM)",48,,0.8474,,,,,,,,,,

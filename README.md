@@ -91,6 +91,8 @@ For the agents also `claude-agent-sdk` and an Anthropic API key.
 | `tahoe` | The one-line commands of the Quick start (Linux / macOS): status, run, log, bundle, agents, stop, setup, ... (`tahoe help`). | seconds |
 | `tahoe_status.py` | What `tahoe status` prints: reads the logs, the job files in `<data>/.tahoe`, the process list and the method version each output records; decides what `tahoe run` redoes. | seconds |
 | `tests/` | Synthetic Tahoe-100M data with planted effects and a smoke test of every script (see `tests/README.md`). | ~3 min |
+| `trim72_idarubicin/` | TRIM72 (MG53) under idarubicin: Tahoe's published DE rows, and corrected per-line fold changes at 5 uM (see its README). | minutes |
+| `mg53_p53/` | MG53 (TRIM72): what raises it and whether it goes with p53 output, on the computed atlas + gene panel (`run_mg53_p53.py`; see its README). | ~45 min |
 
 ## Method v3 (what changed and why)
 

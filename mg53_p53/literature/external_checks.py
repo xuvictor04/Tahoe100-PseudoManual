@@ -34,7 +34,7 @@ import urllib.request
 
 import pandas as pd
 
-OUT = os.path.dirname(os.path.abspath(__file__))
+OUT = os.environ.get("MG53_OUT") or os.path.dirname(os.path.abspath(__file__))   # run_mg53_p53.py sets MG53_OUT
 DL = os.path.join(OUT, "downloads")
 UA = {"User-Agent": "Mozilla/5.0 (tahoe-mg53-literature-check)"}
 

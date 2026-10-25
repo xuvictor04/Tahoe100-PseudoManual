@@ -16,7 +16,7 @@ from scipy.stats import wilcoxon
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from v1_coreg_drugdoses import standardise, FXD, OUT, load_coords  # noqa: E402
-from v3_baseline_locus import zr  # noqa: E402
+from v3_baseline_locus import zr_masked  # noqa: E402
 
 rng = np.random.default_rng(9)
 
@@ -48,9 +48,10 @@ def main():
     use = [i for i, p in enumerate(q["plates"]) if p not in info["unreliable_plates"]]
     cnt = q["counts"][use][:, :, tokens].astype(np.float64)
     tot = q["total"][use]
-    ZB = np.nan_to_num(zr(np.log2((cnt + 0.5) / tot[:, :, None] * 1e6), 1))     # P x L x genes
+    okl = tot > 0
+    nl = okl.sum(axis=1).astype(float)
+    ZB = zr_masked(np.log2((cnt + 0.5) / np.where(okl, tot, 1.0)[:, :, None] * 1e6), okl)     # P x L x genes
     del cnt
-    L = ZB.shape[1]
     rows = []
     for lab in ("E116", "E110"):
         cl = v1[f"class_{lab}"].to_numpy()
@@ -60,7 +61,11 @@ def main():
         rpart = np.zeros((len(gp), 20), dtype=int)
         lp = np.log2(np.maximum(plvl, 1e-6))
         for k, (g_, u_) in enumerate(zip(gp, upi)):
-            c_ = np.flatnonzero((np.abs(lp - lp[u_]) <= 1) & (chrom != chrom[g_]))
+            w_ = 1.0
+            c_ = np.flatnonzero((np.abs(lp - lp[u_]) <= w_) & (chrom != chrom[g_]))
+            while c_.size < 20:
+                w_ += 0.5
+                c_ = np.flatnonzero((np.abs(lp - lp[u_]) <= w_) & (chrom != chrom[g_]))
             rpart[k] = rng.choice(c_, 20, replace=False)
         for nm, X in (("drugdoses_raw", Xs), ("drugdoses_minus3pc", X3)):
             n = X.shape[0]
@@ -70,8 +75,8 @@ def main():
             rows.append({"annotation": lab, "data": nm, "n_pairs": len(gp), "median_r_pair": np.median(obs),
                          "median_r_random": np.median(rnd), "pct_pairs_above_random": 100 * (d > 0).mean(),
                          "wilcoxon_p": wilcoxon(d).pvalue})
-        bo = np.median(np.einsum("plg,plg->pg", ZB[:, :, gp], ZB[:, :, upi]) / L, axis=0)
-        br = np.stack([np.median(np.einsum("plg,plg->pg", ZB[:, :, gp], ZB[:, :, rpart[:, j]]) / L, axis=0)
+        bo = np.median(np.einsum("plg,plg->pg", ZB[:, :, gp], ZB[:, :, upi]) / nl[:, None], axis=0)
+        br = np.stack([np.median(np.einsum("plg,plg->pg", ZB[:, :, gp], ZB[:, :, rpart[:, j]]) / nl[:, None], axis=0)
                        for j in range(20)], axis=1)
         d = bo - np.median(br, axis=1)
         rows.append({"annotation": lab, "data": "untreated_lines_within_plate", "n_pairs": len(gp),
@@ -79,7 +84,7 @@ def main():
                      "pct_pairs_above_random": 100 * (d > 0).mean(), "wilcoxon_p": wilcoxon(d).pvalue})
     t, f = pos["TRIM72"], pos["FUS"]
     rt = {"drugdoses_raw": (Xs[:, t] @ Xs[:, f]) / Xs.shape[0], "drugdoses_minus3pc": (X3[:, t] @ X3[:, f]) / X3.shape[0],
-          "untreated_lines_within_plate": float(np.median((ZB[:, :, t] * ZB[:, :, f]).sum(axis=1) / L))}
+          "untreated_lines_within_plate": float(np.median((ZB[:, :, t] * ZB[:, :, f]).sum(axis=1) / nl))}
     for k, v in rt.items():
         rows.append({"annotation": "-", "data": k, "n_pairs": 1, "median_r_pair": v, "note": "TRIM72-FUS"})
     R = pd.DataFrame(rows)

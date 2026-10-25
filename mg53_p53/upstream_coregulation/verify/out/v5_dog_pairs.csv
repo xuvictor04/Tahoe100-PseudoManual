@@ -1,0 +1,10 @@
+annotation,data,n_pairs,median_r_pair,median_r_random,pct_pairs_above_random,wilcoxon_p,note
+E116,drugdoses_raw,703,0.18,-0.01743,75.11,1.401e-50,
+E116,drugdoses_minus3pc,703,0.1787,0.001959,78.81,1.936e-64,
+E116,untreated_lines_within_plate,703,0.4433,0.01887,92.89,2.213e-107,
+E110,drugdoses_raw,690,0.1918,-0.0148,75.36,3.279e-53,
+E110,drugdoses_minus3pc,690,0.1852,0.002122,80.43,7.604e-66,
+E110,untreated_lines_within_plate,690,0.4529,0.02303,92.61,2.062e-107,
+-,drugdoses_raw,1,0.6355,,,,TRIM72-FUS
+-,drugdoses_minus3pc,1,0.4671,,,,TRIM72-FUS
+-,untreated_lines_within_plate,1,0.4703,,,,TRIM72-FUS

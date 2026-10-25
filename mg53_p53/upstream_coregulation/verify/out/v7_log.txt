@@ -1,0 +1,23 @@
+                             well                                comparison  n_plus_downstream  n_other  median_pct_plus_downstream  median_pct_other  median_log2OE_plus_downstream  median_log2OE_other  MWU_p_one_sided
+0   Homoharringtonine 5 (plate14)       plus_downstream vs minus_downstream                  7        5                       90.57             11.78                          1.657               -1.240            0.037
+1   Homoharringtonine 5 (plate14)    plus_downstream vs upstream_any_strand                  7       21                       90.57             43.62                          1.657                0.676            0.024
+2   Homoharringtonine 5 (plate14)  plus_downstream vs all_other_locus_genes                  7       26                       90.57             35.00                          1.657               -0.069            0.015
+3    Homoharringtonine 5 (plate6)       plus_downstream vs minus_downstream                  7        5                       92.99             13.40                          2.362               -1.394            0.037
+4    Homoharringtonine 5 (plate6)    plus_downstream vs upstream_any_strand                  7       21                       92.99             49.55                          2.362                0.592            0.021
+5    Homoharringtonine 5 (plate6)  plus_downstream vs all_other_locus_genes                  7       26                       92.99             44.19                          2.362               -0.335            0.013
+6          Idarubicin 5 (plate14)       plus_downstream vs minus_downstream                  7        5                       78.82             51.42                          1.547                0.710            0.265
+7          Idarubicin 5 (plate14)    plus_downstream vs upstream_any_strand                  7       20                       78.82             52.45                          1.547                0.706            0.157
+8          Idarubicin 5 (plate14)  plus_downstream vs all_other_locus_genes                  7       25                       78.82             51.42                          1.547                0.710            0.151
+9           Idarubicin 5 (plate6)       plus_downstream vs minus_downstream                  7        5                       74.89             55.12                          1.724                0.638            0.172
+10          Idarubicin 5 (plate6)    plus_downstream vs upstream_any_strand                  7       21                       74.89             50.76                          1.724                0.836            0.104
+11          Idarubicin 5 (plate6)  plus_downstream vs all_other_locus_genes                  7       26                       74.89             52.61                          1.724                0.737            0.092
+                            well                                                                        plus_downstream
+0  Homoharringtonine 5 (plate14)  ENSG00000260060 91; PYCARD-AS1 93; ITGAM 100; ITGAX 72; ITGAD 97; ARMC5 81; TGFB1I1 6
+3   Homoharringtonine 5 (plate6)  ENSG00000260060 93; PYCARD-AS1 95; ITGAM 100; ITGAX 76; ITGAD 98; ARMC5 83; TGFB1I1 4
+6         Idarubicin 5 (plate14)   ENSG00000260060 79; PYCARD-AS1 90; ITGAM 94; ITGAX 11; ITGAD 80; ARMC5 72; TGFB1I1 3
+9          Idarubicin 5 (plate6)   ENSG00000260060 74; PYCARD-AS1 91; ITGAM 94; ITGAX 11; ITGAD 82; ARMC5 75; TGFB1I1 4
+                            well                                                                            other
+0  Homoharringtonine 5 (plate14)  PYCARD 15; ZNF843 73; ENSG00000261474 11; ENSG00000260267 12; ENSG00000280132 7
+3   Homoharringtonine 5 (plate6)  PYCARD 7; ZNF843 77; ENSG00000261474 13; ENSG00000260267 13; ENSG00000280132 14
+6         Idarubicin 5 (plate14)  PYCARD 4; ZNF843 92; ENSG00000261474 67; ENSG00000260267 47; ENSG00000280132 51
+9          Idarubicin 5 (plate6)  PYCARD 2; ZNF843 88; ENSG00000261474 72; ENSG00000260267 39; ENSG00000280132 55

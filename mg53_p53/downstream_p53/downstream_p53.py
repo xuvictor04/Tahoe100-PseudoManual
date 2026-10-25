@@ -27,7 +27,7 @@ Four angles, each designed to remove the confounders the data allow:
      log(total UMI), S- and G2M-phase scores as covariates; random-effects meta-analysis over lines, WT and altered
      separately; non-p53 panel genes as negative-control outcomes; a depth-stratified Mantel-Haenszel rate ratio.
 
-    python3 downstream_p53.py [--data /home/user/tahoe_data] [--recompute] [--perm 5000]
+    python3 downstream_p53.py [--data DIR (default $MG53_DATA, $TAHOE_DATA or ~/Tahoe-100M)] [--recompute] [--perm 5000]
 
 Caches (cache/; rebuilt with --recompute or when missing): effects.npz (per well x line r2, z_line, log2 CPM y of
 every panel gene, from the panel's own setup and T.expression_effects), wells.csv, lines.csv, meta.json,
@@ -1321,13 +1321,13 @@ key_results.csv                   the numbers the summary cites, each with its s
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--data", default="/home/user/tahoe_data")
+    ap.add_argument("--data", default=os.environ.get("MG53_DATA") or os.environ.get("TAHOE_DATA") or os.path.expanduser("~/Tahoe-100M"))
     ap.add_argument("--recompute", action="store_true", help="rebuild the caches")
     ap.add_argument("--perm", type=int, default=5000, help="permutations per test")
     ap.add_argument("--boot", type=int, default=1000, help="drug-level bootstrap resamples")
     a = ap.parse_args()
     t0 = time.time()
-    cdir, tab = os.path.join(HERE, "cache"), os.path.join(HERE, "tables")
+    cdir, tab = os.path.join(os.environ.get("MG53_OUT") or HERE, "cache"), os.path.join(os.environ.get("MG53_OUT") or HERE, "tables")
     os.makedirs(cdir, exist_ok=True)
     os.makedirs(tab, exist_ok=True)
     if a.recompute or not all(os.path.exists(os.path.join(cdir, f)) for f in

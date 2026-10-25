@@ -1,0 +1,27 @@
+Test,Lines / cells,Estimate,p,n
+"Idarubicin 5 µM, per line: TRIM72 induction vs p53-score induction (unadjusted)",TP53-WT,rho 0.02,0.95,17 lines
+"Idarubicin 5 µM, per line: TRIM72 induction vs p53-score induction (drug response and cell loss out)",TP53-WT,rho -0.22,0.40,17 lines
+"Idarubicin 5 µM, per line: TRIM72 induction vs p53-score induction (unadjusted)",TP53-altered,rho -0.24,0.21,31 lines
+"Idarubicin 5 µM, per line: TRIM72 induction vs p53-score induction (drug response and cell loss out)",TP53-altered,rho -0.28,0.13,30 lines
+"13 TRIM72 raisers pooled, per line: TRIM72 vs P53 score (drug response and cell loss out)",TP53-WT,mean rho -0.08,0.40,13 drug-doses
+"13 TRIM72 raisers pooled, per line: TRIM72 vs MDM2 (drug response and cell loss out)",TP53-WT,mean rho -0.17,0.035,13 drug-doses
+"13 TRIM72 raisers pooled, per line: TRIM72 vs P53 score (drug response and cell loss out)",TP53-altered,mean rho 0.04,0.53,13 drug-doses
+"13 TRIM72 raisers pooled, per line: TRIM72 vs MDM2 (drug response and cell loss out)",TP53-altered,mean rho -0.07,0.39,13 drug-doses
+"Untreated, per line (within plates): TRIM72 level vs basal p53 activity",TP53-WT,rho -0.19,0.48,17 lines
+"Untreated, per line (within plates): TRIM72 level vs p53 responsiveness",TP53-WT,rho 0.12,0.65,17 lines
+"Untreated, per line (within plates): TRIM72 level vs TP53 mRNA",TP53-WT,rho -0.45,0.071,17 lines
+"Untreated, per line (within plates): TRIM72 level vs basal p53 activity",TP53-altered,rho -0.16,0.38,31 lines
+"Untreated, per line (within plates): TRIM72 level vs p53 responsiveness",TP53-altered,rho 0.09,0.64,31 lines
+"Untreated, per line (within plates): TRIM72 level vs TP53 mRNA",TP53-altered,rho 0.24,0.22,28 lines
+Across all drug-doses: TRIM72 z vs P53_ACTIVITY z (activity out),all lines pooled,rho 0.12 (CI 0.05 to 0.19),5e-05,1132 drug-doses
+Across all drug-doses: TRIM72 z vs MDM2 z (activity out),all lines pooled,rho -0.02 (CI -0.09 to 0.04),0.41,1132 drug-doses
+Across all drug-doses: TRIM72 z vs p53_WT_minus_altered z (activity out),all lines pooled,rho 0.03 (CI -0.04 to 0.09),0.35,1132 drug-doses
+Across all drug-doses: TRIM72 z vs PMAIP1 z (activity out),all lines pooled,rho 0.33 (CI 0.27 to 0.39),8e-31,1132 drug-doses
+"Single cells, idarubicin 5 µM: P53 score counts in TRIM72-detected vs undetected cells (depth, cycle out)",TP53-WT,rate ratio 1.020,0.30,16 lines
+"Single cells, idarubicin 5 µM: MDM2 counts in TRIM72-detected vs undetected cells (depth, cycle out)",TP53-WT,rate ratio 1.043,0.18,16 lines
+"Single cells, idarubicin 5 µM: ATF3 counts in TRIM72-detected vs undetected cells (depth, cycle out)",TP53-WT,rate ratio 1.117,0.006,15 lines
+"Single cells, idarubicin 5 µM: PMAIP1 counts in TRIM72-detected vs undetected cells (depth, cycle out)",TP53-WT,rate ratio 1.091,0.038,15 lines
+"Single cells, idarubicin 5 µM: P53 score counts in TRIM72-detected vs undetected cells (depth, cycle out)",TP53-altered,rate ratio 0.983,0.29,30 lines
+"Single cells, idarubicin 5 µM: MDM2 counts in TRIM72-detected vs undetected cells (depth, cycle out)",TP53-altered,rate ratio 1.003,0.93,30 lines
+"Single cells, idarubicin 5 µM: ATF3 counts in TRIM72-detected vs undetected cells (depth, cycle out)",TP53-altered,rate ratio 1.195,1e-10,30 lines
+"Single cells, idarubicin 5 µM: PMAIP1 counts in TRIM72-detected vs undetected cells (depth, cycle out)",TP53-altered,rate ratio 1.109,6e-04,27 lines

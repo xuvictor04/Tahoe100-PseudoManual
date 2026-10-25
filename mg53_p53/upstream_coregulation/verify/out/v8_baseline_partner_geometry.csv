@@ -1,0 +1,9 @@
+ranking,geometry,top100_n,pct_rest_1to20cpm,pct_all_atlas,fisher_OR_vs_rest_1to20cpm,fisher_p
+rho_within_plate_median,convergent,7,4.835,2.866,1.481,0.3415
+rho_within_plate_median,divergent,7,5.255,2.962,1.357,0.371
+rho_within_plate_median,tandem_down (readthrough geometry),41,8.146,4.741,7.835,8.148e-19
+rho_within_plate_median,tandem_up,12,4.319,2.596,3.021,0.001427
+rho_partial_given_silent_background,convergent,7,4.817,2.866,1.487,0.3406
+rho_partial_given_silent_background,divergent,2,5.296,2.962,0.3649,0.1764
+rho_partial_given_silent_background,tandem_down (readthrough geometry),35,8.208,4.741,6.022,8.858e-14
+rho_partial_given_silent_background,tandem_up,9,4.349,2.596,2.175,0.04247

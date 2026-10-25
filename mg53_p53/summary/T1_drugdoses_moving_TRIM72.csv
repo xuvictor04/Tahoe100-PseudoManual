@@ -1,0 +1,23 @@
+Drug,Dose (µM),TRIM72 fold (corrected),z,q,Fold without pseudocount,Wells,Plates,p53 activity z,Genes changed,Flags
+Idarubicin,5,12.2×,15.9,<1e-15,6.0×,replicated (2 wells),"6, 14",18.1,"11,472",cell-cycle shift
+Homoharringtonine,5,10.3×,14.8,<1e-15,5.4×,replicated (2 wells),"6, 14",20.6,"11,993",cell-cycle shift; composition shift
+Auranofin,5,6.6×,8.4,7e-15,4.1×,single well,12,-7.8,"8,581",position effect removed
+Homoharringtonine,0.5,5.9×,7.9,3e-13,5.9×,single well,5,17.4,"10,075",cell-cycle shift
+Dinaciclib,5,5.6×,7.4,2e-11,3.7×,single well,9,0.6,"13,164",toxic; transcription drop; cell-cycle shift; composition shift; position effect removed
+Epirubicin,5,4.5×,6.5,8e-09,4.8×,single well,9,8.1,"6,752",cell-cycle shift
+Dinaciclib,0.5,3.7×,5.9,4e-07,2.0×,single well,8,1.6,"12,822",toxic; transcription drop; cell-cycle shift; composition shift; position effect removed
+Dinaciclib,0.05,3.8×,5.5,2e-06,2.5×,single well,7,7.0,"11,885",toxic; transcription drop; cell-cycle shift; composition shift; position effect removed
+Harringtonine,5,3.6×,5.5,2e-06,3.2×,single well,9,6.2,"9,773",cell-cycle shift; composition shift; position effect removed
+Doxorubicin,5,3.0×,4.7,1e-04,3.2×,single well,9,10.0,"7,317",cell-cycle shift
+Mitoxantrone,5,2.0×,4.5,3e-04,1.1×,not replicated (1/2 wells),"6, 14",11.3,"4,951",
+Panobinostat,5,2.7×,4.4,4e-04,2.5×,single well,12,1.1,"10,622",cell-cycle shift; position effect removed
+Topotecan,5,2.6×,4.0,0.002,2.6×,single well,9,18.3,"8,958",toxic; cell-cycle shift
+Filgotinib,5,2.3×,3.8,0.006,3.4×,single well,12,-1.0,"1,393",position effect removed
+Idarubicin,0.5,2.2×,3.4,0.024,2.0×,single well,5,14.9,"3,579",cell-cycle shift
+Lactate,5,2.1×,3.3,0.030,2.0×,single well,12,0.5,90,
+Adagrasib,0.05,1.2×,3.1,0.068,1.2×,not replicated (1/14 wells),"1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14",-0.7,321,position not correctable
+TAK-901,0.05,2.1×,3.1,0.068,1.7×,single well,1,-2.6,"1,712",
+Cyclosporin A,0.05,2.0×,3.0,0.080,1.7×,single well,10,0.7,30,
+Idarubicin,0.05,1.9×,2.9,0.090,1.8×,single well,4,6.0,33,
+Ouabain,5,1.9×,2.9,0.093,1.5×,single well,12,3.8,"9,763",cell-cycle shift; composition shift
+Ponatinib,5,0.39×,-4.2,0.015,0.43×,single well,12,3.9,"3,510",position effect removed

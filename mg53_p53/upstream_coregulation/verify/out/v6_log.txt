@@ -1,0 +1,68 @@
+(1) neighbour pairs (low gene vs >= 8x stronger neighbour <= 20 kb), by orientation:
+        statistic                              config  n_pairs  median    mean  median_0-5kb  median_5-10kb  median_10-20kb  MWU_p_vs_tandem_down
+0           r_raw                          convergent      479 -0.0365 -0.0060       -0.0331         0.0050         -0.0549                   0.0
+1           r_raw                           divergent      504  0.0845  0.0754        0.0752         0.1312          0.0982                   0.0
+2           r_raw  tandem_down (readthrough geometry)      801  0.1889  0.1760        0.2124         0.2257          0.1412                   NaN
+3           r_raw                           tandem_up      439  0.0388  0.0559        0.0891         0.0231          0.0341                   0.0
+4      r_minus3pc                          convergent      479  0.0213  0.0206        0.0046         0.0220          0.0268                   0.0
+5      r_minus3pc                           divergent      504  0.0985  0.1049        0.1085         0.0369          0.0922                   0.0
+6      r_minus3pc  tandem_down (readthrough geometry)      801  0.1798  0.1770        0.2229         0.1783          0.1449                   NaN
+7      r_minus3pc                           tandem_up      439  0.0653  0.0704        0.0654         0.0887          0.0502                   0.0
+8     r_minus10pc                          convergent      479  0.0268  0.0319        0.0244         0.0274          0.0285                   0.0
+9     r_minus10pc                           divergent      504  0.0487  0.0656        0.0560         0.0411          0.0391                   0.0
+10    r_minus10pc  tandem_down (readthrough geometry)      801  0.1130  0.1283        0.1390         0.1143          0.0830                   NaN
+11    r_minus10pc                           tandem_up      439  0.0493  0.0551        0.0652         0.0530          0.0425                   0.0
+12  rho_untreated                          convergent      479  0.2251  0.2170        0.2333         0.2089          0.2353                   0.0
+13  rho_untreated                           divergent      504  0.3642  0.3558        0.4034         0.2711          0.2987                   0.0
+14  rho_untreated  tandem_down (readthrough geometry)      801  0.4474  0.4369        0.5098         0.4434          0.3939                   NaN
+15  rho_untreated                           tandem_up      439  0.3138  0.3019        0.3605         0.3188          0.2852                   0.0
+Empty DataFrame
+Columns: [low, strong, config, gap, r_raw, r_minus3pc, r_minus10pc, rho_untreated, low_gene, strong_gene, gap_bin]
+Index: []
+(2) TRIM72 top-100 partners by orientation class of the gene (a gene can be in several):
+                                                    0         1          2
+variant                                           raw  minus3pc  minus10pc
+top100_n_tandem_up                                 12         7          3
+all_pct_tandem_up                            2.595686  2.595686   2.595686
+top100_n_divergent                                  5         1          1
+all_pct_divergent                            2.962206  2.962206   2.962206
+top100_n_tandem_down (readthrough geometry)        52        57         48
+all_pct_tandem_down (readthrough geometry)   4.740732  4.740732   4.740732
+top100_n_convergent                                10         4          4
+all_pct_convergent                            2.86607   2.86607    2.86607
+(3)
+      variant    gene      r  pct_level_within2x  pct_all_genes  n_level_genes
+0         raw    TP53  0.257              78.286         68.479           4200
+1         raw    MDM2  0.005              53.509         36.147           2123
+2         raw  CDKN1A  0.418              93.808         88.986           4296
+3         raw     FUS  0.636              99.727         99.381           1463
+4         raw   FNDC7  0.863              99.973         99.988           3746
+5         raw    PYGM  0.668              99.364         99.658           4245
+6         raw    ATF3  0.589              99.350         98.648           3999
+7         raw    FOSB  0.656              99.864         99.585           4396
+8    minus3pc    TP53  0.178              87.571         85.628           4200
+9    minus3pc    MDM2  0.034              49.694         59.725           2123
+10   minus3pc  CDKN1A  0.174              87.547         85.255           4296
+11   minus3pc     FUS  0.467              99.658         99.015           1463
+12   minus3pc   FNDC7  0.761              99.973         99.988           3746
+13   minus3pc    PYGM  0.699              99.976         99.982           4245
+14   minus3pc    ATF3  0.361              98.375         97.236           3999
+15   minus3pc    FOSB  0.558              99.932         99.730           4396
+16  minus10pc    TP53  0.247              95.048         95.157           4200
+17  minus10pc    MDM2  0.079              66.981         75.852           2123
+18  minus10pc  CDKN1A  0.007              54.376         57.472           4296
+19  minus10pc     FUS  0.291              94.600         96.821           1463
+20  minus10pc   FNDC7  0.660              99.973         99.988           3746
+21  minus10pc    PYGM  0.647              99.976         99.982           4245
+22  minus10pc    ATF3  0.467              99.775         99.591           3999
+23  minus10pc    FOSB  0.498              99.909         99.736           4396
+(4)
+                                                                 test  n1    n2  estimate         p
+0     TRIM72_within_plate_z_median: TP53 WT vs altered (Mann-Whitney)  17  33.0  0.383957  0.910298
+1  TRIM72_within_plate_z_median vs basal_p53_activity_log2 (Spearman)  50   NaN  0.007300  0.959870
+2  TRIM72_within_plate_z_median vs p53_responsiveness_log2 (Spearman)  49   NaN  0.054553  0.709675
+3              TRIM72_within_plate_z_median by organ (Kruskal-Wallis)  50   NaN  3.146794  0.677366
+4     TRIM72_log2cpm_vs_plate_mean: TP53 WT vs altered (Mann-Whitney)  17  33.0  0.259006  0.934711
+5  TRIM72_log2cpm_vs_plate_mean vs basal_p53_activity_log2 (Spearman)  50   NaN -0.010324  0.943272
+6  TRIM72_log2cpm_vs_plate_mean vs p53_responsiveness_log2 (Spearman)  49   NaN  0.030612  0.834602
+7              TRIM72_log2cpm_vs_plate_mean by organ (Kruskal-Wallis)  50   NaN  3.718790  0.590570

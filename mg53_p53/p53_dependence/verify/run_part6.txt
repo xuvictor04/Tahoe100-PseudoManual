@@ -1,0 +1,32 @@
+strong activators: 44  raisers: 19
+
+=== (a) TRIM72 FDR<0.10 hits ===
+                      drug  conc  TRIM72_wt_minus_altered_z  TRIM72_fdr  TRIM72_all_lines_fold_change  P53_ACTIVITY_all_lines_z  P53_SCORE_wt_minus_altered_z  strong_activator
+              Fumaric acid  0.05                     -5.194       0.000                         1.000                    -0.961                        -0.694             False
+                 Sunitinib  0.05                     -3.974       0.016                         0.929                     0.444                         2.289             False
+                venetoclax  0.05                     -3.552       0.054                         0.842                     1.040                         0.534             False
+     Flumatinib (mesylate)  0.05                     -3.547       0.054                         1.133                    -0.076                        -0.806             False
+               Pralsetinib  5.00                     -3.521       0.054                         0.348                     0.057                        -2.321             False
+Cytarabine (hydrochloride)  5.00                     -3.284       0.097                         0.722                     7.762                        10.085              True
+         Homoharringtonine  0.50                      3.307       0.097                         5.870                    17.399                        11.513              True
+               Apalutamide  0.05                      3.320       0.097                         0.963                     0.661                        -0.612             False
+               Futibatinib  5.00                      3.797       0.028                         0.685                    -1.581                        -1.368             False
+Epirubicin (hydrochloride)  5.00                      4.320       0.004                         4.516                     8.103                         6.331              True
+                 Digitoxin  0.50                      5.117       0.000                         0.849                    -0.401                         1.076             False
+     Ouabain (Octahydrate)  5.00                      6.469       0.000                         1.929                     3.842                         6.046              True
+               hits  activators_hit  activators_n  others_hit  others_n  fisher_or      p  among_raisers_act_hit  among_raisers_act_n  among_raisers_other_hit  among_raisers_other_n  p_among_raisers
+     WT-higher hits               3            44           3      1088    26.4634 0.0010                      2                   10                        0                      9           0.4737
+altered-higher hits               1            44           5      1088     5.0372 0.2121                      0                   10                        0                      9           1.0000
+
+=== (b) WT vs missense-only vs other altered (truncating/splice/deletion/mixed), DMSO-ratio values ===
+tp53_class
+altered: missense only                     20
+WT                                         17
+altered: truncating / splice / deletion    13
+                       drug  conc  scope      gene  n_wt  n_missense  n_trunc_other  fc_wt  fc_missense  fc_trunc_other  p_wt_vs_missense  p_wt_vs_trunc_other
+ Epirubicin (hydrochloride)   5.0 plate9    TRIM72    17          19             13 11.139        2.572          11.099             0.016                0.586
+ Epirubicin (hydrochloride)   5.0 plate9 P53_SCORE    17          20             13  1.488        1.117           1.120             0.017                0.030
+Doxorubicin (hydrochloride)   5.0 plate9    TRIM72    17          17             13  5.716        1.748           5.444             0.113                0.867
+Doxorubicin (hydrochloride)   5.0 plate9 P53_SCORE    17          18             13  1.971        1.178           1.232             0.000                0.002
+ Idarubicin (hydrochloride)   5.0   mean    TRIM72    17          18             13  9.004        8.485          16.764             0.934                0.336
+ Idarubicin (hydrochloride)   5.0   mean P53_SCORE    17          19             13  1.925        1.282           1.204             0.000                0.000

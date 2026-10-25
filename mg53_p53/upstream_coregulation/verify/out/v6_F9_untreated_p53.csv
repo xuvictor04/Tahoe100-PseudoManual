@@ -1,0 +1,9 @@
+test,n1,n2,estimate,p
+TRIM72_within_plate_z_median: TP53 WT vs altered (Mann-Whitney),17,33,0.384,0.9103
+TRIM72_within_plate_z_median vs basal_p53_activity_log2 (Spearman),50,,0.0073,0.9599
+TRIM72_within_plate_z_median vs p53_responsiveness_log2 (Spearman),49,,0.05455,0.7097
+TRIM72_within_plate_z_median by organ (Kruskal-Wallis),50,,3.147,0.6774
+TRIM72_log2cpm_vs_plate_mean: TP53 WT vs altered (Mann-Whitney),17,33,0.259,0.9347
+TRIM72_log2cpm_vs_plate_mean vs basal_p53_activity_log2 (Spearman),50,,-0.01032,0.9433
+TRIM72_log2cpm_vs_plate_mean vs p53_responsiveness_log2 (Spearman),49,,0.03061,0.8346
+TRIM72_log2cpm_vs_plate_mean by organ (Kruskal-Wallis),50,,3.719,0.5906

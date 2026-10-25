@@ -1,0 +1,4 @@
+variant,top100_n_tandem_up,all_pct_tandem_up,top100_n_divergent,all_pct_divergent,top100_n_tandem_down (readthrough geometry),all_pct_tandem_down (readthrough geometry),top100_n_convergent,all_pct_convergent
+raw,12,2.596,5,2.962,52,4.741,10,2.866
+minus3pc,7,2.596,1,2.962,57,4.741,4,2.866
+minus10pc,3,2.596,1,2.962,48,4.741,4,2.866

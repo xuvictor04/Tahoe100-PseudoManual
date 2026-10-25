@@ -8,7 +8,7 @@ Steps (all outputs in tables/; every number is computed here, nothing is typed i
   fetch  Downloads (cached in external/): Lambert et al. 2018 human TF list (humantfs.ccbr.utoronto.ca v1.01,
          DatabaseExtract 'Is TF?' == Yes), HGNC complete set (gene groups, cytobands), Ensembl GRCh38 gene coordinates
          (BioMart) and the TRIM72 +-200 kb region (Ensembl REST overlap). Nothing else is downloaded.
-  prep   One read-only pass over /home/user/tahoe_data/atlas/pseudobulk/groupNNN.npy (mmap, row chunks; sample ->
+  prep   One read-only pass over <data>/atlas/pseudobulk/groupNNN.npy (mmap, row chunks; sample ->
          plate from atlas/sample_map.csv; split (sample, line) rows summed) that writes cache/: per plate x line
          summed counts of every gene over 'quiet' wells (DMSO + drug wells of drug-doses with < 1000 significant
          genes, failed wells out) and over the DMSO wells; per (well, line) counts of the +-1 Mb locus genes and a
@@ -45,7 +45,7 @@ Steps (all outputs in tables/; every number is computed here, nothing is typed i
          c_raiser_wells_genomewide_OE_summary.csv, c_locus_strand_summary_raiser_wells.csv,
          c_per_line_gain_corr_with_TRIM72_genomewide.csv).
 
-All associations; there is no MG53 perturbation in Tahoe. Nothing is written outside this folder; /home/user/tahoe_data
+All associations; there is no MG53 perturbation in Tahoe. Nothing is written outside $MG53_OUT (default this folder); the data folder
 is read only.
 """
 import argparse
@@ -61,12 +61,13 @@ import pandas as pd
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, REPO)
-DATA = "/home/user/tahoe_data"
+DATA = os.environ.get("MG53_DATA") or os.environ.get("TAHOE_DATA") or os.path.expanduser("~/Tahoe-100M")   # the Tahoe-100M folder with atlas/ and gene_panel/
 FXD = os.path.join(DATA, "atlas", "effects")
 PB = os.path.join(DATA, "atlas", "pseudobulk")
-EXT = os.path.join(HERE, "external")
-CACHE = os.path.join(HERE, "cache")
-TAB = os.path.join(HERE, "tables")
+OUTDIR = os.environ.get("MG53_OUT") or HERE      # tables/ (and cache/, external/) go here; run_mg53_p53.py sets it
+EXT = os.path.join(OUTDIR, "external")
+CACHE = os.path.join(OUTDIR, "cache")
+TAB = os.path.join(OUTDIR, "tables")
 SEED = 7
 
 TRIM72_REGION = ("16", 31214017, 31231537)       # GRCh38, + strand (Ensembl ENSG00000177238)

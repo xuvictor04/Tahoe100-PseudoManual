@@ -31,6 +31,15 @@ def zr(M, axis):
     return R / sd
 
 
+def zr_masked(M, ok):
+    """M: P x L (x G); ok: P x L. Per plate, z-scored ranks over the lines present (ok); 0 for absent lines."""
+    out = np.zeros(M.shape, dtype=np.float64)
+    for p in range(M.shape[0]):
+        m = ok[p]
+        out[p, m] = np.nan_to_num(zr(M[p, m], 0))
+    return out
+
+
 def main():
     gm = pd.read_parquet("/home/user/tahoe_data/metadata/gene_metadata.parquet")
     sym = pd.Series(gm["gene_symbol"].values, index=gm["token_id"].values)
@@ -54,26 +63,33 @@ def main():
         z = q if defn == "quiet" else np.load(os.path.join(C2, f"plate_line_sums_{defn}.npz"))
         counts = z["counts"][use].astype(np.float64)       # P x L x G
         tot = z["total"][use]
-        okp = (tot > 0).all(axis=1)
-        counts, tot = counts[okp], tot[okp]
+        okl = tot > 0                                       # (plate, line) present (>= 30 cells in some well)
+        okp = okl.sum(axis=1) >= 40                         # plates with >= 40 lines present
+        counts, tot, okl = counts[okp], tot[okp], okl[okp]
         P, L, G = counts.shape
+        nl = okl.sum(axis=1).astype(float)                  # lines per plate
+        print(f"[{defn}] plates used {int(okp.sum())}; lines per plate {nl.astype(int).tolist()}")
         csum = counts.sum(axis=(0, 1))
         named = np.zeros(G, dtype=bool)
         named[gm["token_id"].astype(int).to_numpy()] = True
         toks = np.flatnonzero((csum >= 200) & named)
         toks = toks[toks != T]
         pooled = 1e6 * csum / tot.sum()
-        lt = np.log2((counts[:, :, toks] + 0.5) / tot[:, :, None] * 1e6)
-        yt = np.log2((counts[:, :, T] + 0.5) / tot * 1e6)
-        ZG = np.nan_to_num(zr(lt, 1))
-        ZT = zr(yt, 1)
-        rho = np.median(np.einsum("pl,plg->pg", ZT, ZG) / L, axis=0)
+        tsafe = np.where(okl, tot, 1.0)
+        lt = np.log2((counts[:, :, toks] + 0.5) / tsafe[:, :, None] * 1e6)
+        yt = np.log2((counts[:, :, T] + 0.5) / tsafe * 1e6)
+        ZG = zr_masked(lt, okl)
+        ZT = zr_masked(yt, okl)
+        rho_p = np.einsum("pl,plg->pg", ZT, ZG) / nl[:, None]
+        rho = np.median(rho_p, axis=0)
         # naive version: Spearman over all (plate, line) points, no within-plate ranking (what a pooled analysis does)
-        ZGn = np.nan_to_num(zr(lt.reshape(P * L, -1), 0))
-        ZTn = zr(yt.reshape(-1), 0)
-        rho_naive = (ZTn @ ZGn) / (P * L)
+        fl = okl.reshape(-1)
+        ZGn = np.nan_to_num(zr(lt.reshape(P * L, -1)[fl], 0))
+        ZTn = zr(yt.reshape(-1)[fl], 0)
+        rho_naive = (ZTn @ ZGn) / fl.sum()
         res = pd.DataFrame({"token": toks, "gene": sym.reindex(toks).values, "pooled_cpm": pooled[toks],
-                            "rho_within_plate_median": rho, "rho_naive_pooled_plates": rho_naive})
+                            "rho_within_plate_median": rho, "n_plates_same_sign": (np.sign(rho_p) == np.sign(rho)).sum(0),
+                            "rho_naive_pooled_plates": rho_naive})
         lb = np.log2(res["pooled_cpm"].to_numpy())
         o = np.argsort(lb)
         pct = np.empty(len(res))
@@ -85,8 +101,9 @@ def main():
         res["rank_naive"] = res["rho_naive_pooled_plates"].rank(ascending=False).astype(int)
         # plate gap of every gene (plates 1-3,14 vs 4-12), from this definition
         hi_ = np.array([p in ("plate1", "plate2", "plate3", "plate14") for p in np.array(pn)[okp]])
-        cpm = counts / tot[:, :, None] * 1e6
-        lc = np.log2(np.median(cpm, axis=1) + 0.1)
+        cpm = counts / tsafe[:, :, None] * 1e6
+        cpm[~okl] = np.nan
+        lc = np.log2(np.nanmedian(cpm, axis=1) + 0.1)
         gap = lc[hi_].mean(axis=0) - lc[~hi_].mean(axis=0)
         res["plate_gap"] = gap[toks]
         if defn == "quiet":
@@ -95,10 +112,10 @@ def main():
             silent = np.flatnonzero((pooled[toks] >= 0.05) & (pooled[toks] <= 0.5))
             silent = rng.choice(silent, size=min(2000, silent.size), replace=False)
             bg = ZG[:, :, silent].mean(axis=2)                     # P x L
-            bgz = zr(bg, 1)
-            r_tb = np.einsum("pl,pl->p", ZT, bgz) / L                # P
-            r_gb = np.einsum("pl,plg->pg", bgz, ZG) / L              # P x g
-            r_tg = np.einsum("pl,plg->pg", ZT, ZG) / L
+            bgz = zr_masked(bg, okl)
+            r_tb = np.einsum("pl,pl->p", ZT, bgz) / nl               # P
+            r_gb = np.einsum("pl,plg->pg", bgz, ZG) / nl[:, None]    # P x g
+            r_tg = rho_p
             part = (r_tg - r_tb[:, None] * r_gb) / np.sqrt((1 - r_tb[:, None] ** 2) * (1 - r_gb ** 2))
             res["rho_partial_given_silent_background"] = np.median(part, axis=0)
             res["rank_partial"] = res["rho_partial_given_silent_background"].rank(ascending=False).astype(int)
@@ -118,7 +135,7 @@ def main():
             r_ = res[res["gene"] == kname]
             if len(r_):
                 rec = {"definition": defn, "n_plates": int(okp.sum()), "gene": kname, "n_genes": len(res)}
-                rec.update(r_.iloc[0][["pooled_cpm", "rho_within_plate_median", "rank_within_plate",
+                rec.update(r_.iloc[0][["pooled_cpm", "rho_within_plate_median", "n_plates_same_sign", "rank_within_plate",
                                        "pct_vs_level_within2x", "rho_naive_pooled_plates", "rank_naive",
                                        "plate_gap"]].to_dict())
                 if "rho_partial_given_silent_background" in r_:

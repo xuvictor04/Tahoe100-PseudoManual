@@ -19,7 +19,8 @@ Which drug-doses raise or lower TRIM72 mRNA, and what do they have in common?
   (d2) per cell line (the gene panel's own per-(well, line) corrected effects): is the TRIM72 rise of the raisers
       larger in TP53-wild-type lines (p53 upstream of TRIM72?), with CDKN1A / MDM2 as positive controls.
 
-Everything is read-only on /home/user/tahoe_data; outputs go to tables/ next to this script:
+Everything is read-only on the data folder ($MG53_DATA, else $TAHOE_DATA, else ~/Tahoe-100M); outputs go to
+tables/ in $MG53_OUT (default: next to this script):
   a_TRIM72_drugdose_ranking.csv          every drug-dose: fold, z, q, flags, dose pattern, activity, cell loss, plates,
                                          plate baseline, within-plate z / rank, pseudocount-free pooled fold, panel lines
   a_TRIM72_plate_baseline_and_spread.csv per plate: TRIM72 baseline CPM, spread of effects, plate factor
@@ -61,12 +62,13 @@ sys.path.insert(0, REPO)
 import tahoe_atlas as A                # noqa: E402  (read-only helpers: FX, flags, dose patterns)
 import tahoe_mtap_gankyrin as T        # noqa: E402
 
-DATA = "/home/user/tahoe_data"
+DATA = os.environ.get("MG53_DATA") or os.environ.get("TAHOE_DATA") or os.path.expanduser("~/Tahoe-100M")   # the Tahoe-100M folder with atlas/ and gene_panel/
 ATLAS = os.path.join(DATA, "atlas")
 EFF = os.path.join(ATLAS, "effects")
 GP = os.path.join(DATA, "gene_panel")
 GR = os.path.join(GP, "results")
-TAB = os.path.join(HERE, "tables")
+OUTDIR = os.environ.get("MG53_OUT") or HERE      # tables/ (and cache/, external/) go here; run_mg53_p53.py sets it
+TAB = os.path.join(OUTDIR, "tables")
 
 GENE = "TRIM72"
 Q_CUT, LFC_MIN = A.Q_CUT, A.LFC_MIN           # 0.10, log2(1.2): the atlas's significance rule
@@ -1077,7 +1079,7 @@ def panel_setup(tmp):
 
 def part_d2(D, t):
     log("Part d2: per-line TRIM72 effects by TP53 status (gene panel machinery, in memory) ...")
-    tmp = tempfile.mkdtemp(prefix="panel_tmp_", dir=HERE)
+    tmp = tempfile.mkdtemp(prefix="panel_tmp_", dir=OUTDIR)
     try:
         P, S = panel_setup(tmp)
         base = pd.read_csv(os.path.join(GR, "baseline_by_cell_line.csv"), usecols=["cell_line_id", "tp53_group"])

@@ -1,20 +1,271 @@
-TRIM72 vs near-silent-gene background (median over plates): rho 0.493
-plate-level TRIM72 rho with background: [0.5  0.48 0.51 0.45 0.42 0.49 0.5  0.55]
-[quiet] 45088 genes; top within-plate: PYCARD-AS1, CPLX4, FNDC7, ENSG00000260060, RSPH10B2, MASP2, SLC17A8, ENSG00000280117, LINC02054, LINC01498, AMPD1, ENSG00000287529
-[quiet] top naive pooled: FNDC7, SLC17A8, C2-AS1, PYCARD-AS1, ENSG00000285864, AMPD1, ENSG00000280117, ENSG00000260395, RSPH10B2, PYGM, ENSG00000264125, ENSG00000289254
-[quiet] Spearman across genes of naive rho vs plate gap: 0.782; within-plate rho vs plate gap: 0.282; median |gap| of naive top-100 1.36 vs within-plate top-100 1.12 vs all 0.03
-[all] 45752 genes; top within-plate: PYCARD-AS1, CPLX4, FNDC7, ENSG00000260060, SLC17A8, MASP2, RSPH10B2, ENSG00000280117, AMPD1, LINC01498, LINC02054, C2-AS1
-[all] top naive pooled: FNDC7, SLC17A8, AMPD1, C2-AS1, ENSG00000260395, PYCARD-AS1, ENSG00000264125, ENSG00000280117, RSPH10B2, PYGM, ENSG00000261170, ENSG00000289254
-[all] Spearman across genes of naive rho vs plate gap: 0.787; within-plate rho vs plate gap: 0.274; median |gap| of naive top-100 1.41 vs within-plate top-100 1.09 vs all 0.02
-/home/user/Tahoe100-PseudoManual/mg53_p53/upstream_coregulation/verify/v3_baseline_locus.py:65: RuntimeWarning: invalid value encountered in divide
-  pooled = 1e6 * csum / tot.sum()
-/usr/local/lib/python3.13/dist-packages/numpy/_core/fromnumeric.py:3862: RuntimeWarning: Mean of empty slice
-  return _methods._mean(a, axis=axis, dtype=dtype,
-Traceback (most recent call last):
-  File "/home/user/Tahoe100-PseudoManual/mg53_p53/upstream_coregulation/verify/v3_baseline_locus.py", line 333, in <module>
-    main()
-    ~~~~^^
-  File "/home/user/Tahoe100-PseudoManual/mg53_p53/upstream_coregulation/verify/v3_baseline_locus.py", line 72, in main
-    ZGn = np.nan_to_num(zr(lt.reshape(P * L, -1), 0))
-                           ~~~~~~~~~~^^^^^^^^^^^
-ValueError: cannot reshape array of size 0 into shape (0,newaxis)
+[quiet] plates used 13; lines per plate [49, 50, 50, 49, 50, 49, 50, 49, 49, 50, 50, 50, 50]
+TRIM72 vs near-silent-gene background (median over plates): rho 0.478
+plate-level TRIM72 rho with background: [0.48 0.48 0.45 0.49 0.49 0.53 0.45 0.43 0.37 0.4  0.49 0.49 0.54]
+[quiet] 46773 genes; top within-plate: PYCARD-AS1, CPLX4, FNDC7, ENSG00000260060, SLC17A8, RSPH10B2, MASP2, C2-AS1, ENSG00000256814, AMPD1, ENSG00000259598, LINC02054
+[quiet] top naive pooled: FNDC7, SLC17A8, ENSG00000260395, AMPD1, C2-AS1, PYCARD-AS1, ENSG00000256814, ENSG00000280117, ENSG00000285864, ENSG00000264125, ENSG00000261170, PYGM
+[quiet] Spearman across genes of naive rho vs plate gap: 0.738; within-plate rho vs plate gap: 0.253; median |gap| of naive top-100 1.28 vs within-plate top-100 1.01 vs all 0.02
+[all] plates used 13; lines per plate [49, 50, 50, 49, 50, 49, 50, 49, 50, 50, 50, 50, 50]
+[all] 47073 genes; top within-plate: PYCARD-AS1, CPLX4, FNDC7, RSPH10B2, ENSG00000260060, SLC17A8, MASP2, ENSG00000256814, AMPD1, LINC01498, ENSG00000259598, LINC02054
+[all] top naive pooled: FNDC7, SLC17A8, AMPD1, ENSG00000260395, C2-AS1, PYCARD-AS1, ENSG00000256814, ENSG00000285864, ENSG00000264125, ENSG00000261170, ENSG00000280117, RSPH10B2
+[all] Spearman across genes of naive rho vs plate gap: 0.746; within-plate rho vs plate gap: 0.260; median |gap| of naive top-100 1.28 vs within-plate top-100 1.05 vs all 0.02
+[dmso] plates used 13; lines per plate [49, 49, 48, 48, 49, 48, 48, 49, 48, 48, 48, 48, 48]
+[dmso] 32756 genes; top within-plate: PYCARD-AS1, FNDC7, CPLX4, TLL2, ENSG00000289254, SMIM41, PYGM, ENSG00000260060, ENSG00000259598, ELAVL3, RSPH10B2, RFPL3S
+[dmso] top naive pooled: FNDC7, ENSG00000289254, PYGM, ARL9, IMPA1P1, AMPD1, PPIEL, PILRA, HK3, PYCARD-AS1, TPH2, LINC02936
+[dmso] Spearman across genes of naive rho vs plate gap: 0.624; within-plate rho vs plate gap: 0.193; median |gap| of naive top-100 1.51 vs within-plate top-100 1.20 vs all 0.00
+   definition  n_plates        gene  n_genes  pooled_cpm  rho_within_plate_median  n_plates_same_sign  rank_within_plate  pct_vs_level_within2x  rho_naive_pooled_plates  rank_naive  plate_gap  rho_partial_given_silent_background  rank_partial
+0       quiet        13  PYCARD-AS1    46773    1.418545                 0.818391                  13                  1              99.979814                 0.810683           6   1.212738                             0.758060           1.0
+1       quiet        13         FUS    46773  252.310183                 0.470348                  13                426              99.943946                 0.403182        3484   0.107056                             0.420627         138.0
+2       quiet        13       ITGAM    46773    1.302136                 0.335918                  13               2749              88.276553                 0.467430        2216   0.769179                             0.231956        2334.0
+3       quiet        13       ITGAX    46773    1.974547                 0.063776                  11              31442              32.520157                 0.161895       18199   0.297064                            -0.002406       21052.0
+4       quiet        13      PYCARD    46773    2.032485                -0.192221                  13              45675               2.140927                -0.112076       42871   0.062371                            -0.109428       36473.0
+5       quiet        13       FNDC7    46773    3.320608                 0.736224                  13                  3              99.979210                 0.859328           1   2.092863                             0.668385           2.0
+6       quiet        13         SRF    46773   26.492257                 0.378535                  13               1641              98.649635                 0.286344        7654   0.078937                             0.385868         254.0
+7       quiet        13       ACTA1    46773    0.141463                 0.579694                  13                 55              99.811143                 0.718395         110   0.788771                             0.479869          59.0
+8       quiet        13        TP53    46773   62.415248                 0.079490                  13              29399              57.939368                 0.032389       33296  -0.042762                            -0.028814       24850.0
+9         all        13  PYCARD-AS1    47073    1.444619                 0.832125                  13                  1              99.979859                 0.811551           6   1.185909                                  NaN           NaN
+10        all        13         FUS    47073  253.707799                 0.478415                  13                377              99.943471                 0.403400        3539   0.104135                                  NaN           NaN
+11        all        13       ITGAM    47073    1.474360                 0.331285                  13               2938              87.953995                 0.461238        2364   0.772879                                  NaN           NaN
+12        all        13       ITGAX    47073    2.009800                 0.065930                  10              31137              33.760331                 0.173273       16754   0.352034                                  NaN           NaN
+13        all        13      PYCARD    47073    2.013864                -0.210084                  13              46177               1.613904                -0.124162       43481   0.066176                                  NaN           NaN
+14        all        13       FNDC7    47073    3.373041                 0.736429                  13                  3              99.979219                 0.857385           1   2.031196                                  NaN           NaN
+15        all        13         SRF    47073   26.499424                 0.355966                  13               2187              97.979246                 0.279684        8133   0.083304                                  NaN           NaN
+16        all        13       ACTA1    47073    0.145040                 0.588860                  13                 42              99.858402                 0.718467         113   0.782347                                  NaN           NaN
+17        all        13        TP53    47073   62.564645                 0.095606                  13              27081              61.977509                 0.029114       33642  -0.042531                                  NaN           NaN
+18       dmso        13  PYCARD-AS1    32756    1.273619                 0.665871                  13                  1              99.979972                 0.700140          10   1.286154                                  NaN           NaN
+19       dmso        13         FUS    32756  258.302487                 0.499349                  13                 29              99.941072                 0.418032         869   0.071890                                  NaN           NaN
+20       dmso        13       ITGAM    32756    1.387069                 0.254776                  13               2787              87.814785                 0.317981        1988   0.682901                                  NaN           NaN
+21       dmso        13       ITGAX    32756    2.198608                 0.066109                   9              20152              40.806519                 0.140899       11599   0.421277                                  NaN           NaN
+22       dmso        13      PYCARD    32756    2.152234                -0.325228                  13              32690               0.000000                -0.196430       31926   0.169778                                  NaN           NaN
+23       dmso        13       FNDC7    32756    3.944245                 0.643291                  13                  2              99.979279                 0.769631           1   2.153262                                  NaN           NaN
+24       dmso        13         SRF    32756   24.498745                 0.311531                  13               1143              97.584280                 0.244144        3908   0.075385                                  NaN           NaN
+25       dmso        13       ACTA1    32756    0.154234                 0.278007                  13               1930              95.159713                 0.397811        1019   0.824769                                  NaN           NaN
+26       dmso        13        TP53    32756   72.763573                 0.120510                  12              14366              72.437358                 0.097969       16662   0.057414                                  NaN           NaN
+top 15 partial (given near-silent background): PYCARD-AS1, FNDC7, CPLX4, ENSG00000260060, RSPH10B2, SLC17A8, ENSG00000280117, MASP2, ENSG00000260395, ENSG00000256814, IMPA1P1, ENSG00000205890, ENSG00000289254, LINC02054, LINC01498
+F7: TRIM72 gap 3.15, rank 1 of 16657 genes >= 2 CPM
+                                                                   0               1
+annotation                                                      E110            E116
+TRIM72_gap                                                     3.151           3.151
+TRIM72_rank                                                        1               1
+n_genes                                                        16657           16657
+top100_pct_sense_exposed                                        51.0            54.0
+all_pct_sense_exposed                                       4.142403        4.220448
+level_stratified_median_gap_diff_DoG_minus_unexposed        0.261652        0.254456
+perm_p                                                      0.000999        0.000999
+n_DoG_2to20                                                      649             660
+n_unexposed_2to20                                               2192            2197
+raw_medians                                           0.402 vs 0.132  0.391 vs 0.125
+Ensembl 110 locus:    gene_symbol     start       end  strand
+25         FUS  31180138  31191605       1
+23      PYCARD  31201486  31203450      -1
+24  PYCARD-AS1  31201885  31203452       1
+42      TRIM72  31214119  31231537       1
+26       PYDC1  31215962  31217135      -1
+27       ITGAM  31259967  31332892       1
+28       ITGAX  31355134  31382999       1
+30       ITGAD  31393335  31426505       1
+/home/user/Tahoe100-PseudoManual/mg53_p53/upstream_coregulation/verify/v3_baseline_locus.py:277: RuntimeWarning: invalid value encountered in sqrt
+  part[fin] = -Pm[:, 0, 1] / np.sqrt(Pm[:, 0, 0] * Pm[:, 1, 1])
+Idarubicin 5 (plate6): 47 lines; across genes Spearman(rho_gain, rho_baseline) = -0.018
+/home/user/Tahoe100-PseudoManual/mg53_p53/upstream_coregulation/verify/v3_baseline_locus.py:277: RuntimeWarning: invalid value encountered in sqrt
+  part[fin] = -Pm[:, 0, 1] / np.sqrt(Pm[:, 0, 0] * Pm[:, 1, 1])
+Idarubicin 5 (plate14): 49 lines; across genes Spearman(rho_gain, rho_baseline) = 0.001
+/home/user/Tahoe100-PseudoManual/mg53_p53/upstream_coregulation/verify/v3_baseline_locus.py:277: RuntimeWarning: invalid value encountered in sqrt
+  part[fin] = -Pm[:, 0, 1] / np.sqrt(Pm[:, 0, 0] * Pm[:, 1, 1])
+Homoharringtonine 5 (plate6): 48 lines; across genes Spearman(rho_gain, rho_baseline) = 0.150
+/home/user/Tahoe100-PseudoManual/mg53_p53/upstream_coregulation/verify/v3_baseline_locus.py:277: RuntimeWarning: invalid value encountered in sqrt
+  part[fin] = -Pm[:, 0, 1] / np.sqrt(Pm[:, 0, 0] * Pm[:, 1, 1])
+Homoharringtonine 5 (plate14): 48 lines; across genes Spearman(rho_gain, rho_baseline) = 0.109
+                              well             gene  strand  downstream_of_FUS_end_E110  observed      expected   log2_OE  pct_vs_level_within2x   added_cpm  baseline_cpm
+0            Idarubicin 5 (plate6)           SETD1A       1                       False    1956.0   2510.254841 -0.359846              28.961846   -5.881036     26.635580
+1            Idarubicin 5 (plate6)  ENSG00000279196      -1                       False      89.0      9.162124  3.211475              73.039345    0.847136      0.097217
+2            Idarubicin 5 (plate6)           HSD3B7       1                       False     290.0    347.150279 -0.259099              19.245036   -0.606405      3.683510
+3            Idarubicin 5 (plate6)            STX1B      -1                       False     694.0    168.822372  2.036202              79.702862    5.572506      1.791325
+4            Idarubicin 5 (plate6)             STX4       1                       False    1357.0   2305.190544 -0.764247              13.765908  -10.060972     24.459702
+5            Idarubicin 5 (plate6)  ENSG00000260911       1                       False     800.0    421.151245  0.924851              62.700130    4.019853      4.468713
+6            Idarubicin 5 (plate6)  ENSG00000232748       1                       False     205.0     37.504092  2.434912              71.428571    1.777250      0.397945
+7            Idarubicin 5 (plate6)           ZNF668      -1                       False    1242.0    588.005834  1.078117              73.231681    6.939341      6.239158
+8            Idarubicin 5 (plate6)  ENSG00000261124       1                       False     202.0     25.361650  2.969036              79.070270    1.874258      0.269105
+9            Idarubicin 5 (plate6)           ZNF646       1                       False    1880.0   1010.880170  0.894791              76.232114    9.221976     10.726154
+10           Idarubicin 5 (plate6)           PRSS53      -1                       False     629.0    423.712479  0.569419              50.757904    2.178246      4.495889
+11           Idarubicin 5 (plate6)  ENSG00000255439      -1                       False     367.0    405.527599 -0.143834              24.414571   -0.408805      4.302935
+12           Idarubicin 5 (plate6)           VKORC1      -1                       False    4419.0   4403.690073  0.005006              54.456208    0.162449     46.726267
+13           Idarubicin 5 (plate6)  ENSG00000280160       1                       False     104.0     16.467430  2.622663              67.577413    0.928782      0.174731
+14           Idarubicin 5 (plate6)            BCKDK       1                       False     545.0   1116.761975 -1.034316               6.649766   -6.066799     11.849635
+15           Idarubicin 5 (plate6)             KAT8       1                       False    1638.0   1945.473085 -0.248116              32.737773   -3.262507     20.642846
+18           Idarubicin 5 (plate6)  ENSG00000261385       1                       False       7.0      8.764108 -0.304761               4.769782   -0.018718      0.092993
+19           Idarubicin 5 (plate6)            PRSS8      -1                       False     662.0   1584.606850 -1.258588               4.134848   -9.789511     16.813800
+20           Idarubicin 5 (plate6)           PRSS36      -1                       False     105.0     32.759440  1.665407              48.935273    0.766523      0.347601
+23           Idarubicin 5 (plate6)              FUS       1                       False   40905.0  22917.763335  0.835797              98.471616  190.857306    243.173682
+24           Idarubicin 5 (plate6)  ENSG00000260304      -1                       False      55.0     15.970792  1.752578              44.049248    0.414128      0.169461
+25           Idarubicin 5 (plate6)  ENSG00000260060       1                        True     626.0    189.127889  1.724143              73.779147    4.635522      2.006781
+26           Idarubicin 5 (plate6)           PYCARD      -1                        True      95.0    265.581668 -1.478296               1.690821   -1.809992      2.818009
+27           Idarubicin 5 (plate6)       PYCARD-AS1       1                        True     760.0     88.862634  3.089205              90.543091    7.121242      0.942895
+28           Idarubicin 5 (plate6)           TRIM72       1                        True    4019.0    233.076932  4.105046              99.321217   40.171322      2.473111
+29           Idarubicin 5 (plate6)            PYDC1      -1                        True      15.0      0.000000  4.954196                    NaN    0.159161      0.000000
+30           Idarubicin 5 (plate6)            ITGAM       1                        True    1144.0    123.636657  3.204716              94.093730   10.826777      1.311872
+32           Idarubicin 5 (plate6)            ITGAX       1                        True     148.0    206.076825 -0.476215              11.456268   -0.616236      2.186621
+34           Idarubicin 5 (plate6)            ITGAD       1                        True     210.0     23.692211  3.121206              81.585845    1.976857      0.251391
+38           Idarubicin 5 (plate6)           ZNF843      -1                        True     490.0     56.432462  3.106930              87.779619    4.600458      0.598788
+39           Idarubicin 5 (plate6)  ENSG00000261474      -1                        True    2159.0   1386.984271  0.638226              72.210685    8.191633     14.716884
+40           Idarubicin 5 (plate6)  ENSG00000260267      -1                        True     396.0    299.701809  0.401388              38.552373    1.021792      3.180048
+41           Idarubicin 5 (plate6)            ARMC5       1                        True    1285.0    569.538129  1.173199              74.894247    7.591557      6.043202
+42           Idarubicin 5 (plate6)  ENSG00000280132      -1                        True     189.0     61.844162  1.603871              55.115990    1.349213      0.656210
+43           Idarubicin 5 (plate6)          TGFB1I1       1                        True     206.0    450.235876 -1.126141               4.464093   -2.591515      4.777321
+44          Idarubicin 5 (plate14)           SETD1A       1                       False    1548.0   1911.429039 -0.304158              26.235465   -4.999725     26.295698
+45          Idarubicin 5 (plate14)  ENSG00000279196      -1                       False      76.0      6.561331  3.437448              81.562148    0.955274      0.090265
+46          Idarubicin 5 (plate14)           HSD3B7       1                       False     204.0    215.703530 -0.080289              19.416058   -0.161006      2.967453
+47          Idarubicin 5 (plate14)            STX1B      -1                       False     566.0    121.878623  2.210724              87.388155    6.109817      1.676695
+48          Idarubicin 5 (plate14)             STX4       1                       False     933.0   1384.350283 -0.569008              13.751355   -6.209266     19.044629
+49          Idarubicin 5 (plate14)  ENSG00000260911       1                       False     460.0    338.558482  0.441667              46.003263    1.670682      4.657579
+50          Idarubicin 5 (plate14)  ENSG00000232748       1                       False     133.0     54.785637  1.271863              49.969002    1.076002      0.753691
+51          Idarubicin 5 (plate14)           ZNF668      -1                       False     845.0    449.595353  0.909574              69.776636    5.439617      6.185123
+52          Idarubicin 5 (plate14)  ENSG00000261124       1                       False     122.0     42.583374  1.507579              54.926668    1.092542      0.585823
+53          Idarubicin 5 (plate14)           ZNF646       1                       False    1318.0    741.312783  0.829771              75.322948    7.933537     10.198305
+54          Idarubicin 5 (plate14)           PRSS53      -1                       False     766.0    397.532960  0.945398              69.203116    5.069034      5.468896
+55          Idarubicin 5 (plate14)  ENSG00000255439      -1                       False     297.0    243.826480  0.284079              33.512508    0.731513      3.354342
+56          Idarubicin 5 (plate14)           VKORC1      -1                       False    2205.0   1909.612953  0.207448              58.219800    4.063666     26.270714
+57          Idarubicin 5 (plate14)  ENSG00000280160       1                       False      73.0     16.127944  2.144134              61.635654    0.782394      0.221874
+58          Idarubicin 5 (plate14)            BCKDK       1                       False     499.0    659.447437 -0.401866              16.516228   -2.207290      9.072077
+59          Idarubicin 5 (plate14)             KAT8       1                       False    1454.0   1616.611137 -0.152896              33.351400   -2.237056     22.239862
+63          Idarubicin 5 (plate14)            PRSS8      -1                       False     438.0    769.614130 -0.812495               6.964892   -4.562045     10.587650
+64          Idarubicin 5 (plate14)           PRSS36      -1                       False      66.0     14.222235  2.175358              60.576696    0.712311      0.195657
+67          Idarubicin 5 (plate14)              FUS       1                       False   30188.0  20156.589887  0.582712              96.571429  138.002995    277.295988
+68          Idarubicin 5 (plate14)  ENSG00000260304      -1                       False      55.0     21.249289  1.351520              39.857334    0.464312      0.292328
+69          Idarubicin 5 (plate14)  ENSG00000260060       1                        True     645.0    220.466747  1.546588              78.815680    5.840341      3.032981
+70          Idarubicin 5 (plate14)           PYCARD      -1                        True      54.0     86.660586 -0.677420               4.440721   -0.449315      1.192197
+71          Idarubicin 5 (plate14)       PYCARD-AS1       1                        True     855.0    184.669496  2.207921              90.147992    9.221796      2.540515
+72          Idarubicin 5 (plate14)           TRIM72       1                        True    4412.0   1007.953455  2.129452              98.338564   46.829769     13.866505
+73          Idarubicin 5 (plate14)            PYDC1      -1                        True       7.0      0.000000  3.906891                    NaN    0.096300      0.000000
+74          Idarubicin 5 (plate14)            ITGAM       1                        True     797.0    114.285901  2.796539              93.904518    9.392158      1.572241
+76          Idarubicin 5 (plate14)            ITGAX       1                        True     136.0    173.444744 -0.349728              11.351581   -0.515131      2.386095
+78          Idarubicin 5 (plate14)            ITGAD       1                        True     148.0     21.012637  2.787207              79.991077    1.746976      0.289073
+82          Idarubicin 5 (plate14)           ZNF843      -1                        True     485.0     58.829588  3.032648              92.358804    5.862864      0.809324
+83          Idarubicin 5 (plate14)  ENSG00000261474      -1                        True    1116.0    713.608248  0.644769              67.164465    5.535739      9.817172
+84          Idarubicin 5 (plate14)  ENSG00000260267      -1                        True     317.0    193.609137  0.709889              46.878954    1.697499      2.663498
+85          Idarubicin 5 (plate14)            ARMC5       1                        True     678.0    304.132002  1.155281              71.855797    5.143335      4.183971
+86          Idarubicin 5 (plate14)  ENSG00000280132      -1                        True     100.0     36.116390  1.456634              51.417257    0.878852      0.496856
+87          Idarubicin 5 (plate14)          TGFB1I1       1                        True     137.0    284.813414 -1.053116               2.676200   -2.033482      3.918203
+88    Homoharringtonine 5 (plate6)           SETD1A       1                       False    1649.0   2713.529660 -0.718408              34.163258  -10.433856     26.596327
+89    Homoharringtonine 5 (plate6)  ENSG00000279196      -1                       False      63.0     10.483904  2.531366              83.116558    0.514730      0.102757
+90    Homoharringtonine 5 (plate6)           HSD3B7       1                       False     113.0    380.769807 -1.748120               8.387942   -2.624513      3.732068
+91    Homoharringtonine 5 (plate6)            STX1B      -1                       False     963.0    182.905049  2.393251              93.075899    7.646005      1.792721
+92    Homoharringtonine 5 (plate6)             STX4       1                       False    3629.0   2407.988236  0.591643              82.367758   11.967596     23.601600
+93    Homoharringtonine 5 (plate6)  ENSG00000260911       1                       False    1357.0    444.764354  1.608218              89.505506    8.941165      4.359303
+94    Homoharringtonine 5 (plate6)  ENSG00000232748       1                       False     425.0     39.104104  3.425437              94.816504    3.782311      0.383274
+95    Homoharringtonine 5 (plate6)           ZNF668      -1                       False     586.0    661.520603 -0.174745              49.546126   -0.740206      6.483813
+96    Homoharringtonine 5 (plate6)  ENSG00000261124       1                       False     317.0     28.158199  3.469737              94.602699    2.831047      0.275989
+97    Homoharringtonine 5 (plate6)           ZNF646       1                       False    1775.0   1088.210451  0.705605              80.532909    6.731483     10.665961
+98    Homoharringtonine 5 (plate6)           PRSS53      -1                       False     139.0    463.750728 -1.734639               8.617711   -3.183004      4.545396
+99    Homoharringtonine 5 (plate6)  ENSG00000255439      -1                       False      85.0    445.351258 -2.382566               3.366422   -3.531938      4.365055
+100   Homoharringtonine 5 (plate6)           VKORC1      -1                       False     938.0   4820.758330 -2.360981               2.929763  -38.056377     47.250069
+101   Homoharringtonine 5 (plate6)  ENSG00000280160       1                       False      73.0     24.865370  1.534884              72.650131    0.471786      0.243715
+102   Homoharringtonine 5 (plate6)            BCKDK       1                       False     224.0   1157.891215 -2.367335               3.634209   -9.153420     11.348928
+103   Homoharringtonine 5 (plate6)             KAT8       1                       False    1440.0   2029.315941 -0.494779              42.776667   -5.776108     19.890090
+106   Homoharringtonine 5 (plate6)  ENSG00000261385       1                       False       5.0      9.818073 -0.907670               8.350410   -0.047224      0.096231
+107   Homoharringtonine 5 (plate6)            PRSS8      -1                       False     353.0   1773.904605 -2.327553               3.413729  -13.926821     17.386707
+108   Homoharringtonine 5 (plate6)           PRSS36      -1                       False      60.0     32.851180  0.859197              58.284024    0.266096      0.321987
+111   Homoharringtonine 5 (plate6)              FUS       1                       False   50657.0  24912.231556  1.023893              94.368507  252.334175    244.174168
+112   Homoharringtonine 5 (plate6)  ENSG00000260304      -1                       False      29.0     18.108335  0.664766              45.601273    0.106753      0.177487
+113   Homoharringtonine 5 (plate6)  ENSG00000260060       1                        True    1027.0    199.320441  2.362362              92.993631    8.112399      1.953615
+114   Homoharringtonine 5 (plate6)           PYCARD      -1                        True      81.0    276.867809 -1.766928               7.443082   -1.919774      2.713686
+115   Homoharringtonine 5 (plate6)       PYCARD-AS1       1                        True     755.0     88.029091  3.093208              95.075440    6.537233      0.862806
+116   Homoharringtonine 5 (plate6)           TRIM72       1                        True    5006.0    227.977609  4.453678              99.408543   46.831198      2.234494
+117   Homoharringtonine 5 (plate6)            PYDC1      -1                        True       5.0      0.000000  3.459432                    NaN    0.049007      0.000000
+118   Homoharringtonine 5 (plate6)            ITGAM       1                        True    8772.0    131.546247  6.053873              99.891705   84.688343      1.289334
+120   Homoharringtonine 5 (plate6)            ITGAX       1                        True     450.0    213.187485  1.076025              76.403258    2.321089      2.089531
+122   Homoharringtonine 5 (plate6)            ITGAD       1                        True     573.0     22.809341  4.620813              98.136646    5.392626      0.223563
+126   Homoharringtonine 5 (plate6)           ZNF843      -1                        True     155.0     54.808326  1.491346              76.801661    0.982016      0.537197
+127   Homoharringtonine 5 (plate6)  ENSG00000261474      -1                        True     499.0   1389.577423 -1.476609              13.395402   -8.728885     13.619772
+128   Homoharringtonine 5 (plate6)  ENSG00000260267      -1                        True     116.0    305.575014 -1.393555              13.052033   -1.858096      2.995056
+129   Homoharringtonine 5 (plate6)            ARMC5       1                        True    1272.0    604.251457  1.073251              83.470725    6.544855      5.922496
+130   Homoharringtonine 5 (plate6)  ENSG00000280132      -1                        True      37.0     70.210213 -0.915028              14.113239   -0.325506      0.688157
+131   Homoharringtonine 5 (plate6)          TGFB1I1       1                        True      97.0    505.898981 -2.376800               3.566824   -4.007773      4.958507
+132  Homoharringtonine 5 (plate14)           SETD1A       1                       False    2254.0   3494.959830 -0.632675              33.641975   -9.260087     26.079516
+133  Homoharringtonine 5 (plate14)  ENSG00000279196      -1                       False      70.0     10.755114  2.647043              82.582250    0.442087      0.080255
+134  Homoharringtonine 5 (plate14)           HSD3B7       1                       False     134.0    405.395255 -1.593501               7.480315   -2.025161      3.025074
+135  Homoharringtonine 5 (plate14)            STX1B      -1                       False    1279.0    213.380513  2.580703              95.329087    7.951691      1.592253
+136  Homoharringtonine 5 (plate14)             STX4       1                       False    4144.0   2482.028640  0.739388              85.290929   12.401690     18.520987
+137  Homoharringtonine 5 (plate14)  ENSG00000260911       1                       False    1262.0    611.243830  1.045284              83.496532    4.855966      4.561123
+138  Homoharringtonine 5 (plate14)  ENSG00000232748       1                       False     364.0     95.872044  1.919232              86.662531    2.000780      0.715401
+139  Homoharringtonine 5 (plate14)           ZNF668      -1                       False     608.0    867.858407 -0.513033              36.363636   -1.939073      6.475991
+140  Homoharringtonine 5 (plate14)  ENSG00000261124       1                       False     373.0     75.518902  2.296678              90.134995    2.219815      0.563525
+141  Homoharringtonine 5 (plate14)           ZNF646       1                       False    2390.0   1357.883227  0.815422              84.296578    7.701692     10.132573
+142  Homoharringtonine 5 (plate14)           PRSS53      -1                       False     201.0    715.593598 -1.829368               5.195843   -3.839916      5.339785
+143  Homoharringtonine 5 (plate14)  ENSG00000255439      -1                       False      96.0    436.469447 -2.178932               2.369180   -2.540595      3.256951
+144  Homoharringtonine 5 (plate14)           VKORC1      -1                       False     871.0   3516.178077 -2.012641               3.884553  -19.738414     26.237847
+145  Homoharringtonine 5 (plate14)  ENSG00000280160       1                       False     102.0     47.072671  1.107419              68.493445    0.409870      0.351258
+146  Homoharringtonine 5 (plate14)            BCKDK       1                       False     338.0   1175.139530 -1.796218               5.923210   -6.246765      8.768933
+147  Homoharringtonine 5 (plate14)             KAT8       1                       False    1845.0   2886.035473 -0.645327              32.775859   -7.768244     21.535701
+150  Homoharringtonine 5 (plate14)  ENSG00000261385       1                       False       9.0      5.447219  0.675712              24.934794    0.026511      0.040647
+151  Homoharringtonine 5 (plate14)            PRSS8      -1                       False     432.0   1562.436132 -1.853487               5.237561   -8.435355     11.658955
+152  Homoharringtonine 5 (plate14)           PRSS36      -1                       False     111.0     24.688795  2.146190              83.218117    0.644057      0.184229
+155  Homoharringtonine 5 (plate14)              FUS       1                       False   59303.0  36839.429909  0.686847              89.703095  167.623968    274.897151
+156  Homoharringtonine 5 (plate14)  ENSG00000260304      -1                       False      52.0     39.994613  0.374587              43.624014    0.089585      0.298441
+157  Homoharringtonine 5 (plate14)  ENSG00000260060       1                        True    1224.0    387.778599  1.657029              90.570771    6.239914      2.893618
+158  Homoharringtonine 5 (plate14)           PYCARD      -1                        True      80.0    148.164794 -0.885002              14.745196   -0.508648      1.105611
+159  Homoharringtonine 5 (plate14)       PYCARD-AS1       1                        True    1325.0    316.594870  2.063550              93.025706    7.524755      2.362442
+160  Homoharringtonine 5 (plate14)           TRIM72       1                        True    6720.0   1711.009866  1.973299              96.688494   37.377265     12.767617
+161  Homoharringtonine 5 (plate14)            PYDC1      -1                        True       7.0      0.000000  3.906891                    NaN    0.052234      0.000000
+162  Homoharringtonine 5 (plate14)            ITGAM       1                        True    9822.0    210.792353  5.538778              99.893662   71.719177      1.572940
+164  Homoharringtonine 5 (plate14)            ITGAX       1                        True     467.0    279.677827  0.738624              72.225759    1.397805      2.086966
+166  Homoharringtonine 5 (plate14)            ITGAD       1                        True     555.0     36.009098  3.927459              97.332741    3.872729      0.268701
+170  Homoharringtonine 5 (plate14)           ZNF843      -1                        True     208.0     99.564770  1.059113              73.269986    0.809148      0.742956
+171  Homoharringtonine 5 (plate14)  ENSG00000261474      -1                        True     463.0   1261.092531 -1.444605              10.602871   -5.955395      9.410318
+172  Homoharringtonine 5 (plate14)  ENSG00000260267      -1                        True     146.0    345.619162 -1.240368              11.782032   -1.489565      2.579023
+173  Homoharringtonine 5 (plate14)            ARMC5       1                        True    1049.0    547.424141  0.937654              81.186895    3.742777      4.084899
+174  Homoharringtonine 5 (plate14)  ENSG00000280132      -1                        True      28.0     67.657848 -1.257918               6.670836   -0.295928      0.504865
+175  Homoharringtonine 5 (plate14)          TGFB1I1       1                        True     157.0    520.837304 -1.726865               5.934474   -2.714967      3.886507
+                            well                                             plus_downstream_genes  plus_downstream_median_pct                                             minus_downstream_genes  minus_downstream_median_pct                                                                                               upstream_lt_2cpm_genes  upstream_lt_2cpm_median_pct  upstream_all_median_pct  TRIM72_pct
+0  Homoharringtonine 5 (plate14)  ENSG00000260060, PYCARD-AS1, ITGAM, ITGAX, ITGAD, ARMC5, TGFB1I1                   90.570771  PYCARD, ZNF843, ENSG00000261474, ENSG00000260267, ENSG00000280132                    11.782032  ENSG00000279196, STX1B, ENSG00000232748, ENSG00000261124, ENSG00000280160, ENSG00000261385, PRSS36, ENSG00000260304                    82.900184                43.624014   96.688494
+1   Homoharringtonine 5 (plate6)  ENSG00000260060, PYCARD-AS1, ITGAM, ITGAX, ITGAD, ARMC5, TGFB1I1                   92.993631  PYCARD, ZNF843, ENSG00000261474, ENSG00000260267, ENSG00000280132                    13.395402  ENSG00000279196, STX1B, ENSG00000232748, ENSG00000261124, ENSG00000280160, ENSG00000261385, PRSS36, ENSG00000260304                    77.883344                49.546126   99.408543
+2         Idarubicin 5 (plate14)  ENSG00000260060, PYCARD-AS1, ITGAM, ITGAX, ITGAD, ARMC5, TGFB1I1                   78.815680  PYCARD, ZNF843, ENSG00000261474, ENSG00000260267, ENSG00000280132                    51.417257                   ENSG00000279196, STX1B, ENSG00000232748, ENSG00000261124, ENSG00000280160, PRSS36, ENSG00000260304                    60.576696                52.447835   98.338564
+3          Idarubicin 5 (plate6)  ENSG00000260060, PYCARD-AS1, ITGAM, ITGAX, ITGAD, ARMC5, TGFB1I1                   74.894247  PYCARD, ZNF843, ENSG00000261474, ENSG00000260267, ENSG00000280132                    55.115990  ENSG00000279196, STX1B, ENSG00000232748, ENSG00000261124, ENSG00000280160, ENSG00000261385, PRSS36, ENSG00000260304                    69.502992                50.757904   99.321217
+                             well                                           gene  n_lines  n_genes  rho_gain  rho_baseline_same_lines  rho_gain_partial_baselines  rho_log2fc  rank_rho_gain  rank_rho_gain_partial_baselines  rank_rho_log2fc  rank_rho_baseline_same_lines  pct_level_rho_gain  pct_level_rho_gain_partial_baselines  pct_level_rho_log2fc
+0           Idarubicin 5 (plate6)                                     PYCARD-AS1       47  28257.0  0.737627                 0.855374                    0.774584    0.729533            1.0                              1.0              1.0                           1.0           99.979031                             99.979031             99.979031
+1           Idarubicin 5 (plate6)                                          ITGAM       47  28257.0  0.611702                 0.390692                    0.602924    0.274514            5.0                              7.0           2126.0                        1683.0           99.935788                             99.935788             91.074486
+2           Idarubicin 5 (plate6)                                            FUS       47  28257.0 -0.008673                 0.354925                    0.104967    0.177960        15556.0                           7655.0           5043.0                        2461.0           56.113537                             78.384279             78.657205
+3           Idarubicin 5 (plate6)                                         PYCARD       47  28257.0  0.466545                -0.126304                    0.052296   -0.140127          121.0                          10709.0          22357.0                       25508.0           99.275203                             53.964419             14.649682
+4           Idarubicin 5 (plate6)                                          ITGAD       47  28257.0  0.122781                 0.463485                    0.093673   -0.119831         7728.0                           8257.0          21315.0                         702.0           70.707733                             69.091306             20.948012
+5           Idarubicin 5 (plate6)                                          ITGAX       47  28257.0 -0.148864                 0.024999                   -0.211406   -0.192875        23230.0                          25028.0          24456.0                       19042.0           10.731600                              7.404143              8.241516
+6           Idarubicin 5 (plate6)      TRIM72 gain vs FUS CPM in well (Spearman)       47      NaN  0.217391                      NaN                         NaN         NaN            NaN                              NaN              NaN                           NaN                 NaN                                   NaN                   NaN
+7           Idarubicin 5 (plate6)     TRIM72 gain vs FUS baseline CPM (Spearman)       47      NaN  0.391998                      NaN                         NaN         NaN            NaN                              NaN              NaN                           NaN                 NaN                                   NaN                   NaN
+8           Idarubicin 5 (plate6)  TRIM72 gain vs PYCARD-AS1 gain (Pearson, CPM)       47      NaN  0.671436                      NaN                         NaN         NaN            NaN                              NaN              NaN                           NaN                 NaN                                   NaN                   NaN
+9          Idarubicin 5 (plate14)                                     PYCARD-AS1       49  27507.0  0.469757                 0.797224                    0.442012    0.636037          140.0                            359.0              4.0                           1.0           99.112051                             98.329810             99.978858
+10         Idarubicin 5 (plate14)                                          ITGAM       49  27507.0  0.341020                 0.363845                    0.225801   -0.238163         1306.0                           5662.0          26440.0                         875.0           93.030691                             74.680307              2.514919
+11         Idarubicin 5 (plate14)                                            FUS       49  27507.0  0.315714                 0.589796                    0.422614    0.512551         1848.0                            511.0             54.0                          28.0           96.126984                             98.984127             99.809524
+12         Idarubicin 5 (plate14)                                         PYCARD       49  27507.0  0.124161                -0.343648                    0.097513   -0.197935        10373.0                          13060.0          25681.0                       27322.0           53.372434                             44.134897              5.027231
+13         Idarubicin 5 (plate14)                                          ITGAD       49  27507.0  0.269680                 0.389560                    0.260464    0.026656         3151.0                           4129.0          15527.0                         643.0           85.612313                             82.132501             41.267009
+14         Idarubicin 5 (plate14)                                          ITGAX       49  27507.0  0.028878                 0.127820                    0.496534    0.020052        16408.0                            138.0          15955.0                        8019.0           32.399745                             99.130066             39.698706
+15         Idarubicin 5 (plate14)      TRIM72 gain vs FUS CPM in well (Spearman)       49      NaN  0.437653                      NaN                         NaN         NaN            NaN                              NaN              NaN                           NaN                 NaN                                   NaN                   NaN
+16         Idarubicin 5 (plate14)     TRIM72 gain vs FUS baseline CPM (Spearman)       49      NaN  0.119490                      NaN                         NaN         NaN            NaN                              NaN              NaN                           NaN                 NaN                                   NaN                   NaN
+17         Idarubicin 5 (plate14)  TRIM72 gain vs PYCARD-AS1 gain (Pearson, CPM)       49      NaN  0.347537                      NaN                         NaN         NaN            NaN                              NaN              NaN                           NaN                 NaN                                   NaN                   NaN
+18   Homoharringtonine 5 (plate6)                                     PYCARD-AS1       48  28397.0  0.859640                 0.855871                    0.852241    0.868650            3.0                              6.0              1.0                           1.0           99.958089                             99.916178             99.979044
+19   Homoharringtonine 5 (plate6)                                          ITGAM       48  28397.0  0.495766                 0.390165                    0.496944    0.471233          756.0                            733.0            532.0                        1667.0           95.580589                             95.927210             96.945407
+20   Homoharringtonine 5 (plate6)                                            FUS       48  28397.0  0.231003                 0.364243                    0.322920    0.251737         4946.0                           2721.0           3752.0                        2220.0           89.119738                             93.493712             88.299617
+21   Homoharringtonine 5 (plate6)                                         PYCARD       48  28397.0  0.521827                -0.135238                    0.258178    0.259687          596.0                           4194.0           3529.0                       25832.0           95.949201                             77.972411             81.453908
+22   Homoharringtonine 5 (plate6)                                          ITGAD       48  28397.0  0.669135                 0.469078                    0.653844    0.504625          131.0                            159.0            376.0                         628.0           99.689441                             99.600178             99.068323
+23   Homoharringtonine 5 (plate6)                                          ITGAX       48  28397.0  0.613117                 0.010647                    0.689909    0.398230          262.0                             93.0           1103.0                       19921.0           98.128578                             99.339498             93.284897
+24   Homoharringtonine 5 (plate6)      TRIM72 gain vs FUS CPM in well (Spearman)       48      NaN  0.279527                      NaN                         NaN         NaN            NaN                              NaN              NaN                           NaN                 NaN                                   NaN                   NaN
+25   Homoharringtonine 5 (plate6)     TRIM72 gain vs FUS baseline CPM (Spearman)       48      NaN  0.221233                      NaN                         NaN         NaN            NaN                              NaN              NaN                           NaN                 NaN                                   NaN                   NaN
+26   Homoharringtonine 5 (plate6)  TRIM72 gain vs PYCARD-AS1 gain (Pearson, CPM)       48      NaN  0.854385                      NaN                         NaN         NaN            NaN                              NaN              NaN                           NaN                 NaN                                   NaN                   NaN
+27  Homoharringtonine 5 (plate14)                                     PYCARD-AS1       48  28996.0  0.863734                 0.865362                    0.823361    0.839091            2.0                              8.0              1.0                           1.0           99.978930                             99.936789             99.978930
+28  Homoharringtonine 5 (plate14)                                          ITGAM       48  28996.0  0.464937                 0.404909                    0.516385    0.471233          930.0                            659.0            498.0                         834.0           95.065929                             96.618460             97.766908
+29  Homoharringtonine 5 (plate14)                                            FUS       48  28996.0  0.332067                 0.618324                    0.372815    0.386778         2435.0                           1996.0           1156.0                          51.0           94.188250                             94.125079             95.704359
+30  Homoharringtonine 5 (plate14)                                         PYCARD       48  28996.0  0.416157                -0.333953                    0.230972    0.130695         1354.0                           5024.0           7623.0                       28790.0           93.191312                             77.443609             69.319131
+31  Homoharringtonine 5 (plate14)                                          ITGAD       48  28996.0  0.634399                 0.422016                    0.631309    0.512297          204.0                            218.0            312.0                         678.0           99.555457                             99.599733             99.355412
+32  Homoharringtonine 5 (plate14)                                          ITGAX       48  28996.0  0.545435                 0.167382                    0.661616    0.489741          496.0                            162.0            415.0                        7360.0           97.178018                             99.151284             98.196478
+33  Homoharringtonine 5 (plate14)      TRIM72 gain vs FUS CPM in well (Spearman)       48      NaN  0.359205                      NaN                         NaN         NaN            NaN                              NaN              NaN                           NaN                 NaN                                   NaN                   NaN
+34  Homoharringtonine 5 (plate14)     TRIM72 gain vs FUS baseline CPM (Spearman)       48      NaN  0.195940                      NaN                         NaN         NaN            NaN                              NaN              NaN                           NaN                 NaN                                   NaN                   NaN
+35  Homoharringtonine 5 (plate14)  TRIM72 gain vs PYCARD-AS1 gain (Pearson, CPM)       48      NaN  0.847363                      NaN                         NaN         NaN            NaN                              NaN              NaN                           NaN                 NaN                                   NaN                   NaN
+Idarubicin 5 (plate6) top by rho_gain: PYCARD-AS1, LINC02169, MIR4500HG, CELF5, ITGAM, PHYHD1, LPAR5, ENSG00000290421, STARD8, RNF103
+Idarubicin 5 (plate6) top by partial: PYCARD-AS1, PHYHD1, CELF5, LINC02169, LINC01692, PIP5K1B, ITGAM, ZNF497-AS1, ENSG00000268643, LINC01471
+Idarubicin 5 (plate6) top by log2fc: PYCARD-AS1, LINC01816, ZNF277-AS1, HNRNPA2B1, ENSG00000286585, ILF2, FAM72A, RPL23A, CFL1, DDX5
+Idarubicin 5 (plate14) top by rho_gain: ZER1, SLC9A1, ENSG00000274949, NPHS1, CSRNP2, CATSPERG, RNPC3-DT, PLXNB3-AS1, ENSG00000266573, ENSG00000287584
+Idarubicin 5 (plate14) top by partial: MED29, SLC43A2, ZNF394, ZER1, SLC9A1, CSRNP2, ENSG00000250025, ENSG00000287868, RASGRP2, HEXIM1
+Idarubicin 5 (plate14) top by log2fc: FNDC7, LRRC41, NXF1, PYCARD-AS1, ENSG00000267740, GPR83, HNRNPA0, ARL9, ILF2, ORAI2
+Homoharringtonine 5 (plate6) top by rho_gain: ENSG00000228401, GRAMD2A, PYCARD-AS1, HIPK4, RAB44, CATSPERD, ENSG00000268643, ENSG00000289254, TMPRSS9, PRX
+Homoharringtonine 5 (plate6) top by partial: GRAMD2A, TMPRSS9, ENSG00000228401, RAB44, HIPK4, PYCARD-AS1, CATSPERD, ENSG00000268643, LINC01618, PRX
+Homoharringtonine 5 (plate6) top by log2fc: PYCARD-AS1, GRAMD2A, LINC01618, ENSG00000268643, TMPRSS9, RAB44, CATSPERD, ENSG00000230739, NSG2, ENSG00000253824
+Homoharringtonine 5 (plate14) top by rho_gain: RPS9, PYCARD-AS1, CATSPERD, ENSG00000260060, ENSG00000284797, PELATON, PRX, CFL1, ENSG00000290421, LHFPL3-AS2
+Homoharringtonine 5 (plate14) top by partial: RPS9, CATSPERD, RCC1, PRX, NUP210L, TRNAU1AP, MRNIP-DT, PYCARD-AS1, ENSG00000284797, ENSG00000290421
+Homoharringtonine 5 (plate14) top by log2fc: PYCARD-AS1, ENSG00000260060, PRX, RPS9, ZNF143, ENSG00000273734, NUP210L, MPDU1, BOLA1, IQCN

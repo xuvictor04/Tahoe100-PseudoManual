@@ -23,7 +23,7 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 
-OUT = os.path.dirname(os.path.abspath(__file__))
+OUT = os.environ.get("MG53_OUT") or os.path.dirname(os.path.abspath(__file__))   # run_mg53_p53.py sets MG53_OUT
 EU = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 TOOL = "tahoe_mg53_literature_screen"
 

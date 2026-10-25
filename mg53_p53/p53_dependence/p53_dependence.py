@@ -19,7 +19,7 @@ What it does (all numbers are recomputed from the gene panel's extract; nothing 
   6. 'Does TRIM72 behave like a p53 target?': four metrics for every panel gene (p53-score members, other p53
      targets, TRIM72, the rest) and where TRIM72 falls.
 
-    python3 p53_dependence.py [--data /home/user/tahoe_data] [--recompute] [--perm 10000]
+    python3 p53_dependence.py [--data DIR (default $MG53_DATA, $TAHOE_DATA or ~/Tahoe-100M)] [--recompute] [--perm 10000]
 
 Outputs (this script's folder, tables/; log2 effects are the method-v3 corrected r2, per line = mean of used wells):
   key_results.csv                         headline rows: strongest TRIM72 raisers + selinexor, TRIM72 next to the
@@ -932,11 +932,11 @@ def key_results(cmp_, wide):
 # ============================================================================= main
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--data", default="/home/user/tahoe_data")
+    ap.add_argument("--data", default=os.environ.get("MG53_DATA") or os.environ.get("TAHOE_DATA") or os.path.expanduser("~/Tahoe-100M"))
     ap.add_argument("--recompute", action="store_true", help="rebuild cache/ from the panel extract")
     ap.add_argument("--perm", type=int, default=10000, help="permutations / bootstrap resamples per test")
     a = ap.parse_args()
-    cdir, tdir = os.path.join(HERE, "cache"), os.path.join(HERE, "tables")
+    cdir, tdir = os.path.join(os.environ.get("MG53_OUT") or HERE, "cache"), os.path.join(os.environ.get("MG53_OUT") or HERE, "tables")
     os.makedirs(tdir, exist_ok=True)
     if a.recompute or not os.path.exists(os.path.join(cdir, "meta.json")):
         build_cache(a.data, cdir)
