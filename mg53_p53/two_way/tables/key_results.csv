@@ -1,0 +1,64 @@
+section,what,n,estimate,ci_lo,ci_hi,p,q,mde_80,detail
+D1,"P53_SCORE [i_all, full]: b_WT - b_alt",53084,0.00503082,-0.00805018,0.0181118,0.161919,0.291454,0.00906499,b_WT 0.0053 (p perm 0.182); b_alt 0.0003; CI two-way cluster; p TP53-label perm
+D1,"MDM2 [i_all, full]: b_WT - b_alt",53084,0.0116541,-0.00671672,0.030025,0.0429785,0.175412,0.0146107,b_WT 0.0041 (p perm 0.872); b_alt -0.0076; CI two-way cluster; p TP53-label perm
+D1,"CDKN1A [i_all, full]: b_WT - b_alt",49689,-0.0149172,-0.0345204,0.00468602,0.0584708,0.175412,0.0220381,b_WT 0.0028 (p perm 0.972); b_alt 0.0177; CI two-way cluster; p TP53-label perm
+D1,"P53_SCORE [i_all, full_base]: b_WT - b_alt",53084,0.00497904,-0.0080019,0.01796,0.161919,0.291454,0.008884,b_WT 0.0053 (p perm 0.164); b_alt 0.0004; CI two-way cluster; p TP53-label perm
+D1,"MDM2 [i_all, full_base]: b_WT - b_alt",53084,0.0115766,-0.00659097,0.0297441,0.057971,0.203898,0.0147599,b_WT 0.0040 (p perm 0.884); b_alt -0.0076; CI two-way cluster; p TP53-label perm
+D1,"CDKN1A [i_all, full_base]: b_WT - b_alt",49689,-0.0147112,-0.034119,0.00469672,0.067966,0.203898,0.0219007,b_WT 0.0032 (p perm 0.968); b_alt 0.0179; CI two-way cluster; p TP53-label perm
+D1,"P53_SCORE [i_all, none]: b_WT - b_alt",53331,-0.001991,-0.0183782,0.0143962,0.581709,0.747912,0.00970746,b_WT 0.0015 (p perm 0.319); b_alt 0.0035; CI two-way cluster; p TP53-label perm
+D1,"MDM2 [i_all, none]: b_WT - b_alt",53331,0.00229472,-0.0207195,0.0253089,0.696152,0.783171,0.0157998,b_WT -0.0018 (p perm 0.449); b_alt -0.0041; CI two-way cluster; p TP53-label perm
+D1,"CDKN1A [i_all, none]: b_WT - b_alt",49936,-0.0240833,-0.0492836,0.00111688,0.009995,0.0449775,0.025682,b_WT -0.0039 (p perm 1); b_alt 0.0202; CI two-way cluster; p TP53-label perm
+D1,"P53_SCORE [ii_active, full]: b_WT - b_alt",2895,-0.0228398,-0.0946438,0.0489643,0.0274863,0.0824588,0.0291846,b_WT -0.0165 (p perm 0.156); b_alt 0.0063; CI two-way cluster; p TP53-label perm
+D1,"MDM2 [ii_active, full]: b_WT - b_alt",2895,-0.0245815,-0.124857,0.0756945,0.183408,0.275112,0.048732,b_WT -0.0441 (p perm 0.003); b_alt -0.0195; CI two-way cluster; p TP53-label perm
+D1,"CDKN1A [ii_active, full]: b_WT - b_alt",2710,-0.0885743,-0.172021,-0.00512743,0.00049975,0.00449775,0.0792328,b_WT -0.0099 (p perm 0.984); b_alt 0.0787; CI two-way cluster; p TP53-label perm
+D1,"P53_SCORE [ii_active, full_base]: b_WT - b_alt",2895,-0.0234082,-0.0951796,0.0483631,0.0244878,0.0734633,0.0285038,b_WT -0.0164 (p perm 0.144); b_alt 0.0070; CI two-way cluster; p TP53-label perm
+D1,"MDM2 [ii_active, full_base]: b_WT - b_alt",2895,-0.0228462,-0.123171,0.0774785,0.210895,0.316342,0.0466337,b_WT -0.0448 (p perm 0.004); b_alt -0.0219; CI two-way cluster; p TP53-label perm
+D1,"CDKN1A [ii_active, full_base]: b_WT - b_alt",2710,-0.091797,-0.175223,-0.0083715,0.00049975,0.00224888,0.0811349,b_WT -0.0103 (p perm 0.977); b_alt 0.0815; CI two-way cluster; p TP53-label perm
+D1,"P53_SCORE [ii_active_no_plate3_13, full]: b_WT - b_alt",2716,-0.00419489,-0.067741,0.0593512,0.698151,0.947339,0.0276486,b_WT -0.0036 (p perm 0.692); b_alt 0.0006; CI two-way cluster; p TP53-label perm
+D1,"MDM2 [ii_active_no_plate3_13, full]: b_WT - b_alt",2716,0.00448015,-0.0815456,0.090506,0.807096,0.947339,0.0510089,b_WT -0.0261 (p perm 0.107); b_alt -0.0306; CI two-way cluster; p TP53-label perm
+D1,"CDKN1A [ii_active_no_plate3_13, full]: b_WT - b_alt",2542,-0.0696886,-0.139319,-5.7851e-05,0.00349825,0.0314843,0.0756566,b_WT 0.0048 (p perm 0.95); b_alt 0.0745; CI two-way cluster; p TP53-label perm
+D1,"P53_SCORE [iii_readthrough, full]: b_WT - b_alt",53084,0.00205424,-0.0101904,0.0142989,0.495752,0.729921,0.00772559,b_WT 0.0032 (p perm 0.241); b_alt 0.0012; CI two-way cluster; p TP53-label perm
+D1,"MDM2 [iii_readthrough, full]: b_WT - b_alt",53084,0.00819493,-0.00910307,0.0254929,0.131434,0.394303,0.0131178,b_WT 0.0014 (p perm 0.914); b_alt -0.0068; CI two-way cluster; p TP53-label perm
+D1,"CDKN1A [iii_readthrough, full]: b_WT - b_alt",49689,-0.0157587,-0.0343757,0.00285825,0.0384808,0.287856,0.0214662,b_WT 0.0007 (p perm 1); b_alt 0.0164; CI two-way cluster; p TP53-label perm
+D1,"P53_SCORE [iv_no_plate3_13, full]: b_WT - b_alt",46869,0.00730752,-0.0067128,0.0213278,0.0464768,0.13943,0.00911831,b_WT 0.0071 (p perm 0.155); b_alt -0.0003; CI two-way cluster; p TP53-label perm
+D1,"MDM2 [iv_no_plate3_13, full]: b_WT - b_alt",46869,0.0161815,-0.0033008,0.0356638,0.007996,0.071964,0.015665,b_WT 0.0071 (p perm 0.788); b_alt -0.0091; CI two-way cluster; p TP53-label perm
+D1,"CDKN1A [iv_no_plate3_13, full]: b_WT - b_alt",43872,-0.0052748,-0.0249269,0.0143773,0.510745,0.614505,0.0206214,b_WT 0.0077 (p perm 0.034); b_alt 0.0129; CI two-way cluster; p TP53-label perm
+D1 line slopes,P53_SCORE [i_all]: mean line slope WT - altered,47,0.00226543,-0.00520538,0.00973625,0.536123,,0.00856713,
+D1 line slopes,MDM2 [i_all]: mean line slope WT - altered,47,0.00857592,-0.00240583,0.0195577,0.117944,,0.0130933,
+D1 line slopes,CDKN1A [i_all]: mean line slope WT - altered,44,-0.0200274,-0.0338914,-0.00616352,0.0040998,,0.0205481,
+D1 line slopes,P53_SCORE [ii_active]: mean line slope WT - altered,47,-0.0251585,-0.0499947,-0.000322375,0.0427479,,0.030424,
+D1 line slopes,MDM2 [ii_active]: mean line slope WT - altered,47,-0.0270811,-0.0644417,0.0102795,0.139593,,0.0432567,
+D1 line slopes,CDKN1A [ii_active]: mean line slope WT - altered,44,-0.0899194,-0.142988,-0.0368511,0.00124994,,0.0823057,
+D2,SLC7A11 (ferroptosis): b_common / diff,49688,0.0115469,0.00279487,0.0202989,0.010917,0.0437921,,"diff -0.0093, q_diff 0.98; b_WT 0.0058 b_alt 0.0151"
+D2,CHAC1 (ferroptosis): b_common / diff,49688,0.0139202,0.00182838,0.026012,0.0250581,0.0845711,,"diff -0.0100, q_diff 0.98; b_WT 0.0075 b_alt 0.0175"
+D2,MCL1 (apoptosis): b_common / diff,53084,0.0164381,0.00793962,0.0249365,0.000317529,0.00428664,,"diff -0.0082, q_diff 0.98; b_WT 0.0114 b_alt 0.0196"
+D2,PMAIP1 (apoptosis): b_common / diff,49776,0.00880984,0.00209339,0.0155263,0.0113535,0.0437921,,"diff 0.0021, q_diff 0.98; b_WT 0.0100 b_alt 0.0079"
+D2,ATF3 (stress (ISR)): b_common / diff,53084,0.0228383,0.0120707,0.0336059,9.70498e-05,0.00262034,,"diff 0.0019, q_diff 0.98; b_WT 0.0240 b_alt 0.0221"
+D2,DDIT3 (stress (ISR)): b_common / diff,53084,0.00958465,0.00101202,0.0181573,0.0292397,0.087719,,"diff -0.0006, q_diff 0.98; b_WT 0.0092 b_alt 0.0098"
+D2,stress (ISR) module (stress (ISR)): b_common / diff,53084,0.0162115,0.00748277,0.0249402,0.000511007,0.00459906,,"diff 0.0006, q_diff 0.98; b_WT 0.0166 b_alt 0.0160"
+D2,PTK2 (PI3K-AKT / FOXO / FAK): b_common / diff,53084,-0.00565719,-0.00920359,-0.0021108,0.0024149,0.0130405,,"diff 0.0021, q_diff 0.98; b_WT -0.0044 b_alt -0.0065"
+D2,CCNE1 (E2F targets): b_common / diff,53084,0.0238414,0.00951245,0.0381703,0.00162505,0.0109691,,"diff -0.0089, q_diff 0.98; b_WT 0.0184 b_alt 0.0273"
+D1 ii_active leave-one-drug-out,P53_SCORE: b_WT - b_alt without each drug,37,-0.0228398,-0.0509067,-5.37274e-05,0.995717,,,ci_lo / ci_hi = smallest / largest diff over the drops; p = largest line-cluster p over the drops (drop giving it: TAK-901)
+D1 ii_active leave-one-drug-out,MDM2: b_WT - b_alt without each drug,37,-0.0245815,-0.0615491,0.00893045,0.626606,,,ci_lo / ci_hi = smallest / largest diff over the drops; p = largest line-cluster p over the drops (drop giving it: TAK-901)
+D1 ii_active leave-one-drug-out,CDKN1A: b_WT - b_alt without each drug,37,-0.0885743,-0.115123,-0.0585204,0.00648461,,,ci_lo / ci_hi = smallest / largest diff over the drops; p = largest line-cluster p over the drops (drop giving it: TAK-901)
+D1 ii_active leave-one-drug-out,FDXR: b_WT - b_alt without each drug,37,-0.0409033,-0.0922473,0.00421203,0.870387,,,ci_lo / ci_hi = smallest / largest diff over the drops; p = largest line-cluster p over the drops (drop giving it: TAK-901)
+D1 ii_active leave-one-drug-out,ZMAT3: b_WT - b_alt without each drug,37,-0.0539598,-0.0947754,-0.0303348,0.0434582,,,ci_lo / ci_hi = smallest / largest diff over the drops; p = largest line-cluster p over the drops (drop giving it: TAK-901)
+D1 ii_active leave-one-drug-out,DDB2: b_WT - b_alt without each drug,37,-0.0177884,-0.0334811,0.00341389,0.887522,,,ci_lo / ci_hi = smallest / largest diff over the drops; p = largest line-cluster p over the drops (drop giving it: TAK-901)
+D1 ii_active leave-one-drug-out,TP53I3: b_WT - b_alt without each drug,37,0.0193674,-0.0283075,0.0456923,0.748969,,,ci_lo / ci_hi = smallest / largest diff over the drops; p = largest line-cluster p over the drops (drop giving it: Harringtonine)
+D1 ii_active leave-one-drug-out,BBC3: b_WT - b_alt without each drug,37,-0.0357761,-0.0618067,-0.020221,0.376283,,,ci_lo / ci_hi = smallest / largest diff over the drops; p = largest line-cluster p over the drops (drop giving it: TAK-901)
+D1 ii_active leave-one-drug-out,TP53: b_WT - b_alt without each drug,37,0.00755215,0.0028796,0.0115236,0.865375,,,ci_lo / ci_hi = smallest / largest diff over the drops; p = largest line-cluster p over the drops (drop giving it: Dinaciclib)
+(v) reliability,split-half (cells within each well x line) [i_all; FE + full],53084,0.168894,,,,,,full-data reliability 0.289
+(v) reliability,split-half (cells within each well x line) [i_all; FE + nothing else],53331,0.174156,,,,,,full-data reliability 0.297
+(v) reliability,split-half (cells within each well x line) [ii_active; FE + full],2895,0.43835,,,,,,full-data reliability 0.610
+(v) reliability,split-half (cells within each well x line) [ii_active; FE + nothing else],2911,0.47179,,,,,,full-data reliability 0.641
+(v) reliability,split-half (cells within each well x line) [ii_active_no_plate3_13; FE + full],2716,0.4181,,,,,,full-data reliability 0.590
+(v) reliability,split-half (cells within each well x line) [ii_active_no_plate3_13; FE + nothing else],2729,0.461565,,,,,,full-data reliability 0.632
+(v) reliability,"split-half (cells within each well x line) [iii_readthrough; FE + full + FUS, PYCARD-AS1]",53084,0.157731,,,,,,full-data reliability 0.272
+(v) reliability,"split-half (cells within each well x line) [iii_readthrough; FE + nothing else + FUS, PYCARD-AS1]",53331,0.161928,,,,,,full-data reliability 0.279
+(v) reliability,split-half (cells within each well x line) [iv_no_plate3_13; FE + full],46869,0.15867,,,,,,full-data reliability 0.274
+(v) reliability,split-half (cells within each well x line) [iv_no_plate3_13; FE + nothing else],47087,0.165785,,,,,,full-data reliability 0.284
+(v) reliability,split-half (cells within each well x line) [the 102 replicated drug-doses only (compare with the replicate-well rows); FE + full],4794,0.269974,,,,,,full-data reliability 0.425
+(v) reliability,replicate wells (two plates) [102 drug-doses with 2+ wells; FE + full],4792,0.114342,,,,,,single-well reliability
+(v) reliability,replicate wells (two plates) [102 drug-doses with 2+ wells; FE + nothing else],4799,0.117799,,,,,,single-well reliability
+(iii) readthrough fit,TRIM72 r2 on FUS_r2 (within FE),53331,0.378026,,,6.9488e-10,,,within R2 of TRIM72 explained by FUS + PYCARD-AS1 0.018
+(iii) readthrough fit,TRIM72 r2 on PYCARD-AS1_r2 (within FE),53331,0.115131,,,5.4948e-42,,,within R2 of TRIM72 explained by FUS + PYCARD-AS1 0.018

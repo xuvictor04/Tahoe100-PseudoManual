@@ -1,0 +1,40 @@
+method,variant,residualised_on,tp53_group,n_rows,n_drugdoses,r_halves,reliability_full_spearman_brown,sd_resid_A,sd_resid_B,reliability_single_well
+split-half (cells within each well x line),i_all,FE + full,all lines,53084,1132,0.16889410863832424,0.28898102469705056,0.8685067602850258,0.8725219344471297,
+split-half (cells within each well x line),i_all,FE + full,TP53-WT,19232,1132,0.1763170313127104,0.2997780812812843,0.884147504384888,0.8894007358518901,
+split-half (cells within each well x line),i_all,FE + full,TP53-altered,33852,1132,0.16442235586371431,0.2824101667848063,0.8594941661972955,0.8627856760015775,
+split-half (cells within each well x line),i_all,FE + nothing else,all lines,53331,1132,0.1741563449901164,0.29664932737996214,0.8707763895821666,0.8751053918001273,
+split-half (cells within each well x line),i_all,FE + nothing else,TP53-WT,19232,1132,0.1808008722018187,0.3062343134362401,0.8873211531627161,0.8914059895798229,
+split-half (cells within each well x line),i_all,FE + nothing else,TP53-altered,34099,1132,0.1701813244373318,0.2908631694650597,0.8613049047433325,0.8657764262555421,
+split-half (cells within each well x line),ii_active,FE + full,all lines,2895,62,0.43835014487580287,0.6095179903689627,0.9612010174530876,0.986885975725354,
+split-half (cells within each well x line),ii_active,FE + full,TP53-WT,1049,62,0.47439924166157976,0.643515308820905,0.9895687680966847,1.0133236044431548,
+split-half (cells within each well x line),ii_active,FE + full,TP53-altered,1846,62,0.41597086623076424,0.5875415605662221,0.9447013932305641,0.9715421322309569,
+split-half (cells within each well x line),ii_active,FE + nothing else,all lines,2911,62,0.471789792035489,0.6411102925004019,0.9913852521924885,1.0196295927292165,
+split-half (cells within each well x line),ii_active,FE + nothing else,TP53-WT,1049,62,0.4970654508839813,0.6640530654026864,1.0095417937992253,1.037323373842747,
+split-half (cells within each well x line),ii_active,FE + nothing else,TP53-altered,1862,62,0.45673269425949903,0.6270645205662388,0.9810083767393513,1.0095248392572265,
+split-half (cells within each well x line),ii_active_no_plate3_13,FE + full,all lines,2716,58,0.4181000332189912,0.5896622571398329,0.9533895040639331,0.9795150592988758,
+split-half (cells within each well x line),ii_active_no_plate3_13,FE + full,TP53-WT,985,58,0.46107820071002664,0.6311478748857668,0.9835027988653217,1.020517384351515,
+split-half (cells within each well x line),ii_active_no_plate3_13,FE + full,TP53-altered,1731,58,0.3906675237768763,0.5618417301007691,0.9358214991038208,0.9553980629521039,
+split-half (cells within each well x line),ii_active_no_plate3_13,FE + nothing else,all lines,2729,58,0.4615648989905888,0.631603699992197,0.9907114682801546,1.0211744467132484,
+split-half (cells within each well x line),ii_active_no_plate3_13,FE + nothing else,TP53-WT,985,58,0.4898274394221408,0.6575626498222238,1.0092411193442352,1.050154583524133,
+split-half (cells within each well x line),ii_active_no_plate3_13,FE + nothing else,TP53-altered,1744,58,0.44439965949095617,0.6153416840981174,0.9800912476530703,1.004437236140019,
+split-half (cells within each well x line),iii_readthrough,"FE + full + FUS, PYCARD-AS1",all lines,53084,1132,0.1577312224826863,0.27248331809595844,0.8625967352910076,0.8667926634870904,
+split-half (cells within each well x line),iii_readthrough,"FE + full + FUS, PYCARD-AS1",TP53-WT,19232,1132,0.16243948312553655,0.27948032647475735,0.8770189550691341,0.8818382217127118,
+split-half (cells within each well x line),iii_readthrough,"FE + full + FUS, PYCARD-AS1",TP53-altered,33852,1132,0.15490936945591408,0.26826238240476474,0.8542947358379975,0.8581274837822074,
+split-half (cells within each well x line),iii_readthrough,"FE + nothing else + FUS, PYCARD-AS1",all lines,53331,1132,0.16192846106623704,0.27872363315318793,0.8642725451716562,0.8687596858414948,
+split-half (cells within each well x line),iii_readthrough,"FE + nothing else + FUS, PYCARD-AS1",TP53-WT,19232,1132,0.16551354134617652,0.28401822110965297,0.8793189459116691,0.8831104449166817,
+split-half (cells within each well x line),iii_readthrough,"FE + nothing else + FUS, PYCARD-AS1",TP53-altered,34099,1132,0.15979618340566507,0.2755590778656196,0.8556696163394529,0.86056024490132,
+split-half (cells within each well x line),iv_no_plate3_13,FE + full,all lines,46869,999,0.15867015200104978,0.27388321296966667,0.8639355547891261,0.8678435652330784,
+split-half (cells within each well x line),iv_no_plate3_13,FE + full,TP53-WT,16982,999,0.16303798463872465,0.2803657091034207,0.8790019607172154,0.8832232838546011,
+split-half (cells within each well x line),iv_no_plate3_13,FE + full,TP53-altered,29887,999,0.1560474349823871,0.26996718345690474,0.8552564765050693,0.8589820262413489,
+split-half (cells within each well x line),iv_no_plate3_13,FE + nothing else,all lines,47087,999,0.16578486139481172,0.2844175917612401,0.8669349835934833,0.8714920112018708,
+split-half (cells within each well x line),iv_no_plate3_13,FE + nothing else,TP53-WT,16982,999,0.1685989947853569,0.28854893002252563,0.8822876345703163,0.8861084703945757,
+split-half (cells within each well x line),iv_no_plate3_13,FE + nothing else,TP53-altered,30105,999,0.16410941893461395,0.28194844275859554,0.8581535122746404,0.8631377943936275,
+split-half (cells within each well x line),the 102 replicated drug-doses only (compare with the replicate-well rows),FE + full,all lines,4794,102,0.2699736233764903,0.42516414263582736,0.57896806398399,0.5830468946707397,
+split-half (cells within each well x line),the 102 replicated drug-doses only (compare with the replicate-well rows),FE + full,TP53-WT,1734,102,0.3092844911530519,0.4724481092427411,0.6021603730646341,0.6059342823832709,
+split-half (cells within each well x line),the 102 replicated drug-doses only (compare with the replicate-well rows),FE + full,TP53-altered,3060,102,0.24473910107790192,0.39323758828812583,0.565403630020466,0.5696693484662675,
+replicate wells (two plates),102 drug-doses with 2+ wells,FE + full,all lines,4792,102,,,0.519260893125358,0.8245604981589189,0.11434220783735721
+replicate wells (two plates),102 drug-doses with 2+ wells,FE + full,TP53-WT,1733,102,,,0.5362007611896245,0.8478700454026642,0.13093779590965618
+replicate wells (two plates),102 drug-doses with 2+ wells,FE + full,TP53-altered,3059,102,,,0.5094141326713748,0.8110578472057307,0.10399788023715692
+replicate wells (two plates),102 drug-doses with 2+ wells,FE + nothing else,all lines,4799,102,,,0.5222491840145924,0.83042627884632,0.11779907444101548
+replicate wells (two plates),102 drug-doses with 2+ wells,FE + nothing else,TP53-WT,1733,102,,,0.5393302820245812,0.8534983611066762,0.13379597127249496
+replicate wells (two plates),102 drug-doses with 2+ wells,FE + nothing else,TP53-altered,3066,102,,,0.5123425596018457,0.8170970729522519,0.10785815976704222
