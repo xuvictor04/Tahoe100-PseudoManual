@@ -1,0 +1,40 @@
+check,value,n,note
+"P53_SCORE members (panel P53_ACTIVITY, testable)",21.0,21.0,"CDKN1A, MDM2, FDXR, ZMAT3, SESN1, BBC3, BAX, TP53I3, RRM2B, AEN, DDB2, XPC, PHLDA3, SPATA18, TRIAP1, RPS27L, ACER2, TP53INP1, PLK3, POLH, EDA2R"
+"background genes for bg_abs_r2 (panel genes, not p53-related, not screen genes, not TRIM72)",78.0,78.0,"MTAP, PSMD10, CDKN2A, CDKN2B, PTGS2, ACSL4, LPCAT3, AIFM2, NFE2L2, HMOX1, TFRC, FTH1, FTL, NCOA4, GSDMD, GSDME, NLRP3, AIM2, PYCARD, CASP1, CASP4, CASP5, CASP3, IL1B, IL18, NAPEPLD, ABCB1, ABCG2, NQO1, GCLM, GCLC, TXNRD1, SRXN1, OSGIN1, AKR1C1, AKR1C2, AKR1B10, G6PD, ME1, PIR, ABCC3, ASNS, TRIB3, PSAT1, PHGDH, PSPH, SLC3A2, SLC7A5, VEGFA, CEBPB, HSPA5, HERPUD1, DNAJB9, SDF2L1, SEL1L, PDIA4, XBP1, HSPA1A, HSPA1B, DNAJB1, HSPH1, HSPA6, BAG3, ISG15, IFIT1, IFIT3, MX1, OAS1, IFI6, IFI44L, STAT1, IRF7, IFITM1, RELB, NFKB2, BIRC3, ICAM1, IER3"
+pseudobulk vs gene_panel well_line: max |diff| TRIM72 counts,0.0,66449.0,
+pseudobulk vs gene_panel well_line: max |diff| total counts,4.0,66449.0,
+pseudobulk vs gene_panel well_line: max |diff| cells,0.0,66449.0,
+"TRIM72 r2 per (well, line): corrected_effects (pseudobulk) vs panel, Pearson r",0.9999999999999875,62611.0,median |diff| 6e-08; max |diff| 1.1e-06
+"MDM2 r2 per (well, line): corrected_effects (pseudobulk) vs panel, Pearson r",0.9999999999992323,63921.0,median |diff| 0; max |diff| 2.4e-06
+"CDKN1A r2 per (well, line): corrected_effects (pseudobulk) vs panel, Pearson r",0.9999999999997539,59935.0,median |diff| 0; max |diff| 1.7e-06
+"NFKBIA r2 per (well, line): corrected_effects (pseudobulk) vs panel, Pearson r",0.9999999999997902,63921.0,median |diff| 0; max |diff| 1.9e-06
+"FUS per (drug-dose, line): our used-well mean of r2 vs corrected_effects' own, max |diff|",2.9802322387695312e-08,,
+"FUS drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"CCND1 drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"CCNE1 drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"CDC25A drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"CDT1 drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"E2F1 drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"IRS1 drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"KIF11 drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"MCL1 drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"MCM3 drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"MCM7 drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"MYBL2 drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"PTK2 drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"RAC1 drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"TXNIP drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"TRIM72 drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"MDM2 drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"CDKN1A drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"NFKBIA drug-dose log2FC: corrected_effects vs atlas DD_lfc, max |diff|",0.0,1132.0,
+"idarubicin 5 uM per-line TRIM72 r2 (mean of 2 wells) vs trim72_idarubicin/corrected, max |diff|",1.1920928955078125e-07,48.0,
+split-half: profiles,66449.0,,
+split-half: max_abs_diff_cells_halfA_plus_halfB_vs_well_line,0.0,,
+split-half: max_abs_diff_TRIM72_counts_halfA_plus_halfB_vs_well_line,0.0,,
+"within-cell permutation, fast formula vs explicit projection, max |diff| of b_WT, b_alt, b_common (i_all, full, P53_SCORE, FE dd)",2.949029909160572e-17,53084.0,
+"within-cell permutation, fast formula vs explicit projection, max |diff| of b_WT, b_alt, b_common (i_all, full, P53_SCORE, FE ddxg)",2.6020852139652106e-18,53084.0,
+D1 TP53-label engine at the true labels minus the main fit (FE dd): max |diff| of b_WT - b_alt; of t,2.3592239273284576e-16,117.0,t: 2.9e-14
+D1 TP53-label engine at the true labels minus the main fit (FE ddxg): max |diff| of b_WT - b_alt; of t,1.457167719820518e-16,117.0,t: 1.9e-14
+D2 TP53-label engine at the true labels minus the main fit (FE dd): max |diff| of b_WT - b_alt; of t,1.5612511283791264e-16,37.0,t: 1.8e-14
+D2 TP53-label engine at the true labels minus the main fit (FE ddxg): max |diff| of b_WT - b_alt; of t,3.7816971776294395e-16,37.0,t: 2.5e-14

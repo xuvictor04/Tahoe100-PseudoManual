@@ -1,0 +1,24 @@
+test,tf_activity,readout,n,estimate,r_raw,p,p_perm_empirical,null_sd,b_WT,se_WT_line,b_alt,se_alt_line,diff_WT_minus_alt,p_diff_line,r_partial_within,ci_lo,ci_hi,n_positive
+"across drug-doses (partial r, covariates)",TP53 (full regulon),MDM2 z,1086,0.15022,0.20687,1.2926e-05,0.000999,0.034443,,,,,,,,,,
+"across drug-doses (partial r, covariates)",TP53 (full regulon),CDKN1A z,1086,0.42152,0.40933,3.6885e-38,0.000999,0.032638,,,,,,,,,,
+"across drug-doses (partial r, covariates)",TP53 (full regulon),panel P53_ACTIVITY z,1086,0.31304,0.18734,1.3552e-19,0.000999,0.034567,,,,,,,,,,
+"across drug-doses (partial r, covariates)","TP53 (MDM2, CDKN1A out)",MDM2 z,1086,0.13297,0.19115,0.00011153,0.000999,0.034411,,,,,,,,,,
+"across drug-doses (partial r, covariates)","TP53 (MDM2, CDKN1A out)",CDKN1A z,1086,0.40628,0.39762,1.1049e-35,0.000999,0.032584,,,,,,,,,,
+"across drug-doses (partial r, covariates)","TP53 (MDM2, CDKN1A out)",panel P53_ACTIVITY z,1086,0.30016,0.17697,3.4501e-18,0.000999,0.034518,,,,,,,,,,
+"across drug-doses (partial r, covariates)","TP53 activated targets (MDM2, CDKN1A out)",MDM2 z,1086,0.089659,0.081589,0.010328,0.007992,0.034959,,,,,,,,,,
+"across drug-doses (partial r, covariates)","TP53 activated targets (MDM2, CDKN1A out)",CDKN1A z,1086,0.36355,0.33583,1.7587e-28,0.000999,0.032841,,,,,,,,,,
+"across drug-doses (partial r, covariates)","TP53 activated targets (MDM2, CDKN1A out)",panel P53_ACTIVITY z,1086,0.17689,0.0078615,4.7553e-07,0.000999,0.035125,,,,,,,,,,
+"within lines (two-way FE, full)","TP53 (MDM2, CDKN1A out)",MDM2 r2,51996,2.509,,1.8799e-07,,,4.4628,0.31484,1.2899,0.235,3.1729,3.365e-11,0.23261,,,
+"within lines (two-way FE, full)","TP53 activated targets (MDM2, CDKN1A out)",MDM2 r2,51996,1.3239,,2.0773e-06,,,2.1804,0.18195,0.84991,0.17533,1.3305,2.0913e-08,0.20693,,,
+"within lines (two-way FE, none)","TP53 (MDM2, CDKN1A out)",MDM2 r2,52234,2.6767,,3.5908e-07,,,4.7352,0.3801,1.3004,0.24335,3.4348,1.6536e-10,0.25658,,,
+"within lines (two-way FE, none)","TP53 activated targets (MDM2, CDKN1A out)",MDM2 r2,52234,1.2736,,7.8563e-06,,,1.889,0.17934,0.95331,0.21086,0.93571,9.7608e-06,0.19701,,,
+"within lines (two-way FE, full)","TP53 (MDM2, CDKN1A out)",CDKN1A r2,48739,2.8326,,1.5672e-07,,,4.3503,0.31653,1.7791,0.40438,2.5713,9.8706e-07,0.17598,,,
+"within lines (two-way FE, full)","TP53 activated targets (MDM2, CDKN1A out)",CDKN1A r2,48739,1.7751,,5.0747e-07,,,2.5064,0.18981,1.328,0.2874,1.1784,8.0846e-05,0.18605,,,
+"within lines (two-way FE, none)","TP53 (MDM2, CDKN1A out)",CDKN1A r2,48977,3.3241,,2.2375e-08,,,4.9613,0.36234,2.1131,0.41559,2.8482,8.8208e-07,0.21584,,,
+"within lines (two-way FE, none)","TP53 activated targets (MDM2, CDKN1A out)",CDKN1A r2,48977,1.7362,,2.468e-06,,,2.2711,0.19992,1.4317,0.32277,0.83941,0.0028453,0.18184,,,
+"per-line activity, WT minus altered lines: p53-activating drug-doses (P53_ACTIVITY z >= 5)",TP53 (full regulon),ULM slope (mean over drug-doses of the WT - altered mean),28,0.053671,,7.2956e-09,,,,,,,,,,0.04093,0.066413,25
+"per-line activity, WT minus altered lines: other drug-doses",TP53 (full regulon),ULM slope (mean over drug-doses of the WT - altered mean),1058,0.0011133,,4.1385e-05,,,,,,,,,,0.00058326,0.0016433,596
+"per-line activity, WT minus altered lines: p53-activating drug-doses (P53_ACTIVITY z >= 5)","TP53 (MDM2, CDKN1A out)",ULM slope (mean over drug-doses of the WT - altered mean),28,0.052184,,6.8303e-09,,,,,,,,,,0.039837,0.06453,25
+"per-line activity, WT minus altered lines: other drug-doses","TP53 (MDM2, CDKN1A out)",ULM slope (mean over drug-doses of the WT - altered mean),1058,0.001104,,2.6549e-05,,,,,,,,,,0.00059123,0.0016168,603
+"per-line activity, WT minus altered lines: p53-activating drug-doses (P53_ACTIVITY z >= 5)","TP53 activated targets (MDM2, CDKN1A out)",ULM slope (mean over drug-doses of the WT - altered mean),28,0.043981,,4.8693e-07,,,,,,,,,,0.030846,0.057115,25
+"per-line activity, WT minus altered lines: other drug-doses","TP53 activated targets (MDM2, CDKN1A out)",ULM slope (mean over drug-doses of the WT - altered mean),1058,0.0023477,,1.6457e-10,,,,,,,,,,0.0016348,0.0030605,649

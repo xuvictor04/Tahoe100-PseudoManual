@@ -1,0 +1,17 @@
+250 files, 1,965,736 cells of 13 CDKN2A-deleted / 6 MTAP-null lines; 16 s
+CDKN2A-deleted lines   P53_SCORE ambient CDKN2A det 0.90% (96% 1 UMI): log RR -0.080 (se 0.008) pct among placebos 25 | TRIM72 det 0.48%: +0.014 (0.010) pct 62 | placebo median -0.019 max +0.125
+CDKN2A-deleted lines   MDM2      ambient CDKN2A det 0.90% (96% 1 UMI): log RR -0.096 (se 0.013) pct among placebos 31 | TRIM72 det 0.48%: -0.056 (0.017) pct 44 | placebo median -0.017 max +0.130
+CDKN2A-deleted lines   XPC       ambient CDKN2A det 0.90% (96% 1 UMI): log RR -0.047 (se 0.016) pct among placebos 38 | TRIM72 det 0.48%: +0.052 (0.021) pct 81 | placebo median -0.025 max +0.152
+CDKN2A-deleted lines   DDB2      ambient CDKN2A det 0.90% (96% 1 UMI): log RR -0.098 (se 0.015) pct among placebos 19 | TRIM72 det 0.48%: -0.012 (0.019) pct 62 | placebo median -0.038 max +0.120
+CDKN2A-deleted lines   ATF3      ambient CDKN2A det 0.90% (96% 1 UMI): log RR -0.043 (se 0.018) pct among placebos 31 | TRIM72 det 0.48%: +0.416 (0.019) pct 100 | placebo median +0.015 max +0.248
+CDKN2A-deleted lines   TP53      ambient CDKN2A det 0.90% (96% 1 UMI): log RR +0.018 (se 0.017) pct among placebos 62 | TRIM72 det 0.48%: +0.124 (0.023) pct 100 | placebo median +0.002 max +0.104
+CDKN2A-deleted lines   PMAIP1    ambient CDKN2A det 0.90% (96% 1 UMI): log RR -0.060 (se 0.019) pct among placebos 31 | TRIM72 det 0.48%: +0.163 (0.022) pct 88 | placebo median -0.007 max +0.889
+MTAP-null lines        P53_SCORE ambient MTAP det 3.69% (94% 1 UMI): log RR -0.017 (se 0.007) pct among placebos 44 | TRIM72 det 0.49%: +0.024 (0.019) pct 62 | placebo median +0.008 max +0.307
+MTAP-null lines        MDM2      ambient MTAP det 3.69% (94% 1 UMI): log RR -0.010 (se 0.012) pct among placebos 44 | TRIM72 det 0.49%: -0.025 (0.033) pct 44 | placebo median +0.016 max +0.416
+MTAP-null lines        XPC       ambient MTAP det 3.69% (94% 1 UMI): log RR -0.013 (se 0.015) pct among placebos 44 | TRIM72 det 0.49%: -0.034 (0.044) pct 38 | placebo median -0.001 max +0.321
+MTAP-null lines        DDB2      ambient MTAP det 3.69% (94% 1 UMI): log RR -0.021 (se 0.013) pct among placebos 44 | TRIM72 det 0.49%: -0.089 (0.041) pct 19 | placebo median -0.004 max +0.228
+MTAP-null lines        ATF3      ambient MTAP det 3.69% (94% 1 UMI): log RR -0.064 (se 0.016) pct among placebos 38 | TRIM72 det 0.49%: +0.323 (0.038) pct 94 | placebo median +0.008 max +0.486
+MTAP-null lines        TP53      ambient MTAP det 3.69% (94% 1 UMI): log RR -0.054 (se 0.012) pct among placebos 31 | TRIM72 det 0.49%: +0.092 (0.037) pct 88 | placebo median +0.006 max +0.141
+MTAP-null lines        PMAIP1    ambient MTAP det 3.69% (94% 1 UMI): log RR +0.014 (se 0.016) pct among placebos 31 | TRIM72 det 0.49%: +0.089 (0.033) pct 62 | placebo median +0.058 max +0.901
+done 877 s
+MONITOR exit 0 wall 879 s peak tree PSS 1.67 GB main RSS 0.00 GB largest other RSS 0.00 GB

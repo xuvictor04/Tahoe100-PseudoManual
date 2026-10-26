@@ -32,3 +32,8 @@ mg53_p53/**/ext_download/
 mg53_p53/**/*.npz
 mg53_p53/**/*.npy
 mg53_perturbation/**/cache/
+# full reruns made by verifiers (duplicates of the step tables; regenerate with the step script)
+mg53_p53/single_cell_all/verify/out/full_run/
+mg53_p53/single_cell_all/verify/out/rebuild/
+mg53_p53/single_cell_all/verify/out/rebuild_pd2/
+mg53_p53/single_cell_all/verify/out/smoke_pd2/
