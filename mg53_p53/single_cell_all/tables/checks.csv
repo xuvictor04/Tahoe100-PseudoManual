@@ -1,12 +1,20 @@
 check,value,n,note
-cells read (all files),95624334.0,3388,"Tahoe-100M has 95,624,334 cells in 3,388 files"
-qualifying groups whose cells read != well_line n_cells,0.0,32717,0 = every qualifying group was read completely
-plates with cells read != well_line total,0.0,14,
-"batched IRLS vs scalar GLM (downstream_p53.poisson_glm copy), TRIM72 x P53_SCORE: max |diff| of log_rr",3.8578827465940435e-08,143,every --check-every-th group id
-same: max relative |diff| of SE,5.7732749943579616e-08,143,
-fits dropped: separation (outcome entirely in one arm),7939.0,5561259,mostly sparse genes; dropped before the meta-analysis
-fits dropped: IRLS not converged (without separation),2.0,5561259,"max 25 iterations, tol 1e-06"
-groups fitted (TRIM72 fittable after the subsample) / qualifying,30803.0,32717,1914 qualifying groups fell below 5 TRIM72-detected cells in the subsample; their placebo fits are dropped too
-"gene lists equal tahoe_gene_panel (P53_ACTIVITY, P53_EXT, context modules)",1.0,1,
-"idarubicin 5 uM P53_SCORE rate ratio, WT: this step (per well, then lines) vs D1 (per line, both wells in one fit)",1.0197503993426529,16,"D1 1.0195 (/home/user/Tahoe100-PseudoManual/mg53_p53/downstream_p53/tables/d_single_cell_meta_main.csv); differences: per-well fits, two-stage pooling, 2000-cell subsample"
-"idarubicin 5 uM P53_SCORE rate ratio, altered: this step (per well, then lines) vs D1 (per line, both wells in one fit)",0.9816738452340354,30,"D1 0.9832 (/home/user/Tahoe100-PseudoManual/mg53_p53/downstream_p53/tables/d_single_cell_meta_main.csv); differences: per-well fits, two-stage pooling, 2000-cell subsample"
+cells read (all files),95624334.0,3388.0,"Tahoe-100M has 95,624,334 cells in 3,388 files"
+qualifying groups whose cells read != well_line n_cells,0.0,32717.0,0 = every qualifying group was read completely
+plates with cells read != well_line total,0.0,14.0,
+plates fitted before all their cells were read (stale-flushed or at end of stream),0.0,14.0, (must be 0 on a full run)
+cells read after their plate had been fitted (ignored),0.0,0.0,"n = of them, cells sampled for fitting; must be 0 on a full run"
+"batched IRLS vs scalar GLM (downstream_p53.poisson_glm copy), TRIM72 x P53_SCORE: max |diff| of log_rr",3.8578827465940435e-08,143.0,every --check-every-th group id
+same: max relative |diff| of SE,5.7732749943579616e-08,143.0,
+fits dropped: separation (outcome entirely in one arm),8197.0,5669338.0,mostly sparse genes; dropped before the meta-analysis
+fits dropped: IRLS not converged (without separation),2.0,5669338.0,"max 25 iterations, tol 1e-06"
+groups fitted (TRIM72 fittable after the subsample) / qualifying,30803.0,32717.0,1914 qualifying groups fell below 5 TRIM72-detected cells in the subsample; their placebo fits are dropped too
+"gene lists equal tahoe_gene_panel (P53_ACTIVITY, P53_EXT, context modules)",1.0,1.0,
+gene_modules.csv genes in the per-cell panel / of them tested as p53 or screen outcomes,20.0,19.0,/home/user/Tahoe100-PseudoManual/mg53_p53/gene_modules.csv; not tested as such: PYCARD (locus_readthrough)
+lines with fitted groups: TP53 genotype x functional call (gene panel),47.0,,WT / responsive: 11; WT / uncertain (within 2 SE of the cut): 5; WT / unresponsive: 1; altered / uncertain (within 2 SE of the cut): 4; altered / unresponsive: 26
+ambient control CDKN2A: flagged lines used (reads < 0.3 x ambient expectation) / flagged,13.0,15.0,"not used: HS-578T (ratio 1.17), NCI-H2122 (ratio 0.80)"
+ambient control MTAP: flagged lines used (reads < 0.3 x ambient expectation) / flagged,6.0,6.0,not used: 
+cap-0 sample: at-risk groups / sampled (all cells also fitted),1194.0,6088.0,--cap0-frac 0.2; at risk = binomial probability > 1e-6 of < 5 TRIM72-detected or undetected cells after the cap
+cap-0 sample: sampled groups the cap dropped / all groups the cap dropped,374.0,1914.0,374 of the sampled dropped groups fitted at cap 0; 820 sampled groups fitted at both caps; 0 dropped groups were outside the at-risk set (should be 0)
+"idarubicin 5 uM P53_SCORE rate ratio, WT: this step (per well, then lines) vs D1 (per line, both wells in one fit)",1.0197503993426529,16.0,"D1 1.0195 (/home/user/Tahoe100-PseudoManual/mg53_p53/downstream_p53/tables/d_single_cell_meta_main.csv); differences: per-well fits, two-stage pooling, 2000-cell subsample"
+"idarubicin 5 uM P53_SCORE rate ratio, altered: this step (per well, then lines) vs D1 (per line, both wells in one fit)",0.9816738452340354,30.0,"D1 0.9832 (/home/user/Tahoe100-PseudoManual/mg53_p53/downstream_p53/tables/d_single_cell_meta_main.csv); differences: per-well fits, two-stage pooling, 2000-cell subsample"

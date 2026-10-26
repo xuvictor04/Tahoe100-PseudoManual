@@ -1,4 +1,4 @@
-outcome,members,n_members,panel_csv_module,literature_citation
+outcome,members,n_members,gene_modules_csv_module,literature_citation
 P53_SCORE,CDKN1A;MDM2;FDXR;ZMAT3;SESN1;BBC3;BAX;TP53I3;RRM2B;AEN;DDB2;XPC;PHLDA3;SPATA18;TRIAP1;RPS27L;ACER2;TP53INP1;PLK3;POLH;EDA2R,21,;p53_primary;p53_secondary;screen_apoptosis,
 P53_PRIMARY5,MDM2;CDKN1A;FDXR;ZMAT3;DDB2,5,p53_primary,
 NFKB_SCORE,NFKBIA;TNFAIP3;CXCL8,3,screen_NFkB,
@@ -27,6 +27,8 @@ FDXR,FDXR,1,p53_primary,p53 target (Fischer 2017 census); MG53->p53 Jiang 2024 P
 ZMAT3,ZMAT3,1,p53_primary,p53 target (Fischer 2017 census)
 DDB2,DDB2,1,p53_primary,p53 target (Fischer 2017 census)
 TP53,TP53,1,,
-(not testable),"panel.csv modules not in the per-cell panel (no single-cell test possible): PI3K-AKT/FAK (TXNIP, IRS1, PTK2), cell cycle (CCND1, KIF11), RAC1, MCL1, FOS, HEXIM1, GDF15",0,,
+(not testable),"gene_modules.csv modules not in the per-cell panel (no single-cell test possible): PI3K-AKT/FAK (TXNIP, IRS1, PTK2), cell cycle (CCND1, KIF11), RAC1, MCL1, FOS, HEXIM1, GDF15",0,,
 (placebo predictors),ABCG2;NLRP3;AIM2;GSDMD;OSGIN1;SDF2L1;IL1B;AKR1B10;NAPEPLD;ABCB1;CDKN2B;AKR1C2;PSPH;HMOX1;GSDME;IRF7,16,,
 (placebo outcomes),MTAP;CDKN2B;PTGS2;ACSL4;LPCAT3;AIFM2;NFE2L2;HMOX1;TFRC;FTH1;FTL;NCOA4;GSDMD;GSDME;NLRP3;AIM2;CASP4;CASP3;IL1B;IL18;NAPEPLD;ABCB1;ABCG2;NQO1;GCLM;GCLC;TXNRD1;OSGIN1;AKR1C1;AKR1C2;AKR1B10;G6PD;ME1;PIR;ABCC3;ASNS;TRIB3;PSAT1;PHGDH;PSPH;SLC3A2;SLC7A5;VEGFA;CEBPB;HSPA5;HERPUD1;DNAJB9;SDF2L1;SEL1L;PDIA4;XBP1;HSPA1A;HSPA1B;DNAJB1;HSPH1;BAG3;ISG15;IFIT1;IFIT3;MX1;OAS1;IFI6;IFI44L;STAT1;IRF7;IFITM1,66,,
+(ambient control: CDKN2A detected),A549;A-172;MIA PaCa-2;NCI-H460;PANC-1;A-427;A498;H4;LOX-IMVI;Panc 03.27;SW 1088;SW 1271;SW 900,13,,
+(ambient control: MTAP detected),A-172;MIA PaCa-2;PANC-1;H4;SW 1088;SW 900,6,,

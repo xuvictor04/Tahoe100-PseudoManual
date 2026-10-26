@@ -27,34 +27,50 @@ sets add the line's untreated TRIM72 level x the drug-dose's TRIM72 effect (full
 low-baseline lines) or the line's p53 responsiveness x the drug-dose's P53_ACTIVITY z (full_p53resp).
 Estimand b_WT - b_alt (negative = more TRIM72 goes with less p53 output only where p53 works).
 
-Inference: cluster-robust SE by drug compound (CR1), by line, and two-way (drug, line); a permutation null that
-shuffles TRIM72 across lines within each FE cell (keeps the drug structure; tests b = 0); a TP53-label permutation
-over lines (group sizes kept, the whole model refitted: for 'dd' through per-line Gram blocks, for 'ddxg' as two
-within-group two-way-FE regressions on the drug-dose x line grid), studentised by the line-cluster SE. Both engines
-reproduce the main fit at the true labels (checks.csv). Minimum detectable b_WT - b_alt (80% power, two-sided 5%) =
-2.80 x the label-permutation SD. Second stage: per-line TRIM72 slopes (line-specific covariate slopes), WT vs
-altered mean (Welch; label permutation of the Welch t). Which drug-doses carry the estimate: per drug-dose
-contributions; leave-one-drug-out (active set).
+PRIMARY TEST (declared before the results were read; every other fe x variant x covariate-set row is a sensitivity
+analysis, column 'role' of key_results.csv): fe 'ddxg', variant i_all (all 1,132 drug-doses), covariate set 'full',
+read-out P53_SCORE, estimand b_WT - b_alt, inference by the conservative two-way SE below. The other D1 read-outs
+of that model are secondary; P53_SCORE over the 9 variants also gets a Holm adjustment (p_holm_variants_*).
+
+Inference: cluster-robust SE by drug compound (CR1), by line, and two-way (drug, line). Every reported two-way SE,
+CI, p and q uses the conservative se = sqrt(max(V_drug + V_line - V_inter, V_drug, V_line)) (the plain two-way
+variance can fall below a one-way variance; se_diff_twoway_cgm keeps that plain value for the diff). A permutation
+null that shuffles TRIM72 across lines within each FE cell (keeps the drug structure; tests b = 0); a TP53-label
+permutation over lines (group sizes kept, the whole model refitted: for 'dd' through per-line Gram blocks, for
+'ddxg' as two within-group two-way-FE regressions on the drug-dose x line grid), studentised by the line-cluster
+SE. Both engines reproduce the main fit at the true labels (checks.csv). Minimum detectable b_WT - b_alt (80%
+power, two-sided 5%) = 2.80 x the label-permutation SD. Second stage: per-line TRIM72 slopes (line-specific
+covariate slopes), WT vs altered mean (Welch; label permutation of the Welch t) and ranks (Mann-Whitney,
+Hodges-Lehmann shift). Which drug-doses and lines carry the estimate: per drug-dose contributions; leave-one-drug-out
+and leave-one-line-out (active set); the active set inside one model with all drug-doses (line FE estimated from all
+of them; separate active / inactive slopes and covariate slopes) and the difference-in-differences active minus
+inactive.
 
 Variants (D1): (i) all drug-doses; (ii) drug-doses that move TRIM72 (|z| >= 3) or activate p53 (P53_ACTIVITY
-z >= 3), also each part alone and without the plate-3/13 wells; (iii) readthrough-corrected TRIM72 = TRIM72 r2
-minus its fit on FUS and PYCARD-AS1 r2 (slopes within drug-dose and line, pooled over lines); (iv) without the
-plate-3 and plate-13 wells; (v) TRIM72 measurement error: split-half (cells of each well x line split at random, the
-method run on each half) and replicate-well reliability of the residual TRIM72 variation, and the implied
-attenuation of b. D2 screen: the same model for each MG53-linked module of mg53_perturbation/assay_panel/panel.csv
-(NF-kB, ferroptosis, apoptosis, stress, PI3K-AKT/FOXO/FAK, cell cycle + E2F targets, RAC1); BH across the screen
-within each FE structure. Gene-level null: the same model for every non-p53 panel gene and for random background
-modules the size of P53_SCORE (is a TRIM72 x TP53-group pattern specific to p53 targets?).
+z >= 3), also each part alone and without the plate-3/13 wells; (iii) readthrough: iii_readthrough_cov (all
+drug-doses) and iii_readthrough_cov_active (active set) put FUS r2 and PYCARD-AS1 r2 into the model as covariates
+x TP53 group (covariate set full_rt); iii_readthrough_subtracted (the earlier version) uses X = TRIM72 r2 minus its
+fit on FUS and PYCARD-AS1 r2 (slopes within drug-dose and line, pooled over lines); (iv) without the plate-3 and
+plate-13 wells; (v) TRIM72 measurement error: split-half (cells of each well x line split at random, the method run
+on each half) and replicate-well reliability of the residual TRIM72 variation, and the implied attenuation of b.
+D2 screen: the same model for each MG53-linked module of mg53_perturbation/assay_panel/panel.csv (NF-kB,
+ferroptosis, apoptosis, stress, PI3K-AKT/FOXO/FAK, cell cycle + E2F targets, RAC1); BH across the screen within
+each FE structure. Gene-level null: the same model for every non-p53 panel gene and for random background modules
+the size of P53_SCORE (is a TRIM72 x TP53-group pattern specific to p53 targets?); the 21 members as a set vs the
+background genes by a camera-style test (variance inflated for the correlation between the genes' estimates).
 
     python3 two_way.py [--data DIR (default $MG53_DATA, $TAHOE_DATA or ~/Tahoe-100M)] [--recompute]
                        [--perm 1000] [--label-perm 2000] [--screen-perm 500] [--screen-label-perm 1000]
                        [--modules 500] [--quick]
 
-Reads <data>/atlas/effects, <data>/atlas/pseudobulk (one streamed pass, ~4 min), <data>/gene_panel (well_line,
-cells/*.parquet for the split-half, ~5 min; results/), <data>/metadata/gene_metadata.parquet. Caches take ~11 min
-once; the models take ~15 min (4 CPUs, peak RSS ~1.3 GB). Writes tables to $MG53_OUT/tables (default <this
-folder>/tables) and caches to $MG53_OUT/cache (default <this folder>/cache); nothing under the data folder.
-numpy / pandas / scipy only.
+Reads <data>/atlas/effects, <data>/atlas/pseudobulk (one streamed pass over 20 GB: I/O-bound, ~13 min from a cold
+page cache), <data>/gene_panel (well_line, cells/*.parquet for the split-half, ~1-2 min; results/),
+<data>/metadata/gene_metadata.parquet. A from-scratch run (cold page cache, empty cache/) takes ~30 min: ~17 min of
+caches, ~14 min of models (4 CPUs, peak RSS ~1.4 GB); with the caches in place ~14 min. The caches are keyed to the
+inputs (cache/manifest.json: real path of --data, sizes and mtimes of atlas/effects/wells.csv,
+atlas/pseudobulk/group*, gene_panel/well_line.parquet and gene_panel/cells) and rebuilt when they do not match.
+Writes tables to $MG53_OUT/tables (default <this folder>/tables) and caches to $MG53_OUT/cache (default <this
+folder>/cache); nothing under the data folder. numpy / pandas / scipy (+ pyarrow for the per-cell files) only.
 """
 import argparse
 import contextlib
@@ -104,10 +120,20 @@ VALIDATE = ["TRIM72", "MDM2", "CDKN1A", "NFKBIA"]           # also taken from th
 PB_UNMASKED = {"PYCARD-AS1"}                               # below the atlas gene list: r2 kept in every line
 COVSETS = {"full": ["beta", "A", "S", "G2M", "bg_abs_r2"], "no_cycle": ["beta", "A", "bg_abs_r2"], "none": [],
            "full_base": ["beta", "A", "S", "G2M", "bg_abs_r2", "trim72_base_x_dd"],
-           "full_p53resp": ["beta", "A", "S", "G2M", "bg_abs_r2", "p53resp_x_dd"]}
+           "full_p53resp": ["beta", "A", "S", "G2M", "bg_abs_r2", "p53resp_x_dd"],
+           "full_rt": ["beta", "A", "S", "G2M", "bg_abs_r2", "FUS", "PYCARD-AS1"]}
 FES = ("dd", "ddxg")
 FE_NAME = {"dd": "drug-dose + line FE (as specified)", "ddxg": "drug-dose x TP53-group + line FE"}
 DROP_PLATES = ("plate3", "plate13")
+# the primary test, declared up front; everything else is secondary (other read-outs of this model), sensitivity
+# (other fe x variant x covariate set) or a check
+PRIMARY = {"fe": "ddxg", "variant": "i_all", "covset": "full", "readout": "P53_SCORE"}
+# each D1 variant at its main covariate set: the Holm family for P53_SCORE (per fe)
+VARIANT_MAIN_COVSET = {"i_all": "full", "ii_active": "full", "ii_trim72": "full", "ii_p53": "full",
+                       "ii_active_no_plate3_13": "full", "iii_readthrough_subtracted": "full",
+                       "iii_readthrough_cov": "full_rt", "iii_readthrough_cov_active": "full_rt",
+                       "iv_no_plate3_13": "full"}
+CACHE_VERSION = 1           # bump when a cache builder changes
 
 
 @contextlib.contextmanager
@@ -126,6 +152,104 @@ def peak_gb():
 
 
 bh = DP.bh
+
+
+def holm(p):
+    """Holm step-down adjusted p (NaN kept)."""
+    p = np.asarray(p, float)
+    out = np.full(len(p), np.nan)
+    ok = np.isfinite(p)
+    if ok.any():
+        q = p[ok]
+        m = len(q)
+        o = np.argsort(q, kind="stable")
+        adj = np.minimum(1.0, np.maximum.accumulate((m - np.arange(m)) * q[o]))
+        r = np.empty(m)
+        r[o] = adj
+        out[ok] = r
+    return out
+
+
+def se_conservative(vd, vl, vi):
+    """Two-way (drug, line) cluster SE, conservative: sqrt(max(V_drug + V_line - V_inter, V_drug, V_line)). Also the
+    plain Cameron-Gelbach-Miller value (sqrt(V2), or the larger one-way SE where V2 <= 0: the earlier column) and
+    which term gave the maximum. Works elementwise on arrays."""
+    vd, vl, vi = (np.asarray(v, float) for v in (vd, vl, vi))
+    v2 = vd + vl - vi
+    m = np.maximum(v2, np.maximum(vd, vl))
+    src = np.where(m == v2, "twoway", np.where(m == vd, "drug", "line"))
+    with quiet():
+        cgm = np.where(v2 > 0, np.sqrt(np.where(v2 > 0, v2, 0.0)), np.sqrt(np.maximum(vd, vl)))
+    return np.sqrt(np.maximum(m, 0.0)), cgm, src
+
+
+# ============================================================================= cache manifest (keyed to the inputs)
+def cache_manifest(data):
+    """What the caches are built from: the real path of --data and size + mtime of the input files they read."""
+    def st(p):
+        try:
+            s = os.stat(p)
+            return [int(s.st_size), int(s.st_mtime_ns)]
+        except OSError:
+            return None
+    files = {}
+    for rel in [os.path.join("atlas", "effects", "wells.csv"), os.path.join("gene_panel", "well_line.parquet")] + \
+            sorted(os.path.relpath(p, data) for p in glob.glob(os.path.join(data, "atlas", "pseudobulk", "group*"))):
+        files[rel] = st(os.path.join(data, rel))
+    cells = glob.glob(os.path.join(data, "gene_panel", "cells", "*.parquet"))
+    cst = [os.stat(p) for p in cells]
+    return {"cache_version": CACHE_VERSION, "data_realpath": os.path.realpath(data), "files": files,
+            "gene_panel/cells/*.parquet": [len(cst), int(sum(s.st_size for s in cst)),
+                                           int(max((s.st_mtime_ns for s in cst), default=0))]}
+
+
+def cache_files(cdir):
+    return (glob.glob(os.path.join(cdir, "*.np[yz]")) + glob.glob(os.path.join(cdir, "*.parquet"))
+            + ([os.path.join(cdir, "panel")] if os.path.isdir(os.path.join(cdir, "panel")) else []))
+
+
+def validate_caches(cdir, data, recompute):
+    """Delete the caches when --recompute is given or when cache/manifest.json does not match the current inputs
+    (or is missing); returns the manifest to write once the caches are rebuilt."""
+    import shutil
+    want = cache_manifest(data)
+    mp = os.path.join(cdir, "manifest.json")
+    have = None
+    if os.path.exists(mp):
+        try:
+            with open(mp, encoding="utf-8") as fh:
+                have = json.load(fh)
+        except (OSError, ValueError):
+            have = None
+    old = cache_files(cdir)
+    if recompute or have != want:
+        if old:
+            if recompute:
+                why = "--recompute"
+            elif have is None:
+                why = "no cache/manifest.json"
+            else:
+                diff = [k for k in ("cache_version", "data_realpath", "gene_panel/cells/*.parquet")
+                        if have.get(k) != want[k]]
+                diff += [k for k in sorted(set(want["files"]) | set(have.get("files", {})))
+                         if have.get("files", {}).get(k) != want["files"].get(k)]
+                why = "inputs changed: " + ", ".join(diff[:6]) + (" ..." if len(diff) > 6 else "")
+            log(f"rebuilding the caches ({why})")
+            for f in old:
+                if os.path.isdir(f):
+                    shutil.rmtree(f, ignore_errors=True)
+                else:
+                    os.remove(f)
+        if os.path.exists(mp):
+            os.remove(mp)
+    return want
+
+
+def write_manifest(cdir, man):
+    mp = os.path.join(cdir, "manifest.json")
+    with open(mp + ".tmp", "w", encoding="utf-8") as fh:
+        json.dump(man, fh, indent=1)
+    os.replace(mp + ".tmp", mp)
 
 
 # ============================================================================= grid: drug-doses x lines (atlas order)
@@ -667,25 +791,26 @@ def fit(des, y, within=None, label=None, want_lines=False):
     Vd, Gd = cluster_vcov(Xt, e, des.drug, bread, n, des.p_all)
     Vl, Gl = cluster_vcov(Xt, e, des.l, bread, n, des.p_all)
     Vi, _ = cluster_vcov(Xt, e, des.drug.astype(np.int64) * 1000 + des.l, bread, n, des.p_all)
-    V2 = Vd + Vl - Vi
     c = np.array([1.0, -1.0])
     out = {"n_rows": n, "n_drugdoses": len(np.unique(des.d)), "n_fe_cells": len(des.fe.du), "n_drugs": int(Gd),
            "n_lines_WT": int(len(np.unique(des.l[des.wt]))), "n_lines_alt": int(len(np.unique(des.l[~des.wt])))}
     td, tl = stats.t.ppf(0.975, Gd - 1), stats.t.ppf(0.975, min(Gd, Gl) - 1)
     for i, nm in ((0, "WT"), (1, "alt")):
-        se, se2 = np.sqrt(Vd[i, i]), np.sqrt(max(V2[i, i], 0)) if V2[i, i] > 0 else np.sqrt(max(Vd[i, i], Vl[i, i]))
+        se = np.sqrt(Vd[i, i])
+        se2 = float(se_conservative(Vd[i, i], Vl[i, i], Vi[i, i])[0])      # conservative two-way
         out.update({f"b_{nm}": b[i], f"se_{nm}_drug": se, f"ci_{nm}_lo": b[i] - td * se, f"ci_{nm}_hi": b[i] + td * se,
                     f"p_{nm}_drug": tp(b[i], se, Gd - 1), f"se_{nm}_twoway": se2,
                     f"p_{nm}_twoway": tp(b[i], se2, min(Gd, Gl) - 1)})
     dif = b[0] - b[1]
-    vd, vl, v2 = c @ Vd @ c, c @ Vl @ c, c @ V2 @ c
+    vd, vl, vi = c @ Vd @ c, c @ Vl @ c, c @ Vi @ c
     se_d, se_l = np.sqrt(vd), np.sqrt(vl)
-    se_2 = np.sqrt(v2) if v2 > 0 else max(se_d, se_l)
+    se_2, se_cgm, src = (x.item() for x in se_conservative(vd, vl, vi))
     out.update({"diff": dif, "se_diff_drug": se_d, "ci_diff_lo_drug": dif - td * se_d,
                 "ci_diff_hi_drug": dif + td * se_d,
                 "p_diff_drug": tp(dif, se_d, Gd - 1), "se_diff_line": se_l, "p_diff_line": tp(dif, se_l, Gl - 1),
                 "se_diff_twoway": se_2, "ci_diff_lo_twoway": dif - tl * se_2, "ci_diff_hi_twoway": dif + tl * se_2,
-                "p_diff_twoway": tp(dif, se_2, min(Gd, Gl) - 1)})
+                "p_diff_twoway": tp(dif, se_2, min(Gd, Gl) - 1), "se_diff_twoway_from": src,
+                "se_diff_twoway_cgm": se_cgm, "p_diff_twoway_cgm": tp(dif, se_cgm, min(Gd, Gl) - 1)})
     # common slope (one TRIM72 slope for all lines, covariates still by group)
     xc = Xt.sum(axis=1)
     bc = float(xc @ ytil / (xc @ xc))
@@ -694,9 +819,8 @@ def fit(des, y, within=None, label=None, want_lines=False):
     Vc, _ = cluster_vcov(xc[:, None], ec, des.drug, bc_, n, des.p_all - 1)
     Vcl, _ = cluster_vcov(xc[:, None], ec, des.l, bc_, n, des.p_all - 1)
     Vci, _ = cluster_vcov(xc[:, None], ec, des.drug.astype(np.int64) * 1000 + des.l, bc_, n, des.p_all - 1)
-    v2c = Vc[0, 0] + Vcl[0, 0] - Vci[0, 0]
     sec = float(np.sqrt(Vc[0, 0]))
-    sec2 = float(np.sqrt(v2c)) if v2c > 0 else float(np.sqrt(max(Vc[0, 0], Vcl[0, 0])))
+    sec2 = float(se_conservative(Vc[0, 0], Vcl[0, 0], Vci[0, 0])[0])
     out.update({"b_common": bc, "se_common_drug": sec, "ci_common_lo": bc - td * sec, "ci_common_hi": bc + td * sec,
                 "p_common_drug": tp(bc, sec, Gd - 1), "se_common_twoway": sec2,
                 "ci_common_lo_twoway": bc - tl * sec2, "ci_common_hi_twoway": bc + tl * sec2,
@@ -876,6 +1000,8 @@ def slope_tests(slopes, n_perm, rng, min_rows=20):
         tnull = null / np.sqrt(pa.var(1, ddof=1) / len(a) + pb.var(1, ddof=1) / len(b))
         se = np.sqrt(a.var(ddof=1) / len(a) + b.var(ddof=1) / len(b))
         dfw = float(t.df) if hasattr(t, "df") else len(allv) - 2
+        # rank-based: Mann-Whitney (two-sided) and the Hodges-Lehmann shift (median of all WT - altered differences)
+        mw = stats.mannwhitneyu(a, b, alternative="two-sided")
         rows.append({"readout": ro, "variant": va, "covset": cs, "fe": fe, "n_lines_WT": len(a), "n_lines_alt": len(b),
                      "mean_slope_WT": a.mean(), "mean_slope_alt": b.mean(), "median_slope_WT": np.median(a),
                      "median_slope_alt": np.median(b), "n_WT_negative": int((a < 0).sum()),
@@ -885,6 +1011,10 @@ def slope_tests(slopes, n_perm, rng, min_rows=20):
                      "p_welch": float(t.pvalue), "p_tp53_label_perm": perm_p(obs / se, tnull),
                      "p_tp53_label_perm_unstudentised": perm_p(obs, null),
                      "sd_label_perm": float(null.std()), "mde_diff_80": Z80 * float(null.std()),
+                     "diff_median_WT_minus_alt": float(np.median(a) - np.median(b)),
+                     "hodges_lehmann_WT_minus_alt": float(np.median(np.subtract.outer(a, b))),
+                     "mannwhitney_U_WT": float(mw.statistic),
+                     "auc_WT_gt_alt": float(mw.statistic) / (len(a) * len(b)), "p_mannwhitney": float(mw.pvalue),
                      "n_perm": n_perm, "min_rows_per_line": min_rows})
     return pd.DataFrame(rows)
 
@@ -913,9 +1043,11 @@ def readthrough_fit(tab, grid, ddmask):
     return rt, pd.DataFrame(rows)
 
 
-def many_diffs(des, Ym):
-    """b_WT, b_alt, diff = b_WT - b_alt and their two-way (drug, line) CR1 SE for many read-outs on one design (the
-    same numbers as fit(), vectorised over read-outs; no permutations)."""
+def many_diffs(des, Ym, glob_dims=None):
+    """b_WT, b_alt, diff = b_WT - b_alt and their conservative two-way (drug, line) CR1 SE for many read-outs on one
+    design (the same numbers as fit(), vectorised over read-outs; no permutations). With glob_dims = (n drugs,
+    n lines) also the per-cluster scores of diff (drug, line, drug x line clusters in global numbering, unscaled):
+    the cross-read-out covariance of the diffs is their cross-product (for the camera-style set test)."""
     n = des.n
     _MY, yt = resid_y(des, Ym)
     Xt = des.xt
@@ -933,12 +1065,20 @@ def many_diffs(des, Ym):
         u0, u1 = np.asarray(S @ (W[:, [0]] * e)), np.asarray(S @ (W[:, [1]] * e))
         V[nm] = {"WT": c * (u0 ** 2).sum(0), "alt": c * (u1 ** 2).sum(0), "diff": c * ((u0 - u1) ** 2).sum(0), "G": G}
     for k in ("WT", "alt", "diff"):
-        v2 = V["drug"][k] + V["line"][k] - V["inter"][k]
-        out[f"se_{k}_twoway"] = np.sqrt(np.where(v2 > 0, v2, np.maximum(V["drug"][k], V["line"][k])))
+        out[f"se_{k}_twoway"] = se_conservative(V["drug"][k], V["line"][k], V["inter"][k])[0]
     df = min(V["drug"]["G"], V["line"]["G"]) - 1
     out["t_diff_twoway"] = out["diff"] / out["se_diff_twoway"]
     out["p_diff_twoway"] = 2 * stats.t.sf(np.abs(out["t_diff_twoway"]), df)
-    return out
+    scores = None
+    if glob_dims is not None:
+        ndg, nlg = glob_dims
+        sc = (W[:, [0]] - W[:, [1]]) * e
+        scores = {}
+        for nm, g, G in (("drug", des.drug, ndg), ("line", des.l, nlg),
+                         ("inter", des.drug.astype(np.int64) * nlg + des.l, ndg * nlg)):
+            S = sparse.csr_matrix((np.ones(n), (g, np.arange(n))), shape=(G, n))
+            scores[nm] = np.asarray(S @ sc)                     # G x read-outs
+    return out, scores
 
 
 def gene_null(E, grid, tab, wt_line, variants, rng, R=200):
@@ -961,6 +1101,9 @@ def gene_null(E, grid, tab, wt_line, variants, rng, R=200):
     X = tab[GENE]
     covs = [tab[c] for c in COVSETS["full"]]
     rows = []
+    setg = list(E.members) + [g for g in BACKGROUND if g not in E.members]   # genes of the set test
+    ndg, nlg = int(grid.drug_id.max()) + 1, grid.nl
+    camera = {}
     for vname, ddm in variants.items():
         base = np.isfinite(X) & ddm[:, None]
         for c in covs:
@@ -970,17 +1113,23 @@ def gene_null(E, grid, tab, wt_line, variants, rng, R=200):
             ok = base & np.isfinite(Y)
             groups.setdefault(ok.tobytes(), (ok, []))[1].append(k)
         for fe in FES:
+            U = {nm: np.zeros((G_, len(setg))) for nm, G_ in (("drug", ndg), ("line", nlg), ("inter", ndg * nlg))}
             for ok, keys in groups.values():
                 des = Design(ok, X, covs, wt_line, grid.drug_id, fe)
                 for c0 in range(0, len(keys), 50):
                     kk = keys[c0:c0 + 50]
-                    o = many_diffs(des, np.column_stack([dd[k][des.d, des.l] for k in kk]).astype(float))
+                    o, sc = many_diffs(des, np.column_stack([dd[k][des.d, des.l] for k in kk]).astype(float),
+                                       (ndg, nlg))
                     for j, k in enumerate(kk):
                         kind = ("D1 read-out" if k.startswith("readout:") else "random background module"
                                 if k.startswith("bg_module_") else "P53_ACTIVITY member" if k in E.members
                                 else "background gene")
                         rows.append({"variant": vname, "fe": fe, "set": kind, "gene": k.replace("readout:", ""),
                                      "n_rows": des.n} | {m: float(v[j]) for m, v in o.items()})
+                        if k in setg:
+                            for nm in U:
+                                U[nm][:, setg.index(k)] = sc[nm][:, j]
+            camera[(vname, fe)] = U
     G = pd.DataFrame(rows)
     summ = []
     for (vname, fe), g in G.groupby(["variant", "fe"], sort=False):
@@ -998,18 +1147,64 @@ def gene_null(E, grid, tab, wt_line, variants, rng, R=200):
                          "ref_mean_t": float(tr.mean()), "ref_sd_t": float(tr.std()),
                          "frac_ref_t_le_obs": nle / len(tr),
                          "p_empirical_two_sided": min(1.0, 2 * min(nle + 1, nge + 1) / (len(tr) + 1))})
-        mem = g[g["set"] == "P53_ACTIVITY member"]["t_diff_twoway"].to_numpy()
-        tb_ = ref_gene["t_diff_twoway"].to_numpy()
-        mw = stats.mannwhitneyu(mem, tb_, alternative="two-sided")
-        summ.append({"variant": vname, "fe": fe, "readout": f"the {len(mem)} P53_ACTIVITY members as single genes",
-                     "diff": float(g[g["set"] == "P53_ACTIVITY member"]["diff"].mean()),
-                     "t_diff_twoway": float(np.mean(mem)), "reference": f"{len(tb_)} background genes",
-                     "n_ref": len(tb_), "ref_mean_diff": ref_gene["diff"].mean(), "ref_sd_diff": ref_gene["diff"].std(),
-                     "ref_mean_t": float(tb_.mean()), "ref_sd_t": float(tb_.std()),
-                     "frac_ref_t_le_obs": float((tb_ <= np.mean(mem)).mean()),
-                     "p_empirical_two_sided": float(mw.pvalue),
-                     "note": "diff, t = mean over the members; p = Mann-Whitney of member t vs background-gene t"})
+        summ.append(set_test(g, camera[(vname, fe)], setg, E.members, vname, fe))
     return G, pd.DataFrame(summ)
+
+
+def set_test(g, U, setg, members, vname, fe):
+    """Camera-style competitive test of the P53_ACTIVITY members vs the background genes: statistic = mean member t
+    minus mean background t (two-way t of diff); its variance = s^2 a'Ra (s^2 = pooled within-set variance of the t,
+    a = +1/m1 for members, -1/m2 for background genes, R = correlation between the genes' diff estimates from their
+    cluster scores: drug, line and two-way versions, the largest a'Ra used, never below independence 1/m1 + 1/m2);
+    t distribution with m1 + m2 - 2 df. Unlike a Mann-Whitney of the t, it allows for the genes sharing lines and
+    drug-doses (p53 targets move together)."""
+    gs = g[g["set"].isin(["P53_ACTIVITY member", "background gene"])].set_index("gene")   # D1 read-outs repeat names
+    tt, dif = gs["t_diff_twoway"], gs["diff"]
+    have = [x for x in setg if x in gs.index]
+    idx = [setg.index(x) for x in have]
+    ism = np.array([x in members for x in have])
+    t = tt.reindex(have).to_numpy(float)
+    m1, m2 = int(ism.sum()), int((~ism).sum())
+    a = np.where(ism, 1.0 / m1, -1.0 / m2)
+    q0 = 1.0 / m1 + 1.0 / m2
+    Cd, Cl, Ci = (U[nm][:, idx].T @ U[nm][:, idx] for nm in ("drug", "line", "inter"))
+    qs, rho = {}, {}
+    for nm, C in (("drug", Cd), ("line", Cl), ("twoway", Cd + Cl - Ci)):
+        dg = np.diag(C)
+        if (dg <= 0).any():
+            continue
+        R = C / np.sqrt(np.outer(dg, dg))
+        qs[nm] = float(a @ R @ a)
+        mm, bb = R[np.ix_(ism, ism)], R[np.ix_(~ism, ~ism)]
+        rho[nm] = (float((mm.sum() - m1) / (m1 * (m1 - 1))), float(R[np.ix_(ism, ~ism)].mean()),
+                   float((bb.sum() - m2) / (m2 * (m2 - 1))))
+    src = max(qs, key=qs.get) if qs else "independence"
+    q = max([q0] + list(qs.values()))
+    if q == q0:
+        src = "independence (floor)"
+    s2 = (((t[ism] - t[ism].mean()) ** 2).sum() + ((t[~ism] - t[~ism].mean()) ** 2).sum()) / (m1 + m2 - 2)
+    stat = float(t[ism].mean() - t[~ism].mean())
+    se = float(np.sqrt(s2 * q))
+    r_ = rho.get(src if src in rho else "line", (np.nan, np.nan, np.nan))
+    tb_ = t[~ism]
+    return {"variant": vname, "fe": fe, "readout": f"the {m1} P53_ACTIVITY members as a set",
+            "diff": float(dif.reindex(have).to_numpy()[ism].mean()), "t_diff_twoway": float(t[ism].mean()),
+            "reference": f"{m2} background genes", "n_ref": m2,
+            "ref_mean_diff": float(dif.reindex(have).to_numpy()[~ism].mean()),
+            "ref_sd_diff": float(dif.reindex(have).to_numpy()[~ism].std(ddof=1)),
+            "ref_mean_t": float(tb_.mean()), "ref_sd_t": float(tb_.std()),
+            "frac_ref_t_le_obs": float((tb_ <= t[ism].mean()).mean()), "p_empirical_two_sided": np.nan,
+            "set_stat_mean_t_members_minus_background": stat, "set_se": se,
+            "set_t": stat / se, "set_df": m1 + m2 - 2, "p_set_camera": float(2 * stats.t.sf(abs(stat / se), m1 + m2 - 2)),
+            "p_set_independent": float(2 * stats.t.sf(abs(stat) / np.sqrt(s2 * q0), m1 + m2 - 2)),
+            "set_vif_effective": q / q0, "set_vif_from": src,
+            "set_vif_drug": qs.get("drug", np.nan) / q0, "set_vif_line": qs.get("line", np.nan) / q0,
+            "set_vif_twoway": qs.get("twoway", np.nan) / q0,
+            "rho_mean_members": r_[0], "rho_mean_members_background": r_[1], "rho_mean_background": r_[2],
+            "note": "diff, t = mean over the members; p_set_camera = camera-style test of mean member t minus mean "
+                    "background t, variance inflated for the correlation of the genes' estimates (rho_* from the "
+                    "cluster version that gives the largest variance); p_set_independent = the same without the "
+                    "inflation (genes treated as independent)"}
 
 
 def reliability(XA, XB, ok_base, covs, wt_line, grid, extra=(), fe="dd"):
@@ -1032,12 +1227,12 @@ def reliability(XA, XB, ok_base, covs, wt_line, grid, extra=(), fe="dd"):
 
 def breakdown(tb, grid, wt_line, ddmask, variant, covset="full", fe="dd", lodo=False):
     """Which drug-doses carry b_WT - b_alt: per drug-dose contributions from the FWL-partialled vectors of the full
-    model (contrib_* = sum over the drug-dose's rows of x~ y~ / sum over all rows of x~^2; for fe 'dd' they add up to
-    b_WT / b_alt up to the small WT-altered cross term, for 'ddxg' exactly), and (lodo) the model refitted without
-    each drug (all its doses)."""
+    model (contrib_* = sum over the drug-dose's rows of x~ y~ / sum over all rows of x~^2; for 'ddxg' they add up to
+    b_WT / b_alt exactly; for 'dd' the WT-altered cross term is left out, and the sums can differ from b), and
+    (lodo) the model refitted without each drug (all its doses) and without each line."""
     covs = [tb[c] for c in COVSETS[covset]]
     X = tb[GENE]
-    pdd, lo = [], []
+    pdd, lo, ll = [], [], []
     for ro in D1:
         Y = tb[ro]
         ok = np.isfinite(X) & np.isfinite(Y) & ddmask[:, None]
@@ -1072,8 +1267,78 @@ def breakdown(tb, grid, wt_line, ddmask, variant, covset="full", fe="dd", lodo=F
                            "n_rows": o["n_rows"], "n_drugdoses": o["n_drugdoses"], "b_WT": o["b_WT"],
                            "b_alt": o["b_alt"], "diff": o["diff"], "p_diff_line": o["p_diff_line"],
                            "p_diff_twoway": o["p_diff_twoway"], "diff_all_drugs": full["diff"],
-                           "p_diff_line_all_drugs": full["p_diff_line"]})
-    return pd.DataFrame(pdd), pd.DataFrame(lo)
+                           "p_diff_line_all_drugs": full["p_diff_line"],
+                           "p_diff_twoway_all_drugs": full["p_diff_twoway"]})
+            for l0 in des.fe.lu:                       # leave one line out
+                ok3 = ok.copy()
+                ok3[:, l0] = False
+                d3 = Design(ok3, X, covs, wt_line, grid.drug_id, fe)
+                o, _ = fit(d3, Y[d3.d, d3.l].astype(float))
+                ll.append({"readout": ro, "variant": variant, "covset": covset, "fe": fe,
+                           "dropped_line_id": grid.L[l0], "dropped_line": grid.lines.loc[l0, "cell_name"],
+                           "dropped_tp53_group": "WT" if wt_line[l0] else "altered",
+                           "n_rows": o["n_rows"], "n_lines_WT": o["n_lines_WT"], "n_lines_alt": o["n_lines_alt"],
+                           "b_WT": o["b_WT"], "b_alt": o["b_alt"], "diff": o["diff"],
+                           "p_diff_line": o["p_diff_line"], "p_diff_twoway": o["p_diff_twoway"],
+                           "diff_all_lines": full["diff"], "p_diff_line_all_lines": full["p_diff_line"],
+                           "p_diff_twoway_all_lines": full["p_diff_twoway"]})
+    return pd.DataFrame(pdd), pd.DataFrame(lo), pd.DataFrame(ll)
+
+
+def joint_active(tb, grid, wt_line, active, fe, covset="full"):
+    """The active-set estimate inside one model over all drug-doses: TRIM72 x TP53 group x (active, inactive) slopes,
+    every covariate x group x (active, inactive), FE as fe ('ddxg': drug-dose x group cells, so the active and
+    inactive drug-doses have their own cells; line FE shared, i.e. estimated from all drug-doses). Contrasts: the
+    active diff (b_WT - b_alt), the inactive diff, their difference-in-differences (active minus inactive), and the
+    four slopes; SE by drug, line, two-way and the conservative max."""
+    covs = [tb[c] for c in COVSETS[covset]]
+    X = tb[GENE]
+    rows = []
+    CON = [("active: b_WT - b_alt (line FE from all drug-doses)", [1, -1, 0, 0]),
+           ("inactive: b_WT - b_alt", [0, 0, 1, -1]),
+           ("difference-in-differences: active diff minus inactive diff", [1, -1, -1, 1]),
+           ("active: b_WT", [1, 0, 0, 0]), ("active: b_alt", [0, 1, 0, 0]),
+           ("inactive: b_WT", [0, 0, 1, 0]), ("inactive: b_alt", [0, 0, 0, 1])]
+    for ro in D1:
+        Y = tb[ro]
+        ok = np.isfinite(X) & np.isfinite(Y)
+        for c in covs:
+            ok &= np.isfinite(c)
+        des = Design(ok, X, covs, wt_line, grid.drug_id, fe)
+        n = des.n
+        ac, w = active[des.d], des.wt
+        cells = [w & ac, ~w & ac, w & ~ac, ~w & ~ac]
+        Xc = np.column_stack([np.where(c, des.x, 0.0) for c in cells])
+        N = np.column_stack([des.C * c[:, None] for c in cells]) if des.K else np.zeros((n, 0))
+        Qc = orth(des.fe.M(N)) if N.shape[1] else np.zeros((n, 0))
+
+        def res(V):
+            R = des.fe.M(V)
+            return R - Qc @ (Qc.T @ R) if Qc.shape[1] else R
+        Xt = res(Xc)
+        yt = res(Y[des.d, des.l].astype(float))
+        bread = np.linalg.inv(Xt.T @ Xt)
+        b = bread @ (Xt.T @ yt)
+        e = yt - Xt @ b
+        p_all = 4 + N.shape[1] + len(des.fe.du) + len(des.fe.lu) - 1
+        Vd, Gd = cluster_vcov(Xt, e, des.drug, bread, n, p_all)
+        Vl, Gl = cluster_vcov(Xt, e, des.l, bread, n, p_all)
+        Vi, _ = cluster_vcov(Xt, e, des.drug.astype(np.int64) * 1000 + des.l, bread, n, p_all)
+        df = min(Gd, Gl) - 1
+        tl = stats.t.ppf(0.975, df)
+        for nm, cv in CON:
+            c = np.array(cv, float)
+            est = float(c @ b)
+            vd, vl, vi = c @ Vd @ c, c @ Vl @ c, c @ Vi @ c
+            se, cgm, src = (x.item() for x in se_conservative(vd, vl, vi))
+            rows.append({"readout": ro, "fe": fe, "covset": covset, "contrast": nm, "n_rows": n,
+                         "n_rows_active": int(ac.sum()), "n_drugdoses_active": len(np.unique(des.d[ac])),
+                         "n_drugdoses_inactive": len(np.unique(des.d[~ac])), "n_drugs": int(Gd), "n_lines": int(Gl),
+                         "estimate": est, "se_drug": float(np.sqrt(vd)), "p_drug": tp(est, np.sqrt(vd), Gd - 1),
+                         "se_line": float(np.sqrt(vl)), "p_line": tp(est, np.sqrt(vl), Gl - 1),
+                         "se_twoway_cgm": cgm, "se_twoway": se, "se_twoway_from": src,
+                         "ci_lo_twoway": est - tl * se, "ci_hi_twoway": est + tl * se, "p_twoway": tp(est, se, df)})
+    return pd.DataFrame(rows)
 
 
 # ============================================================================= checks and outputs
@@ -1139,11 +1404,21 @@ def checks(E, grid, pbe, pbc, tabs, data, sh_check):
 README = """Tables of two_way.py (re-created by: python3 two_way.py --data <Tahoe-100M folder>). Associations only: Tahoe
 has no MG53 perturbation and measures mRNA; p53 activity = transcription of p53 target genes.
 
+PRIMARY TEST (declared up front; the first row of key_results.csv): fe ddxg, variant i_all (all 1,132 drug-doses),
+covariate set full, read-out P53_SCORE; estimand b_WT - b_alt; p and 95% CI from the conservative two-way SE. The
+other read-outs of that model are 'secondary'; every other fe x variant x covariate-set row is 'sensitivity'
+(column role in d1_two_way_models.csv and key_results.csv). For a claim from any of the 9 variants, P53_SCORE has
+a Holm adjustment over the variants (p_holm_variants_*). An ii_active result is a sensitivity result, read with
+the Holm column.
+
 Unit: one drug-dose x cell line cell. Values are method-v3 corrected log2 effects r2 (plate x line baseline ->
 composition shift -> two-pass position correction) per (well, line), averaged over the drug-dose's used wells
 (profiles with >= 30 cells): panel genes from the panel's T.expression_effects (downstream_p53's cache builder), other
 genes from upstream_coregulation.corrected_effects() on atlas/pseudobulk. P53_SCORE = mean r2 of the 21 P53_ACTIVITY
-members the line expresses. TP53 groups: the panel's (17 WT, 33 altered).
+members the line expresses. TP53 groups: the panel's (17 WT, 33 altered). NCI-H661 (altered) does not express
+TRIM72 by the panel's rule, so it has no TRIM72 value: models have at most 17 WT + 32 altered lines; NCI-H2122 and
+NCI-H596 have no DD_A (too few cells for the atlas growth analysis) and drop out of every model with covariates
+(17 WT + 30 altered lines).
 
 Model per read-out Y: Y = FE + b_WT TRIM72 x WT + b_alt TRIM72 x altered + covariates x TP53 group. Two FE
 structures (column fe):
@@ -1155,7 +1430,7 @@ structures (column fe):
   ddxg  drug-dose x TP53-group FE + line FE: each drug-dose has its own WT mean and its own altered mean, so
         b_WT and b_alt come only from line-to-line variation inside the same group and the same wells (more TRIM72
         than the other WT lines of that well, more or less p53 output than them). Exactly two separate regressions
-        (WT lines, altered lines) sharing nothing. Preferred for the D1 question; both are reported.
+        (WT lines, altered lines) sharing nothing. The FE of the primary test; dd rows are sensitivity rows.
 Covariate sets: full = DD_beta (0 where the drug-dose has no consensus response, < 20 significant genes), DD_A
 (relative abundance), S and G2M per-line effects (DD_r2_modules), bg_abs_r2 (mean |r2| over the 78 panel genes that
 are not p53-related, not screen genes, not TRIM72; checks.csv lists them); no_cycle = full without S and G2M (for
@@ -1163,31 +1438,41 @@ cell-cycle read-outs, which overlap those modules); none = fixed effects only; f
 (the line's untreated TRIM72 level, log2 DMSO CPM z-scored over lines, x the drug-dose's TRIM72 log2FC from the
 atlas: low-baseline lines get larger TRIM72 folds under a raiser); full_p53resp = full + p53resp_x_dd (the line's
 p53 responsiveness from gene_panel/results/p53_functional_status.csv, z over lines, x the drug-dose's P53_ACTIVITY
-z: a line that answers p53 activators strongly does so in every such drug-dose, whatever its TRIM72).
-NCI-H2122 and NCI-H596 have no DD_A (too few cells for the atlas growth analysis) and drop out of models with
-covariates. Units: b = log2 change in the read-out per log2 change in TRIM72 (both corrected effects);
-*_per_sd_TRIM72 = per SD of the residual TRIM72 (FE and covariates out).
+z: a line that answers p53 activators strongly does so in every such drug-dose, whatever its TRIM72); full_rt =
+full + FUS r2 + PYCARD-AS1 r2 (readthrough from FUS, each x TP53 group like the other covariates). Units: b = log2
+change in the read-out per log2 change in TRIM72 (both corrected effects); *_per_sd_TRIM72 = per SD of the
+residual TRIM72 (FE and covariates out).
 Inference for diff = b_WT - b_alt (negative = more TRIM72 goes with less p53 output only where p53 works):
-p_diff_twoway (two-way (drug compound, line) cluster-robust SE, t with min(G)-1 df) allows for both drug-level and
-line-level dependence; p_diff_tp53_label_perm permutes the TP53 labels over the analysed lines (group sizes kept,
-whole model refitted, FE included for ddxg; statistic t = diff / line-cluster SE, studentised) and is the
-design-based line-level test, conditional on the drug-doses analysed (it ignores drug-to-drug variation, so in the
-62 active drug-doses from 37 drugs it can be far smaller than the two-way p). Read a diff as supported only when
-both are small under fe ddxg. MDE: mde_diff_80 = 2.80 x the SD of the label-permutation null of diff (smallest
-|b_WT - b_alt| detected with 80% power, two-sided 5%).
+p_diff_twoway / ci_diff_*_twoway use the conservative two-way cluster SE, sqrt(max(V_drug + V_line - V_inter,
+V_drug, V_line)) (drug compound and line clusters, CR1; t with min(G)-1 df): the plain two-way variance V_drug +
+V_line - V_inter can fall below a one-way variance (it did for ii_active ddxg, where the line-cluster SE is larger),
+so the larger of the three is used for every two-way SE, CI, p and q in these tables (also b_WT, b_alt, b_common,
+the D2 q-values, the gene-level null, leave-one-out and joint-model tables). se_diff_twoway_from says which term
+gave it; se_diff_twoway_cgm / p_diff_twoway_cgm keep the plain two-way value (the earlier p_diff_twoway, with the
+larger one-way SE only where V2 <= 0), for comparison only. p_diff_tp53_label_perm permutes the TP53 labels over
+the analysed lines (group sizes kept, whole model refitted, FE included for ddxg; statistic t = diff / line-cluster
+SE, studentised) and is the design-based line-level test, conditional on the drug-doses analysed (it ignores
+drug-to-drug variation, so in the 62 active drug-doses from 37 drugs it can be far smaller than the two-way p). Read
+a diff as supported only when both are small under fe ddxg. MDE: mde_diff_80 = 2.80 x the SD of the
+label-permutation null of diff (smallest |b_WT - b_alt| detected with 80% power, two-sided 5%).
 
 d1_two_way_models.csv     one row per read-out (P53_SCORE, MDM2, CDKN1A, FDXR, ZMAT3, DDB2, TP53I3, BBC3, TP53) x
-                          fe x variant x covariate set. Variants: i_all (all drug-doses; covariates full, none,
-                          full_base, full_p53resp), ii_active (TRIM72 |z| >= 3 or P53_ACTIVITY z >= 3, 62 drug-doses;
-                          full, none, full_base, full_p53resp), ii_trim72 (TRIM72 |z| >= 3 only, 23), ii_p53 (P53_ACTIVITY
-                          z >= 3 only, 50), ii_active_no_plate3_13 (ii_active without the plate-3 / plate-13 wells),
-                          iii_readthrough (X = TRIM72_rt, readthrough_correction_fit.csv), iv_no_plate3_13 (wells of
-                          plates 3 and 13 left out, drug-dose means and covariates recomputed); drugdose_sets.csv.
-                          Columns: n_rows / n_drugdoses / n_fe_cells / n_drugs / n_lines_WT / n_lines_alt; b_WT, b_alt
-                          with drug-cluster SE (CR1), 95% CI (t, G-1 df), p_*_drug, two-way (drug, line) cluster SE/p,
-                          within-cell permutation p (TRIM72 shuffled across lines within each FE cell: drug-dose for
-                          dd, drug-dose x group for ddxg; tests b = 0 and rejects whenever slopes vary across drugs,
-                          even with a zero mean); diff with drug-cluster, line-cluster and two-way SE/CI/p,
+                          fe x variant x covariate set; role = primary / secondary / sensitivity (above). Variants:
+                          i_all (all drug-doses; covariates full, none, full_base, full_p53resp), ii_active (TRIM72
+                          |z| >= 3 or P53_ACTIVITY z >= 3, 62 drug-doses; full, none, full_base, full_p53resp),
+                          ii_trim72 (TRIM72 |z| >= 3 only, 23), ii_p53 (P53_ACTIVITY z >= 3 only, 50),
+                          ii_active_no_plate3_13 (ii_active without the plate-3 / plate-13 wells, 58),
+                          iii_readthrough_cov (all drug-doses, covariates full_rt: FUS and PYCARD-AS1 r2 in the
+                          model), iii_readthrough_cov_active (ii_active, full_rt), iii_readthrough_subtracted (the
+                          earlier readthrough variant: X = TRIM72_rt = TRIM72 r2 minus its pooled fit on FUS and
+                          PYCARD-AS1 r2, readthrough_correction_fit.csv; covariates full), iv_no_plate3_13 (wells of
+                          plates 3 and 13 left out, drug-dose means and covariates recomputed; 999 drug-doses);
+                          drugdose_sets.csv. Columns: n_rows / n_drugdoses / n_fe_cells / n_drugs / n_lines_WT /
+                          n_lines_alt; b_WT, b_alt with drug-cluster SE (CR1), 95% CI (t, G-1 df), p_*_drug,
+                          conservative two-way SE/p; within-cell permutation p (TRIM72 shuffled across lines within
+                          each FE cell: drug-dose for dd, drug-dose x group for ddxg; tests b = 0 and rejects
+                          whenever slopes vary across drugs, even with a zero mean); diff with drug-cluster,
+                          line-cluster and conservative two-way SE/CI/p (+ se_diff_twoway_from, *_cgm),
                           p_diff_perm_within_dd and its null SD, t_diff_line, p_diff_tp53_label_perm (studentised),
                           the unstudentised version, the null SD of diff (ci_diff_*_labelsd = diff +- 1.96 SD),
                           mde_diff_80, mde_diff_80_line_se = 2.80 x line-cluster SE, mde_diff_80_within_dd from the
@@ -1196,32 +1481,58 @@ d1_two_way_models.csv     one row per read-out (P53_SCORE, MDM2, CDKN1A, FDXR, Z
                           that variant, fe and covariate set; trim72_reliability.csv) and
                           mde_diff_80_attenuation_corrected = mde_diff_80 / lambda; q_bh_diff_label and
                           q_bh_diff_twoway = BH over the 9 read-outs within fe x variant x covariate set;
-                          check_label_engine_minus_main and check_label_engine_t_minus_main (the permutation engine at
-                          the true labels minus the main fit: ~1e-16).
+                          p_holm_variants_twoway / p_holm_variants_label = Holm over the 9 variants (each at its main
+                          covariate set: full, full_rt for the iii_readthrough_cov variants) for P53_SCORE, within
+                          fe (empty for the other rows); check_label_engine_minus_main and
+                          check_label_engine_t_minus_main (the permutation engine at the true labels minus the main
+                          fit: ~1e-16).
 d1_line_slopes.csv        i_all and ii_active (full covariates), both fe: per line, the TRIM72 slope from one model with
                           line-specific TRIM72 AND covariate slopes (both FE), drug-cluster SE.
-d1_line_slope_tests.csv   per read-out x variant x fe: mean line slope WT minus altered (lines with >= 20 cells of
-                          data), Welch t, TP53-label permutation p of the Welch t (and of the plain difference), MDE
-                          from the permutation SD of the difference; counts of negative slopes. For fe ddxg the slopes
-                          are not refitted per permutation (the FE depend on the labels): approximate.
+d1_line_slope_tests.csv   per read-out x variant x fe: line slopes WT vs altered (lines with >= 20 cells of data):
+                          mean difference with Welch t / CI / p, TP53-label permutation p of the Welch t (and of the
+                          plain difference), MDE from the permutation SD of the difference; rank-based next to it:
+                          median WT minus median altered, Hodges-Lehmann shift (median of all WT - altered slope
+                          differences), Mann-Whitney U, AUC (P(WT slope > altered slope)) and p_mannwhitney; counts
+                          of negative slopes. For fe ddxg the slopes are not refitted per permutation (the FE depend
+                          on the labels): approximate.
 d1_per_drugdose_contributions.csv.gz  i_all and ii_active (full covariates), both fe: per drug-dose and read-out, its
                           rows' share of the WT / altered TRIM72 variation (weight_share_*), its own slope on the
                           partialled data (slope_*_in_drugdose) and its contribution to b_WT, b_alt and diff (contrib_*:
-                          sum over its rows of x~ y~ / total sum of x~^2; they add up to b_WT / b_alt, exactly for
-                          ddxg, up to the small WT-altered cross term for dd).
+                          sum over its rows of x~ y~ / total sum of x~^2). They add up to b_WT / b_alt exactly for
+                          ddxg; for dd they leave out the WT-altered cross term (the two partialled TRIM72 columns
+                          are correlated through the shared drug-dose FE), which is not small: CROSSTERM_PLACEHOLDER.
 d1_active_leave_one_drug_out.csv  ii_active (full), both fe: the model refitted without each drug (all its doses):
-                          b_WT, b_alt, diff, line-cluster and two-way p, next to the all-drug diff.
+                          b_WT, b_alt, diff, line-cluster and conservative two-way p, next to the all-drug diff and p.
+d1_active_leave_one_line_out.csv  ii_active (full), both fe: the model refitted without each line (dropped line, its
+                          TP53 group): b_WT, b_alt, diff, line-cluster and conservative two-way p, next to the
+                          all-line diff and p.
+d1_active_joint_model.csv ii_active estimated inside one model over all drug-doses (full covariates, both fe): TRIM72
+                          x TP53 group x (active, inactive) slopes and every covariate x group x (active, inactive),
+                          so the line FE are estimated from all drug-doses (in ii_active alone they come from the 62
+                          active drug-doses only). Contrasts: active b_WT - b_alt, inactive b_WT - b_alt, the
+                          difference-in-differences active minus inactive (is the active-set diff different from
+                          the rest, or the same slope gap with less noise?), and the four slopes; drug-, line-,
+                          plain and conservative two-way SE, CI and p (min(G)-1 df).
 d1_gene_null_genes.csv    gene-level null (is the pattern specific to p53 targets?): i_all and ii_active, full
-                          covariates, both fe: the same model (b_WT, b_alt, diff, two-way SE, t, p; no permutations)
-                          for the D1 read-outs, each of the 21 P53_ACTIVITY members, each of the 78 non-p53
-                          background panel genes and 500 random modules of 21 background genes (set column).
+                          covariates, both fe: the same model (b_WT, b_alt, diff, conservative two-way SE, t, p; no
+                          permutations) for the D1 read-outs, each of the 21 P53_ACTIVITY members, each of the 78
+                          non-p53 background panel genes and 500 random modules of 21 background genes (set column).
 d1_gene_null_summary.csv  each D1 read-out's two-way t placed in its reference: P53_SCORE among the random background
                           modules, single genes among the background genes (reference mean / SD of diff and t,
-                          fraction of reference t <= observed, empirical two-sided p); and the 21 members' t vs the
-                          background genes' t (Mann-Whitney p). The modules share genes, lines and drug-doses, so
-                          this is a competitive (specificity) test, not a test of a non-zero diff: a read-out can sit
-                          outside the module null while its own CI includes 0. Caveat: the background genes also
-                          make up bg_abs_r2 (a covariate).
+                          fraction of reference t <= observed, empirical two-sided p). The modules share genes, lines
+                          and drug-doses, so this is a competitive (specificity) test, not a test of a non-zero diff:
+                          a read-out can sit outside the module null while its own CI includes 0. The row 'the 21
+                          P53_ACTIVITY members as a set' is a camera-style competitive test (replaces the earlier
+                          Mann-Whitney of member t vs background t, which treated the genes as independent): statistic
+                          = mean member t minus mean background t (set_stat_*), variance = pooled within-set variance
+                          of the t x a'Ra (a = 1/21 for members, -1/78 for background genes; R = correlation between
+                          the genes' diff estimates from their drug-, line- and two-way cluster scores, the version
+                          giving the largest variance used, never below independence), t with 97 df: p_set_camera;
+                          set_vif_effective = a'Ra / (1/21 + 1/78) (variance inflation over independent genes),
+                          set_vif_drug / _line / _twoway, rho_mean_members (mean correlation between two members'
+                          estimates), rho_mean_members_background, rho_mean_background; p_set_independent = the same
+                          test without the inflation. Caveat: the background genes also make up bg_abs_r2 (a
+                          covariate).
 d2_screen_models.csv      the same model (variant i_all, both fe) for each MG53-linked gene and module (module = mean
                           r2 of the members a line expresses) of mg53_perturbation/assay_panel/panel.csv: NF-kB
                           (NFKBIA, TNFAIP3, CXCL8 + module), ferroptosis (SLC7A11, GPX4, CHAC1), apoptosis (BAX,
@@ -1229,36 +1540,46 @@ d2_screen_models.csv      the same model (variant i_all, both fe) for each MG53-
                           cycle (CCND1, KIF11), E2F targets (E2F1, CCNE1, CDT1, MCM3, MCM7, MYBL2, CDC25A + module;
                           none in the S_PHASE module), RAC1. primary = the covariate set of the BH family (no_cycle for
                           the cell-cycle and E2F read-outs, full otherwise); q_bh_* = BH over the primary rows within
-                          each fe: diff (label-permutation p and two-way p), b_common, b_WT and b_alt (two-way p).
-                          Non-primary rows (full covariates for the cell-cycle read-outs) are sensitivity rows (no q).
-                          source = panel (T.expression_effects), pseudobulk (corrected_effects) or module.
+                          each fe: diff (label-permutation p and conservative two-way p), b_common, b_WT and b_alt
+                          (conservative two-way p). Non-primary rows (full covariates for the cell-cycle read-outs)
+                          are sensitivity rows (no q). source = panel (T.expression_effects), pseudobulk
+                          (corrected_effects) or module. The whole screen is secondary to the D1 primary test.
 readthrough_correction_fit.csv  TRIM72 r2 on FUS r2 and PYCARD-AS1 r2 within drug-dose and line FE (all drug-doses):
                           slopes, drug-cluster SE, within-R2 (share of TRIM72's within variation explained);
-                          PYCARD-AS1 r2 is kept in every line (it is below the atlas gene list).
+                          PYCARD-AS1 r2 is kept in every line (it is below the atlas gene list). Used by
+                          iii_readthrough_subtracted only.
 trim72_reliability.csv    (v) measurement error of TRIM72, per variant, fe and covariate set (covset full / none):
                           split-half (each well x line's cells split at random into two halves, the panel's method
                           run on each half, halves averaged per drug-dose like the main data) and replicate wells
                           (drug-doses with 2+ used wells on different plates: first two wells; split-half is also given
                           for those drug-doses alone: the gap between the two is well- or plate-specific line
                           variation that both halves of a well share but another well does not). r_halves =
-                          correlation of the residual TRIM72 (FE + covariates x group out, and FUS / PYCARD-AS1 for
-                          the readthrough row) between the halves / wells; reliability_full_spearman_brown =
-                          2r/(1+r) (the full-data measure from two halves); attenuation: observed b ~= lambda x true
-                          b for classical, independent measurement error.
+                          correlation of the residual TRIM72 (FE + covariates x group out, and FUS / PYCARD-AS1 x
+                          group for the iii_readthrough rows) between the halves / wells;
+                          reliability_full_spearman_brown = 2r/(1+r) (the full-data measure from two halves);
+                          attenuation: observed b ~= lambda x true b for classical, independent measurement error.
 drugdose_sets.csv         per drug-dose: TRIM72 z, P53_ACTIVITY z (panel), plates, membership of ii_trim72, ii_p53,
                           ii_active and iv_no_plate3_13.
 analysis_cells.csv.gz     the per (drug-dose, line) values of the main data (all used wells): TRIM72 r2, TRIM72_rt,
-                          D1 read-outs, screen read-outs, covariates (incl. trim72_base_x_dd, p53resp_x_dd),
-                          TRIM72 halves A and B.
+                          D1 read-outs, screen read-outs, covariates (incl. trim72_base_x_dd, p53resp_x_dd, FUS and
+                          PYCARD-AS1 r2), TRIM72 halves A and B.
 checks.csv                pseudobulk vs gene_panel counts; corrected_effects vs the panel r2 and the atlas DD_lfc;
                           idarubicin per-line TRIM72 vs trim72_idarubicin/corrected; split-half bookkeeping; the
                           permutation engines (fast within-cell refit vs explicit projection; label engines at the
                           true labels vs the main fit) for both fe.
-key_results.csv           the headline numbers: D1 rows (all read-outs for i_all and ii_active with full covariates,
-                          P53_SCORE for every variant), line-slope tests, leave-one-drug-out ranges, the gene-level
-                          null (P53_SCORE and the members), D2 rows with
-                          q < 0.1 and the D2 MDE range, reliability, readthrough fit. Columns p_twoway, p_label_perm,
-                          q_twoway, q_label, mde_80 as defined above.
+key_results.csv           the headline numbers, the primary test first. role = primary, secondary (other read-outs of
+                          the primary model), sensitivity (every other fe x variant x covariate set, the line-slope
+                          tests, leave-one-drug-out and leave-one-line-out ranges, the active set in the
+                          all-drug-dose model), check (the gene-level null: P53_SCORE and the members as a set),
+                          screen (D2) (rows with q < 0.1 and the D2 MDE range), context (reliability, readthrough
+                          fit). Columns p_twoway (conservative), p_label_perm, q_twoway, q_label,
+                          p_holm_variants_twoway, p_holm_variants_label, p_set_camera, mde_80 as defined above.
+
+Runtime (4 CPUs): the caches are keyed to the inputs (cache/manifest.json: real path of --data, sizes and mtimes of
+atlas/effects/wells.csv, atlas/pseudobulk/group*, gene_panel/well_line.parquet and gene_panel/cells) and rebuilt
+when they do not match. A from-scratch run (empty cache/, cold page cache) takes ~30 min:
+the pseudobulk pass reads 20 GB of atlas/pseudobulk and is I/O-bound (~13 min cold), the split-half pass
+~1-2 min, the panel effects ~2.5 min; the models ~14 min. With the caches in place ~14 min. Peak RSS ~1.4 GB.
 """
 
 
@@ -1283,13 +1604,12 @@ def main():
     cdir, tab = os.path.join(out, "cache"), os.path.join(out, "tables")
     os.makedirs(cdir, exist_ok=True)
     os.makedirs(tab, exist_ok=True)
-    if a.recompute:
-        for f in glob.glob(os.path.join(cdir, "*.np[yz]")) + glob.glob(os.path.join(cdir, "*.parquet")):
-            os.remove(f)
-        import shutil
-        shutil.rmtree(os.path.join(cdir, "panel"), ignore_errors=True)
     rng = np.random.default_rng(SEED)
     log(f"data {a.data}; out {out}")
+    log("primary test (declared up front): fe {fe}, variant {variant}, covariates {covset}, read-out {readout}: "
+        "b_WT - b_alt, conservative two-way SE; every other model is secondary or a sensitivity analysis"
+        .format(**PRIMARY))
+    manifest = validate_caches(cdir, a.data, a.recompute)
     grid = Grid(a.data)
 
     # one panel setup shared by the effects cache and the split-half (the setup takes ~20 s and ~1 GB)
@@ -1308,6 +1628,7 @@ def main():
     sh = build_split_half_counts(a.data, cdir)
     hA, hB, sh_check = split_half_effects(a.data, cdir, sh, grid)
     _held.clear()
+    write_manifest(cdir, manifest)
     log(f"caches ready ({time.time() - t0:.0f} s; peak RSS {peak_gb():.2f} GB)")
 
     # TP53 groups (the panel's), drug-dose sets
@@ -1357,7 +1678,9 @@ def main():
     VARIANTS = {"i_all": ("main", alldd, GENE, ()), "ii_active": ("main", active, GENE, ()),
                 "ii_trim72": ("main", trim_mv, GENE, ()), "ii_p53": ("main", p53_act, GENE, ()),
                 "ii_active_no_plate3_13": ("iv", active & kept_iv, GENE, ()),
-                "iii_readthrough": ("main", alldd, "TRIM72_rt", ("FUS", "PYCARD-AS1")),
+                "iii_readthrough_subtracted": ("main", alldd, "TRIM72_rt", ("FUS", "PYCARD-AS1")),
+                "iii_readthrough_cov": ("main", alldd, GENE, ("FUS", "PYCARD-AS1")),
+                "iii_readthrough_cov_active": ("main", active, GENE, ("FUS", "PYCARD-AS1")),
                 "iv_no_plate3_13": ("iv", kept_iv, GENE, ())}
 
     # (v) reliability of TRIM72 (split-half and replicate wells), under both FE structures
@@ -1416,18 +1739,31 @@ def main():
                  ("ii_active", "full"), ("ii_active", "none"), ("ii_active", "full_base"),
                  ("ii_active", "full_p53resp"),
                  ("ii_trim72", "full"), ("ii_p53", "full"), ("ii_active_no_plate3_13", "full"),
-                 ("iii_readthrough", "full"), ("iv_no_plate3_13", "full")]
+                 ("iii_readthrough_subtracted", "full"), ("iii_readthrough_cov", "full_rt"),
+                 ("iii_readthrough_cov_active", "full_rt"), ("iv_no_plate3_13", "full")]
+    assert all(VARIANT_MAIN_COVSET[v] == c for v, c in D1_COMBOS if v not in ("i_all", "ii_active") or c == "full")
     specs = []
     for fe in FES:
         for vname, cs in D1_COMBOS:
             tk, ddm, xcol, _ex = VARIANTS[vname]
+            xname = ("TRIM72_rt = TRIM72 r2 minus its fit on FUS, PYCARD-AS1 r2" if xcol != GENE else
+                     "TRIM72_r2 (FUS, PYCARD-AS1 r2 x group as covariates)" if cs == "full_rt" else "TRIM72_r2")
             for ro in D1:
                 specs.append({"family": "D1 p53", "module": "p53", "readout": ro, "variant": vname, "covset": cs,
-                              "fe": fe, "xname": "TRIM72_rt (FUS, PYCARD-AS1 out)" if xcol != GENE else "TRIM72_r2",
-                              "tabs": tk, "X": tabs[tk][xcol], "ddmask": ddm, "B_within": a.perm,
-                              "B_label": a.label_perm})
+                              "fe": fe, "xname": xname, "tabs": tk, "X": tabs[tk][xcol], "ddmask": ddm,
+                              "B_within": a.perm, "B_label": a.label_perm})
     log(f"D1: p53 read-outs ({len(specs)} models)")
-    D1T, SL = run_models(specs, tabs, grid, wt_line, rng, want_lines_for={("i_all", "full"), ("ii_active", "full")})
+    # the readthrough-covariate variants draw their permutations from their own stream, so that adding them leaves
+    # the random streams (and permutation p-values) of every other model as they were
+    new_rt = np.array([s_["covset"] == "full_rt" for s_ in specs])
+    D1a, SL = run_models([s_ for s_, k in zip(specs, new_rt) if not k], tabs, grid, wt_line, rng,
+                         want_lines_for={("i_all", "full"), ("ii_active", "full")})
+    D1b, _ = run_models([s_ for s_, k in zip(specs, new_rt) if k], tabs, grid, wt_line,
+                        np.random.default_rng([SEED, 1]))
+    D1T = pd.concat([D1a, D1b], ignore_index=True)
+    order = {(s_["fe"], s_["variant"], s_["covset"], s_["readout"]): i for i, s_ in enumerate(specs)}
+    D1T = D1T.iloc[np.argsort([order[k] for k in zip(D1T["fe"], D1T["variant"], D1T["covset"], D1T["readout"])],
+                              kind="stable")].reset_index(drop=True)
     sh_ = REL[REL["method"].str.startswith("split") & (REL["tp53_group"] == "all lines")]
     lam = {(r["variant"], r["fe"], r["covset"]): r["reliability_full_spearman_brown"] for _, r in sh_.iterrows()}
     D1T["attenuation_lambda_split_half"] = [lam.get((v, f, "none" if c == "none" else "full"), np.nan)
@@ -1437,21 +1773,43 @@ def main():
         D1T[col] = np.nan
         for _k, g in D1T.groupby(["fe", "variant", "covset"]):
             D1T.loc[g.index, col] = bh(g[pc].to_numpy())
+    # role: the declared primary test, the other read-outs of its model (secondary), everything else sensitivity
+    is_prim_model = ((D1T["fe"] == PRIMARY["fe"]) & (D1T["variant"] == PRIMARY["variant"])
+                     & (D1T["covset"] == PRIMARY["covset"]))
+    D1T.insert(0, "role", np.where(is_prim_model & (D1T["readout"] == PRIMARY["readout"]), "primary",
+                                   np.where(is_prim_model, "secondary", "sensitivity")))
+    # Holm over the variants (each at its main covariate set) for P53_SCORE, within fe
+    for col, pc in (("p_holm_variants_twoway", "p_diff_twoway"), ("p_holm_variants_label", "p_diff_tp53_label_perm")):
+        D1T[col] = np.nan
+        for fe in FES:
+            m_ = ((D1T["fe"] == fe) & (D1T["readout"] == "P53_SCORE")
+                  & np.array([VARIANT_MAIN_COVSET.get(v) == c for v, c in zip(D1T["variant"], D1T["covset"])]))
+            D1T.loc[m_, col] = holm(D1T.loc[m_, pc].to_numpy())
     D1T.to_csv(os.path.join(tab, "d1_two_way_models.csv"), index=False, float_format="%.6g")
     SL.to_csv(os.path.join(tab, "d1_line_slopes.csv"), index=False, float_format="%.6g")
     ST = slope_tests(SL, 20000, rng)
     ST.to_csv(os.path.join(tab, "d1_line_slope_tests.csv"), index=False, float_format="%.6g")
-    log("D1: per drug-dose contributions (i_all, ii_active) and leave-one-drug-out (ii_active), both FE")
-    parts, lodos = [], []
+    log("D1: per drug-dose contributions (i_all, ii_active), leave-one-drug-out and leave-one-line-out (ii_active), "
+        "the active set inside the all-drug-dose model, both FE")
+    parts, lodos, lolos, joints = [], [], [], []
     for fe in FES:
-        pa, _ = breakdown(tabs["main"], grid, wt_line, alldd, "i_all", fe=fe)
-        pb_, lo_ = breakdown(tabs["main"], grid, wt_line, active, "ii_active", fe=fe, lodo=True)
+        pa, _, _ = breakdown(tabs["main"], grid, wt_line, alldd, "i_all", fe=fe)
+        pb_, lo_, ll_ = breakdown(tabs["main"], grid, wt_line, active, "ii_active", fe=fe, lodo=True)
         parts += [pa, pb_]
         lodos.append(lo_)
+        lolos.append(ll_)
+        joints.append(joint_active(tabs["main"], grid, wt_line, active, fe))
     pd.concat(parts).to_csv(os.path.join(tab, "d1_per_drugdose_contributions.csv.gz"), index=False,
                             float_format="%.5g")
     lo = pd.concat(lodos)
     lo.to_csv(os.path.join(tab, "d1_active_leave_one_drug_out.csv"), index=False, float_format="%.6g")
+    LL = pd.concat(lolos)
+    LL.to_csv(os.path.join(tab, "d1_active_leave_one_line_out.csv"), index=False, float_format="%.6g")
+    JA = pd.concat(joints)
+    JA.to_csv(os.path.join(tab, "d1_active_joint_model.csv"), index=False, float_format="%.6g")
+    for _, r in JA[(JA["readout"] == "P53_SCORE") & JA["contrast"].str.contains("b_WT - b_alt|differences")].iterrows():
+        log(f"  P53_SCORE [{r['fe']}] {r['contrast']}: {r['estimate']:+.4f} (p conservative two-way "
+            f"{r['p_twoway']:.3g}, line {r['p_line']:.3g})")
     log("D1: gene-level null (p53 targets vs non-p53 panel genes and random background modules)")
     GN, GS = gene_null(E, grid, tabs["main"], wt_line, {"i_all": alldd, "ii_active": active}, rng, R=a.modules)
     GN.to_csv(os.path.join(tab, "d1_gene_null_genes.csv"), index=False, float_format="%.6g")
@@ -1518,48 +1876,87 @@ def main():
                                "note": f"t: {g['check_label_engine_t_minus_main'].abs().max():.2g}"}
     CK.to_csv(os.path.join(tab, "checks.csv"), index=False)
 
-    # key results
+    # key results (role: primary / secondary / sensitivity / check / screen / context; the primary row first)
     kr = []
 
     def model_row(section, r, what):
-        return {"section": section, "what": what, "fe": r["fe"], "n": r["n_rows"], "estimate": r["diff"],
-                "ci_lo": r["ci_diff_lo_twoway"], "ci_hi": r["ci_diff_hi_twoway"], "p_twoway": r["p_diff_twoway"],
-                "p_label_perm": r["p_diff_tp53_label_perm"], "q_label": r["q_bh_diff_label"],
-                "q_twoway": r["q_bh_diff_twoway"], "mde_80": r["mde_diff_80"],
+        return {"section": section, "role": r["role"], "what": what, "fe": r["fe"], "n": r["n_rows"],
+                "estimate": r["diff"], "ci_lo": r["ci_diff_lo_twoway"], "ci_hi": r["ci_diff_hi_twoway"],
+                "p_twoway": r["p_diff_twoway"], "p_label_perm": r["p_diff_tp53_label_perm"],
+                "q_label": r["q_bh_diff_label"], "q_twoway": r["q_bh_diff_twoway"],
+                "p_holm_variants_twoway": r["p_holm_variants_twoway"],
+                "p_holm_variants_label": r["p_holm_variants_label"], "mde_80": r["mde_diff_80"],
                 "detail": f"b_WT {r['b_WT']:+.4f} (two-way p {r['p_WT_twoway']:.3g}); b_alt {r['b_alt']:+.4f} "
                           f"(two-way p {r['p_alt_twoway']:.3g}); drug-cluster p {r['p_diff_drug']:.3g}; "
-                          f"line-cluster p {r['p_diff_line']:.3g}; {r['n_drugdoses']} drug-doses; "
+                          f"line-cluster p {r['p_diff_line']:.3g}; conservative SE from the {r['se_diff_twoway_from']} "
+                          f"variance (plain two-way p {r['p_diff_twoway_cgm']:.3g}); {r['n_drugdoses']} drug-doses; "
                           f"MDE corrected for split-half attenuation {r['mde_diff_80_attenuation_corrected']:.3g}"}
     for _, r in D1T.iterrows():
         if (r["variant"], r["covset"]) in (("i_all", "full"), ("ii_active", "full")) or r["readout"] == "P53_SCORE":
             kr.append(model_row("D1", r, f"{r['readout']} [{r['variant']}, {r['covset']}]: b_WT - b_alt"))
     for _, r in ST.iterrows():
         if r["readout"] in ("P53_SCORE", "MDM2", "CDKN1A", "ZMAT3"):
-            kr.append({"section": "D1 line slopes", "what": f"{r['readout']} [{r['variant']}]: mean line slope WT - "
-                       "altered", "fe": r["fe"], "n": r["n_lines_WT"] + r["n_lines_alt"],
+            kr.append({"section": "D1 line slopes", "role": "sensitivity",
+                       "what": f"{r['readout']} [{r['variant']}]: mean line slope WT - altered", "fe": r["fe"],
+                       "n": r["n_lines_WT"] + r["n_lines_alt"],
                        "estimate": r["diff_mean_WT_minus_alt"], "ci_lo": r["ci_lo_welch"], "ci_hi": r["ci_hi_welch"],
                        "p_label_perm": r["p_tp53_label_perm"], "mde_80": r["mde_diff_80"],
-                       "detail": f"Welch p {r['p_welch']:.3g}; {r['n_WT_negative']}/{r['n_lines_WT']} WT and "
+                       "detail": f"Welch p {r['p_welch']:.3g}; rank-based: Hodges-Lehmann shift "
+                                 f"{r['hodges_lehmann_WT_minus_alt']:+.4f}, median WT - median altered "
+                                 f"{r['diff_median_WT_minus_alt']:+.4f}, Mann-Whitney p {r['p_mannwhitney']:.3g}; "
+                                 f"{r['n_WT_negative']}/{r['n_lines_WT']} WT and "
                                  f"{r['n_alt_negative']}/{r['n_lines_alt']} altered lines with a negative slope"})
     for (fe, ro), g in lo.groupby(["fe", "readout"], sort=False):
-        kr.append({"section": "D1 ii_active leave-one-drug-out", "what": f"{ro}: b_WT - b_alt without each drug",
+        kr.append({"section": "D1 ii_active leave-one-drug-out", "role": "sensitivity",
+                   "what": f"{ro}: b_WT - b_alt without each drug",
                    "fe": fe, "n": len(g), "estimate": g["diff_all_drugs"].iloc[0], "ci_lo": g["diff"].min(),
                    "ci_hi": g["diff"].max(), "p_twoway": g["p_diff_twoway"].max(),
                    "detail": "ci_lo / ci_hi = smallest / largest diff over the drops; p_twoway = largest two-way p "
-                             f"over the drops (drop giving it: {g.loc[g['p_diff_twoway'].idxmax(), 'dropped_drug']})"})
+                             f"over the drops (drop giving it: {g.loc[g['p_diff_twoway'].idxmax(), 'dropped_drug']}); "
+                             f"all drugs: two-way p {g['p_diff_twoway_all_drugs'].iloc[0]:.3g}; drops with two-way "
+                             f"p > 0.05: {int((g['p_diff_twoway'] > 0.05).sum())} of {len(g)}"})
+    for (fe, ro), g in LL.groupby(["fe", "readout"], sort=False):
+        kr.append({"section": "D1 ii_active leave-one-line-out", "role": "sensitivity",
+                   "what": f"{ro}: b_WT - b_alt without each line",
+                   "fe": fe, "n": len(g), "estimate": g["diff_all_lines"].iloc[0], "ci_lo": g["diff"].min(),
+                   "ci_hi": g["diff"].max(), "p_twoway": g["p_diff_twoway"].max(),
+                   "detail": "ci_lo / ci_hi = smallest / largest diff over the drops; p_twoway = largest two-way p "
+                             f"over the drops (drop giving it: {g.loc[g['p_diff_twoway'].idxmax(), 'dropped_line']}); "
+                             f"all lines: two-way p {g['p_diff_twoway_all_lines'].iloc[0]:.3g}; drops with two-way "
+                             f"p > 0.05: {int((g['p_diff_twoway'] > 0.05).sum())} of {len(g)}"})
+    for _, r in JA[JA["readout"].isin(["P53_SCORE", "MDM2", "CDKN1A", "ZMAT3"])
+                   & JA["contrast"].str.contains("b_WT - b_alt|differences")].iterrows():
+        kr.append({"section": "D1 ii_active in the all-drug-dose model", "role": "sensitivity",
+                   "what": f"{r['readout']} [{r['covset']}]: {r['contrast']}", "fe": r["fe"], "n": r["n_rows"],
+                   "estimate": r["estimate"], "ci_lo": r["ci_lo_twoway"], "ci_hi": r["ci_hi_twoway"],
+                   "p_twoway": r["p_twoway"],
+                   "detail": f"one model over all drug-doses (line FE from all of them; TRIM72 and covariate slopes "
+                             f"separate for the {r['n_drugdoses_active']} active and {r['n_drugdoses_inactive']} "
+                             f"inactive drug-doses); drug-cluster p {r['p_drug']:.3g}; line-cluster p "
+                             f"{r['p_line']:.3g}; conservative SE from the {r['se_twoway_from']} variance"})
     for _, r in GS.iterrows():
         if r["readout"] == "P53_SCORE" or r["readout"].startswith("the "):
-            kr.append({"section": "D1 gene-level null", "what": f"{r['readout']} [{r['variant']}, full] vs "
-                       f"{r['reference']}", "fe": r["fe"], "n": r["n_ref"], "estimate": r["diff"],
+            st_ = r["readout"].startswith("the ")
+            kr.append({"section": "D1 gene-level null", "role": "check", "what": f"{r['readout']} [{r['variant']}, "
+                       f"full] vs {r['reference']}", "fe": r["fe"], "n": r["n_ref"], "estimate": r["diff"],
                        "p_twoway": r.get("p_diff_twoway", np.nan),
-                       "detail": f"t {r['t_diff_twoway']:+.2f} vs reference mean t {r['ref_mean_t']:+.2f} (SD "
-                                 f"{r['ref_sd_t']:.2f}), reference mean diff {r['ref_mean_diff']:+.4f}; fraction of "
-                                 f"reference t <= observed {r['frac_ref_t_le_obs']:.3f}; empirical two-sided p "
-                                 f"{r['p_empirical_two_sided']:.3g}" + (" (Mann-Whitney)" if r["readout"].startswith(
-                                     "the ") else "")})
+                       "detail": (f"camera-style set test: mean member t {r['t_diff_twoway']:+.2f} minus mean "
+                                  f"background t {r['ref_mean_t']:+.2f} = {r['set_stat_mean_t_members_minus_background']:+.2f}"
+                                  f" (SE {r['set_se']:.2f}; effective VIF {r['set_vif_effective']:.2f} from the "
+                                  f"{r['set_vif_from']} correlation, mean member-member rho "
+                                  f"{r['rho_mean_members']:.3f}); p {r['p_set_camera']:.3g} (genes treated as "
+                                  f"independent: {r['p_set_independent']:.3g})") if st_ else
+                                 (f"t {r['t_diff_twoway']:+.2f} vs reference mean t {r['ref_mean_t']:+.2f} (SD "
+                                  f"{r['ref_sd_t']:.2f}), reference mean diff {r['ref_mean_diff']:+.4f}; fraction of "
+                                  f"reference t <= observed {r['frac_ref_t_le_obs']:.3f}; empirical two-sided p "
+                                  f"{r['p_empirical_two_sided']:.3g}")})
+            if st_:
+                kr[-1]["p_label_perm"] = np.nan
+                kr[-1]["p_set_camera"] = r["p_set_camera"]
     for _, r in D2T[D2T["primary"]].iterrows():
         if min(r["q_bh_diff_label"], r["q_bh_diff_twoway"], r["q_bh_common"]) < 0.1:
-            kr.append({"section": "D2 (q < 0.1)", "what": f"{r['readout']} ({r['module']}): b_WT - b_alt; b_common",
+            kr.append({"section": "D2 (q < 0.1)", "role": "screen (D2)",
+                       "what": f"{r['readout']} ({r['module']}): b_WT - b_alt; b_common",
                        "fe": r["fe"], "n": r["n_rows"], "estimate": r["diff"], "ci_lo": r["ci_diff_lo_twoway"],
                        "ci_hi": r["ci_diff_hi_twoway"], "p_twoway": r["p_diff_twoway"],
                        "p_label_perm": r["p_diff_tp53_label_perm"], "q_label": r["q_bh_diff_label"],
@@ -1568,7 +1965,8 @@ def main():
                                  f"{r['q_bh_common']:.3g}); b_WT {r['b_WT']:+.4f}; b_alt {r['b_alt']:+.4f}"})
     for fe in FES:
         g = D2T[D2T["primary"] & (D2T["fe"] == fe)]
-        kr.append({"section": "D2 summary", "what": "screen read-outs (primary covariate set)", "fe": fe, "n": len(g),
+        kr.append({"section": "D2 summary", "role": "screen (D2)", "what": "screen read-outs (primary covariate set)",
+                   "fe": fe, "n": len(g),
                    "estimate": float(np.median(g["mde_diff_80"])), "ci_lo": float(g["mde_diff_80"].min()),
                    "ci_hi": float(g["mde_diff_80"].max()),
                    "detail": f"estimate / ci = median / min / max MDE (80%) of b_WT - b_alt; read-outs with "
@@ -1576,17 +1974,25 @@ def main():
                              f"{int((g['q_bh_diff_twoway'] < 0.1).sum())}, q_common < 0.1: "
                              f"{int((g['q_bh_common'] < 0.1).sum())}"})
     for _, r in REL[REL["tp53_group"] == "all lines"].iterrows():
-        kr.append({"section": "(v) reliability", "what": f"{r['method']} [{r['variant']}; {r['residualised_on']}]",
+        kr.append({"section": "(v) reliability", "role": "context",
+                   "what": f"{r['method']} [{r['variant']}; {r['residualised_on']}]",
                    "fe": r["fe"], "n": r["n_rows"], "estimate": r.get("r_halves") if pd.notna(r.get("r_halves")) else
                    r.get("reliability_single_well"), "detail": f"full-data reliability "
                    f"{r['reliability_full_spearman_brown']:.3f}" if pd.notna(r["reliability_full_spearman_brown"])
                    else "single-well reliability (correlation of two wells on two plates)"})
     for _, r in rtfit.iterrows():
-        kr.append({"section": "(iii) readthrough fit", "what": f"TRIM72 r2 on {r['predictor']} (within FE)",
+        kr.append({"section": "(iii) readthrough fit", "role": "context",
+                   "what": f"TRIM72 r2 on {r['predictor']} (within FE)",
                    "fe": "dd", "n": r["n_rows"], "estimate": r["slope"], "p_twoway": np.nan,
                    "detail": f"drug-cluster p {r['p_drug']:.3g}; within R2 of TRIM72 explained by FUS + PYCARD-AS1 "
                              f"{r['within_R2_of_TRIM72']:.3f}"})
-    pd.DataFrame(kr).to_csv(os.path.join(tab, "key_results.csv"), index=False, float_format="%.6g")
+    KR = pd.DataFrame(kr)
+    KR = pd.concat([KR[KR["role"] == "primary"], KR[KR["role"] != "primary"]], ignore_index=True)
+    KR.to_csv(os.path.join(tab, "key_results.csv"), index=False, float_format="%.6g")
+    pr = KR.iloc[0]
+    log(f"PRIMARY {pr['what']} [fe {pr['fe']}]: {pr['estimate']:+.4f} (95% CI {pr['ci_lo']:+.4f} to "
+        f"{pr['ci_hi']:+.4f}; conservative two-way p {pr['p_twoway']:.3g}; label-permutation p "
+        f"{pr['p_label_perm']:.3g})")
     for f in ("d1_per_drugdose_contributions.csv",):              # replaced by the gzipped version
         if os.path.exists(os.path.join(tab, f)):
             os.remove(os.path.join(tab, f))
