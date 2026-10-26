@@ -5,7 +5,7 @@ Needs a method-v3 atlas (<data>/atlas: 'tahoe_atlas.py compute', with its pseudo
 (<data>/gene_panel: 'tahoe_gene_panel.py all'); nothing is read from the 340 GB of cells again, and nothing is written
 into atlas/ or gene_panel/. Each step runs one script of this folder with its tables going to <out>/<step>/tables:
 
-    python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M                 # all data steps + summary (~45 min)
+    python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M                 # all data steps + summary (~2 h cold)
     python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M --steps summary # rebuild the summary tables only
     python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M --steps literature   # optional; needs internet
 
@@ -17,14 +17,14 @@ Steps (default: all but literature, in this order):
   p53_dependence  p53_dependence/p53_dependence.py                     TP53-WT vs altered induction (~3 min)
   downstream      downstream_p53/downstream_p53.py                     TRIM72 vs p53 output, incl. single cells (~8 min)
   two_way         two_way/two_way.py               TRIM72 -> p53 / pathways over all drug-doses x lines, with drug-dose
-                                                   and line fixed effects; TP53 WT minus altered as the control (~20 min)
+                                                   and line fixed effects; TP53 WT minus altered as the control (~30 min cold)
   single_cell_all single_cell_all/single_cell_all.py  the same contrast in single cells of all wells, with placebo genes;
-                                                   plus an ATF3-adjusted sensitivity run (one pass over gene_panel/cells)
+                                                   plus an ATF3-adjusted sensitivity run (one pass over gene_panel/cells each, ~13 min)
   upstream_tf     upstream_tf/upstream_tf.py       transcription-factor activities and line features vs TRIM72
-                                                   (one pass over atlas/pseudobulk; downloads CollecTRI/DoRothEA once)
+                                                   (one pass over atlas/pseudobulk, ~5 min; downloads CollecTRI/DoRothEA once)
   literature      literature/pubmed_screen.py + external_checks.py     PubMed/Europe PMC, p53 census, ChIP-Atlas
   summary         summary_tables.py                                    <out>/SUMMARY.md and <out>/summary/*.csv
-Memory: under ~3 GB per step. Output default: <data>/mg53_p53. Log: <out>/run_mg53_p53.log.
+Memory: under ~4 GB per step. Output default: <data>/mg53_p53. Log: <out>/run_mg53_p53.log.
 """
 import argparse
 import os

@@ -14,7 +14,9 @@ The short answers (written from the verified findings; see README.md for the evi
 | What raises TRIM72 mRNA? | Strong stress drugs | Anthracyclines/TOP2 poisons, harringtonines, auranofin, CDK9 and HDAC inhibitors; robust and replicated: idarubicin and homoharringtonine 5 µM (T1, T2) | moderate |
 | What moves with it? | AP-1 / immediate-early, ATF3, PMAIP1 | Co-responders across drugs and in single cells, not shown regulators; muscle TFs (MyoD/MEF2, the known promoter TFs) are silent in these lines (T3) | moderate |
 | Is it TRIM72's own promoter? | Unresolved | Part of TRIM72's reads look like readthrough from FUS (17-22 kb upstream, same strand); clean for homoharringtonine, not significant for idarubicin after level matching (T4) | moderate |
-| Does more TRIM72 go with less p53 output? | No detectable association | Per line, across drugs, untreated and in single cells; only strong associations are excluded (17 WT lines) (T6, T7) | null, limited power |
+| Does more TRIM72 go with less p53 output? | No detectable association | Per line, across drugs, untreated and in single cells (T6, T7); scaled up over all 1,132 drug-doses x 50 lines with TP53 genotype as the control: WT − altered slope -0.003 (95% CI -0.009 to 0.002, p 0.24) (T9); in single cells of all wells: no genotype-dependent association, a fall of > 1.2% per doubling of TRIM72 excluded (T10). A -3% slope in the 62 most active drug-doses is not robust (Holm p 0.12; gone when line effects use all drug-doses) | null; small effects not excluded |
+| Which transcription factors track TRIM72? | Stress TFs across drugs, none within lines | ATF4/ATF5 r 0.36 across drugs, largely through the shared AP-1/IEG/ATF3 arm (ATF4 0.09 without it); within lines every TF |r| <= 0.08, the noise ceiling; muscle TFs absent (T11) | co-response, not regulation |
+| Which line traits predict TRIM72? | Its locus, not TP53 | Untreated TRIM72 follows PYCARD-AS1 (rho 0.82) and FUS (0.57): readthrough or 16p11.2 copy number; TP53 status no (rho 0.07); KMT2D tentative (q 0.12 over all tests) (T12) | moderate |
 | Does MG53 lower p53 activity? | Not causally testable in Tahoe | p53 target mRNA is a valid read-out and was tested (row above), but TRIM72 only changes with drugs that also act on p53, and its mRNA may not mean MG53 protein. Needs an MG53 knockdown/overexpression with p53 target mRNA as read-out. Literature: MG53 binds p53 and drives its degradation (cardiomyocytes 2024, trophoblasts 2021) | literature; association only in Tahoe |
 
 ## T1. Drug-doses that significantly change TRIM72 mRNA (q < 0.1, >= 1.2x)
@@ -239,4 +241,104 @@ Does TRIM72 go with more or less p53 output? Every test, its estimate and what i
 | Single cells, idarubicin 5 µM: MDM2 counts in TRIM72-detected vs undetected cells (depth, cycle out) | TP53-altered | rate ratio 1.003 | 0.93 | 30 lines |
 | Single cells, idarubicin 5 µM: ATF3 counts in TRIM72-detected vs undetected cells (depth, cycle out) | TP53-altered | rate ratio 1.195 | 1e-10 | 30 lines |
 | Single cells, idarubicin 5 µM: PMAIP1 counts in TRIM72-detected vs undetected cells (depth, cycle out) | TP53-altered | rate ratio 1.109 | 6e-04 | 27 lines |
+
+## T9. Scaled up: TRIM72 vs p53 output over all drug-doses x lines (TP53 genotype as control)
+
+TRIM72 -> p53 output over all drug-doses x lines (two-way model): slope in TP53-WT minus TP53-altered lines.
+
+Each line is compared with lines of its own TP53 group in the same wells (drug-dose x TP53-group and line fixed effects,
+covariates for drug response, cell loss and cell cycle). Negative = more TRIM72 goes with less p53-target mRNA only where
+p53 works. Slopes are log2 change of the read-out per log2 change of TRIM72; p is the conservative cluster p (and the
+TP53-label permutation p).
+
+| Read-out | Drug-doses | Role | WT − altered slope | 95% CI | p | p (TP53-label permutation) | Holm over variants |
+|---|---|---|---|---|---|---|---|
+| p53 score (21 targets) | all 1,132 drug-doses | primary | -0.0032 | -0.0085 to 0.0022 | 0.24 | 0.26 | 0.94 |
+| MDM2 | all 1,132 drug-doses | secondary | -0.0002 | -0.0096 to 0.0092 | 0.97 | 0.97 | – |
+| CDKN1A | all 1,132 drug-doses | secondary | -0.0035 | -0.0163 to 0.0092 | 0.58 | 0.60 | – |
+| FDXR | all 1,132 drug-doses | secondary | -0.0215 | -0.0376 to -0.0055 | 0.010 | 0.007 | – |
+| ZMAT3 | all 1,132 drug-doses | secondary | -0.0007 | -0.0136 to 0.0122 | 0.92 | 0.91 | – |
+| DDB2 | all 1,132 drug-doses | secondary | 0.0059 | -0.0063 to 0.0181 | 0.33 | 0.37 | – |
+| BBC3 | all 1,132 drug-doses | secondary | -0.0065 | -0.0194 to 0.0064 | 0.31 | 0.29 | – |
+| TP53 mRNA (not a target) | all 1,132 drug-doses | secondary | 0.0021 | -0.0079 to 0.0120 | 0.68 | 0.69 | – |
+| p53 score | all; + p53 responsiveness covariate | sensitivity | -0.0038 | -0.0087 to 0.0012 | 0.13 | 0.12 | – |
+| p53 score | all; FUS / PYCARD-AS1 (readthrough) in the model | sensitivity | -0.0031 | -0.0077 to 0.0016 | 0.19 | 0.21 | 0.94 |
+| p53 score | all; without plates 3 and 13 | sensitivity | -0.0038 | -0.0096 to 0.0020 | 0.19 | 0.21 | 0.94 |
+| p53 score | 62 active drug-doses (TRIM72 or p53 z >= 3) | sensitivity | -0.0300 | -0.0538 to -0.0062 | 0.015 | 0.018 | 0.12 |
+| p53 score | 62 active; readthrough in the model | sensitivity | -0.0294 | -0.0562 to -0.0026 | 0.032 | 0.036 | 0.19 |
+| p53 score | 62 active, line effects from all drug-doses | sensitivity | -0.0178 | -0.0466 to 0.0110 | 0.22 | – | – |
+| p53 score | active minus inactive drug-doses | sensitivity | -0.0154 | -0.0446 to 0.0138 | 0.29 | – | – |
+
+## T10. Scaled up: single cells of all wells
+
+Single cells of all wells: p53-target counts in TRIM72-detected vs undetected cells of the same well and line.
+
+Rate ratios (RR) adjusted for depth and cell cycle, meta-analysed over lines (Hartung-Knapp); WT − altered is the
+difference of log RR. Placebo percentile: where TRIM72 falls among 16 other rare genes used as predictors (50 = typical).
+Per doubling: the WT-specific change per doubling of a cell's TRIM72 the data allow (95% CI).
+
+| Outcome | Wells | RR, WT lines | RR, altered lines | WT − altered (log RR) | 95% CI | p | p (permutation) | Placebo percentile | Per doubling of TRIM72 (95% CI) | p53-functional − non-functional lines (p perm) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| p53 score (21 targets) | all wells | 1.091 | 1.048 | 0.041 | -0.030 to 0.111 | 0.24 | 0.15 | 81 | 0.988 to 1.059 | 0.081 (0.010) |
+| p53 primary 5 | all wells | 1.090 | 1.044 | 0.042 | -0.043 to 0.128 | 0.31 | 0.22 | 75 | 0.981 to 1.068 | 0.094 (0.013) |
+| MDM2 | all wells | 1.071 | 1.011 | 0.058 | -0.039 to 0.155 | 0.23 | 0.16 | 88 | 0.982 to 1.080 | 0.110 (0.012) |
+| CDKN1A | all wells | 1.135 | 1.183 | -0.042 | -0.126 to 0.043 | 0.32 | 0.29 | 25 | 0.948 to 1.029 | -0.023 (0.58) |
+| ATF3 (stress) | all wells | 1.379 | 1.348 | 0.022 | -0.073 to 0.117 | 0.64 | 0.66 | 75 | 0.980 to 1.074 | 0.063 (0.30) |
+| PMAIP1 | all wells | 1.244 | 1.224 | 0.016 | -0.060 to 0.091 | 0.67 | 0.71 | 56 | 0.982 to 1.055 | 0.011 (0.83) |
+| NF-κB score | all wells | 1.106 | 1.099 | 0.007 | -0.084 to 0.098 | 0.88 | 0.89 | 44 | 0.965 to 1.052 | -0.025 (0.67) |
+| ferroptosis score | all wells | 1.033 | 1.060 | -0.026 | -0.106 to 0.055 | 0.52 | 0.51 | 19 | 0.953 to 1.029 | -0.014 (0.75) |
+| SLC7A11 | all wells | 1.043 | 1.111 | -0.063 | -0.177 to 0.051 | 0.27 | 0.30 | 19 | 0.923 to 1.029 | -0.043 (0.50) |
+| apoptosis score | all wells | 1.192 | 1.178 | 0.011 | -0.058 to 0.080 | 0.74 | 0.76 | 56 | 0.981 to 1.047 | 0.019 (0.66) |
+| p53 score (21 targets) | DMSO | 1.025 | 1.026 | -0.001 | -0.091 to 0.089 | 0.99 | 0.98 | 62 | 0.955 to 1.049 | 0.037 (0.26) |
+| p53 score (21 targets) | TRIM72 raisers | 1.012 | 1.018 | -0.006 | -0.058 to 0.046 | 0.81 | 0.78 | 56 | 0.955 to 1.051 | 0.001 (0.98) |
+| p53 score (21 targets) | p53 activators | 1.038 | 1.028 | 0.010 | -0.058 to 0.078 | 0.77 | 0.74 | 69 | 0.972 to 1.040 | 0.026 (0.36) |
+| p53 score (21 targets) | other drugs | 1.100 | 1.050 | 0.047 | -0.028 to 0.121 | 0.20 | 0.12 | 81 | 0.988 to 1.056 | 0.093 (0.006) |
+
+## T11. Upstream: transcription-factor activities vs TRIM72
+
+Transcription-factor activities vs TRIM72 (CollecTRI regulons, TRIM72 and its locus genes left out).
+
+Across drug-doses: partial r of TF activity with TRIM72 z (activity and cell loss out; CI from the drug-block null), and
+the same after removing the TF's AP-1/IEG/ATF3 targets and partialling those mediators. Within lines: the two-way model
+(same drug-dose, different lines). TRIM72's within-line r with its best single co-responders is ~0.08 (noise ceiling).
+
+| TF | r across drug-doses | 95% CI | q | r without AP-1/IEG/ATF3 arm | r within lines (q) | WT − altered within lines, q | TF mRNA (median line CPM) |
+|---|---|---|---|---|---|---|---|
+| ATF4 | 0.36 | 0.28 to 0.44 | 9e-26 | 0.09 | -0.008 (0.78) | 0.97 | 188.0 |
+| ATF5 | 0.36 | 0.29 to 0.43 | 3e-26 | 0.07 | -0.007 (0.83) | 0.97 | 23.3 |
+| XBP1 | 0.29 | 0.22 to 0.37 | 3e-17 | 0.04 | 0.005 (0.88) | 0.97 | 61.1 |
+| ELK4 | 0.35 | 0.27 to 0.42 | 3e-22 | – | 0.046 (0.19) | 1.00 | 72.2 |
+| SRF | 0.31 | 0.23 to 0.38 | 1e-19 | 0.17 | 0.030 (0.13) | 0.97 | 23.9 |
+| AP1 | 0.20 | 0.10 to 0.29 | 2e-08 | – | -0.019 (0.46) | 0.97 | – |
+| NFKB | 0.15 | 0.05 to 0.24 | 3e-05 | -0.24 | -0.033 (0.21) | 0.97 | – |
+| HSF1 | 0.22 | 0.11 to 0.32 | 2e-10 | 0.07 | -0.022 (0.19) | 0.97 | 44.5 |
+| TP53 | 0.12 | 0.03 to 0.21 | 5e-04 | -0.18 | -0.060 (0.005) | 0.97 | 60.1 |
+| E2F4 | 0.03 | -0.10 to 0.16 | 0.44 | -0.05 | -0.080 (4e-07) | 0.97 | 13.7 |
+| MYC | 0.17 | 0.06 to 0.29 | 4e-07 | 0.02 | -0.066 (0.016) | 0.97 | 49.0 |
+| MEF2A (muscle; known TRIM72 promoter TF) | 0.13 | 0.06 to 0.19 | 2e-04 | -0.01 | 0.007 (0.70) | 1.00 | 298.5 |
+| MEF2C | 0.21 | 0.12 to 0.29 | 1e-09 | 0.09 | 0.036 (0.023) | 0.97 | 21.9 |
+| MEF2D | 0.15 | 0.07 to 0.23 | 3e-05 | -0.13 | -0.014 (0.53) | 0.97 | 86.8 |
+| MYOD1 (muscle; known TRIM72 promoter TF) | 0.09 | 0.01 to 0.16 | 0.015 | -0.04 | 0.004 (0.83) | 0.97 | – |
+| MYOG (muscle; known TRIM72 promoter TF) | -0.07 | -0.14 to -0.00 | 0.038 | -0.28 | -0.019 (0.045) | 0.97 | – |
+
+## T12. Upstream: cell-line traits that predict TRIM72
+
+Which cell-line traits predict TRIM72's untreated level and its induction (47-49 lines)?
+
+Spearman rho (or group difference for binary traits) with q over all 5,075 line tests and within each outcome. Shown:
+every trait with q < 0.1, plus TP53 status and KMT2D for reference.
+
+| Outcome | Trait | Kind | Lines | rho | Difference (log2), with − without | p | q (all tests) | q (this outcome) |
+|---|---|---|---|---|---|---|---|---|
+| induction, idarubicin 5 µM | NFKBIB | baseline_tf | 48 | 0.62 | – | 2e-05 | 0.036 | 0.008 |
+| induction, idarubicin 5 µM | PYCARD-AS1_untreated_rel | locus | 47 | -0.62 | – | 2e-05 | 0.036 | 0.008 |
+| induction, idarubicin 5 µM | TP73 | baseline_tf | 48 | 0.59 | – | 5e-05 | 0.067 | 0.013 |
+| induction, idarubicin 5 µM | KMT2D | drivers | 48 | -0.43 | -0.68 | 0.003 | 0.28 | 0.087 |
+| induction, idarubicin 5 µM | TP53 WT (vs altered) | tp53 | 48 | 0.08 | -0.05 | 0.60 | 0.87 | 0.84 |
+| idarubicin induction, adjusted for untreated level | TP53 WT (vs altered) | tp53 | 48 | 0.30 | 0.02 | 0.039 | 0.38 | 0.65 |
+| idarubicin induction, adjusted for untreated level | KMT2D | drivers | 48 | 0.05 | 0.15 | 0.72 | 0.91 | 0.95 |
+| untreated level (within plate) | PYCARD-AS1_untreated_rel | locus | 48 | 0.82 | – | 2e-08 | 9e-05 | 1e-05 |
+| untreated level (within plate) | FUS_untreated_rel | locus | 49 | 0.57 | – | 8e-05 | 0.079 | 0.028 |
+| untreated level (within plate) | KMT2D | drivers | 49 | 0.54 | 1.48 | 2e-04 | 0.12 | 0.046 |
+| untreated level (within plate) | TP53 WT (vs altered) | tp53 | 49 | 0.07 | 0.18 | 0.64 | 0.89 | 0.92 |
 

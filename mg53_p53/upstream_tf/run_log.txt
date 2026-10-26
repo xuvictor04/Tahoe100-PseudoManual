@@ -1,99 +1,87 @@
-=== from-scratch run (cache/ and tables/ deleted first; page cache warm) ===
-[01:44:17] data /home/user/tahoe_data; out /home/user/Tahoe100-PseudoManual/mg53_p53/upstream_tf
-[01:44:18] download https://omnipathdb.org/interactions?datasets=collectri&genesymbols=yes&loops=yes&organisms=9606&format=tsv
-[01:44:19] download https://omnipathdb.org/interactions?datasets=dorothea&dorothea_levels=A,B,C&genesymbols=yes&loops=yes&organisms=9606&format=tsv&fields=dorothea_level
-[01:44:20] download https://rest.ensembl.org/overlap/region/human/16:31014017-31431537?feature=gene;content-type=application/json
-01:44:21   download failed (curl: (22) The requested URL returned error: 500); retry 1/2
-[01:44:41] downloads: collectri.tsv downloaded; dorothea_ABC.tsv downloaded; ensembl_trim72_region.json downloaded
-[01:44:42] TFs listed as regulating TRIM72: ['MEF2A', 'MYOD1', 'MYOG']
-[01:44:42] regulons: CollecTRI 667 TFs with >= 5 targets (28465 edges); DoRothEA A-C 290
-[01:44:51]   read group000.npy: 5432 profiles (8 s)
-[01:44:54]   read group001.npy: 5665 profiles (4 s)
-[01:45:00]   plate plate2: 92 wells processed (6 s; W1 max |diff| vs atlas 0; peak RSS 1.34 GB)
-[01:45:03]   read group002.npy: 4800 profiles (3 s)
-[01:45:10]   plate plate3: 96 wells processed (7 s; W1 max |diff| vs atlas 0; peak RSS 1.34 GB)
-[01:45:11]   read group003.npy: 6040 profiles (1 s)
-[01:45:18]   plate plate4: 96 wells processed (7 s; W1 max |diff| vs atlas 0; peak RSS 1.39 GB)
-[01:45:22]   read group004.npy: 8028 profiles (3 s)
-[01:45:29]   plate plate5: 96 wells processed (7 s; W1 max |diff| vs atlas 0; peak RSS 1.54 GB)
-[01:45:33]   read group005.npy: 7708 profiles (3 s)
-[01:45:40]   plate plate6: 96 wells processed (7 s; W1 max |diff| vs atlas 0; peak RSS 1.54 GB)
-[01:45:47]   read group006.npy: 5916 profiles (7 s)
-[01:45:54]   plate plate7: 96 wells processed (7 s; W1 max |diff| vs atlas 0; peak RSS 1.54 GB)
-[01:46:00]   read group007.npy: 6730 profiles (6 s)
-[01:46:07]   plate plate8: 96 wells processed (8 s; W1 max |diff| vs atlas 0; peak RSS 1.54 GB)
-[01:46:14]   read group008.npy: 6107 profiles (7 s)
-[01:46:21]   plate plate9: 96 wells processed (7 s; W1 max |diff| vs atlas 0; peak RSS 1.54 GB)
-[01:46:28]   read group009.npy: 5981 profiles (7 s)
-[01:46:35]   plate plate10: 96 wells processed (7 s; W1 max |diff| vs atlas 0; peak RSS 1.54 GB)
-[01:46:40]   read group010.npy: 5360 profiles (5 s)
-[01:46:47]   plate plate11: 96 wells processed (7 s; W1 max |diff| vs atlas 0; peak RSS 1.54 GB)
-[01:46:52]   read group011.npy: 5775 profiles (4 s)
-[01:46:59]   plate plate12: 96 wells processed (7 s; W1 max |diff| vs atlas 0; peak RSS 1.54 GB)
-[01:47:04]   read group012.npy: 5178 profiles (5 s)
-[01:47:11]   plate plate13: 96 wells processed (7 s; W1 max |diff| vs atlas 0; peak RSS 1.54 GB)
-[01:47:18]   read group013.npy: 5513 profiles (7 s)
-[01:47:24]   plate plate1: 86 wells processed (6 s; W1 max |diff| vs atlas 0; peak RSS 1.54 GB)
-[01:47:31]   plate plate14: 95 wells processed (7 s; W1 max |diff| vs atlas 0; peak RSS 1.54 GB)
-[01:47:32] pseudobulk pass done (170 s; peak RSS 1.54 GB)
-[01:47:38] A1: drug-block permutations (1000)
-[01:47:48] A1: TRIM72 done
-[01:47:52] A1: TRIM72_rt done
-[01:47:53] A1: TRIM72_rt_across done
-[01:48:10] A2: TRIM72 [full]: 81 missing-value pattern(s)
-[01:48:26] A2: TRIM72 [none]: 81 missing-value pattern(s)
-[01:48:41] A2: TRIM72_rt [full]: 81 missing-value pattern(s)
-[01:48:56] A2: TRIM72_rt [none]: 81 missing-value pattern(s)
-[01:48:58] (b) line features: 37 driver genes, 5 organs, 667 baseline TFs
-                                                                                                                  check        value        n                                                                                                                                                                            note plate  W1_finite_here_not_atlas  W1_finite_atlas_not_here
-                               TRIM72 locus genes (+- 200 kb) left out of regulons and universe: in the atlas gene list 1.200000e+01       38 Ensembl REST (rest.ensembl.org overlap, TRIM72 +- 200 kb); atlas genes: PRSS8, FUS, STX4, BCKDK, KAT8, PRSS53, ZNF668, ZNF646, VKORC1, TRIM72, ENSG00000255439, ENSG00000260911   NaN                       NaN                       NaN
-                                                               CollecTRI TFs with >= 5 targets (atlas genes, locus out) 6.670000e+02    28465                                                                                                                                                                                   NaN                       NaN                       NaN
-                                                                                     DoRothEA A-C TFs with >= 5 targets 2.900000e+02    29051                                                                                                                                                                                   NaN                       NaN                       NaN
-                                pass: per-well W1 (median over lines of r1) vs atlas W1.npy, max |diff| over all plates 0.000000e+00 22118547                                                                                                                          finite here not in atlas 0; finite in atlas not here 0   NaN                       NaN                       NaN
-                                              TRIM72 drug-dose log2FC rebuilt from the pass vs atlas DD_lfc, max |diff| 5.960464e-08     1132                                                                                                                                                                                   NaN                       NaN                       NaN
-TRIM72 drug-dose z rebuilt from the pass (well median, robust z, gene plate factor, Stouffer) vs atlas DD_z, max |diff| 1.724969e-06     1132                                                                                                                                                              Pearson r 1.000000   NaN                       NaN                       NaN
-                                                      TRIM72_rt z vs TRIM72 z across the analysed drug-doses, Pearson r 9.863984e-01     1086                                                                                                                                                                                   NaN                       NaN                       NaN
-                                                             analysed drug-doses without a TRIM72_rt z (set to 0 in A1) 0.000000e+00     1086                                                                                                                                                                                   NaN                       NaN                       NaN
-                  TRIM72 responsiveness (RMS of DD_z over the analysed drug-doses): percentile among the universe genes 4.356323e+01    16631                TRIM72 RMS z 1.357; level-matched candidate genes (the matched null's pool) median 1.310 (n 3740): the level-matched null is also roughly responsiveness-matched   NaN                       NaN                       NaN
-                                          DMSO TRIM72 counts per plate x line: pass vs gene_panel well_line, max |diff| 0.000000e+00      700                                                                                                                                                                                   NaN                       NaN                       NaN
-                        idarubicin 5 uM per-line TRIM72 r2 (mean of 2 wells) vs trim72_idarubicin/corrected, max |diff| 7.748604e-07       48                                                                                                                                                                                   NaN                       NaN                       NaN
-                                              TRIM72 untreated line ranking: plates 1-3,14 vs plates 4-12, Spearman rho 9.066435e-01       48                                                                                                                                                                       p 7.4e-19   NaN                       NaN                       NaN
-                                        idarubicin 5 uM per-line TRIM72 r2: plate-6 well vs plate-14 well, Spearman rho 6.319457e-01       46                                                                                                                                                                       p 2.5e-06   NaN                       NaN                       NaN
-                                       homoharringtonine 5 uM per-line TRIM72 r2: _plate6 vs plate14 well, Spearman rho 8.153330e-01       47                                                                                                                                                                         p 3e-12   NaN                       NaN                       NaN
-                                        TP53 CollecTRI ULM t vs panel P53_ACTIVITY z across drug-doses, Pearson r (raw) 1.873418e-01     1086                                                                                                                                                                                   NaN                       NaN                       NaN
-[01:50:10] tables written to /home/user/Tahoe100-PseudoManual/mg53_p53/upstream_tf/tables; peak RSS 2.46 GB; wall 353 s
-exit 0
-
-=== regeneration of the tables after renaming a2a3_tf_summary.csv -> a1a2_tf_summary.csv (pass cache reused, analysis code otherwise unchanged) ===
-[01:51:54] data /home/user/tahoe_data; out /home/user/Tahoe100-PseudoManual/mg53_p53/upstream_tf
-[01:51:54] downloads: collectri.tsv cached; dorothea_ABC.tsv cached; ensembl_trim72_region.json cached
-[01:51:55] TFs listed as regulating TRIM72: ['MEF2A', 'MYOD1', 'MYOG']
-[01:51:55] regulons: CollecTRI 667 TFs with >= 5 targets (28465 edges); DoRothEA A-C 290
-[01:51:55] pseudobulk pass: cache pass_73b0ba7f7c76.npz
-[01:52:02] A1: drug-block permutations (1000)
-[01:52:14] A1: TRIM72 done
-[01:52:17] A1: TRIM72_rt done
-[01:52:19] A1: TRIM72_rt_across done
-[01:52:40] A2: TRIM72 [full]: 81 missing-value pattern(s)
-[01:52:55] A2: TRIM72 [none]: 81 missing-value pattern(s)
-[01:53:11] A2: TRIM72_rt [full]: 81 missing-value pattern(s)
-[01:53:27] A2: TRIM72_rt [none]: 81 missing-value pattern(s)
-[01:53:30] (b) line features: 37 driver genes, 5 organs, 667 baseline TFs
-                                                                                                                  check        value        n                                                                                                                                                                            note plate  W1_finite_here_not_atlas  W1_finite_atlas_not_here
-                               TRIM72 locus genes (+- 200 kb) left out of regulons and universe: in the atlas gene list 1.200000e+01       38 Ensembl REST (rest.ensembl.org overlap, TRIM72 +- 200 kb); atlas genes: PRSS8, FUS, STX4, BCKDK, KAT8, PRSS53, ZNF668, ZNF646, VKORC1, TRIM72, ENSG00000255439, ENSG00000260911   NaN                       NaN                       NaN
-                                                               CollecTRI TFs with >= 5 targets (atlas genes, locus out) 6.670000e+02    28465                                                                                                                                                                                   NaN                       NaN                       NaN
-                                                                                     DoRothEA A-C TFs with >= 5 targets 2.900000e+02    29051                                                                                                                                                                                   NaN                       NaN                       NaN
-                                pass: per-well W1 (median over lines of r1) vs atlas W1.npy, max |diff| over all plates 0.000000e+00 22118547                                                                                                                          finite here not in atlas 0; finite in atlas not here 0   NaN                       NaN                       NaN
-                                              TRIM72 drug-dose log2FC rebuilt from the pass vs atlas DD_lfc, max |diff| 5.960464e-08     1132                                                                                                                                                                                   NaN                       NaN                       NaN
-TRIM72 drug-dose z rebuilt from the pass (well median, robust z, gene plate factor, Stouffer) vs atlas DD_z, max |diff| 1.724969e-06     1132                                                                                                                                                              Pearson r 1.000000   NaN                       NaN                       NaN
-                                                      TRIM72_rt z vs TRIM72 z across the analysed drug-doses, Pearson r 9.863984e-01     1086                                                                                                                                                                                   NaN                       NaN                       NaN
-                                                             analysed drug-doses without a TRIM72_rt z (set to 0 in A1) 0.000000e+00     1086                                                                                                                                                                                   NaN                       NaN                       NaN
-                  TRIM72 responsiveness (RMS of DD_z over the analysed drug-doses): percentile among the universe genes 4.356323e+01    16631                TRIM72 RMS z 1.357; level-matched candidate genes (the matched null's pool) median 1.310 (n 3740): the level-matched null is also roughly responsiveness-matched   NaN                       NaN                       NaN
-                                          DMSO TRIM72 counts per plate x line: pass vs gene_panel well_line, max |diff| 0.000000e+00      700                                                                                                                                                                                   NaN                       NaN                       NaN
-                        idarubicin 5 uM per-line TRIM72 r2 (mean of 2 wells) vs trim72_idarubicin/corrected, max |diff| 7.748604e-07       48                                                                                                                                                                                   NaN                       NaN                       NaN
-                                              TRIM72 untreated line ranking: plates 1-3,14 vs plates 4-12, Spearman rho 9.066435e-01       48                                                                                                                                                                       p 7.4e-19   NaN                       NaN                       NaN
-                                        idarubicin 5 uM per-line TRIM72 r2: plate-6 well vs plate-14 well, Spearman rho 6.319457e-01       46                                                                                                                                                                       p 2.5e-06   NaN                       NaN                       NaN
-                                       homoharringtonine 5 uM per-line TRIM72 r2: _plate6 vs plate14 well, Spearman rho 8.153330e-01       47                                                                                                                                                                         p 3e-12   NaN                       NaN                       NaN
-                                        TP53 CollecTRI ULM t vs panel P53_ACTIVITY z across drug-doses, Pearson r (raw) 1.873418e-01     1086                                                                                                                                                                                   NaN                       NaN                       NaN
-[01:54:48] tables written to /home/user/Tahoe100-PseudoManual/mg53_p53/upstream_tf/tables; peak RSS 2.28 GB; wall 174 s
-exit 0
+=== from-scratch run after the verifier fixes (cache/ and tables/ deleted first; regulons re-downloaded, byte-identical to
+    the earlier download; command: MG53_OUT=/home/user/Tahoe100-PseudoManual/mg53_p53/upstream_tf python3 upstream_tf.py --data /home/user/tahoe_data, wrapped by verify/run_wrap.py) ===
+=== page cache: ~11.6 of the 20 GB of atlas/pseudobulk cached at the start (pass 131 s). A cold-cache run of the same code
+    (page cache empty, --quick permutations, output to a scratch folder) took 203 s for the pass, 327 s in all; an
+    earlier from-scratch run of this version (before the b2 headline-q change) 159 s / 327 s. Peak RSS 2.39-2.41 GiB. ===
+[18:55:58] data /home/user/tahoe_data; out /home/user/Tahoe100-PseudoManual/mg53_p53/upstream_tf
+[18:55:58] download https://omnipathdb.org/interactions?datasets=collectri&genesymbols=yes&loops=yes&organisms=9606&format=tsv
+[18:56:00] download https://omnipathdb.org/interactions?datasets=dorothea&dorothea_levels=A,B,C&genesymbols=yes&loops=yes&organisms=9606&format=tsv&fields=dorothea_level
+[18:56:01] download https://rest.ensembl.org/overlap/region/human/16:31014017-31431537?feature=gene;content-type=application/json
+[18:56:04] downloads: collectri.tsv downloaded; dorothea_ABC.tsv downloaded; ensembl_trim72_region.json downloaded
+[18:56:05] TFs listed as regulating TRIM72: ['MEF2A', 'MYOD1', 'MYOG']
+[18:56:05] regulons: CollecTRI 679 TFs with >= 5 targets (29813 edges); DoRothEA A-C 290
+[18:56:13]   read group000.npy: 5432 profiles (8 s)
+[18:56:16]   read group001.npy: 5665 profiles (3 s)
+[18:56:23]   plate plate2: 92 wells processed (6 s; W1 max |diff| vs atlas 0; peak RSS 1.28 GB)
+[18:56:25]   read group002.npy: 4800 profiles (2 s)
+[18:56:32]   plate plate3: 96 wells processed (7 s; W1 max |diff| vs atlas 0; peak RSS 1.28 GB)
+[18:56:35]   read group003.npy: 6040 profiles (3 s)
+[18:56:41]   plate plate4: 96 wells processed (6 s; W1 max |diff| vs atlas 0; peak RSS 1.33 GB)
+[18:56:46]   read group004.npy: 8028 profiles (5 s)
+[18:56:52]   plate plate5: 96 wells processed (6 s; W1 max |diff| vs atlas 0; peak RSS 1.47 GB)
+[18:56:55]   read group005.npy: 7708 profiles (3 s)
+[18:57:02]   plate plate6: 96 wells processed (6 s; W1 max |diff| vs atlas 0; peak RSS 1.47 GB)
+[18:57:03]   read group006.npy: 5916 profiles (2 s)
+[18:57:10]   plate plate7: 96 wells processed (6 s; W1 max |diff| vs atlas 0; peak RSS 1.47 GB)
+[18:57:12]   read group007.npy: 6730 profiles (2 s)
+[18:57:18]   plate plate8: 96 wells processed (6 s; W1 max |diff| vs atlas 0; peak RSS 1.47 GB)
+[18:57:20]   read group008.npy: 6107 profiles (2 s)
+[18:57:26]   plate plate9: 96 wells processed (7 s; W1 max |diff| vs atlas 0; peak RSS 1.47 GB)
+[18:57:28]   read group009.npy: 5981 profiles (2 s)
+[18:57:35]   plate plate10: 96 wells processed (6 s; W1 max |diff| vs atlas 0; peak RSS 1.47 GB)
+[18:57:38]   read group010.npy: 5360 profiles (3 s)
+[18:57:44]   plate plate11: 96 wells processed (6 s; W1 max |diff| vs atlas 0; peak RSS 1.47 GB)
+[18:57:47]   read group011.npy: 5775 profiles (3 s)
+[18:57:53]   plate plate12: 96 wells processed (6 s; W1 max |diff| vs atlas 0; peak RSS 1.47 GB)
+[18:57:55]   read group012.npy: 5178 profiles (2 s)
+[18:58:01]   plate plate13: 96 wells processed (6 s; W1 max |diff| vs atlas 0; peak RSS 1.47 GB)
+[18:58:03]   read group013.npy: 5513 profiles (1 s)
+[18:58:08]   plate plate1: 86 wells processed (5 s; W1 max |diff| vs atlas 0; peak RSS 1.47 GB)
+[18:58:15]   plate plate14: 95 wells processed (6 s; W1 max |diff| vs atlas 0; peak RSS 1.47 GB)
+[18:58:16] pseudobulk pass done (131 s; peak RSS 1.47 GB)
+[18:58:21] A1: drug-block permutations (1000)
+[18:58:32] A1: TRIM72 done
+[18:58:37] A1: TRIM72_rt done
+[18:58:39] A1: TRIM72_rt_across done
+[18:58:42] A1 regulon-overlap control: 757 genes out of the regulons
+[18:58:42] A1 plate-batch split: high_plates_only (250 drug-doses)
+[18:58:43] A1 plate-batch split: low_plates_only (735 drug-doses)
+[18:58:44] A1 plate-batch split: mixed_plates (101 drug-doses)
+[18:59:01] A2: TRIM72 [full]: 81 missing-value pattern(s)
+[18:59:16] A2: TRIM72 [none]: 81 missing-value pattern(s)
+[18:59:32] A2: TRIM72_rt [full]: 81 missing-value pattern(s)
+[18:59:47] A2: TRIM72_rt [none]: 81 missing-value pattern(s)
+[18:59:48] A2: TRIM72 [full]: 4 missing-value pattern(s)
+[18:59:48] A2: TRIM72 [none]: 4 missing-value pattern(s)
+[18:59:49] A2: TRIM72_rt [full]: 4 missing-value pattern(s)
+[18:59:50] A2: TRIM72_rt [none]: 4 missing-value pattern(s)
+[18:59:52] (b) line features: 37 driver genes, 5 organs, 679 baseline TFs
+                                                                                                                                                    check         value        n                                                                                                                                                                                                                                                                  note plate  W1_finite_here_not_atlas  W1_finite_atlas_not_here
+                                                                 TRIM72 locus genes (+- 200 kb) left out of regulons and universe: in the atlas gene list  1.200000e+01       38                                                                                       Ensembl REST (rest.ensembl.org overlap, TRIM72 +- 200 kb); atlas genes: PRSS8, FUS, STX4, BCKDK, KAT8, PRSS53, ZNF668, ZNF646, VKORC1, TRIM72, ENSG00000255439, ENSG00000260911   NaN                       NaN                       NaN
+                                                                                                 CollecTRI TFs with >= 5 targets (atlas genes, locus out)  6.790000e+02    29813                                         AP1 / NFKB = the COMPLEX sources of AP-1 / NF-kB members only (decoupler); single-protein family members kept as TFs: FOS, FOSB, FOSL1, FOSL2, JUN, JUNB, JUND, NFKB1, NFKB2, REL, RELA, RELB; AP1 targets used 402, NFKB 595   NaN                       NaN                       NaN
+                                                                                                                       DoRothEA A-C TFs with >= 5 targets  2.900000e+02    29051                                                                                                                                                                                                                                                                         NaN                       NaN                       NaN
+                                                                  pass: per-well W1 (median over lines of r1) vs atlas W1.npy, max |diff| over all plates  0.000000e+00 22118547                                                                                                                                                                                                                finite here not in atlas 0; finite in atlas not here 0   NaN                       NaN                       NaN
+                                                                                TRIM72 drug-dose log2FC rebuilt from the pass vs atlas DD_lfc, max |diff|  5.960464e-08     1132                                                                                                                                                                                                                                                                         NaN                       NaN                       NaN
+                                  TRIM72 drug-dose z rebuilt from the pass (well median, robust z, gene plate factor, Stouffer) vs atlas DD_z, max |diff|  1.724969e-06     1132                                                                                                                                                                                                                                                    Pearson r 1.000000   NaN                       NaN                       NaN
+                                                                                        TRIM72_rt z vs TRIM72 z across the analysed drug-doses, Pearson r  9.863984e-01     1086                                                                                                                                                                                                                                                                         NaN                       NaN                       NaN
+                                                                                               analysed drug-doses without a TRIM72_rt z (set to 0 in A1)  0.000000e+00     1086                                                                                                                                                                                                                                                                         NaN                       NaN                       NaN
+                                                    TRIM72 responsiveness (RMS of DD_z over the analysed drug-doses): percentile among the universe genes  4.356323e+01    16631                                                                                                      TRIM72 RMS z 1.357; level-matched candidate genes (the matched null's pool) median 1.310 (n 3740): the level-matched null is also roughly responsiveness-matched   NaN                       NaN                       NaN
+regulon-overlap control: genes taken out of every regulon (targets of AP1, ATF3, FOS, FOSB, FOSL1, FOSL2, JUN, JUNB, JUND in the universe, plus the IEGs)  7.570000e+02    16631 IEGs in the atlas: FOS, FOSB, JUN, JUNB, EGR1, EGR2, EGR3, IER2, IER3, IER5, ATF3, DUSP1, NR4A1, KLF6, KLF4, PPP1R15A, GADD45B, MYC, ZFP36, CCN1, CCN2, SERTAD1, BTG2; partialled: ATF3; PMAIP1; DDIT3; IEG score (mean z of 23 IEGs); AP1 activity (CollecTRI ULM t)   NaN                       NaN                       NaN
+                                                                                               plate-batch split: drug-doses in subset 'high_plates_only'  2.500000e+02       88                                                                                                                                                                                                                                                             n = drugs   NaN                       NaN                       NaN
+                                                                                                plate-batch split: drug-doses in subset 'low_plates_only'  7.350000e+02      276                                                                                                                                                                                                                                                             n = drugs   NaN                       NaN                       NaN
+                                                                                                   plate-batch split: drug-doses in subset 'mixed_plates'  1.010000e+02       95                                                                                                                                                                                                                                                             n = drugs   NaN                       NaN                       NaN
+                                                                                                      A3 TP53 positive control: TP53 activities available  3.000000e+00        3                                                                                                                                                                               TP53 (full regulon); TP53 (MDM2, CDKN1A out); TP53 activated targets (MDM2, CDKN1A out)   NaN                       NaN                       NaN
+                        TRIM72_r2_idarubicin_5 vs TRIM72 untreated level across lines, Spearman rho (the *_adj_untreated outcomes remove the linear part) -7.860399e-01       48                                                                                                                                                                                                                                             p 3.6e-11; linear R2 0.34   NaN                       NaN                       NaN
+                                  TRIM72_r2_idarubicin_5: well-to-well Spearman rho after removing the untreated level from each well (plate6 vs plate14)  3.848905e-01       46                                                                                                                                                                                                                                             raw well-to-well rho 0.63   NaN                       NaN                       NaN
+                 TRIM72_r2_homoharringtonine_5 vs TRIM72 untreated level across lines, Spearman rho (the *_adj_untreated outcomes remove the linear part) -3.302498e-01       47                                                                                                                                                                                                                                               p 0.023; linear R2 0.10   NaN                       NaN                       NaN
+                           TRIM72_r2_homoharringtonine_5: well-to-well Spearman rho after removing the untreated level from each well (plate6 vs plate14)  8.103608e-01       47                                                                                                                                                                                                                                             raw well-to-well rho 0.82   NaN                       NaN                       NaN
+                         TRIM72_induction_mean vs TRIM72 untreated level across lines, Spearman rho (the *_adj_untreated outcomes remove the linear part) -5.914662e-01       47                                                                                                                                                                                                                                             p 1.2e-05; linear R2 0.28   NaN                       NaN                       NaN
+                                                        KMT2D-altered lines vs TRIM72 untreated level: rho; partial on n driver genes; pseudo-driver null  5.366563e-01       49                                                                      14 KMT2D lines; rho partial on n drivers 0.49; 5,000 random sets of 14 lines drawn with probability ~ n driver genes: mean rho 0.12, P(rho >= observed) 0.0008; median n drivers 13 (KMT2D) vs 6   NaN                       NaN                       NaN
+                                                                            DMSO TRIM72 counts per plate x line: pass vs gene_panel well_line, max |diff|  0.000000e+00      700                                                                                                                                                                                                                                                                         NaN                       NaN                       NaN
+                                                          idarubicin 5 uM per-line TRIM72 r2 (mean of 2 wells) vs trim72_idarubicin/corrected, max |diff|  7.748604e-07       48                                                                                                                                                                                                                                                                         NaN                       NaN                       NaN
+                                                                                TRIM72 untreated line ranking: plates 1-3,14 vs plates 4-12, Spearman rho  9.066435e-01       48                                                                                                                                                                                                                                                             p 7.4e-19   NaN                       NaN                       NaN
+                                                                          idarubicin 5 uM per-line TRIM72 r2: plate-6 well vs plate-14 well, Spearman rho  6.319457e-01       46                                                                                                                                                                                                                                                             p 2.5e-06   NaN                       NaN                       NaN
+                                                                          homoharringtonine 5 uM per-line TRIM72 r2: plate6 vs plate14 well, Spearman rho  8.153330e-01       47                                                                                                                                                                                                                                                               p 3e-12   NaN                       NaN                       NaN
+                                                                          TP53 CollecTRI ULM t vs panel P53_ACTIVITY z across drug-doses, Pearson r (raw)  1.873418e-01     1086                                                                                                                                                                                                                                                                         NaN                       NaN                       NaN
+[19:00:58] tables written to /home/user/Tahoe100-PseudoManual/mg53_p53/upstream_tf/tables; peak RSS 2.39 GB; wall 300 s
+WRAP exit 0; wall 302 s; peak RSS (largest child) 2.50 GB; user 295 s sys 57 s

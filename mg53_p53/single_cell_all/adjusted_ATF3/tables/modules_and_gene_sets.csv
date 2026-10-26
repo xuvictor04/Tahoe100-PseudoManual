@@ -1,0 +1,34 @@
+outcome,members,n_members,gene_modules_csv_module,literature_citation
+P53_SCORE,CDKN1A;MDM2;FDXR;ZMAT3;SESN1;BBC3;BAX;TP53I3;RRM2B;AEN;DDB2;XPC;PHLDA3;SPATA18;TRIAP1;RPS27L;ACER2;TP53INP1;PLK3;POLH;EDA2R,21,;p53_primary;p53_secondary;screen_apoptosis,
+P53_PRIMARY5,MDM2;CDKN1A;FDXR;ZMAT3;DDB2,5,p53_primary,
+NFKB_SCORE,NFKBIA;TNFAIP3;CXCL8,3,screen_NFkB,
+NFKB8_SCORE,NFKBIA;TNFAIP3;RELB;NFKB2;BIRC3;CXCL8;ICAM1;IER3,8,;screen_NFkB,
+FERROPTOSIS_SCORE,SLC7A11;GPX4;CHAC1,3,screen_ferroptosis,
+APOPTOSIS_SCORE,BAX;BBC3;PMAIP1,3,p53_secondary;screen_apoptosis;stress_markers,
+NFKBIA,NFKBIA,1,screen_NFkB,MG53 suppresses NF-kB: Wang 2021 JCI Insight 6(17):e148375 (verified)
+TNFAIP3,TNFAIP3,1,screen_NFkB,MG53 suppresses NF-kB: Wang 2021 JCI Insight e148375 (verified)
+CXCL8,CXCL8,1,screen_NFkB,MG53 suppresses NF-kB: Wang 2021 JCI Insight e148375 (verified)
+RELB,RELB,1,,
+NFKB2,NFKB2,1,,
+BIRC3,BIRC3,1,,
+ICAM1,ICAM1,1,,
+IER3,IER3,1,,
+SLC7A11,SLC7A11,1,screen_ferroptosis,MG53->p53->SLC7A11/GPX4 axis: Jiang 2024 FRBM 223:224-236 PMID39111582 (verified)
+GPX4,GPX4,1,screen_ferroptosis,MG53->p53->SLC7A11/GPX4: Jiang 2024 PMID39111582 (verified)
+CHAC1,CHAC1,1,screen_ferroptosis,ferroptosis/ATF4 effector (context for Jiang 2024 axis)
+BAX,BAX,1,screen_apoptosis,p53 target; MG53 anti-apoptotic (Jiang 2024; Li 2021 PMID34788479)
+BBC3,BBC3,1,p53_secondary,canonical p53 BH3-only target; MG53 anti-apoptotic Jiang 2024/Li 2021 PMID34788479
+PMAIP1,PMAIP1,1,stress_markers,co-regulation (SUMMARY T3); p53/stress target
+ATF3,ATF3,1,stress_markers,co-regulation (SUMMARY T3); ATF3 rho 0.44 with TRIM72
+DDIT3,DDIT3,1,stress_markers,co-regulation (SUMMARY T3); DDIT3 rho 0.38
+MDM2,MDM2,1,p53_primary,p53 target (Fischer 2017 census); MG53->p53 Jiang 2024 PMID39111582
+CDKN1A,CDKN1A,1,p53_primary,canonical p53 target (CDKN1A); MG53->p53 Jiang 2024 PMID39111582
+FDXR,FDXR,1,p53_primary,p53 target (Fischer 2017 census); MG53->p53 Jiang 2024 PMID39111582
+ZMAT3,ZMAT3,1,p53_primary,p53 target (Fischer 2017 census)
+DDB2,DDB2,1,p53_primary,p53 target (Fischer 2017 census)
+TP53,TP53,1,,
+(not testable),"gene_modules.csv modules not in the per-cell panel (no single-cell test possible): PI3K-AKT/FAK (TXNIP, IRS1, PTK2), cell cycle (CCND1, KIF11), RAC1, MCL1, FOS, HEXIM1, GDF15",0,,
+(placebo predictors),ABCG2;NLRP3;AIM2;GSDMD;OSGIN1;SDF2L1;IL1B;AKR1B10;NAPEPLD;ABCB1;CDKN2B;AKR1C2;PSPH;HMOX1;GSDME;IRF7,16,,
+(placebo outcomes),MTAP;CDKN2B;PTGS2;ACSL4;LPCAT3;AIFM2;NFE2L2;HMOX1;TFRC;FTH1;FTL;NCOA4;GSDMD;GSDME;NLRP3;AIM2;CASP4;CASP3;IL1B;IL18;NAPEPLD;ABCB1;ABCG2;NQO1;GCLM;GCLC;TXNRD1;OSGIN1;AKR1C1;AKR1C2;AKR1B10;G6PD;ME1;PIR;ABCC3;ASNS;TRIB3;PSAT1;PHGDH;PSPH;SLC3A2;SLC7A5;VEGFA;CEBPB;HSPA5;HERPUD1;DNAJB9;SDF2L1;SEL1L;PDIA4;XBP1;HSPA1A;HSPA1B;DNAJB1;HSPH1;BAG3;ISG15;IFIT1;IFIT3;MX1;OAS1;IFI6;IFI44L;STAT1;IRF7;IFITM1,66,,
+(ambient control: CDKN2A detected),A549;A-172;MIA PaCa-2;NCI-H460;PANC-1;A-427;A498;H4;LOX-IMVI;Panc 03.27;SW 1088;SW 1271;SW 900,13,,
+(ambient control: MTAP detected),A-172;MIA PaCa-2;PANC-1;H4;SW 1088;SW 900,6,,

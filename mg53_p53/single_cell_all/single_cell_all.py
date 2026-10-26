@@ -125,6 +125,7 @@ NOT_IN_CELL_PANEL_NOTE = ("gene_modules.csv modules not in the per-cell panel (n
 CLASSES = ["DMSO", "TRIM72 raisers", "p53 activators", "other drugs", "all wells"]
 HIGH_TRIM72_PLATES = {"plate1", "plate2", "plate3", "plate14"}
 MAX_ITER = 25
+GZ = dict(method="gzip", mtime=0)       # gzip header without a timestamp: reruns give byte-identical files
 TOL = 1e-6
 
 
@@ -488,10 +489,11 @@ def ambient_lines(wl, lines, failed, max_ratio):
     A truly deleted gene sits at the ambient level (ratio ~0.05-0.2); a ratio near 1 means the gene is expressed, so the
     line is not used as an ambient control (used = ratio < max_ratio)."""
     rows = []
+    cols = ["gene", "flag", "cell_line_id", "cell_name", "tp53_group", "n_wells", "line_cpm", "soup_cpm",
+            "ambient_ratio", "used"]
     genes = [x for x in AMBIENT if x in wl.columns]
     if not genes:
-        return pd.DataFrame(columns=["gene", "flag", "cell_line_id", "cell_name", "tp53_group", "n_wells", "line_cpm",
-                                     "soup_cpm", "ambient_ratio", "used"])
+        return pd.DataFrame(columns=cols)
     w = wl[["sample", "cell_line_id", "total_counts"] + genes].copy()
     w["sample"] = w["sample"].astype(str)
     w["cell_line_id"] = w["cell_line_id"].astype(str)
@@ -511,6 +513,8 @@ def ambient_lines(wl, lines, failed, max_ratio):
             rows.append(dict(gene=gname, flag=flag, cell_line_id=cid, cell_name=cname, tp53_group=tp, n_wells=len(h),
                              line_cpm=1e6 * float(h[gname].sum()) / n_umi, soup_cpm=1e6 * expd / n_umi,
                              ambient_ratio=float(h[gname].sum()) / expd if expd > 0 else np.nan))
+    if not rows:                                          # no flagged lines (or no p53_functional_status.csv)
+        return pd.DataFrame(columns=cols)
     A = pd.DataFrame(rows)
     A["used"] = A["ambient_ratio"] < max_ratio
     return A
@@ -1570,7 +1574,7 @@ def write_tables(D, M, G, info, checks_rows, args, tab, t_start):
                  "alpha_den": "nb_moment_denominator", "alpha_TRIM72_pooled": "alpha_TRIM72_pooled_class_tp53"})
     gout["fitted"] = gout["fitted"].eq(True)
     gout.loc[gout["skip_reason"].eq("") & ~gout["fitted"], "skip_reason"] = "too few detected cells after sampling"
-    gout.to_csv(os.path.join(tab, "groups.csv.gz"), index=False, float_format="%.6g")
+    gout.to_csv(os.path.join(tab, "groups.csv.gz"), index=False, float_format="%.6g", compression=GZ)
     # 2. class summary
     fit = gout[gout["fitted"]]
     cs = []
@@ -1665,14 +1669,15 @@ def write_tables(D, M, G, info, checks_rows, args, tab, t_start):
     L["p53_responsiveness_log2"] = L["cell_line_id"].map(li["p53_responsiveness_log2"])
     L = L[["outcome", "outcome_type", "class", "cell_line_id", "cell_name", "tp53_group", "tp53_functional_call",
            "p53_responsiveness_log2", "n_wells", "log_rr", "se", "tau2_wells", "n_wells_positive"]]
-    L.to_csv(os.path.join(tab, "line_estimates.csv.gz"), index=False, float_format="%.6g")
+    L.to_csv(os.path.join(tab, "line_estimates.csv.gz"), index=False, float_format="%.6g", compression=GZ)
     # 11. per-group fits (TRIM72; p53 + screen outcomes), sorted by (sample, cell_line_id, outcome)
     Fg = M["Fg"]
     Fg = Fg[["sample", "plate", "well_class", "cell_line_id", "tp53_group", "outcome_name", "beta", "se", "phi",
              "unadj", "n_det_pred", "y_tot", "y_det"]].rename(
         columns={"outcome_name": "outcome", "beta": "log_rr", "phi": "dispersion", "unadj": "log_rr_unadjusted",
                  "n_det_pred": "n_TRIM72_detected", "y_tot": "outcome_counts", "y_det": "outcome_counts_detected"})
-    Fg.to_csv(os.path.join(tab, "group_fits_TRIM72_p53_screen.csv.gz"), index=False, float_format="%.5g")
+    Fg.to_csv(os.path.join(tab, "group_fits_TRIM72_p53_screen.csv.gz"), index=False, float_format="%.5g",
+              compression=GZ)
     # 12. modules (citations from mg53_p53/gene_modules.csv)
     mods = []
     cite = {}
@@ -1889,7 +1894,7 @@ line_estimates.csv.gz      stage-1 per line x class (TRIM72; p53 and screen outc
 group_fits_TRIM72_p53_screen.csv.gz  per-group fits (TRIM72; p53 and screen outcomes), sorted by sample, line, outcome:
                            log_rr, SE, dispersion, unadjusted log rate ratio, TRIM72-detected cells, outcome counts.
 modules_and_gene_sets.csv  outcome definitions with the mg53_p53/gene_modules.csv modules and citations (formerly
-                           mg53_perturbation/assay_panel/panel.csv); placebo gene lists; ambient-control lines; modules of
+                           mg53_p53/gene_modules.csv); placebo gene lists; ambient-control lines; modules of
                            gene_modules.csv that the per-cell panel lacks.
 key_results.csv            headline rows: p53 primary outcomes and screen modules, WT minus altered per class, with the HK
                            CI (ci_lo_log / ci_hi_log, df, p) and the DL ones (*_DL), the permutation p, the paired check,
@@ -1910,7 +1915,7 @@ def main():
                     or os.path.expanduser("~/Tahoe-100M"))
     ap.add_argument("--modules", default=MODULES_CSV,
                     help="gene modules table (default mg53_p53/gene_modules.csv; formerly "
-                         "mg53_perturbation/assay_panel/panel.csv)")
+                         "mg53_p53/gene_modules.csv)")
     ap.add_argument("--max-cells-per-group", type=int, default=2000,
                     help="uniform subsample per (well, line); 0 = all cells (default 2000: 47M of the 60M cells "
                          "in qualifying groups, 87%% of their TRIM72-detected cells)")
@@ -1948,7 +1953,7 @@ def main():
     args.modules = os.path.abspath(os.path.expanduser(args.modules))
     if not os.path.exists(args.modules):
         sys.exit(f"gene modules table not found: {args.modules}\nIt is mg53_p53/gene_modules.csv (moved there from "
-                 f"mg53_perturbation/assay_panel/panel.csv); pass its location with --modules.")
+                 f"mg53_p53/gene_modules.csv); pass its location with --modules.")
     data, tab, cdir = resolve_paths(args)
     log(f"data {data}; tables {tab}; cache {cdir}; gene modules {args.modules}")
     sm, lines, expr, wl, panel, ga, amb = load_setup(data, args)

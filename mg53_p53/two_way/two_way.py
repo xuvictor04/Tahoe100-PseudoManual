@@ -27,10 +27,14 @@ sets add the line's untreated TRIM72 level x the drug-dose's TRIM72 effect (full
 low-baseline lines) or the line's p53 responsiveness x the drug-dose's P53_ACTIVITY z (full_p53resp).
 Estimand b_WT - b_alt (negative = more TRIM72 goes with less p53 output only where p53 works).
 
-PRIMARY TEST (declared before the results were read; every other fe x variant x covariate-set row is a sensitivity
-analysis, column 'role' of key_results.csv): fe 'ddxg', variant i_all (all 1,132 drug-doses), covariate set 'full',
-read-out P53_SCORE, estimand b_WT - b_alt, inference by the conservative two-way SE below. The other D1 read-outs
-of that model are secondary; P53_SCORE over the 9 variants also gets a Holm adjustment (p_holm_variants_*).
+PRIMARY TEST (declared here and in the tables; every other fe x variant x covariate-set row is a sensitivity
+analysis, column 'role' of d1_two_way_models.csv and key_results.csv): fe 'ddxg', variant i_all (all 1,132
+drug-doses), covariate set 'full', read-out P53_SCORE, estimand b_WT - b_alt, inference by the conservative two-way
+SE below. It was written down in the verifier round, after a first run, but it is the design the step specified from
+the start (i_all = the data set as specified, ddxg = the FE structure already named the preferred reading of D1,
+full = the specified covariates, P53_SCORE = the p53 read-out), not one picked for its result: not preregistered.
+The other D1 read-outs of that model are secondary; P53_SCORE over the 9 variants also gets a Holm adjustment
+(p_holm_variants_*).
 
 Inference: cluster-robust SE by drug compound (CR1), by line, and two-way (drug, line). Every reported two-way SE,
 CI, p and q uses the conservative se = sqrt(max(V_drug + V_line - V_inter, V_drug, V_line)) (the plain two-way
@@ -53,7 +57,7 @@ x TP53 group (covariate set full_rt); iii_readthrough_subtracted (the earlier ve
 fit on FUS and PYCARD-AS1 r2 (slopes within drug-dose and line, pooled over lines); (iv) without the plate-3 and
 plate-13 wells; (v) TRIM72 measurement error: split-half (cells of each well x line split at random, the method run
 on each half) and replicate-well reliability of the residual TRIM72 variation, and the implied attenuation of b.
-D2 screen: the same model for each MG53-linked module of mg53_perturbation/assay_panel/panel.csv (NF-kB,
+D2 screen: the same model for each MG53-linked module of mg53_p53/gene_modules.csv (NF-kB,
 ferroptosis, apoptosis, stress, PI3K-AKT/FOXO/FAK, cell cycle + E2F targets, RAC1); BH across the screen within
 each FE structure. Gene-level null: the same model for every non-p53 panel gene and for random background modules
 the size of P53_SCORE (is a TRIM72 x TP53-group pattern specific to p53 targets?); the 21 members as a set vs the
@@ -63,10 +67,11 @@ background genes by a camera-style test (variance inflated for the correlation b
                        [--perm 1000] [--label-perm 2000] [--screen-perm 500] [--screen-label-perm 1000]
                        [--modules 500] [--quick]
 
-Reads <data>/atlas/effects, <data>/atlas/pseudobulk (one streamed pass over 20 GB: I/O-bound, ~13 min from a cold
-page cache), <data>/gene_panel (well_line, cells/*.parquet for the split-half, ~1-2 min; results/),
-<data>/metadata/gene_metadata.parquet. A from-scratch run (cold page cache, empty cache/) takes ~30 min: ~17 min of
-caches, ~14 min of models (4 CPUs, peak RSS ~1.4 GB); with the caches in place ~14 min. The caches are keyed to the
+Reads <data>/atlas/effects, <data>/atlas/pseudobulk (one streamed pass over 20 GB: I/O-bound, 11-13 min from a
+cold page cache), <data>/gene_panel (well_line, cells/*.parquet for the split-half, ~1 min; results/),
+<data>/metadata/gene_metadata.parquet. A from-scratch run (empty cache/, cold page cache) took 29 min: 14 min of
+caches, 16 min of models (4 CPUs shared with another job; peak RSS 1.4 GB); with the caches in place ~15 min (see
+README below for the breakdown). The caches are keyed to the
 inputs (cache/manifest.json: real path of --data, sizes and mtimes of atlas/effects/wells.csv,
 atlas/pseudobulk/group*, gene_panel/well_line.parquet and gene_panel/cells) and rebuilt when they do not match.
 Writes tables to $MG53_OUT/tables (default <this folder>/tables) and caches to $MG53_OUT/cache (default <this
@@ -1404,12 +1409,23 @@ def checks(E, grid, pbe, pbc, tabs, data, sh_check):
 README = """Tables of two_way.py (re-created by: python3 two_way.py --data <Tahoe-100M folder>). Associations only: Tahoe
 has no MG53 perturbation and measures mRNA; p53 activity = transcription of p53 target genes.
 
-PRIMARY TEST (declared up front; the first row of key_results.csv): fe ddxg, variant i_all (all 1,132 drug-doses),
-covariate set full, read-out P53_SCORE; estimand b_WT - b_alt; p and 95% CI from the conservative two-way SE. The
-other read-outs of that model are 'secondary'; every other fe x variant x covariate-set row is 'sensitivity'
-(column role in d1_two_way_models.csv and key_results.csv). For a claim from any of the 9 variants, P53_SCORE has
-a Holm adjustment over the variants (p_holm_variants_*). An ii_active result is a sensitivity result, read with
-the Holm column.
+PRIMARY TEST (the first row of key_results.csv): fe ddxg, variant i_all (all 1,132 drug-doses), covariate set
+full, read-out P53_SCORE; estimand b_WT - b_alt; p and 95% CI from the conservative two-way SE. Declared in the
+verifier round, after a first run, as the design the step specified from the start (the data set as specified, the
+FE structure already named the preferred reading, the specified covariates): not preregistered. The other read-outs
+of that model are 'secondary'; every other fe x variant x covariate-set row is 'sensitivity' (column role in
+d1_two_way_models.csv and key_results.csv). For a claim from any of the 9 variants, P53_SCORE has a Holm adjustment
+over the variants (p_holm_variants_*). An ii_active result is a sensitivity result, read with the Holm column.
+
+Headline numbers of this run (P53_SCORE, b_WT - b_alt, fe ddxg, full covariates; key_results.csv):
+  primary (i_all)  -0.0032 (95% CI -0.0085 to +0.0022; conservative two-way p 0.24; label-permutation p 0.26).
+  ii_active        -0.030 (CI -0.054 to -0.006; two-way p 0.015, label p 0.018; Holm over the 9 variants 0.12 and
+                   0.14). Not robust: with the line FE from all drug-doses (d1_active_joint_model.csv) -0.018 (p 0.22),
+                   difference-in-differences active minus inactive -0.015 (p 0.29). Every single drug or line left
+                   out keeps two-way p < 0.05 (largest 0.039 and 0.046). Line slopes: mean WT - altered -0.024
+                   (Welch p 0.040), Hodges-Lehmann -0.018 (Mann-Whitney p 0.064). The 21 members as a set vs the
+                   background genes: camera-style p 0.013 (i_all: 0.31).
+  readthrough      FUS and PYCARD-AS1 r2 as covariates: i_all -0.0031 (p 0.19), ii_active -0.029 (p 0.032).
 
 Unit: one drug-dose x cell line cell. Values are method-v3 corrected log2 effects r2 (plate x line baseline ->
 composition shift -> two-pass position correction) per (well, line), averaged over the drug-dose's used wells
@@ -1445,14 +1461,16 @@ residual TRIM72 (FE and covariates out).
 Inference for diff = b_WT - b_alt (negative = more TRIM72 goes with less p53 output only where p53 works):
 p_diff_twoway / ci_diff_*_twoway use the conservative two-way cluster SE, sqrt(max(V_drug + V_line - V_inter,
 V_drug, V_line)) (drug compound and line clusters, CR1; t with min(G)-1 df): the plain two-way variance V_drug +
-V_line - V_inter can fall below a one-way variance (it did for ii_active ddxg, where the line-cluster SE is larger),
+V_line - V_inter can fall below a one-way variance (for diff in 106 of the 270 D1 rows: 86 below V_line, 20 below
+V_drug; e.g. P53_SCORE ii_active ddxg full: SE 0.0101 -> 0.0118, p 0.0054 -> 0.015, Holm over the variants 0.12),
 so the larger of the three is used for every two-way SE, CI, p and q in these tables (also b_WT, b_alt, b_common,
 the D2 q-values, the gene-level null, leave-one-out and joint-model tables). se_diff_twoway_from says which term
 gave it; se_diff_twoway_cgm / p_diff_twoway_cgm keep the plain two-way value (the earlier p_diff_twoway, with the
 larger one-way SE only where V2 <= 0), for comparison only. p_diff_tp53_label_perm permutes the TP53 labels over
 the analysed lines (group sizes kept, whole model refitted, FE included for ddxg; statistic t = diff / line-cluster
 SE, studentised) and is the design-based line-level test, conditional on the drug-doses analysed (it ignores
-drug-to-drug variation, so in the 62 active drug-doses from 37 drugs it can be far smaller than the two-way p). Read
+drug-to-drug variation, so in the 62 active drug-doses from 37 drugs it can be far smaller than the two-way p: fe
+dd, P53_SCORE ii_active full, label p 0.028 vs two-way p 0.53). Read
 a diff as supported only when both are small under fe ddxg. MDE: mde_diff_80 = 2.80 x the SD of the
 label-permutation null of diff (smallest |b_WT - b_alt| detected with 80% power, two-sided 5%).
 
@@ -1488,7 +1506,7 @@ d1_two_way_models.csv     one row per read-out (P53_SCORE, MDM2, CDKN1A, FDXR, Z
                           fit: ~1e-16).
 d1_line_slopes.csv        i_all and ii_active (full covariates), both fe: per line, the TRIM72 slope from one model with
                           line-specific TRIM72 AND covariate slopes (both FE), drug-cluster SE.
-d1_line_slope_tests.csv   per read-out x variant x fe: line slopes WT vs altered (lines with >= 20 cells of data):
+d1_line_slope_tests.csv   per read-out x variant x fe: line slopes WT vs altered (lines with >= 20 drug-dose rows):
                           mean difference with Welch t / CI / p, TP53-label permutation p of the Welch t (and of the
                           plain difference), MDE from the permutation SD of the difference; rank-based next to it:
                           median WT minus median altered, Hodges-Lehmann shift (median of all WT - altered slope
@@ -1500,7 +1518,11 @@ d1_per_drugdose_contributions.csv.gz  i_all and ii_active (full covariates), bot
                           partialled data (slope_*_in_drugdose) and its contribution to b_WT, b_alt and diff (contrib_*:
                           sum over its rows of x~ y~ / total sum of x~^2). They add up to b_WT / b_alt exactly for
                           ddxg; for dd they leave out the WT-altered cross term (the two partialled TRIM72 columns
-                          are correlated through the shared drug-dose FE), which is not small: CROSSTERM_PLACEHOLDER.
+                          are correlated through the shared drug-dose FE), which is not small in the active set:
+                          summed contrib_diff minus diff is at most 0.002 over the 9 read-outs in i_all (P53_SCORE
+                          +0.0054 summed vs diff +0.0050) but up to 0.023 in ii_active (P53_SCORE -0.0278 vs
+                          -0.0228); checks.csv rows 'per drug-dose contributions'. Read the dd contributions as a
+                          ranking of drug-doses, not an exact decomposition.
 d1_active_leave_one_drug_out.csv  ii_active (full), both fe: the model refitted without each drug (all its doses):
                           b_WT, b_alt, diff, line-cluster and conservative two-way p, next to the all-drug diff and p.
 d1_active_leave_one_line_out.csv  ii_active (full), both fe: the model refitted without each line (dropped line, its
@@ -1511,8 +1533,9 @@ d1_active_joint_model.csv ii_active estimated inside one model over all drug-dos
                           so the line FE are estimated from all drug-doses (in ii_active alone they come from the 62
                           active drug-doses only). Contrasts: active b_WT - b_alt, inactive b_WT - b_alt, the
                           difference-in-differences active minus inactive (is the active-set diff different from
-                          the rest, or the same slope gap with less noise?), and the four slopes; drug-, line-,
-                          plain and conservative two-way SE, CI and p (min(G)-1 df).
+                          the rest, or the same slope gap with less noise?), and the four slopes; drug- and
+                          line-cluster SE and p, the plain two-way SE (se_twoway_cgm) and the conservative two-way
+                          SE (se_twoway, se_twoway_from), CI and p (min(G)-1 df).
 d1_gene_null_genes.csv    gene-level null (is the pattern specific to p53 targets?): i_all and ii_active, full
                           covariates, both fe: the same model (b_WT, b_alt, diff, conservative two-way SE, t, p; no
                           permutations) for the D1 read-outs, each of the 21 P53_ACTIVITY members, each of the 78
@@ -1534,7 +1557,7 @@ d1_gene_null_summary.csv  each D1 read-out's two-way t placed in its reference: 
                           test without the inflation. Caveat: the background genes also make up bg_abs_r2 (a
                           covariate).
 d2_screen_models.csv      the same model (variant i_all, both fe) for each MG53-linked gene and module (module = mean
-                          r2 of the members a line expresses) of mg53_perturbation/assay_panel/panel.csv: NF-kB
+                          r2 of the members a line expresses) of mg53_p53/gene_modules.csv: NF-kB
                           (NFKBIA, TNFAIP3, CXCL8 + module), ferroptosis (SLC7A11, GPX4, CHAC1), apoptosis (BAX,
                           MCL1, PMAIP1), stress (ATF3, DDIT3 + module), PI3K-AKT/FOXO/FAK (TXNIP, IRS1, PTK2), cell
                           cycle (CCND1, KIF11), E2F targets (E2F1, CCNE1, CDT1, MCM3, MCM7, MYBL2, CDC25A + module;
@@ -1575,11 +1598,14 @@ key_results.csv           the headline numbers, the primary test first. role = p
                           fit). Columns p_twoway (conservative), p_label_perm, q_twoway, q_label,
                           p_holm_variants_twoway, p_holm_variants_label, p_set_camera, mde_80 as defined above.
 
-Runtime (4 CPUs): the caches are keyed to the inputs (cache/manifest.json: real path of --data, sizes and mtimes of
-atlas/effects/wells.csv, atlas/pseudobulk/group*, gene_panel/well_line.parquet and gene_panel/cells) and rebuilt
-when they do not match. A from-scratch run (empty cache/, cold page cache) takes ~30 min:
-the pseudobulk pass reads 20 GB of atlas/pseudobulk and is I/O-bound (~13 min cold), the split-half pass
-~1-2 min, the panel effects ~2.5 min; the models ~14 min. With the caches in place ~14 min. Peak RSS ~1.4 GB.
+Runtime (4 CPUs, 15 GB RAM): the caches are keyed to the inputs (cache/manifest.json: real path of --data, sizes and
+mtimes of atlas/effects/wells.csv, atlas/pseudobulk/group*, gene_panel/well_line.parquet and gene_panel/cells) and
+rebuilt when they do not match (or with --recompute). Measured from scratch (empty cache/ and tables/, cold page
+cache 11 min after a boot, another 4-process job running on the machine): 29.4 min wall, peak RSS 1.43 GB.
+Caches 13.8 min: panel effects 1.6 min; the pseudobulk pass 11.3 min (it reads 20 GB of atlas/pseudobulk and is
+I/O-bound: ~30 MB/s here; 12.9 min in the verifier's earlier cold run; faster when the files are in the page
+cache); split-half counts 0.8 min. Models 15.6 min: D1 12 min (mostly the permutations), leave-one-out and joint
+models 0.5 min, gene-level null 0.3 min, D2 2.7 min. With the caches in place ~15 min.
 """
 
 
@@ -1799,8 +1825,18 @@ def main():
         lodos.append(lo_)
         lolos.append(ll_)
         joints.append(joint_active(tabs["main"], grid, wt_line, active, fe))
-    pd.concat(parts).to_csv(os.path.join(tab, "d1_per_drugdose_contributions.csv.gz"), index=False,
-                            float_format="%.5g")
+    PDD = pd.concat(parts)
+    PDD.to_csv(os.path.join(tab, "d1_per_drugdose_contributions.csv.gz"), index=False, float_format="%.5g")
+    # do the per drug-dose contributions add up to the fitted slopes? (exactly for ddxg; for dd the WT-altered cross
+    # term of the shared drug-dose FE is left out): sum of the contributions minus the main fit, per read-out
+    ctr = []
+    for (fe, va, ro), g in PDD.groupby(["fe", "variant", "readout"], sort=False):
+        r = D1T[(D1T["fe"] == fe) & (D1T["variant"] == va) & (D1T["covset"] == "full")
+                & (D1T["readout"] == ro)].iloc[0]
+        ctr.append({"fe": fe, "variant": va, "readout": ro, "diff": r["diff"],
+                    "sum_contrib_diff": g["contrib_diff"].sum(), "gap_diff": g["contrib_diff"].sum() - r["diff"],
+                    "gap_WT": g["contrib_WT"].sum() - r["b_WT"], "gap_alt": g["contrib_alt"].sum() - r["b_alt"]})
+    CTR = pd.DataFrame(ctr)
     lo = pd.concat(lodos)
     lo.to_csv(os.path.join(tab, "d1_active_leave_one_drug_out.csv"), index=False, float_format="%.6g")
     LL = pd.concat(lolos)
@@ -1867,6 +1903,16 @@ def main():
         CK.loc[len(CK)] = {"check": f"within-cell permutation, fast formula vs explicit projection, max |diff| of "
                                     f"b_WT, b_alt, b_common (i_all, full, P53_SCORE, FE {fe})",
                            "value": within_dd_perm_check(des, yt, rng), "n": des.n, "note": ""}
+    for (fe, va), g in CTR.groupby(["fe", "variant"], sort=False):
+        p5 = g[g["readout"] == "P53_SCORE"].iloc[0]
+        CK.loc[len(CK)] = {"check": f"per drug-dose contributions ({va}, full, FE {fe}): sum of contrib_diff minus "
+                                    "the fitted diff, max |gap| over the 9 D1 read-outs",
+                           "value": float(g["gap_diff"].abs().max()), "n": len(g),
+                           "note": f"P53_SCORE: sum {p5['sum_contrib_diff']:+.5f} vs diff {p5['diff']:+.5f}; "
+                                   f"max |gap| of b_WT {g['gap_WT'].abs().max():.2g}, of b_alt "
+                                   f"{g['gap_alt'].abs().max():.2g}"
+                                   + (" (exact for ddxg)" if fe == "ddxg" else
+                                      " (dd: the WT-altered cross term is left out)")}
     for nm_, T_ in (("D1", D1T), ("D2", D2T)):
         for fe in FES:
             g = T_[T_["fe"] == fe]

@@ -1,0 +1,179 @@
+
+## README_tables.txt: text changed
+
+## a0_readthrough_fit.csv: rows 2 -> 2; columns 8 -> 8
+   all 2 shared rows identical in the shared columns
+
+## a0_regulon_sizes.csv: rows 957 -> 969; columns 7 -> 7
+   rows only after: 12 (e.g. [('CollecTRI', 'FOS'), ('CollecTRI', 'FOSB'), ('CollecTRI', 'FOSL1'), ('CollecTRI', 'FOSL2'), ('CollecTRI', 'JUN'), ('CollecTRI', 'JUNB')])
+   targets_in_database: 2/957 changed (max |diff| 427)
+   targets_used: 2/957 changed (max |diff| 316)
+
+## a0_regulons_used.csv.gz: rows 73447 -> 75399; columns 7 -> 7
+   rows only before: 668 (e.g. [('CollecTRI', 'AP1', 'A2M'), ('CollecTRI', 'AP1', 'AANAT'), ('CollecTRI', 'AP1', 'ABCA1'), ('CollecTRI', 'AP1', 'ABCC1'), ('CollecTRI', 'AP1', 'ACOT11'), ('CollecTRI', 'AP1', 'ACP5')])
+   rows only after: 2620 (e.g. [('CollecTRI', 'FOS', 'A2M'), ('CollecTRI', 'FOS', 'AANAT'), ('CollecTRI', 'FOS', 'ABCB1'), ('CollecTRI', 'FOS', 'ACHE'), ('CollecTRI', 'FOS', 'ACP5'), ('CollecTRI', 'FOS', 'ACTA1')])
+   n_records: 857/72779 changed (max |diff| 7)
+
+## a0_tf_edges_to_trim72_locus.csv: rows 70 -> 76; columns 6 -> 6
+   rows only after: 6 (e.g. [('CollecTRI', 'FOS', 'ITGAX'), ('CollecTRI', 'FOSL2', 'ITGAX'), ('CollecTRI', 'JUN', 'ITGAX'), ('CollecTRI', 'JUND', 'ITGAX'), ('CollecTRI', 'NFKB1', 'ITGAX'), ('CollecTRI', 'RELA', 'ITGAX')])
+   n_records: 2/70 changed (max |diff| 4)
+
+## a1_dd_tf_vs_trim72.csv.gz: rows 25872 -> 34452; columns 21 -> 22
+   columns added: se_jackknife_drug
+   rows only after: 8580 (e.g. [('CollecTRI_lfc_slope', 'FOS', 'TRIM72', 'covariates'), ('CollecTRI_lfc_slope', 'FOS', 'TRIM72', 'minus_10pc'), ('CollecTRI_lfc_slope', 'FOS', 'TRIM72', 'minus_3pc'), ('CollecTRI_lfc_slope', 'FOS', 'TRIM72', 'raw'), ('CollecTRI_lfc_slope', 'FOS', 'TRIM72_rt', 'covariates'), ('CollecTRI_lfc_slope', 'FOS', 'TRIM72_rt', 'minus_10pc')])
+   ci_hi: 25872/25872 changed (max |diff| 0.522)
+   ci_lo: 25872/25872 changed (max |diff| 0.521)
+   matched_genes_median_r: 48/25872 changed (max |diff| 0.0666)
+   null_sd_drug_block: 48/25872 changed (max |diff| 0.000668)
+   p: 43/25872 changed (max |diff| 0.59)
+   p_perm_empirical: 28/25872 changed (max |diff| 0.601)
+   p_spearman: 35/25872 changed (max |diff| 0.578)
+   pct_abs_vs_matched_genes: 48/25872 changed (max |diff| 30)
+   pct_vs_all_genes: 12/25872 changed (max |diff| 7.73)
+   pct_vs_matched_genes: 44/25872 changed (max |diff| 10)
+   q_bh: 18237/25872 changed (max |diff| 0.636)
+   r: 48/25872 changed (max |diff| 0.0664)
+   rank_vs_all_genes: 12/25872 changed (max |diff| 1.29e+03)
+   rho_spearman_partial: 48/25872 changed (max |diff| 0.0413)
+
+## a1_matched_genes_reference.csv: rows 12 -> 12; columns 5 -> 5
+   all 12 shared rows identical in the shared columns
+
+## a1_pc_variance.csv: rows 10 -> 10; columns 3 -> 3
+   all 10 shared rows identical in the shared columns
+
+## a1_plate_batch_split.csv: NEW (0.58 MB)
+
+## a1_regulon_overlap_control.csv: NEW (0.29 MB)
+
+## a1_tf_activity_by_drugdose.csv.gz: rows 1086 -> 1086; columns 669 -> 681
+   columns added: FOS, FOSB, FOSL1, FOSL2, JUN, JUNB, JUND, NFKB1, NFKB2, REL, RELA, RELB
+   AP1: 1086/1086 changed (max |diff| 3.22)
+   NFKB: 1084/1086 changed (max |diff| 2.27)
+
+## a1a2_tf_summary.csv: rows 667 -> 679; columns 54 -> 77
+   columns added: ci_hi_dd_TRIM72_covariates, ci_lo_dd_TRIM72_covariates, n_targets_minus_overlap, q_dd_TRIM72_high_plates_only, q_dd_TRIM72_low_plates_only, q_dd_TRIM72_minus_overlap, q_dd_TRIM72_minus_overlap_plus_mediators, q_dd_TRIM72_plus_mediators, q_mean_z_dd_TRIM72_covariates, r_dd_TRIM72_high_plates_only, r_dd_TRIM72_low_plates_only, r_dd_TRIM72_minus_overlap, r_dd_TRIM72_minus_overlap_plus_mediators, r_dd_TRIM72_plus_mediators, r_mean_z_dd_TRIM72_covariates, rank_neg_mean_z, rank_neg_method_robust, rank_neg_ulm, rank_pos_mean_z, rank_pos_method_robust, rank_pos_ulm, within_n_lines, within_n_rows
+   rows only after: 12 (e.g. ['FOS', 'FOSB', 'FOSL1', 'FOSL2', 'JUN', 'JUNB'])
+   n_targets_used: 2/667 changed (max |diff| 316)
+   n_tests_q_lt_0.1: 3/667 changed (max |diff| 1)
+   pct_vs_all_genes_dd_TRIM72_covariates: 2/667 changed (max |diff| 0.91)
+   pct_vs_all_genes_dd_TRIM72_minus_10pc: 2/667 changed (max |diff| 7.74)
+   pct_vs_all_genes_dd_TRIM72_minus_3pc: 2/667 changed (max |diff| 1.31)
+   pct_vs_all_genes_dd_TRIM72_rt_covariates: 2/667 changed (max |diff| 1.06)
+   pct_vs_all_genes_dd_TRIM72_rt_minus_10pc: 2/667 changed (max |diff| 7.56)
+   pct_vs_all_genes_dd_TRIM72_rt_minus_3pc: 2/667 changed (max |diff| 1.5)
+   pct_vs_matched_dd_TRIM72_covariates: 2/667 changed (max |diff| 0.67)
+   q_dd_TRIM72_covariates: 537/667 changed (max |diff| 0.0016)
+   q_dd_TRIM72_minus_10pc: 482/667 changed (max |diff| 0.0011)
+   q_dd_TRIM72_minus_3pc: 497/667 changed (max |diff| 0.0012)
+   q_dd_TRIM72_rt_across_covariates: 605/667 changed (max |diff| 0.0261)
+   q_dd_TRIM72_rt_across_minus_10pc: 612/667 changed (max |diff| 0.0449)
+   q_dd_TRIM72_rt_across_minus_3pc: 562/667 changed (max |diff| 0.0009)
+   q_dd_TRIM72_rt_covariates: 536/667 changed (max |diff| 0.0017)
+   q_dd_TRIM72_rt_minus_10pc: 505/667 changed (max |diff| 0.0011)
+   q_dd_TRIM72_rt_minus_3pc: 500/667 changed (max |diff| 0.0014)
+   q_lfc_slope_covariates: 578/667 changed (max |diff| 0.237)
+   q_tf_mRNA_covariates: 432/667 changed (max |diff| 0.002)
+   r_dd_TRIM72_covariates: 2/667 changed (max |diff| 0.0019)
+   r_dd_TRIM72_minus_10pc: 2/667 changed (max |diff| 0.0665)
+   r_dd_TRIM72_minus_3pc: 2/667 changed (max |diff| 0.0118)
+   r_dd_TRIM72_raw: 2/667 changed (max |diff| 0.0057)
+   r_dd_TRIM72_rt_across_covariates: 2/667 changed (max |diff| 0.0259)
+   r_dd_TRIM72_rt_across_minus_10pc: 2/667 changed (max |diff| 0.0431)
+   r_dd_TRIM72_rt_across_minus_3pc: 2/667 changed (max |diff| 0.0108)
+   r_dd_TRIM72_rt_across_raw: 2/667 changed (max |diff| 0.0259)
+   r_dd_TRIM72_rt_covariates: 2/667 changed (max |diff| 0.0086)
+   r_dd_TRIM72_rt_minus_10pc: 2/667 changed (max |diff| 0.0609)
+   r_dd_TRIM72_rt_minus_3pc: 2/667 changed (max |diff| 0.0125)
+   r_dd_TRIM72_rt_raw: 2/667 changed (max |diff| 0.006)
+   r_lfc_slope_covariates: 2/667 changed (max |diff| 0.0401)
+   within_TRIM72_b_per_sd: 2/667 changed (max |diff| 0.00558)
+   within_TRIM72_p: 2/667 changed (max |diff| 0.078)
+   within_TRIM72_q: 658/667 changed (max |diff| 0.0948)
+   within_TRIM72_r: 2/667 changed (max |diff| 0.00697)
+   within_TRIM72_rt_b_per_sd: 2/667 changed (max |diff| 0.00643)
+   within_TRIM72_rt_p: 2/667 changed (max |diff| 0.0667)
+   within_TRIM72_rt_q: 662/667 changed (max |diff| 0.0995)
+   within_TRIM72_rt_r: 2/667 changed (max |diff| 0.00811)
+   within_diff_WT_minus_alt: 2/667 changed (max |diff| 0.0321)
+   within_diff_p_line: 2/667 changed (max |diff| 0.0741)
+   within_diff_q: 659/667 changed (max |diff| 0.0154)
+
+## a2_noise_ceiling_genes.csv: NEW (0.01 MB)
+
+## a2_within_line_tf_vs_trim72.csv.gz: rows 2676 -> 2724; columns 29 -> 29
+   rows only after: 48 (e.g. [('FOS', 'TRIM72', 'full'), ('FOS', 'TRIM72', 'none'), ('FOS', 'TRIM72_rt', 'full'), ('FOS', 'TRIM72_rt', 'none'), ('FOSB', 'TRIM72', 'full'), ('FOSB', 'TRIM72', 'none')])
+   b: 8/2676 changed (max |diff| 0.352)
+   b_WT: 8/2676 changed (max |diff| 0.3)
+   b_alt: 8/2676 changed (max |diff| 0.38)
+   b_per_sd_tf: 8/2676 changed (max |diff| 0.00816)
+   ci_hi_twoway: 8/2676 changed (max |diff| 0.127)
+   ci_lo_twoway: 8/2676 changed (max |diff| 0.63)
+   diff_WT_minus_alt: 8/2676 changed (max |diff| 0.0824)
+   mde_diff_80_line: 8/2676 changed (max |diff| 0.412)
+   p_diff_drug: 8/2676 changed (max |diff| 0.0578)
+   p_diff_line: 8/2676 changed (max |diff| 0.0741)
+   p_drug: 8/2676 changed (max |diff| 0.0479)
+   p_twoway: 8/2676 changed (max |diff| 0.0943)
+   q_bh_diff_line: 2492/2676 changed (max |diff| 0.0153)
+   q_bh_twoway: 2608/2676 changed (max |diff| 0.122)
+   r_partial_within: 8/2676 changed (max |diff| 0.0103)
+   sd_tf_resid: 8/2676 changed (max |diff| 0.00678)
+   se_WT_line: 8/2676 changed (max |diff| 0.16)
+   se_alt_line: 8/2676 changed (max |diff| 0.147)
+   se_diff_drug: 8/2676 changed (max |diff| 0.0728)
+   se_diff_line: 8/2676 changed (max |diff| 0.147)
+   se_drug: 8/2676 changed (max |diff| 0.0979)
+   se_twoway: 8/2676 changed (max |diff| 0.164)
+
+## a3_tp53_positive_control.csv: rows 23 -> 23; columns 19 -> 20
+   columns added: n_lines
+   all 23 shared rows identical in the shared columns
+
+## a4_muscle_promoter_tfs.csv: rows 9 -> 9; columns 26 -> 26
+   baseline_activity_vs_TRIM72_induction_mean_q: 8/9 changed (max |diff| 0.12)
+   baseline_activity_vs_TRIM72_untreated_rel_q: 8/9 changed (max |diff| 0.246)
+   q_dd_TRIM72_covariates: 5/9 changed (max |diff| 0.0014)
+   q_dd_TRIM72_minus_3pc: 4/9 changed (max |diff| 0.0005)
+   q_dd_TRIM72_rt_covariates: 5/9 changed (max |diff| 0.0016)
+   within_TRIM72_q: 8/9 changed (max |diff| 0.0058)
+   within_TRIM72_rt_q: 8/9 changed (max |diff| 0.004)
+
+## b1_line_outcomes.csv: rows 50 -> 50; columns 23 -> 23
+   all 50 shared rows identical in the shared columns
+
+## b2_line_feature_tests.csv: rows 4991 -> 5075; columns 27 -> 29
+   columns added: q_bh_family, q_bh_outcome
+   rows only before: 7 (e.g. [('TRIM72_induction_mean', 'drivers', 'n driver genes altered (hypermutation proxy)'), ('TRIM72_induction_mean_adj_untreated', 'drivers', 'n driver genes altered (hypermutation proxy)'), ('TRIM72_r2_homoharringtonine_5', 'drivers', 'n driver genes altered (hypermutation proxy)'), ('TRIM72_r2_homoharringtonine_5_adj_untreated', 'drivers', 'n driver genes altered (hypermutation proxy)'), ('TRIM72_r2_idarubicin_5', 'drivers', 'n driver genes altered (hypermutation proxy)'), ('TRIM72_r2_idarubicin_5_adj_untreated', 'drivers', 'n driver genes altered (hypermutation proxy)')])
+   rows only after: 91 (e.g. [('TRIM72_induction_mean', 'baseline_tf', 'FOS'), ('TRIM72_induction_mean', 'baseline_tf', 'FOSB'), ('TRIM72_induction_mean', 'baseline_tf', 'FOSL1'), ('TRIM72_induction_mean', 'baseline_tf', 'FOSL2'), ('TRIM72_induction_mean', 'baseline_tf', 'JUN'), ('TRIM72_induction_mean', 'baseline_tf', 'JUNB')])
+   null_sd: 13/4984 changed (max |diff| 0.0006)
+   p: 14/4984 changed (max |diff| 0.224)
+   p_organ_adjusted: 14/4984 changed (max |diff| 0.301)
+   p_perm_empirical: 14/4984 changed (max |diff| 0.221)
+   q_bh: 4951/4984 changed (max |diff| 0.589)
+   rho: 14/4984 changed (max |diff| 0.0484)
+   rho_ci_hi: 14/4984 changed (max |diff| 0.0414)
+   rho_ci_lo: 14/4984 changed (max |diff| 0.056)
+   rho_organ_adjusted: 14/4984 changed (max |diff| 0.0802)
+
+## b3_baseline_tf_activity_per_line.csv: rows 50 -> 50; columns 668 -> 680
+   columns added: FOS, FOSB, FOSL1, FOSL2, JUN, JUNB, JUND, NFKB1, NFKB2, REL, RELA, RELB
+   AP1: 50/50 changed (max |diff| 1.82)
+   NFKB: 50/50 changed (max |diff| 1.23)
+
+## checks.csv: rows 29 -> 40; columns 7 -> 7
+   rows only before: 1 (e.g. [('homoharringtonine 5 uM per-line TRIM72 r2: _plate6 vs plate14 well, Spearman rho', nan)])
+   rows only after: 12 (e.g. [('A3 TP53 positive control: TP53 activities available', nan), ('KMT2D-altered lines vs TRIM72 untreated level: rho; partial on n driver genes; pseudo-driver null', nan), ('TRIM72_induction_mean vs TRIM72 untreated level across lines, Spearman rho (the *_adj_untreated outcomes remove the linear part)', nan), ('TRIM72_r2_homoharringtonine_5 vs TRIM72 untreated level across lines, Spearman rho (the *_adj_untreated outcomes remove the linear part)', nan), ('TRIM72_r2_homoharringtonine_5: well-to-well Spearman rho after removing the untreated level from each well (plate6 vs plate14)', nan), ('TRIM72_r2_idarubicin_5 vs TRIM72 untreated level across lines, Spearman rho (the *_adj_untreated outcomes remove the linear part)', nan)])
+   n: 1/28 changed (max |diff| 1.35e+03)
+   note: 22/28 text changed
+   value: 1/28 changed (max |diff| 12)
+
+## key_results.csv: rows 80 -> 94; columns 7 -> 7
+   rows only before: 45 (e.g. [('(b) line features', 'TRIM72_induction_mean ~ baseline_tf: features with q < 0.1'), ('(b) line features', 'TRIM72_induction_mean ~ drivers: features with q < 0.1'), ('(b) line features', 'TRIM72_induction_mean ~ lineage: features with q < 0.1'), ('(b) line features', 'TRIM72_induction_mean ~ locus: features with q < 0.1'), ('(b) line features', 'TRIM72_induction_mean ~ tp53: features with q < 0.1'), ('(b) line features', 'TRIM72_induction_mean_adj_untreated ~ baseline_tf: features with q < 0.1')])
+   rows only after: 59 (e.g. [('(b) inducibility vs untreated level (per raiser)', 'TRIM72_induction_mean vs TRIM72_untreated_rel across lines (Spearman)'), ('(b) inducibility vs untreated level (per raiser)', 'TRIM72_r2_homoharringtonine_5 vs TRIM72_untreated_rel across lines (Spearman)'), ('(b) inducibility vs untreated level (per raiser)', 'TRIM72_r2_idarubicin_5 vs TRIM72_untreated_rel across lines (Spearman)'), ('(b) line features', 'KMT2D-altered lines vs TRIM72 untreated level'), ('(b) line features', "TRIM72 untreated level vs its locus neighbours' untreated level"), ('(b) line features', 'TRIM72_induction_mean ~ baseline_tf: features with q < 0.1 (BH over all 5075 line tests)')])
+   detail: 28/35 text changed
+   estimate: 1/35 changed (max |diff| 1)
+   n: 1/35 changed (max |diff| 12)
+   q: 5/35 changed (max |diff| 0.0014)
+
+## run_info.json: downloads: {'collectri.tsv': 'cached', 'dorothea_ABC.tsv': 'cached', 'ensembl_trim72_region.json': 'cached'} -> {'collectri.tsv': 'downloaded', 'dorothea_ABC.tsv': 'downloaded', 'ensembl_trim72_region.json': 'downloaded'}; fallback_tf_mrna: False -> None; n_tfs_collectri: 667 -> 679; pass_from_cache: None -> False; pass_seconds_incl_setup: 1.5 -> 137.5; peak_rss_gb: 2.28 -> 2.39; peak_rss_source: None -> getrusage; platform: None -> linux; python: None -> 3.13.16; regulon_md5: None -> {'collectri.tsv': '6b6657b2f1daf2c43f6eecd0da3c9022', 'dorothea_ABC.tsv': 'ba90ec37fcab08906c34ac92decaf816'}; wall_seconds: 174.1 -> 300.4

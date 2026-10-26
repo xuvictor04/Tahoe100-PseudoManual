@@ -222,6 +222,125 @@ def t7_downstream(ws):
     return pd.DataFrame(rows)
 
 
+def t9_two_way(ws):
+    """TRIM72 -> p53 output over all drug-doses x lines (two-way model): slope in TP53-WT minus TP53-altered lines.
+
+    Each line is compared with lines of its own TP53 group in the same wells (drug-dose x TP53-group and line fixed effects,
+    covariates for drug response, cell loss and cell cycle). Negative = more TRIM72 goes with less p53-target mRNA only where
+    p53 works. Slopes are log2 change of the read-out per log2 change of TRIM72; p is the conservative cluster p (and the
+    TP53-label permutation p)."""
+    k = pd.read_csv(os.path.join(ws, "two_way", "tables", "key_results.csv"))
+    k = k[(k["fe"] == "ddxg") | k["fe"].isna()]
+    rows = [
+        ("P53_SCORE [i_all, full]: b_WT - b_alt", "p53 score (21 targets)", "all 1,132 drug-doses", "primary"),
+        ("MDM2 [i_all, full]: b_WT - b_alt", "MDM2", "all 1,132 drug-doses", "secondary"),
+        ("CDKN1A [i_all, full]: b_WT - b_alt", "CDKN1A", "all 1,132 drug-doses", "secondary"),
+        ("FDXR [i_all, full]: b_WT - b_alt", "FDXR", "all 1,132 drug-doses", "secondary"),
+        ("ZMAT3 [i_all, full]: b_WT - b_alt", "ZMAT3", "all 1,132 drug-doses", "secondary"),
+        ("DDB2 [i_all, full]: b_WT - b_alt", "DDB2", "all 1,132 drug-doses", "secondary"),
+        ("BBC3 [i_all, full]: b_WT - b_alt", "BBC3", "all 1,132 drug-doses", "secondary"),
+        ("TP53 [i_all, full]: b_WT - b_alt", "TP53 mRNA (not a target)", "all 1,132 drug-doses", "secondary"),
+        ("P53_SCORE [i_all, full_p53resp]: b_WT - b_alt", "p53 score", "all; + p53 responsiveness covariate", "sensitivity"),
+        ("P53_SCORE [iii_readthrough_cov, full_rt]: b_WT - b_alt", "p53 score", "all; FUS / PYCARD-AS1 (readthrough) in the model",
+         "sensitivity"),
+        ("P53_SCORE [iv_no_plate3_13, full]: b_WT - b_alt", "p53 score", "all; without plates 3 and 13", "sensitivity"),
+        ("P53_SCORE [ii_active, full]: b_WT - b_alt", "p53 score", "62 active drug-doses (TRIM72 or p53 z >= 3)", "sensitivity"),
+        ("P53_SCORE [iii_readthrough_cov_active, full_rt]: b_WT - b_alt", "p53 score", "62 active; readthrough in the model",
+         "sensitivity"),
+        ("P53_SCORE [full]: active: b_WT - b_alt (line FE from all drug-doses)", "p53 score",
+         "62 active, line effects from all drug-doses", "sensitivity"),
+        ("P53_SCORE [full]: difference-in-differences: active diff minus inactive diff", "p53 score",
+         "active minus inactive drug-doses", "sensitivity"),
+    ]
+    out = []
+    for what, readout, scope, role in rows:
+        x = k[k["what"] == what]
+        if not len(x):
+            continue
+        x = x.iloc[0]
+        out.append({"Read-out": readout, "Drug-doses": scope, "Role": role,
+                    "WT − altered slope": num(x["estimate"], 4), "95% CI": f"{num(x['ci_lo'], 4)} to {num(x['ci_hi'], 4)}",
+                    "p": pval(x["p_twoway"]), "p (TP53-label permutation)": pval(x["p_label_perm"]),
+                    "Holm over variants": pval(x["p_holm_variants_twoway"]) if "p_holm_variants_twoway" in x else "–"})
+    return pd.DataFrame(out)
+
+
+def t10_single_cell(ws):
+    """Single cells of all wells: p53-target counts in TRIM72-detected vs undetected cells of the same well and line.
+
+    Rate ratios (RR) adjusted for depth and cell cycle, meta-analysed over lines (Hartung-Knapp); WT − altered is the
+    difference of log RR. Placebo percentile: where TRIM72 falls among 16 other rare genes used as predictors (50 = typical).
+    Per doubling: the WT-specific change per doubling of a cell's TRIM72 the data allow (95% CI)."""
+    k = pd.read_csv(os.path.join(ws, "single_cell_all", "tables", "key_results.csv"))
+    names = {"P53_SCORE": "p53 score (21 targets)", "P53_PRIMARY5": "p53 primary 5", "MDM2": "MDM2", "CDKN1A": "CDKN1A",
+             "ATF3": "ATF3 (stress)", "PMAIP1": "PMAIP1", "NFKB_SCORE": "NF-κB score", "FERROPTOSIS_SCORE": "ferroptosis score",
+             "SLC7A11": "SLC7A11", "APOPTOSIS_SCORE": "apoptosis score"}
+    sel = [(o, "all wells") for o in names] + [("P53_SCORE", c) for c in ("DMSO", "TRIM72 raisers", "p53 activators",
+                                                                        "other drugs")]
+    out = []
+    for o, c in sel:
+        x = k[(k["outcome"] == o) & (k["class"] == c)]
+        if not len(x):
+            continue
+        x = x.iloc[0]
+        out.append({"Outcome": names.get(o, o), "Wells": c, "RR, WT lines": num(x["rr_WT"], 3),
+                    "RR, altered lines": num(x["rr_altered"], 3),
+                    "WT − altered (log RR)": num(x["WT_minus_altered_log_rr"], 3),
+                    "95% CI": f"{num(x['ci_lo_log'], 3)} to {num(x['ci_hi_log'], 3)}", "p": pval(x["p"]),
+                    "p (permutation)": pval(x["p_perm"]),
+                    "Placebo percentile": num(x["placebo_predictor_percentile"], 0),
+                    "Per doubling of TRIM72 (95% CI)": f"{num(x['per_doubling_diff_ci_lo'], 3)} to "
+                                                       f"{num(x['per_doubling_diff_ci_hi'], 3)}",
+                    "p53-functional − non-functional lines (p perm)":
+                        f"{num(x['functional_resp_minus_unresp'], 3)} ({pval(x['functional_p_perm'])})"})
+    return pd.DataFrame(out)
+
+
+def t11_upstream_tf(ws):
+    """Transcription-factor activities vs TRIM72 (CollecTRI regulons, TRIM72 and its locus genes left out).
+
+    Across drug-doses: partial r of TF activity with TRIM72 z (activity and cell loss out; CI from the drug-block null), and
+    the same after removing the TF's AP-1/IEG/ATF3 targets and partialling those mediators. Within lines: the two-way model
+    (same drug-dose, different lines). TRIM72's within-line r with its best single co-responders is ~0.08 (noise ceiling)."""
+    a = pd.read_csv(os.path.join(ws, "upstream_tf", "tables", "a1a2_tf_summary.csv")).set_index("tf")
+    tfs = ["ATF4", "ATF5", "XBP1", "ELK4", "SRF", "AP1", "NFKB", "HSF1", "TP53", "E2F4", "MYC", "MEF2A", "MEF2C", "MEF2D",
+           "MYOD1", "MYOG"]
+    out = []
+    for t in tfs:
+        if t not in a.index:
+            continue
+        x = a.loc[t]
+        out.append({"TF": t + (" (muscle; known TRIM72 promoter TF)" if t in ("MYOD1", "MYOG", "MEF2A") else ""),
+                    "r across drug-doses": num(x["r_dd_TRIM72_covariates"]),
+                    "95% CI": f"{num(x['ci_lo_dd_TRIM72_covariates'])} to {num(x['ci_hi_dd_TRIM72_covariates'])}",
+                    "q": pval(x["q_dd_TRIM72_covariates"]),
+                    "r without AP-1/IEG/ATF3 arm": num(x["r_dd_TRIM72_minus_overlap_plus_mediators"]),
+                    "r within lines (q)": f"{num(x['within_TRIM72_r'], 3)} ({pval(x['within_TRIM72_q'])})",
+                    "WT − altered within lines, q": pval(x["within_diff_q"]),
+                    "TF mRNA (median line CPM)": num(x["tf_mRNA_median_line_cpm"], 1)})
+    return pd.DataFrame(out)
+
+
+def t12_line_features(ws):
+    """Which cell-line traits predict TRIM72's untreated level and its induction (47-49 lines)?
+
+    Spearman rho (or group difference for binary traits) with q over all 5,075 line tests and within each outcome. Shown:
+    every trait with q < 0.1, plus TP53 status and KMT2D for reference."""
+    b = pd.read_csv(os.path.join(ws, "upstream_tf", "tables", "b2_line_feature_tests.csv"))
+    keep = (b["q_bh"] < 0.1) | (b["feature"].isin(["TP53 WT (vs altered)", "KMT2D"])
+                                & b["outcome"].isin(["TRIM72_untreated_rel", "TRIM72_r2_idarubicin_5",
+                                                     "TRIM72_r2_idarubicin_5_adj_untreated"]))
+    lab = {"TRIM72_untreated_rel": "untreated level (within plate)", "TRIM72_r2_idarubicin_5": "induction, idarubicin 5 µM",
+           "TRIM72_r2_idarubicin_5_adj_untreated": "idarubicin induction, adjusted for untreated level"}
+    out = []
+    for _, x in b[keep].sort_values(["outcome", "q_bh"]).iterrows():
+        out.append({"Outcome": lab.get(x["outcome"], x["outcome"]), "Trait": x["feature"], "Kind": x["family"],
+                    "Lines": int(x["n_lines"]), "rho": num(x["rho"]),
+                    "Difference (log2), with − without": num(x["diff_mean"]) if np.isfinite(x["diff_mean"]) else "–",
+                    "p": pval(x["p"]), "q (all tests)": pval(x["q_bh"]), "q (this outcome)": pval(x["q_bh_outcome"])})
+    return pd.DataFrame(out)
+
+
 def t8_answers():
     """The short answers (written from the verified findings; see README.md for the evidence and caveats)."""
     return pd.DataFrame([
@@ -238,7 +357,16 @@ def t8_answers():
         ("Is it TRIM72's own promoter?", "Unresolved", "Part of TRIM72's reads look like readthrough from FUS (17-22 kb upstream, "
          "same strand); clean for homoharringtonine, not significant for idarubicin after level matching (T4)", "moderate"),
         ("Does more TRIM72 go with less p53 output?", "No detectable association", "Per line, across drugs, untreated and in "
-         "single cells; only strong associations are excluded (17 WT lines) (T6, T7)", "null, limited power"),
+         "single cells (T6, T7); scaled up over all 1,132 drug-doses x 50 lines with TP53 genotype as the control: WT − "
+         "altered slope -0.003 (95% CI -0.009 to 0.002, p 0.24) (T9); in single cells of all wells: no genotype-dependent "
+         "association, a fall of > 1.2% per doubling of TRIM72 excluded (T10). A -3% slope in the 62 most active drug-doses is "
+         "not robust (Holm p 0.12; gone when line effects use all drug-doses)", "null; small effects not excluded"),
+        ("Which transcription factors track TRIM72?", "Stress TFs across drugs, none within lines", "ATF4/ATF5 r 0.36 across "
+         "drugs, largely through the shared AP-1/IEG/ATF3 arm (ATF4 0.09 without it); within lines every TF |r| <= 0.08, the "
+         "noise ceiling; muscle TFs absent (T11)", "co-response, not regulation"),
+        ("Which line traits predict TRIM72?", "Its locus, not TP53", "Untreated TRIM72 follows PYCARD-AS1 (rho 0.82) and FUS "
+         "(0.57): readthrough or 16p11.2 copy number; TP53 status no (rho 0.07); KMT2D tentative (q 0.12 over all tests) (T12)",
+         "moderate"),
         ("Does MG53 lower p53 activity?", "Not causally testable in Tahoe", "p53 target mRNA is a valid read-out and was "
          "tested (row above), but TRIM72 only changes with drugs that also act on p53, and its mRNA may not mean MG53 "
          "protein. Needs an MG53 knockdown/overexpression with p53 target mRNA as read-out. Literature: MG53 binds p53 and "
@@ -255,6 +383,11 @@ TABLES = [
     ("T5_p53_dependence", "T5. TRIM72 induction in TP53 wild-type vs altered lines (same wells)", t5_p53_dependence, False),
     ("T6_idarubicin_per_line_TRIM72_and_p53", "T6. Idarubicin 5 µM per cell line: TRIM72 next to p53 targets", t6_per_line, False),
     ("T7_TRIM72_vs_p53_output_tests", "T7. Does TRIM72 go with more or less p53 output?", t7_downstream, False),
+    ("T9_two_way_TRIM72_p53", "T9. Scaled up: TRIM72 vs p53 output over all drug-doses x lines (TP53 genotype as control)",
+     t9_two_way, False),
+    ("T10_single_cell_all_wells", "T10. Scaled up: single cells of all wells", t10_single_cell, False),
+    ("T11_upstream_TF_activity", "T11. Upstream: transcription-factor activities vs TRIM72", t11_upstream_tf, False),
+    ("T12_line_traits", "T12. Upstream: cell-line traits that predict TRIM72", t12_line_features, False),
 ]
 
 

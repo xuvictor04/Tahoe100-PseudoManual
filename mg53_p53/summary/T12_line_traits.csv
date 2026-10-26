@@ -1,0 +1,12 @@
+Outcome,Trait,Kind,Lines,rho,"Difference (log2), with − without",p,q (all tests),q (this outcome)
+"induction, idarubicin 5 µM",NFKBIB,baseline_tf,48,0.62,–,2e-05,0.036,0.008
+"induction, idarubicin 5 µM",PYCARD-AS1_untreated_rel,locus,47,-0.62,–,2e-05,0.036,0.008
+"induction, idarubicin 5 µM",TP73,baseline_tf,48,0.59,–,5e-05,0.067,0.013
+"induction, idarubicin 5 µM",KMT2D,drivers,48,-0.43,-0.68,0.003,0.28,0.087
+"induction, idarubicin 5 µM",TP53 WT (vs altered),tp53,48,0.08,-0.05,0.60,0.87,0.84
+"idarubicin induction, adjusted for untreated level",TP53 WT (vs altered),tp53,48,0.30,0.02,0.039,0.38,0.65
+"idarubicin induction, adjusted for untreated level",KMT2D,drivers,48,0.05,0.15,0.72,0.91,0.95
+untreated level (within plate),PYCARD-AS1_untreated_rel,locus,48,0.82,–,2e-08,9e-05,1e-05
+untreated level (within plate),FUS_untreated_rel,locus,49,0.57,–,8e-05,0.079,0.028
+untreated level (within plate),KMT2D,drivers,49,0.54,1.48,2e-04,0.12,0.046
+untreated level (within plate),TP53 WT (vs altered),tp53,49,0.07,0.18,0.64,0.89,0.92

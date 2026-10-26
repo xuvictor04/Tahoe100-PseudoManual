@@ -1,18 +1,25 @@
 {
  "downloads": {
-  "collectri.tsv": "cached",
-  "dorothea_ABC.tsv": "cached",
-  "ensembl_trim72_region.json": "cached"
+  "collectri.tsv": "downloaded",
+  "dorothea_ABC.tsv": "downloaded",
+  "ensembl_trim72_region.json": "downloaded"
  },
  "download_date_utc": "2026-10-26",
+ "regulon_md5": {
+  "collectri.tsv": "6b6657b2f1daf2c43f6eecd0da3c9022",
+  "dorothea_ABC.tsv": "ba90ec37fcab08906c34ac92decaf816"
+ },
  "locus_source": "Ensembl REST (rest.ensembl.org overlap, TRIM72 +- 200 kb)",
- "fallback_tf_mrna": false,
- "n_tfs_collectri": 667,
+ "n_tfs_collectri": 679,
  "n_tfs_dorothea": 290,
  "n_drugdoses": 1086,
  "perm": 1000,
  "line_perm": 10000,
- "pass_seconds_incl_setup": 1.5,
- "wall_seconds": 174.1,
- "peak_rss_gb": 2.28
+ "pass_seconds_incl_setup": 137.5,
+ "pass_from_cache": false,
+ "wall_seconds": 300.4,
+ "peak_rss_gb": 2.39,
+ "peak_rss_source": "getrusage",
+ "python": "3.13.16",
+ "platform": "linux"
 }

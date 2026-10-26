@@ -1,49 +1,49 @@
-[13:24:18] data /home/user/tahoe_data; tables /home/user/Tahoe100-PseudoManual/mg53_p53/single_cell_all/tables; cache /home/user/Tahoe100-PseudoManual/mg53_p53/single_cell_all/cache; gene modules /home/user/Tahoe100-PseudoManual/mg53_p53/gene_modules.csv
-[13:24:22] groups: 67018 (well, line); 32717 qualify (60,004,380 cells, 931,222 TRIM72-detected); expected cells used 47,079,238 (cap 2000); cap-0 sample 1194 of 6088 at-risk groups (4,277,837 cells)
-[13:24:22] placebo predictors (16): ABCG2 0.0076, NLRP3 0.0095, AIM2 0.0148, GSDMD 0.0180, OSGIN1 0.0223, SDF2L1 0.0240, IL1B 0.0275, AKR1B10 0.0296, NAPEPLD 0.0334, ABCB1 0.0352, CDKN2B 0.0400, AKR1C2 0.0400, PSPH 0.0433, HMOX1 0.0436, GSDME 0.0442, IRF7 0.0462; TRIM72 0.0155
-[13:24:22] ambient controls: CDKN2A in 13 lines (detected 0.0097); MTAP in 6 lines (detected 0.0348)
-[13:24:22] outcomes: 108 (66 placebo outcomes); cell columns 104
-[13:24:22] streaming 3388 cell files (2 readers, 3 fitting workers)
-[13:24:37]   200/3388 files, 5,645,000 cells, 10 s, peak RSS 1.19 GB, largest worker 0.15 GB
-[13:24:39]   plate4: 2677 groups, 4,237,556 cells sent to fit (complete); 0 groups fitted before it; 12 s; peak RSS 1.45 GB, largest worker 0.15 GB
-[13:24:53]   400/3388 files, 11,290,000 cells, 26 s, peak RSS 1.90 GB, largest worker 0.22 GB
-[13:25:52]   plate5: 2182 groups, 3,290,560 cells sent to fit (complete); 2677 groups fitted before it; 85 s; peak RSS 2.11 GB, largest worker 0.22 GB
-[13:26:01]   600/3388 files, 16,935,000 cells, 94 s, peak RSS 2.11 GB, largest worker 0.22 GB
-[13:26:45]   plate6: 2686 groups, 4,398,706 cells sent to fit (complete); 4859 groups fitted before it; 138 s; peak RSS 2.22 GB, largest worker 0.22 GB
-[13:26:49]   800/3388 files, 22,580,000 cells, 143 s, peak RSS 2.22 GB, largest worker 0.22 GB
-[13:28:11]   plate7: 677 groups, 974,963 cells sent to fit (complete); 7545 groups fitted before it; 224 s; peak RSS 2.22 GB, largest worker 0.24 GB
-[13:28:17]   1000/3388 files, 28,225,000 cells, 230 s, peak RSS 2.22 GB, largest worker 0.24 GB
-[13:28:33]   plate8: 1539 groups, 2,876,261 cells sent to fit (complete); 8222 groups fitted before it; 246 s; peak RSS 2.22 GB, largest worker 0.24 GB
-[13:28:34]   1200/3388 files, 33,870,000 cells, 247 s, peak RSS 2.22 GB, largest worker 0.24 GB
-[13:29:27]   plate9: 1000 groups, 1,522,445 cells sent to fit (complete); 9761 groups fitted before it; 300 s; peak RSS 2.22 GB, largest worker 0.25 GB
-[13:29:28]   1400/3388 files, 39,515,000 cells, 301 s, peak RSS 2.22 GB, largest worker 0.25 GB
-[13:29:41]   1600/3388 files, 45,159,822 cells, 314 s, peak RSS 2.22 GB, largest worker 0.25 GB
-[13:29:56]   plate10: 1913 groups, 3,291,640 cells sent to fit (complete); 10761 groups fitted before it; 329 s; peak RSS 2.22 GB, largest worker 0.25 GB
-[13:30:06]   1800/3388 files, 50,804,622 cells, 339 s, peak RSS 2.22 GB, largest worker 0.25 GB
-[13:30:53]   plate11: 2187 groups, 3,482,208 cells sent to fit (complete); 12674 groups fitted before it; 387 s; peak RSS 2.22 GB, largest worker 0.25 GB
-[13:31:00]   2000/3388 files, 56,449,422 cells, 393 s, peak RSS 2.22 GB, largest worker 0.25 GB
-[13:31:16]   2200/3388 files, 62,094,222 cells, 409 s, peak RSS 2.33 GB, largest worker 0.25 GB
-[13:32:00]   plate12: 2712 groups, 5,306,726 cells sent to fit (complete); 14861 groups fitted before it; 453 s; peak RSS 2.55 GB, largest worker 0.26 GB
-[13:32:10]   2400/3388 files, 67,739,022 cells, 463 s, peak RSS 2.55 GB, largest worker 0.26 GB
-[13:33:56]   plate13: 1267 groups, 2,381,197 cells sent to fit (complete); 17573 groups fitted before it; 569 s; peak RSS 2.55 GB, largest worker 0.26 GB
-[13:34:00]   2600/3388 files, 73,383,822 cells, 573 s, peak RSS 2.55 GB, largest worker 0.26 GB
-[13:34:50]   plate14: 4136 groups, 5,515,156 cells sent to fit (complete); 18840 groups fitted before it; 623 s; peak RSS 2.55 GB, largest worker 0.26 GB
-[13:34:52]   2800/3388 files, 79,028,622 cells, 625 s, peak RSS 2.55 GB, largest worker 0.26 GB
-[13:36:48]   plate1: 3716 groups, 4,779,201 cells sent to fit (complete); 22976 groups fitted before it; 741 s; peak RSS 2.96 GB, largest worker 0.26 GB
-[13:36:51]   3000/3388 files, 84,673,422 cells, 744 s, peak RSS 2.96 GB, largest worker 0.26 GB
-[13:37:19]   3200/3388 files, 90,318,222 cells, 772 s, peak RSS 2.96 GB, largest worker 0.26 GB
-[13:38:52]   plate2: 3958 groups, 5,938,856 cells sent to fit (complete); 26692 groups fitted before it; 865 s; peak RSS 3.10 GB, largest worker 0.26 GB
-[13:41:25]   plate3: 3261 groups, 3,360,980 cells sent to fit (complete); 30650 groups fitted before it; 1018 s; peak RSS 3.10 GB, largest worker 0.26 GB
-[13:42:28] streamed and fitted in 1078 s: 33911 groups, 6,327,606 fits; peak RSS main 3.10 GB, largest worker 0.66 GB
-[13:42:29] meta-analysis
-[13:42:37]   meta stages 1/2: 83,301 line rows, 9,472 pooled rows (8 s)
-[13:42:41]   WT minus altered with 10000 permutations (11 s)
-[13:42:53]   within-well paired check (23 s)
-[13:42:56]   placebo nulls (27 s)
-[13:43:09]   sensitivity subsets incl. cap 0 (40 s)
-[13:43:14]   ambient negative controls (44 s)
-[13:43:20]   TP53 functional-status grouping (51 s)
-[13:43:21]   per-doubling bounds, subsets, controls (51 s)
+[17:43:11] data /home/user/tahoe_data; tables /home/user/Tahoe100-PseudoManual/mg53_p53/single_cell_all/tables; cache /home/user/Tahoe100-PseudoManual/mg53_p53/single_cell_all/cache; gene modules /home/user/Tahoe100-PseudoManual/mg53_p53/gene_modules.csv
+[17:43:18] groups: 67018 (well, line); 32717 qualify (60,004,380 cells, 931,222 TRIM72-detected); expected cells used 47,079,238 (cap 2000); cap-0 sample 1194 of 6088 at-risk groups (4,277,837 cells)
+[17:43:18] placebo predictors (16): ABCG2 0.0076, NLRP3 0.0095, AIM2 0.0148, GSDMD 0.0180, OSGIN1 0.0223, SDF2L1 0.0240, IL1B 0.0275, AKR1B10 0.0296, NAPEPLD 0.0334, ABCB1 0.0352, CDKN2B 0.0400, AKR1C2 0.0400, PSPH 0.0433, HMOX1 0.0436, GSDME 0.0442, IRF7 0.0462; TRIM72 0.0155
+[17:43:18] ambient controls: CDKN2A in 13 lines (detected 0.0097); MTAP in 6 lines (detected 0.0348)
+[17:43:18] outcomes: 108 (66 placebo outcomes); cell columns 104
+[17:43:18] streaming 3388 cell files (2 readers, 3 fitting workers)
+[17:44:12]   200/3388 files, 5,645,000 cells, 50 s, peak RSS 1.19 GB, largest worker 0.15 GB
+[17:44:23]   plate4: 2677 groups, 4,237,556 cells sent to fit (complete); 0 groups fitted before it; 61 s; peak RSS 1.44 GB, largest worker 0.15 GB
+[17:45:01]   400/3388 files, 11,290,000 cells, 98 s, peak RSS 1.98 GB, largest worker 0.21 GB
+[17:45:14]   plate5: 2182 groups, 3,290,560 cells sent to fit (complete); 2677 groups fitted before it; 112 s; peak RSS 2.18 GB, largest worker 0.21 GB
+[17:45:43]   600/3388 files, 16,935,000 cells, 141 s, peak RSS 2.18 GB, largest worker 0.21 GB
+[17:46:00]   plate6: 2686 groups, 4,398,706 cells sent to fit (complete); 4859 groups fitted before it; 158 s; peak RSS 2.18 GB, largest worker 0.21 GB
+[17:46:19]   800/3388 files, 22,580,000 cells, 177 s, peak RSS 2.18 GB, largest worker 0.22 GB
+[17:46:59]   plate7: 677 groups, 974,963 cells sent to fit (complete); 7545 groups fitted before it; 217 s; peak RSS 2.18 GB, largest worker 0.24 GB
+[17:47:22]   1000/3388 files, 28,225,000 cells, 240 s, peak RSS 2.18 GB, largest worker 0.24 GB
+[17:48:03]   plate8: 1539 groups, 2,876,261 cells sent to fit (complete); 8222 groups fitted before it; 280 s; peak RSS 2.18 GB, largest worker 0.24 GB
+[17:48:04]   1200/3388 files, 33,870,000 cells, 281 s, peak RSS 2.18 GB, largest worker 0.24 GB
+[17:48:28]   plate9: 1000 groups, 1,522,445 cells sent to fit (complete); 9761 groups fitted before it; 305 s; peak RSS 2.18 GB, largest worker 0.25 GB
+[17:48:29]   1400/3388 files, 39,515,000 cells, 307 s, peak RSS 2.18 GB, largest worker 0.25 GB
+[17:48:54]   1600/3388 files, 45,159,822 cells, 332 s, peak RSS 2.18 GB, largest worker 0.25 GB
+[17:49:05]   plate10: 1913 groups, 3,291,640 cells sent to fit (complete); 10761 groups fitted before it; 343 s; peak RSS 2.18 GB, largest worker 0.25 GB
+[17:49:24]   1800/3388 files, 50,804,622 cells, 362 s, peak RSS 2.18 GB, largest worker 0.25 GB
+[17:49:35]   plate11: 2187 groups, 3,482,208 cells sent to fit (complete); 12674 groups fitted before it; 372 s; peak RSS 2.18 GB, largest worker 0.25 GB
+[17:49:42]   2000/3388 files, 56,449,422 cells, 379 s, peak RSS 2.18 GB, largest worker 0.25 GB
+[17:50:04]   2200/3388 files, 62,094,222 cells, 402 s, peak RSS 2.31 GB, largest worker 0.25 GB
+[17:50:11]   plate12: 2712 groups, 5,306,726 cells sent to fit (complete); 14861 groups fitted before it; 408 s; peak RSS 2.31 GB, largest worker 0.25 GB
+[17:50:16]   2400/3388 files, 67,739,022 cells, 414 s, peak RSS 2.31 GB, largest worker 0.25 GB
+[17:51:00]   plate13: 1267 groups, 2,381,197 cells sent to fit (complete); 17573 groups fitted before it; 458 s; peak RSS 2.40 GB, largest worker 0.25 GB
+[17:51:12]   2600/3388 files, 73,383,822 cells, 469 s, peak RSS 2.40 GB, largest worker 0.25 GB
+[17:51:51]   plate14: 4136 groups, 5,515,156 cells sent to fit (complete); 18840 groups fitted before it; 509 s; peak RSS 2.40 GB, largest worker 0.26 GB
+[17:51:56]   2800/3388 files, 79,028,622 cells, 514 s, peak RSS 2.40 GB, largest worker 0.26 GB
+[17:52:36]   plate1: 3716 groups, 4,779,201 cells sent to fit (complete); 22976 groups fitted before it; 553 s; peak RSS 2.96 GB, largest worker 0.26 GB
+[17:52:43]   3000/3388 files, 84,673,422 cells, 561 s, peak RSS 2.96 GB, largest worker 0.26 GB
+[17:53:31]   3200/3388 files, 90,318,222 cells, 609 s, peak RSS 2.96 GB, largest worker 0.26 GB
+[17:53:38]   plate2: 3958 groups, 5,938,856 cells sent to fit (complete); 26692 groups fitted before it; 616 s; peak RSS 2.96 GB, largest worker 0.26 GB
+[17:54:33]   plate3: 3261 groups, 3,360,980 cells sent to fit (complete); 30650 groups fitted before it; 671 s; peak RSS 2.96 GB, largest worker 0.26 GB
+[17:55:06] streamed and fitted in 697 s: 33911 groups, 6,327,606 fits; peak RSS main 2.96 GB, largest worker 0.56 GB
+[17:55:08] meta-analysis
+[17:55:15]   meta stages 1/2: 83,301 line rows, 9,472 pooled rows (7 s)
+[17:55:18]   WT minus altered with 10000 permutations (10 s)
+[17:55:27]   within-well paired check (19 s)
+[17:55:30]   placebo nulls (21 s)
+[17:55:40]   sensitivity subsets incl. cap 0 (32 s)
+[17:55:44]   ambient negative controls (35 s)
+[17:55:49]   TP53 functional-status grouping (41 s)
+[17:55:50]   per-doubling bounds, subsets, controls (41 s)
      outcome          class  n_lines_WT  n_lines_altered  rr_WT  rr_altered  WT_minus_altered_log_rr  ci_lo_log  ci_hi_log  p_perm  placebo_predictor_empirical_p  placebo_outcome_empirical_p  per_doubling_diff_ci_lo  per_doubling_diff_ci_hi
    P53_SCORE           DMSO          17               30 1.0251      1.0258                  -0.0006    -0.0907     0.0895  0.9826                         0.7059                       0.9206                   0.9546                   1.0490
    P53_SCORE TRIM72 raisers          17               30 1.0122      1.0183                  -0.0060    -0.0578     0.0458  0.7827                         0.8824                       0.7385                   0.9553                   1.0506
@@ -90,5 +90,5 @@ P53_PRIMARY5      all wells          17               30 1.0897      1.0444     
                                               cap-0 sample: sampled groups the cap dropped / all groups the cap dropped 3.740000e+02    1914.0                      374 of the sampled dropped groups fitted at cap 0; 820 sampled groups fitted at both caps; 0 dropped groups were outside the at-risk set (should be 0)
      idarubicin 5 uM P53_SCORE rate ratio, WT: this step (per well, then lines) vs D1 (per line, both wells in one fit) 1.019750e+00      16.0 D1 1.0195 (/home/user/Tahoe100-PseudoManual/mg53_p53/downstream_p53/tables/d_single_cell_meta_main.csv); differences: per-well fits, two-stage pooling, 2000-cell subsample
 idarubicin 5 uM P53_SCORE rate ratio, altered: this step (per well, then lines) vs D1 (per line, both wells in one fit) 9.816738e-01      30.0 D1 0.9832 (/home/user/Tahoe100-PseudoManual/mg53_p53/downstream_p53/tables/d_single_cell_meta_main.csv); differences: per-well fits, two-stage pooling, 2000-cell subsample
-[13:43:30] tables written to /home/user/Tahoe100-PseudoManual/mg53_p53/single_cell_all/tables; wall 1152 s; peak RSS main 3.10 GB, largest child 0.66 GB
-MONITOR exit 0 wall 1154 s; peak PSS of the process tree 3.58 GB; peak RSS main 3.10 GB; largest child RSS 0.41 GB
+[17:55:59] tables written to /home/user/Tahoe100-PseudoManual/mg53_p53/single_cell_all/tables; wall 770 s; peak RSS main 2.96 GB, largest child 0.56 GB
+MONITOR exit 0; wall 782 s; peak PSS of the process tree 3.54 GB; peak RSS main 2.93 GB; largest child RSS 0.55 GB; read from disk 2.06 GB; page cache 0.6 GB before, 11.0 GB after
