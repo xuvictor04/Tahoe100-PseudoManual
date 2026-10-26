@@ -1,0 +1,3 @@
+predictor,slope,se_drug,p_drug,n_rows,n_drugdoses,n_lines,within_R2_of_TRIM72
+FUS_r2,0.376203,0.0609244,1.76034e-09,51165,1086,49,0.0186163
+PYCARD-AS1_r2,0.117131,0.00762618,1.93006e-41,51165,1086,49,0.0186163

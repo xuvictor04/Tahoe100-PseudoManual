@@ -32,3 +32,9 @@ pseudobulk vs gene_panel well_line: max |diff| cells,0.0,66449.0,
 split-half: profiles,66449.0,,
 split-half: max_abs_diff_cells_halfA_plus_halfB_vs_well_line,0.0,,
 split-half: max_abs_diff_TRIM72_counts_halfA_plus_halfB_vs_well_line,0.0,,
+"within-cell permutation, fast formula vs explicit projection, max |diff| of b_WT, b_alt, b_common (i_all, full, P53_SCORE, FE dd)",4.0766001685454967e-17,53084.0,
+"within-cell permutation, fast formula vs explicit projection, max |diff| of b_WT, b_alt, b_common (i_all, full, P53_SCORE, FE ddxg)",6.613633252161577e-18,53084.0,
+D1 TP53-label engine at the true labels minus the main fit (FE dd): max |diff| of b_WT - b_alt; of t,2.3592239273284576e-16,117.0,t: 2.9e-14
+D1 TP53-label engine at the true labels minus the main fit (FE ddxg): max |diff| of b_WT - b_alt; of t,1.457167719820518e-16,117.0,t: 1.9e-14
+D2 TP53-label engine at the true labels minus the main fit (FE dd): max |diff| of b_WT - b_alt; of t,1.5612511283791264e-16,37.0,t: 1.8e-14
+D2 TP53-label engine at the true labels minus the main fit (FE ddxg): max |diff| of b_WT - b_alt; of t,3.7816971776294395e-16,37.0,t: 2.5e-14
