@@ -258,8 +258,9 @@ cannot be excluded, because TRIM72 is barely expressed in these lines.
 
 ## Running it on your system
 
-**From an empty machine:** `bash mg53_p53/setup/mg53_setup.sh` streams Tahoe-100M, builds the atlas and gene panel,
-runs every step below and compares your tables with these (~5 h, ~28 GB disk); see [setup/README.md](setup/README.md).
+**From an empty machine:** `bash mg53_p53/setup/mg53_setup.sh` downloads Tahoe-100M (429 GB; `--mode needed`: the 338 GB
+the analysis reads; `--mode stream`: ~28 GB disk, nothing kept), builds the atlas and gene panel, runs every step below and
+compares your tables with these; see [setup/README.md](setup/README.md).
 
 **With the atlas and gene panel already computed:**
 Needs the computed atlas (`tahoe_atlas.py compute`, keeping `atlas/pseudobulk`) and gene panel (`tahoe_gene_panel.py all`) in
@@ -283,7 +284,7 @@ passes over `atlas/pseudobulk` and `gene_panel/cells` are I/O-bound).
 
 | Folder / file | What it holds |
 |---|---|
-| `setup/` | `mg53_setup.sh`: an empty machine to every table below (stream via `stream_build.py`, then atlas, gene panel, all steps, `compare_with_repo.py`). |
+| `setup/` | `mg53_setup.sh`: an empty machine to every table below (Tahoe-100M download or `stream_build.py`, atlas, gene panel, all steps, `compare_with_repo.py`). |
 | `run_mg53_p53.py` | Runs the steps below on a Tahoe-100M folder, then `summary_tables.py`. |
 | `summary_tables.py`, `SUMMARY.md`, `summary/` | The summary tables (T1-T12) built from the step tables. |
 | `gene_modules.csv` | p53 primary targets and the pathway read-outs of the screen, with the literature for each MG53 link. |
