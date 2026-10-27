@@ -273,8 +273,9 @@ HGNC and Ensembl coordinates once), `p53_dependence` (~3 min), `downstream` (~8-
 ATF3-adjusted sensitivity run), `upstream_tf` (~5 min; downloads CollecTRI/DoRothEA once; `--offline` uses cached files),
 `summary`. Each step's tables go to `<out>/<step folder>/tables` (caches in `cache/`, keyed to the data folder), then
 `summary_tables.py` writes `<out>/SUMMARY.md` and `<out>/summary/*.csv` (T1-T12). The log is `<out>/run_mg53_p53.log`.
-Reproducibility: a from-scratch run of `run_mg53_p53.py` into an empty folder (~25 min here plus a one-time ~20 min
-pass over `atlas/pseudobulk`) reproduced all 98 step tables and the summary tables of this folder exactly.
+Reproducibility: a from-scratch run of `run_mg53_p53.py` (all eight steps) into an empty folder took 60 min here and
+reproduced all 168 step tables and the 12 summary tables of this folder exactly (on a cold disk expect ~2 h: the
+passes over `atlas/pseudobulk` and `gene_panel/cells` are I/O-bound).
 
 | Folder / file | What it holds |
 |---|---|
