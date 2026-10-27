@@ -5,9 +5,13 @@ Each expression file is downloaded just before tahoe_atlas._build_group reads it
 extract (tahoe_mtap_gankyrin._extract_one) runs on it, then it is replaced by a zero-row parquet with the same
 schema, so the folder is indexed exactly like a full download while never holding more than a few files.
 
+    python3 stream_build.py metadata --data DIR          # the four small metadata tables the scripts need
     python3 stream_build.py plates   --data DIR          # file -> plate map (reads one column chunk per file)
-    python3 stream_build.py stream   --data DIR --workers 4
+    python3 stream_build.py stream   --data DIR          # workers: --workers N, default from CPUs and free memory
     python3 stream_build.py finish   --data DIR          # tahoe_atlas.py build on the finished groups (all reused)
+Every command is resumable: finished plates, per-cell files and downloads are kept and skipped on a rerun. 'stream'
+exits non-zero if any plate failed or any file is missing at the end (rerun it). Disk: ~25 GB at the end (atlas
+pseudobulk ~20 GB, gene panel cells ~2.6 GB), plus ~0.3 GB per worker in flight. Memory: ~2.6 GB per worker.
 """
 import argparse, concurrent.futures as cf, json, os, re, subprocess, sys, time, traceback
 import multiprocessing as mp
@@ -35,8 +39,25 @@ def remote_files():
     return sorted(out)
 
 
+METADATA = ["cell_line_metadata", "drug_metadata", "gene_metadata", "sample_metadata"]
+
+
+def cmd_metadata(args):
+    os.makedirs(os.path.join(args.data, "metadata"), exist_ok=True)
+    for name in METADATA:
+        path = os.path.join(args.data, "metadata", name + ".parquet")
+        download(f"metadata/{name}.parquet", path)
+        log(f"metadata: {name}.parquet ok")
+
+
 def cmd_plates(args):
     import fsspec, pyarrow.parquet as pq
+    out = os.path.join(args.data, "plate_map.json")
+    if os.path.exists(out):
+        with open(out) as fh:
+            if len(json.load(fh)) == 3388:
+                log("plate_map.json exists (3,388 files): kept")
+                return
     fs = fsspec.filesystem("https", block_size=1 << 18)
     files = remote_files()
     log(f"{len(files)} expression files on Hugging Face")
@@ -159,12 +180,27 @@ def groups(args):
     return root, pm, plates, by_plate
 
 
+def full_files(root):
+    """Expression files in <root>/data that hold cells (a download, or a stream's files in flight; stubs are ~3 KB)."""
+    d = os.path.join(root, "data")
+    return [f for f in (os.listdir(d) if os.path.isdir(d) else [])
+            if f.endswith(".parquet") and os.path.getsize(os.path.join(d, f)) > 1 << 20]
+
+
 def cmd_stream(args):
     import pandas as pd
     import tahoe_mtap_gankyrin as T
     import tahoe_gene_panel as P
     root, pm, plates, by_plate = groups(args)
     os.makedirs(os.path.join(root, "data"), exist_ok=True)
+    mark = os.path.join(root, "data", ".streamed")      # this folder's files are the stream's to replace by stubs
+    if not os.path.exists(mark):
+        full = full_files(root)
+        if full:
+            sys.exit(f"{os.path.join(root, 'data')} already holds {len(full)} expression files with cells (a download?); "
+                     "'stream' would replace them by empty stubs. Run tahoe_atlas.py build/effects and "
+                     "tahoe_gene_panel.py extract/analyze on it instead, or stream into another folder.")
+        open(mark, "w").close()
     gm = pd.read_parquet(os.path.join(root, "metadata", "gene_metadata.parquet"),
                          columns=["token_id", "gene_symbol", "ensembl_id"])
     G = int(gm["token_id"].max()) + 1
@@ -182,14 +218,38 @@ def cmd_stream(args):
     jobs.sort(key=lambda j: -len(j[2]))           # biggest plates first: shorter tail
     if args.only:
         jobs = [j for j in jobs if j[1] in args.only.split(",")]
-    log(f"{len(jobs)} plates, {sum(len(j[2]) for j in jobs)} files, {args.workers} at a time")
+    workers = args.workers or auto_workers()
+    log(f"{len(jobs)} plates, {sum(len(j[2]) for j in jobs)} files, {workers} at a time")
+    failed = []
     ctx = mp.get_context("spawn")
-    with ctx.Pool(args.workers, maxtasksperchild=1) as pool:
+    with ctx.Pool(workers, maxtasksperchild=1) as pool:
         for name, n, reused, err in pool.imap_unordered(plate_job, jobs, chunksize=1):
             if err:
+                failed.append(name)
                 log(f"FAILED {name}:\n{err}")
             else:
                 log(f"{name} {'already built' if reused else 'done'} ({n:,} cells)")
+    missing_groups = [j[1] for j in jobs if not os.path.exists(os.path.join(pb, f"group{j[0]:03d}.npy"))]
+    missing_cells = [f for j in jobs for f in j[2]
+                     if not os.path.exists(os.path.join(cells_dir, re.sub(r"[^\w.-]+", "__", os.path.relpath(f, root))))]
+    if failed or missing_groups or missing_cells:
+        sys.exit(f"stream incomplete: failed plates {failed}, plates without output {missing_groups}, "
+                 f"{len(missing_cells)} files without per-cell output; rerun 'stream' (finished work is kept)")
+    log("stream complete: every plate and every file processed")
+
+
+def auto_workers():
+    """Plates in parallel: one per CPU, at most one per ~3 GB of free memory, at least 1."""
+    try:
+        import psutil
+        free_gb = psutil.virtual_memory().available / 1e9
+    except Exception:  # noqa: BLE001
+        try:
+            with open("/proc/meminfo") as fh:
+                free_gb = int(next(l for l in fh if l.startswith("MemAvailable")).split()[1]) / 1e6
+        except Exception:  # noqa: BLE001
+            free_gb = 8.0
+    return max(1, min(os.cpu_count() or 1, int(free_gb // 3)))
 
 
 def cmd_finish(args):
@@ -203,10 +263,11 @@ def cmd_finish(args):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("command", choices=["plates", "stream", "finish"])
+    ap.add_argument("command", choices=["metadata", "plates", "stream", "finish"])
     ap.add_argument("--data", required=True)
-    ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--workers", type=int, default=0, help="plates in parallel (default: from CPUs and free memory)")
     ap.add_argument("--batch-size", type=int, default=20000)
     ap.add_argument("--only", default="")
     a = ap.parse_args()
-    {"plates": cmd_plates, "stream": cmd_stream, "finish": cmd_finish}[a.command](a)
+    a.data = os.path.abspath(os.path.expanduser(a.data))
+    {"metadata": cmd_metadata, "plates": cmd_plates, "stream": cmd_stream, "finish": cmd_finish}[a.command](a)

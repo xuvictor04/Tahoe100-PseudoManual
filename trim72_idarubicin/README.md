@@ -48,7 +48,7 @@ the authors' full run). Files are in `corrected/`:
 | `TRIM72_idarubicin_5uM_per_well_line.csv` | Each correction step per well and line: log2 CPM, plate baseline residual, composition shift, position effect, result. |
 | `TRIM72_idarubicin_by_dose_corrected.csv` | All three doses pooled over lines: the row `tahoe_gene_panel.py analyze` writes for TRIM72 (fold change, z, FDR, flags). |
 | `run_notes.txt` | Expressed threshold, ambient RNA, plate factors, wells used. |
-| `stream_build.py` | Streams the dataset through the repo's build and extract a few files at a time (`plates`, `stream`, `finish`). |
+| `mg53_p53/setup/stream_build.py` (moved there) | Streams the dataset through the repo's build and extract a few files at a time (`plates`, `stream`, `finish`). |
 | `trim72_ida_per_line.py` | Runs the panel's setup and `expression_effects` for TRIM72 and writes the three tables. |
 
 Checks: four independent checks agreed with these tables.

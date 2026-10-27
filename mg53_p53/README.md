@@ -6,7 +6,7 @@ every MG53-p53 relation here is an **association in mRNA**, never a causal or pr
 lines (median line ~4 CPM; muscle is ~140 nTPM), and its untreated level is ~10x lower on plates 4-13 than on plates 1-3
 and 14, which inflates fold changes on the low plates.
 
-All tables: [SUMMARY.md](SUMMARY.md) (eight tables, T1-T8; CSVs in `summary/`). The literature evidence map, with every
+All tables: [SUMMARY.md](SUMMARY.md) (T1-T12; CSVs in `summary/`). The literature evidence map, with every
 citation: [literature/evidence_map.md](literature/evidence_map.md).
 
 ## Short answers
@@ -258,6 +258,10 @@ cannot be excluded, because TRIM72 is barely expressed in these lines.
 
 ## Running it on your system
 
+**From an empty machine:** `bash mg53_p53/setup/mg53_setup.sh` streams Tahoe-100M, builds the atlas and gene panel,
+runs every step below and compares your tables with these (~5 h, ~28 GB disk); see [setup/README.md](setup/README.md).
+
+**With the atlas and gene panel already computed:**
 Needs the computed atlas (`tahoe_atlas.py compute`, keeping `atlas/pseudobulk`) and gene panel (`tahoe_gene_panel.py all`) in
 your Tahoe-100M folder; the 340 GB of cells are not read again, and nothing is written into `atlas/` or `gene_panel/`.
 
@@ -279,6 +283,7 @@ passes over `atlas/pseudobulk` and `gene_panel/cells` are I/O-bound).
 
 | Folder / file | What it holds |
 |---|---|
+| `setup/` | `mg53_setup.sh`: an empty machine to every table below (stream via `stream_build.py`, then atlas, gene panel, all steps, `compare_with_repo.py`). |
 | `run_mg53_p53.py` | Runs the steps below on a Tahoe-100M folder, then `summary_tables.py`. |
 | `summary_tables.py`, `SUMMARY.md`, `summary/` | The summary tables (T1-T12) built from the step tables. |
 | `gene_modules.csv` | p53 primary targets and the pathway read-outs of the screen, with the literature for each MG53 link. |
