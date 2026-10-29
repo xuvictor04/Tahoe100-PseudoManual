@@ -1,244 +1,311 @@
 # Evaluation of Tahoe100-PseudoManual (`mg53_p53/`, `trim72_idarubicin/`)
 
-**Goal evaluated:** use Tahoe-100M to find upstream effectors of MG53/TRIM72 and the downstream effects of TRIM72, mainly on p53 output
-but also broadly, reading the data as 24 h mRNA.
+**Goal evaluated:** use Tahoe-100M to find upstream effectors of MG53/TRIM72 and the downstream effects of TRIM72 (mainly on p53
+output, but also broadly), reading the data as 24 h mRNA.
 
-**Scope.** The project works only by building and extracting from the Tahoe-100M database; no wet-lab experiments will be run. So
-every recommendation here stays inside Tahoe, and the limits of Tahoe's gene-level 24 h counts are stated as limits, not as
-experiments to run. Analyses should be genome-wide and data-driven at their base. Curated gene, pathway or drug lists can set
-priorities, but should not define what is tested, because that preloads the answer with assumptions.
+**Criteria applied.**
+1. **Tahoe only.** The project builds and extracts from the Tahoe-100M database; no wet-lab experiments will be run. Limits of
+   Tahoe's gene-level 24 h counts are stated as limits, not as experiments to run.
+2. **Genome-wide at the base.** Analyses should be genome-wide (all genes, all drugs, all lines) and data-driven at their base.
+   Curated gene, pathway, regulon or drug-class lists may set priorities or annotate results. They should not define what is tested
+   (the search space), what the outcome is, or which hypotheses are asked, because that preloads the answer with assumptions.
+3. The data compilation is done on a separate computer. This evaluation reads the repo's code and committed tables. Its one
+   real-data check (below) used a pre-chosen gene subset and is scoped accordingly.
 
 ## Bottom line
 
-**The repo largely meets the goal for p53, partly for upstream effectors, and only weakly for "downstream broadly".**
+**Under these criteria the repo meets the goal well on the upstream side, but not yet on the downstream side.**
 
-- The work is careful, internally consistent and candid about what Tahoe cannot show.
-- Its central p53 conclusions reproduce on an independent source: Tahoe's own published DESeq2 table, which none of the repo's
-  numbers came from.
-- The weak points are mostly interpretive, not computational:
-  - Much of what "raises TRIM72" travels with same-strand readthrough-type transcription from FUS, which the repo understates.
-  - Several short-answer details are wrong or generalise from one compound.
-  - The one replicated lowerer (radotinib) is never named.
-  - The computed "broad downstream" screen is never reported.
-  - The 24 h shutdown/stability effects are handled for readthrough but not for mRNA stability or for the p53 read-outs themselves.
+- **Upstream** rests mostly on genome-wide, data-driven analyses:
+  - all 1,132 drug-doses are ranked;
+  - all 16.6k expressed genes are scanned for co-variation across drugs;
+  - all 46,775 genes are scanned across untreated lines;
+  - readthrough geometry is analysed for every gene.
 
-| Part of the goal | Grade | Why |
+  Its strongest answers come from this base: the replicated raisers, the readthrough signal at the FUS-TRIM72 locus, and that the
+  locus (not TP53) sets the untreated level. Two of its five short answers are list-defined, however: "what moves with TRIM72" and
+  "which transcription factors track it".
+- **Downstream** is list-defined at its base:
+  - every p53 test uses the literature 21-gene p53 score (or named targets) as its outcome;
+  - "broad downstream" is 27 read-outs chosen from MG53 literature;
+  - the single-cell store holds only 116 hand-picked genes.
+
+  No genome-wide, TP53-genotype-controlled downstream screen exists, although the repo's own genome-wide pseudobulk would support one
+  without re-reading cells. The downstream nulls are therefore valid only for the lists tested.
+- **Conclusions with TRIM72 itself as the outcome are list-free and stand.** TRIM72 induction does not need p53 (it rises in 31 of 31
+  TP53-altered lines under idarubicin 5 µM), though a partial p53 contribution is not excluded.
+- **Within its lists the work is careful and reproducible.** The p53 nulls reproduce on Tahoe's own DESeq2 quantification of the same
+  wells (for 141 pre-chosen genes). The remaining problems are interpretive and are listed below.
+
+| Part of the goal | Basis | Grade |
 |---|---|---|
-| Downstream: TRIM72 → p53 output | **Strong** on direction; **moderate** on magnitude | TRIM72 is not a p53 target. Its induction does not need p53, though a partial p53 contribution is not excluded (as the repo says). No TP53-WT-specific association, replicated on DESeq2. The excluded effect size depends on reliability assumptions (see below). Because induced TRIM72 is largely readthrough-compatible, the null says little about MG53 protein. |
-| Upstream effectors of TRIM72 mRNA | **Adequate** | Replicated raisers are right (idarubicin and homoharringtonine 5 µM). But the rise is readthrough-compatible, the class and TF claims overgeneralise, the lowerers are under-reported, and the plates 1-3 drugs were screened at about half sensitivity. |
-| Downstream broadly (non-p53) | **Weak** | The within-well, genotype-controlled pathway screen (two_way D2, 27 read-outs) was computed but never reported. There is no short answer beyond p53, and per-line cell abundance is never tested as an outcome. |
-| Reading it as 24 h mRNA | **Adequate** | Readthrough/DoG, ambient RNA, cell loss and the protein/time-lag caveats are handled. Not handled: stabilisation, superinduction and composition for the shutdown drugs, and the collapse of p53-target mRNA in shutdown wells. The README wrongly says the genotype contrast cancels transcription shutdown. |
-| Reproducibility / engineering | **Adequate** | The summary layer rebuilds byte-identically, 33 of 34 quoted numbers trace to tables, and the core smoke test passes (196 PASS / 0 FAIL). But no test covers `mg53_p53`, the comparison tool skips the 13 `.csv.gz` tables and always exits 0, three caches are not keyed to their inputs, and nothing is pinned. |
+| Upstream: what raises / lowers TRIM72 mRNA | Data-driven (all drug-doses) | **Adequate.** Replicated raisers right; rise is readthrough-compatible; class claims and lowerers need correcting. |
+| Upstream: locus / readthrough, line traits | Genome-wide | **Good.** The best-founded part of the repo. |
+| Upstream: what moves with TRIM72, which TFs | List-defined (34 programs; curated regulons) | **Not met by criterion 2.** The genome-wide tables give a different lead (readthrough-geometry genes; AP-1/IEG only in the top 1%). |
+| Downstream: TRIM72 → p53 output | Outcome = curated 21-gene p53 score | **Strong for that score; not established genome-wide.** No data-derived p53 program; no genome-wide genotype-controlled screen. |
+| Downstream broadly | List-defined (27 MG53-literature read-outs), unreported | **Not met.** |
+| Reading it as 24 h mRNA | — | **Adequate.** Readthrough, cell loss and ambient RNA handled; stabilisation/composition under shutdown drugs not discussed. |
+| Reproducibility / engineering | — | **Adequate.** Summary layer rebuilds exactly; no test covers `mg53_p53`; the comparison tool cannot fail. |
 
 ## How this was checked
 
-1. **Audit.** 12 independent auditors covered each workstream plus cross-cutting views (24 h kinetics, core method, literature, goal
-   coverage, reproducibility). They read the code and recomputed numbers from the committed tables; the 430 GB raw data is not
-   available here. This produced 73 de-duplicated issues.
-2. **Adversarial verification.** Each issue went to a verifier with its own code. Of the 21 "major" issues, 5 stayed major and 16 were
-   downgraded; 34 issues were only partly confirmed and 1 was refuted. A separate agent adjudicated four disagreements between auditors.
-3. **Real-data check.** Tahoe's full pseudobulk DESeq2 table (1,026 files, about 92 GB) was streamed and reduced to 141 genes × all
-   379 drugs (9.2M rows). It matches the repo's own idarubicin pull to 4e-7. Five analyses re-tested the claims on it:
-   - upstream ranking,
-   - 24 h shutdown effects,
-   - locus readthrough,
-   - p53 dependence and the genotype-controlled association,
-   - broad downstream effects and viability.
+1. **Workstream audit.** 12 auditors read the code and recomputed numbers from the committed tables, producing 73 issues.
+2. **Adversarial verification.** Each issue was verified against the code and tables. 5 of 21 "major" issues stayed major and 1 was
+   refuted; most others were narrowed.
+3. **Independent quantification.** Tahoe's published pseudobulk DESeq2 table (drug vs plate DMSO, per gene × line × drug × dose ×
+   plate) was read for all 379 drugs and 50 lines, but **only for 141 pre-chosen genes**. Each of five analyses had a skeptic re-check.
+   - Statements about TRIM72 itself are unaffected by the gene restriction.
+   - Statements about other genes (p53 targets, pathways, selectivity) speak only to those 141.
+   - This compilation step is now left to the separate build computer.
+4. **List-dependence audit.** Five audits (data products, upstream, downstream, a list-free reading of the committed genome-wide
+   tables, and this evaluation) each had a verifier. They classified every analysis by whether a list defines its search space,
+   outcome or hypotheses.
 
-   A separate skeptic re-derived each analysis; the numbers below are the skeptic-corrected ones.
+## Where the repo rests on lists, and where it is genome-wide
 
-   This check itself rests on a pre-chosen gene set (141 genes). Its results speak only to those genes. Its broad-downstream
-   null, in particular, covers literature pathways, not the genome.
-4. **Critics.** A completeness critic and a calibration critic reviewed the draft of this report. The KMT2D lead was re-checked
-   independently.
+**What the build makes:**
+- `atlas/pseudobulk`: every gene, per well × line, about 20 GB, no gene filter (`tahoe_atlas.py:486-488, 586`).
+- `atlas/effects`: 16,643 expressed genes, but only per well and per drug-dose; the median over lines (`tahoe_atlas.py:960`).
+- `gene_panel/cells` and `well_line`: the only per-cell store. It holds **116 hard-coded genes** plus 3 modules: 39 panel genes
+  (`tahoe_gene_panel.py:85-128`, "the user's list"), 4 MTAP anchors and 73 curated context genes (`:144-152`). All other genes are
+  dropped at extraction (`tahoe_mtap_gankyrin.py:386-416`).
+- Tahoe's own genome-wide DESeq2 table ships with the download but is never read by the pipeline.
 
-## What holds up
+**Short answers and their basis:**
 
-- **TRIM72 is not a p53 target, and its induction does not need p53.**
-  - Under idarubicin 5 µM, TRIM72 rises in 33 of 33 TP53-altered lines (WT − altered −0.18 log2, CI −1.22 to 0.60).
-  - In the same wells MDM2 is WT-selective (WT − altered +0.81, p 0.002).
-  - Selinexor activates p53 WT-selectively (MDM2 WT − altered +1.10) without raising TRIM72.
-  - TRIM72 is absent from the Fischer 2017 p53-target census and has TP53 ChIP peaks in only 2 of 393 data sets.
-  - A modest WT lean in TRIM72 induction does reproduce (+0.3 to +0.5 log2 pooled, nominal p 0.01-0.04). It is largest for
-    epirubicin and doxorubicin (+1.1 to +2.1 log2, on low-count plate 9). So a partial p53 input of about 0.5-1 log2 is not excluded.
-    The repo's short answer says exactly this, though it mis-cites the numbers.
-- **No TP53-WT-specific association between TRIM72 and p53 output.**
-  - The repo's WT − altered slope is −0.0032 (CI −0.0085 to 0.0022). The independent DESeq2 refit gives +0.0020 (CI −0.0078 to +0.0117),
-    permutation p 0.73. It stays null when shutdown drugs are dropped, in active drug-doses, with MDM2 or CDKN1A alone, and with count
-    filters.
-  - The repo's FDXR slope (p 0.01) does not replicate (p 0.24), and DDB2 leans the opposite way (+0.029, p 0.026). Neither survives correction.
-  - The repo's −0.030 slope in its 62 active drug-doses does not replicate (−0.0035 to +0.044 by model). The repo already calls it not robust.
-- **The TP53 labels (17 WT / 33 altered) are correct.** Seven WT lines are CDKN2A-null, which matters only for non-genotoxic drugs.
-- **Idarubicin and homoharringtonine 5 µM are real, replicated raisers.**
-  - Both rise on both plates, in 45-47 of 47 lines in DESeq2.
-  - All 21 repo raisers point the same way in DESeq2, and no raiser outside them reaches significance.
-  - Mitoxantrone 5 µM is correctly flagged as not replicating.
-- **The locus drives the untreated TRIM72 level across lines.** PYCARD-AS1 within-plate rho is 0.82 in the repo and 0.62-0.75 in DESeq2.
-  TP53 status shows no detectable effect (rho 0.07; underpowered).
-  - The repo's KMT2D lead replicates in DESeq2: KMT2D-mutant lines read +1.5 log2 higher (q 0.02, the only one of 30 drivers).
-  - Half of it goes with PYCARD-AS1 (+0.74, p 0.10 after adjusting), and these lines are hypermutated (median 18 vs 6 drivers).
-  - It is still a lead, as the repo says.
-- **The documentation and reasoning are sound.**
-  - Internal consistency is excellent.
-  - The key citations (Jiang 2024 FRBM, Li 2021, Fischer 2017) are accurate.
-  - The explanation of why Tahoe cannot test MG53 → p53 causally is right. (The README's proposed wet-lab experiment is outside
-    this project's scope.)
+| Short answer | Basis | Where the list enters |
+|---|---|---|
+| What raises TRIM72 | All 1,132 drug-doses ranked (data-driven) | Class labels in T2 are 37 author-curated classes (`summary_tables.py:84`). Tahoe's own MoA annotation gives a TOP2/DNA-damage lean and no CDK9/HDAC class support. |
+| Is it TRIM72's own promoter (readthrough) | Genome-wide co-variation and DoG geometry | — |
+| Which line traits predict it | Genome-wide untreated scan (PYCARD-AS1 #1 of 46,775); all annotated drivers | 679 of 725 trait tests are curated regulon activities |
+| What moves with it (AP-1/IEG, ATF3, PMAIP1) | **34 pre-chosen rows** (`trim72_upstream_landscape.py:862-868`); single-cell leg uses panel genes picked from the same table | Defines the hypotheses |
+| Which TFs track it | **CollecTRI regulons** (curated targets); 16 hand-picked TFs shown in T11; hand-made IEG adjustment list | Defines the exposure |
+| Not a p53 target / induction does not need p53 | TRIM72 is the outcome, TP53 genotype the modifier (data-driven) | "p53 activator" drug-doses (e.g. selinexor) are picked by the 21-gene score; target-likeness is measured against that score inside the 116-gene panel |
+| No association of TRIM72 with p53 output (T7, T9, T10) | **Outcome = 21-gene P53_ACTIVITY** (`tahoe_gene_panel.py:156-157`); nulls from 78 curated panel genes; single cells confined to panel genes | Defines the outcome, the reference and the search space |
+| Broad downstream (two_way D2; single-cell NF-κB/ferroptosis) | **27 read-outs from MG53 literature** (`two_way.py:113-123`, `gene_modules.csv`); 3-gene single-cell scores | Defines the hypotheses; unreported |
 
-## The 24 h reading, raiser by raiser (verified)
+**Also list-defined, and less visible:**
+- The "functional p53" line status and the "p53 activator" drug classes are defined by the 21-gene score
+  (`tahoe_gene_panel.py:1219-1286`). They are then used as exposures or strata.
+- A curated DNA-damage drug list stratifies p53_dependence and downstream_p53.
+- The S/G2M (Tirosh 2016) and proteasome modules, and a panel-based responsiveness term (`bg_abs_r2`), are covariates in the primary
+  two_way model. These are adjustments, which criterion 2 tolerates, but they are lists.
+
+**The list choice can change the reading, by the repo's own tables:**
+- Against the panel's own competitive null, the primary p53-score slope sits at the 1.8th percentile of 500 background modules
+  (p_emp 0.04). The correlation-aware test gives p 0.31, so this is not a hidden effect. It shows the reference set matters, and a
+  genome-wide reference is needed.
+- With a different curated p53 list (the CollecTRI TP53 regulon, 835 targets), TRIM72 has a significant within-line negative
+  association (r −0.060, q 0.005). It is present in both genotypes, if anything weaker in WT, so it is not routed through p53. The
+  README prints it but never connects it to the "no association with p53 output" answer.
+
+## What the committed genome-wide tables show when read without lists
+
+These tables come from the repo's own genome-wide analyses; only the reading is new. They are not genotype-split.
+
+- **TRIM72's strongest partners are defined by genomic geometry, not by a pathway.** Across 1,086 drug-doses, 41-51% of its top 100
+  partners are low-expressed genes just downstream of a strongly expressed same-strand gene. The genome-wide rate is 4.2%. The same
+  axis runs through:
+  - the untreated plate batch (TRIM72 #1 of 16,656 genes);
+  - untreated line-to-line variation (PYCARD-AS1 #1 of 46,775);
+  - drug response (TRIM72 vs the genome-wide readthrough index: rho 0.45).
+
+  The upstream genes of these partners also co-vary with TRIM72 (median r 0.27 vs 0.12 genome-wide). So the data do not separate
+  readthrough from co-regulation of the whole same-strand neighbourhood.
+- **The repo's lists reproduce only the secondary part of "what moves".** The union of all 20 repo list definitions supplies 0 of
+  TRIM72's top 50 partners.
+  - On T3's own metric, FOSB ranks 18, FOS 53, HEXIM1 93 and JUN 102 of 16,643: real, but top-1% rather than top.
+  - ATF3 and PMAIP1, named in the short answer, are outside the top ~118.
+  - Among TF mRNAs, which is the list-free TF read-out, FOSB, FOS and ATF3 lead and ATF4 does not track TRIM72.
+  - MEF2A/C/D are expressed but do not co-vary positively; MyoD/MYOG/MYF5/MYF6 are not expressed.
+- **The raisers split by the data-defined readthrough index.** 8 of 21 raisers are genome-wide readthrough inducers, among them
+  homoharringtonine, auranofin, panobinostat and the weak adagrasib, filgotinib and TAK-901. Idarubicin, harringtonine, ouabain and
+  dinaciclib raise TRIM72 with a negative global index. The curated classes do not show this split.
+- **No genome-wide table points to TRIM72 going with less p53-target mRNA.** MDM2 and CDKN1A are mid-ranked partners, and TRIM72 sits
+  at the 55th percentile of all genes for correlation with the p53 score. One p53-responsive lncRNA outside every repo list,
+  TP53TG1, is a strong negative partner in one adjustment variant only. That is not robust, but it is the kind of gene a list-free
+  screen would surface.
+- **A genotype-dependent lead that the repo selected but never reported: cardiac glycosides.** The repo's all-drug-dose TRIM72
+  WT-vs-altered screen gives:
+  - ouabain 5 µM +1.65 log2 (line-permutation p 0.006, FDR 0.27);
+  - digitoxin 0.5 µM +1.29 log2 (p 0.004);
+  - 5 of 6 glycoside drug-doses leaning the same way.
+
+  These are single wells with 2-16 TRIM72 counts per profile. For ouabain the 21-gene p53 score is also WT-selective and tracks
+  TRIM72 within the well (rho 0.43), so a p53 link is ambiguous. It is a lead only.
+
+## What holds up (with scope stated)
+
+- **TRIM72 induction does not need p53.**
+  - TRIM72 is the outcome here, so this test is list-free.
+  - Under idarubicin 5 µM TRIM72 rises in 31/31 TP53-altered lines in the repo, and 33/33 in Tahoe's DESeq2 (WT − altered −0.18 log2,
+    CI −1.22 to 0.60).
+  - A modest WT lean across raisers (+0.3 to +0.5 log2 pooled, nominal p 0.01-0.04) means a partial p53 contribution is not excluded,
+    as the repo says, though it mis-cites the numbers.
+  - The literature (Fischer 2017 census; 2 of 393 ChIP-Atlas sets) is supporting annotation.
+- **No TP53-WT-specific association between TRIM72 and the curated 21-gene p53 score.**
+  - Repo: −0.0032 (CI −0.0085 to 0.0022).
+  - Tahoe's DESeq2 (12 curated targets): WT − altered +0.0020 (CI −0.0078 to +0.0117), permutation p 0.73.
+  - The repo's −0.030 in drug-doses selected partly by that same score does not replicate.
+  - Valid for these curated targets; not a genome-wide statement.
+- **The TP53 labels (17 WT / 33 altered) are correct.**
+- **Idarubicin and homoharringtonine 5 µM are replicated raisers** (both plates; 45-47 of 47 lines in DESeq2). All 21 repo raisers
+  point the same way in DESeq2.
+- **The locus sets the untreated level.** PYCARD-AS1 is #1 of 46,775 genes (genome-wide, list-free); TP53 status shows no detectable
+  effect (rho 0.07; underpowered).
+  - KMT2D, the only hit among all Tahoe-annotated drivers altered in enough lines, replicates in DESeq2 (+1.5 log2, q 0.02 of 30).
+  - Half of it goes with PYCARD-AS1, and the mutant lines are hypermutated, so it remains a lead.
+- **Internal consistency is excellent**, and the explanation of why Tahoe cannot test MG53 → p53 causally is right.
+
+## The 24 h reading, raiser by raiser
 
 | Raiser | What a 24 h mRNA snapshot shows |
 |---|---|
-| Idarubicin 5 µM (replicated) | The same-strand PYCARD-AS1 co-rise covers about half (plate 6) to all (plate 14) of TRIM72's added counts. Opposite-strand PYCARD does not rise. Idarubicin is not a readthrough inducer genome-wide, so the signal is locus-specific: readthrough or co-regulation of the + strand domain, which 3' counts cannot separate. p53 output is real but read better by FDXR/DDB2 than by MDM2/CDKN1A, which are blunted at 24 h. |
-| Homoharringtonine 5 / 0.5 µM (5 µM replicated) | Same near-locus signature as idarubicin. It extends further (ITGAM), and HHT is also a genome-wide readthrough inducer. Translation block gives a superinduction/stabilisation profile (FOS +3.1, JUN +3.7 log2). |
-| Epirubicin, doxorubicin 5 µM (single wells, low-count plate 9) | Partly locus-coupled (about 0.5). Largest WT lean. Genuine DNA-damage p53 output. |
-| Auranofin 5 µM | Locus co-rise. p53 output is suppressed in WT lines (p53 index −0.76), so these wells cannot be used for p53 read-outs. |
-| Dinaciclib, all doses | The z and corrected fold come mostly from the pseudocount floor (a no-change simulation reproduces 66-83% of the effect). A real 1.8-4.3x rise remains (DESeq2 medians), but it is a generic low-gene/composition rise in heavily cell-depleted wells, with no strand pattern. Every p53 target falls, FDXR/DDB2 included, so these wells should be excluded. |
-| Panobinostat 5 µM | The only one of three HDAC inhibitors to raise TRIM72. Mixed shutdown profile. |
-| Not raisers | AT7519 (globally near-inactive, so the CDK9 class cannot be tested), plicamycin, 4EGI-1 and the MNK inhibitors. Shutdown alone is not sufficient. |
+| Idarubicin 5 µM (replicated) | PYCARD-AS1, the same-strand RNA between FUS and TRIM72, rises with TRIM72; opposite-strand PYCARD does not. If TRIM72 follows PYCARD-AS1 at its untreated ratio, that rise covers about half (plate 6) to all (plate 14) of TRIM72's added counts. Idarubicin is not a genome-wide readthrough inducer. Curated long-lived p53 targets rise WT-selectively, while the short-lived MDM2/CDKN1A are blunted. |
+| Homoharringtonine 5 / 0.5 µM | Same near-locus signature, extending into ITGAM. A genome-wide readthrough inducer. Translation block gives a superinduction/stabilisation-like profile (FOS +3.1, JUN +3.7 log2). |
+| Epirubicin, doxorubicin 5 µM (single wells, low-count plate 9) | Partly locus-coupled; largest WT lean. |
+| Auranofin 5 µM | Locus co-rise; a genome-wide readthrough inducer; curated p53 targets fall in WT lines. |
+| Dinaciclib, all doses | The z and fold come mostly from the pseudocount floor (a no-change simulation reproduces 66-83%). A real 1.8-4.3x rise remains, but it is a generic low-gene rise in heavily cell-depleted wells, with no strand pattern. |
+| Not raisers | AT7519 (globally near-inactive), plicamycin, 4EGI-1, MNK inhibitors. Shutdown alone is not sufficient. |
 
 ## What needs correcting
 
-### Major: kept as major by the verifiers
-1. **TRIM72's drug "induction" is largely readthrough-compatible, and the repo understates this** (M-4, M-5, M-6).
-   - Almost every raiser co-raises PYCARD-AS1 strand-specifically.
-   - If TRIM72 follows PYCARD-AS1 at its untreated ratio, that rise accounts for half to all of TRIM72's added counts.
-   - The FUS distal-3' feature ENSG00000260060 rises more than FUS itself. It was dropped from the locus table (T4) by the Ensembl
-     116 coordinates.
-   - The README contrasts "clean for homoharringtonine" with "not significant for idarubicin". That contrast comes from a strand test
-     dominated by genes 150-280 kb away. Near the locus, both drugs show the same signature.
-   - Consequence: the upstream list names effectors of transcription past FUS at 16p11.2, not demonstrated regulators of TRIM72/MG53
-     expression. "Unresolved" is the right verdict, but it applies to both drugs, and the TRIM72-mRNA ≈ MG53 premise is weaker than stated.
-2. **"CDK9 and HDAC inhibitors raise TRIM72" generalises from single compounds** (M-1).
-   - Dinaciclib is the only testable CDK9 compound, and its signal is floor-inflated and not TRIM72-specific.
-   - Belinostat and tucidinostat do not raise TRIM72; only panobinostat does.
-3. **The transcription-factor short answer is misleading** (M-8).
-   - The ATF4/ATF5/XBP1 (integrated stress response) association comes from weakly active drug-doses.
-   - At the raisers, ISR targets are repressed, in the repo's data and in DESeq2.
-   - MEF2A/C/D are expressed, not "silent", though they do not explain the rise.
-4. **"Downstream broadly" was computed but not delivered** (M-17).
-   - The D2 screen is absent from README, SUMMARY and the short answers. Only the across-drug rows (T3) and the single-cell NF-κB and
-     ferroptosis rows (T10) reach the deliverable, and they are not interpreted.
-   - The independent re-analysis gives the answer the repo should state:
-     - no mRNA footprint beyond a shared stress state (largest within-well |partial r| 0.027);
-     - no TP53-WT-specific pathway association (minimum q 0.85);
-     - no protective link to 24 h cell abundance. If anything there is a weak, non-specific negative lean: lines that raise TRIM72
-       more are slightly more depleted, as stress genes are too.
-   - The D2 hits (ATF3, MCL1, PTK2) are technical or stress co-variation; TRIM72's line deviations do not replicate in ordinary wells.
-   - MG53's known non-p53 targets (IRS1, FAK and others) are regulated at the protein level, so mRNA cannot test them.
+### Major
+1. **Downstream answers are defined by lists, and stated as if general.** "No detectable association with p53 output" means "with the
+   21-gene literature score and named targets". "Broad downstream" was asked only of 27 MG53-literature read-outs, and those results
+   are not reported. The repo should say so until a genome-wide, genotype-controlled screen exists (see the last section).
+2. **"What moves with it" and "which TFs track it" are list-framed.**
+   - The genome-wide base the repo already computed puts readthrough-geometry genes first and AP-1/IEG in the top 1%.
+   - The TF answer rests on regulon scores. The ISR association (ATF4/ATF5/XBP1) comes from weakly active drug-doses, and ATF4 mRNA
+     does not track TRIM72.
+   - "Muscle TFs silent" is wrong for MEF2A/C/D, which are expressed (though they do not co-vary).
+3. **The drug "induction" of TRIM72 is largely readthrough-compatible, and this is understated.**
+   - Idarubicin and homoharringtonine show the same near-locus signature. The README's "clean for homoharringtonine, not significant
+     for idarubicin" comes from a strand test dominated by genes 150-280 kb away.
+   - The FUS distal-3' feature ENSG00000260060 rises more than FUS but was dropped from T4 by the Ensembl 116 coordinates.
+   - T1 has no readthrough column.
+   - Consequence: the upstream list names effectors of transcription in the FUS-TRIM72 neighbourhood, not demonstrated regulators of
+     MG53 expression.
+4. **"CDK9 and HDAC inhibitors raise TRIM72" generalises from one compound each.** Dinaciclib's significance comes mostly from the
+   pseudocount floor; only panobinostat of three HDAC inhibitors raises TRIM72.
 
-### Notable (the verifiers graded these minor; the real-data check sharpened them)
+### Notable
 - **Lowerers.**
   - The short answers name only ponatinib 5 µM, which is only nominal in DESeq2.
-  - The README mentions trametinib (lower in 9/9 wells, compound level q 4e-6 in DESeq2) and the "Other TK inhibitor" class only as
-    hypotheses.
-  - It never names radotinib 5 µM, the only lowerer replicated on two plates (0.48x). Radotinib is TRIM72-selective and barely
-    moves EGR1/CCND1.
-  - Trametinib's fall comes with MAPK/IEG loss and, per a critic's check, a parallel PYCARD-AS1 fall, i.e. it also looks locus-level.
-- **Effect-size bounds.**
-  - The README's "up to ~0.03 per doubling" is 0.03 log2, about 2%, and is the optimistic end.
-  - With replicate-well reliability, the DESeq2 bound is 3.6-5.1% per doubling. That reliability is carried by the strongly
-    replicated idarubicin/HHT wells. In a typical drug-dose, TRIM72's line deviations do not replicate (r ≈ 0.01), so the null
-    constrains little there.
-  - The single-cell ">1.2% per doubling excluded" depends on the overdispersion model (1.8% if half of it is technical). It also
-    rests on a 0/1 detection exposure (about 1.7% of cells, mostly 1 UMI), and the README itself says a few-percent fall could be
-    masked. That figure should be dropped from the short answer or labelled conditional.
-- **Plates 1-3 were screened at about half sensitivity.** PF-06260933, HI-TOPK-032, abemaciclib and ERK5-IN-2 at 5 µM are unresolved
-  candidates: 2.2-2.6x, nearly all lines up, with the same PYCARD-AS1 co-rise.
+  - Trametinib (lower in 9/9 wells) and the "Other TK inhibitor" class (q 0.010) appear only as hypotheses.
+  - Radotinib 5 µM, the only lowerer replicated on two plates (0.48x), is never named. It changes 824 genes genome-wide, so
+    TRIM72-selectivity is not established.
+- **Effect-size bounds (for the curated p53 score).**
+  - "Up to ~0.03 per doubling" is 0.03 log2 (about 2%) and is the optimistic end.
+  - With replicate-well reliability it is 3.6-5.1%, carried by the strongly replicated idarubicin/homoharringtonine wells. In a
+    typical drug-dose TRIM72's line deviations do not replicate, so the data constrain little there.
+  - The single-cell ">1.2% per doubling excluded" depends on the overdispersion model and on a 0/1 detection exposure.
+- **The plates 1-3 drug set was screened at about half sensitivity.** PF-06260933, HI-TOPK-032, abemaciclib and ERK5-IN-2 at 5 µM are
+  unresolved candidates.
+- **The cardiac-glycoside WT lean (above) is unreported.**
 
-### Minor (verified)
+### Minor
 - **24 h kinetics.**
-  - Stabilisation, superinduction and composition are never named as alternatives for the translation- and transcription-blocking raisers.
-  - The README wrongly lists transcription shutdown among the factors the genotype contrast cancels.
-  - 7 of the 13 pooled raisers show no WT-selective p53 output at 24 h. Shutdown and cytotoxic wells (dinaciclib, auranofin)
-    should be excluded from the p53-output tests, and FDXR/DDB2 should be preferred over MDM2/CDKN1A for the DNA-damage raisers.
-  - The temporally cleaner design (untreated TRIM72 vs induced p53 responsiveness; WT rho 0.12, p 0.65) is in SUMMARY T7 but not
-    in the README.
+  - Stabilisation, superinduction and composition are not named as alternatives for the translation- and transcription-blocking
+    raisers.
+  - The README wrongly says the genotype contrast cancels transcription shutdown.
+  - Wells should be excluded from p53-output tests only on list-free evidence: severe cell loss, or a genome-wide
+    transcription-collapse signature. Results should be reported with and without them. A mechanism label or a 4-gene labile index
+    would also flag idarubicin and epirubicin.
 - **Wording.**
-  - "Compare z, not folds, across plates": z carries the full 1.84x plate amplification.
-  - "No detectable association in any of four designs": its own across-drug rho is 0.12, p 5e-5, a stress co-induction.
+  - "Compare z, not folds, across plates": z carries the full plate amplification.
+  - "No detectable association in any of four designs": the across-drug rho is 0.12, p 5e-5, a stress co-induction.
   - The untreated "negative lean" rests on TP53 mRNA, which a degradation mechanism would not lower.
-  - "+0.16 to +0.45 log2" is not traceable to T5.
+  - "+0.16 to +0.45 log2" cannot be traced to T5.
   - "TRIM72 only changes with drugs that act on p53" is contradicted by T1.
-  - "None within lines / noise ceiling" for the TFs.
-  - The AP-1-arm partial over-adjusts (ATF4 0.09 vs 0.22).
-  - The AP-1/IEG co-response is equally present in inert wells, i.e. a well-level stress axis.
 - **`trim72_idarubicin/README.md`.**
-  - It calls 12.2x "the strongest TRIM72 increase" with no readthrough caveat.
-  - 12.2x is a per-line-median estimand measured against the plate's median drug well. Against DMSO it is about 6-7x
-    (pooled reads, DESeq2), and it ranges about 3-19x depending on the plate.
+  - 12.2x is a per-line-median estimand against the plate's median drug well; it is about 6-7x against DMSO and plate-dependent.
+  - It carries no readthrough caveat.
 - **Literature.**
   - Cong 2020 is misdescribed: it does not say "no direct binding", and the cells were rat RLE-6TN, not A549.
-  - The MDM2-independence of Jiang 2024 rests on a 2025 review, not the primary paper.
-  - No citation for stress-induced (DoG) readthrough.
+  - The MDM2-independence of Jiang 2024 rests on a 2025 review.
 - **Code.**
-  - The panel's p53 WT-vs-altered contrast adds an unfiltered single-pass position correction. It makes erythromycin and afatinib
-    look like strong WT-selective p53 "suppressors" (z −5 to −8), which DESeq2 does not support.
-  - Its "pattern" label ignores sign.
-  - FDR uses two one-sided BH families; a single two-sided family gives 16 up / 3 down instead of 21 / 1.
-  - None of these changes a headline.
+  - The panel's p53 WT-vs-altered contrast adds an unfiltered single-pass position correction, which creates false "suppressors"
+    (erythromycin, afatinib, z −5 to −8).
+  - Its pattern label ignores sign.
+  - FDR uses two one-sided BH families.
 - **Reproducibility.**
-  - `compare_with_repo.py` skips the 13 `.csv.gz` step tables and always exits 0.
-  - The p53_dependence, downstream_p53 and upstream_coregulation caches are reused regardless of input.
-  - No test exercises `mg53_p53` (the synthetic data plants TRIM72 = 0).
+  - `compare_with_repo.py` skips the 13 `.csv.gz` tables and always exits 0.
+  - Three caches are not keyed to their inputs.
+  - No test covers `mg53_p53`.
   - The T8 short answers are hard-coded.
   - Nothing is pinned.
-  - "Reproduced all 168 tables exactly" has no committed evidence.
 
-### Claims that did not survive verification
-- **"Only ~6 raisers survive batch correction" (auditor): refuted.** Low-baseline plates amplify true effects; the null spread is the same.
-- **"The active-set −0.030 slope is a shutdown artefact" (auditor): contested, and moot.** It does not replicate in DESeq2.
-- **"Decreases are detectable mainly on high-baseline plates" (real-data analysis): refuted by its own skeptic.** The pattern is
-  confounded with the plates 1-3 compound library.
-- **"The pseudocount causes the scarcity of decreases" (auditor): not supported.** DESeq2 shows the same scarcity; low counts limit power.
-- **A within-line E2F/p53-regulon "axis": not reproduced.** Curated p53 targets give r 0.000.
+### Claims (from the audits and from this evaluation's own checks) that did not survive
+- **"Only ~6 raisers survive batch correction": refuted.** Low-baseline plates amplify true effects.
+- **"The active-set −0.030 slope is a shutdown artefact": moot.** It does not replicate.
+- **"Decreases are detectable mainly on high-baseline plates": refuted.** The pattern is confounded with the plates 1-3 compound library.
+- **"MUSCLE_STRUCTURAL is a readthrough false positive": not shown.** It is a weak nominal signal either way.
+- **"A within-line E2F/p53-regulon axis is not reproduced": withdrawn.** This was tested only with 19 curated p53 targets and 5
+  proliferation markers from the 141-gene subset, which cannot refute a regulon-wide pattern; it was not re-tested genome-wide.
 
-## What Tahoe actually says on the user's question (after verification)
+## What Tahoe says so far on the question (scoped)
 
-- **Upstream.**
-  - At 24 h, TRIM72 mRNA rises after strong cytotoxic or stress drugs:
+- **Upstream** (data-driven base).
+  - At 24 h TRIM72 mRNA rises after strong cytotoxic or stress drugs:
     - replicated for idarubicin and homoharringtonine 5 µM;
-    - supported as a class for anthracyclines/TOP2 poisons;
     - single wells for auranofin, epirubicin, doxorubicin, harringtonine, dinaciclib, panobinostat and filgotinib.
   - It falls with radotinib (replicated) and trametinib.
-  - The rise does not need p53, though a modest contribution is not excluded.
-  - For idarubicin, homoharringtonine, auranofin and the anthracyclines it travels with a strand-specific rise of the FUS-downstream
-    lncRNA PYCARD-AS1 (readthrough or + strand co-regulation). For dinaciclib it is a generic low-gene shift in dying wells, and the
-    harringtonines add a translation-block superinduction profile.
-  - None of this establishes TRIM72-promoter activation or more MG53 protein.
-  - Among line traits, the locus dominates the untreated level. KMT2D is a confounded lead. The muscle promoter TFs MyoD/myogenin are
-    not expressed, and the AKT and glucocorticoid routes do not raise TRIM72 mRNA here.
-- **Downstream.**
-  - There is no TP53-genotype-specific association of TRIM72 with p53-target output. Falls steeper than roughly 2-5% per doubling
-    are excluded where TRIM72 varies reproducibly (essentially the idarubicin/HHT wells); elsewhere the data constrain little.
-  - There is no broad mRNA pathway or viability footprint beyond a shared stress state.
-  - The literature's MG53 → p53 effect is protein-level degradation and cannot be tested in Tahoe.
-- **What Tahoe cannot settle.** These are limits of the database, not tasks:
-  - Whether the TRIM72 counts are spliced TRIM72 mRNA or readthrough: Tahoe ships gene-level counts, not read coverage.
-  - Whether MG53 protein changes, or acts on p53 protein: Tahoe has no protein data.
-  - Anything before or after 24 h: Tahoe has one time point.
+  - The rise does not need p53.
+  - It travels with a genome-wide downstream-of-gene axis, which is strand-specific at the FUS-TRIM72 locus (readthrough or
+    neighbourhood co-regulation). It is not established as TRIM72-promoter activation or as more MG53 protein.
+  - The locus, not TP53, sets the untreated level.
+- **Downstream** (list-limited base).
+  - No TP53-genotype-specific association of TRIM72 with the curated p53-target score. Falls steeper than roughly 2-5% per doubling
+    are excluded, and only where TRIM72 varies reproducibly.
+  - Among 28 MG53-linked pathway genes (tested against a 109-gene background), no footprint beyond a shared stress state.
+  - A list-free test finds no protective link between a line's TRIM72 induction and its 24 h cell abundance (slope −0.019, p 0.70).
+  - **A genome-wide, genotype-controlled screen has not been run, so effects outside the tested lists are unknown.**
+- **What Tahoe cannot settle.** These are limits of the database:
+  - spliced TRIM72 mRNA vs readthrough (gene-level counts only);
+  - MG53 protein or p53 protein (no protein data);
+  - anything before or after 24 h (one time point).
 
-## Priority fixes for the repo
-1. Rewrite the upstream short answer and section 2 around the locus signal.
-   - State that idarubicin and HHT show the same near-locus signature.
-   - Report the PYCARD-AS1 co-rise for each raiser in T1, and restore ENSG00000260060 to T4.
-   - Add the readthrough caveat and the estimand/reference of the 12.2x to `trim72_idarubicin/README.md`.
-2. Name compounds, not classes (dinaciclib, panobinostat), and carry the pseudocount-floor flag into T1/T5.
-   - Add a lowering row: trametinib and radotinib 5 µM.
-   - Flag plates 1-3 as low-sensitivity.
-3. Build the "beyond p53" answer from a genome-wide, genotype-controlled screen of all genes, not from the 27 pre-chosen D2
-   read-outs. Use the D2 pathways only as a priority overlay. Add a per-line abundance analysis.
-4. Add a 24 h paragraph.
-   - Name stabilisation, superinduction and composition as alternatives for the shutdown raisers.
-   - Remove the claim that the genotype contrast cancels shutdown.
-   - Exclude shutdown and cytotoxic wells from the p53-output tests, and use FDXR/DDB2 for the DNA-damage raisers.
-5. Fix the remaining short-answer errors.
-   - TF row: the ISR association holds only among weak drug-doses, and MEF2 is expressed.
-   - Bounds: state 2% (split-half) to 5% (replicate wells), say where they apply, and mark the single-cell 1.2% as conditional.
-   - Cite the WT lean correctly (+0.3 to +0.5 log2 pooled).
-   - Correct the Cong 2020 description.
-6. Engineering.
-   - Make `compare_with_repo.py` include `.csv.gz` and exit non-zero on a mismatch.
-   - Key all caches to their inputs.
-   - Pin dependencies and data revisions.
-   - Add a minimal synthetic test for `mg53_p53`.
-   - Fix the panel's p53 contrast (two-pass correction, sign-aware label).
+## Building the list-free version (for the build computer)
+
+These specs use the repo's existing products and code paths. Lists appear only as annotation after a genome-wide result.
+
+- **Keep the per-(well × line) effect tensor for all genes.** It is already computed and discarded twice: in `upstream_tf.py`
+  build_pass (`:562-707`, about 2-11 min) and in atlas effects pass 3 (`tahoe_atlas.py:1176-1187`). It is about 4.4 GB for 1,329 wells ×
+  50 lines × 16,643 genes. It reproduces the panel's per-line effects exactly and needs no raw-cell pass. Everything below except the
+  single-cell item builds on it.
+- **Genome-wide, genotype-controlled downstream screen.**
+  - Run the two_way design (drug-dose × TP53-group and line fixed effects; `many_diffs`, `two_way.py:1051`, is already vectorised)
+    with every expressed gene as the outcome and TRIM72 as the exposure. Chunk the genes; per-gene expression masks make the fitting
+    take hours.
+  - Report the WT-specific and common slopes for all genes, with the FDR over the genome.
+  - Then test, as overlays, whether p53 targets or MG53 pathways are enriched, using a rank-based, correlation-aware test against the
+    genome.
+- **A p53 program derived from Tahoe.**
+  - The genes whose 24 h response is TP53-WT-selective across drug-doses, genome-wide.
+  - Choose the activating drug-doses by genome-wide WT-vs-altered divergence, not by the 21-gene score.
+  - Use this program as the p53 outcome; keep the 21-gene list as a check.
+  - The atlas already has a genotype-split, drug-level read-out of every driver feature (`angle_line_response`, `tahoe_atlas.py:2881-2911`).
+- **Data-driven programs and drug groupings.**
+  - Run the atlas `angles` step, which `mg53_setup.sh` skips. `angle_programs` (`tahoe_atlas.py:3042-3160`) finds gene programs
+    genome-wide and gives per-line, genotype-split program responses.
+  - Use these programs for "what moves with TRIM72".
+  - Group drugs by signature similarity (`drug_summary.csv` `most_similar_drugs`) rather than by curated classes.
+- **"What moves" and "which TFs" from the genome-wide tables already committed.**
+  - Base T3/T8 on `a_coreg_genomewide.csv` (raw and PC-removed variants) and on TF mRNA across all genes.
+  - Add the genome-wide readthrough index as a T1 column.
+- **Single cells, genome-wide.** This needs one new pass over the raw cells (338 GB; a re-download only if the build used stream
+  mode).
+  - The cheapest form is a TRIM72-detection-stratified pseudobulk: add a detected flag to the (sample, line) key at
+    `tahoe_atlas.py:507`. That is about 2 × 20 GB and about 1 h, and makes every gene an outcome.
+  - Choose detection-matched placebo genes from the data (a few hundred via `--genes`, about 14 MB per gene).
+- **Method-independent replicate.** Tahoe's own DESeq2 table for all genes × all drugs (`metadata/pseudobulk_differential_expression`,
+  about 90 GB; read it whole, without the gene filter) supports the same screens with a different quantification.
+
+## Repo content outside the project's scope (criterion 1)
+
+These recommend wet-lab work and should be removed or reframed as limits:
+- `README.md` section 4's "direct test";
+- section 2's qPCR assay;
+- T8's last row (`summary_tables.py:372`);
+- `gene_modules.csv`, a knockdown/overexpression qPCR design with pre-written expected directions.
