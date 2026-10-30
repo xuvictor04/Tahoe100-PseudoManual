@@ -32,6 +32,9 @@ Options:
 - `--venv DIR`: the Python environment (default `~/tahoe-venv`; made if missing).
 - `--workers N`: how many plates are read at once (default: from CPUs and free memory).
 - `--redo STEP`: runs STEP and every later step again.
+- `--no-export-all-genes`: the `export` step leaves out `all_genes/` (every gene at the per-profile level, ~21 GB), and
+  the run needs ~24 GB less disk. The choice is kept for this data folder; `--export-all-genes` turns it back on (add
+  `--redo mg53_export` if the export has already run).
 
 For higher Hugging Face rate limits (optional), make a free read token at huggingface.co/settings/tokens. Then run
 `export HF_TOKEN=...` in the same shell before starting.
@@ -40,19 +43,20 @@ For higher Hugging Face rate limits (optional), make a free read token at huggin
 
 | Mode | What stays on the machine | Free disk needed |
 |---|---|---|
-| `full` (default) | The whole Tahoe-100M dataset (429 GB, 4,427 files), the same as `tahoe download`, plus the outputs. The whole dataset includes Tahoe's own pseudobulk DE (89 GB) and per-cell `obs_metadata` (2.3 GB), which this analysis does not read. | ~435 GB |
-| `needed` | Only what the analysis reads: the 3,388 expression files (338 GB) and the four metadata tables, plus the outputs. | ~350 GB |
-| `stream` | Each file is downloaded, processed and deleted, so only the outputs stay (~28 GB). Use it when the disk is small. To run anything else on the cells later, you must download again. | ~33 GB |
+| `full` (default) | The whole Tahoe-100M dataset (429 GB, 4,427 files), the same as `tahoe download`, plus the outputs. The whole dataset includes Tahoe's own pseudobulk DE (89 GB) and per-cell `obs_metadata` (2.3 GB); the analysis does not need them, but the `export` step copies Tahoe's DE rows of TRIM72 and the up- / downstream genes into `export/tahoe_deseq2/`. | ~471 GB (~447 with `--no-export-all-genes`) |
+| `needed` | Only what the analysis reads: the 3,388 expression files (338 GB) and the four metadata tables, plus the outputs. | ~386 GB (~362) |
+| `stream` | Each file is downloaded, processed and deleted, so only the outputs stay (~53 GB, ~25 of them the `export` tables). Use it when the disk is small. To run anything else on the cells later, you must download again. | ~69 GB (~45) |
 
-All three modes give the same tables: they feed the same files to the same atlas and gene-panel code.
+All three modes give the same tables: they feed the same files to the same atlas and gene-panel code (only `full` adds
+`export/tahoe_deseq2/`, Tahoe's own DE rows).
 
 ## What you need
 
 | | |
 |---|---|
 | OS | Linux (tested: Ubuntu-type, Python 3.13). macOS should work but is untested. |
-| Disk | The amount for your mode (table above), in the data folder; it includes ~5 GB for the `genome_wide` cache (`mg53_p53/genome_wide/cache`, the per well x line effects of every gene). Python packages take another ~0.5 GB in `~/tahoe-venv`. |
-| Memory | 8 GB or more; 16 GB is better. Each plate read at once needs ~3 GB, and each MG53 step stays under ~4 GB (`genome_wide`: ~3-3.5 GB in its first pass, then ~1 GB plus ~0.9 GB for each of its 2 worker processes). |
+| Disk | The amount for your mode (table above), in the data folder; it includes ~5 GB for the `genome_wide` cache (`mg53_p53/genome_wide/cache`, the per well x line effects of every gene) and ~36 GB at the peak of the `export` step (~25 GB kept: `all_genes/` ~21 GB, the up- / downstream gene tables, ~3.9 MB per selected gene and folder, and, in `full` mode, Tahoe's DE rows, ~3.2 MB per gene; ~4.6 GB of temporary counts while it runs). The budget holds for ~2,000 selected-gene entries; the step checks the free disk itself before it writes anything. Python packages take another ~0.5 GB in `~/tahoe-venv`. |
+| Memory | 8 GB or more; 16 GB is better. Each plate read at once needs ~3 GB, and each MG53 step stays under ~4 GB (`genome_wide`: ~3-3.5 GB in its first pass, then ~1 GB plus ~0.9 GB for each of its 2 worker processes; `export`: ~2-3 GB). |
 | CPUs | 4 or more. |
 | Network | Reaches `huggingface.co` for the dataset. |
 | Network (MG53 steps) | Reaches `storage.googleapis.com`, `rest.ensembl.org` / `www.ensembl.org`, `humantfs.ccbr.utoronto.ca` and `omnipathdb.org` once. These provide the TF list, HGNC / Ensembl coordinates and the CollecTRI / DoRothEA regulons. |
@@ -88,12 +92,13 @@ Dropped connections are retried automatically (download: 5 attempts; stream: 4).
 | `mg53_single_cell_all` | all | The same contrast in single cells of all wells, plus the ATF3-adjusted run (T10). | ~25 min |
 | `mg53_upstream_tf` | all | Transcription-factor activities and cell-line traits vs TRIM72 (T11, T12). | ~5 min |
 | `mg53_genome_wide` | all | The list-free version: every atlas gene's per-line effects (one more pass over `atlas/pseudobulk`, kept as a 4.4 GB cache), a p53 program found from the data, TRIM72 against every gene with TP53 genotype as the control, data-driven programs. Writes `genome_wide/GENOME_WIDE.md`. New and not yet run on the real data: if it fails, the setup says so, leaves it pending and still runs `mg53_summary` and `compare`; rerunning the same command retries it. | ~1.5-3 h (estimated) |
+| `mg53_export` | all | The data as tables in `export/` (its `README.md` defines every file and column, with units): cell lines, drugs, wells (used or excluded, and why), drug-doses; per (plate, well, drug, concentration, cell line) the raw counts, the uncorrected log2 changes (vs the plate's DMSO wells and vs its drug-well median) and the method-v3 corrected effect, for TRIM72, for the genes the data tie to it upstream and downstream, and for every expressed atlas gene (`all_genes/`, Parquet; `--no-export-all-genes` leaves it out); Tahoe's own DE rows of those genes in `full` mode. One more pass over `atlas/pseudobulk`. New and not yet run on the real data: if it fails, the setup says so, leaves it pending and still runs `mg53_summary` and `compare`. If `mg53_genome_wide` failed, it still writes everything that does not need it and says what is missing. | ~30-45 min, +15-40 min for Tahoe's DE rows (estimated) |
 | `mg53_summary` | all | Writes `SUMMARY.md` and `summary/T1..T12 *.csv`, including the short answers (T8). | seconds |
 | `compare` | all | Compares your tables with the ones committed here (`compare_with_repo.py`). | seconds |
 
-The whole run is the download plus ~5.5-8 h (full, needed), or ~6.5-9 h for stream. The times are from a 4-CPU,
-16 GB machine and the repository's own notes; the `genome_wide` time is an estimate from its kernels timed at the real
-dimensions.
+The whole run is the download plus ~6-9 h (full, needed), or ~7-10 h for stream. The times are from a 4-CPU,
+16 GB machine and the repository's own notes; the `genome_wide` and `export` times are estimates from their kernels timed
+at the real dimensions.
 
 ## What you get
 
@@ -104,6 +109,7 @@ All results are in `<data>/mg53_p53/` (default `~/Tahoe-100M/mg53_p53/`):
 | `SUMMARY.md` | The short answers and tables T1-T12. The same tables are CSVs in `summary/`. |
 | `<step>/tables/` | Every step's full tables, each folder with a `README_tables.txt` that explains its columns. |
 | `genome_wide/GENOME_WIDE.md` | The list-free downstream screen and the Tahoe p53 program (tables in `genome_wide/tables/`). |
+| `export/` | The data themselves, raw, uncorrected and corrected, as CSV and Parquet; `export/README.md` defines every file and column. `metadata/` (cell lines with TP53 group and genotype features, drugs, wells used or excluded and why, drug-doses, plates); `TRIM72/` (every plate, well, drug, dose and line; per well; per drug-dose x line; per drug-dose; drug-dose x line matrices); `upstream/` and `downstream/` (the genes the data tie to TRIM72, each with why it is there, and their values); `all_genes/` (every expressed gene, Parquet; `python3 mg53_p53/export/export_genes.py --export <data>/mg53_p53/export --genes FUS,ATF3 --out x.csv` writes any genes as CSV); `tahoe_deseq2/` (Tahoe's own DE rows, `full` mode). |
 | `trim72_idarubicin/` | TRIM72 fold change per cell line at idarubicin 5 µM, plus all doses, corrected. |
 | `compare_with_repo.txt` | Your tables next to the committed ones: `identical` (to 1e-6), `close` (to 1e-3; another numpy/BLAS can do that), or `differs`. |
 | `run_mg53_p53.log` | The MG53 steps' log. The setup log is `<data>/.mg53_setup/setup.log`. |
@@ -128,6 +134,15 @@ internet access; run them with
 - **Stream mode refuses because `<data>/data` holds files with cells.** Use `--mode full` on that folder, or another
   `--data`. Streaming would replace those files with empty stubs.
 - **Rerun one part.** For example, `--redo mg53_two_way` reruns that step and every later one.
+- **`mg53_export` failed, or stopped for lack of disk.** The run goes on without it, as for `mg53_genome_wide` below; the
+  log says what it needs (e.g. "needs ~27 GB free"; a resumed run counts only what it still has to write). Free disk
+  or restart with `--no-export-all-genes` (then
+  `--redo mg53_export`), and rerun: finished parts of the export (`<data>/mg53_p53/export/.state`) are kept. If
+  `mg53_genome_wide` had failed, `export/downstream/` is empty (its `NOTE.md` says why); when a later run finishes
+  `mg53_genome_wide`, the export runs again by itself: its gene tables (TRIM72, upstream, downstream) are rebuilt and,
+  in `full` mode, Tahoe's DE rows are read again (~15-40 min); `all_genes/` is kept (with `--no-export-all-genes` the
+  pass and the selected-gene store are rebuilt too, because they hold only the selected genes). Deleting
+  `export/all_genes/` to get its ~21 GB back is safe: the next export run rebuilds it.
 - **`mg53_genome_wide` failed.** The run goes on without it: `SUMMARY.md` and `compare_with_repo.txt` are still
   written, the end of the log says `EXCEPT: mg53_genome_wide`, and `status` lists it as pending. Rerun
   `bash mg53_p53/setup/mg53_setup.sh` to retry it; its caches (`<data>/mg53_p53/genome_wide/cache`) are reused and

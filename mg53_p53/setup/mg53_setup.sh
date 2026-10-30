@@ -8,14 +8,18 @@
 #
 # Options: --data DIR    data folder (default $TAHOE_DATA, else ~/Tahoe-100M)
 #          --mode MODE   how Tahoe-100M gets here (default: what this data folder already uses, else full):
-#                          full    download the whole dataset and keep it (429 GB, as 'tahoe download'; ~435 GB free)
+#                          full    download the whole dataset and keep it (429 GB, as 'tahoe download'; ~471 GB free)
 #                          needed  download only what the analysis reads: the 3,388 expression files and the four
-#                                  metadata tables (338 GB; ~350 GB free)
-#                          stream  download each file, process it, delete it: only ~28 GB kept (~33 GB free)
+#                                  metadata tables (338 GB; ~386 GB free)
+#                          stream  download each file, process it, delete it: only ~53 GB kept (~69 GB free)
+#                        (each includes ~36 GB for the export at its peak, ~21 GB of it all_genes; with
+#                        --no-export-all-genes: ~447 / ~362 / ~45 GB free)
 #          --venv DIR    Python environment (default: the one this folder used, else $TAHOE_VENV, else ~/tahoe-venv;
 #                        made if missing)
 #          --workers N   plates read at once (default: from CPUs and free memory)
 #          --redo STEP   forget STEP and every step after it, then run (e.g. --redo mg53_two_way)
+#          --no-export-all-genes   the export step leaves out all_genes/ (every gene per profile, ~21 GB); kept for
+#                        later runs of this folder (--export-all-genes turns it back on; then --redo mg53_export)
 # Optional: export HF_TOKEN=<your Hugging Face read token> before starting, for higher download rate limits.
 #
 # Steps, in order; each is marked done in <data>/.mg53_setup/ and skipped on a rerun, and an interrupted step resumes
@@ -32,13 +36,15 @@
 #   panel_analyze  tahoe_gene_panel.py analyze: the gene panel with the atlas's corrections (~10 min)
 #   ida            TRIM72 x idarubicin per cell line, corrected (trim72_idarubicin/corrected/trim72_ida_per_line.py)
 #   mg53_<step>    mg53_p53/run_mg53_p53.py, one step at a time: perturbations coregulation p53_dependence downstream
-#                  two_way single_cell_all upstream_tf genome_wide summary (2.5-5 h; coregulation and upstream_tf
+#                  two_way single_cell_all upstream_tf genome_wide export summary (3-6 h; coregulation and upstream_tf
 #                  download a TF list, HGNC / Ensembl coordinates and the CollecTRI / DoRothEA regulons once;
-#                  genome_wide keeps a ~5 GB cache; it is new, so a failure there is reported and left pending while
-#                  summary and compare still run, and the next run of the same command retries it)
+#                  genome_wide keeps a ~5 GB cache; export writes the raw, uncorrected and corrected values as tables
+#                  (<data>/mg53_p53/export, ~25 GB with all_genes); both are new, so a failure there is reported and
+#                  left pending while summary and compare still run, and the next run of the same command retries it)
 #   compare        your tables against the ones committed in this repository (<data>/mg53_p53/compare_with_repo.txt)
 # Results: <data>/mg53_p53/SUMMARY.md and <data>/mg53_p53/summary/*.csv; the list-free genome-wide analysis in
-# <data>/mg53_p53/genome_wide/GENOME_WIDE.md; idarubicin per line in <data>/mg53_p53/trim72_idarubicin/.
+# <data>/mg53_p53/genome_wide/GENOME_WIDE.md; the data as tables in <data>/mg53_p53/export (README.md there);
+# idarubicin per line in <data>/mg53_p53/trim72_idarubicin/.
 # Log: <data>/.mg53_setup/setup.log.
 set -u
 
@@ -49,8 +55,8 @@ REPO="$(dirname "$MG53")"
 HF_REPO="tahoebio/Tahoe-100M"
 N_FILES=3388
 META_TABLES="cell_line_metadata drug_metadata gene_metadata sample_metadata"
-MG53_STEPS="perturbations coregulation p53_dependence downstream two_way single_cell_all upstream_tf genome_wide summary"
-SOFT_STEPS="mg53_genome_wide"   # new steps not yet run on the real data: a failure is reported, the others go on
+MG53_STEPS="perturbations coregulation p53_dependence downstream two_way single_cell_all upstream_tf genome_wide export summary"
+SOFT_STEPS="mg53_genome_wide mg53_export"   # new steps not yet run on the real data: a failure is reported, the others go on
 PKGS="numpy pandas pyarrow scipy psutil fsspec aiohttp requests huggingface_hub hf_xet brotli>=1.2.0"
 
 absolute() {
@@ -67,6 +73,7 @@ VENV=""
 MODE_ARG=""
 WORKERS=""
 REDO=""
+EXPORT_ALL_ARG=""
 while [ $# -gt 0 ]; do
   case "$1" in
     start|run|status|stop) CMD="$1" ;;
@@ -80,6 +87,8 @@ while [ $# -gt 0 ]; do
     --workers=*) WORKERS="${1#--workers=}" ;;
     --redo) REDO="${2:?--redo needs a step}"; shift ;;
     --redo=*) REDO="${1#--redo=}" ;;
+    --no-export-all-genes) EXPORT_ALL_ARG=0 ;;
+    --export-all-genes) EXPORT_ALL_ARG=1 ;;
     -h|--help|help) sed -n '2,/^set -u/p' "$SELF" | sed '$d; s/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown argument: $1 (see: bash $0 --help)" >&2; exit 2 ;;
   esac
@@ -93,6 +102,12 @@ LOG="$STATE/setup.log"
 OUT="$DATA/mg53_p53"
 mkdir -p "$STATE" || exit 1
 [ -z "$VENV" ] && [ -s "$STATE/venv" ] && VENV="$(cat "$STATE/venv")"   # the environment this folder was set up with
+# the export's all_genes tables: the flag, else what this folder used, else $MG53_EXPORT_ALL_GENES, else on
+if [ -n "$EXPORT_ALL_ARG" ]; then EXPORT_ALL="$EXPORT_ALL_ARG"
+elif [ -s "$STATE/export_all_genes" ]; then EXPORT_ALL="$(cat "$STATE/export_all_genes")"
+else case "${MG53_EXPORT_ALL_GENES:-1}" in 0|false|no|off) EXPORT_ALL=0 ;; *) EXPORT_ALL=1 ;; esac
+fi
+case "$EXPORT_ALL" in 0) ;; *) EXPORT_ALL=1 ;; esac
 VENV="$(absolute "${VENV:-${TAHOE_VENV:-$HOME/tahoe-venv}}")"
 PY="$VENV/bin/python"
 
@@ -130,10 +145,16 @@ used_gb() { du -sk "$1" 2>/dev/null | awk '{ printf "%d\n", $1 / 1048576 }'; }
 full_files() {      # expression files with cells in <data>/data (stubs of a stream are ~3 KB)
   find "$DATA/data" -maxdepth 1 -name '*.parquet' -size +1024k 2>/dev/null | wc -l | tr -d ' '
 }
+export_gb() {       # the export step at its peak (its own free-disk check, export_data.py): all_genes ~22 GB plus
+  # ~4.6 GB of temporary counts, or plus the upstream / downstream gene tables (~3.9 MB per selected gene and folder)
+  # and, in full mode, Tahoe's DESeq2 rows (~3.2 MB per gene): ~27-29 GB for ~1,000 selected-gene entries, ~36 GB
+  # for ~2,000. Without all_genes: the selected genes' store, tables and DESeq2 rows (~12 GB for ~1,500 entries).
+  if [ "$EXPORT_ALL" = 1 ]; then echo 36; else echo 12; fi
+}
 need_gb() {         # free disk the whole run needs in this mode (df -h units), counting what is here already
   local total
   case "$MODE" in full) total=435 ;; needed) total=350 ;; *) total=33 ;; esac
-  echo $(( total - $(used_gb "$DATA") ))
+  echo $(( total + $(export_gb) - $(used_gb "$DATA") ))
 }
 
 # ----------------------------------------------------------------------------- status / stop / start
@@ -147,6 +168,7 @@ if [ "$CMD" = status ]; then
   [ -d "$DATA/data" ] && echo "expression files with cells in $DATA/data: $(full_files) of $N_FILES ($(used_gb "$DATA") GB in the data folder)"
   [ -f "$OUT/SUMMARY.md" ] && echo "results: $OUT/SUMMARY.md"
   [ -f "$OUT/genome_wide/GENOME_WIDE.md" ] && echo "genome-wide: $OUT/genome_wide/GENOME_WIDE.md"
+  [ -f "$OUT/export/README.md" ] && echo "the data as tables: $OUT/export/README.md (all_genes: $([ "$EXPORT_ALL" = 1 ] && echo on || echo off))"
   [ -f "$LOG" ] && { echo "--- end of $LOG"; tail -n 15 "$LOG"; }
   exit 0
 fi
@@ -165,6 +187,8 @@ if [ "$CMD" = start ]; then
   args=(run --data "$DATA" --venv "$VENV" --mode "$MODE")
   [ -n "$WORKERS" ] && args+=(--workers "$WORKERS")
   [ -n "$REDO" ] && args+=(--redo "$REDO")
+  [ "$EXPORT_ALL" = 0 ] && args+=(--no-export-all-genes)
+  [ "$EXPORT_ALL" = 1 ] && [ -n "$EXPORT_ALL_ARG" ] && args+=(--export-all-genes)
   if command -v setsid >/dev/null 2>&1; then
     setsid nohup bash "$SELF" "${args[@]}" </dev/null >>"$LOG" 2>&1 &
   else
@@ -206,6 +230,9 @@ step() {            # step NAME COMMAND...: run unless done; mark when it succee
     die "$name failed (exit $rc); the lines above have the error. Fix it, then rerun the same command (finished work is kept)."
   fi
   mark "$name"
+  # genome_wide finished after an export without it: the export runs again (its gene tables and, in full mode, the
+  # DESeq2 rows are rebuilt; all_genes/ is kept, a selected-gene store is rebuilt)
+  [ "$name" = mg53_genome_wide ] && rm -f "$STATE/mg53_export.done"
   say "$name: done in $(( ($(date +%s) - t0 + 30) / 60 )) min"
 }
 SOFT_FAILED=""
@@ -228,7 +255,7 @@ check() {
   done_mark download && have_data=1
   if [ "$have_data" = 0 ]; then
     local need; need="$(need_gb)"
-    [ "$(free_gb)" -ge "$need" ] || die "$(free_gb) GB free in $DATA; mode $MODE needs ~$need GB more. Free space, use --data on a larger disk, or a smaller --mode (needed: 350 GB, stream: 33 GB)."
+    [ "$(free_gb)" -ge "$need" ] || die "$(free_gb) GB free in $DATA; mode $MODE needs ~$need GB more (incl. ~$(export_gb) GB for the export). Free space, use --data on a larger disk, a smaller --mode (needed: 386 GB, stream: 69 GB), or --no-export-all-genes (~24 GB less)."
     curl -sSfI --retry 3 "https://huggingface.co/api/datasets/$HF_REPO" >/dev/null \
       || die "cannot reach huggingface.co (the data come from https://huggingface.co/datasets/$HF_REPO)"
   fi
@@ -239,6 +266,7 @@ check() {
   fi
   echo "$MODE" > "$STATE/mode"
   echo "$VENV" > "$STATE/venv"
+  echo "$EXPORT_ALL" > "$STATE/export_all_genes"
   say "check: $(getconf _NPROCESSORS_ONLN 2>/dev/null || echo '?') CPUs; ${memkb:+$(( memkb / 1048576 )) GB free memory; }$(free_gb) GB free disk"
 }
 
@@ -324,7 +352,7 @@ ida() {
   say "ida: tables in $OUT/trim72_idarubicin"
 }
 mg53() {
-  "$PY" "$MG53/run_mg53_p53.py" --data "$DATA" --out "$OUT" --steps "$1"
+  MG53_EXPORT_ALL_GENES="$EXPORT_ALL" "$PY" "$MG53/run_mg53_p53.py" --data "$DATA" --out "$OUT" --steps "$1"
 }
 
 check
@@ -351,5 +379,6 @@ if [ -n "$SOFT_FAILED" ]; then
   exit 1
 fi
 say "all done in $(( ($(date +%s) - T_ALL + 30) / 60 )) min. Start with $OUT/SUMMARY.md (tables in $OUT/summary/);"
-say "the list-free genome-wide analysis: $OUT/genome_wide/GENOME_WIDE.md; idarubicin per line: $OUT/trim72_idarubicin/;"
+say "the list-free genome-wide analysis: $OUT/genome_wide/GENOME_WIDE.md; the data as tables: $OUT/export/README.md;"
+say "idarubicin per line: $OUT/trim72_idarubicin/;"
 say "against the repository: $OUT/compare_with_repo.txt"

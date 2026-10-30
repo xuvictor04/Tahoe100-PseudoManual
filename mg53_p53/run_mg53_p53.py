@@ -5,7 +5,7 @@ Needs a method-v3 atlas (<data>/atlas: 'tahoe_atlas.py compute', with its pseudo
 (<data>/gene_panel: 'tahoe_gene_panel.py all'); nothing is read from the 340 GB of cells again, and nothing is written
 into atlas/ or gene_panel/. Each step runs one script of this folder with its tables going to <out>/<step>/tables:
 
-    python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M                 # all data steps + summary (~3.5-5 h cold)
+    python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M                 # all data steps + summary (~4-6 h cold)
     python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M --steps summary # rebuild the summary tables only
     python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M --steps literature   # optional; needs internet
 
@@ -26,10 +26,18 @@ Steps (default: all but literature, in this order):
                                                    (one pass over atlas/pseudobulk, kept as a 4.4 GB cache), a Tahoe-derived
                                                    p53 program, TRIM72 vs every gene with TP53 genotype as the control,
                                                    data-driven programs (~1.5-3 h cold; ~5 GB disk in <out>/genome_wide/cache)
+  export          export/export_data.py            the data as tables (<out>/export, README.md there defines every
+                                                   column): cell lines, drugs, wells, doses; per (plate, well, drug,
+                                                   concentration, line) raw counts, uncorrected and corrected values of
+                                                   TRIM72, of the genes the data tie to it upstream / downstream and of
+                                                   every atlas gene (all_genes, ~21 GB; MG53_EXPORT_ALL_GENES=0
+                                                   leaves it out); Tahoe's DESeq2 rows when present (one more pass over
+                                                   atlas/pseudobulk; ~30-45 min, +15-40 min for Tahoe's DESeq2 rows,
+                                                   estimated; ~27-36 GB at its peak; works without genome_wide)
   literature      literature/pubmed_screen.py + external_checks.py     PubMed/Europe PMC, p53 census, ChIP-Atlas
   summary         summary_tables.py                                    <out>/SUMMARY.md and <out>/summary/*.csv
 Memory: under ~4 GB per step (genome_wide ~3-3.5 GB in its first pass, then ~1 GB plus ~0.9 GB per worker, 2 by
-default). Output default: <data>/mg53_p53. Log: <out>/run_mg53_p53.log.
+default; export ~2-3 GB). Output default: <data>/mg53_p53. Log: <out>/run_mg53_p53.log.
 """
 import argparse
 import os
@@ -48,9 +56,11 @@ STEPS = {   # step: (folder, [(script, output subfolder, extra arguments, takes 
                                             ("single_cell_all.py", "adjusted_ATF3", ["--adjust", "ATF3"], True)]),
     "upstream_tf": ("upstream_tf", [("upstream_tf.py", "", [], True)]),
     "genome_wide": ("genome_wide", [("genome_wide.py", "", [], True)]),
+    "export": ("export", [("export_data.py", "", [], True)]),
     "literature": ("literature", [("pubmed_screen.py", "", [], False), ("external_checks.py", "", [], False)]),
 }
-DEFAULT = "perturbations,coregulation,p53_dependence,downstream,two_way,single_cell_all,upstream_tf,genome_wide,summary"
+DEFAULT = ("perturbations,coregulation,p53_dependence,downstream,two_way,single_cell_all,upstream_tf,genome_wide,"
+           "export,summary")
 
 
 def main():
