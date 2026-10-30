@@ -559,6 +559,100 @@ def load_profiles(pb):
     return pd.concat(parts, ignore_index=True)
 
 
+def stream_plates(prof, rows_of, plates, nw, L, toks, etoks, on_plate, chunk=CHUNK):
+    """One sequential pass over the pseudobulk files of prof (columns file, row, wi, li, plate, as build_pass makes
+    them; each file read once): per plate, the counts of the atlas tokens toks and of the extra tokens etoks summed
+    per (well of the plate, line) as float32 (wells in rows_of[p] order). on_plate(p, C, Ex) is called as soon as
+    every file holding that plate's profiles has been read; C and Ex are dropped after the call. Raises on a (sample,
+    line) profile listed twice in one file and on a short read. Plates without any profile are never passed on."""
+    G, E = len(toks), len(etoks)
+    pos = np.empty(nw, dtype=int)
+    for p in plates:
+        pos[rows_of[p]] = np.arange(len(rows_of[p]))
+    files = sorted(prof["file"].unique())
+    pending = {p: set(prof.loc[prof["plate"] == p, "file"]) for p in plates}
+    acc = {}
+    for f in files:
+        g = prof[prof["file"] == f].sort_values("row")
+        if g.duplicated(["wi", "li"]).any():
+            raise ValueError(f"{f}: a (sample, line) profile appears twice in one file")
+        off, shape, dt = TW.npy_layout(f)
+        rb = shape[1] * dt.itemsize
+        rows = g["row"].to_numpy()
+        a_w, a_l, a_p = g["wi"].to_numpy(), g["li"].to_numpy(), g["plate"].to_numpy()
+        for p in np.unique(a_p):
+            if p not in acc:
+                acc[p] = (np.zeros((len(rows_of[p]), L, G), dtype=np.float32),
+                          np.zeros((len(rows_of[p]), L, E), dtype=np.float32))
+        buf = np.empty((chunk, shape[1]), dtype=dt)
+        tf0 = time.time()
+        with open(f, "rb") as fh:
+            for s0 in range(0, shape[0], chunk):
+                n = min(chunk, shape[0] - s0)
+                lo, hi = np.searchsorted(rows, [s0, s0 + n])
+                if hi <= lo:
+                    continue
+                fh.seek(off + s0 * rb)
+                if fh.readinto(buf[:n]) != n * rb:
+                    raise IOError(f"{f}: short read at row {s0}")
+                rr = rows[lo:hi] - s0
+                sub = buf[rr[:, None], toks[None, :]]
+                ex = buf[rr[:, None], etoks[None, :]]
+                pp = a_p[lo:hi]
+                for p in np.unique(pp):
+                    m = pp == p
+                    C, Ex = acc[p]
+                    ix = (pos[a_w[lo:hi][m]], a_l[lo:hi][m])
+                    C[ix] += sub[m]
+                    Ex[ix] += ex[m]
+        log(f"  read {os.path.basename(f)}: {len(g)} profiles ({time.time() - tf0:.0f} s)")
+        for p in np.unique(a_p):
+            pending[p].discard(f)
+            if not pending[p]:
+                C, Ex = acc.pop(p)
+                on_plate(p, C, Ex)
+                del C, Ex
+
+
+def plate_r2(C, tot, nc, em, drug, comp, W1a, W2a):
+    """Method-v3 r2 of the atlas genes for one plate, in place on C (the plate's wells x lines x genes counts, float32
+    -> r2): log CPM as tahoe_atlas.log_cpm (profiles with >= A.MIN_CELLS cells; lines that do not express the gene,
+    em = lines x genes False, -> NaN), minus the plate's drug-well median of the line (drug: bool per well of the
+    plate), minus the composition shift (comp: the plate's wells x lines), minus the atlas's position effect W1a - W2a
+    of the gene; wells whose own W1 has < A.MIN_LINES lines -> NaN. tot, nc: the plate's wells x lines total counts and
+    cells. Returns (r2, the plate's W1 (wells x genes), its validation against the atlas W1a: cells finite in both,
+    max |diff|, finite here only, finite in the atlas only)."""
+    L, G = em.shape
+    nwp = C.shape[0]
+    for i in range(nwp):                              # log CPM exactly as tahoe_atlas.log_cpm, expressing lines only
+        ok = nc[i] >= A.MIN_CELLS
+        Yi = np.full((L, G), np.nan, dtype=np.float32)
+        Yi[ok] = np.log2((C[i][ok] + 0.5) / (tot[i][ok][:, None] + 1.0) * 1e6)
+        Yi[~em] = np.nan
+        C[i] = Yi
+    Y = C
+    with quiet():
+        for l_ in range(L):
+            base = np.nanmedian(Y[drug, l_, :], axis=0)
+            Y[:, l_, :] -= base[None, :]
+            Y[:, l_, :] -= comp[:, l_][:, None]
+        W1m = np.full((nwp, G), np.nan, dtype=np.float32)
+        for i in range(nwp):
+            v = np.nanmedian(Y[i], axis=0)
+            v[np.isfinite(Y[i]).sum(axis=0) < A.MIN_LINES] = np.nan
+            W1m[i] = v
+    both = np.isfinite(W1m) & np.isfinite(W1a)
+    val = {"W1_cells_both_finite": int(both.sum()),
+           "W1_max_abs_diff_vs_atlas": float(np.max(np.abs(W1m[both] - W1a[both]))) if both.any() else np.nan,
+           "W1_finite_here_not_atlas": int((np.isfinite(W1m) & ~np.isfinite(W1a)).sum()),
+           "W1_finite_atlas_not_here": int((~np.isfinite(W1m) & np.isfinite(W1a)).sum())}
+    eff = np.nan_to_num(W1a - W2a).astype(np.float32)
+    fin = np.isfinite(W1m)
+    for i in range(nwp):
+        Y[i] = np.where(fin[i][None, :], Y[i] - eff[i][None, :], np.nan)
+    return Y, W1m, val
+
+
 def build_pass(ctx, W, tfs, sel, excl, cdir, key):
     """One streamed pass over atlas/pseudobulk (each file read once, sequentially). Per plate, as soon as all its
     profiles are read: method-v3 r2 of every atlas gene per (well, line) (log CPM -> minus the plate's drug-well
@@ -587,9 +681,6 @@ def build_pass(ctx, W, tfs, sel, excl, cdir, key):
     prof["plate"] = plate_w[prof["wi"].to_numpy()]
     plates = list(fx.plates)
     rows_of = {p: np.flatnonzero(plate_w == p) for p in plates}
-    pos = np.empty(NW, dtype=int)
-    for p in plates:
-        pos[rows_of[p]] = np.arange(len(rows_of[p]))
     tot = np.zeros((NW, L))
     nc = np.zeros((NW, L))
     np.add.at(tot, (prof["wi"].to_numpy(), prof["li"].to_numpy()), prof["total_counts"].to_numpy(float))
@@ -604,9 +695,6 @@ def build_pass(ctx, W, tfs, sel, excl, cdir, key):
     dm_n = np.zeros((len(plates), L))
     ulm = ULM(W)
     val = []
-    files = sorted(prof["file"].unique())
-    pending = {p: set(prof.loc[prof["plate"] == p, "file"]) for p in plates}
-    acc = {}
 
     def process_plate(p, C, Ex):
         tp = time.time()
@@ -617,36 +705,10 @@ def build_pass(ctx, W, tfs, sel, excl, cdir, key):
         dm_c[pi], dm_e[pi] = C[dm].sum(axis=0), Ex[dm].sum(axis=0)
         dm_t[pi], dm_n[pi] = t_[dm].sum(axis=0), n_[dm].sum(axis=0)
         exw[rows] = Ex
-        for i in range(len(rows)):                    # log CPM exactly as tahoe_atlas.log_cpm, expressing lines only
-            ok = n_[i] >= A.MIN_CELLS
-            Yi = np.full((L, G), np.nan, dtype=np.float32)
-            Yi[ok] = np.log2((C[i][ok] + 0.5) / (t_[i][ok][:, None] + 1.0) * 1e6)
-            Yi[~ctx.em] = np.nan
-            C[i] = Yi
-        Y = C
-        drug = fx.drug_w[rows]
-        S = ctx.comp[rows]
-        with quiet():
-            for l_ in range(L):
-                base = np.nanmedian(Y[drug, l_, :], axis=0)
-                Y[:, l_, :] -= base[None, :]
-                Y[:, l_, :] -= S[:, l_][:, None]
-            W1m = np.full((len(rows), G), np.nan, dtype=np.float32)
-            for i in range(len(rows)):
-                v = np.nanmedian(Y[i], axis=0)
-                v[np.isfinite(Y[i]).sum(axis=0) < A.MIN_LINES] = np.nan
-                W1m[i] = v
         W1a = np.asarray(fx.W1[rows])[:, ctx.gcol]
         W2a = np.asarray(fx.W2[rows])[:, ctx.gcol]
-        both = np.isfinite(W1m) & np.isfinite(W1a)
-        val.append({"plate": p, "wells": len(rows), "W1_cells_both_finite": int(both.sum()),
-                    "W1_max_abs_diff_vs_atlas": float(np.max(np.abs(W1m[both] - W1a[both]))) if both.any() else np.nan,
-                    "W1_finite_here_not_atlas": int((np.isfinite(W1m) & ~np.isfinite(W1a)).sum()),
-                    "W1_finite_atlas_not_here": int((~np.isfinite(W1m) & np.isfinite(W1a)).sum())})
-        eff = np.nan_to_num(W1a - W2a).astype(np.float32)
-        fin = np.isfinite(W1m)
-        for i in range(len(rows)):
-            Y[i] = np.where(fin[i][None, :], Y[i] - eff[i][None, :], np.nan)
+        Y, _W1m, v = plate_r2(C, t_, n_, ctx.em, fx.drug_w[rows], ctx.comp[rows], W1a, W2a)
+        val.append({"plate": p, "wells": len(rows)} | v)
         selw[rows] = Y[:, :, sel_j]
         with quiet():
             for i in range(len(rows)):
@@ -659,46 +721,7 @@ def build_pass(ctx, W, tfs, sel, excl, cdir, key):
         log(f"  plate {p}: {len(rows)} wells processed ({time.time() - tp:.0f} s; W1 max |diff| vs atlas "
             f"{val[-1]['W1_max_abs_diff_vs_atlas']:.2g}; peak RSS {peak_gb():.2f} GB)")
 
-    for f in files:
-        g = prof[prof["file"] == f].sort_values("row")
-        if g.duplicated(["wi", "li"]).any():
-            raise ValueError(f"{f}: a (sample, line) profile appears twice in one file")
-        off, shape, dt = TW.npy_layout(f)
-        rb = shape[1] * dt.itemsize
-        rows = g["row"].to_numpy()
-        a_w, a_l, a_p = g["wi"].to_numpy(), g["li"].to_numpy(), g["plate"].to_numpy()
-        for p in np.unique(a_p):
-            if p not in acc:
-                acc[p] = (np.zeros((len(rows_of[p]), L, G), dtype=np.float32),
-                          np.zeros((len(rows_of[p]), L, E), dtype=np.float32))
-        buf = np.empty((CHUNK, shape[1]), dtype=dt)
-        tf0 = time.time()
-        with open(f, "rb") as fh:
-            for s0 in range(0, shape[0], CHUNK):
-                n = min(CHUNK, shape[0] - s0)
-                lo, hi = np.searchsorted(rows, [s0, s0 + n])
-                if hi <= lo:
-                    continue
-                fh.seek(off + s0 * rb)
-                if fh.readinto(buf[:n]) != n * rb:
-                    raise IOError(f"{f}: short read at row {s0}")
-                rr = rows[lo:hi] - s0
-                sub = buf[rr[:, None], ctx.gtok[None, :]]
-                ex = buf[rr[:, None], etok[None, :]]
-                pp = a_p[lo:hi]
-                for p in np.unique(pp):
-                    m = pp == p
-                    C, Ex = acc[p]
-                    ix = (pos[a_w[lo:hi][m]], a_l[lo:hi][m])
-                    C[ix] += sub[m]
-                    Ex[ix] += ex[m]
-        log(f"  read {os.path.basename(f)}: {len(g)} profiles ({time.time() - tf0:.0f} s)")
-        for p in np.unique(a_p):
-            pending[p].discard(f)
-            if not pending[p]:
-                C, Ex = acc.pop(p)
-                process_plate(p, C, Ex)
-                del C, Ex
+    stream_plates(prof, rows_of, plates, NW, L, ctx.gtok, etok, process_plate)
     tf_dd = ctx.dd_mean(tfw)
     res = {"tf_dd": tf_dd, "selw": selw, "bgw": bgw, "exw": exw, "tot": tot, "nc": nc, "dm_c": dm_c, "dm_e": dm_e,
            "dm_t": dm_t, "dm_n": dm_n, "tfs": np.array(tfs), "sel": np.array(sel), "extra": np.array(EXTRA_SYMBOLS),

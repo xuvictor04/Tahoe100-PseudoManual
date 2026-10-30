@@ -8,10 +8,10 @@
 #
 # Options: --data DIR    data folder (default $TAHOE_DATA, else ~/Tahoe-100M)
 #          --mode MODE   how Tahoe-100M gets here (default: what this data folder already uses, else full):
-#                          full    download the whole dataset and keep it (429 GB, as 'tahoe download'; ~430 GB free)
+#                          full    download the whole dataset and keep it (429 GB, as 'tahoe download'; ~435 GB free)
 #                          needed  download only what the analysis reads: the 3,388 expression files and the four
-#                                  metadata tables (338 GB; ~345 GB free)
-#                          stream  download each file, process it, delete it: only ~23 GB kept (~28 GB free)
+#                                  metadata tables (338 GB; ~350 GB free)
+#                          stream  download each file, process it, delete it: only ~28 GB kept (~33 GB free)
 #          --venv DIR    Python environment (default: the one this folder used, else $TAHOE_VENV, else ~/tahoe-venv;
 #                        made if missing)
 #          --workers N   plates read at once (default: from CPUs and free memory)
@@ -32,11 +32,14 @@
 #   panel_analyze  tahoe_gene_panel.py analyze: the gene panel with the atlas's corrections (~10 min)
 #   ida            TRIM72 x idarubicin per cell line, corrected (trim72_idarubicin/corrected/trim72_ida_per_line.py)
 #   mg53_<step>    mg53_p53/run_mg53_p53.py, one step at a time: perturbations coregulation p53_dependence downstream
-#                  two_way single_cell_all upstream_tf summary (1-2 h; coregulation and upstream_tf download a TF
-#                  list, HGNC / Ensembl coordinates and the CollecTRI / DoRothEA regulons once)
+#                  two_way single_cell_all upstream_tf genome_wide summary (2.5-5 h; coregulation and upstream_tf
+#                  download a TF list, HGNC / Ensembl coordinates and the CollecTRI / DoRothEA regulons once;
+#                  genome_wide keeps a ~5 GB cache; it is new, so a failure there is reported and left pending while
+#                  summary and compare still run, and the next run of the same command retries it)
 #   compare        your tables against the ones committed in this repository (<data>/mg53_p53/compare_with_repo.txt)
-# Results: <data>/mg53_p53/SUMMARY.md and <data>/mg53_p53/summary/*.csv; idarubicin per line in
-# <data>/mg53_p53/trim72_idarubicin/. Log: <data>/.mg53_setup/setup.log.
+# Results: <data>/mg53_p53/SUMMARY.md and <data>/mg53_p53/summary/*.csv; the list-free genome-wide analysis in
+# <data>/mg53_p53/genome_wide/GENOME_WIDE.md; idarubicin per line in <data>/mg53_p53/trim72_idarubicin/.
+# Log: <data>/.mg53_setup/setup.log.
 set -u
 
 SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
@@ -46,7 +49,8 @@ REPO="$(dirname "$MG53")"
 HF_REPO="tahoebio/Tahoe-100M"
 N_FILES=3388
 META_TABLES="cell_line_metadata drug_metadata gene_metadata sample_metadata"
-MG53_STEPS="perturbations coregulation p53_dependence downstream two_way single_cell_all upstream_tf summary"
+MG53_STEPS="perturbations coregulation p53_dependence downstream two_way single_cell_all upstream_tf genome_wide summary"
+SOFT_STEPS="mg53_genome_wide"   # new steps not yet run on the real data: a failure is reported, the others go on
 PKGS="numpy pandas pyarrow scipy psutil fsspec aiohttp requests huggingface_hub hf_xet brotli>=1.2.0"
 
 absolute() {
@@ -128,7 +132,7 @@ full_files() {      # expression files with cells in <data>/data (stubs of a str
 }
 need_gb() {         # free disk the whole run needs in this mode (df -h units), counting what is here already
   local total
-  case "$MODE" in full) total=430 ;; needed) total=345 ;; *) total=28 ;; esac
+  case "$MODE" in full) total=435 ;; needed) total=350 ;; *) total=33 ;; esac
   echo $(( total - $(used_gb "$DATA") ))
 }
 
@@ -142,6 +146,7 @@ if [ "$CMD" = status ]; then
   done
   [ -d "$DATA/data" ] && echo "expression files with cells in $DATA/data: $(full_files) of $N_FILES ($(used_gb "$DATA") GB in the data folder)"
   [ -f "$OUT/SUMMARY.md" ] && echo "results: $OUT/SUMMARY.md"
+  [ -f "$OUT/genome_wide/GENOME_WIDE.md" ] && echo "genome-wide: $OUT/genome_wide/GENOME_WIDE.md"
   [ -f "$LOG" ] && { echo "--- end of $LOG"; tail -n 15 "$LOG"; }
   exit 0
 fi
@@ -168,7 +173,7 @@ if [ "$CMD" = start ]; then
   echo "started in the background (pid $!; mode $MODE); safe to log out."
   echo "  follow it:   tail -f $LOG"
   echo "  where it is: bash $SELF status --data $DATA"
-  echo "  results:     $OUT/SUMMARY.md (at the end)"
+  echo "  results:     $OUT/SUMMARY.md and $OUT/genome_wide/GENOME_WIDE.md (at the end)"
   exit 0
 fi
 
@@ -191,10 +196,19 @@ step() {            # step NAME COMMAND...: run unless done; mark when it succee
   say "$name: start"
   local t0; t0=$(date +%s)
   "$@"; rc=$?
-  [ "$rc" = 0 ] || die "$name failed (exit $rc); the lines above have the error. Fix it, then rerun the same command (finished work is kept)."
+  if [ "$rc" != 0 ]; then
+    case " $SOFT_STEPS " in
+      *" $name "*)          # a soft step: report it, leave it pending, go on with the others
+        SOFT_FAILED="$SOFT_FAILED $name"
+        say "WARNING: $name failed (exit $rc); the lines above have the error. It stays pending and the other steps go on; rerun the same command to retry it (its finished work is kept)."
+        return 0 ;;
+    esac
+    die "$name failed (exit $rc); the lines above have the error. Fix it, then rerun the same command (finished work is kept)."
+  fi
   mark "$name"
   say "$name: done in $(( ($(date +%s) - t0 + 30) / 60 )) min"
 }
+SOFT_FAILED=""
 
 # the machine check (every run) -----------------------------------------------
 check() {
@@ -214,7 +228,7 @@ check() {
   done_mark download && have_data=1
   if [ "$have_data" = 0 ]; then
     local need; need="$(need_gb)"
-    [ "$(free_gb)" -ge "$need" ] || die "$(free_gb) GB free in $DATA; mode $MODE needs ~$need GB more. Free space, use --data on a larger disk, or a smaller --mode (needed: 345 GB, stream: 28 GB)."
+    [ "$(free_gb)" -ge "$need" ] || die "$(free_gb) GB free in $DATA; mode $MODE needs ~$need GB more. Free space, use --data on a larger disk, or a smaller --mode (needed: 350 GB, stream: 33 GB)."
     curl -sSfI --retry 3 "https://huggingface.co/api/datasets/$HF_REPO" >/dev/null \
       || die "cannot reach huggingface.co (the data come from https://huggingface.co/datasets/$HF_REPO)"
   fi
@@ -330,5 +344,12 @@ step panel_analyze "$PY" "$REPO/tahoe_gene_panel.py" analyze --data "$DATA"
 step ida ida
 for s in $MG53_STEPS; do step "mg53_$s" mg53 "$s"; done
 step compare "$PY" "$HERE/compare_with_repo.py" --out "$OUT"
+if [ -n "$SOFT_FAILED" ]; then
+  say "finished in $(( ($(date +%s) - T_ALL + 30) / 60 )) min EXCEPT:$SOFT_FAILED (failed; the WARNING above has the error)."
+  say "The rest is done: start with $OUT/SUMMARY.md (tables in $OUT/summary/); against the repository: $OUT/compare_with_repo.txt."
+  say "Rerun the same command to retry$SOFT_FAILED; nothing else runs again."
+  exit 1
+fi
 say "all done in $(( ($(date +%s) - T_ALL + 30) / 60 )) min. Start with $OUT/SUMMARY.md (tables in $OUT/summary/);"
-say "idarubicin per line: $OUT/trim72_idarubicin/; against the repository: $OUT/compare_with_repo.txt"
+say "the list-free genome-wide analysis: $OUT/genome_wide/GENOME_WIDE.md; idarubicin per line: $OUT/trim72_idarubicin/;"
+say "against the repository: $OUT/compare_with_repo.txt"

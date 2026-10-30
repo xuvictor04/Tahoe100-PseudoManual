@@ -5,7 +5,7 @@ Needs a method-v3 atlas (<data>/atlas: 'tahoe_atlas.py compute', with its pseudo
 (<data>/gene_panel: 'tahoe_gene_panel.py all'); nothing is read from the 340 GB of cells again, and nothing is written
 into atlas/ or gene_panel/. Each step runs one script of this folder with its tables going to <out>/<step>/tables:
 
-    python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M                 # all data steps + summary (~2 h cold)
+    python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M                 # all data steps + summary (~3.5-5 h cold)
     python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M --steps summary # rebuild the summary tables only
     python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M --steps literature   # optional; needs internet
 
@@ -22,9 +22,14 @@ Steps (default: all but literature, in this order):
                                                    plus an ATF3-adjusted sensitivity run (one pass over gene_panel/cells each, ~13 min)
   upstream_tf     upstream_tf/upstream_tf.py       transcription-factor activities and line features vs TRIM72
                                                    (one pass over atlas/pseudobulk, ~5 min; downloads CollecTRI/DoRothEA once)
+  genome_wide     genome_wide/genome_wide.py       the list-free version: per (well x line) effects of every atlas gene
+                                                   (one pass over atlas/pseudobulk, kept as a 4.4 GB cache), a Tahoe-derived
+                                                   p53 program, TRIM72 vs every gene with TP53 genotype as the control,
+                                                   data-driven programs (~1.5-3 h cold; ~5 GB disk in <out>/genome_wide/cache)
   literature      literature/pubmed_screen.py + external_checks.py     PubMed/Europe PMC, p53 census, ChIP-Atlas
   summary         summary_tables.py                                    <out>/SUMMARY.md and <out>/summary/*.csv
-Memory: under ~4 GB per step. Output default: <data>/mg53_p53. Log: <out>/run_mg53_p53.log.
+Memory: under ~4 GB per step (genome_wide ~3-3.5 GB in its first pass, then ~1 GB plus ~0.9 GB per worker, 2 by
+default). Output default: <data>/mg53_p53. Log: <out>/run_mg53_p53.log.
 """
 import argparse
 import os
@@ -42,9 +47,10 @@ STEPS = {   # step: (folder, [(script, output subfolder, extra arguments, takes 
     "single_cell_all": ("single_cell_all", [("single_cell_all.py", "", [], True),
                                             ("single_cell_all.py", "adjusted_ATF3", ["--adjust", "ATF3"], True)]),
     "upstream_tf": ("upstream_tf", [("upstream_tf.py", "", [], True)]),
+    "genome_wide": ("genome_wide", [("genome_wide.py", "", [], True)]),
     "literature": ("literature", [("pubmed_screen.py", "", [], False), ("external_checks.py", "", [], False)]),
 }
-DEFAULT = "perturbations,coregulation,p53_dependence,downstream,two_way,single_cell_all,upstream_tf,summary"
+DEFAULT = "perturbations,coregulation,p53_dependence,downstream,two_way,single_cell_all,upstream_tf,genome_wide,summary"
 
 
 def main():

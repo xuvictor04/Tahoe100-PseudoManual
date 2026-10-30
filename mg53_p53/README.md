@@ -259,7 +259,7 @@ cannot be excluded, because TRIM72 is barely expressed in these lines.
 ## Running it on your system
 
 **From an empty machine:** `bash mg53_p53/setup/mg53_setup.sh` downloads Tahoe-100M (429 GB; `--mode needed`: the 338 GB
-the analysis reads; `--mode stream`: ~28 GB disk, nothing kept), builds the atlas and gene panel, runs every step below and
+the analysis reads; `--mode stream`: ~33 GB disk, nothing kept), builds the atlas and gene panel, runs every step below and
 compares your tables with these; see [setup/README.md](setup/README.md).
 
 **With the atlas and gene panel already computed:**
@@ -267,7 +267,7 @@ Needs the computed atlas (`tahoe_atlas.py compute`, keeping `atlas/pseudobulk`) 
 your Tahoe-100M folder; the 340 GB of cells are not read again, and nothing is written into `atlas/` or `gene_panel/`.
 
 ```bash
-python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M            # ~2 h cold; tables in ~/Tahoe-100M/mg53_p53/
+python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M            # ~3.5-5 h cold; tables in ~/Tahoe-100M/mg53_p53/
 python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M --steps summary      # rebuild SUMMARY.md only
 python3 mg53_p53/run_mg53_p53.py --data ~/Tahoe-100M --steps literature   # optional; needs internet
 ```
@@ -276,11 +276,12 @@ Steps: `perturbations`, `coregulation` (one pass over `atlas/pseudobulk`, ~25 mi
 HGNC and Ensembl coordinates once), `p53_dependence` (~3 min), `downstream` (~8-14 min), `two_way` (~30 min cold: a pass over
 `atlas/pseudobulk`, then the models), `single_cell_all` (two passes over `gene_panel/cells`, ~13 min each: the main run and an
 ATF3-adjusted sensitivity run), `upstream_tf` (~5 min; downloads CollecTRI/DoRothEA once; `--offline` uses cached files),
-`summary`. Each step's tables go to `<out>/<step folder>/tables` (caches in `cache/`, keyed to the data folder), then
+`genome_wide` (one pass over `atlas/pseudobulk` kept as a 4.4 GB cache, then the genome-wide models; ~1.5-3 h, estimated), `summary`.
+Each step's tables go to `<out>/<step folder>/tables` (caches in `cache/`, keyed to the data folder), then
 `summary_tables.py` writes `<out>/SUMMARY.md` and `<out>/summary/*.csv` (T1-T12). The log is `<out>/run_mg53_p53.log`.
-Reproducibility: a from-scratch run of `run_mg53_p53.py` (all eight steps) into an empty folder took 60 min here and
-reproduced all 168 step tables and the 12 summary tables of this folder exactly (on a cold disk expect ~2 h: the
-passes over `atlas/pseudobulk` and `gene_panel/cells` are I/O-bound).
+Reproducibility: a from-scratch run of `run_mg53_p53.py` (the eight steps before `genome_wide` was added; nine now) into an
+empty folder took 60 min here and reproduced all 168 step tables and the 12 summary tables of this folder exactly (on a cold
+disk expect ~2 h: the passes over `atlas/pseudobulk` and `gene_panel/cells` are I/O-bound).
 
 | Folder / file | What it holds |
 |---|---|
@@ -295,6 +296,7 @@ passes over `atlas/pseudobulk` and `gene_panel/cells` are I/O-bound).
 | `two_way/` | `two_way.py`: TRIM72 vs p53 output and pathway read-outs over all drug-doses x lines, TP53 genotype as control. |
 | `single_cell_all/` | `single_cell_all.py`: the same contrast in single cells of all wells, placebo genes, functional p53 grouping. |
 | `upstream_tf/` | `upstream_tf.py`: transcription-factor activities and cell-line traits vs TRIM72. |
+| `genome_wide/` | `genome_wide.py`: per (well x line) effects of every atlas gene; a Tahoe-derived p53 program; TRIM72 vs every expressed gene with TP53 genotype as the control (label relabellings, exposure shuffles, placebo exposures); data-driven programs. Lists only as overlays. |
 | `literature/` | `evidence_map.md` plus the PubMed / Europe PMC / p53-census / ChIP-Atlas checks that back it. |
 | `*/verify/` | The adversarial verifiers' independent scripts and outputs for each workstream (this run's paths). |
 
