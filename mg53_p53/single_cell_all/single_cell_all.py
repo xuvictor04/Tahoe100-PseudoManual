@@ -408,12 +408,14 @@ def resolve_paths(args):
     data = os.path.abspath(os.path.expanduser(args.data))
     out = os.environ.get("MG53_OUT") or HERE
     tab, cdir = os.path.join(out, "tables"), os.path.join(out, "cache")
+    # never inside the folders this reads (<data>/mg53_p53, the runner's default output, is fine)
+    inputs = [os.path.realpath(os.path.join(data, d)) for d in ("atlas", "gene_panel", "data", "metadata")]
+    for d in (tab, cdir):
+        rd = os.path.realpath(d)
+        if any(rd == i or rd.startswith(i + os.sep) for i in inputs):
+            sys.exit(f"refusing to write into the data folder's inputs: {d}")
     for d in (tab, cdir):
         os.makedirs(d, exist_ok=True)
-    real_data = os.path.realpath(data)
-    for d in (tab, cdir):
-        if os.path.realpath(d).startswith(real_data + os.sep):
-            sys.exit(f"refusing to write under the data folder: {d}")
     return data, tab, cdir
 
 

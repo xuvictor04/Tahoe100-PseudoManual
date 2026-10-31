@@ -297,12 +297,14 @@ REINDEX_HINT = " (if the download finished after an earlier run, add --reindex)"
 
 def data_parquets(data_abs, out_dir):
     """Every parquet file under data_abs except the outputs of these scripts: out_dir and every folder below
-    data_abs that holds a file_index.json (mtap_gankyrin/, gene_panel/, atlas/, trial folders)."""
+    data_abs that holds a file_index.json (mtap_gankyrin/, gene_panel/, atlas/, trial folders) or a .not_tahoe_input
+    marker (mg53_p53/run_mg53_p53.py's output folder)."""
     def norm(p):
         return os.path.normcase(os.path.abspath(p))
 
     skip = [norm(out_dir) + os.sep]
-    for f in glob.glob(os.path.join(data_abs, "**", "file_index.json"), recursive=True):
+    for f in (glob.glob(os.path.join(data_abs, "**", "file_index.json"), recursive=True)
+              + glob.glob(os.path.join(data_abs, "**", ".not_tahoe_input"), recursive=True)):
         d = norm(os.path.dirname(f))
         if d != norm(data_abs):
             skip.append(d + os.sep)

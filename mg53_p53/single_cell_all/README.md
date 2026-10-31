@@ -207,7 +207,8 @@ MG53_OUT=$PWD/mg53_p53/single_cell_all/adjusted_ATF3 \
 - The per-group fits are cached in `cache/fits.parquet`. A rerun with the same parameters (including the resolved
   data folder and its total cell count) rebuilds every table from the cache in ~1-2 min.
 - Reads only `gene_panel/` (cells, `well_line.parquet`, `sample_map.csv`, `results/`) and `atlas/effects/`. Writes nothing
-  under the data folder; it refuses to.
+  into the folders it reads (`atlas/`, `gene_panel/`, `data/`, `metadata/`); it refuses to. `<data>/mg53_p53`, the
+  runner's default output, is allowed.
 - Python: numpy, pandas, scipy, plus pyarrow to read parquet (clear error if missing). psutil, if installed, is used
   for memory reporting only; otherwise `resource` (absent on Windows).
 

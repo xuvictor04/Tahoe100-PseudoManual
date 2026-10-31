@@ -83,6 +83,11 @@ def main():
             sys.exit("not found: " + ", ".join(missing) + "\nRun the atlas ('tahoe_atlas.py compute') and the gene panel "
                      "('tahoe_gene_panel.py all') on this folder first (or: tahoe run).")
     os.makedirs(out, exist_ok=True)
+    marker = os.path.join(out, ".not_tahoe_input")     # the atlas / gene panel file index skips this folder
+    if not os.path.exists(marker):
+        with open(marker, "w", encoding="utf-8") as fh:
+            fh.write("Outputs of mg53_p53/run_mg53_p53.py, not Tahoe-100M input: tahoe_mtap_gankyrin.data_parquets "
+                     "leaves this folder out of the file index.\n")
     logp = os.path.join(out, "run_mg53_p53.log")
     with open(logp, "a", encoding="utf-8") as log:
         def say(msg):
