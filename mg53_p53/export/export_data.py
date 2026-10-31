@@ -68,12 +68,17 @@ when no row group can be skipped).
 import argparse
 import glob
 import hashlib
+import itertools
 import json
+import multiprocessing as mp
 import os
 import shutil
 import sys
 import time
 import traceback
+from collections import deque
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 
 for _v in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
     os.environ.setdefault(_v, "2")
@@ -116,6 +121,7 @@ DESEQ_COLS = ["gene_name", "baseMean", "log2FoldChange", "lfcSE", "stat", "pvalu
               "n_cells_ctrl", "Cell_ID_Cellosaur", "Cell_ID_DepMap", "drug", "concentration", "concentration_unit",
               "Cell_Name_Vevo"]
 DESEQ_NEED = ["gene_name", "log2FoldChange", "plate", "drug", "concentration"]
+DESEQ_BATCH_ROWS = 2_000_000    # DESeq2 rows read at once (whole row groups pooled; ~0.3 GB)
 log, quiet = UT.log, UT.quiet
 
 
@@ -1639,128 +1645,211 @@ def deseq2_keys(ctx):
     return {"dd": ddk, "cello": set(ctx.lines), "depmap": dep}
 
 
-def deseq2_extract(files, genes, folder, exposure, keys=None):
+DESEQ_SCHEMA = pa.schema([("gene_name", pa.string()), ("baseMean", pa.float64()), ("log2FoldChange", pa.float64()),
+                        ("lfcSE", pa.float64()), ("stat", pa.float64()), ("pvalue", pa.float64()),
+                        ("padj", pa.float64()), ("plate", pa.string()), ("plate_atlas", pa.string()),
+                        ("n_cells_trt", pa.int64()), ("n_cells_ctrl", pa.int64()),
+                        ("Cell_ID_Cellosaur", pa.string()), ("Cell_ID_DepMap", pa.string()), ("drug", pa.string()),
+                        ("concentration", pa.float64()), ("concentration_unit", pa.string()),
+                        ("Cell_Name_Vevo", pa.string()), ("concentration_uM", pa.float64()),
+                        ("drug_dose_row", pa.int32()), ("cell_line_id", pa.string()),
+                        ("source_file", pa.string())])
+
+
+_DQ = {}                             # a DESeq2 worker's settings (deseq2_extract; set by _deseq2_init)
+
+
+def _deseq2_init(want, keys, exposure):
+    _DQ.update(want=want, vs=pa.array(want, pa.string()), keys=keys, kdd=keys["dd"], exposure=exposure)
+
+
+def _deseq2_file(f):
+    """The wanted genes' rows of one DESeq2 file with the atlas's join keys: (tables, rows per gene, counters,
+    exposure rows). Runs in deseq2_extract's process or in one of its workers."""
+    want, vs, keys, kdd, exposure = _DQ["want"], _DQ["vs"], _DQ["keys"], _DQ["kdd"], _DQ["exposure"]
+    n = dict(rg=0, skip=0, batch=0, read=0, nodd=0, nocl=0)
+    tables, counts, xrows = [], {}, []
+    pf = pq.ParquetFile(f)
+    names = pf.schema_arrow.names
+    miss = [c for c in DESEQ_NEED if c not in names]
+    if miss:
+        raise ValueError(f"{f}: missing columns {miss}")
+    gi = pf.metadata.schema.names.index("gene_name") if "gene_name" in pf.metadata.schema.names else None
+    gtype = pf.schema_arrow.field("gene_name").type
+    # row-group statistics are used only for a plain text / bytes gene_name column (bytes decoded: a BYTE_ARRAY
+    # without the UTF8 annotation reports bytes, whose str() would skip every row group)
+    use_stats = gi is not None and (pa.types.is_string(gtype) or pa.types.is_large_string(gtype)
+                                    or pa.types.is_binary(gtype) or pa.types.is_large_binary(gtype))
+    cols = [c for c in DESEQ_COLS if c in names]
+    # Tahoe's files hold many small row groups: the ones whose statistics may hold a wanted gene are read in
+    # batches of ~DESEQ_BATCH_ROWS rows (one read per batch, one output row group per batch with matches; one
+    # read and one output row group per input row group took ~5 h on the real table and gave a Parquet footer
+    # over the 4 GB limit)
+    batches, cur, cur_n = [], [], 0
+    for rg in range(pf.num_row_groups):
+        n["rg"] += 1
+        st = pf.metadata.row_group(rg).column(gi).statistics if use_stats else None
+        if st is not None and st.has_min_max:
+            lo, hi = st.min, st.max
+            lo = lo.decode("utf-8", "replace") if isinstance(lo, (bytes, bytearray)) else str(lo)
+            hi = hi.decode("utf-8", "replace") if isinstance(hi, (bytes, bytearray)) else str(hi)
+            if not any(lo <= g <= hi for g in want):
+                n["skip"] += 1
+                continue
+        nr = pf.metadata.row_group(rg).num_rows
+        if cur and cur_n + nr > DESEQ_BATCH_ROWS:
+            batches.append(cur)
+            cur, cur_n = [], 0
+        cur.append(rg)
+        cur_n += nr
+    if cur:
+        batches.append(cur)
+    for b in batches:
+        n["batch"] += 1
+        gcol = pf.read_row_groups(b, columns=["gene_name"]).column(0)
+        if pa.types.is_dictionary(gcol.type):
+            gcol = pc.cast(gcol, gcol.type.value_type)
+        m = pc.is_in(pc.cast(gcol, pa.string()), value_set=vs)
+        if not pc.any(m).as_py():
+            continue
+        t = pf.read_row_groups(b, columns=cols).filter(m)
+        n["read"] += t.num_rows
+        arrs = {}
+        for fld in DESEQ_SCHEMA:
+            c = fld.name
+            if c == "plate":
+                arrs[c] = pc.cast(t.column("plate"), pa.string())
+            elif c == "plate_atlas":
+                arrs[c] = plate_atlas(t.column("plate"))
+            elif c == "source_file":
+                arrs[c] = pa.array([os.path.basename(f)] * t.num_rows, pa.string())
+            elif c == "concentration":
+                arrs[c] = pa.array(stored_precision(t.column(c)), pa.float64())
+            elif c in ("concentration_uM", "drug_dose_row", "cell_line_id"):
+                continue
+            elif c in t.column_names:
+                col = t.column(c)
+                if pa.types.is_dictionary(col.type):
+                    col = pc.cast(col, col.type.value_type)
+                arrs[c] = pc.cast(col, fld.type)
+            else:
+                arrs[c] = pa.nulls(t.num_rows, fld.type)
+        # the atlas's join keys (mapped on the few distinct values, then taken back to the rows)
+        ui, uv = dict_codes(arrs["concentration_unit"])
+        fac = np.array([UNIT_TO_UM.get(str(v).strip().lower(), np.nan) for v in uv] + [1.0])[ui]  # null: uM
+        cum = arrs["concentration"].to_numpy(zero_copy_only=False) * fac
+        di, dv = dict_codes(arrs["drug"])
+        cu, cix = np.unique(np.round(cum, 6), return_inverse=True)
+        n_c = max(len(cu), 1)
+        code = np.where(di >= 0, di, -1) * n_c + cix.ravel()
+        uc, inv = np.unique(code, return_inverse=True)
+        look = np.array([kdd.get((str(dv[k // n_c]).strip() if k // n_c >= 0 else "", float(cu[k % n_c])), -1)
+                         for k in uc.tolist()], dtype=np.int32)
+        ddr = look[inv.ravel()] if len(uc) else np.zeros(0, np.int32)
+        c1, v1 = dict_codes(arrs["Cell_ID_Cellosaur"])
+        c2, v2 = dict_codes(arrs["Cell_ID_DepMap"])
+        code = (c1 + 1) * (len(v2) + 1) + (c2 + 1)
+        uc, inv = np.unique(code, return_inverse=True)
+        vals = []
+        for k in uc.tolist():
+            a1, a2 = k // (len(v2) + 1) - 1, k % (len(v2) + 1) - 1
+            c_ = v1[a1] if a1 >= 0 else None
+            vals.append(c_ if c_ in keys["cello"] else keys["depmap"].get(str(v2[a2]).strip(), "") if a2 >= 0
+                        else "")
+        cid = np.array(vals, dtype=object)[inv.ravel()] if len(uc) else np.zeros(0, object)
+        arrs["concentration_uM"] = pa.array(cum, pa.float64(), from_pandas=True)
+        arrs["drug_dose_row"] = pa.array(ddr, pa.int32())
+        arrs["cell_line_id"] = pa.array(cid, pa.string())
+        tt = pa.table({fld.name: arrs[fld.name] for fld in DESEQ_SCHEMA}, schema=DESEQ_SCHEMA)
+        n["nodd"] += int((ddr < 0).sum())
+        n["nocl"] += int((cid == "").sum())
+        tables.append(tt)
+        for vc in pc.value_counts(tt.column("gene_name")).to_pylist():
+            counts[vc["values"]] = counts.get(vc["values"], 0) + int(vc["counts"])
+        xm = pc.equal(tt.column("gene_name"), exposure)
+        if pc.any(xm).as_py():
+            xrows.append(tt.filter(xm))
+    return tables, counts, n, xrows
+
+
+def deseq2_workers():
+    """DESeq2 file workers: the CPUs this process may use ($MG53_CPUS overrides) minus 1, at most (available memory
+    - 3 GB) / 1 GB (a worker holds one batch of ~DESEQ_BATCH_ROWS rows, ~0.5 GB) and 8 (the scan reads ~92 GB: the
+    disk sets the pace beyond that), at least 1. The output does not depend on it (files are taken in order)."""
+    try:
+        cpus = int(os.environ.get("MG53_CPUS") or 0) or len(os.sched_getaffinity(0))
+    except (AttributeError, ValueError):
+        cpus = os.cpu_count() or 2
+    n = cpus - 1
+    try:
+        with open("/proc/meminfo", encoding="utf-8") as fh:
+            avail = next(int(x.split()[1]) / 1024 ** 2 for x in fh if x.startswith("MemAvailable:"))
+        n = min(n, int((avail - 3) // 1.0))
+    except (OSError, StopIteration, ValueError):
+        pass
+    return max(1, min(n, 8))
+
+
+def deseq2_extract(files, genes, folder, exposure, keys=None, workers=1):
     """One streamed pass over Tahoe's pseudobulk DESeq2 files: per row group, the gene_name column first (row groups
     whose gene_name statistics cannot hold a wanted gene are skipped), then the other columns of the matching rows
     only. Writes genes.parquet (all wanted genes) and <exposure>_deseq2.csv; returns rows per gene. keys
-    (deseq2_keys) adds the atlas's join keys: concentration_uM, drug_dose_row, cell_line_id."""
+    (deseq2_keys) adds the atlas's join keys: concentration_uM, drug_dose_row, cell_line_id. workers > 1: files
+    are read by that many spawn processes and written in file order (the same file as with 1)."""
     keys = keys or {"dd": {}, "cello": set(), "depmap": {}}
-    kdd = keys["dd"]
     want = sorted(set(genes))
-    vs = pa.array(want, pa.string())
-    out_schema = pa.schema([("gene_name", pa.string()), ("baseMean", pa.float64()), ("log2FoldChange", pa.float64()),
-                            ("lfcSE", pa.float64()), ("stat", pa.float64()), ("pvalue", pa.float64()),
-                            ("padj", pa.float64()), ("plate", pa.string()), ("plate_atlas", pa.string()),
-                            ("n_cells_trt", pa.int64()), ("n_cells_ctrl", pa.int64()),
-                            ("Cell_ID_Cellosaur", pa.string()), ("Cell_ID_DepMap", pa.string()), ("drug", pa.string()),
-                            ("concentration", pa.float64()), ("concentration_unit", pa.string()),
-                            ("Cell_Name_Vevo", pa.string()), ("concentration_uM", pa.float64()),
-                            ("drug_dose_row", pa.int32()), ("cell_line_id", pa.string()),
-                            ("source_file", pa.string())])
     path = os.path.join(folder, "genes.parquet")
     os.makedirs(folder, exist_ok=True)
-    wr = pq.ParquetWriter(path + ".tmp", out_schema, **PQ,
-                          use_byte_stream_split=[f.name for f in out_schema if pa.types.is_floating(f.type)],
-                          use_dictionary=[f.name for f in out_schema if pa.types.is_string(f.type)])
+    wr = pq.ParquetWriter(path + ".tmp", DESEQ_SCHEMA, **PQ,
+                          use_byte_stream_split=[f.name for f in DESEQ_SCHEMA if pa.types.is_floating(f.type)],
+                          use_dictionary=[f.name for f in DESEQ_SCHEMA if pa.types.is_string(f.type)])
     xrows, counts = [], {}
-    n_rg = n_skip = n_read = n_nodd = n_nocl = 0
+    tot = dict(rg=0, skip=0, batch=0, read=0, nodd=0, nocl=0)
     t0 = time.time()
-    for k, f in enumerate(files):
-        pf = pq.ParquetFile(f)
-        names = pf.schema_arrow.names
-        miss = [c for c in DESEQ_NEED if c not in names]
-        if miss:
-            raise ValueError(f"{f}: missing columns {miss}")
-        gi = pf.metadata.schema.names.index("gene_name") if "gene_name" in pf.metadata.schema.names else None
-        gtype = pf.schema_arrow.field("gene_name").type
-        # row-group statistics are used only for a plain text / bytes gene_name column (bytes decoded: a BYTE_ARRAY
-        # without the UTF8 annotation reports bytes, whose str() would skip every row group)
-        use_stats = gi is not None and (pa.types.is_string(gtype) or pa.types.is_large_string(gtype)
-                                        or pa.types.is_binary(gtype) or pa.types.is_large_binary(gtype))
-        cols = [c for c in DESEQ_COLS if c in names]
-        for rg in range(pf.num_row_groups):
-            n_rg += 1
-            st = pf.metadata.row_group(rg).column(gi).statistics if use_stats else None
-            if st is not None and st.has_min_max:
-                lo, hi = st.min, st.max
-                lo = lo.decode("utf-8", "replace") if isinstance(lo, (bytes, bytearray)) else str(lo)
-                hi = hi.decode("utf-8", "replace") if isinstance(hi, (bytes, bytearray)) else str(hi)
-                if not any(lo <= g <= hi for g in want):
-                    n_skip += 1
-                    continue
-            gcol = pf.read_row_group(rg, columns=["gene_name"]).column(0)
-            if pa.types.is_dictionary(gcol.type):
-                gcol = pc.cast(gcol, gcol.type.value_type)
-            m = pc.is_in(pc.cast(gcol, pa.string()), value_set=vs)
-            if not pc.any(m).as_py():
-                continue
-            t = pf.read_row_group(rg, columns=cols).filter(m)
-            n_read += t.num_rows
-            arrs = {}
-            for fld in out_schema:
-                c = fld.name
-                if c == "plate":
-                    arrs[c] = pc.cast(t.column("plate"), pa.string())
-                elif c == "plate_atlas":
-                    arrs[c] = plate_atlas(t.column("plate"))
-                elif c == "source_file":
-                    arrs[c] = pa.array([os.path.basename(f)] * t.num_rows, pa.string())
-                elif c == "concentration":
-                    arrs[c] = pa.array(stored_precision(t.column(c)), pa.float64())
-                elif c in ("concentration_uM", "drug_dose_row", "cell_line_id"):
-                    continue
-                elif c in t.column_names:
-                    col = t.column(c)
-                    if pa.types.is_dictionary(col.type):
-                        col = pc.cast(col, col.type.value_type)
-                    arrs[c] = pc.cast(col, fld.type)
-                else:
-                    arrs[c] = pa.nulls(t.num_rows, fld.type)
-            # the atlas's join keys (mapped on the few distinct values, then taken back to the rows)
-            ui, uv = dict_codes(arrs["concentration_unit"])
-            fac = np.array([UNIT_TO_UM.get(str(v).strip().lower(), np.nan) for v in uv] + [1.0])[ui]  # null: uM
-            cum = arrs["concentration"].to_numpy(zero_copy_only=False) * fac
-            di, dv = dict_codes(arrs["drug"])
-            cu, cix = np.unique(np.round(cum, 6), return_inverse=True)
-            n_c = max(len(cu), 1)
-            code = np.where(di >= 0, di, -1) * n_c + cix.ravel()
-            uc, inv = np.unique(code, return_inverse=True)
-            look = np.array([kdd.get((str(dv[k // n_c]).strip() if k // n_c >= 0 else "", float(cu[k % n_c])), -1)
-                             for k in uc.tolist()], dtype=np.int32)
-            ddr = look[inv.ravel()] if len(uc) else np.zeros(0, np.int32)
-            c1, v1 = dict_codes(arrs["Cell_ID_Cellosaur"])
-            c2, v2 = dict_codes(arrs["Cell_ID_DepMap"])
-            code = (c1 + 1) * (len(v2) + 1) + (c2 + 1)
-            uc, inv = np.unique(code, return_inverse=True)
-            vals = []
-            for k in uc.tolist():
-                a1, a2 = k // (len(v2) + 1) - 1, k % (len(v2) + 1) - 1
-                c_ = v1[a1] if a1 >= 0 else None
-                vals.append(c_ if c_ in keys["cello"] else keys["depmap"].get(str(v2[a2]).strip(), "") if a2 >= 0
-                            else "")
-            cid = np.array(vals, dtype=object)[inv.ravel()] if len(uc) else np.zeros(0, object)
-            arrs["concentration_uM"] = pa.array(cum, pa.float64(), from_pandas=True)
-            arrs["drug_dose_row"] = pa.array(ddr, pa.int32())
-            arrs["cell_line_id"] = pa.array(cid, pa.string())
-            tt = pa.table({fld.name: arrs[fld.name] for fld in out_schema}, schema=out_schema)
-            n_nodd += int((ddr < 0).sum())
-            n_nocl += int((cid == "").sum())
-            wr.write_table(tt)
-            for vc in pc.value_counts(tt.column("gene_name")).to_pylist():
-                counts[vc["values"]] = counts.get(vc["values"], 0) + int(vc["counts"])
-            xm = pc.equal(tt.column("gene_name"), exposure)
-            if pc.any(xm).as_py():
-                xrows.append(tt.filter(xm))
+    workers = max(1, min(int(workers), len(files)))
+    log(f"  DESeq2: {len(files)} files, {len(want)} genes, {workers} worker process(es)")
+
+    def take(k, res):
+        tables, c, n, x = res
+        for tt in tables:                    # one row group per read batch with matching rows
+            wr.write_table(tt, row_group_size=max(1, tt.num_rows))
+        for g, v in c.items():
+            counts[g] = counts.get(g, 0) + v
+        for key in tot:
+            tot[key] += n[key]
+        xrows.extend(x)
         if (k + 1) % 50 == 0:
-            log(f"  DESeq2: {k + 1}/{len(files)} files ({time.time() - t0:.0f} s; rows kept {n_read:,}; peak RSS "
+            log(f"  DESeq2: {k + 1}/{len(files)} files ({time.time() - t0:.0f} s; rows kept {tot['read']:,}; peak RSS "
                 f"{UT.peak_gb():.2f} GB)")
+
+    if workers <= 1:
+        _deseq2_init(want, keys, exposure)
+        for k, f in enumerate(files):
+            take(k, _deseq2_file(f))
+    else:
+        with ProcessPoolExecutor(workers, mp_context=mp.get_context("spawn"), initializer=_deseq2_init,
+                                 initargs=(want, keys, exposure)) as ex:
+            try:
+                todo = iter(enumerate(files))
+                pending = deque((k, ex.submit(_deseq2_file, f)) for k, f in itertools.islice(todo, 2 * workers))
+                while pending:                   # in file order; at most 2 x workers files read ahead
+                    k, fu = pending.popleft()
+                    take(k, fu.result())
+                    nxt = next(todo, None)
+                    if nxt is not None:
+                        pending.append((nxt[0], ex.submit(_deseq2_file, nxt[1])))
+            except BrokenProcessPool:
+                wr.close()
+                sys.exit("Tahoe DESeq2: a worker process died (out of memory?); rerun the step (MG53_CPUS=2 uses "
+                         "fewer workers)")
     wr.close()
     os.replace(path + ".tmp", path)
-    X = pa.concat_tables(xrows).to_pandas() if xrows else pd.DataFrame(columns=out_schema.names)
+    X = pa.concat_tables(xrows).to_pandas() if xrows else pd.DataFrame(columns=DESEQ_SCHEMA.names)
     X = X.sort_values(["drug", "concentration_uM", "plate_atlas", "cell_line_id", "Cell_ID_DepMap"], kind="stable")
     write_csv(X, os.path.join(folder, f"{exposure}_deseq2.csv"))
-    return counts, {"files": len(files), "row_groups": n_rg, "row_groups_skipped_by_statistics": n_skip,
-                    "rows_kept": n_read, "rows_without_drug_dose_row": n_nodd, "rows_without_cell_line_id": n_nocl,
+    return counts, {"files": len(files), "row_groups": tot["rg"], "row_groups_skipped_by_statistics": tot["skip"],
+                    "read_batches": tot["batch"], "rows_kept": tot["read"],
+                    "rows_without_drug_dose_row": tot["nodd"], "rows_without_cell_line_id": tot["nocl"],
                     "seconds": round(time.time() - t0, 1)}
 
 
@@ -2330,7 +2419,7 @@ def deseq2_part(ctx, data, ddir, files, genes, xlabel, ck):
                "(setup --mode needed / stream does not download it)")
         return {"status": "absent"}
     xs = ctx.gsym[ctx.label2idx[xlabel]] if xlabel in ctx.label2idx else xlabel
-    counts, stats = deseq2_extract(files, genes, ddir, xs, deseq2_keys(ctx))
+    counts, stats = deseq2_extract(files, genes, ddir, xs, deseq2_keys(ctx), workers=deseq2_workers())
     gl = pd.DataFrame({"gene": genes, "rows": [counts.get(g, 0) for g in genes],
                        "is_exposure": [g == xs for g in genes]})
     write_csv(gl, os.path.join(ddir, "genes.csv"))
