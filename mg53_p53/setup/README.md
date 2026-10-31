@@ -57,7 +57,7 @@ All three modes give the same tables: they feed the same files to the same atlas
 | OS | Linux (tested: Ubuntu-type, Python 3.13). macOS should work but is untested. |
 | Disk | The amount for your mode (table above), in the data folder; it includes ~5 GB for the `genome_wide` cache (`mg53_p53/genome_wide/cache`, the per well x line effects of every gene) and ~36 GB at the peak of the `export` step (~25 GB kept: `all_genes/` ~21 GB, the up- / downstream gene tables, ~3.9 MB per selected gene and folder, and, in `full` mode, Tahoe's DE rows, ~3.2 MB per gene; ~4.6 GB of temporary counts while it runs). The budget holds for ~2,000 selected-gene entries; the step checks the free disk itself before it writes anything. Python packages take another ~0.5 GB in `~/tahoe-venv`. |
 | Memory | 8 GB or more; 16 GB is better. Each plate read at once needs ~3 GB, and each MG53 step stays under ~4 GB (`genome_wide`: ~3-3.5 GB in its first pass, then ~1 GB plus ~0.9 GB for each of its 2 worker processes; `export`: ~2-3 GB). |
-| CPUs | 4 or more. |
+| CPUs | 4 or more. Most steps use a fixed few: they wait on the disk more than on the CPU. More CPUs speed up `mg53_genome_wide`'s screen, its longest part: up to 12 worker processes of 2 threads each, as free memory allows (`MG53_CPUS=N` caps the CPUs it counts). |
 | Network | Reaches `huggingface.co` for the dataset. |
 | Network (MG53 steps) | Reaches `storage.googleapis.com`, `rest.ensembl.org` / `www.ensembl.org`, `humantfs.ccbr.utoronto.ca` and `omnipathdb.org` once. These provide the TF list, HGNC / Ensembl coordinates and the CollecTRI / DoRothEA regulons. |
 | Accounts | None. Tahoe-100M is public (CC0). `HF_TOKEN` is optional. |

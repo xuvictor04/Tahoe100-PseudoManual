@@ -62,7 +62,7 @@ Tahoe p53 program), estimand b_WT - b_alt, inference by the conservative two-way
 it).
 
     python3 genome_wide.py [--data DIR (default $MG53_DATA, $TAHOE_DATA or ~/Tahoe-100M)] [--recompute]
-                           [--exposure GENE (default $MG53_GW_EXPOSURE, else TRIM72)] [--chunk 64] [--workers 2]
+                           [--exposure GENE (default $MG53_GW_EXPOSURE, else TRIM72)] [--chunk 64] [--workers N]
                            [--perm 100] [--folds 5] [--label-perm 20] [--x-perm 20] [--placebos 20]
                            [--placebos-set 200] [--set-label-perm 2000] [--set-within-perm 1000] [--d-perm 1000]
                            [--extra-genes PYCARD-AS1] [--rt-covariates FUS,PYCARD-AS1] [--quick]
@@ -84,7 +84,8 @@ rebuilt). Memory: the tensor is memory-mapped and read per gene chunk; peak RSS 
 during the tensor pass (as upstream_tf's pass plus the per-plate W2 check), ~1 GB later, and ~0.9 GB per worker on the
 real data (target < 8 GB). Time on the real data (4 CPUs, defaults), estimated from the kernels timed at the real
 dimensions on simulated arrays (not yet run on the real data): 1.5-3 h cold (the screen ~45-130 min with 2 workers, by
-how many genes share an occupancy); ~5 GB of cache (the free disk is checked before the tensor is written).
+how many genes share an occupancy; with more CPUs the screen takes up to 12 workers of 2 BLAS threads each, as free
+memory allows); ~5 GB of cache (the free disk is checked before the tensor is written).
 numpy / pandas / scipy (+ pyarrow); psutil only for memory reports.
 """
 import argparse
@@ -1565,6 +1566,28 @@ def screen_job(job):
     return ci, float(res["peak_gb"])
 
 
+def auto_workers():
+    """Screen processes for this machine (--workers not given): the CPUs this process may use ($MG53_CPUS overrides)
+    over the 2 BLAS threads of each, at most (available memory - 3 GB) / 1.25 GB (a worker peaked at ~0.9 GB at the
+    real dimensions) and 12, at least 2 (the 4-CPU default). Results do not depend on it: chunks are fixed by --chunk
+    and assembled in chunk order."""
+    try:
+        cpus = int(os.environ.get("MG53_CPUS") or 0) or len(os.sched_getaffinity(0))
+    except (AttributeError, ValueError):
+        cpus = os.cpu_count() or 4
+    avail = None
+    try:
+        with open("/proc/meminfo", encoding="utf-8") as fh:
+            avail = next(int(x.split()[1]) / 1024 ** 2 for x in fh if x.startswith("MemAvailable:"))
+    except (OSError, StopIteration, ValueError):
+        pass
+    n = cpus // 2
+    if avail is not None:
+        n = min(n, int((avail - 3) // 1.25))
+    n = max(2, min(n, 12))
+    return n, f"{cpus} CPUs" + (f", {avail:.0f} GB available memory" if avail is not None else "")
+
+
 def run_screen(shared, chunks, workers):
     """The screen over every gene chunk: in this process (--workers 1) or a spawn process pool (the repo's convention;
     each worker re-imports this step and reads its chunks from the memory-mapped tensor itself; a worker that dies,
@@ -2323,7 +2346,9 @@ def main():
     ap.add_argument("--exposure", default=os.environ.get("MG53_GW_EXPOSURE") or GENE,
                     help="the exposure gene (an atlas gene; default $MG53_GW_EXPOSURE, else TRIM72)")
     ap.add_argument("--chunk", type=int, default=64, help="genes per chunk (memory ~ chunk; default 64)")
-    ap.add_argument("--workers", type=int, default=2, help="screen processes (2 BLAS threads each; default 2)")
+    ap.add_argument("--workers", type=int, default=None,
+                    help="screen processes (2 BLAS threads each; default: from the CPUs ($MG53_CPUS overrides) "
+                    "and free memory, 2 to 12; 2 on 4 CPUs)")
     ap.add_argument("--perm", type=int, default=100, help="TP53-label permutations of the program derivation (B)")
     ap.add_argument("--folds", type=int, default=5, help="compound folds for cross-fitting (B, C)")
     ap.add_argument("--label-perm", type=int, default=20, help="genome-wide TP53 relabellings (C)")
@@ -2345,6 +2370,9 @@ def main():
     if a.quick:
         a.perm, a.label_perm, a.x_perm, a.placebos, a.placebos_set = 50, 2, 2, 2, 20
         a.set_label_perm, a.set_within_perm, a.d_perm = 200, 100, 200
+    workers_from = "--workers"
+    if a.workers is None:
+        a.workers, workers_from = auto_workers()
     t_all = time.time()
     out = os.environ.get("MG53_OUT") or HERE
     cdir, tab = os.path.join(out, "cache"), os.path.join(out, "tables")
@@ -2357,7 +2385,7 @@ def main():
             "stage_seconds": {}, "versions": {"python": sys.version.split()[0], "numpy": np.__version__,
                                               "pandas": pd.__version__, "scipy": __import__("scipy").__version__}}
     ck = Checks()
-    log(f"data {data}; out {out}; exposure {exposure}")
+    log(f"data {data}; out {out}; exposure {exposure}; screen workers {a.workers} ({workers_from})")
     log("primary test (declared up front): fe {fe}, drug-doses {dd}, covariates {covset}, outcome {outcome}, "
         "estimand {estimand}, conservative two-way SE; everything else is secondary, sensitivity, screen, overlay or "
         "a check".format(**PRIMARY))
