@@ -84,7 +84,7 @@ rebuilt). Memory: the tensor is memory-mapped and read per gene chunk; peak RSS 
 during the tensor pass (as upstream_tf's pass plus the per-plate W2 check), ~1 GB later, and ~0.9 GB per worker on the
 real data (target < 8 GB). Time on the real data (4 CPUs, defaults), estimated from the kernels timed at the real
 dimensions on simulated arrays (not yet run on the real data): 1.5-3 h cold (the screen ~45-130 min with 2 workers, by
-how many genes share an occupancy; with more CPUs the screen takes up to 12 workers of 2 BLAS threads each, as free
+how many genes share an occupancy; with more CPUs the screen takes up to 16 workers of 2 BLAS threads each, as free
 memory allows); ~5 GB of cache (the free disk is checked before the tensor is written).
 numpy / pandas / scipy (+ pyarrow); psutil only for memory reports.
 """
@@ -1569,7 +1569,7 @@ def screen_job(job):
 def auto_workers():
     """Screen processes for this machine (--workers not given): the CPUs this process may use ($MG53_CPUS overrides)
     over the 2 BLAS threads of each, at most (available memory - 3 GB) / 1.25 GB (a worker peaked at ~0.9 GB at the
-    real dimensions) and 12, at least 2 (the 4-CPU default). Results do not depend on it: chunks are fixed by --chunk
+    real dimensions) and 16, at least 2 (the 4-CPU default). Results do not depend on it: chunks are fixed by --chunk
     and assembled in chunk order."""
     try:
         cpus = int(os.environ.get("MG53_CPUS") or 0) or len(os.sched_getaffinity(0))
@@ -1584,7 +1584,7 @@ def auto_workers():
     n = cpus // 2
     if avail is not None:
         n = min(n, int((avail - 3) // 1.25))
-    n = max(2, min(n, 12))
+    n = max(2, min(n, 16))
     return n, f"{cpus} CPUs" + (f", {avail:.0f} GB available memory" if avail is not None else "")
 
 
@@ -2348,7 +2348,7 @@ def main():
     ap.add_argument("--chunk", type=int, default=64, help="genes per chunk (memory ~ chunk; default 64)")
     ap.add_argument("--workers", type=int, default=None,
                     help="screen processes (2 BLAS threads each; default: from the CPUs ($MG53_CPUS overrides) "
-                    "and free memory, 2 to 12; 2 on 4 CPUs)")
+                    "and free memory, 2 to 16; 2 on 4 CPUs)")
     ap.add_argument("--perm", type=int, default=100, help="TP53-label permutations of the program derivation (B)")
     ap.add_argument("--folds", type=int, default=5, help="compound folds for cross-fitting (B, C)")
     ap.add_argument("--label-perm", type=int, default=20, help="genome-wide TP53 relabellings (C)")

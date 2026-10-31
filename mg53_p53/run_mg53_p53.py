@@ -37,7 +37,7 @@ Steps (default: all but literature, in this order):
   literature      literature/pubmed_screen.py + external_checks.py     PubMed/Europe PMC, p53 census, ChIP-Atlas
   summary         summary_tables.py                                    <out>/SUMMARY.md and <out>/summary/*.csv
 Memory: under ~4 GB per step (genome_wide ~3-3.5 GB in its first pass, then ~1 GB plus ~0.9 GB per worker: 2 on 4
-CPUs, up to 12 on larger machines as free memory allows, $MG53_CPUS caps the CPUs it counts; export ~2-3 GB). Output default: <data>/mg53_p53. Log: <out>/run_mg53_p53.log.
+CPUs, up to 16 on larger machines as free memory allows, $MG53_CPUS caps the CPUs it counts; export ~2-3 GB). Output default: <data>/mg53_p53. Log: <out>/run_mg53_p53.log.
 """
 import argparse
 import os
