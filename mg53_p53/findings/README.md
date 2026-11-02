@@ -118,15 +118,22 @@ only.
 `MDM2_MG53.md`, `mdm2_mg53_levels.py`, and nine `tables/mdm2_mg53_*.csv`.
 
 MDM2 is a p53 **regulator**, not a reading of p53's output — p53 induces it, and the MDM2 protein then
-degrades p53 — so a link to MG53 would point toward p53 rather than away from it. It is also the
-best-measured gene in the analysis (185.8 CPM, all 50 lines, moved up by 96 of 98 compounds), and it carries
-the largest p53-activation fold change of all 195 program genes.
+degrades p53 — so a link to MG53 would point toward p53 rather than away from it. It is well measured
+(185.8 CPM, all 50 lines, moved up by 96 of 98 compounds) and carries the largest p53-activation fold change
+of all 195 program genes.
 
-The short answer is no link, with the measurement proving itself along the way: MDM2's baseline runs **3.07x
-higher in TP53-wild-type lines than in TP53-altered ones** (p 3.4e-12), exactly as the p53 feedback loop
-predicts, while MG53's baseline shows nothing (1.08x, p 0.77). Across MG53 fold-change deciles MDM2 stays
-within 2% of 1.00 with no trend; the one large number, a -0.614 correlation between the two genes' CPM, is a
-plate batch effect in full (between plate medians -0.763, within plate **+0.074**); and in the all-gene
-placebo MDM2 sits at the 26th percentile for change and the 9th for level, which is to say ordinary. The
-screen's -0.35% per doubling is the smallest slope of the eight effectors that cleared the threshold and is
-the same size in lines whose p53 cannot induce MDM2 at all.
+The short answer is a small bounded association and no p53 route, with the measurement proving itself along
+the way: MDM2's baseline runs **3.07x higher in TP53-wild-type lines than in TP53-altered ones**
+(p 3.3e-12), exactly as the p53 feedback loop predicts, while MG53's baseline shows nothing (1.08x, p 0.77)
+— so MDM2's side of every null below is sound. Across MG53 fold-change deciles MDM2 stays within 2% of 1.00
+with no trend. The one large number, a -0.614 correlation between the two genes' CPM, is a plate batch
+effect in full (between plate medians -0.763, within plate **+0.074**). In the unselected 16,642-gene
+reference family MDM2 sits at the 36th and 60th percentiles — the middle. The screen's -0.35% per doubling
+(95% CI -0.61% to -0.08%) is the smallest slope of the eight effectors that cleared the threshold.
+
+Two things that would have been read as findings without their controls, and are documented as such: the
+CPM correlation above, and the per-line genotype interaction, which reads **p 2e-06 with the wild-type slope
+six times the altered one** until each exposure's mean is removed, after which it is p 0.36 — and whose
+contrast gene behaves identically, including a sign flip between arms that no p53 route predicts. The
+document also records seven corrections to its own earlier claims, including that its reference family was
+called "all genes" when 97% of it had been selected for association with MG53.

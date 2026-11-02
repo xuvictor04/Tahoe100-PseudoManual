@@ -56,11 +56,19 @@ SEED = 0
 
 
 # ----------------------------------------------------------------------------- small statistics helpers
-def resid(y, X):
-    """y with the columns of X (plus an intercept) projected out; NaN rows propagate as NaN."""
+def resid(y, X, mask=None):
+    """y with the columns of X (plus an intercept) projected out; NaN rows propagate as NaN.
+
+    `mask` restricts the rows the regression is ESTIMATED on. Pass it whenever the residual will be
+    correlated against another residual: fitting x and y on different row sets leaves the two residuals
+    orthogonal to the covariates on different subsets, so on their intersection neither is clean. Use
+    resid_pair rather than calling this twice.
+    """
     y = pd.to_numeric(y, errors="coerce")
     X = X.apply(pd.to_numeric, errors="coerce")
     ok = y.notna() & X.notna().all(axis=1)
+    if mask is not None:
+        ok = ok & mask.reindex(y.index).fillna(False)
     out = pd.Series(np.nan, index=y.index, dtype=float)
     if ok.sum() <= X.shape[1] + 1:
         return out
@@ -70,26 +78,52 @@ def resid(y, X):
     return out
 
 
-def fit(x, y, cluster=None, label=""):
-    """OLS slope and both correlations, with a compound-clustered bootstrap when a cluster key is given."""
+def resid_pair(x, y, X):
+    """Residualise x and y on X over the SAME rows: the intersection where x, y and every covariate exist."""
+    x, y = pd.to_numeric(x, errors="coerce"), pd.to_numeric(y, errors="coerce")
+    Xn = X.apply(pd.to_numeric, errors="coerce")
+    ok = x.notna() & y.notna() & Xn.notna().all(axis=1)
+    return resid(x, X, ok), resid(y, X, ok)
+
+
+def fit(x, y, cluster=None, label="", seed_tag=""):
+    """OLS slope, both correlations, a cluster-robust SE, and a cluster bootstrap when a key is given.
+
+    Three p values come back and they are not interchangeable, which is the point of naming them:
+      p            the OLS slope's p, from the iid SE. Quote it only beside b.
+      p_cluster    the slope's p from the cluster-robust SE. Prefer it when a cluster key exists.
+      p_spearman   Spearman's own p. The ONLY p to quote beside rho.
+    """
     d = pd.DataFrame({"x": pd.to_numeric(x, errors="coerce"), "y": pd.to_numeric(y, errors="coerce")})
     if cluster is not None:
         d["g"] = np.asarray(cluster)
-    d = d.dropna()
+    d = d.dropna().reset_index(drop=True)
     n = len(d)
     if n < 10 or d["x"].std() == 0 or d["y"].std() == 0:
         return dict(contrast=label, n=n, b=np.nan, se=np.nan, r=np.nan, rho=np.nan)
     a, b = d["x"].to_numpy(), d["y"].to_numpy()
-    beta = float(np.polyfit(a, b, 1)[0])
+    coef = np.polyfit(a, b, 1)
+    beta = float(coef[0])
     r = float(np.corrcoef(a, b)[0, 1])
-    rho = float(st.spearmanr(a, b).statistic)
-    se = float(np.sqrt(np.sum((b - np.polyval(np.polyfit(a, b, 1), a)) ** 2) / (n - 2) / np.sum((a - a.mean()) ** 2)))
+    sp = st.spearmanr(a, b)
+    res = b - np.polyval(coef, a)
+    sxx = float(np.sum((a - a.mean()) ** 2))
+    se = float(np.sqrt(np.sum(res ** 2) / (n - 2) / sxx))
     o = dict(contrast=label, n=n, b=beta, se=se, t=beta / se if se else np.nan,
-             p=float(2 * st.t.sf(abs(beta / se), n - 2)) if se else np.nan, r=r, rho=rho)
+             p=float(2 * st.t.sf(abs(beta / se), n - 2)) if se else np.nan,
+             r=r, rho=float(sp.statistic), p_spearman=float(sp.pvalue))
     if cluster is not None and d["g"].nunique() >= 10:          # bootstrap whole compounds, not rows
-        rng = np.random.default_rng(SEED)
+        ac = a - a.mean()
+        meat = sum(float(np.sum(ac[i] * res[i])) ** 2
+                   for i in (d.index[d["g"].to_numpy() == k].to_numpy() for k in pd.unique(d["g"])))
+        se_cl = float(np.sqrt(meat) / sxx)
+        nc = int(d["g"].nunique())
+        o.update(n_clusters=nc, se_cluster=se_cl, t_cluster=beta / se_cl if se_cl else np.nan,
+                 p_cluster=float(2 * st.t.sf(abs(beta / se_cl), nc - 1)) if se_cl else np.nan)
+        # one RNG per contrast, so two contrasts' intervals are not drawn from the identical cluster picks
+        rng = np.random.default_rng(abs(hash((SEED, label, seed_tag, n, nc))) % (2 ** 32))
         keys = d["g"].to_numpy()
-        groups = [d.index[keys == k] for k in pd.unique(keys)]
+        groups = [d.index[keys == k].to_numpy() for k in pd.unique(keys)]
         bs, rs = [], []
         for _ in range(NDRAW):
             pick = rng.integers(0, len(groups), len(groups))
@@ -100,10 +134,13 @@ def fit(x, y, cluster=None, label=""):
             bs.append(np.polyfit(s["x"], s["y"], 1)[0])
             rs.append(np.corrcoef(s["x"], s["y"])[0, 1])
         if bs:
-            o.update(n_clusters=d["g"].nunique(), b_lo=float(np.percentile(bs, 2.5)),
-                     b_hi=float(np.percentile(bs, 97.5)), r_lo=float(np.percentile(rs, 2.5)),
-                     r_hi=float(np.percentile(rs, 97.5)),
-                     p_boot=float(2 * min(np.mean(np.asarray(bs) <= 0), np.mean(np.asarray(bs) >= 0))))
+            bs_a = np.asarray(bs)
+            pb = float(2 * min(np.mean(bs_a <= 0), np.mean(bs_a >= 0)))
+            o.update(b_lo=float(np.percentile(bs, 2.5)), b_hi=float(np.percentile(bs, 97.5)),
+                     r_lo=float(np.percentile(rs, 2.5)), r_hi=float(np.percentile(rs, 97.5)),
+                     p_boot=pb, n_boot_draws=len(bs),
+                     # a percentile-inversion p cannot resolve below 2/draws; say so instead of printing 0
+                     p_boot_floor="< %.4f" % (2.0 / len(bs)) if pb == 0 else "")
     return o
 
 
@@ -125,6 +162,17 @@ def bins(d, xcol, ycol, q, unit, xname, yname, extra=None, group=""):
                    x_lo=float(g[xcol].min()), x_median=float(g[xcol].median()), x_hi=float(g[xcol].max()),
                    y_mean=float(y.mean()), y_median=float(np.median(y)), y_sd=float(y.std(ddof=1)),
                    y_se=se, y_lo=float(y.mean() - 1.96 * se), y_hi=float(y.mean() + 1.96 * se))
+        if "log2" in yname:
+            # 2**(mean log2) is a GEOMETRIC mean of fold changes, not the mean fold change. Both are given
+            # because they differ enough to matter: in the top MG53 decile, 1.017 against 1.035.
+            row.update(y_geometric_fold=float(2 ** y.mean()),
+                       y_geometric_fold_lo=float(2 ** (y.mean() - 1.96 * se)),
+                       y_geometric_fold_hi=float(2 ** (y.mean() + 1.96 * se)))
+            lin = 2 ** y
+            sel = float(lin.std(ddof=1) / np.sqrt(len(lin))) if len(lin) > 1 else np.nan
+            row.update(y_arithmetic_fold=float(lin.mean()),
+                       y_arithmetic_fold_lo=float(lin.mean() - 1.96 * sel),
+                       y_arithmetic_fold_hi=float(lin.mean() + 1.96 * sel))
         for c in (extra or []):
             row["%s_mean" % c] = float(pd.to_numeric(g[c], errors="coerce").mean())
         rows.append(row)
@@ -180,12 +228,10 @@ def unit_drugdose(res, out, models):
     d["cdkn1a_log2fc"] = np.log2(pd.to_numeric(d["CDKN1A_fold_change"], errors="coerce"))
     d["plate1"] = d["plates"].astype(str).str.split(",").str[0]
     # residual versions: strip transcriptome-wide activity, then p53 output, then plate
-    A = d[ACTIVITY]
-    d["mg53_z_act"], d["mdm2_z_act"] = resid(d["TRIM72_z"], A), resid(d["MDM2_z"], A)
-    d["mg53_z_p53"] = resid(d["TRIM72_z"], d[["P53_ACTIVITY_z"]])
-    d["mdm2_z_p53"] = resid(d["MDM2_z"], d[["P53_ACTIVITY_z"]])
-    d["mg53_z_both"] = resid(d["TRIM72_z"], d[ACTIVITY + ["P53_ACTIVITY_z"]])
-    d["mdm2_z_both"] = resid(d["MDM2_z"], d[ACTIVITY + ["P53_ACTIVITY_z"]])
+    d["mg53_z_act"], d["mdm2_z_act"] = resid_pair(d["TRIM72_z"], d["MDM2_z"], d[ACTIVITY])
+    d["mg53_z_p53"], d["mdm2_z_p53"] = resid_pair(d["TRIM72_z"], d["MDM2_z"], d[["P53_ACTIVITY_z"]])
+    d["mg53_z_both"], d["mdm2_z_both"] = resid_pair(d["TRIM72_z"], d["MDM2_z"],
+                                                    d[ACTIVITY + ["P53_ACTIVITY_z"]])
     for c in ("TRIM72_z", "MDM2_z"):
         d[c + "_wp"] = d[c] - d.groupby("plate1")[c].transform("mean")
     U = "2. drug-dose, lines pooled"
@@ -240,10 +286,9 @@ def unit_perline(res, out, models):
     # within drug-dose: remove each exposure's mean, so lines are compared only against lines on the same drug
     for c in ("TRIM72_r2", "TRIM72_level", GENE, PARTNER):
         e[c + "_wdd"] = e[c] - e.groupby("dd")[c].transform("mean")
-    e["mdm2_amp"] = resid(e[GENE], e[["bg_abs_r2", "atlas_beta", "atlas_A"]])
-    e["mg53_amp"] = resid(e["TRIM72_r2"], e[["bg_abs_r2", "atlas_beta", "atlas_A"]])
-    e["mdm2_p53"] = resid(e[GENE], e[["P53_SCORE"]])
-    e["mg53_p53"] = resid(e["TRIM72_r2"], e[["P53_SCORE"]])
+    e["mg53_amp"], e["mdm2_amp"] = resid_pair(e["TRIM72_r2"], e[GENE],
+                                              e[["bg_abs_r2", "atlas_beta", "atlas_A"]])
+    e["mg53_p53"], e["mdm2_p53"] = resid_pair(e["TRIM72_r2"], e[GENE], e[["P53_SCORE"]])
     U = "3. cell line x drug-dose (18 MG53-raising exposures)"
     t, extra = [], [PARTNER, "P53_SCORE", "TRIM72_level"]
     for grp, s in (("all lines", e), ("TP53-WT", e[e.tp53_group.eq("WT")]),
@@ -301,17 +346,85 @@ def unit_screen(res, models):
                              q_label_permutation=float(r["q_label_diff"]) if bk == "diff" else np.nan))
         n_tested = int((g_all["tested"] == True).sum())                                  # noqa: E712
         tcrit = float(st.t.isf(0.1 / n_tested / 2, float(r["df"])))
-        rows.append(dict(gene=sym, arm="lone-discovery threshold at q < 0.1", covariate_set="gw (primary)",
-                         b=tcrit * float(r["se_common"]), t=tcrit,
-                         note="|b| this large would be needed to clear q < 0.1 with no other gene among the"
-                              " %d significant; BH draws its power from the mass of genome-wide signal, and"
-                              " the run's own calibration finds that mass 4.44x inflated" % n_tested))
+        # The run supplies TWO standard errors and they disagree about how marginal this gene is, so both
+        # thresholds are given rather than the one that suits the argument.
+        for lab, sek in (("line-clustered se_common", "se_common"),
+                         ("drug-clustered se_common_drug", "se_common_drug")):
+            se = float(r[sek])
+            rows.append(dict(gene=sym, arm="lone-discovery threshold at q < 0.1 (%s)" % lab,
+                             covariate_set="gw (primary)", b=tcrit * se, t=tcrit, se=se,
+                             p=float(2 * st.t.sf(abs(float(r["b_common"]) / se), float(r["df"]))),
+                             note="|b| this large would be needed to clear q < 0.1 with no other gene among"
+                                  " the %d tested; the slope is %.2fx under it. BH draws its power from the"
+                                  " mass of genome-wide signal, which the run's own calibration finds 4.44x"
+                                  " inflated" % (n_tested, tcrit * se / abs(float(r["b_common"])))))
+        # The disattenuation is not a point value: the run reports split-half reliability for MG53 under
+        # several subsets, and MG53_p53_TABLES.md already flags that the ii_active variant (0.610) halves
+        # the correction. Giving one number would pick the subset that maximises it.
+        for rel, which in ((0.272, "i_all variant, lowest"), (REL, "i_all, FE + full - the primary"),
+                           (0.425, "ii_active_no_plate3_13"), (0.610, "ii_active"), (0.705, "ii_trim72")):
+            b = float(r["b_common"])
+            rows.append(dict(gene=sym, arm="per doubling of TRUE MG53 at reliability %.3f (%s)" % (rel, which),
+                             covariate_set="gw (primary)", b=b / rel,
+                             pct_per_doubling_true=100 * (2 ** (b / rel) - 1),
+                             note="classical errors-in-variables correction; 0.289 is already the"
+                                  " Spearman-Brown full-data reliability, not a half-reliability"))
     t = pd.DataFrame(rows)
     models.append(dict(unit="4. genome-wide screen (reported)", group="all 47 lines", x="MG53 log2 (r2)",
                        y="MDM2 log2 (r2)", adjustment="line + drug-dose fixed effects, gw covariates",
                        contrast="within line, across drugs", n=int(g.loc[GENE, "n_rows"]),
                        b=float(g.loc[GENE, "b_common"]), se=float(g.loc[GENE, "se_common"]),
                        t=float(g.loc[GENE, "t_common"]), p=float(g.loc[GENE, "p_common"])))
+    return t
+
+
+def genotype_interaction(e, out):
+    """Does the MG53 -> MDM2 slope differ between TP53-wild-type and TP53-altered lines, at the per-line unit?
+
+    This is the test that decides whether the per-line unit supports a p53 route, and it has to be run twice.
+    Fitted raw, the wild-type slope is six times the altered one and the interaction is highly significant -
+    which looks exactly like p53 dependence. Fitted with each exposure's mean removed, so that lines are
+    compared only against other lines given the same drug at the same dose, the interaction disappears.
+
+    The reason is in the uncontrolled bins: across exposures, the ones that raise MG53 most are the ones that
+    induce MDM2 least, and wild-type lines have far more MDM2 range to lose (their baseline runs 3.07x above
+    the altered lines'). So the raw interaction is an exposure-level pattern magnified by the wild-type
+    lines' larger dynamic range, not a per-line relationship. Both fits are reported; the within-exposure one
+    is the one that answers the question.
+
+    Model: MDM2 = a + b1*MG53 + b2*WT + b3*(MG53 x WT), cluster-robust on cell line.
+    """
+    rows = []
+    for ycol, yname in ((GENE, "MDM2"), (PARTNER, "CDKN1A")):
+        base = e[e["TRIM72_r2"].notna() & e[ycol].notna() & e["tp53_group"].isin(["WT", "altered"])].copy()
+        for mode in ("raw", "within exposure"):
+            s = base.copy()
+            if mode == "within exposure":
+                for c in ("TRIM72_r2", ycol):
+                    s[c] = s[c] - s.groupby("dd")[c].transform("mean")
+            s = s.reset_index(drop=True)
+            wt = (s["tp53_group"] == "WT").to_numpy(float)
+            x = s["TRIM72_r2"].to_numpy(float)
+            X = np.column_stack([np.ones(len(s)), x, wt, x * wt])
+            y = s[ycol].to_numpy(float)
+            beta, *_ = np.linalg.lstsq(X, y, rcond=None)
+            r = y - X @ beta
+            XtXi = np.linalg.pinv(X.T @ X)
+            meat = np.zeros((4, 4))
+            for _, g in s.groupby("cell_line_id"):
+                i = g.index.to_numpy()
+                u = X[i].T @ r[i]
+                meat += np.outer(u, u)
+            se = np.sqrt(np.diag(XtXi @ meat @ XtXi))
+            t = beta[3] / se[3] if se[3] else np.nan
+            rows.append(dict(outcome=yname, fit=mode, n_rows=len(s), n_lines=int(s["cell_line_id"].nunique()),
+                             b_altered=beta[1], se_altered=se[1], b_WT=beta[1] + beta[3],
+                             interaction_WT_extra=beta[3], se_interaction=se[3], t_interaction=t,
+                             p_interaction=float(2 * st.norm.sf(abs(t))) if np.isfinite(t) else np.nan,
+                             ratio_WT_over_altered=(beta[1] + beta[3]) / beta[1] if beta[1] else np.nan,
+                             answers_the_question=(mode == "within exposure")))
+    t = pd.DataFrame(rows)
+    t.to_csv(os.path.join(out, "mdm2_mg53_genotype_interaction.csv"), index=False)
     return t
 
 
@@ -354,15 +467,28 @@ def unit_singlecell(res, out):
 
 # ----------------------------------------------------------------------------- controls
 def placebo_screen(res, out):
-    """Is MDM2 unusual, or does every gene do this? For each of the 4,643 downstream genes, correlate that
-    gene against MG53 across the 1,132 drug-doses, twice: on pooled CPM (LEVEL) and on corrected log2 fold
-    change (CHANGE). MDM2's percentile in those two distributions is the only thing that makes its own
-    correlation mean anything.
+    """Is MDM2 unusual, or does every gene do this?
 
-    The LEVEL test matters most. CPM is a share of each pool's library, so an exposure that raises MG53 12x
-    while collapsing the transcriptome moves every other gene's share down arithmetically, with no
-    regulation involved. If MDM2's negative CPM correlation sits in the middle of the all-gene distribution,
-    that is what it is.
+    TWO REFERENCE FAMILIES, and the difference between them is a trap this function exists to label.
+
+      the 4,642 exported downstream genes    NOT a sample of genes. 4,500 of them are in the export because
+                                             the genome-wide screen already called them significant against
+                                             MG53 at q < 0.1 (c_calibration.csv: N_q01_common = 4500), and
+                                             the other 142 are p53-program members selected with the TP53
+                                             labels. MDM2 is itself one of the 4,500. So a percentile here
+                                             is a rank WITHIN THE DISCOVERY SET, not among genes at large,
+                                             and the family is shifted toward MG53 association by
+                                             construction - which is why its median Spearman is +0.25 on
+                                             level and +0.05 on change rather than 0.
+      the 16,642 tested genes                The run's own co-regulation columns (coreg_r_across_dd_*) cover
+                                             every tested gene, selected for nothing. This is the honest
+                                             reference family, and it is the one to read first. Its cost is
+                                             that it is the run's Pearson r on z across drug-doses rather
+                                             than a statistic recomputed here.
+
+    Each family is reported with its selection stated in the `family` column. Within the first, two
+    quantities: pooled CPM (LEVEL) and corrected log2 fold change (CHANGE). The LEVEL one needs the plate
+    decomposition in level_by_plate() to be read at all.
     """
     gz = os.path.join(res, "export/downstream/genes_per_drugdose.csv.gz")
     mg = pd.read_csv(gz, usecols=["gene", "drug_dose_row", "cpm_pooled", "r2_median_lines_mean"])
@@ -393,6 +519,8 @@ def placebo_screen(res, out):
                 continue
             v = s[s.gene == sym].iloc[0]
             rows.append(dict(gene=sym, quantity=what, n_genes_in_null=len(s), n_drugdoses=int(ok.sum()),
+                             family="the exported downstream set: 4,500 of these genes were SELECTED at"
+                                    " q < 0.1 against MG53, so this is a rank within the discovery set",
                              rho=float(v["rho"]), r=float(v["r"]),
                              rho_percentile_among_genes=float((s["rho"] < v["rho"]).mean()),
                              r_percentile_among_genes=float((s["r"] < v["r"]).mean()),
@@ -400,27 +528,28 @@ def placebo_screen(res, out):
                              all_gene_rho_q05=float(s["rho"].quantile(0.05)),
                              all_gene_rho_q95=float(s["rho"].quantile(0.95)),
                              all_gene_frac_rho_negative=float((s["rho"] < 0).mean()),
-                             verdict="unremarkable among genes" if 0.05 <= float((s["rho"] < v["rho"]).mean())
-                                     <= 0.95 else "in the tail of the all-gene distribution"))
+                             verdict="middle of this family" if 0.05 <= float((s["rho"] < v["rho"]).mean())
+                                     <= 0.95 else "in this family's tail"))
         s.assign(quantity=what).to_csv(os.path.join(
             out, "mdm2_mg53_allgene_null_%s.csv" % col), index=False)
-    # the run's own genome-wide co-regulation columns, for the same percentile read
+    # The unselected family: the run's own co-regulation columns over every tested gene. Read this one first.
     g = pd.read_csv(os.path.join(res, "genome_wide/tables/c_screen_genes.csv.gz"), low_memory=False,
-                    usecols=["symbol", "coreg_r_across_dd_raw", "coreg_r_across_dd_minus_3pc"])
-    for col, what in (("coreg_r_across_dd_raw", "run's own co-regulation r, raw"),
-                      ("coreg_r_across_dd_minus_3pc", "run's own co-regulation r, 3 PCs removed")):
+                    usecols=["symbol", "tested", "coreg_r_across_dd_raw", "coreg_r_across_dd_minus_3pc"])
+    for col, what in (("coreg_r_across_dd_raw", "co-regulation r across drug-doses, raw"),
+                      ("coreg_r_across_dd_minus_3pc", "co-regulation r across drug-doses, 3 PCs removed")):
         s = g[["symbol", col]].dropna()
         for sym in (GENE, PARTNER):
             if sym not in set(s["symbol"]):
                 continue
             v = float(s.loc[s.symbol == sym, col].iloc[0])
             rows.append(dict(gene=sym, quantity=what, n_genes_in_null=len(s), r=v,
+                             family="every tested gene, selected for nothing - the honest reference family",
                              r_percentile_among_genes=float((s[col] < v).mean()),
                              all_gene_rho_median=float(s[col].median()),
                              all_gene_rho_q05=float(s[col].quantile(0.05)),
                              all_gene_rho_q95=float(s[col].quantile(0.95)),
-                             verdict="unremarkable among genes" if 0.05 <= float((s[col] < v).mean()) <= 0.95
-                                     else "in the tail of the all-gene distribution"))
+                             verdict="middle of this family" if 0.05 <= float((s[col] < v).mean()) <= 0.95
+                                     else "in this family's tail"))
     t = pd.DataFrame(rows)
     t.to_csv(os.path.join(out, "mdm2_mg53_allgene_null.csv"), index=False)
     return t
@@ -430,7 +559,8 @@ def level_by_plate(res, out, models):
     """Split the LEVEL comparison into its between-plate and within-plate parts, because MG53 carries a
     3.12 log2 plate-batch gap - the largest of 16,656 genes - and plates differ in depth and composition.
 
-    Each drug-dose lives on one or two plates, so a correlation computed across all 1,132 of them is partly
+    All but one drug-dose lives on one or two plates (1,030 on one, 101 on two; Adagrasib at 0.05 uM is on
+    13), so a correlation computed across all 1,132 of them is partly
     a correlation across plates. If MG53's plate medians run 16x while MDM2's run the other way, an
     across-plate correlation appears with no regulation in it at all. The within-plate version is the one
     that can mean something.
@@ -461,6 +591,18 @@ def level_by_plate(res, out, models):
     t["mean_of_per_plate_rho"] = float(pm["rho_within_plate"].mean())
     t["n_plates_rho_negative"] = int((pm["rho_within_plate"] < 0).sum())
     t["mg53_plate_median_range_fold"] = float(t["mg53_cpm_median"].max() / t["mg53_cpm_median"].min())
+    # Robustness to the one-plate-per-exposure convention above. Assigning each exposure to plates[0] leaves
+    # plate6 holding a single exposure, so its "median" is one number; these two variants fix that.
+    ex = d.assign(plate=d["plates"].astype(str).str.split(",")).explode("plate")
+    pe = ex.groupby("plate").agg(mg=("mg53_cpm", "median"), md=("%s_cpm" % GENE, "median"))
+    t["rho_between_plate_medians_full_membership"] = float(st.spearmanr(pe["mg"], pe["md"]).statistic)
+    for c in ("mg53_cpm", "%s_cpm" % GENE):
+        ex[c + "_wp"] = ex[c] - ex.groupby("plate")[c].transform("median")
+    t["rho_within_plate_full_membership"] = float(
+        st.spearmanr(ex["mg53_cpm_wp"], ex["%s_cpm_wp" % GENE]).statistic)
+    drop6 = t[t["n_drugdoses"] > 5]
+    t["rho_between_plate_medians_excl_plate6"] = float(
+        st.spearmanr(drop6["mg53_cpm_median"], drop6["mdm2_cpm_median"]).statistic)
     t.to_csv(os.path.join(out, "mdm2_mg53_cpm_by_plate.csv"), index=False)
     U = "2. drug-dose, lines pooled"
     models.append(dict(unit=U, group="LEVEL, all drug-doses", x="MG53 CPM", y="MDM2 CPM",
@@ -576,10 +718,19 @@ def extremes(d, out, k=12):
     """Named exposures at both ends of MG53, with MDM2 beside them. Immune to how the bins were drawn."""
     cols = ["drug", "conc", "TRIM72_fold_change", "TRIM72_z", "MDM2_fold_change", "MDM2_z",
             "CDKN1A_fold_change", "P53_ACTIVITY_z", "atlas_n_sig_genes", "cells_log2_vs_plate", "plates",
-            "category", "flags"]
-    s = d[cols].dropna(subset=["TRIM72_z", "MDM2_z"]).sort_values("TRIM72_z")
-    t = pd.concat([s.tail(k).iloc[::-1].assign(end="MG53 raised most"),
-                   s.head(k).assign(end="MG53 lowered most")], ignore_index=True)
+            "category", "moa_fine", "targets", "flags"]
+    s = d[cols].dropna(subset=["TRIM72_z", "MDM2_z"])
+    out_rows = []
+    # Ranked by fold change, and separately by z, because they disagree about which exposures are extreme
+    # and a table sorted by one while displaying the other reads as non-monotone. n_distinct_compounds is
+    # carried because the same compound appears at several doses: these are not independent chances.
+    for by in ("TRIM72_fold_change", "TRIM72_z"):
+        r = s.sort_values(by)
+        for end, part in (("MG53 raised most", r.tail(k).iloc[::-1]), ("MG53 lowered most", r.head(k))):
+            p = part.assign(end=end, ranked_by=by)
+            p["n_distinct_compounds_in_this_block"] = p["drug"].nunique()
+            out_rows.append(p)
+    t = pd.concat(out_rows, ignore_index=True)
     t.to_csv(os.path.join(out, "mdm2_mg53_extremes.csv"), index=False)
     return t
 
@@ -638,6 +789,7 @@ def main():
     mt = pd.DataFrame(models)                                  # level_by_plate appends to models
     mt.to_csv(os.path.join(out, "mdm2_mg53_models.csv"), index=False)
     sc = unit_singlecell(res, out)
+    gi = genotype_interaction(e, out)
     nul = placebo_screen(res, out)
 
     pd.set_option("display.width", 200)
@@ -670,6 +822,11 @@ def main():
           % (plt["rho_all_drugdoses"].iloc[0], plt["rho_between_plate_medians"].iloc[0],
              plt["rho_within_plate_pooled"].iloc[0], plt["mean_of_per_plate_rho"].iloc[0],
              plt["n_plates_rho_negative"].iloc[0], plt["mg53_plate_median_range_fold"].iloc[0]))
+    print("\n===== does the per-line slope differ by TP53 status? raw, then within exposure")
+    print(gi[["outcome", "fit", "n_rows", "n_lines", "b_altered", "b_WT", "interaction_WT_extra",
+              "se_interaction", "t_interaction", "p_interaction"]].to_string(index=False))
+    print("The raw fit confounds WHICH EXPOSURE a line was in with the line itself; the within-exposure fit"
+          " is the one that answers the question.")
     print("\n===== single cells: MDM2 in MG53-detected vs MG53-undetected cells of the same line and well")
     print(sc[sc.outcome.isin([GENE, PARTNER])][
         ["outcome", "wellset", "tp53_group", "n_lines", "rate_ratio", "p", "percentile_among_controls",
@@ -680,7 +837,7 @@ def main():
                "verdict"]].to_string(index=False))
     print("\n===== joint quintiles, chi2 p = %.4g" % ct["chi2_p"].iloc[0])
     print(ct.pivot(index="mg53_quintile", columns="mdm2_quintile", values="n").to_string())
-    print("\nwrote 12 CSVs to %s" % out)
+    print("\nwrote 13 CSVs to %s" % out)
 
 
 if __name__ == "__main__":
