@@ -1,0 +1,17 @@
+cell_line_id,cell_name,tp53_changes,role
+CVCL_0028,AN3 CA,p.G389W; p.R213Q; p.S90fs,"truncating class, flagged mixed: NOT in the core null reference"
+CVCL_0152,AsPC-1,p.C135fs,null reference (core)
+CVCL_0218,COLO 205,p.Y103fs; p.Y107fs,null reference (core)
+CVCL_0292,HCT15,Splice_site; p.S241F,"truncating class, flagged mixed: NOT in the core null reference"
+CVCL_0366,SNU-423,Splice_site,null reference (core)
+CVCL_0371,KATO III,DEL,null reference (core)
+CVCL_1285,HOP62,Splice_site,null reference (core)
+CVCL_1495,NCI-H1792,Splice_site,null reference (core)
+CVCL_1550,NCI-H2347,Thr125Thr; p.T125T,"truncating class, flagged mixed: NOT in the core null reference"
+CVCL_1635,Panc 03.27,375+5G>T,null reference (core)
+CVCL_1666,RPMI-7951,p.S166*,null reference (core)
+CVCL_1717,SW1417,p.C238fs,null reference (core)
+CVCL_1731,SW 900,p.Q167*,null reference (core)
+CVCL_0028,AN3 CA,,"why flagged: p.G389W; p.R213Q; p.S90fs: frameshift plus two missense (R213Q, G389W)"
+CVCL_0292,HCT15,,why flagged: Splice_site plus missense p.S241F (DNA-contact hotspot)
+CVCL_1550,NCI-H2347,,why flagged: p.T125T synonymous at the exon-4 donor (splice-affecting; can leave some full-length mRNA)

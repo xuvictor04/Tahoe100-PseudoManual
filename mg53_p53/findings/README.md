@@ -61,3 +61,24 @@ keep the gene (`n_folds_kept`), and MG53's slope on that gene (`b_common`, `q_co
 
 Read `wt_mean_log2` with care: it is averaged over a broad set of drug-doses, most of which do not activate
 p53, so the median program gene reads only 1.06x. It is not the fold change under a strong p53 activator.
+
+## Per-line p53 function
+
+`PER_LINE_p53_FUNCTION.md` and `tables/per_line_p53_state.csv` — each of the 50 lines placed on a p53-output
+axis against a null reference (the TP53-deletion and truncating lines), so a mutant can be read as retaining
+activity, sitting at the null, or falling below it. Plus whether using that finer picture instead of the
+yes/no genotype label changes what MG53's level does to p53. It does not.
+
+Both a circularity-prone and a label-free version of each line's inducibility are given: program P and the
+p53-activating drug-doses were selected using the TP53 labels, so `lf_P_on_LFP50_*` repeats the scoring on a
+label-free program and drug-dose set. `ind_P_mean_frac_of_WT_gap` is the readable one: 1.0 means a line
+reaches the wild-type median, 0.0 means it sits at the null.
+
+| File | Contents |
+|---|---|
+| `tables/per_line_p53_state.csv` | 50 lines, 29 key columns: inducibility, distance from null with CI, the label-free repeat, panel responsiveness, literature-expected direction, GDSC Nutlin-3a AUC |
+| `tables/per_line_p53_state_FULL.csv` | the same 50 lines with all 216 computed columns |
+| `tables/tp53_mutation_annotation.csv` | per-variant annotation for the 33 mutant lines (41 rows): domain, hotspot, zygosity, reported transactivation class, dominant-negative and gain-of-function evidence |
+| `tables/tp53db_variant_function.csv` | NCI/IARC TP53-database function reports per variant (25 rows) |
+| `tables/wt_lines_annotation.csv` | the 17 genotype-WT lines: other routes that lower p53 (CDKN2A/ARF, MDM4, PPM1D, ATM, LKB1) |
+| `tables/null_reference_lines.csv` | the lines used as the zero-p53-output anchor |
