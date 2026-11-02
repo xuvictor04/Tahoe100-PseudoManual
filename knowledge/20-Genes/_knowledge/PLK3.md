@@ -1,0 +1,24 @@
+> [!summary] In one line
+> PLK3 encodes a stress-activated polo-like kinase, switched on by DNA damage and oxidative stress, that has been implicated in phosphorylating p53 at serine 20.
+
+## What it is
+
+PLK3 (also PRK, FNK, CNK) belongs to the polo-like kinase family — an N-terminal kinase domain plus a C-terminal polo-box domain for substrate docking and localisation. Family membership is misleading if read as family resemblance. PLK1 is a mitotic kinase, overexpressed in tumours and a drug target; PLK3 behaves instead as a stress-response kinase whose transcript is an immediate-early gene and whose activity is induced rather than cell-cycle-scheduled.
+
+The best-developed part of its biology is the damage response. PLK3 activity rises rapidly after DNA damage in an ATM-dependent manner, and PLK3 phosphorylates p53 on serine 20 — the site whose modification interferes with [[MDM2]] binding and so stabilises the protein. Hydrogen peroxide produces the same ATM-dependent activation, and cells lacking PLK3 fail to mount the serine 20 response while retaining serine 15 phosphorylation. PLK3 has also been reported to phosphorylate CHK2 ([[CHEK2]]) and CDC25C and to act on HIF-1α under hypoxia, but no single function has been pinned down as its principal one.
+
+PLK3 is usually labelled a tumour suppressor. The basis is expression rather than mutation — the transcript is reported down-regulated in lung, head and neck, gastric, bladder and uterine tumours. The mouse genetics are less supportive, with at least one study finding no significant increase in spontaneous tumours in Plk3-deficient animals.
+
+## Why it appears in this work
+
+PLK3 sits in the induction arm of [[p53 program P]] as a curated effector with an arrest role, and its interest here is that it is a candidate *feedback* component rather than a terminal output. If PLK3 is induced as part of the p53 response and also phosphorylates p53 at a stabilising site, its induction reports engagement of a loop, not merely a downstream consequence — a different kind of signal from p21's. Its presence says the stress-kinase layer moved with the canonical arrest and apoptosis arms, as one expects if [[The p53 pathway]] is genuinely active.
+
+## What is uncertain
+
+The serine 20 claim deserves its hedges. It rests on in vitro kinase work plus knockdown and PLK3-deficient cell lines; CHK2 is the better-established serine 20 kinase, and how much PLK3 contributes in any particular cell type is unresolved; the two are not mutually exclusive. Whether PLK3 is a *direct* p53 target is a separate, weaker question: it is damage-inducible, but a validated p53 response element is not part of the standard account, so membership in a p53-associated induction arm may reflect a general stress induction running parallel to p53 rather than through it. The tumour-suppressor designation rests largely on reduced expression in tumour series, and the mouse data argue against a straightforward reading. Most pointedly here, a report has PLK3 phosphorylating serine 20 of gain-of-function mutant p53 and supporting its transactivation — if that holds, PLK3's effect is conditional on p53 genotype, and this panel contains both wild-type and altered lines (see [[p53 nullification in cancer cell lines]]).
+
+## References
+
+- Xie et al., 2001, Journal of Biological Chemistry — Plk3 links DNA damage to arrest and apoptosis partly via p53, with ATM-dependent activation and serine 20 as a target site.
+- Xie et al., 2001, Journal of Biological Chemistry — reactive-oxygen-species-induced phosphorylation of p53 on serine 20 is mediated in part by Plk3.
+- Bahassi El et al., 2002, Oncogene — Plk3 as a multifunctional kinase in stress-response pathways, interacting with the damage checkpoint machinery.

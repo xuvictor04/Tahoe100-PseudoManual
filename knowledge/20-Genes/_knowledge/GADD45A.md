@@ -15,7 +15,7 @@ GADD45A is the member of [[p53 program P]] that reports the checkpoint and arres
 
 ## What is uncertain
 
-The intron 3 response element makes the direct-target status secure, but attributing any particular induction to p53 is less secure here than for any other canonical target in the panel, because the p53-independent inputs are strong and a 379-compound library supplies exactly those inputs — ATF4-driven integrated stress response, oxidative stress, HDAC and methyltransferase inhibition. Whether GADD45A is pro-apoptotic or protective is context-dependent and both have been reported in reputable systems; the arrest function is the better-supported one. The DNA demethylation role should not be assumed. And the muscle work, while solid in muscle, says nothing about pooled cancer lines: GADD45A's being an atrophy gene is not evidence of anything about [[The TRIM72 locus]] or about MG53.
+The intron 3 response element makes the direct-target status secure, but attributing any particular induction to p53 is less secure here than for any other canonical target in the panel, because the p53-independent inputs are strong and a 379-compound library supplies exactly those inputs — ATF4-driven integrated stress response, oxidative stress, HDAC and methyltransferase inhibition. Whether GADD45A is pro-apoptotic or protective is context-dependent and both have been reported in reputable systems; the arrest function is the better-supported one. The DNA demethylation role should not be assumed. And the muscle work, solid as it is in muscle, says nothing about pooled cancer lines.
 
 ## References
 
