@@ -196,11 +196,11 @@ doubling of MG53); `diff` is the wild-type-minus-altered version.
 | FDXR | metabolism / redox | **2.06x** | 1.24x | +0.314 | +0.0025 (0.75) | none | none |
 | ZMAT3 | negative feedback | 1.98x | 1.20x | +0.218 | +0.0012 (0.80) | none | none |
 | POLH | DNA repair | 1.98x | 1.16x | +0.184 | +0.0021 (0.57) | none | none |
-| BTG2 | cell-cycle arrest | 1.94x | 1.15x | +0.261 | +0.0153 (0.106) | none | none |
+| BTG2 | cell-cycle arrest | 1.94x | 1.15x | +0.261 | +0.0153 (xperm q 0.055) | positive | none |
 | XPC | DNA repair | 1.84x | 1.09x | +0.166 | +0.0004 (0.92) | none | none |
 | DDB2 | DNA repair | 1.82x | 1.14x | +0.206 | **−0.0075 (0.084)** | negative | none |
 | PMAIP1 (NOXA) | apoptosis | 1.82x | 1.06x | +0.019 | **+0.0081 (0.070)** | positive | none |
-| ACER2 | metabolism / redox | 1.75x | 1.11x | +0.238 | +0.0136 (0.100) | none | none |
+| ACER2 | metabolism / redox | 1.75x | 1.11x | +0.238 | +0.0136 (xperm q 0.052) | positive | none |
 | PPM1D | negative feedback | 1.67x | 1.24x | +0.226 | −0.0020 (0.63) | none | none |
 | GADD45A | cell-cycle arrest | 1.57x | 1.11x | +0.126 | +0.0065 (0.36) | none | none |
 | TP53INP1 | apoptosis | 1.54x | 1.18x | +0.278 | −0.0058 (0.42) | none | none |
@@ -225,9 +225,9 @@ doubling of MG53); `diff` is the wild-type-minus-altered version.
 
 - **Every one of the 29 is a real p53 target in this data**: all have a positive wild-type-minus-altered
   difference (+0.019 to +0.314 log2), so p53 status does drive them.
-- **Six of 29 reach q_common < 0.1 for an MG53 slope — and they split three positive, three negative.**
-  Positive: CDKN1A, PMAIP1, AEN. Negative: MDM2, DDB2, TP53I3. That is 21% against a genome-wide base rate
-  of 27% (4,500 of 16,642), i.e. slightly *below* chance, and the even sign split is what noise looks like.
+- **Eight of 29 reach the calibrated threshold for an MG53 slope — five positive, three negative.**
+  Positive: CDKN1A, PMAIP1, AEN, ACER2, BTG2. Negative: MDM2, DDB2, TP53I3. That is 28% against a
+  genome-wide base rate of 27% (4,500 of 16,642), i.e. exactly chance, with signs split both ways.
 - **The two most canonical effectors point opposite ways**: CDKN1A +0.0104 (q 0.031) and MDM2 −0.0050
   (q 0.069). If MG53 were damping p53's output, p21 and MDM2 would not move in opposite directions.
 - **Not one gene differs by TP53 status.** Every `mg53_genotype_verdict` is "none"; across all 195 program
@@ -235,6 +235,41 @@ doubling of MG53); `diff` is the wild-type-minus-altered version.
 - **FDXR**, the one gene with a negative lean in the earlier list-based work, has `diff` −0.0213 — the
   largest negative among the classics — but q 0.999 and a common slope of +0.0025 (q 0.75). It does not
   survive multiplicity.
+
+### The MG53 slope columns, and why the q value needs care
+
+`b_common` is the single MG53 slope fitted across all lines, from the screen's model
+[`genome_wide/genome_wide.py` section C]:
+
+    Y_gene = (drug-dose x TP53-group fixed effects) + (line fixed effects)
+             + b_common x MG53 + (covariates x TP53 group)
+
+Y is the gene's corrected log2 fold change for that line x drug-dose, MG53 is TRIM72's corrected log2 fold
+change for the same cell, so the unit is **log2 of the gene per doubling of MG53**. Because both line and
+drug-dose x group means are removed, only the residual co-variation is used: for a given line under a given
+drug, does the gene deviate from expectation in the same direction as MG53 does. `b_WT` and `b_alt` are the
+same slope fitted separately per genotype group and `diff` = `b_WT` - `b_alt`; `b_common` constrains the two
+to be equal while leaving the fixed effects and covariates group-specific.
+
+**The analytic q value is badly calibrated and must not be read as a p value.** The step's own calibration
+gives `lambda_common` **4.444** for the observed fit, where 1.0 is correct — the analytic two-way standard
+error does not absorb the line-level structure, so the statistic is inflated about 4.4x. Two things follow:
+
+- Use `q_xperm_common` (the exposure shuffled across lines within each drug-dose x group cell), which is the
+  null the step documents for the common slope. The verdict column uses it. The TP53-relabelling null is
+  explicitly **not** valid here, because relabelling preserves the within-line association.
+- Even the calibrated q does not make MG53 special, because **matched placebo genes show the same inflation
+  or more**: lambda 4.685 (response-matched) and 5.518 (expression-matched), giving 3,196 and 5,330 genes at
+  q_common < 0.1 against MG53's 4,500 [`genome_wide/tables/c_calibration.csv`]. MG53 sits inside the placebo
+  range. So read `placebo_pct_common_expression` / `_response` — the share of placebo exposures whose
+  statistic for that gene falls below MG53's — rather than the q value.
+
+On that placebo reading the eight genes are extreme in opposite directions (CDKN1A 0.9/1.0, PMAIP1 1.0/1.0,
+AEN 1.0/1.0, BTG2 1.0/1.0 at the positive end; MDM2 0.1/0.0, DDB2 0.1/0.0, TP53I3 0.0/0.0 at the negative
+end). Sixteen of the 29 sit in the outer tenths in one direction or the other, which is more than chance
+would give — but in **both** directions at once. That is the signature of MG53 tracking overall
+transcriptional response amplitude, which makes it a better predictor than a random matched gene for any
+responsive gene, in whichever direction that gene happens to go. It is not a p53-directed effect.
 
 ### Caveats
 

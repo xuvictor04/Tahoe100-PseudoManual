@@ -296,20 +296,27 @@ def p53_effectors(res, out):
                 [["symbol", "best_activator", "DD_lfc"]].rename(columns={"DD_lfc": "best_log2"}),
                 on="symbol", how="left")
     g["fold_ida5"] = 2 ** g["ida5_log2"]
-    g = g.merge(sc[["symbol", "b_common", "se_common", "q_common", "b_WT", "b_alt", "diff", "se_diff",
-                    "q_diff", "q_label_diff", "placebo_pct_common_expression"]], on="symbol", how="left")
-    # verdict on MG53: the common slope uses q_common; the genotype-specific slope uses q_label_diff
-    # (permutation-calibrated) and falls back to q_diff where the label version is missing
+    g = g.merge(sc[["symbol", "b_common", "se_common", "q_common", "q_xperm_common", "b_WT", "b_alt",
+                    "diff", "se_diff", "q_diff", "q_label_diff", "placebo_pct_common_expression",
+                    "placebo_pct_common_response"]], on="symbol", how="left")
+    # Verdicts use the permutation-calibrated q values, not the analytic ones. genome_wide.py's own
+    # calibration shows the analytic common-slope statistic is inflated about 4.4x by line-level structure
+    # (lambda_common 4.444 observed; c_calibration.csv), and the exposure-shuffle null is the one the step
+    # documents for the common slope. The TP53-relabelling null is explicitly NOT valid for the common
+    # slope ("relabelling keeps the within-line association"), so the genotype verdict uses q_label_diff.
+    # The placebo percentiles are carried alongside because matched placebo genes show the SAME inflation
+    # (lambda 4.685 / 5.518), so "significant" here does not mean MG53 is special: read the percentiles.
     qd = g["q_label_diff"].fillna(g["q_diff"])
-    g["mg53_common_verdict"] = np.where(g["q_common"] >= 0.1, "none",
+    qc = g["q_xperm_common"].fillna(g["q_common"])
+    g["mg53_common_verdict"] = np.where(qc >= 0.1, "none",
                                         np.where(g["b_common"] > 0, "positive", "negative"))
     g["mg53_genotype_verdict"] = np.where(qd < 0.1, "differs by TP53 status", "none")
     cols_out = ["symbol", "role", "in_curated_panel", "arm", "n_folds_kept", "median_line_cpm",
                 "wt_mean_log2", "fold_WT_broad", "wt_minus_alt_log2", "ida5_log2", "fold_ida5",
                 "best_activator", "best_log2", "z_program", "q_up", "loco_frequency",
-                "b_common", "se_common", "q_common", "mg53_common_verdict",
+                "b_common", "se_common", "q_common", "q_xperm_common", "mg53_common_verdict",
                 "b_WT", "b_alt", "diff", "se_diff", "q_diff", "q_label_diff", "mg53_genotype_verdict",
-                "placebo_pct_common_expression"]
+                "placebo_pct_common_expression", "placebo_pct_common_response"]
     t = g[[c for c in cols_out if c in g.columns]].sort_values("ida5_log2", ascending=False)
     t.to_csv(os.path.join(out, "p53_effectors_per_gene.csv"), index=False)
     return t
