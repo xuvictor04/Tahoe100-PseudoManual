@@ -1,0 +1,5 @@
+# Per-user Obsidian state: pane layout, recent files, hotkeys. Not shared.
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/hotkeys.json
+.trash/

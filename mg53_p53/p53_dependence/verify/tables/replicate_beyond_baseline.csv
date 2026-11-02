@@ -1,9 +1,0 @@
-,0
-n,46
-analysis_fc_spearman,0.6319457292630279
-analysis_fc_partial_given_dmso_allplates,"(np.float64(0.29442481476950705), np.float64(0.04961809474375386))"
-analysis_fc6_vs_baseline,-0.5971631205673759
-analysis_fc14_vs_baseline,-0.849768732654949
-treated_cpm_spearman,0.6108541473943879
-treated_cpm_partial_given_baseline,"(np.float64(0.3068094079224215), np.float64(0.04036872281400396))"
-intrinsic_treated_partial_given_baseline,"(np.float64(0.3068094079224215), np.float64(0.04036872281400396))"

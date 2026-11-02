@@ -1,0 +1,315 @@
+symbol,roles,tier
+ACER2,"curated p53 effector; p53 program, induction arm",1
+AEN,"curated p53 effector; p53 program, induction arm",1
+ATM,central to this work,1
+BAX,"curated p53 effector; p53 program, induction arm",1
+BBC3,"curated p53 effector; p53 program, induction arm",1
+BTG2,"curated p53 effector; p53 program, induction arm",1
+CCNG1,"curated p53 effector; p53 program, induction arm",1
+CDKN1A,"curated p53 effector; p53 program, induction arm",1
+CDKN2A,central to this work,1
+CHEK2,central to this work,1
+DDB2,"curated p53 effector; p53 program, induction arm",1
+EDA2R,"curated p53 effector; p53 program, induction arm",1
+FDXR,"curated p53 effector; p53 program, induction arm",1
+FUS,central to this work,1
+GADD45A,"curated p53 effector; p53 program, induction arm",1
+GDF15,"curated p53 effector; p53 program, induction arm",1
+MDM2,"curated p53 effector; p53 program, induction arm",1
+MDM4,central to this work,1
+MEF2C,central to this work,1
+MYOD1,central to this work,1
+MYOG,central to this work,1
+PHLDA3,"curated p53 effector; p53 program, induction arm",1
+PLK3,"curated p53 effector; p53 program, induction arm",1
+PMAIP1,curated p53 effector,1
+POLH,"curated p53 effector; p53 program, induction arm",1
+PPM1D,"curated p53 effector; p53 program, induction arm",1
+PYCARD,central to this work,1
+PYCARD-AS1,central to this work,1
+RPS27L,"curated p53 effector; p53 program, induction arm",1
+RRM2B,"curated p53 effector; p53 program, induction arm",1
+SESN1,"curated p53 effector; p53 program, induction arm",1
+SPATA18,curated p53 effector,1
+SRF,central to this work,1
+STK11,central to this work,1
+TIGAR,"curated p53 effector; p53 program, induction arm",1
+TNFRSF10B,"curated p53 effector; p53 program, induction arm",1
+TP53,central to this work,1
+TP53BP1,central to this work,1
+TP53I3,curated p53 effector,1
+TP53INP1,"curated p53 effector; p53 program, induction arm",1
+TRIAP1,"curated p53 effector; p53 program, induction arm",1
+TRIM72,central to this work,1
+USP7,central to this work,1
+XPC,"curated p53 effector; p53 program, induction arm",1
+ZMAT3,"curated p53 effector; p53 program, induction arm",1
+AZU1,tracks MG53 genome-wide,2
+BRCA2,"p53 program, repression arm",2
+CCNE2,"p53 program, repression arm",2
+CENPN,"p53 program, repression arm",2
+COL20A1,tracks MG53 genome-wide,2
+EXO1,"p53 program, repression arm",2
+FANCD2,"p53 program, repression arm",2
+FGF18,tracks MG53 genome-wide,2
+FNDC7,tracks MG53 genome-wide,2
+GRAMD2A,tracks MG53 genome-wide,2
+HJURP,"p53 program, repression arm",2
+IMPA1P1,tracks MG53 genome-wide,2
+KIF11,"p53 program, repression arm",2
+KIF17,tracks MG53 genome-wide,2
+LDHC,tracks MG53 genome-wide,2
+LINC00880,tracks MG53 genome-wide,2
+MBOAT1,"p53 program, repression arm",2
+MIR924HG,"p53 program, repression arm",2
+MMP25,tracks MG53 genome-wide,2
+MRPL37,"p53 program, repression arm",2
+NECAB2,tracks MG53 genome-wide,2
+POGLUT3,"p53 program, repression arm",2
+PRKCG,tracks MG53 genome-wide,2
+PYGM,tracks MG53 genome-wide,2
+RAD54B,"p53 program, repression arm",2
+SELPLG,tracks MG53 genome-wide,2
+SEMA4A,tracks MG53 genome-wide,2
+SGO1,"p53 program, repression arm",2
+SMC1A,"p53 program, repression arm",2
+SMIM41,tracks MG53 genome-wide,2
+USP1,"p53 program, repression arm",2
+ABCB9,"p53 program, induction arm",3
+ACTA2,"p53 program, induction arm",3
+ADORA1,tracks MG53 genome-wide,3
+ANKRA2,"p53 program, induction arm",3
+APOBEC3C,"p53 program, induction arm",3
+ARFGEF1,"p53 program, induction arm",3
+ARFGEF2,"p53 program, induction arm",3
+ARHGAP30,"p53 program, induction arm",3
+ARL9,tracks MG53 genome-wide,3
+ARMH3,"p53 program, induction arm",3
+ASCC3,"p53 program, induction arm",3
+ASIC4,tracks MG53 genome-wide,3
+ATF3,"p53 program, induction arm",3
+ATG14,"p53 program, induction arm",3
+BLOC1S2,"p53 program, induction arm",3
+BRMS1L,"p53 program, induction arm",3
+BTBD10,"p53 program, induction arm",3
+BTBD19,"p53 program, induction arm",3
+C12orf50,tracks MG53 genome-wide,3
+C19orf38,tracks MG53 genome-wide,3
+CASK,"p53 program, induction arm",3
+CATSPERD,tracks MG53 genome-wide,3
+CDKL2,tracks MG53 genome-wide,3
+CDS2,"p53 program, induction arm",3
+CEP85L,"p53 program, induction arm",3
+CEP95,"p53 program, induction arm",3
+CERS5,"p53 program, induction arm",3
+CHADL,tracks MG53 genome-wide,3
+CHMP3,"p53 program, induction arm",3
+CIC,"p53 program, induction arm",3
+COP1,"p53 program, induction arm",3
+CPNE9,tracks MG53 genome-wide,3
+CPT1C,tracks MG53 genome-wide,3
+CREBRF,"p53 program, induction arm",3
+CSNK1G1,"p53 program, induction arm",3
+CYFIP2,"p53 program, induction arm",3
+DCP1B,"p53 program, induction arm",3
+DCTN5,"p53 program, induction arm",3
+DERA,"p53 program, induction arm",3
+DGKA,"p53 program, induction arm",3
+DHDH,tracks MG53 genome-wide,3
+DNAI3,"p53 program, induction arm",3
+DNAJC5,"p53 program, induction arm",3
+DPYS,tracks MG53 genome-wide,3
+DRAM1,"p53 program, induction arm",3
+DRC1,tracks MG53 genome-wide,3
+EFNA2,tracks MG53 genome-wide,3
+ELL,"p53 program, induction arm",3
+ENSG00000196826,"p53 program, induction arm",3
+ENSG00000205890,tracks MG53 genome-wide,3
+ENSG00000225420,"p53 program, induction arm",3
+ENSG00000225647,tracks MG53 genome-wide,3
+ENSG00000229195,tracks MG53 genome-wide,3
+ENSG00000249951,tracks MG53 genome-wide,3
+ENSG00000251095,"p53 program, induction arm",3
+ENSG00000255202,tracks MG53 genome-wide,3
+ENSG00000258851,tracks MG53 genome-wide,3
+ENSG00000260177,tracks MG53 genome-wide,3
+ENSG00000261341,tracks MG53 genome-wide,3
+ENSG00000265408,"p53 program, induction arm",3
+ENSG00000266313,tracks MG53 genome-wide,3
+ENSG00000268465,tracks MG53 genome-wide,3
+ENSG00000269635,tracks MG53 genome-wide,3
+ENSG00000280046,tracks MG53 genome-wide,3
+ENSG00000282440,tracks MG53 genome-wide,3
+ENSG00000283573,tracks MG53 genome-wide,3
+ENSG00000284716,tracks MG53 genome-wide,3
+ENSG00000285190,tracks MG53 genome-wide,3
+ENSG00000285901,"p53 program, induction arm",3
+ENSG00000286230,tracks MG53 genome-wide,3
+ENSG00000286677,tracks MG53 genome-wide,3
+ENSG00000286782,tracks MG53 genome-wide,3
+ENSG00000286952,tracks MG53 genome-wide,3
+ENSG00000287975,tracks MG53 genome-wide,3
+ENSG00000289254,tracks MG53 genome-wide,3
+ENSG00000289726,tracks MG53 genome-wide,3
+ENSG00000290241,tracks MG53 genome-wide,3
+ENSG00000291177,"p53 program, induction arm",3
+EP300,"p53 program, induction arm",3
+EPHA1-AS1,tracks MG53 genome-wide,3
+EPHA2,"p53 program, induction arm",3
+EPS8L2,"p53 program, induction arm",3
+EZH1,"p53 program, induction arm",3
+FAM193A,"p53 program, induction arm",3
+FAM3C,"p53 program, induction arm",3
+FAS,"p53 program, induction arm",3
+FBXL20,"p53 program, induction arm",3
+FBXL5,"p53 program, induction arm",3
+FBXO22,"p53 program, induction arm",3
+FBXO42,"p53 program, induction arm",3
+FBXW7,"p53 program, induction arm",3
+FCHO2,"p53 program, induction arm",3
+FRS2,"p53 program, induction arm",3
+GAL3ST1,tracks MG53 genome-wide,3
+GARIN1B,tracks MG53 genome-wide,3
+GAS6,"p53 program, induction arm",3
+GBE1,"p53 program, induction arm",3
+GRIK5,tracks MG53 genome-wide,3
+GRIN2C,"p53 program, induction arm",3
+HAP1,tracks MG53 genome-wide,3
+HCLS1,tracks MG53 genome-wide,3
+HDAC5,"p53 program, induction arm",3
+HELZ,"p53 program, induction arm",3
+HHAT,"p53 program, induction arm",3
+HIVEP2,"p53 program, induction arm",3
+HPN,tracks MG53 genome-wide,3
+HPX,tracks MG53 genome-wide,3
+HSDL2,"p53 program, induction arm",3
+HSPA4L,"p53 program, induction arm",3
+HTT,"p53 program, induction arm",3
+IER5,"p53 program, induction arm",3
+IL34,tracks MG53 genome-wide,3
+INKA2,"p53 program, induction arm",3
+IQCN,tracks MG53 genome-wide,3
+ISCU,"p53 program, induction arm",3
+KCNMB2-AS1,"p53 program, induction arm",3
+KDM4B,"p53 program, induction arm",3
+KDM4C,"p53 program, induction arm",3
+KDM6A,"p53 program, induction arm",3
+KLHL24,"p53 program, induction arm",3
+LIG1,"p53 program, induction arm",3
+LINC01291,tracks MG53 genome-wide,3
+LINC02236,tracks MG53 genome-wide,3
+LMO7DN,tracks MG53 genome-wide,3
+MAP3K2,"p53 program, induction arm",3
+MED23,"p53 program, induction arm",3
+MGRN1,"p53 program, induction arm",3
+MIR34AHG,"p53 program, induction arm",3
+MIR3659HG,"p53 program, induction arm",3
+MIR9-1HG,tracks MG53 genome-wide,3
+MOCS2-DT,tracks MG53 genome-wide,3
+MPP4,tracks MG53 genome-wide,3
+MROH3P,tracks MG53 genome-wide,3
+MTNR1A,tracks MG53 genome-wide,3
+MXI1,"p53 program, induction arm",3
+MYOCOS,tracks MG53 genome-wide,3
+NADSYN1,"p53 program, induction arm",3
+NAP1L4,"p53 program, induction arm",3
+NBPF14,"p53 program, induction arm",3
+NECTIN4,"p53 program, induction arm",3
+NHEJ1,"p53 program, induction arm",3
+NOPCHAP1,"p53 program, induction arm",3
+NOTCH1,"p53 program, induction arm",3
+NPHS1,tracks MG53 genome-wide,3
+NTPCR,"p53 program, induction arm",3
+NUP210L,tracks MG53 genome-wide,3
+OGA,"p53 program, induction arm",3
+PAN3,"p53 program, induction arm",3
+PCGF3,"p53 program, induction arm",3
+PCNP,"p53 program, induction arm",3
+PCNX1,"p53 program, induction arm",3
+PDE4C,tracks MG53 genome-wide,3
+PER1,"p53 program, induction arm",3
+PGAP1,"p53 program, induction arm",3
+PHYHD1,tracks MG53 genome-wide,3
+PI4KB,"p53 program, induction arm",3
+PIDD1,"p53 program, induction arm",3
+PIKFYVE,"p53 program, induction arm",3
+PILRA,tracks MG53 genome-wide,3
+PINCR,"p53 program, induction arm",3
+PITRM1-AS1,tracks MG53 genome-wide,3
+PLA2G12B,tracks MG53 genome-wide,3
+PLCL2,"p53 program, induction arm",3
+PLK2,"p53 program, induction arm",3
+PLXNB2,"p53 program, induction arm",3
+POM121C,"p53 program, induction arm",3
+PPM1A,"p53 program, induction arm",3
+PPP1R36,tracks MG53 genome-wide,3
+PPP2CB,"p53 program, induction arm",3
+PPP4R3A,"p53 program, induction arm",3
+PRKD2,"p53 program, induction arm",3
+PRKX,"p53 program, induction arm",3
+PRRG1,"p53 program, induction arm",3
+PRX,tracks MG53 genome-wide,3
+PTBP3,"p53 program, induction arm",3
+PTCHD4,"p53 program, induction arm",3
+PURPL,"p53 program, induction arm",3
+PVT1,"p53 program, induction arm",3
+RAB3GAP1,"p53 program, induction arm",3
+RAB6A,"p53 program, induction arm",3
+RALGAPB,"p53 program, induction arm",3
+RAPGEF6,"p53 program, induction arm",3
+RBPJ,"p53 program, induction arm",3
+RC3H1,"p53 program, induction arm",3
+RETSAT,"p53 program, induction arm",3
+REV3L,"p53 program, induction arm",3
+RFPL3S,tracks MG53 genome-wide,3
+RGL1,"p53 program, induction arm",3
+RIC1,"p53 program, induction arm",3
+ROPN1L,tracks MG53 genome-wide,3
+RPL23AP53,"p53 program, induction arm",3
+SCUBE2,tracks MG53 genome-wide,3
+SDHA,"p53 program, induction arm",3
+SH2D4B,tracks MG53 genome-wide,3
+SHOC2,"p53 program, induction arm",3
+SLC2A14,tracks MG53 genome-wide,3
+SLC30A1,"p53 program, induction arm",3
+SLC6A13,tracks MG53 genome-wide,3
+SLC8A2,tracks MG53 genome-wide,3
+SMAD5,"p53 program, induction arm",3
+SMG6,"p53 program, induction arm",3
+SNX2,"p53 program, induction arm",3
+SNX31,tracks MG53 genome-wide,3
+SPATA32,tracks MG53 genome-wide,3
+SPTBN5,tracks MG53 genome-wide,3
+SPX,tracks MG53 genome-wide,3
+SRA1,"p53 program, induction arm",3
+STAT3,"p53 program, induction arm",3
+STPG4,tracks MG53 genome-wide,3
+STX6,"p53 program, induction arm",3
+SUSD6,"p53 program, induction arm",3
+SYT16,tracks MG53 genome-wide,3
+TAB3,"p53 program, induction arm",3
+TAF3,"p53 program, induction arm",3
+TLE4,"p53 program, induction arm",3
+TLL2,tracks MG53 genome-wide,3
+TM7SF3,"p53 program, induction arm",3
+TMEFF1,"p53 program, induction arm",3
+TMEM131,"p53 program, induction arm",3
+TMEM68,"p53 program, induction arm",3
+TMPRSS9,tracks MG53 genome-wide,3
+TNKS,"p53 program, induction arm",3
+TRAF3IP2-AS1,"p53 program, induction arm",3
+UBA6,"p53 program, induction arm",3
+USP15,"p53 program, induction arm",3
+VWCE,tracks MG53 genome-wide,3
+WDR48,"p53 program, induction arm",3
+WWP1,"p53 program, induction arm",3
+XG,tracks MG53 genome-wide,3
+ZFPM1,"p53 program, induction arm",3
+ZFYVE1,"p53 program, induction arm",3
+ZNF195,"p53 program, induction arm",3
+ZNF37A,"p53 program, induction arm",3
+ZNF423,"p53 program, induction arm",3
+ZNF44,"p53 program, induction arm",3
+ZNF503-AS1,tracks MG53 genome-wide,3
+ZNF654,"p53 program, induction arm",3
+ZNF79,"p53 program, induction arm",3
