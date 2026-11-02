@@ -7,7 +7,9 @@ everything comes from a run's output folder (`~/Tahoe-100M/mg53_p53` by default)
 |---|---|
 | `MG53_p53_TABLES.md` | The three correlation tables: MG53 -> p53 targets in wild-type lines (A), what moves MG53 (B), and MG53 -> p53 split by how much p53 activity each mutant retains (C). Plus how far p53 is disabled across the panel. |
 | `FINDINGS.md` | The long write-up: how the run reproduces the committed tables, upstream of MG53, downstream of MG53, how to read the 24 h snapshot, using the exported data, and what is left open. |
+| `MDM2_MG53.md` | MDM2 against MG53 at every resolution the data allow: baseline across lines, exposure level and change, per line within an exposure, and the genome-wide screen. Includes the plate decomposition that explains the one large number, and the all-gene placebo that places MDM2 among ordinary genes. |
 | `make_tables.py` | Regenerates every number in `MG53_p53_TABLES.md` into `tables/`. |
+| `mdm2_mg53_levels.py` | Regenerates every number in `MDM2_MG53.md` into `tables/`. |
 | `tables/*.csv` | The tables as CSV. |
 
 Regenerate the tables on your own machine:
@@ -110,3 +112,21 @@ Not computable from a run's output alone: per-arm placebo-gene pseudo-controls (
 place inside each arm) need per-line values for arbitrary genes, which only `export/all_genes` on the full
 data provides. `genome_wide/tables/c_placebos.csv` has 200 placebo exposures at the wild-type / altered split
 only.
+
+## MDM2 against MG53
+
+`MDM2_MG53.md`, `mdm2_mg53_levels.py`, and nine `tables/mdm2_mg53_*.csv`.
+
+MDM2 is a p53 **regulator**, not a reading of p53's output — p53 induces it, and the MDM2 protein then
+degrades p53 — so a link to MG53 would point toward p53 rather than away from it. It is also the
+best-measured gene in the analysis (185.8 CPM, all 50 lines, moved up by 96 of 98 compounds), and it carries
+the largest p53-activation fold change of all 195 program genes.
+
+The short answer is no link, with the measurement proving itself along the way: MDM2's baseline runs **3.07x
+higher in TP53-wild-type lines than in TP53-altered ones** (p 3.4e-12), exactly as the p53 feedback loop
+predicts, while MG53's baseline shows nothing (1.08x, p 0.77). Across MG53 fold-change deciles MDM2 stays
+within 2% of 1.00 with no trend; the one large number, a -0.614 correlation between the two genes' CPM, is a
+plate batch effect in full (between plate medians -0.763, within plate **+0.074**); and in the all-gene
+placebo MDM2 sits at the 26th percentile for change and the 9th for level, which is to say ordinary. The
+screen's -0.35% per doubling is the smallest slope of the eight effectors that cleared the threshold and is
+the same size in lines whose p53 cannot induce MDM2 at all.
