@@ -54,6 +54,17 @@ curated 21-gene panel plus the classic effectors it omits), each with its fold c
 activator, its wild-type-minus-altered difference, and MG53's slope on it. Grouped by what each gene does
 once p53 is active. Start here.
 
+**Direction first.** Every per-gene table carries `p53_direction` (induced or repressed by p53),
+`p53_direction_source`, `frac_compounds_wt_up`, `direction_is_mixed` and `mg53_effect_on_p53_output`.
+"Up with MG53" means *more* p53 output for a p53-induced gene and *less* for a p53-repressed one, so only
+the signed column can be added across genes. Signed, the 67 program genes with a verdict split **35 toward
+more p53 output and 32 toward less** — an even split, which is what a non-specific association looks like
+and not what a coherent change in p53 output would look like. `tables/tableD_signed_tally.csv` and
+`tables/p53_effectors_signed_tally.csv` hold the counts. And direction is not uniform: **65 of the 195
+program genes, and 11 of the 29 canonical effectors, are moved up by between 35% and 65% of the 98
+compounds** — BAX among them, at 54% — so for a third of the program the direction is not a fact about the
+gene.
+
 `tables/tableD_p53_target_genes.csv` — the full set: one row per gene in the data-defined p53 program (195:
 180 induction arm, 15 repression arm), 67 columns, generated and documented by `table_d()` in
 `make_tables.py`. Per gene it carries the p53-activation fold change, the wild-type-minus-altered

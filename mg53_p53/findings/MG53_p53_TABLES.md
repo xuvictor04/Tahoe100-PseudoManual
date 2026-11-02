@@ -172,6 +172,15 @@ The companion `tables/tableD_p53_target_genes.csv` holds all 195 genes of the da
 and documented by `table_d()` in `make_tables.py`, with per-gene detectable-effect bounds and a readthrough
 geometry flag. This table is the focused one; see the full-program section below.
 
+**Read the direction columns before the slope columns.** Both tables carry `p53_direction` (induced or
+repressed by p53), `p53_direction_source`, `frac_compounds_wt_up`, `direction_is_mixed`, and
+`mg53_effect_on_p53_output` — MG53's slope re-expressed in p53-output units rather than in the gene's own.
+The last of those is the only column that can be summed across genes: for a p53-repressed gene, "up with
+MG53" means *less* p53 output, so the raw verdict columns point opposite ways for the two arms. All 29 genes
+in this focused table happen to be p53-**induced** (26 by the data's own arm, 3 by curation), so for this
+table the signed and unsigned readings agree — but 11 of the 29 are direction-mixed, so the per-gene
+direction is not uniform even here. See the signed tally in the full-program section.
+
 ### Two fold changes, diluted in opposite ways
 
 Neither available fold change is clean, so both are given:
@@ -453,6 +462,50 @@ tested genes (27.04%) pass q_common and 5,746 (34.5%) pass q_xperm_common, again
 The one thing that differs is sign and size: the 4,447 non-program hits are 71.7% positive with a median
 `|b_common|` of 0.0153, while the program's hits split 24/29 with a median of 0.0037
 [`c_screen_genes.csv.gz`; recomputed]. The repressed arm is the same story on 15 genes (4 hits).
+
+### Signed by the direction p53 moves each gene — which is the only way to add these up
+
+A gene's MG53 slope is in that gene's own units, and "up with MG53" means opposite things in the two arms.
+For a gene **p53 induces**, more of it means more p53 output. For a gene **p53 represses**, more of it means
+**less**. An unsigned tally adds the two together, so it reads as noise whatever the truth is. Signed
+[`tables/tableD_signed_tally.csv`, `tables/p53_effectors_signed_tally.csv`]:
+
+| Direction p53 moves the gene | genes | with a verdict | **toward MORE p53 output** | **toward LESS** | direction mixed | membership unstable |
+|---|---|---|---|---|---|---|
+| induced by p53 (arm P) | 180 | 62 | **32** | **30** | 63 | 43 |
+| repressed by p53 (arm P-down) | 15 | 5 | **3** | **2** | 2 | 2 |
+| **all 195 program genes** | 195 | **67** | **35** | **32** | 65 | 45 |
+| *the 29 canonical effectors* | *29* | *8* | *5* | *3* | *11* | *3* |
+
+**35 against 32.** A coherent change in p53 output would push the two arms in opposite *gene-level*
+directions and so land almost entirely on one side of this split. It lands on both sides equally, in the
+full program and in the curated effector list alike. That is what a non-specific association looks like, and
+it is only visible once direction is accounted for — the unsigned "34 positive, 33 negative" above conceals
+the fact that three of those "positives" are repressed genes moving the p53-output score the other way.
+
+Where direction comes from, and what "mixed" means:
+
+- **Data-defined**, from the arm the gene was selected into. The two arms are disjoint, no gene is
+  significant in both directions (`q_up` and `q_down` are never both < 0.1), and the separation is wide:
+  induction-arm genes are moved up by 64–99% of the 98 compounds (median 79%), repression-arm genes moved
+  **down** by 70–81%.
+- **Curation agrees wherever it speaks.** Not one of the 15 repression-arm genes appears in any curated
+  p53-activated set, including CollecTRI's 723 TP53 targets — so `direction_conflicts_curation` is **0 of
+  195**. Curation also fills the gaps: PMAIP1 (NOXA), TP53I3 and SPATA18 are canonical targets that the
+  data-defined program does not contain, and without the curated fallback they would drop out of a signed
+  tally for want of a sign. `p53_direction_source` records which applied.
+- **Mixed is a property of the gene, not a defect.** `frac_compounds_wt_up` is the share of the 98 compounds
+  that move the gene up in wild-type lines; at 0.5 the gene goes each way equally often and its direction is
+  not a fact about the gene. **65 of 195 program genes** sit between 0.35 and 0.65, and so do **11 of the 29
+  canonical effectors** — among them **BAX at 0.541**, EDA2R 0.541, RPS27L 0.510, XPC 0.571, PMAIP1 0.571,
+  GDF15 0.592, TRIAP1 0.612, PHLDA3 0.622 and GADD45A 0.633. A canonical p53 apoptosis target moving up in
+  only 54% of compounds is a caution about reading any single gene as a p53 readout.
+- **Program membership is often unstable, and that does not track the verdict.** `n_folds_kept` counts the
+  cross-fitting folds (of 5) in which a gene was re-selected. Of the 67 genes with a verdict, 20 were kept
+  in 0 or 1 folds — and those 20 split 11 toward less output and 9 toward more, the same even split as the
+  stable ones (15 against 20). `loco_frequency` is computed for the **induction arm only**, so every
+  repression-arm gene reads blank there and must be judged on `n_folds_kept` alone; of the five
+  repression-arm genes with a verdict, MBOAT1 was kept in 1 fold of 5 and SMC1A in 2.
 
 **How many by genotype: none.** 0 of 195 — and 0 of all 16,642 tested genes — reach q_diff < 0.1 or
 q_label_diff < 0.1. q_diff cannot even rank genes: 194 of the 195 sit at its minimum, 0.99879. On the

@@ -1,0 +1,3 @@
+p53_direction,n_genes,n_with_verdict,n_toward_more_p53_output,n_toward_less_p53_output,n_direction_mixed,n_membership_unstable,reading
+induced by p53,29,8,5,3,11,3,a coherent shift in p53 output would push the induction and repression arms in OPPOSITE gene-level directions and so land on ONE side of this split; an even split is what a non-specific association looks like
+ALL,29,8,5,3,11,3,a coherent shift in p53 output would push the induction and repression arms in OPPOSITE gene-level directions and so land on ONE side of this split; an even split is what a non-specific association looks like

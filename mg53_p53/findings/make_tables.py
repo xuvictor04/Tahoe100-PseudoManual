@@ -251,6 +251,110 @@ P53_EFFECTOR_ROLE = {
 }
 
 
+#: Curated sets that assert a gene is p53-ACTIVATED. There is no curated p53-REPRESSED set in the run, so
+#: repression is data-defined only, and a gene in one of these that lands in the repression arm is a
+#: literature-versus-data conflict worth flagging rather than resolving.
+CURATED_ACTIVATED = ["OVERLAY_CollecTRI_TP53_activated", "OVERLAY_P53_ACTIVITY21",
+                     "OVERLAY_GM_p53_primary", "OVERLAY_GM_p53_secondary", "OVERLAY_GM_p53_all"]
+
+
+def sign_by_p53_direction(g, res, bcol="b_common", qcol=None):
+    """Add the direction of p53 regulation, and re-express MG53's slope in p53-OUTPUT units.
+
+    Why this is necessary. A gene's MG53 slope is in the gene's own units, and "up with MG53" means opposite
+    things depending on which way p53 moves that gene. For a p53-INDUCED gene, more of it means more p53
+    output. For a p53-REPRESSED gene, more of it means LESS p53 output. Tallying slopes without signing them
+    adds the two together and reads as noise either way, so the signed column is the only one that can be
+    summed across genes.
+
+    Direction comes from the data-defined program arm: induction (in_P, 180 genes, moved up by 64-99% of the
+    98 reference compounds) or repression (in_P_down, 15 genes, moved DOWN by 70-81%). The two are disjoint
+    and no gene is significant in both directions (q_up and q_down are never both < 0.1), so in this data
+    the arms are clean. Curation agrees where it speaks: no repression-arm gene appears in any of the curated
+    p53-activated sets, including CollecTRI's 723 TP53 targets.
+
+    Mixedness is reported rather than resolved, because it is a property of the gene and not a defect:
+      frac_compounds_wt_up      the share of the 98 compounds that move the gene UP in wild-type lines. At
+                                0.5 the gene goes each way equally often and its direction is not a fact.
+      direction_is_mixed        set when that share sits between 0.35 and 0.65, or when the data arm
+                                contradicts a curated activated set.
+      program_membership_stable n_folds_kept is the number of the 5 cross-fitting folds in which the gene
+                                was re-selected into the program. A gene at 0 or 1 is in the full-data
+                                program but almost none of the cross-fitted ones, so its direction label is
+                                itself unstable. loco_frequency is the same idea over 98 leave-one-compound-
+                                out programs - but it is computed for the INDUCTION arm only, so every
+                                repression-arm gene reads NaN and must be judged on n_folds_kept alone.
+    """
+    cur = pd.read_csv(os.path.join(res, "export/downstream/overlay/curated_sets.csv"))
+    act = set(cur.loc[cur["set"].isin(CURATED_ACTIVATED), "gene"].astype(str))
+    if "arm" in g.columns:                                        # the program tables carry a named arm
+        arm = g["arm"].astype(str)
+        rep, ind = arm.str.contains("down", case=False), arm.str.contains("up", case=False)
+    else:                                                         # the genome-wide tables carry the flags
+        rep = g["in_P_down"] == True if "in_P_down" in g.columns else pd.Series(False, index=g.index)
+        ind = g["in_P"] == True if "in_P" in g.columns else pd.Series(False, index=g.index)
+    rep, ind = rep.fillna(False), ind.fillna(False)               # noqa: E712
+    g["curated_calls_p53_activated"] = g["symbol"].isin(act)
+    # Where the data-defined program gives no direction, fall back to curation. Several canonical targets
+    # (PMAIP1/NOXA and TP53I3 among them) are not in the data-defined program at all, so without this they
+    # would be dropped from a signed tally for want of a sign - even though their direction is not in doubt.
+    cur_only = ~rep & ~ind & g["curated_calls_p53_activated"]
+    g["p53_direction"] = np.where(rep, "repressed by p53",
+                                  np.where(ind | cur_only, "induced by p53", "not in the program"))
+    g["p53_direction_source"] = np.where(rep | ind, "data: the program arm it was selected into",
+                                         np.where(cur_only, "curated p53-activated set (not in the"
+                                                            " data-defined program)", "none available"))
+    g["p53_direction_sign"] = np.where(rep, -1, np.where(ind | cur_only, 1, 0))
+    wtup = (pd.to_numeric(g["frac_compounds_wt_up"], errors="coerce") if "frac_compounds_wt_up" in g.columns
+            else pd.Series(np.nan, index=g.index, dtype=float))
+    g["frac_compounds_wt_up"] = wtup
+    conflict = rep & g["curated_calls_p53_activated"]
+    g["direction_conflicts_curation"] = conflict
+    g["direction_is_mixed"] = (wtup.between(0.35, 0.65) | conflict).fillna(False)
+    nf = (pd.to_numeric(g["n_folds_kept"], errors="coerce") if "n_folds_kept" in g.columns
+          else pd.Series(np.nan, index=g.index, dtype=float))
+    g["program_membership_stable"] = np.where(nf.isna(), "unknown",
+                                              np.where(nf >= 4, "stable (4-5 of 5 folds)",
+                                                       np.where(nf >= 2, "partial (2-3 of 5)",
+                                                                "unstable (0-1 of 5)")))
+    # The signed verdict. Only meaningful where the slope cleared its threshold AND the gene has a direction.
+    b = pd.to_numeric(g[bcol], errors="coerce")
+    hit = pd.to_numeric(g[qcol], errors="coerce") < 0.1 if qcol else b.notna()
+    toward = np.sign(b) * g["p53_direction_sign"]
+    g["mg53_effect_on_p53_output"] = np.where(
+        ~hit | (g["p53_direction_sign"] == 0), "none",
+        np.where(toward > 0, "toward MORE p53 output", "toward LESS p53 output"))
+    return g
+
+
+def signed_tally(t, out, name="p53_direction_signed_tally.csv"):
+    """The point of signing: how the genes with a verdict split once direction is accounted for."""
+    rows = []
+    for arm, s in t.groupby("p53_direction"):
+        v = s[s["mg53_effect_on_p53_output"] != "none"]
+        rows.append(dict(p53_direction=arm, n_genes=len(s), n_with_verdict=len(v),
+                         n_toward_more_p53_output=int((v["mg53_effect_on_p53_output"]
+                                                       == "toward MORE p53 output").sum()),
+                         n_toward_less_p53_output=int((v["mg53_effect_on_p53_output"]
+                                                       == "toward LESS p53 output").sum()),
+                         n_direction_mixed=int(s["direction_is_mixed"].sum()),
+                         n_membership_unstable=int((s["program_membership_stable"]
+                                                    == "unstable (0-1 of 5)").sum())))
+    tot = pd.DataFrame(rows)
+    allv = t[t["mg53_effect_on_p53_output"] != "none"]
+    tot.loc[len(tot)] = dict(
+        p53_direction="ALL", n_genes=len(t), n_with_verdict=len(allv),
+        n_toward_more_p53_output=int((allv["mg53_effect_on_p53_output"] == "toward MORE p53 output").sum()),
+        n_toward_less_p53_output=int((allv["mg53_effect_on_p53_output"] == "toward LESS p53 output").sum()),
+        n_direction_mixed=int(t["direction_is_mixed"].sum()),
+        n_membership_unstable=int((t["program_membership_stable"] == "unstable (0-1 of 5)").sum()))
+    tot["reading"] = ("a coherent shift in p53 output would push the induction and repression arms in"
+                      " OPPOSITE gene-level directions and so land on ONE side of this split; an even split"
+                      " is what a non-specific association looks like")
+    tot.to_csv(os.path.join(out, name), index=False)
+    return tot
+
+
 def p53_effectors(res, out):
     """The canonical p53 effector genes only, each with its fold change and MG53's slope on it.
 
@@ -311,7 +415,11 @@ def p53_effectors(res, out):
     g["mg53_common_verdict"] = np.where(qc >= 0.1, "none",
                                         np.where(g["b_common"] > 0, "positive", "negative"))
     g["mg53_genotype_verdict"] = np.where(qd < 0.1, "differs by TP53 status", "none")
-    cols_out = ["symbol", "role", "in_curated_panel", "arm", "n_folds_kept", "median_line_cpm",
+    g = sign_by_p53_direction(g, res, "b_common", "q_xperm_common")
+    cols_out = ["symbol", "role", "p53_direction", "p53_direction_source", "direction_is_mixed", "frac_compounds_wt_up",
+                "curated_calls_p53_activated", "direction_conflicts_curation",
+                "mg53_effect_on_p53_output", "program_membership_stable",
+                "in_curated_panel", "arm", "n_folds_kept", "median_line_cpm",
                 "wt_mean_log2", "fold_WT_broad", "wt_minus_alt_log2", "ida5_log2", "fold_ida5",
                 "best_activator", "best_log2", "z_program", "q_up", "loco_frequency",
                 "b_common", "se_common", "q_common", "q_xperm_common", "mg53_common_verdict",
@@ -319,6 +427,7 @@ def p53_effectors(res, out):
                 "placebo_pct_common_expression", "placebo_pct_common_response"]
     t = g[[c for c in cols_out if c in g.columns]].sort_values("ida5_log2", ascending=False)
     t.to_csv(os.path.join(out, "p53_effectors_per_gene.csv"), index=False)
+    signed_tally(t, out, "p53_effectors_signed_tally.csv")
     return t
 
 
@@ -433,6 +542,13 @@ def table_d(res, out):
             dc == "sense_exposed", "readthrough spillover risk (<= 20 kb 3' of a much higher same-strand"
                                    " gene)",
             np.where(near, "within 200 kb of the MG53 locus", "no readthrough geometry"))
+        # Direction of p53 regulation, and MG53's slope re-expressed in p53-output units. Without this the
+        # induction and repression arms are tallied against each other: see sign_by_p53_direction.
+        tab = tab.rename(columns={"screen_b_common": "b_common",
+                                  "screen_q_xperm_common": "q_xperm_common"})
+        tab = sign_by_p53_direction(tab, res, "b_common", "q_xperm_common")
+        tab = tab.rename(columns={"b_common": "screen_b_common",
+                                  "q_xperm_common": "screen_q_xperm_common"})
         return tab
 
     ov = {"overlay_OVERLAY_P53_ACTIVITY21": "curated_panel21",
@@ -480,6 +596,7 @@ def table_d(res, out):
     t["mg53_columns_are_circular"] = False
     os.makedirs(out, exist_ok=True)
     t.to_csv(os.path.join(out, "tableD_p53_target_genes.csv"), index=False)
+    signed_tally(t, out, "tableD_signed_tally.csv")
 
     # The other direction, for contrast: what MG53's level actually tracks genome-wide. The program selects
     # nothing here - the ranking is by |b_common| among the genes the screen itself calls hits.
