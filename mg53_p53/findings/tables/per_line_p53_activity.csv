@@ -1,0 +1,50 @@
+cell_line_id,cell_name,tp53_group,ind_P,p53_responsiveness_log2,tp53_class,functional_call,basal_p53_activity_log2,tp53_changes,activity_group
+CVCL_0459,NCI-H460,WT,0.1844100101530471,1.24641,WT,responsive,0.683204,,WT (functional p53)
+CVCL_0504,RKO,WT,0.16841869681411004,1.36924,WT,responsive,0.520933,,WT (functional p53)
+CVCL_0023,A549,WT,0.15800773881023247,0.976308,WT,responsive,1.44427,,WT (functional p53)
+CVCL_0099,SNU-1,WT,0.15350571451085984,1.05613,WT,responsive,0.33759,,WT (functional p53)
+CVCL_1056,A498,WT,0.15224870371768315,1.10423,WT,responsive,1.20822,,WT (functional p53)
+CVCL_1239,H4,WT,0.15004989286522982,0.706648,WT,uncertain (within 2 SE of the cut),0.751173,,WT (functional p53)
+CVCL_1724,SW48,WT,0.14986926504565656,1.06336,WT,responsive,0.850558,,WT (functional p53)
+CVCL_0131,A-172,WT,0.14747468703785127,0.722968,WT,uncertain (within 2 SE of the cut),1.10171,,WT (functional p53)
+CVCL_1097,C32,WT,0.14738856117395455,1.03869,WT,responsive,0.872298,,WT (functional p53)
+CVCL_0397,LS 180,WT,0.1445669641648358,0.948143,WT,responsive,1.11987,,WT (functional p53)
+CVCL_C466,hTERT-HPNE,WT,0.13469789454972894,0.937982,WT,responsive,0.910523,,WT (functional p53)
+CVCL_0399,LoVo,WT,0.11651400091689146,1.03459,WT,responsive,1.02382,,WT (functional p53)
+CVCL_1381,LOX-IMVI,WT,0.11642440316617556,0.716,WT,uncertain (within 2 SE of the cut),0.964511,,WT (functional p53)
+CVCL_1055,A-427,WT,0.09576190731383598,0.662603,WT,uncertain (within 2 SE of the cut),0.789047,,WT (functional p53)
+CVCL_1125,CHP-212,WT,0.08277998579149684,0.55649,WT,uncertain (within 2 SE of the cut),0.983633,,WT (functional p53)
+CVCL_1098,HepG2/C3A,WT,0.07630716229048773,0.894626,WT,responsive,0.79371,,WT (functional p53)
+CVCL_0359,J82,altered,0.026553001142751012,0.595494,altered: missense only,uncertain (within 2 SE of the cut),-0.293995,p.E271K; p.K320N,altered: higher activity
+CVCL_1547,NCI-H23,altered,0.02487280001988854,0.312948,altered: missense only,unresponsive,0.136708,p.M246I,altered: higher activity
+CVCL_0293,HEC-1-A,altered,0.022342812062599048,0.290136,altered: missense only,unresponsive,-0.511556,p.R248Q,altered: higher activity
+CVCL_1285,HOP62,altered,0.0196149971812094,0.339879,altered: truncating / splice / deletion,unresponsive,-0.38118,Splice_site,altered: higher activity
+CVCL_0179,BT-474,altered,0.018964910479921365,0.498875,altered: missense only,uncertain (within 2 SE of the cut),-0.208088,p.E285K,altered: higher activity
+CVCL_0428,MIA PaCa-2,altered,0.0188169852378604,0.466762,altered: missense only,uncertain (within 2 SE of the cut),-0.473911,p.R248W,altered: higher activity
+CVCL_0546,SW480,altered,0.01727836313332463,0.22384,altered: missense only,unresponsive,-0.27306,p.P309S; p.R273H,altered: higher activity
+CVCL_0332,HS-578T,altered,0.016778066250138796,0.327071,altered: missense only,unresponsive,-0.410607,p.V157F,altered: higher activity
+CVCL_1517,NCI-H2030,altered,0.016235176942478002,0.204369,altered: missense only,unresponsive,-0.0224558,p.G262V,altered: higher activity
+CVCL_1550,NCI-H2347,altered,0.015932566256158163,0.411308,altered: truncating / splice / deletion,unresponsive,0.613233,Thr125Thr; p.T125T,altered: higher activity
+CVCL_0480,PANC-1,altered,0.010461992667809606,0.256388,altered: missense only,unresponsive,-0.342992,p.R273H,altered: higher activity
+CVCL_1731,SW 900,altered,0.010270345930289915,0.307369,altered: truncating / splice / deletion,unresponsive,-0.345583,p.Q167*,altered: higher activity
+CVCL_0028,AN3 CA,altered,0.00991572720877214,0.468977,altered: truncating / splice / deletion,uncertain (within 2 SE of the cut),0.299698,p.G389W; p.R213Q; p.S90fs,altered: higher activity
+CVCL_1094,C-33 A,altered,0.008531468024790777,0.238313,altered: missense only,unresponsive,-0.373541,p.R273C,altered: higher activity
+CVCL_0334,Hs 766T,WT,0.008382771173678354,0.160859,WT,unresponsive,-0.281508,,WT (functional p53)
+CVCL_0069,SK-MEL-2,altered,0.00822809353907844,0.121607,altered: missense only,unresponsive,-0.121144,p.G245S,altered: higher activity
+CVCL_1717,SW1417,altered,0.008178071500322293,0.194375,altered: truncating / splice / deletion,unresponsive,-0.0917137,p.C238fs,altered: higher activity
+CVCL_1635,Panc 03.27,altered,0.006920242531840858,0.260606,altered: truncating / splice / deletion,unresponsive,-0.197149,375+5G>T,altered: higher activity
+CVCL_0320,HT-29,altered,0.0038660825941994157,0.0545397,altered: missense only,unresponsive,0.0812758,p.R273H,altered: higher activity
+CVCL_1666,RPMI-7951,altered,0.003849880514898476,0.284418,altered: truncating / splice / deletion,unresponsive,-0.145409,p.S166*,altered: lower activity
+CVCL_0371,KATO III,altered,0.0035629928161851547,0.187618,altered: truncating / splice / deletion,unresponsive,-0.119684,DEL,altered: lower activity
+CVCL_1478,NCI-H1573,altered,0.0016925717732720286,0.221295,altered: missense only,unresponsive,-0.685082,p.R248L,altered: lower activity
+CVCL_0366,SNU-423,altered,0.0005486754564122415,0.13599,altered: truncating / splice / deletion,unresponsive,-0.161284,Splice_site,altered: lower activity
+CVCL_1119,CFPAC-1,altered,0.00036454243692468505,0.268889,altered: missense only,unresponsive,-0.448353,p.C242R,altered: lower activity
+CVCL_0292,HCT15,altered,-0.001231131167171186,0.167405,altered: truncating / splice / deletion,unresponsive,-0.063694,Splice_site; p.S241F,altered: lower activity
+CVCL_0152,AsPC-1,altered,-0.006339934241881574,0.288299,altered: truncating / splice / deletion,unresponsive,-0.565493,p.C135fs,altered: lower activity
+CVCL_0218,COLO 205,altered,-0.007953819955400713,0.168028,altered: truncating / splice / deletion,unresponsive,-0.627406,p.Y103fs; p.Y107fs,altered: lower activity
+CVCL_1495,NCI-H1792,altered,-0.008750122747314765,0.170337,altered: truncating / splice / deletion,unresponsive,-0.481835,Splice_site,altered: lower activity
+CVCL_1531,NCI-H2122,altered,-0.011744188686906224,0.263996,altered: missense only,unresponsive,0.639711,p.C176F; p.Q16L,altered: lower activity
+CVCL_1693,SHP-77,altered,-0.01253009149595296,0.151371,altered: missense only,unresponsive,-0.171575,p.C176W,altered: lower activity
+CVCL_1571,NCI-H596,altered,-0.016050951189740936,,altered: missense only,not measured,0.0950998,p.G245C,altered: lower activity
+CVCL_1716,SW 1271,altered,-0.03505703693520647,0.0409434,altered: missense only,unresponsive,0.169565,p.C277F,altered: lower activity
+CVCL_1715,SW 1088,altered,-0.048496287152596615,0.256044,altered: missense only,unresponsive,-0.695352,p.R273C,altered: lower activity

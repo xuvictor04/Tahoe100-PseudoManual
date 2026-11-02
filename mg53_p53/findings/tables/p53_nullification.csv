@@ -1,0 +1,7 @@
+measure,value,note,basis
+TP53 driver mutation,33/50,"genotype, from Tahoe cell_line_metadata",list-based
+functionally responsive lines,11/50,gene-panel call; every responsive line is genotype-WT,list-based
+"median responsiveness, WT vs altered (log2)",0.948 vs 0.256 (3.7x),Mann-Whitney p 3.1e-07; ranking is genotype-blind,list-based
+altered lines retaining a response,0/33,no TP53-altered line is called responsive,list-based
+genotype-WT lines not fully responsive,6/17,p53 damped without a TP53 mutation,list-based
+genotype-WT lines with CDKN2A/ARF loss,9/17,a second route to lowering p53 activity,list-based

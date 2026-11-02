@@ -1,0 +1,39 @@
+category,driver,detail,statistic,value,basis,direction
+"readthrough spillover (positional, not regulation)",PYCARD-AS1,"upstream (5'), same strand, 10.6 kb, 1.42 CPM",r with MG53 across drug-doses,0.7224,data-defined,positive
+"readthrough spillover (positional, not regulation)",FUS,"upstream (5'), same strand, 17.1 kb, 252.30 CPM",r with MG53 across drug-doses,0.6318,data-defined,positive
+"readthrough spillover (positional, not regulation)",ITGAM,"downstream (3'), same strand, 28.4 kb, 1.30 CPM",r with MG53 across drug-doses,0.5303,data-defined,positive
+"readthrough spillover (positional, not regulation)",ITGAX,"downstream (3'), same strand, 123.6 kb, 1.97 CPM",r with MG53 across drug-doses,0.05703,data-defined,none / weak
+"readthrough spillover (positional, not regulation)",PYCARD,"upstream (5'), OPPOSITE strand, 10.6 kb, 2.03 CPM",r with MG53 across drug-doses,-0.1025,data-defined,none / weak
+"readthrough spillover (positional, not regulation)",genome-wide readthrough index,Spearman over drug-doses: DoG raw index vs TRIM72 z,Spearman vs MG53 z,0.4511,data-defined,positive
+"readthrough spillover (positional, not regulation)",antisense control,Spearman over drug-doses: DoG antisense index vs TRIM72 z,Spearman vs MG53 z,-0.05186,data-defined,none / weak
+drug,Idarubicin (hydrochloride) 5 uM,"plates plate14,plate6; z 15.89",corrected log2 fold,3.6132538,data-defined,positive
+drug,Homoharringtonine 5 uM,"plates plate14,plate6; z 14.77",corrected log2 fold,3.358899,data-defined,positive
+drug,Auranofin 5 uM,plates plate12; z 8.43,corrected log2 fold,2.7130983,data-defined,positive
+drug,Homoharringtonine 0.5 uM,plates plate5; z 7.93,corrected log2 fold,2.553393,data-defined,positive
+drug,Dinaciclib 5 uM,plates plate9; z 7.40,corrected log2 fold,2.478055,data-defined,positive
+drug,Epirubicin (hydrochloride) 5 uM,plates plate9; z 6.49,corrected log2 fold,2.1751714,data-defined,positive
+drug,Ponatinib 5 uM,plates plate12; z -4.21,corrected log2 fold,-1.3401115,data-defined,negative
+drug,Anethole trithione 5 uM,"plates plate14,plate6; z -3.22",corrected log2 fold,-0.7201686,data-defined,negative
+drug,Cabozantinib (S-malate) 5 uM,plates plate12; z -3.15,corrected log2 fold,-1.0016257,data-defined,negative
+drug,Trametinib (DMSO_TF solvate) 0.05 uM,plates plate7; z -3.07,corrected log2 fold,-1.0543118,data-defined,negative
+transcription factor (regulon activity),ATF4,after removing shared AP-1/IEG/ATF3 targets: 0.09,r across drug-doses,0.36,list-based,positive
+transcription factor (regulon activity),ATF5,after removing shared AP-1/IEG/ATF3 targets: 0.07,r across drug-doses,0.36,list-based,positive
+transcription factor (regulon activity),XBP1,after removing shared AP-1/IEG/ATF3 targets: 0.04,r across drug-doses,0.29,list-based,positive
+transcription factor (regulon activity),ELK4,after removing shared AP-1/IEG/ATF3 targets: –,r across drug-doses,0.35,list-based,positive
+transcription factor (regulon activity),SRF,after removing shared AP-1/IEG/ATF3 targets: 0.17,r across drug-doses,0.31,list-based,positive
+transcription factor (regulon activity),AP1,after removing shared AP-1/IEG/ATF3 targets: –,r across drug-doses,0.2,list-based,positive
+transcription factor (regulon activity),NFKB,after removing shared AP-1/IEG/ATF3 targets: -0.24,r across drug-doses,0.15,list-based,none / weak
+transcription factor (regulon activity),HSF1,after removing shared AP-1/IEG/ATF3 targets: 0.07,r across drug-doses,0.22,list-based,positive
+transcription factor (regulon activity),E2F4,after removing shared AP-1/IEG/ATF3 targets: -0.05,r across drug-doses,0.03,list-based,none / weak
+transcription factor (regulon activity),MYC,after removing shared AP-1/IEG/ATF3 targets: 0.02,r across drug-doses,0.17,list-based,positive
+transcription factor (regulon activity),MEF2A (muscle; known TRIM72 promoter TF),after removing shared AP-1/IEG/ATF3 targets: -0.01,r across drug-doses,0.13,list-based,none / weak
+transcription factor (regulon activity),MEF2C,after removing shared AP-1/IEG/ATF3 targets: 0.09,r across drug-doses,0.21,list-based,positive
+transcription factor (regulon activity),MEF2D,after removing shared AP-1/IEG/ATF3 targets: -0.13,r across drug-doses,0.15,list-based,none / weak
+transcription factor (regulon activity),MYOD1 (muscle; known TRIM72 promoter TF),after removing shared AP-1/IEG/ATF3 targets: -0.04,r across drug-doses,0.09,list-based,none / weak
+transcription factor (regulon activity),MYOG (muscle; known TRIM72 promoter TF),after removing shared AP-1/IEG/ATF3 targets: -0.28,r across drug-doses,-0.07,list-based,none / weak
+untreated level across cell lines,PYCARD-AS1,organ-adjusted 0.817,Spearman across lines,0.8206,data-defined,positive
+untreated level across cell lines,CPLX4,organ-adjusted 0.744,Spearman across lines,0.74194,data-defined,positive
+untreated level across cell lines,FNDC7,organ-adjusted 0.766,Spearman across lines,0.72773,data-defined,positive
+data-driven program,PROG_P24,within-line slope +0.0297 (p 1.3e-10),r across drug-doses,0.767756,data-defined,positive
+data-driven program,PROG_P29,within-line slope +0.0125 (p 0.001),r across drug-doses,0.559428,data-defined,positive
+data-driven program,PROG_P43,within-line slope +0.0108 (p 0.0004),r across drug-doses,0.49257,data-defined,positive
