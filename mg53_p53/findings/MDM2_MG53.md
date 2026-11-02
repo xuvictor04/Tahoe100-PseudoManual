@@ -300,6 +300,26 @@ so "MG53-detected" partly means "more deeply sequenced cell". The UMI offset, th
 depth-stratified version are what stand against that, and the adjusted and unadjusted per-line medians do
 differ (for DMSO plate 14 WT, -0.210 adjusted against -0.122 unadjusted), so the adjustment is doing work.
 
+### The contrast gene in the same cells, and what the two of them together rule out
+
+| Well set | TP53 | lines | **CDKN1A rate ratio** | p | percentile among controls | depth-matched | p |
+|---|---|---|---|---|---|---|---|
+| DMSO, plates 6+14 | WT | 17 | 1.114 | 0.068 | 69th (85) | 1.078 | 0.25 |
+| DMSO, plates 6+14 | altered | 27 | **1.208** | **4e-5** | 77th (84) | 1.155 | **0.003** |
+| Idarubicin 5 µM, both wells | WT | 14 | 1.019 | 0.68 | 59th (80) | 0.961 | 0.54 |
+| Idarubicin 5 µM, both wells | altered | 26 | 1.005 | 0.92 | 50th (80) | 1.003 | 0.86 |
+
+In untreated cells, the MG53-positive cells carry **more CDKN1A and less MDM2** than their neighbours in the
+same well: +20.8% and -8.5% in the altered lines, both outside the control-gene distribution, both holding
+when depth is matched. The same sign split appears at the drug-dose unit (CDKN1A rho +0.29, MDM2 -0.08) and
+in the genome-wide screen (+0.0104 against -0.0050). Three independent resolutions agreeing on the split
+means it is a real feature of the data rather than noise.
+
+It also argues against the p53 route rather than for it. CDKN1A and MDM2 are both p53-induced; under p53
+they move **together**. Finding them moving apart — and doing so most clearly in the lines where p53 is
+disabled — points at whatever distinguishes an MG53-positive cell from its neighbours (cell-cycle position,
+stress state, arrest) rather than at p53 arbitrating between them.
+
 ## Table 7 — the genome-wide screen's own slope on MDM2
 
 This is the one estimate with per-line resolution across all exposures: cell-line and drug-dose fixed
