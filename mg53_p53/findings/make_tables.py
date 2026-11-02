@@ -236,6 +236,85 @@ def nullification(ind, ls, res, out):
     return t
 
 
+# Canonical p53 effectors, grouped by what they do once p53 is active. The grouping is literature
+# annotation, not derived from Tahoe; it is an overlay for reading the table, and selects nothing.
+P53_EFFECTOR_ROLE = {
+    "CDKN1A": "cell-cycle arrest", "BTG2": "cell-cycle arrest", "GADD45A": "cell-cycle arrest",
+    "PLK3": "cell-cycle arrest", "CCNG1": "cell-cycle arrest",
+    "BAX": "apoptosis", "BBC3": "apoptosis", "PMAIP1": "apoptosis", "TNFRSF10B": "apoptosis",
+    "AEN": "apoptosis", "TP53INP1": "apoptosis", "TRIAP1": "apoptosis (anti-)", "EDA2R": "apoptosis",
+    "DDB2": "DNA repair", "POLH": "DNA repair", "XPC": "DNA repair", "RRM2B": "DNA repair",
+    "FDXR": "metabolism / redox", "TIGAR": "metabolism / redox", "SESN1": "metabolism / redox",
+    "TP53I3": "metabolism / redox", "ACER2": "metabolism / redox",
+    "MDM2": "negative feedback", "PPM1D": "negative feedback", "ZMAT3": "negative feedback",
+    "RPS27L": "other", "PHLDA3": "other", "GDF15": "other (secreted)",
+}
+
+
+def p53_effectors(res, out):
+    """The canonical p53 effector genes only, each with its fold change and MG53's slope on it.
+
+    This is the focused companion to the full 195-gene program table: the genes that actually carry out
+    p53's effects, rather than every gene the genome-wide selection picked up.
+
+    Two fold changes are reported because neither alone is clean, and they are diluted in opposite ways:
+      fold_WT_broad  2**wt_mean_log2 from the program table. WT lines only, but averaged over a broad
+                     drug-dose set in which most drug-doses do not activate p53, so it reads low.
+      fold_ida5      the drug-dose fold under idarubicin 5 uM, a strong p53 activator, from the per-gene
+                     per-drug-dose export. Activator-specific, but it is the median over ALL lines, and
+                     two-thirds of the panel is p53-dead, so it also reads low for the sharpest targets.
+    The clean quantity, WT lines only under one strong activator, needs a per-gene per-line extraction that
+    the export does not provide for arbitrary genes (only TRIM72 and the program scores reach that
+    granularity). See the open questions in FINDINGS.md.
+    """
+    gz = pd.read_csv(os.path.join(res, "genome_wide/tables/b_p53_program_genes.csv.gz"), low_memory=False)
+    sc = pd.read_csv(os.path.join(res, "genome_wide/tables/c_screen_genes.csv.gz"), low_memory=False)
+    cur = pd.read_csv(os.path.join(res, "export/downstream/overlay/curated_sets.csv"))
+    panel = set(cur.loc[cur["set"] == "OVERLAY_P53_ACTIVITY21", "gene"].astype(str))
+    keep = sorted(set(P53_EFFECTOR_ROLE) | panel)
+    g = gz[gz["symbol"].isin(keep)].copy()
+    g["role"] = g["symbol"].map(P53_EFFECTOR_ROLE).fillna("other")
+    g["in_curated_panel"] = g["symbol"].isin(panel)
+    g["arm"] = np.where(g["in_P"] == True, "P up",                                      # noqa: E712
+                        np.where(g["in_P_down"] == True, "P down", "not in program"))   # noqa: E712
+    up = [c for c in gz.columns if c.startswith("in_P_minus_fold")]
+    dn = [c for c in gz.columns if c.startswith("in_P_down_minus_fold")]
+    g["n_folds_kept"] = np.where(g["arm"] == "P down", g[dn].sum(axis=1), g[up].sum(axis=1))
+    g["fold_WT_broad"] = 2 ** g["wt_mean_log2"]
+    # fold under one strong activator, streamed because the per-drug-dose export is ~0.5 GB gzipped
+    ids = pd.read_csv(os.path.join(res, "export/downstream/genes.csv"), usecols=["gene", "symbol"])
+    want = set(ids.loc[ids["symbol"].isin(keep), "gene"])
+    cols = ["gene", "drug", "concentration_uM", "DD_lfc"]
+    chunks = [c[c["gene"].isin(want)] for c in
+              pd.read_csv(os.path.join(res, "export/downstream/genes_per_drugdose.csv.gz"),
+                          usecols=cols, chunksize=400_000)]
+    dd = pd.concat(chunks, ignore_index=True).merge(ids, on="gene", how="left")
+    ida = dd[dd["drug"].str.contains("Idarubicin", na=False) & np.isclose(dd["concentration_uM"], 5.0)]
+    best = dd.loc[dd.groupby("symbol")["DD_lfc"].idxmax()]
+    g = g.merge(ida.groupby("symbol")["DD_lfc"].first().rename("ida5_log2"), on="symbol", how="left")
+    g = g.merge(best.assign(best_activator=best["drug"] + " " + best["concentration_uM"].astype(str) + " uM")
+                [["symbol", "best_activator", "DD_lfc"]].rename(columns={"DD_lfc": "best_log2"}),
+                on="symbol", how="left")
+    g["fold_ida5"] = 2 ** g["ida5_log2"]
+    g = g.merge(sc[["symbol", "b_common", "se_common", "q_common", "b_WT", "b_alt", "diff", "se_diff",
+                    "q_diff", "q_label_diff", "placebo_pct_common_expression"]], on="symbol", how="left")
+    # verdict on MG53: the common slope uses q_common; the genotype-specific slope uses q_label_diff
+    # (permutation-calibrated) and falls back to q_diff where the label version is missing
+    qd = g["q_label_diff"].fillna(g["q_diff"])
+    g["mg53_common_verdict"] = np.where(g["q_common"] >= 0.1, "none",
+                                        np.where(g["b_common"] > 0, "positive", "negative"))
+    g["mg53_genotype_verdict"] = np.where(qd < 0.1, "differs by TP53 status", "none")
+    cols_out = ["symbol", "role", "in_curated_panel", "arm", "n_folds_kept", "median_line_cpm",
+                "wt_mean_log2", "fold_WT_broad", "wt_minus_alt_log2", "ida5_log2", "fold_ida5",
+                "best_activator", "best_log2", "z_program", "q_up", "loco_frequency",
+                "b_common", "se_common", "q_common", "mg53_common_verdict",
+                "b_WT", "b_alt", "diff", "se_diff", "q_diff", "q_label_diff", "mg53_genotype_verdict",
+                "placebo_pct_common_expression"]
+    t = g[[c for c in cols_out if c in g.columns]].sort_values("ida5_log2", ascending=False)
+    t.to_csv(os.path.join(out, "p53_effectors_per_gene.csv"), index=False)
+    return t
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--results", default=os.environ.get("MG53_RESULTS") or os.path.expanduser("~/Tahoe-100M/mg53_p53"),
@@ -263,7 +342,11 @@ def main():
     print(tc[["split", "group", "n_lines", "r", "slope", "slope_lo", "slope_hi", "direction"]].to_string(index=False))
     print("\np53 nullification across the panel")
     print(nullification(ind, ls, res, out).to_string(index=False))
-    print(f"\nwrote 6 CSVs to {out}")
+    print("\nCanonical p53 effectors, per gene (fold change and MG53's slope)")
+    pe = p53_effectors(res, out)
+    print(pe[["symbol", "role", "fold_ida5", "fold_WT_broad", "wt_minus_alt_log2", "b_common",
+              "q_common", "mg53_common_verdict", "mg53_genotype_verdict"]].to_string(index=False))
+    print(f"\nwrote 7 CSVs to {out}")
 
 
 if __name__ == "__main__":

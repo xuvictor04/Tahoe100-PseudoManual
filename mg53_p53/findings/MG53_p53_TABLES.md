@@ -160,3 +160,88 @@ output that cannot move in either direction.
   reported here as findings.
 - Actual cell death and survival are effectively unmeasured: the per-line composition shift does not track
   surviving cell counts (r −0.01), and the atlas corrects composition out by design.
+
+## Table D — per gene: the canonical p53 effectors
+
+`tables/p53_effectors_per_gene.csv` (29 genes). One row per gene that actually carries out p53's effects —
+the curated 21-gene P53_ACTIVITY panel plus the classic effectors it omits (PMAIP1, GADD45A, TNFRSF10B,
+TIGAR, PPM1D, BTG2, CCNG1). The `role` column groups them by what they do once p53 is active; that grouping
+is **literature annotation**, an overlay for reading the table, and selects nothing.
+
+The companion `tables/tableD_p53_target_genes_RAW.csv` holds all 195 genes of the data-defined program,
+including the many that are statistically selected but not known effectors. This table is the focused one.
+
+### Two fold changes, diluted in opposite ways
+
+Neither available fold change is clean, so both are given:
+
+| Column | What it is | How it is diluted |
+|---|---|---|
+| `fold_ida5` | the gene's fold change under idarubicin 5 uM, a strong p53 activator | it is the median over **all 50 lines**, and two-thirds of the panel is p53-dead, so the sharpest targets read low |
+| `fold_WT_broad` | `2**wt_mean_log2`, **wild-type lines only** | averaged over a broad drug-dose set in which most drug-doses do not activate p53, so everything reads low (median 1.06x) |
+
+The clean quantity — wild-type lines only, under one strong activator — needs a per-gene **per-line**
+extraction that the export does not provide for arbitrary genes (only TRIM72 and the program scores reach
+that granularity). That is a concrete pipeline addition, not a result that exists yet.
+
+### The table
+
+Sorted by fold change under idarubicin 5 uM. `b_common` is the MG53 slope on that gene (log2 of the gene per
+doubling of MG53); `diff` is the wild-type-minus-altered version.
+
+| Gene | Role | fold (ida 5 uM, all lines) | fold (WT, broad) | WT−alt log2 | MG53 b_common (q) | MG53 verdict | genotype verdict |
+|---|---|---|---|---|---|---|---|
+| SESN1 | metabolism / redox | **3.08x** | 1.14x | +0.134 | +0.0005 (0.92) | none | none |
+| TIGAR | metabolism / redox | **2.65x** | 1.21x | +0.179 | +0.0043 (0.36) | none | none |
+| FDXR | metabolism / redox | **2.06x** | 1.24x | +0.314 | +0.0025 (0.75) | none | none |
+| ZMAT3 | negative feedback | 1.98x | 1.20x | +0.218 | +0.0012 (0.80) | none | none |
+| POLH | DNA repair | 1.98x | 1.16x | +0.184 | +0.0021 (0.57) | none | none |
+| BTG2 | cell-cycle arrest | 1.94x | 1.15x | +0.261 | +0.0153 (0.106) | none | none |
+| XPC | DNA repair | 1.84x | 1.09x | +0.166 | +0.0004 (0.92) | none | none |
+| DDB2 | DNA repair | 1.82x | 1.14x | +0.206 | **−0.0075 (0.084)** | negative | none |
+| PMAIP1 (NOXA) | apoptosis | 1.82x | 1.06x | +0.019 | **+0.0081 (0.070)** | positive | none |
+| ACER2 | metabolism / redox | 1.75x | 1.11x | +0.238 | +0.0136 (0.100) | none | none |
+| PPM1D | negative feedback | 1.67x | 1.24x | +0.226 | −0.0020 (0.63) | none | none |
+| GADD45A | cell-cycle arrest | 1.57x | 1.11x | +0.126 | +0.0065 (0.36) | none | none |
+| TP53INP1 | apoptosis | 1.54x | 1.18x | +0.278 | −0.0058 (0.42) | none | none |
+| RRM2B | DNA repair | 1.46x | 1.13x | +0.155 | +0.0010 (0.80) | none | none |
+| TNFRSF10B (DR5) | apoptosis | 1.39x | 1.13x | +0.093 | +0.0039 (0.37) | none | none |
+| AEN | apoptosis | 1.36x | 1.17x | +0.182 | **+0.0090 (0.082)** | positive | none |
+| BAX | apoptosis | 1.33x | 1.06x | +0.143 | −0.0002 (0.98) | none | none |
+| EDA2R | apoptosis | 1.33x | 1.07x | +0.243 | +0.0051 (0.63) | none | none |
+| RPS27L | other | 1.32x | 1.02x | +0.135 | −0.0002 (0.95) | none | none |
+| PLK3 | cell-cycle arrest | 1.27x | 1.09x | +0.163 | +0.0076 (0.30) | none | none |
+| **CDKN1A (p21)** | cell-cycle arrest | 1.08x | 1.12x | +0.215 | **+0.0104 (0.031)** | **positive** | none |
+| GDF15 | other (secreted) | 1.08x | 1.07x | +0.170 | +0.0015 (0.86) | none | none |
+| **MDM2** | negative feedback | 1.06x | 1.25x | +0.257 | **−0.0050 (0.069)** | **negative** | none |
+| CCNG1 | cell-cycle arrest | 0.87x | 1.05x | +0.107 | −0.0017 (0.52) | none | none |
+| TP53I3 (PIG3) | metabolism / redox | 0.85x | 1.06x | +0.141 | **−0.0100 (0.090)** | negative | none |
+| TRIAP1 | apoptosis (anti-) | 0.81x | 1.08x | +0.142 | −0.0038 (0.36) | none | none |
+| BBC3 (PUMA) | apoptosis | 0.72x | 1.14x | +0.185 | +0.0017 (0.74) | none | none |
+| PHLDA3 | other | 0.54x | 1.08x | +0.254 | −0.0059 (0.21) | none | none |
+| SPATA18 | other | — | 1.05x | +0.154 | +0.0172 (0.196) | none | none |
+
+### What it says
+
+- **Every one of the 29 is a real p53 target in this data**: all have a positive wild-type-minus-altered
+  difference (+0.019 to +0.314 log2), so p53 status does drive them.
+- **Six of 29 reach q_common < 0.1 for an MG53 slope — and they split three positive, three negative.**
+  Positive: CDKN1A, PMAIP1, AEN. Negative: MDM2, DDB2, TP53I3. That is 21% against a genome-wide base rate
+  of 27% (4,500 of 16,642), i.e. slightly *below* chance, and the even sign split is what noise looks like.
+- **The two most canonical effectors point opposite ways**: CDKN1A +0.0104 (q 0.031) and MDM2 −0.0050
+  (q 0.069). If MG53 were damping p53's output, p21 and MDM2 would not move in opposite directions.
+- **Not one gene differs by TP53 status.** Every `mg53_genotype_verdict` is "none"; across all 195 program
+  genes the smallest q_diff is 0.999. No canonical effector shows a wild-type-specific MG53 slope.
+- **FDXR**, the one gene with a negative lean in the earlier list-based work, has `diff` −0.0213 — the
+  largest negative among the classics — but q 0.999 and a common slope of +0.0025 (q 0.75). It does not
+  survive multiplicity.
+
+### Caveats
+
+- The largest MG53 slope here, CDKN1A at +0.0104 log2 per doubling, is **+0.7% of p21 per doubling of MG53**
+  — and positive. Nothing in this table is of a size that would matter biologically even if it were real.
+- `wt_mean_log2`, `wt_minus_alt_log2` and program membership were all computed **using the TP53 wild-type /
+  altered labels**, so they are circular as measures of p53 specificity. `b_common`, `diff` and the q values
+  from the MG53 screen are not.
+- 24 h mRNA associations only: no MG53 perturbation, no protein data, every line carries wild-type MG53 at
+  trace level, and the effective sample is the 11-17 lines with functional p53.

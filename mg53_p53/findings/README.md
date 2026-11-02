@@ -47,7 +47,12 @@ it matters only because it means part of the measured MG53 signal is not MG53's 
 
 ## Per-gene tables
 
-`tables/tableD_p53_target_genes_RAW.csv` — one row per gene in the data-defined p53 program (195: 180 up
+`tables/p53_effectors_per_gene.csv` — **the focused per-gene table**: the 29 canonical p53 effectors (the
+curated 21-gene panel plus the classic effectors it omits), each with its fold change under a strong
+activator, its wild-type-minus-altered difference, and MG53's slope on it. Grouped by what each gene does
+once p53 is active. Start here.
+
+`tables/tableD_p53_target_genes_RAW.csv` — the full set: one row per gene in the data-defined p53 program (195: 180 up
 arm, 15 down arm), joining the program columns to the MG53 screen columns. A plain extraction of pipeline
 columns, no derived verdicts. Per gene it carries the p53-activation fold change (`wt_mean_log2`,
 `p53_fold_WT`), the WT-minus-altered difference (`wt_minus_alt_log2`), how many of the 5 cross-fitted folds
