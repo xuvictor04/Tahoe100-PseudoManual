@@ -82,3 +82,28 @@ reaches the wild-type median, 0.0 means it sits at the null.
 | `tables/tp53db_variant_function.csv` | NCI/IARC TP53-database function reports per variant (25 rows) |
 | `tables/wt_lines_annotation.csv` | the 17 genotype-WT lines: other routes that lower p53 (CDKN2A/ARF, MDM4, PPM1D, ATM, LKB1) |
 | `tables/null_reference_lines.csv` | the lines used as the zero-p53-output anchor |
+
+## The measurement: change in p53 activity per change in MG53, with a knockout-like control
+
+`mg53_to_p53_effect.py` and `tables/mg53_to_p53_effect.csv`.
+
+Tahoe has no engineered p53 knockout, but it has the next best thing: **10 lines whose only TP53 allele is
+truncated, splice-disrupted or deleted outright** (KATO III is a whole-gene deletion). Those cannot mount a
+p53 response, so any MG53 -> p53-activity slope measured in them is being produced by something other than
+p53. That makes them the control arm. A second, softer control is the 21 mutant lines retaining <= 15% of
+the wild-type-minus-null gap.
+
+Headline, over all drug-doses: in the 11 lines with functional p53, a **doubling of MG53 changes p53 activity
+by +0.095% (95% CI -0.11% to +0.30%)**. The knockout-controlled contrast (functional minus p53-null) is
++0.050% (-0.163 to +0.264). Both are indistinguishable from zero, and the arm could have detected 0.29%.
+
+The control does not merely come out null — it comes out **as large or larger than the functional arm**.
+Restricted to p53-activating drug-doses the p53-null control reads +0.225% (CI +0.007 to +0.443) while the
+functional arm reads -0.123%, and the low-activity mutants read +0.430% (CI +0.048 to +0.814). A slope that
+is biggest where there is no p53 to act on is not a p53-mediated effect; it is MG53 tracking overall
+transcriptional response amplitude.
+
+Not computable from a run's output alone: per-arm placebo-gene pseudo-controls (a matched gene put in MG53's
+place inside each arm) need per-line values for arbitrary genes, which only `export/all_genes` on the full
+data provides. `genome_wide/tables/c_placebos.csv` has 200 placebo exposures at the wild-type / altered split
+only.
