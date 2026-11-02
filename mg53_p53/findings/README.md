@@ -44,3 +44,15 @@ it matters only because it means part of the measured MG53 signal is not MG53's 
 - **Caveat on all of it:** these are associations in 24 h mRNA. Tahoe has no MG53 perturbation and no protein
   data, every line carries wild-type MG53 at trace level, and p53 itself is functionally disabled in about
   four-fifths of the panel — so the effective sample for any MG53 -> p53 test is 11 to 17 lines.
+
+## Per-gene tables
+
+`tables/tableD_p53_target_genes_RAW.csv` — one row per gene in the data-defined p53 program (195: 180 up
+arm, 15 down arm), joining the program columns to the MG53 screen columns. A plain extraction of pipeline
+columns, no derived verdicts. Per gene it carries the p53-activation fold change (`wt_mean_log2`,
+`p53_fold_WT`), the WT-minus-altered difference (`wt_minus_alt_log2`), how many of the 5 cross-fitted folds
+keep the gene (`n_folds_kept`), and MG53's slope on that gene (`b_common`, `q_common`, `b_WT`, `b_alt`,
+`diff`, `q_diff`, `q_label_diff`).
+
+Read `wt_mean_log2` with care: it is averaged over a broad set of drug-doses, most of which do not activate
+p53, so the median program gene reads only 1.06x. It is not the fold change under a strong p53 activator.
