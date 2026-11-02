@@ -49,6 +49,7 @@ The PP2A–MDM2 mechanism rests essentially on one 2002 study and the reviews th
 |---|---|
 | Median level across the 50 lines | 63.21 CPM |
 | Lines where detected | 50 of 50 |
+| Readthrough geometry | no same-strand neighbour close enough to spill into it |
 
 ### What p53 does to it
 
@@ -78,6 +79,7 @@ The PP2A–MDM2 mechanism rests essentially on one 2002 study and the reviews th
 | In TP53-wild-type lines / altered lines | -0.00383 / -0.00041 |
 | Verdict | none |
 | **Signed into p53-output units** | **none** |
+| Co-regulation with MG53 across exposures (r) | -0.192 raw, -0.107 with 3 PCs removed |
 
 > [!note] How to read the slope's sign
 > It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;

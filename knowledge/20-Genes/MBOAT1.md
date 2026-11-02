@@ -14,8 +14,25 @@ generated_by: knowledge/_build/build_vault.py
 
 # MBOAT1
 
-> [!abstract] Knowledge layer: needs a short written note
-> Nothing is written about this gene yet. Add `knowledge/20-Genes/_knowledge/MBOAT1.md` and rebuild; see [[How this vault is built]].
+> [!summary] In one line
+> MBOAT1 encodes an endoplasmic-reticulum lysophospholipid acyltransferase that re-acylates lyso-phosphatidylethanolamine and lyso-phosphatidylserine, setting the fatty-acid composition of membrane phospholipids.
+
+## What it is
+
+MBOAT1 runs the re-acylation half of the Lands cycle: a phospholipase strips the sn-2 acyl chain from a membrane phospholipid, and a membrane-bound O-acyltransferase puts a new one back. Also called LPEAT1 or LPSAT, it is a multipass ER membrane enzyme preferring lyso-phosphatidylethanolamine and lyso-phosphatidylserine as acceptors and oleoyl-CoA as donor, so its activity shifts membranes toward monounsaturated chains. That specificity gave it a second life in redox biology: MBOAT1 and its paralogue MBOAT2 were identified as ferroptosis suppressors acting independently of GPX4 and FSP1, depleting the polyunsaturated phospholipids that lipid peroxidation requires. In the same work MBOAT1 was reported to be driven transcriptionally by the oestrogen receptor.
+
+## Why it appears in this work
+
+It is carried here as a member of the repression arm of [[p53 program P]], which makes the sign of its slope matter more than the size — a positive coefficient on measured MG53 reads as *less* p53 output, not more. That inversion is the argument of [[Signing genes by p53 direction]].
+
+## What is uncertain
+
+Nothing establishes MBOAT1 as a direct p53 target: no response element at the locus has been reported, and a repression arm derived from expression behaviour collects genes that fall simply because growth and lipid synthesis fall under arrest. The ferroptosis role rests substantially on gain-of-function overexpression. And since its level tracks oestrogen-receptor status, a hormone-receptor covariate across these pooled lines could generate an association unrelated to p53.
+
+## References
+
+- Hishikawa et al., 2008, PNAS — defined the MBOAT lysophospholipid acyltransferase family, assigning MBOAT1 lyso-PE/lyso-PS acceptor preference.
+- Liang et al., 2023, Cell — MBOAT1 and MBOAT2 suppress ferroptosis independently of GPX4 and FSP1, and are induced by oestrogen and androgen receptor respectively.
 
 ## In this dataset
 
@@ -27,6 +44,7 @@ generated_by: knowledge/_build/build_vault.py
 |---|---|
 | Median level across the 50 lines | 21.93 CPM |
 | Lines where detected | 49 of 50 |
+| Readthrough geometry | no same-strand neighbour close enough to spill into it |
 
 ### What p53 does to it
 
@@ -56,6 +74,7 @@ generated_by: knowledge/_build/build_vault.py
 | In TP53-wild-type lines / altered lines | -0.01012 / -0.01139 |
 | Verdict | down with MG53 |
 | **Signed into p53-output units** | **toward MORE p53 output** |
+| Co-regulation with MG53 across exposures (r) | -0.519 raw, -0.097 with 3 PCs removed |
 
 > [!note] How to read the slope's sign
 > It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;

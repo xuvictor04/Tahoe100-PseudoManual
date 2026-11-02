@@ -11,9 +11,9 @@ PRKCG surfaces twice: among genes whose expression tracks measured [[MG53 (TRIM7
 
 ## What is uncertain
 
-Whether PRKCG is a p53 target at all. The label is curation; I know of no primary work showing p53 occupancy at this gene or clean induction by p53, and the data-defined [[p53 program P]] does not contain it. The mechanism of SCA14 is also unsettled — increased, unchanged and mislocalisation-driven phenotypes have all been reported for different mutants. And PRKCG carries this study's readthrough-geometry flag, a much higher-expressed same-strand gene just upstream, so some reads credited to it may not be its own ([[Readthrough spillover]], the same failure mode as [[Why MG53 is hard to measure here]]).
+Whether PRKCG is a p53 target at all. The label is curation; I know of no primary work showing p53 occupancy at this gene or clean induction by p53, and the data-defined [[p53 program P]] does not contain it. The mechanism of SCA14 is also unsettled — increased, unchanged and mislocalisation-driven phenotypes have all been reported for different mutants. And PRKCG carries this study's readthrough-geometry flag — it sits within 20 kb 3′ of a much higher-expressed same-strand gene, so some reads credited to it may not be its own ([[Readthrough spillover]], the same failure mode as [[Why MG53 is hard to measure here]]).
 
 ## References
 
 - Chen et al., 2003, American Journal of Human Genetics — missense mutations in the PKCγ regulatory domain cause dominant non-episodic cerebellar ataxia (SCA14).
-- Abeliovich et al., 1993, Cell — PKCγ-deficient mice show altered hippocampal long-term potentiation and mild ataxia.
+- Abeliovich et al., 1993, Cell — hippocampal long-term potentiation is modified in PKCγ-mutant mice.

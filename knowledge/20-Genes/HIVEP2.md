@@ -7,7 +7,7 @@ program_arm: P up (WT-selective induction)
 median_line_cpm: 396.69
 mg53_verdict: up with MG53
 mg53_effect_on_p53_output: toward MORE p53 output
-tags: [gene, mg53-associated, p53-induced, p53-program]
+tags: [gene, mg53-associated, p53-induced, p53-program, transcription-factor]
 generated_by: knowledge/_build/build_vault.py
 ---
 
@@ -26,6 +26,7 @@ generated_by: knowledge/_build/build_vault.py
 |---|---|
 | Median level across the 50 lines | 396.69 CPM |
 | Lines where detected | 50 of 50 |
+| Readthrough geometry | no readthrough geometry |
 
 ### What p53 does to it
 
@@ -55,15 +56,26 @@ generated_by: knowledge/_build/build_vault.py
 | In TP53-wild-type lines / altered lines | 0.00739 / 0.00571 |
 | Verdict | up with MG53 |
 | **Signed into p53-output units** | **toward MORE p53 output** |
+| Co-regulation with MG53 across exposures (r) | 0.091 raw, 0.232 with 3 PCs removed |
 
 > [!note] How to read the slope's sign
 > It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;
 > for a p53-repressed gene it means *less*. The signed row above does that conversion; see
 > [[Signing genes by p53 direction]].
 
+### As a transcription factor, against MG53
+
+| | |
+|---|---|
+| Regulon size used | 8 targets |
+| Activity vs MG53 across exposures (r) | -0.025 (q 0.553) |
+| With 3 principal components removed | -0.107 (q 0.003) |
+| Within line, across exposures (r) | -0.014 (q 0.374) |
+| Percentile against all genes | 35.9 |
+
 ## Links
 
-- **Concepts:** [[The p53 pathway]], [[p53 program P]]
+- **Concepts:** [[The p53 pathway]], [[p53 program P]], [[Transcription factor activity inference]]
 - **Findings:** [[Downstream of MG53]], [[Upstream of MG53]]
 - **Why this gene is in the vault:** p53 program, induction arm
 - **Indexes:** [[Genes — Map of Content]]
@@ -73,3 +85,4 @@ generated_by: knowledge/_build/build_vault.py
 - Program and MG53 columns: `mg53_p53/findings/tables/tableD_p53_target_genes.csv`
 - Genome-wide screen: `genome_wide/tables/c_screen_genes.csv.gz`
 - Curated effector columns: `mg53_p53/findings/tables/p53_effectors_per_gene.csv`
+- Transcription-factor activity: `upstream_tf/tables/a1a2_tf_summary.csv`

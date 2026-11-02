@@ -95,8 +95,7 @@ Two consequences of those units.
 2^0.0104 − 1 = **+0.72% of p21 per doubling of MG53** — the largest slope among the 29 canonical effectors
 [`c_screen_genes.csv.gz`, `b_common`; `MG53_p53_TABLES.md`, Table D]. That is the scale the study's bound
 lives on: effects above roughly 0.4–0.6% of p53 output per doubling of measured MG53 are excluded, which is
-the headline in [[What this study found]] and the measurement it rests on is [[The measurement with
-controls]].
+the headline in [[What this study found]] and the measurement it rests on is [[The measurement with controls]].
 
 **They are not comparable across genes of different expression.** Median |`b_common`| by expression bin:
 0.0140 below 1 CPM, 0.0144 at 1–4, 0.0059 at 4–16, 0.0036 at 16–64, 0.0027 above 64

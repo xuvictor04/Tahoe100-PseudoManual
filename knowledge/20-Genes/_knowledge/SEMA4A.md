@@ -11,7 +11,7 @@ SEMA4A is among the genes whose expression tracks measured [[MG53 (TRIM72)]] acr
 
 ## What is uncertain
 
-SEMA4A carries the readthrough-geometry flag: a much higher-expressed same-strand gene sits immediately upstream, so some reads credited to it may be that neighbour's ([[Readthrough spillover]]). Measured MG53 has the same weakness ([[Why MG53 is hard to measure here]]), making a shared-artefact explanation at least as plausible as a shared regulator. The biology is unsettled too: the immune work rests on mouse systems and a receptor, Tim-2, whose human counterpart is unclear, and the dominant retinal variant from the original genetics paper has since been reassessed as a common polymorphism, so that gene–disease claim is weaker than database entries imply.
+SEMA4A carries the readthrough-geometry flag: it sits within 20 kb 3′ of a much higher-expressed same-strand gene, so some reads credited to it may be that neighbour's ([[Readthrough spillover]]). Measured MG53 has the same weakness ([[Why MG53 is hard to measure here]]), making a shared-artefact explanation at least as plausible as a shared regulator. The biology is unsettled too: the immune work rests on mouse systems and a receptor, Tim-2, whose human counterpart is unclear, and the dominant retinal variant from the original genetics paper has since been reassessed as a common polymorphism, so that gene–disease claim is weaker than database entries imply.
 
 ## References
 

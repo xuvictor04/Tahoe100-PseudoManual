@@ -14,8 +14,25 @@ generated_by: knowledge/_build/build_vault.py
 
 # MRPL37
 
-> [!abstract] Knowledge layer: needs a short written note
-> Nothing is written about this gene yet. Add `knowledge/20-Genes/_knowledge/MRPL37.md` and rebuild; see [[How this vault is built]].
+> [!summary] In one line
+> MRPL37 encodes mL37, a nuclear-encoded structural protein of the large subunit of the mitochondrial ribosome.
+
+## What it is
+
+The mitoribosome translates the thirteen OXPHOS subunits encoded by mitochondrial DNA; all of its own protein components are encoded in the nucleus and imported. MRPL37 is one of them, a constituent of the large (39S) subunit, placed in the structure by the cryo-EM work that resolved the human mitoribosome and associated with the inner membrane where translation is coupled to membrane insertion. It belongs to the mL37/mL65 family, proteins with no bacterial counterpart. Beyond structural placement and RNA binding its individual contribution is not separately characterised, and vendor claims of mitochondrial-disease association are not backed by a primary study I can cite. The gene is at 1p32.3.
+
+## Why it appears in this work
+
+It is carried as a member of the repression arm of [[p53 program P]], so its slope has to be read through the sign convention in [[Signing genes by p53 direction]] before it says anything about p53 output.
+
+## What is uncertain
+
+Whether MRPL37 carries information of its own is doubtful. Mitoribosome subunits move as one tightly co-regulated module, so a slope on MRPL37 is effectively a slope on mitochondrial biogenesis, nearly collinear with dozens of other MRPL and MRPS genes — which is also the most economical explanation for its repression-arm membership, since arrest lowers biosynthetic capacity generally. No p53 response element at the locus has been reported, and p53's reported effects on mitochondrial biogenesis run in both directions, so even the expected sign is not secure.
+
+## References
+
+- Brown et al., 2014, Science — structure of the large subunit of the human mitochondrial ribosome, resolving its protein complement.
+- Amunts et al., 2015, Science — structure of the complete human mitoribosome.
 
 ## In this dataset
 
@@ -27,6 +44,7 @@ generated_by: knowledge/_build/build_vault.py
 |---|---|
 | Median level across the 50 lines | 30.13 CPM |
 | Lines where detected | 50 of 50 |
+| Readthrough geometry | no readthrough geometry |
 
 ### What p53 does to it
 
@@ -56,6 +74,7 @@ generated_by: knowledge/_build/build_vault.py
 | In TP53-wild-type lines / altered lines | -0.00552 / -0.00884 |
 | Verdict | down with MG53 |
 | **Signed into p53-output units** | **toward MORE p53 output** |
+| Co-regulation with MG53 across exposures (r) | 0.233 raw, -0.139 with 3 PCs removed |
 
 > [!note] How to read the slope's sign
 > It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;

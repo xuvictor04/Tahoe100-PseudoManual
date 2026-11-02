@@ -21,7 +21,7 @@ The evidence tying Myf5 specifically to TRIM72 is weaker than for [[MYOD1]]. The
 
 - Braun et al., 1992, Cell — targeted inactivation of Myf-5 gives abnormal rib development and perinatal death, with muscle still forming.
 - Rudnicki et al., 1993, Cell — MyoD or Myf-5 is required for skeletal muscle formation; either alone suffices, establishing the redundancy.
-- Olson, Arnold, Rigby and Wold, 1996, Cell — argued that phenotypes at this locus reflect cis effects on the neighbouring MRF4 gene, not the targeted gene alone.
+- Olson, Arnold, Rigby and Wold, 1996, Cell — "Know your neighbors": the three distinct phenotypes of MRF4-null alleles reflect cis effects on the neighbouring Myf5 gene, establishing that a phenotype at this locus cannot be assigned to the targeted gene alone.
 - Kassar-Duchossoy et al., 2004, Nature — muscle forms in Myf5:Myod double mutants when Mrf4 expression is intact, identifying MRF4 as a determination gene.
 - Kuang et al., 2007, Cell — Myf5-negative satellite stem cells generate Myf5-positive committed progenitors by asymmetric division.
 - Jung and Ko, 2010, Biochemical and Biophysical Research Communications — E-box and MEF2 elements drive the TRIM72 promoter in differentiating myoblasts (tested with MyoD and myogenin).

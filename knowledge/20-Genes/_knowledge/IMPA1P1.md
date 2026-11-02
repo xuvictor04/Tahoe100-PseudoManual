@@ -3,7 +3,7 @@
 
 ## What it is
 
-The record is almost entirely annotation. IMPA1P1 lies on chromosome 8 near its parent gene IMPA1 and is classed as a transcribed unprocessed pseudogene with a single non-coding transcript. The parent enzyme is well characterised — IMPA1 recycles free inositol by dephosphorylating myo-inositol monophosphate, and is the classical candidate target of lithium — but none of that transfers to a pseudogene not expected to make protein. No function, pathway, partner or phenotype has been assigned to IMPA1P1, and no regulatory role of the kind shown for some other transcribed pseudogenes. What is attached to it is statistical: copy-number variants, and association signals for circulating inositol-monophosphatase levels more plausibly read as tagging IMPA1.
+The record is almost entirely annotation. IMPA1P1 lies on chromosome 8 near its parent gene IMPA1 and is classed as a transcribed unprocessed pseudogene with a single non-coding transcript. The parent enzyme is well characterised — IMPA1 recycles free inositol by dephosphorylating myo-inositol monophosphate, and is the classical candidate target of lithium — but none of that transfers to a pseudogene not expected to make protein. No function, pathway, partner or phenotype has been assigned to IMPA1P1, and no regulatory role of the kind shown for some other transcribed pseudogenes. What is attached to it is statistical: copy-number variants, and association signals in its interval more plausibly read as tagging IMPA1, which sits about 30 kb 5′ of it on the same strand.
 
 ## Why it appears in this work
 

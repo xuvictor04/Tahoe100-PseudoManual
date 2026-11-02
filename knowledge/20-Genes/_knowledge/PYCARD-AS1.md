@@ -3,7 +3,7 @@
 
 ## What it is
 
-Not much is established. PYCARD-AS1 (also catalogued as C16orf98) is annotated as a polyadenylated, Pol II-transcribed non-coding RNA at 16p11.2, running antisense to [[PYCARD]] and overlapping it at the 5′ end. General gene databases list no function for it. There is no mouse model, no structure, and no disease association.
+Not much is established. PYCARD-AS1 (also catalogued as C16orf98) is annotated as a polyadenylated, Pol II-transcribed non-coding RNA at 16p11.2, running antisense to [[PYCARD]] and, in the annotation this project uses, spanning the same coordinates to within two bases. General gene databases list no function for it. There is no mouse model, no structure, and no disease association.
 
 One study has investigated it functionally. Working mainly in a single breast cancer line, it reported a transcript distributed between nucleus and cytoplasm with two activities, both directed at PYCARD: in the nucleus, localising to the PYCARD promoter and helping recruit DNMT1 and the histone methyltransferase G9a, promoting DNA methylation and H3K9me2 and so silencing transcription; in the cytoplasm, base-pairing with PYCARD mRNA through their overlapping 5′ regions and interfering with ribosome assembly. Knockdown raised PYCARD and increased sensitivity to paclitaxel, and that sensitisation was reduced when PYCARD was knocked down as well. The repression of PYCARD was reproduced in a few additional breast lines; the mechanistic and apoptosis work was not.
 

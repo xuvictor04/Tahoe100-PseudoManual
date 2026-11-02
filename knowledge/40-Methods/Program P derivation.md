@@ -130,8 +130,7 @@ selected by z alone at q < 0.05, next to the observed count under the same rule
 
 `loco_frequency` repeats the gene selection 98 times, dropping one compound each time, and records the share
 of those programmes that keep the gene [`b_p53_program_genes.csv.gz`, `loco_frequency`]. Induction-arm
-membership is mostly not the work of single compounds — the arm averages 0.97 ([[Cross-fitting and
-circularity]]), and all 25 of the strongest genes by fold change sit at 1.000
+membership is mostly not the work of single compounds — the arm averages 0.97 ([[Cross-fitting and circularity]]), and all 25 of the strongest genes by fold change sit at 1.000
 [`MG53_p53_TABLES.md`, "The 25 strongest p53 target genes by fold change"].
 
 > [!important] `loco_frequency` is computed for the **induction arm only.**

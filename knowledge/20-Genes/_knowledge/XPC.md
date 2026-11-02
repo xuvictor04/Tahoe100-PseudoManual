@@ -23,4 +23,5 @@ More fundamentally, XPC mRNA is a poor proxy for repair capacity. XPC acts stoic
 
 - Sugasawa et al., 1998, *Molecular Cell* — identified the XPC complex as the initiator of global-genome nucleotide-excision repair.
 - Araki et al., 2001, *Journal of Biological Chemistry* — identified centrin-2 as the third subunit of the XPC–RAD23B complex.
-- Adimoolam & Ford, 2002, *PNAS* — showed XPC mRNA and protein are induced after UV in a p53-dependent manner and identified a p53 response element in the gene.
+- Adimoolam & Ford, 2002, *PNAS* — showed XPC mRNA and protein are induced after UV in a p53-dependent manner, and reported a putative p53 response element upstream of the transcription start site.
+- Hastak et al., 2012, *Genes & Cancer* — mapped p53 binding at the XPC locus to the first exon at the translation start, and did not reproduce binding at the earlier upstream element in cells.

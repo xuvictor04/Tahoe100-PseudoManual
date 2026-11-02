@@ -9,7 +9,7 @@ Its transcriptional behaviour is the other half of the story. BTG2 was first cat
 
 ## Why it appears in this work
 
-BTG2 is a curated p53 arrest effector whose induction is a high-confidence read on the transcriptional output of [[The p53 pathway]], and it is well enough expressed across the panel to be measured reliably. It earns a second kind of attention here because it is simultaneously a classic immediate-early gene: whatever happens to it under a drug exposure is a mixture of p53 engagement and generic stress and growth-factor signalling. That makes it a useful internal check on whether an induction assigned to [[p53 program P]] is really p53-specific or part of a broader response, and it is one of the program genes where the measured association with MG53 level is on the positive side.
+BTG2 is a curated p53 arrest effector, so its induction is one read on the transcriptional output of [[The p53 pathway]] — a weaker one than the canonical readouts, though, because it sits among the more thinly expressed members of the programme, with several lines showing no detection at all, and a thin gene gives a noisy per-cell estimate. It earns a second kind of attention here because it is simultaneously a classic immediate-early gene: whatever happens to it under a drug exposure is a mixture of p53 engagement and generic stress and growth-factor signalling. That makes it a useful internal check on whether an induction assigned to [[p53 program P]] is really p53-specific or part of a broader response. The generated block below does call BTG2 up with MG53, but that slope sits almost entirely in the TP53-altered lines rather than the wild-type ones — the wrong arm for anything p53-mediated, and not to be read as one.
 
 ## What is uncertain
 

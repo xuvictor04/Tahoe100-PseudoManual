@@ -11,7 +11,7 @@ SELPLG is among the genes whose expression tracks measured [[MG53 (TRIM72)]] acr
 
 ## What is uncertain
 
-Nearly all of it. SELPLG carries the readthrough-geometry flag: a much higher-expressed same-strand gene sits immediately upstream, so a share of the reads credited to SELPLG may be transcriptional readthrough rather than its own output ([[Readthrough spillover]]). Because measured MG53 is vulnerable to exactly this ([[Why MG53 is hard to measure here]]), a correlation between the two is as easily a shared artefact of how both are quantified as it is biology. No mechanism connects selectin-mediated adhesion to MG53, and this should not be read as a biological pairing without an orthogonal, locus-aware assay.
+Nearly all of it. SELPLG carries the readthrough-geometry flag: it sits within 20 kb 3′ of a much higher-expressed same-strand gene, so a share of the reads credited to SELPLG may be transcriptional readthrough rather than its own output ([[Readthrough spillover]]). Because measured MG53 is vulnerable to exactly this ([[Why MG53 is hard to measure here]]), a correlation between the two is as easily a shared artefact of how both are quantified as it is biology. No mechanism connects selectin-mediated adhesion to MG53, and this should not be read as a biological pairing without an orthogonal, locus-aware assay.
 
 ## References
 

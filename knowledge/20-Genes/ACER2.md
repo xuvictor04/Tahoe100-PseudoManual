@@ -48,6 +48,7 @@ The direct-target claim rests on reporter and ChIP work in a small number of lin
 |---|---|
 | Median level across the 50 lines | 13.72 CPM |
 | Lines where detected | 49 of 50 |
+| Readthrough geometry | no readthrough geometry |
 
 ### What p53 does to it
 
@@ -77,6 +78,7 @@ The direct-target claim rests on reporter and ChIP work in a small number of lin
 | In TP53-wild-type lines / altered lines | 0.00590 / 0.01845 |
 | Verdict | up with MG53 |
 | **Signed into p53-output units** | **toward MORE p53 output** |
+| Co-regulation with MG53 across exposures (r) | 0.080 raw, 0.081 with 3 PCs removed |
 
 > [!note] How to read the slope's sign
 > It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;

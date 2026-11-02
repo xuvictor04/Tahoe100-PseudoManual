@@ -26,6 +26,7 @@ generated_by: knowledge/_build/build_vault.py
 |---|---|
 | Median level across the 50 lines | 186.06 CPM |
 | Lines where detected | 50 of 50 |
+| Readthrough geometry | no readthrough geometry |
 
 ### What p53 does to it
 
@@ -55,6 +56,7 @@ generated_by: knowledge/_build/build_vault.py
 | In TP53-wild-type lines / altered lines | 0.00033 / -0.00710 |
 | Verdict | down with MG53 |
 | **Signed into p53-output units** | **toward LESS p53 output** |
+| Co-regulation with MG53 across exposures (r) | 0.126 raw, -0.020 with 3 PCs removed |
 
 > [!note] How to read the slope's sign
 > It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;

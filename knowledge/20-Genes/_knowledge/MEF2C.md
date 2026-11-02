@@ -17,7 +17,7 @@ MEF2 is not a guess about [[MG53 (TRIM72)]]. The TRIM72 promoter carries a conse
 
 ## What is uncertain
 
-Which MEF2 paralogue acts at the TRIM72 promoter is unsettled: the reporter work established a functional MEF2 site, not which of the four occupies it in a cell. MEF2C's transcript is also a poor proxy for its activity, since HDAC gating is the real switch — so absence of the transcript is good evidence the factor is not acting, while presence would have been weak evidence that it is. MEF2C regulons are drawn from muscle, heart, neuronal and immune contexts and overlap generic stress programmes, so an activity score for a factor not expressed here reports what those targets do for other reasons. Nothing perturbs MEF2C in this dataset in any case, so direction was never available.
+Which MEF2 paralogue acts at the TRIM72 promoter is unsettled: the reporter work established a functional MEF2 site, not which of the four occupies it in a cell. MEF2C's transcript is also a poor proxy for its activity, since HDAC gating is the real switch — and unlike the myogenic bHLH factors MEF2C is expressed in this panel, so its presence is only weak evidence that the protein is doing anything. MEF2C regulons are drawn from muscle, heart, neuronal and immune contexts and overlap generic stress programmes, so an activity score here can track what those targets do for other reasons. Nothing perturbs MEF2C in this dataset in any case, so direction was never available.
 
 ## References
 

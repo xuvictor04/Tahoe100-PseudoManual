@@ -15,12 +15,21 @@ generated_by: knowledge/_build/build_vault.py
 
 *Generated from the study's tables — do not edit by hand.*
 
-### How well it is measured
+### What MG53's level tracks, for this gene
 
 | | |
 |---|---|
-| Median level across the 50 lines | 2.21 CPM |
-| Lines where detected | 48 of 50 |
+| Slope, log2 of this gene per doubling of measured MG53 | 0.06349 |
+| As a percentage | +4.50% |
+| FDR, exposure-shuffle null | 5.64e-05 |
+| In TP53-wild-type lines / altered lines | 0.06153 / 0.06479 |
+| Verdict | — |
+| Co-regulation with MG53 across exposures (r) | 0.384 raw, 0.297 with 3 PCs removed |
+
+> [!note] How to read the slope's sign
+> It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;
+> for a p53-repressed gene it means *less*. The signed row above does that conversion; see
+> [[Signing genes by p53 direction]].
 
 ## Links
 

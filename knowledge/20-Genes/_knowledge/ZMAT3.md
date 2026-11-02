@@ -20,7 +20,8 @@ The two mechanisms are themselves unreconciled — different binding preferences
 ## References
 
 - Varmeh-Ziaie et al., 1997, *Oncogene* — identified Wig-1 as a p53-induced zinc-finger gene.
-- Hellborg et al., 2001, *Oncogene* — characterised Wig-1 as a nuclear, double-stranded-RNA-binding zinc-finger protein.
+- Hellborg et al., 2001, *Oncogene* — characterised human Wig-1 as a p53-induced, growth-inhibitory nuclear protein with three zinc fingers.
+- Méndez-Vidal et al., 2002, *Nucleic Acids Research* — showed Wig-1 binds double-stranded RNA with high affinity, the first zinc finger being required.
 - Vilborg et al., 2009, *PNAS* — reported that Wig-1 binds an AU-rich element in the p53 3′ UTR and stabilises p53 mRNA.
 - Bieging-Rolett et al., 2020, *Molecular Cell* — screens identified Zmat3 as a p53-dependent tumour suppressor and showed it regulates splicing, including of MDM2 and MDM4, with coupling to nonsense-mediated decay.
 - Muys et al., 2021, *Genes & Development* — showed ZMAT3 binds intronic uridine-rich regions and suppresses inclusion of oncogenic CD44 variant exons, defining a p53–ZMAT3–CD44 axis.

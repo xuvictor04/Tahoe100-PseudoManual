@@ -7,7 +7,7 @@ SESN1 was cloned as PA26 — "p53-activated gene 26" — and the identification 
 
 What sestrins are now best understood to do is inhibit mTORC1. The first mechanism proposed was indirect: sestrins 1 and 2 activate AMPK, which phosphorylates TSC2 and suppresses mTORC1, linking DNA damage to a halt in anabolic growth. A more direct route came later — sestrins bind GATOR2 in the amino-acid-sensing arm upstream of mTORC1, and for sestrin 2 that interaction is governed by direct leucine binding. Both converge on the same output: less mTORC1, less cap-dependent translation, more autophagy.
 
-The antioxidant side is real but less mechanistically settled. Sestrin expression lowers intracellular ROS in many systems, and sestrin loss raises it; what is no longer tenable is the specific claim that sestrins act as reductases for overoxidised peroxiredoxins. Beyond p53, SESN1 is a FOXO target and responds to hypoxia and energy stress, so the gene sits at a junction of several stress inputs rather than belonging to p53 alone.
+The antioxidant side is real but less mechanistically settled. Sestrin expression lowers intracellular ROS in many systems, and sestrin loss raises it; what is no longer tenable is the specific claim that sestrins act as reductases for overoxidised peroxiredoxins. Inputs besides p53 are described for the family, but they sort unevenly across the three paralogues: oxidative and hypoxic induction of SESN2 and SESN3 proceeds without p53, whereas SESN1's requires it, and the clear FOXO target is SESN3, with only a reported minor contribution to SESN1.
 
 ## Why it appears in this work
 
@@ -17,7 +17,7 @@ SESN1 is a curated p53 effector in the metabolic and redox arm of [[p53 program 
 
 The strongest claim is the weakest-sounding one: SESN1 is p53-inducible. Almost everything downstream carries qualifications. The AMPK/TSC2 and GATOR2 routes have not been reconciled into a single accounting. More importantly for this gene specifically, the structural and leucine-sensing work was done on sestrin 2; transferring it to sestrin 1 is a paralogue inference, not a result. Much of what is written about "sestrins" rests on SESN2 experiments, so claims about SESN1's own biology are thinner than the family literature suggests.
 
-The redox function remains mechanistically open now that the peroxiredoxin-reductase model has failed; lower ROS may be downstream of mTORC1 inhibition, autophagy or NRF2 rather than a direct catalytic activity. And because SESN1 is also driven by FOXO and hypoxia, its induction under a drug exposure is not by itself evidence that p53 did it. Finally, SESN1 is not a recurrently mutated cancer gene; its tumour-suppressive reading is inherited from p53 rather than established on its own.
+The redox function remains mechanistically open now that the peroxiredoxin-reductase model has failed; lower ROS may be downstream of mTORC1 inhibition, autophagy or NRF2 rather than a direct catalytic activity. The standing caution that a stress gene's induction need not mean p53 caused it applies less forcefully here than to most of this panel, because the p53-independent routes in the sestrin literature are largely SESN2 and SESN3 results; a FOXO contribution to SESN1 and a HIF1 input have been reported, so it is not a pure p53 reporter, but it is a more specific one than its paralogues. Finally, SESN1 is not a recurrently mutated cancer gene; its tumour-suppressive reading is inherited from p53 rather than established on its own.
 
 ## References
 

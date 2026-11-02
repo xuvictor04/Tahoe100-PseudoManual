@@ -10,7 +10,7 @@ effector_role: cell-cycle arrest
 median_line_cpm: 8.51
 mg53_verdict: up with MG53
 mg53_effect_on_p53_output: toward MORE p53 output
-tags: [curated-effector, gene, mg53-associated, p53-induced, p53-program]
+tags: [curated-effector, gene, mg53-associated, p53-induced, p53-program, transcription-factor]
 generated_by: knowledge/_build/build_vault.py
 ---
 
@@ -27,7 +27,7 @@ Its transcriptional behaviour is the other half of the story. BTG2 was first cat
 
 ## Why it appears in this work
 
-BTG2 is a curated p53 arrest effector whose induction is a high-confidence read on the transcriptional output of [[The p53 pathway]], and it is well enough expressed across the panel to be measured reliably. It earns a second kind of attention here because it is simultaneously a classic immediate-early gene: whatever happens to it under a drug exposure is a mixture of p53 engagement and generic stress and growth-factor signalling. That makes it a useful internal check on whether an induction assigned to [[p53 program P]] is really p53-specific or part of a broader response, and it is one of the program genes where the measured association with MG53 level is on the positive side.
+BTG2 is a curated p53 arrest effector, so its induction is one read on the transcriptional output of [[The p53 pathway]] — a weaker one than the canonical readouts, though, because it sits among the more thinly expressed members of the programme, with several lines showing no detection at all, and a thin gene gives a noisy per-cell estimate. It earns a second kind of attention here because it is simultaneously a classic immediate-early gene: whatever happens to it under a drug exposure is a mixture of p53 engagement and generic stress and growth-factor signalling. That makes it a useful internal check on whether an induction assigned to [[p53 program P]] is really p53-specific or part of a broader response. The generated block below does call BTG2 up with MG53, but that slope sits almost entirely in the TP53-altered lines rather than the wild-type ones — the wrong arm for anything p53-mediated, and not to be read as one.
 
 ## What is uncertain
 
@@ -51,6 +51,7 @@ The p53-dependence of BTG2 induction is solid for DNA damage in specific systems
 |---|---|
 | Median level across the 50 lines | 8.51 CPM |
 | Lines where detected | 45 of 50 |
+| Readthrough geometry | no same-strand neighbour close enough to spill into it |
 
 ### What p53 does to it
 
@@ -80,15 +81,26 @@ The p53-dependence of BTG2 induction is solid for DNA damage in specific systems
 | In TP53-wild-type lines / altered lines | 0.00030 / 0.02636 |
 | Verdict | up with MG53 |
 | **Signed into p53-output units** | **toward MORE p53 output** |
+| Co-regulation with MG53 across exposures (r) | 0.459 raw, 0.208 with 3 PCs removed |
 
 > [!note] How to read the slope's sign
 > It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;
 > for a p53-repressed gene it means *less*. The signed row above does that conversion; see
 > [[Signing genes by p53 direction]].
 
+### As a transcription factor, against MG53
+
+| | |
+|---|---|
+| Regulon size used | 6 targets |
+| Activity vs MG53 across exposures (r) | -0.132 (q 8.35e-05) |
+| With 3 principal components removed | -0.170 (q 5.06e-07) |
+| Within line, across exposures (r) | -0.025 (q 0.044) |
+| Percentile against all genes | 16.4 |
+
 ## Links
 
-- **Concepts:** [[The p53 pathway]], [[p53 program P]]
+- **Concepts:** [[The p53 pathway]], [[p53 program P]], [[Transcription factor activity inference]]
 - **Findings:** [[Downstream of MG53]], [[Upstream of MG53]]
 - **Why this gene is in the vault:** curated p53 effector; p53 program, induction arm
 - **Indexes:** [[Genes — Map of Content]]
@@ -98,3 +110,4 @@ The p53-dependence of BTG2 induction is solid for DNA damage in specific systems
 - Program and MG53 columns: `mg53_p53/findings/tables/tableD_p53_target_genes.csv`
 - Genome-wide screen: `genome_wide/tables/c_screen_genes.csv.gz`
 - Curated effector columns: `mg53_p53/findings/tables/p53_effectors_per_gene.csv`
+- Transcription-factor activity: `upstream_tf/tables/a1a2_tf_summary.csv`

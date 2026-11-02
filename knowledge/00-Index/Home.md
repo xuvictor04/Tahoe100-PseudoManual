@@ -9,7 +9,7 @@ generated_by: knowledge/_build/build_vault.py
 The knowledge base for the MG53 / p53 work on [[Tahoe-100M]]. Three kinds of note:
 
 - **[[Concepts — Map of Content|Concepts]]** — the biology and the measurement ideas this work rests on, each explained once and linked everywhere.
-- **[[Genes — Map of Content|Genes]]** — 314 notes. 45 deep, 31 short, the rest data-only.
+- **[[Genes — Map of Content|Genes]]** — 343 notes. 50 deep, 55 short, the rest data-only.
 - **[[Findings — Map of Content|Findings]]** — what the study concluded, and how much of it survived its own controls.
 - **[[Methods — Map of Content|Methods]]** — how each number was produced, and the nulls it was tested against.
 

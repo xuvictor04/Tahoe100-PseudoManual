@@ -18,4 +18,4 @@ ELK4's regulon here is among the smallest of any factor scored, making its activ
 - Dalton & Treisman, 1992, Cell — characterised SAP-1 as a protein recruited by serum response factor to the c-fos serum response element.
 - Mo et al., 2001, Journal of Molecular Biology — crystal structure of a ternary SAP-1/SRF/c-fos SRE DNA complex.
 - Rickman et al., 2009, Cancer Research — identified SLC45A3-ELK4 as a recurrent chimeric transcript in prostate cancer.
-- Jung & Ko, 2010, Biochemical and Biophysical Research Communications — TRIM72 is transcriptionally activated through a conserved MEF2 site adjacent to an E-box, not a CArG element.
+- Jung & Ko, 2010, Biochemical and Biophysical Research Communications — TRIM72 is transcriptionally activated by the synergism of MyoD (or myogenin) with MEF2.

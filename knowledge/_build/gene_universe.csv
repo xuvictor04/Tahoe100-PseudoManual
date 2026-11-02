@@ -17,9 +17,14 @@ GADD45A,"curated p53 effector; p53 program, induction arm",1
 GDF15,"curated p53 effector; p53 program, induction arm",1
 MDM2,"curated p53 effector; p53 program, induction arm",1
 MDM4,central to this work,1
-MEF2C,central to this work,1
-MYOD1,central to this work,1
-MYOG,central to this work,1
+MEF2A,muscle promoter TF (TRIM72's native drivers),1
+MEF2B,muscle promoter TF (TRIM72's native drivers),1
+MEF2C,central to this work; muscle promoter TF (TRIM72's native drivers),1
+MEF2D,muscle promoter TF (TRIM72's native drivers),1
+MYF5,muscle promoter TF (TRIM72's native drivers),1
+MYF6,"muscle promoter TF (TRIM72's native drivers); transcription factor, negative rank",1
+MYOD1,central to this work; muscle promoter TF (TRIM72's native drivers),1
+MYOG,central to this work; muscle promoter TF (TRIM72's native drivers),1
 PHLDA3,"curated p53 effector; p53 program, induction arm",1
 PLK3,"curated p53 effector; p53 program, induction arm",1
 PMAIP1,curated p53 effector,1
@@ -31,7 +36,7 @@ RPS27L,"curated p53 effector; p53 program, induction arm",1
 RRM2B,"curated p53 effector; p53 program, induction arm",1
 SESN1,"curated p53 effector; p53 program, induction arm",1
 SPATA18,curated p53 effector,1
-SRF,central to this work,1
+SRF,central to this work; muscle promoter TF (TRIM72's native drivers),1
 STK11,central to this work,1
 TIGAR,"curated p53 effector; p53 program, induction arm",1
 TNFRSF10B,"curated p53 effector; p53 program, induction arm",1
@@ -44,16 +49,24 @@ TRIM72,central to this work,1
 USP7,central to this work,1
 XPC,"curated p53 effector; p53 program, induction arm",1
 ZMAT3,"curated p53 effector; p53 program, induction arm",1
+APEX1,"transcription factor, positive rank",2
+ASCL1,"transcription factor, positive rank",2
+ATF4,"transcription factor, positive rank",2
+ATF5,"transcription factor, positive rank",2
 AZU1,tracks MG53 genome-wide,2
 BRCA2,"p53 program, repression arm",2
 CCNE2,"p53 program, repression arm",2
 CENPN,"p53 program, repression arm",2
 COL20A1,tracks MG53 genome-wide,2
+CREBBP,"transcription factor, positive rank",2
+DNMT3A,"transcription factor, negative rank",2
+ELK4,"transcription factor, positive rank",2
 EXO1,"p53 program, repression arm",2
 FANCD2,"p53 program, repression arm",2
 FGF18,tracks MG53 genome-wide,2
 FNDC7,tracks MG53 genome-wide,2
 GRAMD2A,tracks MG53 genome-wide,2
+HHEX,"transcription factor, negative rank",2
 HJURP,"p53 program, repression arm",2
 IMPA1P1,tracks MG53 genome-wide,2
 KIF11,"p53 program, repression arm",2
@@ -64,17 +77,33 @@ MBOAT1,"p53 program, repression arm",2
 MIR924HG,"p53 program, repression arm",2
 MMP25,tracks MG53 genome-wide,2
 MRPL37,"p53 program, repression arm",2
+NAB2,"transcription factor, negative rank",2
 NECAB2,tracks MG53 genome-wide,2
+NFIL3,"transcription factor, negative rank",2
+PBRM1,"transcription factor, positive rank",2
 POGLUT3,"p53 program, repression arm",2
 PRKCG,tracks MG53 genome-wide,2
 PYGM,tracks MG53 genome-wide,2
 RAD54B,"p53 program, repression arm",2
+RB1,"transcription factor, negative rank",2
 SELPLG,tracks MG53 genome-wide,2
 SEMA4A,tracks MG53 genome-wide,2
 SGO1,"p53 program, repression arm",2
+SIX1,"transcription factor, positive rank",2
+SMAD4,"transcription factor, positive rank",2
+SMAD6,"transcription factor, negative rank",2
 SMC1A,"p53 program, repression arm",2
 SMIM41,tracks MG53 genome-wide,2
+STAT4,"transcription factor, positive rank",2
+TCF21,"transcription factor, negative rank",2
+TEF,"transcription factor, positive rank",2
+TGIF1,"transcription factor, negative rank",2
+TWIST1,"transcription factor, positive rank",2
+TWIST2,"transcription factor, positive rank",2
 USP1,"p53 program, repression arm",2
+XBP1,"transcription factor, positive rank",2
+YBX3,"transcription factor, negative rank",2
+ZNF91,"transcription factor, positive rank",2
 ABCB9,"p53 program, induction arm",3
 ACTA2,"p53 program, induction arm",3
 ADORA1,tracks MG53 genome-wide,3

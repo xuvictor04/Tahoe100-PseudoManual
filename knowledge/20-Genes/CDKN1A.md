@@ -54,6 +54,7 @@ p21 mRNA reports p53 transcriptional activity, not outcome. Arrest, senescence, 
 |---|---|
 | Median level across the 50 lines | 56.41 CPM |
 | Lines where detected | 47 of 50 |
+| Readthrough geometry | no readthrough geometry |
 
 ### What p53 does to it
 
@@ -83,6 +84,7 @@ p21 mRNA reports p53 transcriptional activity, not outcome. Arrest, senescence, 
 | In TP53-wild-type lines / altered lines | 0.00796 / 0.01205 |
 | Verdict | up with MG53 |
 | **Signed into p53-output units** | **toward MORE p53 output** |
+| Co-regulation with MG53 across exposures (r) | 0.418 raw, 0.174 with 3 PCs removed |
 
 > [!note] How to read the slope's sign
 > It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;

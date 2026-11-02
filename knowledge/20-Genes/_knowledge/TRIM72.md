@@ -5,7 +5,7 @@
 
 MG53 ("mitsugumin 53") is a tripartite-motif protein — a RING finger with E3 ubiquitin ligase activity, a B-box, an oligomerising coiled-coil and a C-terminal SPRY domain — expressed almost only in skeletal and cardiac muscle.
 
-Its established job is acute membrane repair. When the sarcolemma tears, MG53 senses the change in redox environment, oligomerises, and nucleates a repair patch by drawing vesicles to the breach, alongside caveolin-3, dysferlin and PTRF/cavin-1. The trigger is oxidation rather than calcium entry, which separates it from the calcium-sensing dysferlin pathway. *Trim72*-null mice develop myopathy and tolerate ischaemia–reperfusion poorly, and recombinant MG53 protein is protective in injury models.
+Its established job is acute membrane repair. When the sarcolemma tears, MG53 senses the change in redox environment, oligomerises, and nucleates a repair patch by drawing vesicles to the breach, alongside caveolin-3, dysferlin and PTRF/cavin-1. What brings it to the wound is the oxidative environment rather than calcium entry — calcium is still needed for the recruited vesicles to fuse — which separates its sensing step from the calcium-sensing dysferlin pathway. *Trim72*-null mice develop myopathy and tolerate ischaemia–reperfusion poorly, and recombinant MG53 protein is protective in injury models.
 
 Two further activities matter here: the RING domain ubiquitinates the insulin receptor and IRS1, and MG53 restrains myoblast differentiation, entangling its expression with the muscle programme that produces it. The fuller account is in [[MG53 (TRIM72)]].
 
@@ -23,7 +23,6 @@ And two things the dataset cannot speak to: all 50 lines are TRIM72-wild-type an
 
 ## References
 
-- Cai et al., 2009, *Nature Cell Biology* — identified MG53 as the nucleating factor for acute membrane repair in striated muscle.
-- Cai et al., 2009, *Journal of Biological Chemistry* — showed the trigger for MG53 assembly at the wound is oxidation-dependent rather than calcium-dependent.
+- Cai et al., 2009, *Nature Cell Biology* — identified MG53 as the nucleating factor for acute membrane repair in striated muscle, with oligomerisation and recruitment driven by entry of the extracellular oxidative environment rather than by calcium.
 - Song et al., 2013, *Nature* — MG53 as an E3 ligase for the insulin receptor and IRS1, with metabolic consequences on overexpression.
 - Weisleder et al., 2012, *Science Translational Medicine* — recombinant MG53 delivered as a protein therapeutic in muscle injury models.

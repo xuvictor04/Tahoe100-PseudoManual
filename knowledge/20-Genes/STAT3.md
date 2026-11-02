@@ -6,7 +6,7 @@ p53_direction: induced by p53
 program_arm: P up (WT-selective induction)
 median_line_cpm: 251.18
 mg53_verdict: none
-tags: [gene, p53-induced, p53-program]
+tags: [gene, p53-induced, p53-program, transcription-factor]
 generated_by: knowledge/_build/build_vault.py
 ---
 
@@ -25,6 +25,7 @@ generated_by: knowledge/_build/build_vault.py
 |---|---|
 | Median level across the 50 lines | 251.18 CPM |
 | Lines where detected | 50 of 50 |
+| Readthrough geometry | no readthrough geometry |
 
 ### What p53 does to it
 
@@ -54,15 +55,26 @@ generated_by: knowledge/_build/build_vault.py
 | In TP53-wild-type lines / altered lines | -0.00048 / -0.00150 |
 | Verdict | none |
 | **Signed into p53-output units** | **none** |
+| Co-regulation with MG53 across exposures (r) | -0.110 raw, -0.024 with 3 PCs removed |
 
 > [!note] How to read the slope's sign
 > It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;
 > for a p53-repressed gene it means *less*. The signed row above does that conversion; see
 > [[Signing genes by p53 direction]].
 
+### As a transcription factor, against MG53
+
+| | |
+|---|---|
+| Regulon size used | 336 targets |
+| Activity vs MG53 across exposures (r) | 0.078 (q 0.027) |
+| With 3 principal components removed | 0.089 (q 0.014) |
+| Within line, across exposures (r) | -0.017 (q 0.374) |
+| Percentile against all genes | 60.2 |
+
 ## Links
 
-- **Concepts:** [[The p53 pathway]], [[p53 program P]]
+- **Concepts:** [[The p53 pathway]], [[p53 program P]], [[Transcription factor activity inference]]
 - **Findings:** [[Downstream of MG53]], [[Upstream of MG53]]
 - **Why this gene is in the vault:** p53 program, induction arm
 - **Indexes:** [[Genes — Map of Content]]
@@ -72,3 +84,4 @@ generated_by: knowledge/_build/build_vault.py
 - Program and MG53 columns: `mg53_p53/findings/tables/tableD_p53_target_genes.csv`
 - Genome-wide screen: `genome_wide/tables/c_screen_genes.csv.gz`
 - Curated effector columns: `mg53_p53/findings/tables/p53_effectors_per_gene.csv`
+- Transcription-factor activity: `upstream_tf/tables/a1a2_tf_summary.csv`

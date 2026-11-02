@@ -8,19 +8,44 @@ generated_by: knowledge/_build/build_vault.py
 
 # IMPA1P1
 
-> [!abstract] Knowledge layer: needs a short written note
-> Nothing is written about this gene yet. Add `knowledge/20-Genes/_knowledge/IMPA1P1.md` and rebuild; see [[How this vault is built]].
+> [!summary] In one line
+> IMPA1P1 is a transcribed pseudogene of inositol monophosphatase 1, with no known function of its own.
+
+## What it is
+
+The record is almost entirely annotation. IMPA1P1 lies on chromosome 8 near its parent gene IMPA1 and is classed as a transcribed unprocessed pseudogene with a single non-coding transcript. The parent enzyme is well characterised — IMPA1 recycles free inositol by dephosphorylating myo-inositol monophosphate, and is the classical candidate target of lithium — but none of that transfers to a pseudogene not expected to make protein. No function, pathway, partner or phenotype has been assigned to IMPA1P1, and no regulatory role of the kind shown for some other transcribed pseudogenes. What is attached to it is statistical: copy-number variants, and association signals in its interval more plausibly read as tagging IMPA1, which sits about 30 kb 5′ of it on the same strand.
+
+## Why it appears in this work
+
+IMPA1P1 is in the vault only because the genome-wide screen ranked it as tracking measured MG53 across exposures. It is not a curated p53 effector, not a transcription factor, and chromosome 8 puts it nowhere near TRIM72, so [[Readthrough spillover]] does not apply.
+
+## What is uncertain
+
+The first question is whether the measurement means anything. A pseudogene retaining high identity to a well-expressed parent is exactly where short reads cannot be assigned confidently, so the apparent signal may be IMPA1 reads landing on the wrong feature — and any correlation with MG53 would then be inherited from the parent locus. The transcript is low enough that ambient RNA is also live; see [[Why MG53 is hard to measure here]]. With no established function there is no mechanism against which a correlation could be judged. This note records a screen rank, not biology.
+
+## References
+
+No primary literature I can cite with confidence.
 
 ## In this dataset
 
 *Generated from the study's tables — do not edit by hand.*
 
-### How well it is measured
+### What MG53's level tracks, for this gene
 
 | | |
 |---|---|
-| Median level across the 50 lines | 2.80 CPM |
-| Lines where detected | 46 of 50 |
+| Slope, log2 of this gene per doubling of measured MG53 | 0.09755 |
+| As a percentage | +7.00% |
+| FDR, exposure-shuffle null | 5.64e-05 |
+| In TP53-wild-type lines / altered lines | 0.09943 / 0.09646 |
+| Verdict | — |
+| Co-regulation with MG53 across exposures (r) | 0.685 raw, 0.555 with 3 PCs removed |
+
+> [!note] How to read the slope's sign
+> It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;
+> for a p53-repressed gene it means *less*. The signed row above does that conversion; see
+> [[Signing genes by p53 direction]].
 
 ## Links
 

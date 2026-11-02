@@ -13,8 +13,27 @@ generated_by: knowledge/_build/build_vault.py
 
 # CENPN
 
-> [!abstract] Knowledge layer: needs a short written note
-> Nothing is written about this gene yet. Add `knowledge/20-Genes/_knowledge/CENPN.md` and rebuild; see [[How this vault is built]].
+> [!summary] In one line
+> CENPN encodes CENP-N, the subunit of the constitutive centromere-associated network that reads the CENP-A nucleosome directly and so marks where a kinetochore is built.
+
+## What it is
+
+CENP-N was found in the complex that co-purifies with CENP-A chromatin, and is the component that recognises it specifically, contacting the CENP-A nucleosome through the histone's exposed RG loop. Structural work has since resolved that interface and shown how CENP-N bridges to CENP-L and sits alongside CENP-C in the inner kinetochore. Depleting it impairs kinetochore assembly and new CENP-A deposition, so cells lose chromosome segregation fidelity. Expression is proliferation-coupled rather than tissue-specific. Outside that structural role its literature is mostly correlative: raised expression in various tumours with survival associations, a weak basis for functional claims.
+
+## Why it appears in this work
+
+CENPN was selected into the repression arm of [[p53 program P]], declining modestly and selectively in TP53-wild-type lines under p53-activating compounds. For a mitosis gene of this kind the expected route is indirect, through p21 and the DREAM complex rather than p53 at the promoter; see [[The p21-DREAM axis]]. Its membership mainly reinforces reading that arm as a proliferation-arrest signature rather than a dedicated repression programme.
+
+## What is uncertain
+
+Nothing establishes CENPN as a p53 target in any direct sense, and its program membership here is only partially stable across folds, so it should be held more loosely than the core members of the arm. CENP-N's biology is executed at the protein level, so a fall in its transcript reports cells leaving the cycle, not a change in centromere function.
+
+## References
+
+- Foltz et al., 2006, Nature Cell Biology — defined the human CENP-A nucleosome-associated complex, including CENP-N.
+- Carroll et al., 2009, Nature Cell Biology — showed CENP-N binds CENP-A nucleosomes directly and is required for centromere assembly.
+- Chittori et al., 2018, Science — structural basis of centromeric nucleosome recognition by CENP-N.
+- Engeland, 2018, Cell Death and Differentiation — review of p53-p21-DREAM-mediated repression of cell-cycle and mitosis genes.
 
 ## In this dataset
 
@@ -26,6 +45,7 @@ generated_by: knowledge/_build/build_vault.py
 |---|---|
 | Median level across the 50 lines | 31.50 CPM |
 | Lines where detected | 50 of 50 |
+| Readthrough geometry | no readthrough geometry |
 
 ### What p53 does to it
 
@@ -55,6 +75,7 @@ generated_by: knowledge/_build/build_vault.py
 | In TP53-wild-type lines / altered lines | 0.00345 / 0.00351 |
 | Verdict | none |
 | **Signed into p53-output units** | **none** |
+| Co-regulation with MG53 across exposures (r) | 0.339 raw, 0.108 with 3 PCs removed |
 
 > [!note] How to read the slope's sign
 > It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;

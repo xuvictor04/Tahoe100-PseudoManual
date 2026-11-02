@@ -3,7 +3,7 @@
 
 ## What it is
 
-Despite its KDEL motif this is a glucosyltransferase, not part of KDEL-receptor retrieval. With its paralogue POGLUT2 (KDELC1) it adds glucose to a serine between the third and fourth conserved cysteines of an EGF repeat, a position distinct from the sites POGLUT1 uses. Only properly folded repeats are accepted. Losing the site, together with nearby O-fucose sites, reduces NOTCH1 surface presentation and ligand responsiveness, so the modification reads as a folding and trafficking checkpoint rather than a signalling switch. Later work extended the substrates to fibrillins and LTBP1, and mice lacking both enzymes die perinatally with limb and lung defects. Past that the record is thin: no human disease is firmly attributed to it, and nothing is established about its transcriptional regulation.
+Despite its KDEL motif this is a glucosyltransferase, not part of KDEL-receptor retrieval. With its paralogue POGLUT2 (KDELC1) it adds glucose to a serine between the third and fourth conserved cysteines of an EGF repeat, a position distinct from the sites POGLUT1 uses. Only properly folded repeats are accepted. Losing the site, together with nearby O-fucose sites, reduces NOTCH1 surface presentation and ligand responsiveness, so the modification reads as a folding and trafficking checkpoint rather than a signalling switch. Later work extended the substrates beyond Notch to fibrillins and LTBP1. Past that the record is thin: no human disease is firmly attributed to it, and nothing is established about its transcriptional regulation.
 
 ## Why it appears in this work
 

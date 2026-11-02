@@ -51,6 +51,7 @@ Mechanistically, whether PUMA is a direct activator of BAX or only a derepressor
 |---|---|
 | Median level across the 50 lines | 17.41 CPM |
 | Lines where detected | 50 of 50 |
+| Readthrough geometry | no readthrough geometry |
 
 ### What p53 does to it
 
@@ -80,6 +81,7 @@ Mechanistically, whether PUMA is a direct activator of BAX or only a derepressor
 | In TP53-wild-type lines / altered lines | -0.00291 / 0.00454 |
 | Verdict | none |
 | **Signed into p53-output units** | **none** |
+| Co-regulation with MG53 across exposures (r) | 0.124 raw, -0.159 with 3 PCs removed |
 
 > [!note] How to read the slope's sign
 > It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;

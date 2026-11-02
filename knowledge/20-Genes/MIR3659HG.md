@@ -26,6 +26,7 @@ generated_by: knowledge/_build/build_vault.py
 |---|---|
 | Median level across the 50 lines | 2.43 CPM |
 | Lines where detected | 49 of 50 |
+| Readthrough geometry | **readthrough-exposed** — sits ≤ 20 kb 3′ of a much higher same-strand gene, so transcription running past that neighbour is counted as this gene ([[Readthrough spillover]]) |
 
 ### What p53 does to it
 
@@ -55,6 +56,7 @@ generated_by: knowledge/_build/build_vault.py
 | In TP53-wild-type lines / altered lines | 0.02278 / 0.02499 |
 | Verdict | up with MG53 |
 | **Signed into p53-output units** | **toward MORE p53 output** |
+| Co-regulation with MG53 across exposures (r) | 0.446 raw, 0.037 with 3 PCs removed |
 
 > [!note] How to read the slope's sign
 > It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;

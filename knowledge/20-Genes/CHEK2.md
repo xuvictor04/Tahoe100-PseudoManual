@@ -41,6 +41,21 @@ How much p53 activation actually requires CHK2 is contested, and the two best ex
 
 *Generated from the study's tables — do not edit by hand.*
 
+### What MG53's level tracks, for this gene
+
+| | |
+|---|---|
+| Slope, log2 of this gene per doubling of measured MG53 | -0.00131 |
+| As a percentage | -0.09% |
+| FDR, exposure-shuffle null | 0.7114 |
+| In TP53-wild-type lines / altered lines | -0.00033 / -0.00191 |
+| Verdict | — |
+| Co-regulation with MG53 across exposures (r) | -0.061 raw, -0.188 with 3 PCs removed |
+
+> [!note] How to read the slope's sign
+> It is in **this gene's** units. For a p53-induced gene, up with MG53 means more p53 output;
+> for a p53-repressed gene it means *less*. The signed row above does that conversion; see
+> [[Signing genes by p53 direction]].
 
 ## Links
 

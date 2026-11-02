@@ -3,7 +3,7 @@
 
 ## What it is
 
-What is known is sequence and little else. The open reading frame predicts a signal peptide and a string of fibronectin type III domains — a module shared with fibronectin itself and many cell-surface proteins — and FN1 is its closest paralogue. Expression is low wherever surveyed, most consistently in testis. Everything functional is annotation, not observation: "secreted" and "extracellular region" come from domain content, not experiment. There is no published knockout, no identified ligand or receptor, no characterised partner, no replicated disease association. No connection has been reported between FNDC7 and p53, membrane repair, or [[MG53 (TRIM72)]].
+What is known is sequence and little else. The open reading frame predicts a signal peptide and a string of fibronectin type III domains — a module shared with fibronectin itself and many cell-surface proteins, and the only basis for any family assignment. Expression is low wherever surveyed, most consistently in testis. Everything functional is annotation, not observation: "secreted" and "extracellular region" come from domain content, not experiment. There is no published knockout, no identified ligand or receptor, no characterised partner, no replicated disease association. No connection has been reported between FNDC7 and p53, membrane repair, or [[MG53 (TRIM72)]].
 
 ## Why it appears in this work
 

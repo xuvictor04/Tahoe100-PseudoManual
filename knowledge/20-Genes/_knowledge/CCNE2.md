@@ -3,7 +3,7 @@
 
 ## What it is
 
-Cyclin E2 is the second E-type cyclin, sharing CDK2 and its late-G1 window with cyclin E1, and phosphorylating RB and p27. Its transcription is an E2F output governed by CDE/CHR elements, and the protein is degraded by SCF-[[FBXW7]] after autophosphorylation, so both message and protein are sharply cell-cycle periodic. Mice lacking both E cyclins develop surprisingly far: E cyclins are dispensable for ordinary mitotic cycles and needed for endoreplication and re-entry from quiescence, making cyclin E2 a reinforcer rather than the gatekeeper of S phase. It is frequently amplified in cancer, notably breast cancer, where high cyclin E tracks resistance to endocrine and CDK4/6 therapy.
+Cyclin E2 is the second E-type cyclin, sharing CDK2 and its late-G1 window with cyclin E1, and phosphorylating RB and p27. Its transcription is an E2F output, and the protein is degraded by SCF-[[FBXW7]] after autophosphorylation, so both message and protein are sharply cell-cycle periodic. Mice lacking both E cyclins develop surprisingly far: E cyclins are dispensable for ordinary mitotic cycles and needed for endoreplication and re-entry from quiescence, making cyclin E2 a reinforcer rather than the gatekeeper of S phase. It is frequently amplified in cancer, notably breast cancer, where high cyclin E tracks resistance to endocrine and CDK4/6 therapy.
 
 ## Why it appears in this work
 

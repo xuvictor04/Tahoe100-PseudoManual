@@ -16,4 +16,4 @@ The measurement is the weak point. LDHC shares substantial sequence identity wit
 ## References
 
 - Wu et al., 2022, Frontiers in Oncology — review of LDH-C4 in germ-cell metabolism, male infertility and its reclassification as a cancer-testis antigen.
-- Naik and Decock, 2023, Frontiers in Oncology — commentary reporting HLA-A2-restricted LDHC peptides that elicit cytotoxic T-cell responses.
+- Naik and Decock, 2023, Frontiers in Oncology — commentary on that review, noting the authors' own earlier identification of HLA-A2-restricted LDHC peptides that elicit cytotoxic T-cell responses.

@@ -18,5 +18,6 @@ APE1 is not a sequence-specific transcription factor, so its assigned regulon is
 - Demple et al., 1991, PNAS — cloned the major human apurinic/apyrimidinic endonuclease.
 - Xanthoudakis and Curran, 1992, EMBO Journal — identified Ref-1 as a nuclear factor that restores AP-1 DNA binding.
 - Xanthoudakis et al., 1996, PNAS — Apex-null mouse embryos die early, establishing the gene as essential.
-- Gaiddon et al., 1999, EMBO Journal — Ref-1 stimulates p53 DNA binding and transactivation.
+- Jayaraman et al., 1997, Genes and Development — Ref-1 stimulates the DNA binding and transcriptional activity of p53 in vitro.
+- Gaiddon et al., 1999, EMBO Journal — Ref-1 associates with p53 in cells, and is required for its transactivation and pro-apoptotic function.
 - Tell et al., 2009, Antioxidants and Redox Signaling — review of APE1/Ref-1's dual repair and redox roles.

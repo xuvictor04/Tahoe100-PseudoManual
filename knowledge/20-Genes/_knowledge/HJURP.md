@@ -3,7 +3,7 @@
 
 ## What it is
 
-HJURP was picked up twice over — once as a protein binding a Holliday-junction-like structure, once as a transcript overexpressed in tumours, the source of the alias FAKTS. Its real job emerged from CENP-A proteomics: HJURP binds the CENP-A/H4 dimer through a conserved N-terminal domain, keeps it soluble, and loads it into centromeric chromatin in a narrow window at mitotic exit and early G1. Without it, new CENP-A is not deposited, the existing pool is diluted by replication, and kinetochores fail — placing HJURP upstream of the CENP-A reader [[CENPN]] in one assembly pathway. Beyond that the literature is largely correlative: high HJURP associates with poor outcome in several tumour series, a weak basis for functional claims.
+HJURP was picked up twice over — once as a protein binding a Holliday-junction-like structure, once as a transcript over-expressed in lung tumours, the source of the alias URLC9. Its real job emerged from CENP-A proteomics: HJURP binds the CENP-A/H4 dimer through a conserved N-terminal domain, keeps it soluble, and loads it into centromeric chromatin in a narrow window at mitotic exit and early G1. Without it, new CENP-A is not deposited, the existing pool is diluted by replication, and kinetochores fail — placing HJURP upstream of the CENP-A reader [[CENPN]] in one assembly pathway. Beyond that the literature is largely correlative: high HJURP associates with poor outcome in several tumour series, a weak basis for functional claims.
 
 ## Why it appears in this work
 

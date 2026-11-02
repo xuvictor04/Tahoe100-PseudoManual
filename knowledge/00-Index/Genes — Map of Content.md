@@ -6,11 +6,11 @@ generated_by: knowledge/_build/build_vault.py
 
 # Genes — Map of Content
 
-314 gene notes. Tier 1 is well studied and gets a deep note; tier 2 gets a short one; tier 3 is data only.
+343 gene notes. Tier 1 is well studied and gets a deep note; tier 2 gets a short one; tier 3 is data only.
 
 Every gene's `In this dataset` block is generated from the study's tables. The prose is a separate layer — see [[How this vault is built]].
 
-## Tier 1 — deep notes (45)
+## Tier 1 — deep notes (50)
 
 | Gene | Why it is here |
 |---|---|
@@ -32,9 +32,14 @@ Every gene's `In this dataset` block is generated from the study's tables. The p
 | [[GDF15]] | curated p53 effector; p53 program, induction arm |
 | [[MDM2]] | curated p53 effector; p53 program, induction arm |
 | [[MDM4]] | central to this work |
-| [[MEF2C]] | central to this work |
-| [[MYOD1]] | central to this work |
-| [[MYOG]] | central to this work |
+| [[MEF2A]] | muscle promoter TF (TRIM72's native drivers) |
+| [[MEF2B]] | muscle promoter TF (TRIM72's native drivers) |
+| [[MEF2C]] | central to this work; muscle promoter TF (TRIM72's native drivers) |
+| [[MEF2D]] | muscle promoter TF (TRIM72's native drivers) |
+| [[MYF5]] | muscle promoter TF (TRIM72's native drivers) |
+| [[MYF6]] | muscle promoter TF (TRIM72's native drivers); transcription factor, negative rank |
+| [[MYOD1]] | central to this work; muscle promoter TF (TRIM72's native drivers) |
+| [[MYOG]] | central to this work; muscle promoter TF (TRIM72's native drivers) |
 | [[PHLDA3]] | curated p53 effector; p53 program, induction arm |
 | [[PLK3]] | curated p53 effector; p53 program, induction arm |
 | [[PMAIP1]] | curated p53 effector |
@@ -46,7 +51,7 @@ Every gene's `In this dataset` block is generated from the study's tables. The p
 | [[RRM2B]] | curated p53 effector; p53 program, induction arm |
 | [[SESN1]] | curated p53 effector; p53 program, induction arm |
 | [[SPATA18]] | curated p53 effector |
-| [[SRF]] | central to this work |
+| [[SRF]] | central to this work; muscle promoter TF (TRIM72's native drivers) |
 | [[STK11]] | central to this work |
 | [[TIGAR]] | curated p53 effector; p53 program, induction arm |
 | [[TNFRSF10B]] | curated p53 effector; p53 program, induction arm |
@@ -60,20 +65,28 @@ Every gene's `In this dataset` block is generated from the study's tables. The p
 | [[XPC]] | curated p53 effector; p53 program, induction arm |
 | [[ZMAT3]] | curated p53 effector; p53 program, induction arm |
 
-## Tier 2 — short notes (31)
+## Tier 2 — short notes (55)
 
 | Gene | Why it is here |
 |---|---|
+| [[APEX1]] | transcription factor, positive rank |
+| [[ASCL1]] | transcription factor, positive rank |
+| [[ATF4]] | transcription factor, positive rank |
+| [[ATF5]] | transcription factor, positive rank |
 | [[AZU1]] | tracks MG53 genome-wide |
 | [[BRCA2]] | p53 program, repression arm |
 | [[CCNE2]] | p53 program, repression arm |
 | [[CENPN]] | p53 program, repression arm |
 | [[COL20A1]] | tracks MG53 genome-wide |
+| [[CREBBP]] | transcription factor, positive rank |
+| [[DNMT3A]] | transcription factor, negative rank |
+| [[ELK4]] | transcription factor, positive rank |
 | [[EXO1]] | p53 program, repression arm |
 | [[FANCD2]] | p53 program, repression arm |
 | [[FGF18]] | tracks MG53 genome-wide |
 | [[FNDC7]] | tracks MG53 genome-wide |
 | [[GRAMD2A]] | tracks MG53 genome-wide |
+| [[HHEX]] | transcription factor, negative rank |
 | [[HJURP]] | p53 program, repression arm |
 | [[IMPA1P1]] | tracks MG53 genome-wide |
 | [[KIF11]] | p53 program, repression arm |
@@ -84,17 +97,33 @@ Every gene's `In this dataset` block is generated from the study's tables. The p
 | [[MIR924HG]] | p53 program, repression arm |
 | [[MMP25]] | tracks MG53 genome-wide |
 | [[MRPL37]] | p53 program, repression arm |
+| [[NAB2]] | transcription factor, negative rank |
 | [[NECAB2]] | tracks MG53 genome-wide |
+| [[NFIL3]] | transcription factor, negative rank |
+| [[PBRM1]] | transcription factor, positive rank |
 | [[POGLUT3]] | p53 program, repression arm |
 | [[PRKCG]] | tracks MG53 genome-wide |
 | [[PYGM]] | tracks MG53 genome-wide |
 | [[RAD54B]] | p53 program, repression arm |
+| [[RB1]] | transcription factor, negative rank |
 | [[SELPLG]] | tracks MG53 genome-wide |
 | [[SEMA4A]] | tracks MG53 genome-wide |
 | [[SGO1]] | p53 program, repression arm |
+| [[SIX1]] | transcription factor, positive rank |
+| [[SMAD4]] | transcription factor, positive rank |
+| [[SMAD6]] | transcription factor, negative rank |
 | [[SMC1A]] | p53 program, repression arm |
 | [[SMIM41]] | tracks MG53 genome-wide |
+| [[STAT4]] | transcription factor, positive rank |
+| [[TCF21]] | transcription factor, negative rank |
+| [[TEF]] | transcription factor, positive rank |
+| [[TGIF1]] | transcription factor, negative rank |
+| [[TWIST1]] | transcription factor, positive rank |
+| [[TWIST2]] | transcription factor, positive rank |
 | [[USP1]] | p53 program, repression arm |
+| [[XBP1]] | transcription factor, positive rank |
+| [[YBX3]] | transcription factor, negative rank |
+| [[ZNF91]] | transcription factor, positive rank |
 
 ## Tier 3 — data only (238)
 

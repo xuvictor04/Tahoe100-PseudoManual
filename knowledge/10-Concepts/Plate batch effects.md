@@ -32,8 +32,7 @@ denominator is not what is moving [`MDM2_MG53.md`, Table 2].
 
 ### It is a precision problem, not a bias problem
 
-Depth drives the counting-noise floor, which is most of MG53's variance ([[Why MG53 is hard to measure
-here]]):
+Depth drives the counting-noise floor, which is most of MG53's variance ([[Why MG53 is hard to measure here]]):
 
 | | Deep plates (1/2/3/14) | Shallow plates (4–13) | Ratio |
 |---|---|---|---|

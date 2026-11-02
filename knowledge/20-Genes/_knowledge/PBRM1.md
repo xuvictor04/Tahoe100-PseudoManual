@@ -18,4 +18,4 @@ The regulon here holds only a handful of targets and overlaps p53's own, so the 
 - Xia et al., 2008, Cancer Research — BAF180 binds the p21 promoter and is required for p21 induction and G1 arrest; truncating mutations found in breast cancer.
 - Burrows et al., 2010, PNAS — BRD7 and BAF180 are required for p53-dependent transcription of targets driving replicative senescence.
 - Varela et al., 2011, Nature — exome sequencing identified PBRM1 as the second major mutated gene in clear-cell renal cell carcinoma.
-- Miao et al., 2018, Science — PBRM1 loss-of-function is associated with clinical benefit from immune checkpoint therapy in renal cell carcinoma.
+- Miao et al., 2018, Science — PBRM1 loss-of-function was associated with clinical benefit from immune checkpoint therapy in renal cell carcinoma; later cohorts have not reproduced this consistently.
