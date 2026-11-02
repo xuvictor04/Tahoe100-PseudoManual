@@ -1,0 +1,21 @@
+gene,arm,covariate_set,b,pct_per_doubling_measured,pct_per_doubling_true,p,se,se_drug_clustered,q_bh,q_exposure_shuffle,t,q_label_permutation,note
+MDM2,"common slope, all 47 lines",gw (primary),-0.00499589,-0.3456898189396207,-1.1894441749111917,0.0155751,0.00198877,0.00122243,0.0692698,0.0312582,,,
+MDM2,"common slope, all 47 lines",gw_all,-0.00500473,-0.34630044098937773,-1.191536253255221,0.015365,,,,,,,
+MDM2,"common slope, all 47 lines",gw_pc,-0.00599652,-0.41478447614835545,-1.4259726756104762,0.00196599,,,,,,,
+MDM2,"common slope, all 47 lines",curated_cycle,-0.00478372,-0.3310330763750202,-1.1392186359492906,0.0217649,,,,,,,
+MDM2,"common slope, all 47 lines",none,-0.00499763,-0.34581000954833074,-1.1898559675888154,0.0184536,,,,,,,
+MDM2,"common slope, all 47 lines",gw_rt (readthrough-corrected),-0.00501286,-0.3468620165626324,-1.1934602635812364,0.00594786,,,,,,,
+MDM2,TP53-WT lines only (17),gw (primary),-0.00538949,-0.37287407151661567,-1.2825508190699941,0.211191,0.00425051,,,,-1.26796,,
+MDM2,TP53-altered lines only (30),gw (primary),-0.00475702,-0.32918848277297963,-1.1328963210842202,0.0161332,0.00190444,,,,-2.49785,,
+MDM2,WT minus altered,gw (primary),-0.000632468,-0.043829733064382204,-0.151368877550917,0.892231,0.00464254,,0.99879,,-0.136233,0.998795,
+MDM2,lone-discovery threshold at q < 0.1,gw (primary),0.010168721175980859,,,,,,,,5.11307047872849,,"|b| this large would be needed to clear q < 0.1 with no other gene among the 16642 significant; BH draws its power from the mass of genome-wide signal, and the run's own calibration finds that mass 4.44x inflated"
+CDKN1A,"common slope, all 47 lines",gw (primary),0.0103987,0.7233868513950803,2.5218862998149794,0.00495932,0.00351047,0.00246806,0.0313337,0.00894835,,,
+CDKN1A,"common slope, all 47 lines",gw_all,0.0103943,0.7230796608844292,2.520805876591936,0.00496282,,,,,,,
+CDKN1A,"common slope, all 47 lines",gw_pc,0.0112272,0.781246128339963,2.7255281357316807,0.00135924,,,,,,,
+CDKN1A,"common slope, all 47 lines",curated_cycle,0.0108487,0.7548090109067429,2.6324442808534965,0.00367536,,,,,,,
+CDKN1A,"common slope, all 47 lines",none,0.0098503,0.6851069607923588,2.387313967115756,0.00969889,,,,,,,
+CDKN1A,"common slope, all 47 lines",gw_rt (readthrough-corrected),0.00960777,0.6681823122185682,2.327855676585777,0.00400981,,,,,,,
+CDKN1A,TP53-WT lines only (17),gw (primary),0.00795689,0.5530533113546676,1.924044825347937,0.108582,0.00485574,,,,1.63866,,
+CDKN1A,TP53-altered lines only (30),gw (primary),0.0120537,0.8389988491830591,2.929081414823176,0.0100586,0.00447623,,,,2.69282,,
+CDKN1A,WT minus altered,gw (primary),-0.00409678,-0.28356434529273056,-0.9764288693306811,0.51324,0.00621416,,0.99879,,-0.659266,0.998795,
+CDKN1A,lone-discovery threshold at q < 0.1,gw (primary),0.018109671513943885,,,,,,,,5.158759799668958,,"|b| this large would be needed to clear q < 0.1 with no other gene among the 16642 significant; BH draws its power from the mass of genome-wide signal, and the run's own calibration finds that mass 4.44x inflated"
