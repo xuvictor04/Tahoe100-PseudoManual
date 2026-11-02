@@ -41,6 +41,7 @@ Usage:
     python3 mdm2_mg53_levels.py --results ~/Tahoe-100M/mg53_p53
 """
 import argparse
+import hashlib
 import os
 
 import numpy as np
@@ -120,8 +121,13 @@ def fit(x, y, cluster=None, label="", seed_tag=""):
         nc = int(d["g"].nunique())
         o.update(n_clusters=nc, se_cluster=se_cl, t_cluster=beta / se_cl if se_cl else np.nan,
                  p_cluster=float(2 * st.t.sf(abs(beta / se_cl), nc - 1)) if se_cl else np.nan)
-        # one RNG per contrast, so two contrasts' intervals are not drawn from the identical cluster picks
-        rng = np.random.default_rng(abs(hash((SEED, label, seed_tag, n, nc))) % (2 ** 32))
+        # One RNG per contrast, so two contrasts' intervals are not drawn from the identical cluster picks -
+        # but seeded through a STABLE hash. Python's hash() is salted per process for str (and for any tuple
+        # containing one) unless PYTHONHASHSEED is set, so seeding from it makes the bootstrap irreproducible
+        # across runs. An earlier version of this file did exactly that, and the committed intervals could
+        # not be regenerated; blake2b is stable across processes and machines.
+        key = "|".join(str(x) for x in (SEED, label, seed_tag, n, nc)).encode()
+        rng = np.random.default_rng(int.from_bytes(hashlib.blake2b(key, digest_size=4).digest(), "big"))
         keys = d["g"].to_numpy()
         groups = [d.index[keys == k].to_numpy() for k in pd.unique(keys)]
         bs, rs = [], []
