@@ -52,15 +52,18 @@ curated 21-gene panel plus the classic effectors it omits), each with its fold c
 activator, its wild-type-minus-altered difference, and MG53's slope on it. Grouped by what each gene does
 once p53 is active. Start here.
 
-`tables/tableD_p53_target_genes_RAW.csv` — the full set: one row per gene in the data-defined p53 program (195: 180 up
-arm, 15 down arm), joining the program columns to the MG53 screen columns. A plain extraction of pipeline
-columns, no derived verdicts. Per gene it carries the p53-activation fold change (`wt_mean_log2`,
-`p53_fold_WT`), the WT-minus-altered difference (`wt_minus_alt_log2`), how many of the 5 cross-fitted folds
-keep the gene (`n_folds_kept`), and MG53's slope on that gene (`b_common`, `q_common`, `b_WT`, `b_alt`,
-`diff`, `q_diff`, `q_label_diff`).
+`tables/tableD_p53_target_genes.csv` — the full set: one row per gene in the data-defined p53 program (195:
+180 induction arm, 15 repression arm), 67 columns, generated and documented by `table_d()` in
+`make_tables.py`. Per gene it carries the p53-activation fold change, the wild-type-minus-altered
+difference, cross-fitting stability (`n_folds_kept`, `loco_frequency`), MG53's slope with both the analytic
+and exposure-shuffle FDR, per-gene detectable-effect bounds for measured and true MG53, and a readthrough
+geometry flag. `tables/tableD_top_mg53_partners.csv` is the other direction: the 100 genes MG53 tracks most
+strongly genome-wide, for contrast.
 
-Read `wt_mean_log2` with care: it is averaged over a broad set of drug-doses, most of which do not activate
-p53, so the median program gene reads only 1.06x. It is not the fold change under a strong p53 activator.
+Read the fold change with care. Its baseline is **not vehicle**: it is the same line's median over that
+plate's **drug wells**, and it is a compound-equal mean (each of 98 compounds carries 1/98) over the 142
+p53-activating drug-doses. So a strong activator is averaged with 97 weaker ones, which is why the median
+program gene reads only 1.06x. It is not the fold change under a strong p53 activator.
 
 ## Per-line p53 function
 

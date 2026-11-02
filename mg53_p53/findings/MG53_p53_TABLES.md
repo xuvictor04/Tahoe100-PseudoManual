@@ -168,8 +168,9 @@ the curated 21-gene P53_ACTIVITY panel plus the classic effectors it omits (PMAI
 TIGAR, PPM1D, BTG2, CCNG1). The `role` column groups them by what they do once p53 is active; that grouping
 is **literature annotation**, an overlay for reading the table, and selects nothing.
 
-The companion `tables/tableD_p53_target_genes_RAW.csv` holds all 195 genes of the data-defined program,
-including the many that are statistically selected but not known effectors. This table is the focused one.
+The companion `tables/tableD_p53_target_genes.csv` holds all 195 genes of the data-defined program, generated
+and documented by `table_d()` in `make_tables.py`, with per-gene detectable-effect bounds and a readthrough
+geometry flag. This table is the focused one; see the full-program section below.
 
 ### Two fold changes, diluted in opposite ways
 
@@ -178,7 +179,12 @@ Neither available fold change is clean, so both are given:
 | Column | What it is | How it is diluted |
 |---|---|---|
 | `fold_ida5` | the gene's fold change under idarubicin 5 uM, a strong p53 activator | it is the median over **all 50 lines**, and two-thirds of the panel is p53-dead, so the sharpest targets read low |
-| `fold_WT_broad` | `2**wt_mean_log2`, **wild-type lines only** | averaged over a broad drug-dose set in which most drug-doses do not activate p53, so everything reads low (median 1.06x) |
+| `fold_WT_broad` | `2**wt_mean_log2`, **wild-type lines only** | its baseline is **not vehicle**: it is the same line's median over that plate's **drug wells**, and it is a compound-equal mean (each of 98 compounds carries 1/98) over the 142 p53-activating drug-doses, so a strong activator is averaged with 97 weaker ones (median 1.06x) |
+
+An earlier version of this section said `fold_WT_broad` was diluted by averaging over drug-doses that
+mostly do not activate p53. That was wrong: the average is taken over the 142 **p53-activating**
+drug-doses specifically [`genome_wide/genome_wide.py`:1976 -> `set_stats`:957-984]. It reads low for the two
+reasons given above instead.
 
 The clean quantity — wild-type lines only, under one strong activator — needs a per-gene **per-line**
 extraction that the export does not provide for arbitrary genes (only TRIM72 and the program scores reach
@@ -261,15 +267,17 @@ error does not absorb the line-level structure, so the statistic is inflated abo
 - Even the calibrated q does not make MG53 special, because **matched placebo genes show the same inflation
   or more**: lambda 4.685 (response-matched) and 5.518 (expression-matched), giving 3,196 and 5,330 genes at
   q_common < 0.1 against MG53's 4,500 [`genome_wide/tables/c_calibration.csv`]. MG53 sits inside the placebo
-  range. So read `placebo_pct_common_expression` / `_response` — the share of placebo exposures whose
-  statistic for that gene falls below MG53's — rather than the q value.
+  range. So read `placebo_pct_common_expression` / `_response` alongside the q value — but note their
+  **resolution is 0.1, because each family holds only 10 placebo exposures in the per-gene screen**. A 0.0 or
+  1.0 there means "most extreme of ten", not a p value, and cannot support a claim on its own.
 
 On that placebo reading the eight genes are extreme in opposite directions (CDKN1A 0.9/1.0, PMAIP1 1.0/1.0,
 AEN 1.0/1.0, BTG2 1.0/1.0 at the positive end; MDM2 0.1/0.0, DDB2 0.1/0.0, TP53I3 0.0/0.0 at the negative
-end). Sixteen of the 29 sit in the outer tenths in one direction or the other, which is more than chance
-would give — but in **both** directions at once. That is the signature of MG53 tracking overall
-transcriptional response amplitude, which makes it a better predictor than a random matched gene for any
-responsive gene, in whichever direction that gene happens to go. It is not a p53-directed effect.
+end). With only 10 placebos per family these are weak individually, but the pattern across the 29 is
+informative: genes land in the outer tenths in **both** directions at once. That is the signature of MG53
+tracking overall transcriptional response amplitude, which makes it a better predictor than a random matched
+gene for any responsive gene, in whichever direction that gene happens to go. It is not a p53-directed
+effect.
 
 ### Caveats
 
@@ -280,3 +288,247 @@ responsive gene, in whichever direction that gene happens to go. It is not a p53
   from the MG53 screen are not.
 - 24 h mRNA associations only: no MG53 perturbation, no protein data, every line carries wild-type MG53 at
   trace level, and the effective sample is the 11-17 lines with functional p53.
+
+---
+
+## Full program (195 genes) - generated per-gene table: p53 target genes, their fold change, and MG53
+
+`tables/tableD_p53_target_genes.csv` (195 rows, 67 columns) and `tables/tableD_top_mg53_partners.csv`
+(100 rows), both written by `table_d()` in `make_tables.py`. This is the gene-level companion to the
+per-line tables above, and the full-program version of the 29-gene effector table: it replaces the earlier
+hand-made `tableD_p53_target_genes_RAW.csv` dump with a generated, documented file.
+
+**One row is one gene of the data-defined p53 program** — 180 genes in the induction arm P, 15 in the
+repression arm P-down [`genome_wide/tables/b_p53_program_genes.csv.gz`, `in_P` / `in_P_down`] — carrying
+that gene's p53-activation fold change and that gene's own row from the genome-wide MG53 screen. Four
+things carry the weight: `wt_fold` (how much the gene moves when p53 is activated in TP53-wild-type
+lines), `wt_minus_alt_log2` (how much of that is genotype-specific), `n_folds_kept` with `loco_frequency`
+(whether the gene survives cross-fitting — the only handles on a circular selection), and
+`median_line_cpm` (whether the gene is expressed well enough for any of it to be measurable). The MG53
+block is `b_common`, one slope shared by all lines, and `diff` = `b_WT` − `b_alt`, its
+wild-type-minus-altered version.
+
+**The fold change is `2**wt_mean_log2`, and its baseline is not DMSO.** `wt_mean_log2` is the
+compound-equal weighted mean — each of **98 compounds** carries 1/98, split evenly across its doses — over
+**the 142 S2 p53-activating drug-doses**, of the mean corrected log2 response of the **TP53-wild-type lines
+that express the gene**; and that response is already relative to **the same line's median log2 CPM over
+that plate's drug wells**, minus the composition shift and the well-position effect
+[`genome_wide/genome_wide.py`:1976 → `set_stats`:957-984; `export/README.md`, `r2`]. So it is a fold change
+against a typical drug well of the same line on the same plate, not against vehicle and not against
+untreated cells, and it averages 142 treatments instead of reporting one strong activator. That is why the
+numbers are small: across the 180 induction-arm genes it runs **1.001x to 1.255x, median 1.060x**, with 42
+of 180 reaching 1.10x and 19 of 180 below 1.02x; the 15 repressed genes run 0.872x to 0.965x, median 0.935x
+[`genome_wide/tables/b_p53_program_genes.csv.gz`, `wt_mean_log2`; recomputed]. Ranking by the fold change is
+not the same as ranking by the program's own selection statistic — Spearman(`z_program`, `wt_mean_log2`)
+within P is 0.552 [same file, `z_program`; recomputed] — so both are in the table.
+
+### Column glossary
+
+| column | means | units | circular? |
+|---|---|---|---|
+| `arm` | induction arm P or repression arm P-down of the data-defined program | label | **yes** — membership was selected using the TP53 labels |
+| `wt_mean_log2`, `wt_fold` | the gene's corrected log2 change in TP53-WT lines, compound-equal mean over the 142 S2 p53-activating drug-doses, against that plate's drug-well median for the same line; `wt_fold` = 2** it | log2; fold (ratio) | **yes** — through the label-selected S2 drug-dose set |
+| `wt_minus_alt_log2`, `wt_minus_alt_fold` | same mean, of (WT-line mean − altered-line mean). Positive = moves more in TP53-WT | log2; fold | **yes** — this is the selection functional itself |
+| `z_program`, `q_arm` | the drug-equal mean WT-minus-altered contrast z, calibrated against 100 TP53-label permutations, and its own-direction BH FDR (`q_up` / `q_down` over 16,642 genes) | z; FDR | **yes** |
+| `frac_compounds_up`, `frac_compounds_wt_up` | share of the 98 S2 compounds with a positive contrast, and with a positive WT arm. The program rule needs both ≥ 0.5 | share of 98 | **yes** |
+| `n_folds_kept` of `n_folds_total` | how many of the 5 cross-fitted programs keep the gene (drug-doses re-selected without each compound fold) | count 0-5 | holds compounds out, not labels |
+| `loco_frequency` | share of the 98 leave-one-compound-out programs keeping the gene. Blanked on P-down rows: those programs are derived in the induction direction only | share of 98 | holds compounds out, not labels |
+| `median_line_cpm`, `n_lines_expressing` | the gene's median level across lines, and how many of 50 express it | CPM; count | **no** |
+| `b_common`, `se_common`, `q_common`, `q_xperm_common` | log2 change in the gene per log2 change in **measured** MG53, one slope for all lines, at equal drug-dose × TP53-group and cell line, conservative two-way (compound, line) SE; BH FDR, and the FDR against the exposure shuffled within each cell | log2 per doubling; FDR | **no** — no label-based selection of genes or drug-doses (one covariate's background gene set excludes the label-selected programs) |
+| `b_WT`, `b_alt`, `diff`, `se_diff`, `q_diff`, `q_label_diff` | the same slope fitted per TP53 group, their difference, and its two FDRs (BH, and the TP53-relabelling null) | log2 per doubling; FDR | **no** — label-tested, not label-selected |
+| `crit_*_q01_measured`, `mde80_*_q01_measured`, `mde80_*_q01_true` | smallest effect this gene could have shown as a lone discovery at q < 0.1, at 50% and 80% power, per doubling of measured and of true MG53 (÷ reliability 0.289) | log2 per doubling | **no** |
+| `placebo_pct_common_*`, `placebo_pct_diff_*` | share of that family's 10 placebo exposures whose t is below this gene's. Resolution 0.1, so 0.0 or 1.0 means "most extreme of ten", not a p value | share of 10 | **no** |
+| `readthrough_geometry` | positional only, never regulation: `sense_exposed` = the gene sits ≤ 20 kb **3' of** an expressed same-strand gene at ≥ 8x its own level, so transcription running past that neighbour is counted as this gene — readthrough spillover. MG53 itself is such a gene | label | **no** (positional) |
+| `mg53_verdict_common`, `mg53_verdict_genotype` | per-gene reading, each naming its own test in the next column: `q_xperm_common` < 0.1 on `b_common`, `q_label_diff` < 0.1 on `diff` | label | **no** |
+
+### The 25 strongest p53 target genes by fold change
+
+Sorted by `wt_fold`. ◆ = curated 21-gene P53_ACTIVITY panel, † = CollecTRI TP53-activated, ‡ = carries
+readthrough spillover geometry. All 25 have `loco_frequency` 1.000 and are not fallback members.
+
+| Gene | CPM | p53 fold change (WT) | WT−alt log2 | folds (of 5) | MG53 b_common (q_common; xperm q) | MG53 WT−alt diff (q_diff) | verdict |
+|---|---|---|---|---|---|---|---|
+| **MDM2** ◆† | 185.8 | **1.255x** | +0.257 | 5 | **−0.0050 (0.069; 0.031)** | −0.0006 (0.999) | **down** |
+| GRIN2C | 2.08 | 1.244x | +0.412 | 5 | **+0.0511 (1.2e−04; 5.6e−05)** | +0.0081 (0.999) | **up** |
+| PPM1D † | 56.2 | 1.243x | +0.226 | 5 | −0.0020 (0.63; 0.58) | −0.0086 (0.999) | none |
+| **FDXR** ◆† | 10.5 | 1.237x | +0.314 | 5 | +0.0025 (0.75; 0.71) | −0.0213 (0.999) | none |
+| TIGAR † | 35.7 | 1.209x | +0.179 | 5 | +0.0043 (0.36; 0.29) | −0.0118 (0.999) | none |
+| ZMAT3 ◆† | 28.9 | 1.202x | +0.218 | 5 | +0.0012 (0.80; 0.77) | −0.0012 (0.999) | none |
+| MIR3659HG ‡ | 2.43 | 1.194x | +0.201 | 4 | **+0.0241 (0.065; 0.028)** | −0.0022 (0.999) | **up** |
+| PER1 | 73.2 | 1.186x | +0.075 | 4 | +0.0011 (0.87; 0.85) | +0.0088 (0.999) | none |
+| PINCR | 0.65 | 1.183x | +0.392 | 5 | +0.0010 (0.95; 0.94) | −0.0353 (0.999) | none |
+| TP53INP1 ◆† | 9.20 | 1.180x | +0.278 | 5 | −0.0058 (0.42; 0.35) | −0.0011 (0.999) | none |
+| FAS † | 21.0 | 1.176x | +0.180 | 5 | +0.0000 (1.00; 1.00) | −0.0080 (0.999) | none |
+| PURPL | 20.2 | 1.176x | +0.303 | 5 | +0.0048 (0.55; 0.49) | +0.0081 (0.999) | none |
+| AEN ◆ | 17.0 | 1.167x | +0.182 | 5 | **+0.0090 (0.082; 0.039)** | −0.0125 (0.999) | **up** |
+| ACTA2 | 4.25 | 1.163x | +0.259 | 5 | +0.0129 (0.28; 0.21) | −0.0145 (0.999) | none |
+| ZNF79 | 7.20 | 1.160x | +0.150 | 5 | +0.0051 (0.41; 0.34) | −0.0012 (0.999) | none |
+| POLH ◆ | 59.0 | 1.158x | +0.184 | 5 | +0.0021 (0.57; 0.51) | +0.0042 (0.999) | none |
+| BTG2 † | 8.51 | 1.155x | +0.261 | 5 | **+0.0153 (0.11; 0.055)** | −0.0261 (0.999) | **up** |
+| SESN1 ◆† | 44.6 | 1.144x | +0.134 | 5 | +0.0005 (0.92; 0.91) | −0.0105 (0.999) | none |
+| DRAM1 † | 37.4 | 1.142x | +0.105 | 5 | **−0.0062 (0.16; 0.097)** | +0.0031 (0.999) | **down** |
+| MIR34AHG | 21.8 | 1.140x | +0.220 | 5 | −0.0076 (0.41; 0.34) | −0.0094 (0.999) | none |
+| **DDB2** ◆† | 54.3 | 1.139x | +0.206 | 5 | **−0.0075 (0.084; 0.041)** | +0.0060 (0.999) | **down** |
+| BBC3 ◆† | 17.4 | 1.136x | +0.185 | 5 | +0.0017 (0.74; 0.71) | −0.0074 (0.999) | none |
+| ENSG00000285901 | 4.68 | 1.135x | +0.177 | 5 | **+0.0351 (6.2e−04; 5.6e−05)** | −0.0170 (0.999) | **up** |
+| TNFRSF10B † | 200.5 | 1.131x | +0.093 | 5 | +0.0039 (0.37; 0.30) | −0.0068 (0.999) | none |
+| HSPA4L | 38.7 | 1.129x | +0.102 | 4 | −0.0038 (0.40; 0.33) | −0.0081 (0.999) | none |
+
+[All values `genome_wide/tables/b_p53_program_genes.csv.gz` (`wt_mean_log2`, `wt_minus_alt_log2`,
+`median_line_cpm`, `in_P_minus_fold0..4`, `loco_frequency`, overlay columns) and
+`genome_wide/tables/c_screen_genes.csv.gz` (`b_common`, `q_common`, `q_xperm_common`, `diff`, `q_diff`,
+`dog_class`); folds and verdicts recomputed.]
+
+Three readings the table forces. **CDKN1A (p21) is not in the top 25 by fold change** — 1.117x, 23rd by
+`wt_minus_alt_log2` — yet it has the largest positive slope among the classic effectors, +0.0104
+(q_common 0.031; xperm 0.0089), i.e. **+0.72% of p21 per doubling of MG53**. **MDM2, the strongest p53
+target here, moves the other way** (−0.0050, −0.35% per doubling), as does DDB2. Two canonical targets
+pointing in opposite directions is not a p53-directed effect. And the two largest slopes in the program,
+GRIN2C (+0.0511) and ENSG00000285901 (+0.0351), sit on genes of 2.1 and 4.7 CPM, where `|b_common|` is
+largest genome-wide for reasons of expression alone (median `|b_common|` by CPM bin: 0.0140 below 1 CPM,
+0.0144 at 1-4, 0.0059 at 4-16, 0.0036 at 16-64, 0.0027 above 64 [`c_screen_genes.csv.gz`, `b_common`;
+recomputed]).
+
+Only one gene in the top 25, **MIR3659HG**, carries readthrough spillover geometry; the only other one in
+the whole program is **RRM2B** (26th by fold change at 1.127x, `b_common` +0.0010, q 0.80), so 2 of 195
+program genes in total, against 702 of 16,642 tested genes (4.218%) genome-wide [`c_screen_genes.csv.gz`,
+`dog_class`; recomputed].
+
+### FDXR
+
+FDXR is the gene most likely to be misread, because it was the one negative lean in the earlier list-based
+work. As a p53 target it is impeccable: 1.237x in the wild-type lines, `wt_minus_alt_log2` +0.314 (the
+third largest in the program), `z_program` 5.32 at q 1.5e−04, rank 5 by z, kept by all 5 cross-fitted
+programs and by all 98 leave-one-compound-out programs, a member of both the curated 21-gene panel and the
+curated p53-primary list, 10.5 CPM in 49 of 50 lines, and no readthrough geometry
+[`b_p53_program_genes.csv.gz`]. **As an MG53 result it is not credible.** Its common slope is flat
+(+0.0025, q_common 0.75, xperm q 0.71). Its genotype split looks suggestive — `b_WT` −0.0106 (se 0.0051)
+against `b_alt` +0.0107 (se 0.0064), `diff` −0.0213 (se 0.0083), nominal p_diff 0.0135, pooled relabelling
+p 0.0112 — but: q_diff is 0.999 and q_label_diff 0.999; the effect halves and the nominal p collapses to
+0.111 when three response principal components are added (`diff_gw_pc` −0.0101), while holding under the
+other covariate sets (−0.0200 to −0.0231); its own-gene relabelling p sits on its floor of 1/21 = 0.048 and
+cannot go lower; its placebo percentiles are 0.1 and 0.0, i.e. 9 of 10 and 10 of 10 matched placebo
+exposures give a *lower* t, an empirical two-sided p of roughly 2/11; and |diff| 0.0213 is **2.3x below
+FDXR's own 80%-power detection bound of 0.0495** log2 per doubling of measured MG53
+[`c_screen_genes.csv.gz`, `b_WT`/`b_alt`/`diff`/`se_diff`/`p_diff`/`q_diff`/`q_label_diff`/`diff_gw_pc`/
+`p_diff_gw_pc`/`p_label_own_diff`/`placebo_pct_diff_*`; bound recomputed]. One gene out of 195 at nominal
+p 0.013 is what the second-smallest of 195 tests gives.
+
+### For contrast: what MG53's level actually tracks
+
+`tables/tableD_top_mg53_partners.csv` — the 100 largest `|b_common|` among the 4,500 genes the screen calls
+hits, with the p53 program selecting nothing. Top 10:
+
+| Gene | b_common (se) | q_common | xperm q | CPM | readthrough geometry |
+|---|---|---|---|---|---|
+| ENSG00000283573 | +0.1431 (0.0198) | 1.4e−06 | 5.6e−05 | 3.91 | **yes** |
+| FNDC7 | +0.1408 (0.0142) | 4.8e−09 | 5.6e−05 | 2.54 | **yes** |
+| SEMA4A | +0.1325 (0.0163) | 3.2e−07 | 5.6e−05 | 13.83 | **yes** |
+| LDHC | +0.1199 (0.0152) | 3.2e−07 | 5.6e−05 | 3.90 | **yes** |
+| ENSG00000260177 | +0.1182 (0.0144) | 2.5e−07 | 5.6e−05 | 2.25 | no |
+| ENSG00000289254 | +0.1161 (0.0145) | 3.2e−07 | 5.6e−05 | 4.33 | **yes** |
+| MMP25 | +0.1136 (0.0135) | 1.5e−07 | 5.6e−05 | 2.36 | no |
+| AZU1 | +0.1123 (0.0132) | 1.5e−07 | 5.6e−05 | 1.50 | **yes** |
+| GRAMD2A | +0.1079 (0.0168) | 7.0e−06 | 5.6e−05 | 1.24 | **yes** |
+| ENSG00000205890 | +0.1074 (0.0119) | 8.4e−08 | 5.6e−05 | 3.18 | no |
+
+All 100 slopes are positive, from 0.062 to 0.143 (median 0.073); none of the 100 is a p53 program member;
+median expression is 2.77 CPM against 54.19 CPM for the program; and **61 of 100 carry readthrough
+spillover geometry** against the genome-wide 4.218% [`c_screen_genes.csv.gz`, `b_common`/`q_common`/
+`dog_class`; `b_p53_program_genes.csv.gz`, `median_line_cpm`; recomputed]. That 61% is not just an
+expression artefact: among the 4,087 tested genes at or below the list's own 75th-percentile expression
+(3.94 CPM) the rate is 9.5%, so it is still a **6.4x** enrichment [recomputed]. The magnitude gap is
+largely artefact, though: the 20x ratio between the partners' median `|b_common|` and the program's
+(0.0037) is about 4x expression level and the rest selection of the top 100 of 16,642 on `|b|`. What this
+list shows is the genes MG53's residual variation co-moves with — dominated by low-expressed genes whose
+measurement shares a readthrough neighbourhood with MG53's own — not a biology list, and not anything that
+resembles the p53 program.
+
+### The per-gene bottom line
+
+**How many p53 targets show any MG53 association: the background number, with no direction.** 53 of 195 at
+the analytic q_common < 0.1 (24 positive, 29 negative) and 67 of 195 at the exposure-shuffle
+q_xperm_common < 0.1 (34 positive, 33 negative). Both are exactly the genome-wide rate: 4,500 of 16,642
+tested genes (27.04%) pass q_common and 5,746 (34.5%) pass q_xperm_common, against 27.2% and 34.4% here.
+The one thing that differs is sign and size: the 4,447 non-program hits are 71.7% positive with a median
+`|b_common|` of 0.0153, while the program's hits split 24/29 with a median of 0.0037
+[`c_screen_genes.csv.gz`; recomputed]. The repressed arm is the same story on 15 genes (4 hits).
+
+**How many by genotype: none.** 0 of 195 — and 0 of all 16,642 tested genes — reach q_diff < 0.1 or
+q_label_diff < 0.1. q_diff cannot even rank genes: 194 of the 195 sit at its minimum, 0.99879. On the
+nominal p_diff the extreme gene is INKA2 at 1.9e−03 (the only program gene q_label_diff separates at all,
+0.888), and its difference is carried by the **altered** arm (`b_alt` +0.0202, p 0.0043; `b_WT` −0.0046,
+p 0.39) — the wrong arm for anything MG53 does to p53's output. The minimum of 195 independent tests is
+expected to fall that low about 30% of the time [`c_screen_genes.csv.gz`, `p_diff`/`q_diff`/
+`q_label_diff`/`b_WT`/`b_alt`; recomputed].
+
+**The per-gene detectable-effect bound.** A lone discovery at q_diff < 0.1 needs p ≤ 0.1/16,642 =
+6.0e−06, i.e. |t| ≥ 5.11 at the median df of 46. With a median `se_diff` of 0.0048 across the 195 genes
+that is **|diff| ≥ 0.029 log2 at 80% power = +2.0% in the gene per doubling of measured MG53**, and,
+dividing by MG53's split-half reliability of 0.289, **+7.1% per doubling of true MG53**. For the common
+slope the same bound is +1.0% measured / +3.7% true. **No gene reaches its own bound**: the largest |diff|
+in the table is 0.035 and 0 of 195 clear their own 80% threshold (13 exceed the much weaker 1.96 × se).
+On the true-MG53 scale that bound is **1.43x the median gene's entire wild-type-minus-altered genotype
+effect** (0.070 log2) — MG53 would have to move a p53 target by more than TP53 genotype itself does for
+this screen to have seen it [`c_screen_genes.csv.gz`, `se_diff`/`se_common`/`df`;
+`two_way/tables/trim72_reliability.csv`, `reliability_full_spearman_brown` row i_all / ddxg / full / all
+lines; recomputed].
+
+### Caveats
+
+- **The fold-change columns are circular.** The program's genes **and** the S1 / S2 p53-activating
+  drug-doses were both selected using the TP53 wild-type / altered labels, at the drug-dose-selection step
+  and again at the contrast step. So `arm`, `z_program`, `q_arm`, `wt_mean_log2`, `wt_minus_alt_log2`,
+  `frac_compounds_*`, `rank_in_P`, `loco_frequency` and `n_folds_kept` are all circular as evidence of p53
+  specificity — the genes were picked for showing this pattern — and the magnitudes are selected-on
+  maxima, optimistically large for these genes. `wt_mean_log2` inherits it through the S2 selection even
+  though it is a one-arm mean. The cross-fitting and leave-one-compound-out columns hold **compounds** out,
+  not labels: they bound compound-driven instability, they do not remove the circularity. The whole MG53
+  screen block is **not** circular (one covariate's background gene set excludes the label-selected
+  programs; nothing else uses the labels for selection).
+- **The baseline is a drug well, not DMSO or untreated.** Every `wt_fold` is against the same line's
+  median log2 CPM over that plate's drug wells; at program level the DMSO-referenced version is 0.025 log2
+  larger [`export/downstream/program_scores_per_drugdose_line.csv`, `P_r2_mean` vs `P_u_dmso_mean`].
+- **The effects are small and averaged over 142 treatments.** Median 1.060x, maximum 1.255x; 19 of 180
+  induction-arm genes are below 1.02x. A single strong activator gives much larger folds — see the
+  `fold_ida5` column in the effector table above — and the clean quantity (wild-type lines only, one
+  activator) still needs a per-gene per-line extraction the export does not provide.
+- **q_common must not be read as a p value.** `lambda_common` is 4.44 with 4,500 of 16,642 genes passing,
+  and matched placebo exposures — real genes chosen before any fit — give **2 to 8,381** genes at
+  q_common < 0.1 (median 5,331, expression-matched) and 897 to 5,344 (median 3,196, response-matched), so
+  MG53 sits inside the placebo range [`genome_wide/tables/c_calibration.csv`, `N_q01_common`]. The
+  exposure shuffles give 0 every time, but they break the exposure's line-level structure by construction,
+  so they are not the yardstick. Only the comparison against background (27.0% / 34.5%) and the placebo
+  percentiles are informative per gene, and the latter have 0.1 resolution.
+- **q_diff saturates.** Its 0.99879 floor is a real BH value, not a missing one, so "none" for all 195
+  means nowhere near significance, not "untested".
+- **Low counts.** 13 of the 180 induction-arm genes sit below 5 CPM and one below 1 (PINCR, 0.65), where
+  a zero count still receives a log2 CPM set by library size alone. `|diff|` is also not comparable across
+  rows: `se_diff` spans 0.0021 to 0.0209, a 9.8x range, and the two largest `|diff|` values in the table
+  (ZNF423 −0.0354 at 1.26 CPM, PINCR −0.0353 at 0.65 CPM) are its two noisiest rows. Read every slope next
+  to `median_line_cpm` and its own `mde80_*` column.
+- **The repressed arm is the weakest part.** Only 4 of its 15 genes are kept by all 5 cross-fitted
+  programs, and those fold programs were top-25 fallbacks in 4 of the 5 folds
+  [`export/downstream/program_flags.csv`, `flag`]. `loco_frequency` is blank for all 15 by construction
+  (the leave-one-compound-out programs are derived in the induction direction only) and `rank_in_P` is
+  blank for all 15 (it is a rank within the induction arm) — neither blank means missing data.
+- **The design is smaller per gene than it looks.** `n_drugdoses` is 1,132 for every tested gene, but
+  after pruning the 195 genes contribute 11 to 17 wild-type and 22 to 30 altered lines (median 17 and 30,
+  df median 46), not the panel's 17 and 33 [`c_screen_genes.csv.gz`, `n_lines_WT`/`n_lines_alt`/`df`].
+- **The true-MG53 scale is a range, not a point.** Dividing by 0.289 assumes classical measurement error;
+  the `ii_active` variant of the same split-half gives 0.610, which would halve the de-attenuation
+  [`two_way/tables/trim72_reliability.csv`].
+- **Readthrough spillover is positional and is never called "downstream".** TRIM72 lies 10.6 kb **3' of**
+  PYCARD-AS1 and 17 kb **3' of** FUS on the same strand, so transcription running past them is counted as
+  TRIM72; `readthrough_geometry` applies the same test to each outcome gene. It says nothing about
+  regulation. Only the screen's `b_common_gw_rt` / `diff_gw_rt` columns adjust for it; no program column
+  does. "Downstream" in this section means regulatory downstream of MG53 and nothing else.
+- **Whether p53 regulates MG53 is out of scope** and no column here reports it. A gene's p53-activation
+  fold change is in scope because it defines the read-out being tested.
+- **Everything here is an association in mRNA 24 h after treatment.** Tahoe contains no MG53 perturbation
+  and no protein data, so no slope in this table can separate MG53 changing a p53 target from the two
+  moving together; and every mean over lines is over the lines that still had cells in the well at 24 h,
+  which is not a random subset.
+- If a per-gene fold change is needed for a gene **outside** the program, it is only in
+  `genome_wide/tables/b_p53_program_genes.csv.gz`: `export/downstream/genes.csv` carries
+  `program_wt_mean_log2` on just 195 of its 4,642 rows.

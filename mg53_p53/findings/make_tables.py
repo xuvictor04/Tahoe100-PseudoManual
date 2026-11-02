@@ -322,6 +322,180 @@ def p53_effectors(res, out):
     return t
 
 
+def table_d(res, out):
+    """Per-gene companion to Tables A and C: every p53 target gene, its fold change, and MG53's slope on it.
+
+    One row per member of the data-defined p53 program - 180 genes in the induction arm P, 15 in the
+    repression arm P-down. The fold-change block says how much the gene moves in the TP53-wild-type lines
+    when p53 is activated; the MG53 block is that gene's own row in the genome-wide MG53 screen.
+
+    Scope (fixed, per the project's question): upstream of MG53 = what raises or lowers MG53's expression;
+    downstream of MG53 = what MG53's level does to p53 and p53's output. Whether p53 regulates MG53 is NOT
+    in scope and no column here reports it. A gene's p53-activation fold change IS in scope: it defines the
+    read-out being tested, it says nothing about p53 acting on MG53.
+
+    wt_fold = 2**wt_mean_log2, and the baseline matters. wt_mean_log2 is the compound-equal weighted mean
+    (each of 98 compounds carries 1/98, split across its doses) over the 142 S2 p53-activating drug-doses,
+    of the mean corrected log2 response of the TP53-WT lines that express the gene - and that response is
+    already relative to the SAME LINE's median log2 CPM over that plate's drug wells, minus the composition
+    shift and the well-position effect [genome_wide.py:1976 -> set_stats :957-984]. So it is a fold change
+    against a typical drug well of the same line on the same plate, not against DMSO and not against
+    untreated cells, and it averages 142 treatments rather than reporting one strong activator, which is
+    why it reads low (median 1.06x).
+
+    CIRCULARITY: the program's genes AND the S1 / S2 p53-activating drug-doses were both selected USING the
+    TP53 WT/altered labels, so arm, z_program, q_arm, wt_mean_log2, wt_minus_alt_log2, frac_compounds_*,
+    rank_in_P, loco_frequency and n_folds_kept are all circular as evidence of p53 specificity. The screen
+    block is not: it fits every atlas gene over all 1,132 drug-doses with no label-based selection of genes
+    or drug-doses (the labels enter the design, plus one covariate, resp_bg, whose background gene set is
+    defined by excluding the label-selected programs).
+
+    Writes tableD_p53_target_genes.csv (the 195 program genes, strongest p53 induction first) and
+    tableD_top_mg53_partners.csv (the 100 largest |b_common| among the screen's q_common < 0.1 genes, for
+    contrast). Returns the first.
+    """
+    # MG53's split-half reliability under the screen's own fixed effects (drug-dose x TP53-group), used to
+    # restate slopes and detection bounds per doubling of TRUE rather than measured MG53: an observed slope
+    # is reliability x the true one, so dividing de-attenuates it [two_way/tables/trim72_reliability.csv,
+    # row i_all / ddxg / full / all lines]. The ii_active variant gives 0.610, so the true-scale columns
+    # are the wide end of a range, not a point estimate.
+    rel = 0.289317
+    pg = pd.read_csv(os.path.join(res, "genome_wide/tables/b_p53_program_genes.csv.gz"), low_memory=False)
+    sc = pd.read_csv(os.path.join(res, "genome_wide/tables/c_screen_genes.csv.gz"), low_memory=False)
+    n_tested = int((sc["tested"] == True).sum())                                         # noqa: E712
+    alpha = 0.1 / n_tested                   # a lone discovery at q < 0.1 needs a p below this
+
+    def screen(tab):
+        """Join the MG53 screen block on symbol, then add the verdicts, detection bounds and geometry.
+
+        b_common is ONE slope shared by all lines: log2 change in the gene per log2 change in measured
+        MG53, at equal drug-dose x TP53-group and cell line, with the conservative two-way (compound, line)
+        cluster SE. diff = b_WT - b_alt is the wild-type-minus-altered version of the same slope.
+
+        The verdicts use the permutation-calibrated q values, not the analytic ones. The screen's own
+        calibration puts lambda_common at 4.44 with 4,500 of 16,642 genes at q_common < 0.1, and matched
+        placebo exposures - real genes picked before any fit - give 2 to 8,381 such genes, so q_common on
+        its own says almost nothing [genome_wide/tables/c_calibration.csv]. q_xperm_common (the exposure
+        shuffled across lines within each drug-dose x TP53-group cell) is the null the step documents for
+        the common slope, and the TP53-relabelling null is explicitly not valid for it, so the genotype
+        verdict uses q_label_diff instead. The placebo percentiles ride along because they are the only
+        per-gene yardstick free of that inflation - with 10 placebos per family their resolution is 0.1, so
+        a 0.0 or a 1.0 is "most extreme of ten", not a p value.
+        """
+        cols = ["symbol", "tested", "n_rows", "n_lines_WT", "n_lines_alt", "n_drugdoses", "df",
+                "b_common", "se_common", "t_common", "p_common", "q_common", "q_xperm_common",
+                "b_WT", "b_alt", "diff", "se_diff", "t_diff", "p_diff", "q_diff", "q_label_diff",
+                "sd_x_resid", "b_common_gw_rt", "diff_gw_rt",
+                "placebo_pct_common_expression", "placebo_pct_common_response",
+                "placebo_pct_diff_expression", "placebo_pct_diff_response"]
+        pos = ["dog_class", "in_TRIM72_locus_200kb"]            # positional flags, kept unprefixed
+        cols = [c for c in cols if c in sc.columns]
+        pos = [c for c in pos if c in sc.columns]
+        s = sc[cols + pos].drop_duplicates("symbol").rename(
+            columns={c: "screen_" + c for c in cols if c != "symbol"})
+        tab = tab.merge(s, on="symbol", how="left")
+        # "not tested" keys on the screen's own tested flag, NOT on a missing slope: the exposure's row
+        # carries b_common = 1.0 with tested False, which would otherwise read as a real null result.
+        ok = tab.get("screen_tested", pd.Series(False, index=tab.index)) == True          # noqa: E712
+
+        def verdict(est, q, up, down):
+            b = pd.to_numeric(tab["screen_" + est], errors="coerce")
+            qq = pd.to_numeric(tab["screen_" + q], errors="coerce")
+            hit = ok & qq.notna() & (qq < 0.1)
+            return np.where(~ok, "not tested", np.where(hit & (b > 0), up,
+                                                        np.where(hit & (b < 0), down, "none")))
+
+        tab["mg53_verdict_common"] = verdict("b_common", "q_xperm_common", "up with MG53",
+                                             "down with MG53")
+        tab["mg53_verdict_genotype"] = verdict("diff", "q_label_diff", "differs by TP53 status (WT higher)",
+                                               "differs by TP53 status (altered higher)")
+        tab["mg53_verdict_common_test"] = "q_xperm_common < 0.1 (exposure shuffled within cell) on b_common"
+        tab["mg53_verdict_genotype_test"] = "q_label_diff < 0.1 (TP53 relabelling) on diff = b_WT - b_alt"
+        # Smallest effect this gene could have shown as a lone discovery at q < 0.1: crit_* would be caught
+        # half the time, mde80_* four times in five. Dividing by rel converts per doubling of measured MG53
+        # into per doubling of true MG53.
+        tcrit = st.t.isf(alpha / 2, pd.to_numeric(tab["screen_df"], errors="coerce"))
+        for est in ("diff", "common"):
+            se = pd.to_numeric(tab["screen_se_" + est], errors="coerce")
+            tab["crit_%s_q01_measured" % est] = tcrit * se
+            tab["mde80_%s_q01_measured" % est] = (tcrit + st.norm.isf(0.2)) * se
+            tab["mde80_%s_q01_true" % est] = tab["mde80_%s_q01_measured" % est] / rel
+        tab["diff_per_doubling_true"] = pd.to_numeric(tab["screen_diff"], errors="coerce") / rel
+        # Positional only, never regulation: dog_class "sense_exposed" means the gene sits within 20 kb 3'
+        # of an expressed same-strand gene at >= 8x its own level, so transcription running past that
+        # neighbour is counted as this gene - readthrough spillover. MG53 itself is sense_exposed (TRIM72
+        # lies 10.6 kb 3' of PYCARD-AS1 and 17 kb 3' of FUS, same strand), which is why the flag belongs
+        # next to b_common at all.
+        dc = tab["dog_class"].astype(str) if "dog_class" in tab.columns else pd.Series("", index=tab.index)
+        near = (tab["in_TRIM72_locus_200kb"] == True if "in_TRIM72_locus_200kb" in tab.columns
+                else pd.Series(False, index=tab.index))                                   # noqa: E712
+        tab["readthrough_geometry"] = np.where(
+            dc == "sense_exposed", "readthrough spillover risk (<= 20 kb 3' of a much higher same-strand"
+                                   " gene)",
+            np.where(near, "within 200 kb of the MG53 locus", "no readthrough geometry"))
+        return tab
+
+    ov = {"overlay_OVERLAY_P53_ACTIVITY21": "curated_panel21",
+          "overlay_OVERLAY_GM_p53_primary": "curated_p53_primary",
+          "overlay_OVERLAY_CollecTRI_TP53_activated": "curated_collectri_TP53",
+          "overlay_OVERLAY_GM_locus_readthrough": "curated_locus_readthrough"}
+    for c in list(ov) + ["in_P_noX"]:                        # an overlay this run did not write
+        if c not in pg.columns:
+            pg[c] = np.nan
+    fu = [c for c in pg.columns if c.startswith("in_P_minus_fold")]
+    fd = [c for c in pg.columns if c.startswith("in_P_down_minus_fold")]
+    a_up, a_dn = pg["in_P"] == True, pg["in_P_down"] == True                              # noqa: E712
+    g = pg[a_up | a_dn].copy()
+    isup = a_up[a_up | a_dn].to_numpy()                      # the two arms are disjoint by construction
+    g["arm"] = np.where(isup, "P up (WT-selective induction)", "P down (WT-selective repression)")
+    g["q_arm"] = np.where(isup, g["q_up"], g["q_down"])      # the gene's own direction's FDR
+    # cross-fitted stability: the program rule re-run on p53-activating drug-doses selected without each
+    # compound fold's compounds. This holds compounds out, not labels, so it bounds compound-driven
+    # instability and does not touch the label circularity.
+    g["n_folds_kept"] = np.where(isup, g[fu].sum(axis=1) if fu else np.nan,
+                                 g[fd].sum(axis=1) if fd else np.nan)
+    g["n_folds_total"] = len(fu) if fu else np.nan
+    # loco_frequency counts leave-one-compound-out INDUCTION programs only (program_rule is called with
+    # sign = +1 there), so the published 0.0 on every P-down gene is structural, not fragility: blank it
+    # rather than let it read as a stability failure. n_folds_kept is the down arm's only stability column.
+    g.loc[~isup, "loco_frequency"] = np.nan
+    pm = os.path.join(res, "genome_wide/tables/b_p53_program.csv")    # program_is_fallback lives here
+    if os.path.exists(pm):
+        pmd = pd.read_csv(pm)
+        if "program_is_fallback" in pmd.columns:
+            g = g.merge(pmd[["symbol", "program_is_fallback"]].drop_duplicates("symbol"),
+                        on="symbol", how="left")
+    # rank_in_P is the rank by z WITHIN THE INDUCTION ARM (genome_wide.py:1988 fills it for P only), so it
+    # is blank on every P-down row by construction, not missing data.
+    t = g[["symbol", "idx", "arm", "rank_in_P", "z_program", "q_arm", "median_line_cpm",
+           "n_lines_expressing", "wt_mean_log2", "wt_minus_alt_log2", "frac_compounds_up",
+           "frac_compounds_wt_up", "n_compounds_with_z", "loco_frequency", "n_folds_kept",
+           "n_folds_total", "in_P_noX"]
+          + [c for c in ("program_is_fallback",) if c in g.columns] + list(ov)].rename(columns=ov)
+    t.insert(t.columns.get_loc("wt_mean_log2") + 1, "wt_fold", 2.0 ** t["wt_mean_log2"])
+    t.insert(t.columns.get_loc("wt_minus_alt_log2") + 1, "wt_minus_alt_fold",
+             2.0 ** t["wt_minus_alt_log2"])
+    t = screen(t).sort_values("wt_mean_log2", ascending=False, kind="stable").reset_index(drop=True)
+    t["fold_change_columns_are_circular"] = True      # chosen with the TP53 labels; see the docstring
+    t["mg53_columns_are_circular"] = False
+    os.makedirs(out, exist_ok=True)
+    t.to_csv(os.path.join(out, "tableD_p53_target_genes.csv"), index=False)
+
+    # The other direction, for contrast: what MG53's level actually tracks genome-wide. The program selects
+    # nothing here - the ranking is by |b_common| among the genes the screen itself calls hits.
+    s = sc[(sc["tested"] == True) & sc["q_common"].notna() & (sc["q_common"] < 0.1)]      # noqa: E712
+    s = s.reindex(s["b_common"].abs().sort_values(ascending=False, kind="stable").index).head(100)
+    pb = pg[["symbol", "median_line_cpm", "n_lines_expressing", "in_P", "in_P_down", "z_program",
+             "wt_mean_log2", "q_up", "loco_frequency"] + list(ov)].rename(
+        columns={**ov, "in_P": "in_p53_program_P", "in_P_down": "in_p53_program_P_down"})
+    p = s[["symbol"]].merge(pb, on="symbol", how="left")
+    p.insert(p.columns.get_loc("wt_mean_log2") + 1, "wt_fold", 2.0 ** p["wt_mean_log2"])
+    p = screen(p).sort_values("screen_b_common", key=lambda v: -v.abs(),
+                              kind="stable").reset_index(drop=True)
+    p.to_csv(os.path.join(out, "tableD_top_mg53_partners.csv"), index=False)
+    return t
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--results", default=os.environ.get("MG53_RESULTS") or os.path.expanduser("~/Tahoe-100M/mg53_p53"),
@@ -353,7 +527,10 @@ def main():
     pe = p53_effectors(res, out)
     print(pe[["symbol", "role", "fold_ida5", "fold_WT_broad", "wt_minus_alt_log2", "b_common",
               "q_common", "mg53_common_verdict", "mg53_genotype_verdict"]].to_string(index=False))
-    print(f"\nwrote 7 CSVs to {out}")
+    print("\nPer-gene: every p53 program gene, its fold change and MG53's slope")
+    td = table_d(res, out)
+    print(td.head(12).to_string(index=False) if hasattr(td, "head") else td)
+    print(f"\nwrote 9 CSVs to {out}")
 
 
 if __name__ == "__main__":
