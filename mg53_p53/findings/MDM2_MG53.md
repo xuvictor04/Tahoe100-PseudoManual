@@ -146,6 +146,74 @@ What the same column *does* show is the 3.07x wild-type / altered split — visi
 sitting near +1.2 to +1.5 and every altered band near -0.4 to 0.0, with no overlap between the groups and no
 trend inside either one. MDM2's baseline is set by whether the line has working p53. It is not set by MG53.
 
+## Table 4 — within one exposure, across cell lines: the one contrast that shows something
+
+Hold the drug and dose fixed and compare the lines against each other. Among the lines given the same
+exposure, do the ones that raise MG53 most show the least MDM2? This is the only contrast in the document
+where the answer is not flatly no, so it gets the most careful null.
+
+The unit is 861 line x exposure cells — the 18 MG53-raising exposures for which the pipeline exported
+per-line values for MDM2 — and each line is compared only against the other lines on the same exposure.
+Binned first, five bins per group:
+
+| Group | MG53 quintile within exposure | n | MG53 change (median) | MDM2 change (mean, 95% CI) |
+|---|---|---|---|---|
+| all lines | 1 (lowest) | 169 | -1.54 | -0.002 (-0.102, +0.097) |
+| all lines | 3 | 169 | +0.03 | -0.004 (-0.097, +0.088) |
+| all lines | 5 (highest) | 169 | +1.44 | -0.013 (-0.122, +0.097) |
+| TP53-WT | 1 (lowest) | 61 | -1.38 | +0.169 (-0.046, +0.385) |
+| TP53-WT | 2 | 61 | -0.32 | +0.390 (+0.193, +0.587) |
+| TP53-WT | 3 | 61 | +0.22 | +0.361 (+0.156, +0.566) |
+| TP53-WT | 4 | 61 | +0.82 | +0.147 (-0.045, +0.340) |
+| TP53-WT | 5 (highest) | 61 | +1.71 | -0.049 (-0.249, +0.150) |
+| TP53-altered | 1 (lowest) | 108 | -1.66 | -0.040 (-0.148, +0.068) |
+| TP53-altered | 3 | 108 | -0.13 | -0.216 (-0.292, -0.140) |
+| TP53-altered | 5 (highest) | 108 | +1.32 | -0.034 (-0.149, +0.080) |
+
+Pooled over all lines it is flat. In the 17 wild-type lines it does decline — +0.39 in the second bin down
+to -0.05 in the top — though not from the first bin, and as a single slope that is **-0.060 (95% CI -0.139
+to +0.019, compound-bootstrap p 0.13)**: not significant. In the altered lines the pattern is
+non-monotonic, most negative in the middle.
+
+The same data by the pipeline's own estimator says something stronger, so both are given.
+
+The statistic is a Spearman per exposure over the lines in that group, averaged over the 18 exposures — the
+pipeline's own estimator. Two nulls, and the difference between them is the point:
+
+- **per-exposure shuffle**: MDM2 permuted independently inside each exposure. Holds the exposure set, the
+  line count and both marginals fixed — but it also destroys the fact that the *same* 17 or 30 lines appear
+  in all 18 exposures. If a line simply tends to run high in MG53 and low in MDM2 as a standing property,
+  the real statistic keeps that and this null throws it away, so its p is too small. **This is the null the
+  pipeline reports.**
+- **line-label shuffle**: one permutation of the cell-line labels, applied to every exposure at once. Each
+  line's whole MDM2 profile travels together and is attached to a different line's MG53 profile. Line-level
+  structure survives in the null, so what gets tested is the claim actually being made.
+
+| Group | Contrast | mean rho over 18 exposures | negative in | p, per-exposure shuffle | **p, line-label shuffle** |
+|---|---|---|---|---|---|
+| all lines | MG53 change → MDM2 | -0.017 | 11 of 18 | 0.64 | 0.71 |
+| **TP53-WT (17)** | **MG53 change → MDM2** | **-0.162** | **11 of 18** | **0.005** | **0.036** |
+| TP53-altered (30) | MG53 change → MDM2 | -0.047 | 12 of 18 | 0.29 | 0.45 |
+| TP53-WT | MG53 *level* → MDM2 | -0.033 | 9 of 18 | 0.55 | 0.69 |
+| all lines | *CDKN1A* → MG53 change | +0.135 | 4 of 18 | <0.001 | 0.008 |
+| TP53-WT | *CDKN1A* → MG53 change | +0.163 | 2 of 18 | 0.006 | 0.059 |
+| TP53-altered | *CDKN1A* → MG53 change | +0.122 | 6 of 18 | 0.012 | 0.086 |
+
+**The stricter null costs the result most of its significance but does not kill it**: p 0.005 becomes 0.036,
+and the null's spread widens by 34% (SD 0.058 to 0.078) — which is exactly the inflation the weaker null was
+hiding.
+
+Then the accounting, which is where it ends. Nine contrasts were tested; at p = 0.036 and rank 2 this is
+**q ≈ 0.16** by Benjamini-Hochberg, so it does not clear 0.1. It sits in the smallest arm available,
+**17 lines**. Its magnitude is estimator-dependent: the same data as a pooled within-exposure residual slope
+gives -0.060 with a compound-bootstrap p of 0.13. The per-exposure correlations run from **-0.65 to +0.31**,
+so the mean of -0.162 is an average over exposures that disagree about the sign. And the contrast does not
+reproduce in the TP53-altered arm, while the genome-wide screen — with 47 lines and all 1,132 exposures
+rather than 18 — puts the wild-type-minus-altered difference at -0.0006, p 0.89.
+
+So: a hint, in the one place it could show up, that does not survive its own accounting. Worth recording,
+not worth believing yet. If anything in this document is followed up, this is the row to follow up.
+
 ## Table 5 — the twelve biggest raisers and the twelve biggest lowerers, named
 
 Binning hides what the extremes do, and the extremes are where a real effect would be easiest to see. These
@@ -190,7 +258,7 @@ and *down* where it is not (auranofin, z **-7.8**, MDM2 0.66x; panobinostat z 1.
 z 0.6, 0.66x). MG53 is raised 2.0x to 12.2x throughout, in no particular relation to either. The gene is
 doing exactly what a p53-regulated transcript should do, and MG53 is not the thing it is tracking.
 
-## Table 4 — single cells: MDM2 in the cells that have MG53 against the cells that do not
+## Table 6 — single cells: MDM2 in the cells that have MG53 against the cells that do not
 
 This is the best-controlled comparison in the data, and the most literal reading of "different levels of
 MG53": inside **one cell line, one well**, split the cells by whether MG53 was detected in them and ask how
@@ -232,7 +300,7 @@ so "MG53-detected" partly means "more deeply sequenced cell". The UMI offset, th
 depth-stratified version are what stand against that, and the adjusted and unadjusted per-line medians do
 differ (for DMSO plate 14 WT, -0.210 adjusted against -0.122 unadjusted), so the adjustment is doing work.
 
-## Table 6 — the genome-wide screen's own slope on MDM2
+## Table 7 — the genome-wide screen's own slope on MDM2
 
 This is the one estimate with per-line resolution across all exposures: cell-line and drug-dose fixed
 effects, 53,084 line x exposure cells, 47 lines. Reported from `c_screen_genes`, not recomputed.
@@ -324,6 +392,53 @@ independent (chi-square p = 0.042):
 A faint anti-diagonal tilt — the lowest MG53 cells lean to high MDM2, the fourth row leans low — but the
 corner that should be emptiest if MDM2 fell with MG53 holds 51 against 45 expected. The p of 0.042 is on 16
 degrees of freedom and is carried as much by that non-monotonicity as by any trend.
+
+## What this adds up to
+
+Every contrast in the document, with what it came to:
+
+| Resolution | Contrast | Result | Verdict |
+|---|---|---|---|
+| 48 lines, untreated | MG53 baseline vs MDM2 baseline | r +0.08, p 0.57 (WT -0.10, altered +0.15) | nothing |
+| 1,132 exposures | MG53 change deciles vs MDM2 | every bin within 2% of 1.00, no trend | nothing |
+| 1,132 exposures | MG53 change vs MDM2 change | rho -0.092, Pearson +0.003, -0.022 after activity | 26th percentile of genes |
+| 1,132 exposures | MG53 CPM vs MDM2 CPM | -0.614 overall, **+0.074 within plate** | plate artefact |
+| the 12 biggest lowerers | MDM2 | 0.95 to 1.08, every one | nothing |
+| the 12 biggest raisers | MDM2 | 0.48 to 1.77, following p53 activity | not following MG53 |
+| 861 line x exposure | within exposure, TP53-WT | mean rho -0.162, p 0.036, **q ~0.16** | a hint, unconfirmed |
+| 861 line x exposure | within exposure, TP53-altered | -0.047, p 0.45 | nothing |
+| single cells | untreated, TP53-WT | rate ratio 1.016, 34th percentile of 85 controls | nothing |
+| single cells | untreated, TP53-altered | 0.915, p 0.005, 3.6th percentile | replicates, wrong arm for p53 |
+| single cells | idarubicin, TP53-WT | **+15% on plate 14, -6% on plate 6** | irreproducible |
+| 53,084 cells | screen, common slope | -0.35% per doubling, same in all 6 covariate sets | smallest of the eight; under the lone-discovery bar |
+| 53,084 cells | screen, WT vs altered | -0.0054 vs -0.0048, difference p 0.89 | not p53-mediated |
+
+**There is no relationship between the level of MG53 and the level of MDM2 in this data.** Not across cell
+lines untreated, not across exposures, not between absolute amounts, and not in the cells of a single well.
+The screen's "down with MG53" verdict is real as a statement about where MDM2 falls in a genome-wide ranking
+and is the smallest effect among the genes that cleared, carried by MDM2's precision rather than its size;
+set against the all-gene distribution it is the 26th percentile.
+
+**And nothing about it looks p53-mediated**, which is what the question was. The screen's slope is the same
+size in 30 lines whose p53 cannot touch MDM2 as in 17 where it can. Partialling out p53 output makes the
+drug-dose correlation *more* negative, not less. The negative tilt lives in the exposures that do **not**
+activate p53 (rho -0.119, p 1e-13) and is absent in the 50 that do (+0.048, p 0.37). The one single-cell
+result that replicates sits in the p53-altered arm. If MG53 were acting on p53 through MDM2, none of that
+would look like this.
+
+**What the data are good for, and what they are not.** MDM2 is measured well enough to recover its own
+biology at high confidence — the 3.07x wild-type/altered baseline split, p 3.4e-12, is the p53-MDM2 feedback
+loop sitting right there in the table. The limit is on the MG53 side: 5.89 CPM, 12.4% zeros, split-half
+reliability 0.289, the largest plate gap of 16,656 genes, and two wells of the same exposure disagreeing by
+21 percentage points at single-cell resolution. Tahoe also has no MG53 perturbation, no protein measurement,
+and one time point. An absence here constrains the association; it cannot rule out a protein-level or
+post-transcriptional link, which is where TRIM72's known biology mostly lives.
+
+**The one thing worth following up** is the Table 4 row: within an exposure, among TP53-wild-type lines, the
+lines that raise MG53 most showing the least MDM2 (mean rho -0.162, p 0.036 under the cell-line-label
+shuffle, q ~0.16 over the nine contrasts tested). It needs the two things this run cannot give it — per-line
+MDM2 values across all 1,132 exposures instead of 18, which an `export/all_genes` per-line addition would
+provide, and more than 17 wild-type lines.
 
 ## The files
 
