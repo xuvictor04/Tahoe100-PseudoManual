@@ -33,7 +33,8 @@ proves it is positional: the same-strand neighbours correlate with MG53 (+0.53 t
 
 Units: slopes are log2 of the read-out per doubling of MG53; +1 = 2x. "two-way" means both cell line and
 drug-dose fixed effects are removed, so a drug's own effect on both variables is controlled. Slope intervals
-are 95% with cell-line-clustered standard errors.
+are 95% with cell-line-clustered standard errors — a construction the caveats below record as 12–58% too
+narrow, with one row refitted and three left unresolved.
 
 ## Table A — MG53 -> p53 target output, in the 17 TP53-wild-type lines
 
@@ -50,7 +51,9 @@ are 95% with cell-line-clustered standard errors.
 
 The raw correlation is positive for every read-out, and it collapses to zero once drug identity is removed —
 so it reflects drugs that move MG53 and p53 targets together, not MG53 acting on p53. The data-defined
-program is flat. The only interval that excludes zero is **positive**, not negative.
+program is flat. The only interval that excludes zero is **positive**, not negative — though that interval
+uses the standard-error construction the caveats below now record as unresolved, so read it as a direction
+rather than as a result.
 
 ## Table B — upstream of MG53: what moves its expression
 
@@ -69,7 +72,7 @@ program is flat. The only interval that excludes zero is **positive**, not negat
 | | Homoharringtonine 5 uM | corrected log2 fold | +3.36 | positive | data-defined |
 | | Auranofin 5 uM | corrected log2 fold | +2.71 | positive | data-defined |
 | | Homoharringtonine 0.5 uM | corrected log2 fold | +2.55 | positive | data-defined |
-| | Dinaciclib 5 uM | corrected log2 fold | +2.48 | positive | data-defined |
+| | Dinaciclib 5 uM (**withdrawn**) | corrected log2 fold | +2.48 | **none** — an artefact of the ratio-scale estimand, not a rise | data-defined |
 | | Epirubicin 5 uM | corrected log2 fold | +2.18 | positive | data-defined |
 | Drug (lowers) | Ponatinib 5 uM | corrected log2 fold | **−1.34** | negative | data-defined |
 | | Trametinib 0.05 uM | corrected log2 fold | −1.05 | negative | data-defined |
@@ -90,6 +93,18 @@ The muscle TFs that drive TRIM72 in its native tissue are absent or silent here.
 collapses once the shared stress-response targets are partialled out, i.e. they are reading general drug
 stress rather than MG53-specific regulation.
 
+Two corrections to the drug rows, from a later re-analysis on absolute rather than ratio scales.
+**Dinaciclib 5 µM is withdrawn**: on an added-CPM scale all three doses score about zero (`R4_z` 0.674 /
+−0.304 / 0.000, q up to 0.969), and with 71–82% cell loss, a 10.8× depth deficit, 25 of 44 lines carrying
+zero MG53 reads at 5 µM, and a pseudocount floor of 2.545 CPM (half-count) or 5.090 (one-count) against a
+plate baseline of 0.883, a line with **no reads at all** already scores 62–111% of the +2.48 shown. An
+earlier version of this table read it as positive; a fold built on a pseudocount in a depleted well can be
+produced with no added RNA. **And the remaining drug rows are not equally supported**: of the 21 drug-doses
+the calling rule returns, only idarubicin 5 µM and homoharringtonine 5 µM pass in a second well, 17 rest on
+one used well and cannot be tested for replication at any effect size, and mitoxantrone 5 µM passes in 1 of
+2 wells with the two wells disagreeing in *sign*. Auranofin 5 µM and homoharringtonine 0.5 µM above are
+single-well calls.
+
 ## Table C — MG53 -> p53 program, with mutants split by retained p53 activity
 
 Activity = each line's mean p53-program induction under the p53-activating drug-doses. Reference points:
@@ -102,7 +117,7 @@ Activity = each line's mean p53-program induction under the p53-activating drug-
 | Data-defined inducibility | WT (functional p53) | 17 | +0.013 (−0.002, +0.027) | +0.0009 (−0.0014, +0.0032) | **none** |
 | | Altered: **higher** activity (above null) | 18 | +0.024 (+0.010, +0.038) | +0.0010 (−0.0010, +0.0030) | **none** |
 | | Altered: **lower** activity (at/below null) | 14 | +0.085 (+0.068, +0.101) | **+0.0043 (+0.0004, +0.0082)** | **positive** |
-| Gene-panel functional call (list-based) | Responsive | 11 | +0.021 | +0.0014 (−0.0015, +0.0043) | none |
+| Gene-panel functional call (list-based) | Responsive | 11 | +0.021 | +0.0014 (−0.0023, +0.0051) | none |
 | | Unresponsive | 28 | +0.058 | **+0.0026 (+0.0001, +0.0052)** | positive |
 | | Uncertain | 9 | −0.009 | −0.0006 (−0.0025, +0.0013) | none |
 
@@ -150,13 +165,34 @@ output that cannot move in either direction.
   nothing here speaks to what forcing MG53 up or down would do, nor to protein-level events.
 - **No line carries a TRIM72/MG53 alteration**: all 50 have wild-type MG53 and differ only in expression
   level (0.93 to 23.6 CPM, median 5.9). Nothing here contrasts functional with non-functional MG53.
-- MG53 is measured at trace level — median 5 UMIs per profile — and its split-half reliability is 0.289, so
-  bounds on true MG53 are about 3.5x wider than bounds on measured MG53.
+- MG53 is measured at trace level — median 5 UMIs per profile. An earlier version turned that into a
+  conversion: split-half reliability 0.289, so bounds on true MG53 about 3.5× wider than bounds on measured
+  MG53. Both halves of it are withdrawn. The division is not licensed, because MG53 and every read-out here
+  are counted from the same cells, in the same well, against the same total-UMI denominator — the one case
+  the classical correction excludes. And 0.289 is the optimistic floor of the attenuation factor's range: the
+  split-half splits *cells* within each (well, line), so it measures cell-sampling noise only and books every
+  well-level artefact as signal. Matched on the 102 replicated drug-doses the same statistic reads 0.425, and
+  the factor the cross-batch replicate pairs support is **0.078–0.105 (0.055 trimmed)**, a 9–12× correction
+  against the 3.46× the published `mde_diff_80_attenuation_corrected` applies — understated by about 3.6×.
+  Every bound and slope in these tables is per doubling of **measured** MG53 and is left there.
 - Part of the measured MG53 signal is readthrough spillover rather than MG53's own transcript, which dilutes
   MG53 as an exposure in every table.
-- The two intervals that just exclude zero (CollecTRI +0.0006; low-activity mutants +0.0004) rest on
-  cell-line-clustered standard errors with 14 to 28 lines. They would probably not survive the
-  label-permutation and placebo-gene machinery the pipeline applies to its primary test, and are not
+- **The interval construction used throughout these tables proved 12–58% too narrow wherever it was
+  refitted.** A later controlled re-measurement replaced the cell-line-clustered CR0 standard error times
+  1.96 with a per-arm CR1 factor, a conservative two-way (drug, line) cluster and a *t* on
+  min(drugs, lines) − 1 df. One row here inherits a recomputed interval directly: Table C's **Responsive,
+  11 lines** row is the same fit as that work's functional-p53 arm, so its interval is now
+  **(−0.0023, +0.0051)**, corrected from (−0.0015, +0.0043). The point estimate is unchanged — the two fits
+  agree to 1e−18 — and the verdict does not change. The CSVs behind these tables are **not** corrected,
+  because `make_tables.py` was not refitted: `tableC_mutants_by_activity.csv` still carries `se_slope`
+  0.0014888 with `slope_lo`/`slope_hi` −0.0015464 / +0.0042899 on that row, which is the CR0 × 1.96
+  construction. The replacement lives in `tables/mg53_to_p53_effect.csv`, arm A, `lo`/`hi`, where `se_twoway`
+  0.0016569 carries both the per-arm CR1 factor (1.10 here) and the two-way cluster.
+- The three intervals that just exclude zero were **not** refitted and are unresolved rather than corrected:
+  Table A's CollecTRI TP53 targets, +0.0029 (+0.0006, +0.0051) on 17 lines; Table C's low-activity mutants,
+  +0.0043 (+0.0004, +0.0082) on 14 lines; and panel-unresponsive, +0.0026 (+0.0001, +0.0052) on 28 lines.
+  All three rest on the construction above with 14 to 28 clusters, and they would probably not survive the
+  label-permutation and placebo-gene machinery the pipeline applies to its primary test. They are not
   reported here as findings.
 - Actual cell death and survival are effectively unmeasured: the per-line composition shift does not track
   surviving cell counts (r −0.01), and the atlas corrects composition out by design.
@@ -345,7 +381,8 @@ within P is 0.552 [same file, `z_program`; recomputed] — so both are in the ta
 | `median_line_cpm`, `n_lines_expressing` | the gene's median level across lines, and how many of 50 express it | CPM; count | **no** |
 | `b_common`, `se_common`, `q_common`, `q_xperm_common` | log2 change in the gene per log2 change in **measured** MG53, one slope for all lines, at equal drug-dose × TP53-group and cell line, conservative two-way (compound, line) SE; BH FDR, and the FDR against the exposure shuffled within each cell | log2 per doubling; FDR | **no** — no label-based selection of genes or drug-doses (one covariate's background gene set excludes the label-selected programs) |
 | `b_WT`, `b_alt`, `diff`, `se_diff`, `q_diff`, `q_label_diff` | the same slope fitted per TP53 group, their difference, and its two FDRs (BH, and the TP53-relabelling null) | log2 per doubling; FDR | **no** — label-tested, not label-selected |
-| `crit_*_q01_measured`, `mde80_*_q01_measured`, `mde80_*_q01_true` | smallest effect this gene could have shown as a lone discovery at q < 0.1, at 50% and 80% power, per doubling of measured and of true MG53 (÷ reliability 0.289) | log2 per doubling | **no** |
+| `crit_*_q01_measured`, `mde80_*_q01_measured` | smallest effect this gene could have shown as a lone discovery at q < 0.1, at 50% and 80% power, per doubling of **measured** MG53 | log2 per doubling | **no** |
+| `mde80_*_q01_true` | the same bound ÷ reliability 0.289. **Do not read it**: the division is not licensed here (exposure and outcome are counted from the same cells in the same well) and 0.289 is the optimistic end of the factor's range. The column stays in the CSV so earlier readings can be traced | log2 per doubling | **no** |
 | `placebo_pct_common_*`, `placebo_pct_diff_*` | share of that family's 10 placebo exposures whose t is below this gene's. Resolution 0.1, so 0.0 or 1.0 means "most extreme of ten", not a p value | share of 10 | **no** |
 | `readthrough_geometry` | positional only, never regulation: `sense_exposed` = the gene sits ≤ 20 kb **3' of** an expressed same-strand gene at ≥ 8x its own level, so transcription running past that neighbour is counted as this gene — readthrough spillover. MG53 itself is such a gene | label | **no** (positional) |
 | `mg53_verdict_common`, `mg53_verdict_genotype` | per-gene reading, each naming its own test in the next column: `q_xperm_common` < 0.1 on `b_common`, `q_label_diff` < 0.1 on `diff` | label | **no** |
@@ -517,15 +554,23 @@ expected to fall that low about 30% of the time [`c_screen_genes.csv.gz`, `p_dif
 
 **The per-gene detectable-effect bound.** A lone discovery at q_diff < 0.1 needs p ≤ 0.1/16,642 =
 6.0e−06, i.e. |t| ≥ 5.11 at the median df of 46. With a median `se_diff` of 0.0048 across the 195 genes
-that is **|diff| ≥ 0.029 log2 at 80% power = +2.0% in the gene per doubling of measured MG53**, and,
-dividing by MG53's split-half reliability of 0.289, **+7.1% per doubling of true MG53**. For the common
-slope the same bound is +1.0% measured / +3.7% true. **No gene reaches its own bound**: the largest |diff|
+that is **|diff| ≥ 0.029 log2 at 80% power = +2.0% in the gene per doubling of measured MG53**; for the
+common slope the same bound is **+1.0% measured**. **No gene reaches its own bound**: the largest |diff|
 in the table is 0.035 and 0 of 195 clear their own 80% threshold (13 exceed the much weaker 1.96 × se).
-On the true-MG53 scale that bound is **1.43x the median gene's entire wild-type-minus-altered genotype
-effect** (0.070 log2) — MG53 would have to move a p53 target by more than TP53 genotype itself does for
-this screen to have seen it [`c_screen_genes.csv.gz`, `se_diff`/`se_common`/`df`;
-`two_way/tables/trim72_reliability.csv`, `reliability_full_spearman_brown` row i_all / ddxg / full / all
-lines; recomputed].
+That bound is **41% of the median gene's entire wild-type-minus-altered genotype effect** (0.070 log2), so on
+the measured scale this screen could have seen only an MG53 effect about two-fifths the size of what TP53
+genotype itself does to the median program gene [`c_screen_genes.csv.gz`, `se_diff`/`se_common`/`df`;
+recomputed].
+
+An earlier version restated both bounds per doubling of **true** MG53 — **+7.1%** and **+3.7%**, dividing by
+MG53's split-half reliability of 0.289 — and put the genotype comparison at 1.43× on that scale. Those
+restatements are withdrawn rather than widened. MG53 and every outcome gene are counted from the same cells,
+in the same well, against the same total-UMI denominator, so the classical correction's independence
+condition fails by construction and the quotient has no estimand. How little it pinned down is visible in
+its sensitivity to the divisor: at the 0.105–0.080 attenuation factor the cross-batch replicate pairs
+support, the same arithmetic gives **+21% to +29%** and **+10% to +13%**. The measured bounds are the ones
+that stand [`two_way/tables/trim72_reliability.csv`, `reliability_full_spearman_brown` row
+i_all / ddxg / full / all lines; recomputed].
 
 ### Caveats
 
@@ -568,9 +613,14 @@ lines; recomputed].
 - **The design is smaller per gene than it looks.** `n_drugdoses` is 1,132 for every tested gene, but
   after pruning the 195 genes contribute 11 to 17 wild-type and 22 to 30 altered lines (median 17 and 30,
   df median 46), not the panel's 17 and 33 [`c_screen_genes.csv.gz`, `n_lines_WT`/`n_lines_alt`/`df`].
-- **The true-MG53 scale is a range, not a point.** Dividing by 0.289 assumes classical measurement error;
-  the `ii_active` variant of the same split-half gives 0.610, which would halve the de-attenuation
-  [`two_way/tables/trim72_reliability.csv`].
+- **There is no true-MG53 scale here.** An earlier version of this caveat called it a range rather than a
+  point, noting that the `ii_active` variant of the same split-half gives 0.610 and would halve the
+  de-attenuation. That understates the problem twice. `ii_active` is estimated on the active exposures, not
+  on the all-drug-dose scope these slopes are fitted at, so it is not scope-matched — and no subset variant
+  is: 0.585 is `ii_p53` (the 50 drug-doses with curated P53_ACTIVITY z ≥ 3) and 0.706 is `ii_trim72` (the 23
+  MG53-moving ones). More basically, dividing at all requires exposure error independent of outcome error,
+  which same-well, same-denominator counting rules out. Every slope and bound here is per doubling of
+  **measured** MG53 [`two_way/tables/trim72_reliability.csv`, `n_drugdoses`].
 - **Readthrough spillover is positional and is never called "downstream".** TRIM72 lies 10.6 kb **3' of**
   PYCARD-AS1 and 17 kb **3' of** FUS on the same strand, so transcription running past them is counted as
   TRIM72; `readthrough_geometry` applies the same test to each outcome gene. It says nothing about

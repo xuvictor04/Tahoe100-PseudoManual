@@ -40,8 +40,14 @@ it matters only because it means part of the measured MG53 signal is not MG53's 
   factor. Idarubicin and homoharringtonine at 5 uM raise it about 10-12x on two plates each; ponatinib and
   trametinib lower it. The muscle TFs that drive TRIM72 in its native tissue are silent or absent here.
 - **Downstream:** in the TP53-wild-type lines, more MG53 shows no association with p53 target output or with
-  p53-driven arrest. WT-specific effects above roughly 0.4-0.6% per doubling of measured MG53 (about 1.3-2%
-  of true MG53) are excluded. The raw positive correlation is drug-driven and collapses once drug identity is
+  p53-driven arrest. WT-specific effects above roughly 0.4-0.6% per doubling of measured MG53 are excluded.
+  The matching bound on *true* MG53 is withdrawn: an earlier version of this bullet gave "about 1.3-2% of
+  true MG53" by dividing the measured bound by a split-half reliability of 0.289, and exposure and outcome
+  are counted from the same cells in the same well against the same total-UMI denominator, so that division
+  has no estimand. The artefact-free quantity needs no divisor at all and is estimated directly, from
+  cov(exposure in well A, outcome in well B) over 102 cross-batch replicate pairs: **+0.0074 to +0.0079
+  program-log2 per doubling of true MG53 (95% CI -0.018 to +0.026)**, which is about +0.5% and not
+  distinguishable from zero. The raw positive correlation is drug-driven and collapses once drug identity is
   controlled.
 - **Caveat on all of it:** these are associations in 24 h mRNA. Tahoe has no MG53 perturbation and no protein
   data, every line carries wild-type MG53 at trace level, and p53 itself is functionally disabled in about
@@ -69,9 +75,10 @@ gene.
 180 induction arm, 15 repression arm), 67 columns, generated and documented by `table_d()` in
 `make_tables.py`. Per gene it carries the p53-activation fold change, the wild-type-minus-altered
 difference, cross-fitting stability (`n_folds_kept`, `loco_frequency`), MG53's slope with both the analytic
-and exposure-shuffle FDR, per-gene detectable-effect bounds for measured and true MG53, and a readthrough
-geometry flag. `tables/tableD_top_mg53_partners.csv` is the other direction: the 100 genes MG53 tracks most
-strongly genome-wide, for contrast.
+and exposure-shuffle FDR, per-gene detectable-effect bounds, and a readthrough geometry flag. The bounds to
+read are the **measured**-MG53 ones; any true-MG53 column there is a reliability division of the same
+quantity and carries the defect described under the short answer above. `tables/tableD_top_mg53_partners.csv`
+is the other direction: the 100 genes MG53 tracks most strongly genome-wide, for contrast.
 
 Read the fold change with care. Its baseline is **not vehicle**: it is the same line's median over that
 plate's **drug wells**, and it is a compound-equal mean (each of 98 compounds carries 1/98) over the 142
@@ -109,15 +116,61 @@ p53 response, so any MG53 -> p53-activity slope measured in them is being produc
 p53. That makes them the control arm. A second, softer control is the 21 mutant lines retaining <= 15% of
 the wild-type-minus-null gap.
 
-Headline, over all drug-doses: in the 11 lines with functional p53, a **doubling of MG53 changes p53 activity
-by +0.095% (95% CI -0.11% to +0.30%)**. The knockout-controlled contrast (functional minus p53-null) is
-+0.050% (-0.163 to +0.264). Both are indistinguishable from zero, and the arm could have detected 0.29%.
+Headline, over all drug-doses: in the 11 lines with functional p53, a **doubling of measured MG53 changes p53
+activity by +0.095% (95% CI -0.161% to +0.352%)**. The knockout-controlled contrast (functional minus
+p53-null) is +0.050% (-0.194 to +0.295). Both are indistinguishable from zero, and the arm could have
+detected +0.357% at 80% power — 3.0% of the p53 response the same arm shows to a p53-activating drug-dose,
+which is measured below.
 
-The control does not merely come out null — it comes out **as large or larger than the functional arm**.
-Restricted to p53-activating drug-doses the p53-null control reads +0.225% (CI +0.007 to +0.443) while the
-functional arm reads -0.123%, and the low-activity mutants read +0.430% (CI +0.048 to +0.814). A slope that
-is biggest where there is no p53 to act on is not a p53-mediated effect; it is MG53 tracking overall
-transcriptional response amplitude.
+**Those intervals are corrected; the estimates are not.** An earlier version of this section gave -0.11% to
++0.30% for the headline, -0.163 to +0.264 for the contrast, and an MDE of 0.29%. The slopes are unchanged
+to 1e-18: the estimate reproduced and its interval was wrong. The earlier intervals came from a CR0
+cell-line standard error with a 1.96 multiplier over 6 to 21 clusters, which puts them **12-58% too
+narrow** across the ten pre-specified rows; they are replaced by a per-arm CR1 factor on a conservative
+two-way (drug, line) cluster with a *t* on min(drugs, lines) - 1 degrees of freedom, and the MDE by the
+few-cluster multiplier t(.975,df) + t(.80,df) = 3.11 at df 10 in place of the normal 2.8016. The contrast
+is now fitted **jointly**, with (drug-dose x arm) fixed-effect cells and arm-specific slopes, so its
+covariance is right under drug clustering; the earlier `hypot` of two separate SEs is valid only under
+cell-line clustering, where the arms share no line and the covariance is zero.
+
+**The control arm is not distinguishable from zero either, so the comparison between arms is uninformative at
+this precision.** Over all drug-doses the p53-null control reads +0.045% (-0.042 to +0.132) and the
+low-activity mutants +0.304% (-0.022 to +0.632); restricted to p53-activating drug-doses the control reads
++0.225% (-0.103 to +0.553), the functional arm -0.123% (-0.857 to +0.616) and the mutants +0.430% (-0.091 to
++0.954). An earlier version of this section read the control as coming out "as large or larger than the
+functional arm", on intervals that excluded zero under p53-activating drugs for both the control (given as
++0.225% with a CI of +0.007 to +0.443) and the low-activity mutants (+0.430%, +0.048 to +0.814), and it
+quoted the functional arm's -0.123% with no interval at all. The point estimates are unchanged; under the
+corrected standard errors every one of those intervals includes zero. None of those orderings is a
+demonstrated inequality, and the argument from them is withdrawn.
+
+The conclusion that the slope is not p53-mediated rests on two other things instead. **First, the arms are
+demonstrably far apart in p53 competence**, which is the positive control: a p53-activating drug-dose minus
+the rest moves the program +0.1704 log2 (+12.5%) in the functional arm — all 11 lines between +0.103 and
++0.203 — against +0.0188 (+1.3%) in the p53-null arm, and the curated 21-gene panel +24.6% against +0.2%, a
+gap of roughly 10x to 100x. A p53-mediated MG53 effect of any appreciable size would have appeared as a
+functional-minus-null difference. **Second, the contrast itself is flat**: +0.050% (-0.194 to +0.295) over
+all drug-doses against an MDE of +0.346%, and -0.347% (-1.014 to +0.324) under p53-activating drugs. What the
+measured slope tracks is overall transcriptional response amplitude and MG53's own 3' neighbourhood, not p53
+output: standardised by each outcome's residual spread, MG53's association is about 6x larger with a 5-gene
+stress / ISR set and 4x larger with the FUS readthrough-spillover score than with the p53 program, and it is
+the same in the arm with no p53 at all. The association is also same-well only — pairing MG53 from one well
+with the program score from the other well of a replicated drug-dose puts every arm at or below zero.
+
+The CSV carries 54 rows: the pre-specified family (the p53 program in four fittable arms plus the contrast,
+both scopes, 10 tests, flagged `prespecified`), the same fits on four secondary outcomes — the curated
+21-gene panel and three non-p53 read-outs — and a continuous version in which the dependence on retained p53
+activity is a coefficient rather than an arm. Both intervals are given per row: `lo`/`hi` is the two-way
+cluster interval to quote, `lo_line`/`hi_line` the same fit clustered on cell line alone. That is the
+dimension the earlier text used but not its interval: that one took this SE divided by the arm's CR1 factor
+(1.05 to 1.20) and multiplied by 1.96, so `lo_line`/`hi_line` is already wider than what was published. Two
+nulls are given as well, and the one to read is `p_line`, the whole-line exposure permutation, which
+reassigns each line's entire MG53 trajectory to another line of the same arm; the within-drug-dose
+`p_shuffle` is anti-conservative here, because permuting raw MG53 inside a drug-dose destroys the line-level
+structure the line fixed effect would otherwise absorb. `pct_true` divides by that arm's group-specific
+reliability (0.301 wild-type, 0.283 altered) and is **a statement about how loose the bound is, not a
+corrected estimate** — the classical correction needs exposure and outcome errors to be independent, and
+here they are counted from the same cells in the same well against the same total-UMI denominator.
 
 Not computable from a run's output alone: per-arm placebo-gene pseudo-controls (a matched gene put in MG53's
 place inside each arm) need per-line values for arbitrary genes, which only `export/all_genes` on the full

@@ -18,23 +18,25 @@ transcriptionally, and the MDM2 protein then ubiquitinates p53 and sends it for 
 run toward p53, not away from it — which makes it the one gene in the set where an association could speak to
 what regulates p53 rather than to what p53 does.
 
-The second is measurement. MDM2 is **well** measured — 185.8 CPM, detected in all 50 lines, moved up by 96 of
-the 98 reference compounds — while MG53 sits at 5.89 CPM with 12.4% of profiles at zero. It is not the
-best-measured gene in the data (185.8 CPM is 903rd of 16,643 genes by level, and among the 29 canonical
-effectors TNFRSF10B is higher at 200.5 CPM); the point is only that nothing MDM2 shows or fails to show here
-is a detection problem on MDM2's side.
+The second is measurement. MDM2 is **well** measured — 185.8 CPM, detected in all 50 lines, moved up by 96
+of the 98 reference compounds — while MG53 sits at 5.89 CPM with 12.42% of the 62,611 usable profiles from
+expressing lines at zero. That figure is reproducible only with its denominator, which earlier versions of
+the three places it appears in this document did not carry: over all 63,921 usable profiles it is 13.69%,
+and over all 66,449 profiles 16.56%. MDM2 is still not the best-measured gene in the data (185.8 CPM is
+903rd of 16,643 genes by level, and among the 29 canonical effectors TNFRSF10B is higher at 200.5 CPM); the
+point is only that nothing MDM2 shows or fails to show here is a detection problem on MDM2's side.
 
 | | MG53 (TRIM72) | MDM2 | CDKN1A (contrast gene) |
 |---|---|---|---|
 | Median level across lines | 5.89 CPM | 185.8 CPM (903rd of 16,643) | 56.4 CPM |
-| Lines where detected | 50 of 50, 12.4% of profiles zero | 50 of 50 | 47 of 50 |
+| Lines where detected | 50 of 50; 12.42% of usable profiles from expressing lines are zero | 50 of 50 | 47 of 50 |
 | Role | the exposure | p53 regulator (p53 induces it; its protein degrades p53) | p53 effector (arrest) |
 | In the data-defined p53 program | not a member | induction arm, **rank 3** of 180 | induction arm, rank 29 |
 | Moved up by | — | 96 of 98 compounds | 85 of 98 |
 | Fold change under p53 activators, WT lines | — | **1.255x**, the largest of all 195 program genes | 1.117x |
 | Baseline, TP53-WT vs TP53-altered lines | 1.08x, p 0.77 | **3.07x, p 3.4e-12** | 1.96x, p 5.8e-4 |
 | Fold-change range over the 1,132 exposures | 0.31x to 12.24x | 0.46x to 2.11x | 0.50x to 2.15x |
-| Split-half reliability | 0.289 to 0.705 by subset | — | — |
+| Split-half reliability | 0.289 full-data (0.301 in TP53-WT lines, 0.283 in altered); the 0.425-0.705 subset values are not scope-matched and no "true MG53" scale is built from any of them | — | — |
 
 **That baseline row is the positive control for everything below**, with one limit stated up front. The
 per-line baseline measurement finds MDM2 running 3.07x higher in TP53-wild-type lines than in TP53-altered
@@ -46,8 +48,11 @@ p 3.3e-12 (Mann-Whitney on the medians: 3.14x, p 1.8e-7); MG53 is 17 against 31 
 What that licenses is narrow but real: **MDM2's side of every null below is sound** — a gene whose 3x
 biological signal this measurement recovers at p 1e-12 is not failing to show a comparable MG53 effect for
 want of detection. What it does **not** license is any claim about MG53's reliability, which is separately
-and poorly characterised (0.289 split-half, and the plate and replicate problems documented throughout). A
-null here is a null about the *association*, limited by the exposure, not by the outcome.
+and poorly characterised: the project's two published anchors — 0.289317 split-half (`fe = ddxg`) and
+0.114342 replicate-well (`fe = dd`) — are different specifications and are not interchangeable, the
+`key_results.csv` row usually cited for "0.114" in fact reads 0.113639, and the plate and replicate problems
+documented throughout sit underneath all three. A null here is a null about the *association*, limited by
+the exposure, not by the outcome.
 
 ## What "level" means here, because two different things are called that
 
@@ -429,17 +434,21 @@ stress state, arrest) rather than at p53 arbitrating between them.
 This is the one estimate with per-line resolution across all exposures: cell-line and drug-dose fixed
 effects, 53,084 line x exposure cells, 47 lines. Reported from `c_screen_genes`, not recomputed.
 
-| Arm / covariate set | slope (log2 MDM2 per doubling of MG53) | change in MDM2, measured MG53 | change in MDM2, true MG53 | p |
-|---|---|---|---|---|
-| gw (primary) | -0.00500 | **-0.35%** | -1.19% | 0.016 |
-| gw_all | -0.00501 | -0.35% | -1.19% | 0.015 |
-| gw_pc | -0.00600 | -0.41% | -1.43% | 0.002 |
-| curated_cycle | -0.00478 | -0.33% | -1.14% | 0.022 |
-| no covariates | -0.00500 | -0.35% | -1.19% | 0.018 |
-| gw_rt (readthrough-corrected) | -0.00501 | -0.35% | -1.19% | 0.006 |
-| **TP53-WT lines only (17)** | -0.00539 | -0.37% | -1.28% | **0.21** |
-| **TP53-altered lines only (30)** | -0.00476 | -0.33% | -1.13% | **0.016** |
-| WT minus altered | -0.00063 | -0.04% | -0.15% | 0.89 |
+| Arm / covariate set | slope (log2 MDM2 per doubling of MG53) | change in MDM2, measured MG53 | p |
+|---|---|---|---|
+| gw (primary) | -0.00500 | **-0.35%** | 0.016 |
+| gw_all | -0.00501 | -0.35% | 0.015 |
+| gw_pc | -0.00600 | -0.41% | 0.002 |
+| curated_cycle | -0.00478 | -0.33% | 0.022 |
+| no covariates | -0.00500 | -0.35% | 0.018 |
+| gw_rt (readthrough-corrected) | -0.00501 | -0.35% | 0.006 |
+| **TP53-WT lines only (17)** | -0.00539 | -0.37% | **0.21** |
+| **TP53-altered lines only (30)** | -0.00476 | -0.33% | **0.016** |
+| WT minus altered | -0.00063 | -0.04% | 0.89 |
+
+An earlier version of this table carried a fourth column, "change in MDM2, true MG53", reading -1.19% on the
+primary row and -1.13% to -1.43% across the others. That column is removed, not widened; the reason is given
+under the first of the three readings below.
 
 Three readings, in order of importance.
 
@@ -449,23 +458,36 @@ running into the TRIM72 locus. A doubling of measured MG53 buys **-0.35%** of MD
 -0.61% to -0.08% (line-clustered) or -0.51% to -0.18% (drug-clustered). MDM2's own range across exposures is
 0.46x to 2.11x. This slope is not a player in that range.
 
-The "per doubling of **true** MG53" column needs a range, not a number. Dividing by a reliability assumes
-classical measurement error, and the run reports split-half reliability for MG53 under several subsets:
-0.289 for the primary specification, but 0.425, 0.586, 0.610 and 0.705 for the active, p53-responsive and
-MG53-moving subsets. The sibling `MG53_p53_TABLES.md` already flags that the 0.610 variant "would halve the
-de-attenuation", and it does:
+There is no "per doubling of true MG53" figure here at all. An earlier version of this section gave one
+as a range rather than a point, dividing the slope by each of the split-half reliabilities the run reports —
+0.289 for the primary specification, then 0.425, 0.586, 0.610 and 0.705 for the active, p53-responsive and
+MG53-moving subsets — and concluding that the true effect was "somewhere around -0.5% to -1.2%" per doubling.
+The range was an improvement on the single -1.19% it replaced, and it is still wrong, for two reasons that
+widening cannot fix.
 
-| reliability used | per doubling of true MG53 | 95% interval |
-|---|---|---|
-| 0.289 (primary, i_all) | **-1.19%** | -2.11% to -0.26% |
-| 0.425 (active, plates 3/13 excluded) | -0.81% | — |
-| 0.610 (active exposures) | **-0.57%** | -1.01% to -0.12% |
-| 0.705 (MG53-moving exposures) | -0.49% | — |
+The division is not licensed. MG53 and MDM2 are counted from the same cells, in the same well, against
+the same total-UMI denominator, so the classical correction's requirement that exposure error be independent
+of outcome error fails by construction: dividing scales the shared same-well artefact up along with any
+signal. That channel has been demonstrated rather than assumed — a cross-well version of this kind of
+association, exposure read in one well and outcome in its cross-batch replicate, sits at or below zero in
+every arm while the same-well version is positive. (The earlier parenthetical that "the correction itself is
+right" because 0.289 is already the Spearman-Brown full-data reliability — raw split-half 0.169,
+2r/(1+r) = 0.289 — answered the wrong objection. Dividing once rather than twice is the correct arithmetic
+for a correction of the wrong kind.)
 
-So the true-MG53 effect is somewhere around **-0.5% to -1.2%** per doubling. The earlier version of this
-table gave -1.19% alone, which is the subset that maximises the correction. (The correction itself is right:
-0.289 is already the Spearman-Brown full-data reliability — raw split-half 0.169, 2r/(1+r) = 0.289 — not a
-half-reliability, so dividing once is correct and in the right direction.)
+And none of the high values is scope-matched. This table is fitted over all 1,132 exposures, while the
+menu's 0.586 and 0.705 are variants `ii_p53` (0.585 under the `ddxg` fixed effects, 0.586 under `dd`: the 50
+drug-doses with curated P53_ACTIVITY z >= 3) and `ii_trim72` (0.706 and 0.705: the 23 MG53-moving ones). A
+divisor estimated on 23 or 50 drug-doses does not describe a 1,132-drug-dose fit — and neither variant is
+the 142-drug-dose p53-activating set either, so **no scope-matched reliability for the p53-activating scope
+exists** and every true-MG53 scaling of that scope anywhere in this project is unverified. The 0.289 anchor
+is meanwhile the optimistic floor of the factor's range, because the split-half splits *cells* within each
+(well, line) and so books every well-level artefact as signal; matched on the 102 replicated drug-doses the
+same statistic reads 0.425, and the cross-batch replicate pairs support 0.078 to 0.105. The earlier -0.5% to
+-1.2% was therefore not a range around a quantity; it was one unidentified number divided by another.
+
+So **-0.35% per doubling of measured MG53** is what this table supports, and the measured scale is the only
+one used below.
 
 **The point estimates are the same size in both genotype arms, but this test cannot carry much weight.**
 b_WT = -0.0054, b_altered = -0.0048, difference -0.0006. The honest version is the interval, not the p: the
@@ -614,7 +636,8 @@ arms there are not statistically distinguishable either (difference +0.105 ± 0.
 **What the data are good for, and what they are not.** MDM2's side of the measurement is sound: the 3.07x
 wild-type/altered baseline split at p 3.3e-12 is the p53-MDM2 feedback loop recovered from this very table,
 so a comparable MG53 effect would not be missed for want of detection in the outcome. The limit is on the
-MG53 side: 5.89 CPM, 12.4% zeros, split-half reliability 0.289 to 0.705 depending on subset, the largest
+MG53 side: 5.89 CPM, 12.42% zeros among usable profiles from expressing lines, a split-half reliability of
+0.289 whose subset values are not scope-matched and which cannot be divided out at all, the largest
 plate gap of 16,656 genes, and two wells of the same exposure disagreeing by 21 percentage points at
 single-cell resolution. Tahoe also has no MG53 perturbation, no protein measurement, and one time point. An
 absence here constrains the association; it cannot rule out a protein-level or post-transcriptional link,
@@ -657,6 +680,11 @@ was called the best-measured gene in the analysis when it is 903rd of 16,643 by 
 correlations were quoted with their OLS slope's p value, one of them overstating significance by nine orders
 of magnitude; the WT-versus-altered equality in the screen was said to mean a p53-mediated effect "cannot"
 behave that way, when the test has about 21% power; the per-doubling-of-true-MG53 figure was given as a
-point value using the reliability subset that maximises it; the per-line genotype interaction, which is
-significant at p 2e-06 before exposures are held fixed, was not reported at all; and the unit-3 n was given
-as 861 where every contrast in it runs on 843.
+point value using the reliability subset that maximises it, then as a -0.5% to -1.2% range, when the
+division is not licensed at all under same-well errors and none of the subset divisors is scope-matched, so
+Table 7's true-MG53 column is now removed rather than widened; the per-line genotype interaction, which is
+significant at p 2e-06 before exposures are held fixed, was not reported at all; the unit-3 n was given as
+861 where every contrast in it runs on 843; "12.4% of profiles zero" was quoted bare in three places, where
+it is 12.42% of the 62,611 usable profiles from expressing lines and 13.69% or 16.56% on the two wider
+denominators; and the split-half reliability was given as "0.289 to 0.705 by subset", a menu whose upper end
+describes 23- and 50-drug-dose variants rather than any scope used here.
