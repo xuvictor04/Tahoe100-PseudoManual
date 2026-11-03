@@ -26,11 +26,19 @@ elsewhere in the repository needs to be able to recognise it.
 > wrong (it is group-specific, 0.301 and 0.283) and the division is the wrong *kind* of correction, because
 > exposure and outcome are counted from the same cells in the same well against the same total-UMI
 > denominator. See [[Reliability and disattenuation]].
+> **Output that was never opened.** The eight **R** rows at the foot of the table have a third mechanism and
+> no arithmetic in it at all. Every headline number of `MDM2_MG53.md` reproduced; what failed was provenance
+> — three statements false as written, an exposure set misdescribed, and four pieces of the run's own output
+> never read, among them the 70-exposure panel that retires the one row that document nominated for
+> follow-up. The conclusions did not move.
 
 **Source tags used in the table.** **M** = the controlled-measurement document, written up in this vault as
 [[The measurement with controls]]. **U** = the upstream document, written up as [[Upstream of MG53]], whose
-own §8 carries the fuller list including claims that never reached the committed files. Section pointers are
-to those documents. "Committed" paths are relative to `mg53_p53/findings/`.
+own §8 carries the fuller list including claims that never reached the committed files. **R** = the
+five-lens adversarial review of `MDM2_MG53.md`, applied in that document and condensed in
+[[MDM2 and MG53]]; its section pointers are to `MDM2_MG53.md` itself. Section pointers are otherwise to the
+M and U documents. "Committed" paths are relative to `mg53_p53/findings/`; run-output paths
+(`downstream_p53/`, `p53_dependence/`, `single_cell_all/`) are relative to the run tree.
 
 ---
 
@@ -75,6 +83,13 @@ to those documents. "Committed" paths are relative to `mg53_p53/findings/`.
 | P24's readthrough composition: "20.6% readthrough-geometry vs **2.1% of all program members**" [`FINDINGS.md`, "Programs"] | 20.6% against **4.2% of atlas genes (OR 6.0, p 1.3e-9) and 1.7% of *other* program members (OR 14.7, p 7.6e-16)** | U, §5.5 | The committed denominator includes P24 itself, which is the set being tested |
 | "readthrough-geometry genes … against **4.2% of all genes**" [`FINDINGS.md`, twice] | **4.218%.** The pipeline table prints 4.224%, which divides a 703 numerator from one gene universe by the 16,642 of another | U, §5.2 | An arithmetic slip in the source table. The committed rounding is unaffected; recorded so the printed column is not trusted to three figures |
 | "**MEF2A / C / D are expressed (298.5 / 21.9 / 86.8 CPM)**", their mRNA relating to TRIM72 at "−0.17, −0.165, −0.03" [`FINDINGS.md`, twice] | **MEF2A / B / C / D at 298.5 / 13.8 / 21.8 / 86.8 CPM**, correlations **−0.175 / −0.037 / −0.165 / −0.026** | U, §5.3 | Recomputed; rounding-level, and the reading is unchanged — the muscle factors are silent, absent, or negatively related |
+| Table 4's mean rho over the 18 exposures, **−0.162473**, called "**the pipeline's own estimator**" [`MDM2_MG53.md`, "The per-exposure Spearman"] | That is the **arithmetic** mean. The pipeline averages in **Fisher z** and reads **−0.179022**, 10% further from zero, at p 0.030194 / q 0.181164 on 5,000 draws. Both are now printed side by side, arithmetic still the document's statistic | R, Table 4 | Recomputed both ways from `downstream_p53/tables/a_per_line_effects.csv` over the same 18 exposures and 17 wild-type lines: arithmetic −0.162473, Fisher z −0.179022, the latter matching `a_pooled_over_drugdoses.csv` exactly, and `README_tables.txt` says "Fisher z average" outright. The mislabel ran toward the document's own null conclusion |
+| The **per-exposure shuffle** labelled "**This is the null the pipeline reports**", with the line-label shuffle as "the stricter null" whose cost was "exactly the inflation the weaker null was hiding" [`MDM2_MG53.md`, same section] | **All three withdrawn.** `a_pooled_over_drugdoses.csv` carries exactly one p column, `p_line_permutation` — "ONE line-label permutation applied to all drug-doses at once" — and had already returned **p 0.030194** for this cell. The document's 0.036 on 2,000 draws **reproduces** the pipeline rather than correcting it; the per-exposure shuffle's 0.005 is the anti-conservative of the two, and no run table applies it to a mean over exposures | R, Table 4 | The pipeline's own column and README, read directly. Permuting MDM2 inside each exposure destroys the fact that the same 17 lines recur in all 18, which is the structure the claim is about |
+| Unit 3's exposures called "**18 MG53-raising exposures**" [`MDM2_MG53.md`, Table 4 and the unit table; carried into [[MDM2 and MG53]]] | **13 of the 18** were selected for raising MG53 (role "TRIM72 raiser", panel call up at z ≥ 4, 2.05× to 12.24×). The other **five are p53 reference activators that missed that cut, and four of them lower MG53** — Topotecan 0.5 µM 0.93×, Mitoxantrone 0.5 µM 0.89×, Selinexor 5 µM 0.81×, Amsacrine 5 µM 0.76×; the fifth, Idarubicin 0.5 µM, raises it 2.15× at z 3.42. Those four are the only exposures of the 18 where MG53 falls | R, Table 4 | `a_selected_drugdoses.csv`, row by row. Not cosmetic: on the 13 raisers alone the wild-type statistic is **−0.223 arithmetic / −0.244 Fisher z, p 0.0035, negative in 10 of 13** against **−0.005 (1 of 5, p 0.98)** on the activators, so the published 18-exposure figure is a diluted union. The five dilute because MG53 moves less across lines in them (median between-line SD 0.86 against 1.26) |
+| Table 4's wild-type row nominated for follow-up — "**if anything in this document is followed up, this is the row**" — on the premise that it "needs the two things this run cannot give it — per-line MDM2 values across all 1,132 exposures instead of 18" [`MDM2_MG53.md`, closing section] | **Withdrawn: it fails out of sample.** `p53_dependence/tables/per_line_effects_selected.csv` holds the same per-line quantity over **87** drug-doses (10 gene labels × 50 lines, 40,583 rows), a strict superset of unit 3's 18 agreeing to max \|diff\| 5.0e-06 on all 5,507 shared cells — so **70 exposures were held out and unexamined**. On those 70 the statistic is **−0.0077, negative in 35 of 70, line-label p 0.84**, against **−0.1807 at p 0.029** on the 17 shared. The raiser subset the tilt lived in goes the same way: **−0.032, 5 of 10, p 0.66** against −0.201 at p 0.018 on 14. What stands is the pooled within-exposure slope over all 87, **−0.0307 (95% CI −0.0597 to −0.0059, cell-line bootstrap over 17 clusters, p 0.016, n 1,478) = −2.1% of MDM2 per doubling, interval −4.1% to −0.4%** | R, "The out-of-sample test" | Both estimators recomputed panel by panel from the 87-exposure table with the line-label null and a cell-line bootstrap. The premise was false in the way that mattered — the run had 87, enough to test the row and retire it. "More than 17 wild-type lines" stands: the larger panel buys exposures, not lines, and 24 of its 87 drug-doses were themselves selected with the TP53 labels |
+| "nothing detectable … between the MG53-positive and MG53-negative cells of a single well" — a bound-shaped sentence with **no bound**, at the one unit of the five where the document gave none [`MDM2_MG53.md`, "What this adds up to"] | The run publishes one. Per doubling of a cell's MG53: wild-type rate ratio **1.0346 (0.9882–1.0832)**, largest change not excluded **8.3%**, MDE80 **6.7%**; untreated altered wells **0.9784 (0.9587–0.9986)**, largest not excluded **4.1%**, MDE80 2.9%. This resolution is therefore **2.4× coarser** than the exposure-level ±3.4%, in the arm the p53 question needs | R, Table 6b | `single_cell_all/tables/per_doubling_bounds.csv`, alpha-as-estimated scenario, read row by row. The step converts the detected/undetected contrast to a doubling of the implied true MG53 rate under its pooled overdispersion, so it is the same unit as the exposure-level bound and the two are comparable |
+| The two-well single-cell comparison called "**the best-controlled comparison in the data**", its untreated altered **−8.5%** read as what this resolution shows [`MDM2_MG53.md`, Table 6] | The identical GLM runs at full scale over **20,120 (cell line × well) groups, 1,289 wells, 47 lines** (9,099 wild-type, 11,021 altered), and **the pooled sign is the other way**: all wells **1.0331 (0.9941–1.0737), p 0.095**; wild-type **1.0711 (0.9763–1.1751), p 0.14**. The step's own primary estimand, wild-type minus altered, is null in all five well classes (all wells 1.0593, permutation **p 0.158**; 0.11 to 0.85 across classes). The untreated negative survives at about half the size over all 28 DMSO wells — **0.9559 (0.9165–0.9971), p 0.037, q 0.093** — and the raiser class reads 0.9489 (0.9150–0.9840), p 0.0056, q 0.020, but both sit at the **15th–27th percentile of that step's 63–66 placebo outcome genes** (empirical p 0.39–0.55) | R, Table 6b | `single_cell_all/tables/trim72_meta_by_tp53_group.csv`, `trim72_WT_minus_altered.csv` and the placebo-outcome null, row by row. Table 6's eight MDM2 cells are two exposures of this same fit, so the plate-6-against-plate-14 disagreement is a two-well reliability statement, not the pooled behaviour of the resolution |
+| Unit 3's within-exposure wild-type interval as "**−0.139 to +0.019, compound-bootstrap p 0.13**" [`MDM2_MG53.md`, Table 4, twice] | **−0.142958 to +0.019653, p_boot 0.123**, on a bootstrap clustered on **cell line — 17 clusters**, not on compound. Two separate faults: the generator seeded each bootstrap from `abs(hash((SEED, label, …)))`, which Python salts per process, so **no interval or `p_boot` in `mdm2_mg53_models.csv` could be regenerated** and the prose drifted from the committed table; and "compound" was the wrong word for a cell-line-clustered fit. The seed is a blake2b digest now, and every such bound is a 2,000-draw Monte Carlo quantity whose third digit moves | R, the generator's note | Reproduced the committed interval exactly by re-running the procedure under the stable seed (slope −0.060284, 17 clusters, 2,000 draws → −0.142958, +0.019653, p 0.123), and confirmed the salting: `abs(hash(…))` on the one key returned three different values under PYTHONHASHSEED 1 / 2 / 3 where blake2b returned one. The mislabel ran the other way — clustered on compound the same row reads **−0.127 to −0.009, p 0.018**, an interval excluding zero |
 
 ---
 
@@ -84,7 +99,8 @@ Some of the committed documents caught their own errors and said so on the page.
 the ledger is complete, and because the habit is the point: a corrected number kept next to its replacement
 is worth more than a clean page.
 
-**`MDM2_MG53.md` records seven**, under "Corrections this document carries" — see [[MDM2 and MG53]]:
+**`MDM2_MG53.md` records twenty-one**, under "Corrections this document carries" — see [[MDM2 and MG53]].
+These seven predate the review:
 
 1. the 4,642-gene reference family was called **"all genes"** when 4,500 of its members, 97% of it, had been
    selected for association with MG53 and MDM2 is one of them, so percentiles inside it are ranks within the
@@ -104,6 +120,22 @@ is worth more than a clean page.
    p 0.36 — and its contrast gene behaves identically, including a sign flip between arms that no p53 route
    predicts;
 7. the **unit-3 n was given as 861** where every contrast in it runs on **843**.
+
+The other fourteen came from the review. **Eight are the R rows in the table above.** Two the table already
+carried from the other documents — the bare "12.4% of profiles zero" and the 0.289-to-0.705 reliability
+menu. The last four are transcription-level and change no reading:
+
+- MG53 given as detected in "**50 of 50**" lines, hardcoded in the generator, where the export says **49**:
+  NCI-H661 (CVCL_1577) fails the expression filter and `b_baseline_per_line.csv` agrees at 49 of 50. Now
+  read from `export/all_genes/genes.csv` like the other two genes' counts;
+- the activity-adjusted partial Spearman given twice as **−0.019** where it is **−0.022299**, recomputed by
+  residualising both genes on the five activity covariates over all 1,132 exposures;
+- the p quoted beside it as 0.45, which is the **Spearman's own p (0.4535)**; the bootstrap p is **0.46**;
+- Table 6's caveat that MG53 is "detected in a minority of cells at about **5 UMIs**" — a pseudobulk
+  profile's whole count over a median 1,217 cells. A **detected cell carries 1.12 to 1.18 UMIs**, at a
+  detection rate of **1.3%** of an untreated line's cells (0.36% on plate 6, 3.01% on plate 14; 7.5% and
+  10.0% under idarubicin), with detected cells **23% to 32%** more deeply sequenced than undetected ones.
+  Understating this understated the table's exposure to the depth confound.
 
 The same document also keeps, deliberately, the two results that would have been read as findings without
 their controls: the **−0.614** correlation between MDM2 and MG53 CPM, which is a plate batch effect in full
@@ -235,7 +267,7 @@ Specifically verified field by field, and unchanged:
 - [[The measurement with controls]] — the controlled measurement, with its own section listing the three
   intervals that no longer exclude zero
 - [[Upstream of MG53]] — §8, *Claims dropped, withdrawn or corrected*, the fuller list on the upstream side
-- [[MDM2 and MG53]] — the seven self-recorded corrections and the two documented near-misses
+- [[MDM2 and MG53]] — the twenty-one self-recorded corrections and the two documented near-misses
 - [[Reliability and disattenuation]] — why the 0.289 divisor is both the wrong value and the wrong kind of
   correction
 - [[How the numbers are decided]] — the standards these corrections are measured against
@@ -253,10 +285,15 @@ Specifically verified field by field, and unchanged:
 2. **New, authoritative.** The upstream document, *"Upstream of MG53: regulation, perturbations, and what
    this dataset can support"* — F1–F11, §§2–6, with the independent `verify_*` recomputations and §6.4,
    *Which published claims are at risk*.
-3. **Committed, older, and corrected here.** `mg53_p53/findings/FINDINGS.md`,
+3. **New, authoritative.** The five-lens adversarial review of `mg53_p53/findings/MDM2_MG53.md` — the **R**
+   rows, every number of which was recomputed here from the run tree (`downstream_p53/`, `p53_dependence/`,
+   `single_cell_all/`) rather than taken from the review, and all of which are now carried in that
+   document's own corrections passage and in its tables `mdm2_mg53_out_of_sample.csv`,
+   `mdm2_mg53_single_cell_all.csv` and `mdm2_mg53_per_exposure_rho.csv`.
+4. **Committed, older, and corrected here.** `mg53_p53/findings/FINDINGS.md`,
    `mg53_p53/findings/README.md`, `mg53_p53/findings/MG53_p53_TABLES.md`,
    `mg53_p53/findings/MDM2_MG53.md`.
-4. **Committed tables cited row by row above.** `mg53_p53/findings/tables/mg53_to_p53_effect.csv` (10 rows,
+5. **Committed tables cited row by row above.** `mg53_p53/findings/tables/mg53_to_p53_effect.csv` (10 rows,
    the arm slopes and their intervals and MDEs), `tableA_wt_p53_targets.csv`,
    `tableC_mutants_by_activity.csv`, `tableB_upstream_mg53.csv`, and in the run output
    `two_way/tables/trim72_reliability.csv`, `two_way/tables/key_results.csv`,

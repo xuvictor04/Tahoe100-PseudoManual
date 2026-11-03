@@ -1,4 +1,4 @@
 gene,median_line_cpm,n_lines_expressing,in_p53_program,rank_in_program,wt_fold_under_p53_activators,wt_minus_altered_fold,drugdose_fold_min,drugdose_fold_max,note
 MDM2,185.79924,50,P (WT-selective induction),3.0,1.2548187571518474,1.1952695476757629,0.4612273558378833,2.110972000274604,"p53 regulator (p53 induces it, it degrades p53)"
 CDKN1A,56.413177,47,P (WT-selective induction),29.0,1.116989790985214,1.160936449342203,0.5027136213061042,2.1459069709624794,p53 effector (arrest)
-MG53 (TRIM72),5.89,50,not a member,,,,0.3098809541114314,12.23764417054904,"the exposure; 12.4% zero profiles, split-half reliability 0.289"
+MG53 (TRIM72),5.89,49,not a member,,,,0.3098809541114314,12.23764417054904,"the exposure; 12.4% zero profiles, split-half reliability 0.289"

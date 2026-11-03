@@ -179,7 +179,7 @@ only.
 
 ## MDM2 against MG53
 
-`MDM2_MG53.md`, `mdm2_mg53_levels.py`, and nine `tables/mdm2_mg53_*.csv`.
+`MDM2_MG53.md`, `mdm2_mg53_levels.py`, and fifteen `tables/mdm2_mg53_*.csv`.
 
 MDM2 is a p53 **regulator**, not a reading of p53's output — p53 induces it, and the MDM2 protein then
 degrades p53 — so a link to MG53 would point toward p53 rather than away from it. It is well measured

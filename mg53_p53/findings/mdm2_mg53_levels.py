@@ -13,10 +13,22 @@ they do not agree with each other, which is the finding:
 
   unit 1  baseline across lines          48 lines           each line's untreated level of both genes
   unit 2  drug-dose, lines pooled      1,132 drug-doses     each exposure's effect on both genes
-  unit 3  line x drug-dose               861 cells          18 MG53-raising exposures x 50 lines
+  unit 3  line x drug-dose               861 cells          18 selected exposures x 50 lines: 13 MG53
+                                                            raisers + 5 p53 reference activators, 4 of which
+                                                            lower MG53
+  unit 3b line x drug-dose, wider      4,094 cells          the same quantity from per_line_effects_selected:
+                                                            87 drug-doses x 50 lines, 17 of them unit 3's and
+                                                            70 held out - the out-of-sample test of unit 3's
+                                                            one positive row. MDM2 is present in 4,179 of the
+                                                            cells and MG53 in 4,094, so the contrasts run on
+                                                            the 4,094 where both exist (1,478 wild-type)
   unit 4  the genome-wide screen      53,084 cells          reported from c_screen_genes, not recomputed
-  unit 5  single cells in one well    up to 47 lines        MG53-detected vs MG53-undetected cells, with
-                                                            78-85 control genes as the placebo family
+  unit 5  single cells in one well    up to 47 lines        MG53-detected vs MG53-undetected cells in six
+                                                            wells of two exposures, with 78-85 control genes
+                                                            as the placebo family
+  unit 5b the same GLM, every well    20,120 line x well    single_cell_all: per well rather than per line,
+          class                       groups                over all 1,289 wells, with the per-doubling
+                                                            bound unit 5 has none of - and the opposite sign
 
 Two different things get called "level" and they behave differently, so both are binned separately:
 
@@ -283,8 +295,12 @@ def unit_drugdose(res, out, models):
 
 
 def unit_perline(res, out, models):
-    """Unit 3. One row per cell line x MG53-raising drug-dose. The only unit where both genes are resolved
-    per line, so the only place the TP53-WT / altered split is a real split of the same contrast."""
+    """Unit 3. One row per cell line x selected drug-dose. The only unit where both genes are resolved
+    per line, so the only place the TP53-WT / altered split is a real split of the same contrast.
+
+    The 18 selected drug-doses are not one panel: 13 were selected for raising MG53 (panel call up, z >= 4)
+    and 5 are p53 reference activators that were not, 4 of them lowering MG53. per_exposure_rho() splits
+    them; the bins and slopes here pool all 18."""
     e = pd.read_csv(os.path.join(res, "downstream_p53/tables/a_per_line_effects.csv"))
     e["dd"] = e["drug"].astype(str) + " @ " + e["conc"].astype(str)
     for c in ("TRIM72_r2", "TRIM72_level", GENE, PARTNER, "P53_SCORE"):
@@ -295,7 +311,7 @@ def unit_perline(res, out, models):
     e["mg53_amp"], e["mdm2_amp"] = resid_pair(e["TRIM72_r2"], e[GENE],
                                               e[["bg_abs_r2", "atlas_beta", "atlas_A"]])
     e["mg53_p53"], e["mdm2_p53"] = resid_pair(e["TRIM72_r2"], e[GENE], e[["P53_SCORE"]])
-    U = "3. cell line x drug-dose (18 MG53-raising exposures)"
+    U = "3. cell line x drug-dose (18 selected exposures: 13 MG53 raisers + 5 p53 reference activators)"
     t, extra = [], [PARTNER, "P53_SCORE", "TRIM72_level"]
     for grp, s in (("all lines", e), ("TP53-WT", e[e.tp53_group.eq("WT")]),
                    ("TP53-altered", e[e.tp53_group.eq("altered")])):
@@ -434,40 +450,192 @@ def genotype_interaction(e, out):
     return t
 
 
+def detection_and_depth(res):
+    """Per well set: how often MG53 is detected in a single cell, how many UMIs a detected cell carries, and
+    how much more deeply detected cells are sequenced. All three are per-CELL quantities, and the reason they
+    are computed rather than quoted is that an earlier version of this file used a per-PROFILE number in
+    their place ("~5 UMIs", which is a pseudobulk profile's whole count over a median of 1,217 cells).
+
+    Detection rate and depth come from the run's own description of exactly these well sets
+    (d_single_cell_line_description, one row per well set x line, 49 lines each). The count per detected cell
+    is the well set's total TRIM72 UMIs (export/TRIM72/TRIM72_per_profile, summed over its profiles) divided
+    by its detected cells, which is exact rather than approximate: a cell counts as detected exactly when it
+    carries at least one UMI, so every UMI in the well set sits in a detected cell.
+    """
+    ln = pd.read_csv(os.path.join(res, "downstream_p53/tables/d_single_cell_line_description.csv"))
+    p = pd.read_csv(os.path.join(res, "export/TRIM72/TRIM72_per_profile.csv"))
+    plate = p["plate"].astype(str).str.replace("plate", "", regex=False)
+    dmso = p["is_dmso"].astype(bool)
+    ida = (~dmso) & p["drug"].astype(str).str.lower().str.contains("idarubicin") \
+        & np.isclose(p["concentration_uM"], 5.0)
+    umis = {}
+    for ws, mask in (("DMSO, plates 6+14", dmso & plate.isin(["6", "14"])),
+                     ("DMSO, plate6", dmso & plate.eq("6")),
+                     ("DMSO, plate14", dmso & plate.eq("14")),
+                     ("idarubicin 5 uM, both wells", ida & plate.isin(["6", "14"])),
+                     ("idarubicin 5 uM, plate6", ida & plate.eq("6")),
+                     ("idarubicin 5 uM, plate14", ida & plate.eq("14"))):
+        umis[ws] = (float(p.loc[mask, "umi_count"].sum()),
+                    int(p.loc[mask, ["plate", "well"]].drop_duplicates().shape[0]))
+    rows = []
+    for ws, s in ln.groupby("wellset"):
+        u, nw = umis.get(ws, (np.nan, np.nan))
+        det, cells = float(s["n_TRIM72_detected"].sum()), float(s["n_cells"].sum())
+        deep, shallow = float(s["median_UMI_detected"].median()), float(s["median_UMI_not_detected"].median())
+        rows.append(dict(wellset=ws, n_wells=nw, n_lines_described=int(s["cell_line_id"].nunique()),
+                         mg53_pct_cells_detected_median_over_lines=float(s["pct_TRIM72_detected"].median()),
+                         mg53_pct_cells_detected_pooled=100 * det / cells,
+                         mg53_umi_per_detected_cell=u / det,
+                         median_umi_detected_cells=deep, median_umi_undetected_cells=shallow,
+                         depth_gap_detected_vs_not_pct=100 * (deep / shallow - 1)))
+    return pd.DataFrame(rows)
+
+
 def unit_singlecell(res, out):
     """Unit 5. Single cells inside one cell line and one well: MDM2 in the cells that have MG53 against the
     cells that do not.
 
-    This is the best-controlled comparison in the data and the cleanest reading of "different levels of
-    MG53". Cell line, drug, dose, plate and well are all held fixed by construction - the only thing that
-    differs between the two groups of cells is whether MG53 was detected in them. The run fits a
-    quasi-Poisson GLM per line (offset log UMIs; covariates log UMIs, S-phase and G2M module fractions, and a
-    well indicator where two wells are pooled), then pools lines by DerSimonian-Laird random effects.
+    The cleanest reading of "different levels of MG53", and the design that holds the most fixed: cell line,
+    drug, dose, plate and well are all fixed by construction - the only thing that differs between the two
+    groups of cells is whether MG53 was detected in them. The run fits a quasi-Poisson GLM per line (offset
+    log UMIs; covariates log UMIs, S-phase and G2M module fractions, and a well indicator where two wells
+    are pooled), then pools lines by DerSimonian-Laird random effects. It is the design and not this table
+    that is well controlled: unit 5b runs the same GLM over 1,289 wells rather than the six here, so an
+    earlier version calling this "the best-controlled comparison in the data" was ranking two well sets
+    above the full-scale version of themselves.
 
     Its negative control is the right one too: every non-p53 panel gene is run through the same fit, giving
     78 to 85 control genes per well set, and MDM2 is reported as a percentile among them. A rate ratio only
-    means something if it sits outside that control distribution.
+    means something if it sits outside that control distribution - and the controls do not centre on 1.00
+    after the fit, so the ratio relative to their median is carried beside the absolute one.
 
-    The catch, and it is a real one: MG53 is detected in few cells at ~5 UMIs, so "detected" partly means
-    "deeper cell". The UMI offset, the UMI covariate and the depth-stratified Mantel-Haenszel version
-    (d_single_cell_mh_depth_strata) are what stand against that, and all three are carried here.
+    The catch, and it is a real one: MG53 is detected in 0.4% to 10% of cells depending on the well set and
+    a detected cell carries about ONE UMI of it, so "detected" partly means "deeper cell" - detected cells
+    run 23% to 32% deeper than undetected ones. detection_and_depth() computes all three per well set,
+    because an earlier version read the ~5 UMIs of a pseudobulk PROFILE (a median 1,217 cells) as a
+    per-cell count and so understated this exposure. What stands against the confound is the UMI offset, the
+    UMI covariate and the depth-stratified Mantel-Haenszel version (d_single_cell_mh_depth_strata), and those
+    are carried here too.
     """
     m = pd.read_csv(os.path.join(res, "downstream_p53/tables/d_single_cell_meta_main.csv"))
     s = pd.read_csv(os.path.join(res, "downstream_p53/tables/d_single_cell_mh_depth_strata.csv"))
     keep = ["wellset", "tp53_group", "outcome", "n_lines", "rate_ratio", "se", "p", "I2", "n_lines_positive",
             "percentile_among_controls", "n_controls", "q_bh_p53_outcomes",
-            "median_line_log_rate_ratio_unadjusted", "WT_minus_altered_log_rate_ratio", "p_WT_minus_altered"]
+            "median_line_log_rate_ratio_unadjusted", "WT_minus_altered_log_rate_ratio", "p_WT_minus_altered",
+            # the controls do not sit at 1.00 after the fit (median 1.05-1.13 untreated), so the ratio
+            # relative to their median is carried beside the absolute one. The percentile is rank-based and
+            # unaffected; these two columns are what make "+13.1% and -14.4%" reproducible.
+            "control_median_log_rate_ratio", "log_rate_ratio_minus_control_median"]
     t = m[m.outcome.isin([GENE, PARTNER, "P53_SCORE"])][keep].copy()
+    t["control_median_rate_ratio"] = np.exp(t["control_median_log_rate_ratio"])
+    t["pct_change_vs_control_median"] = 100 * (np.exp(t["log_rate_ratio_minus_control_median"]) - 1)
     t = t.merge(s[["wellset", "tp53_group", "outcome", "median_line_rate_ratio", "n_lines_above_1",
                    "p_wilcoxon"]].rename(columns={"median_line_rate_ratio": "mh_depth_rate_ratio",
                                                   "p_wilcoxon": "mh_depth_p"}),
                 on=["wellset", "tp53_group", "outcome"], how="left")
+    t = t.merge(detection_and_depth(res), on="wellset", how="left")
     t["pct_change_in_outcome"] = 100 * (t["rate_ratio"] - 1)
     t["control_percentile_verdict"] = np.where(
         t["percentile_among_controls"].between(5, 95), "inside the control-gene distribution",
         "outside the control-gene distribution")
     t = t.sort_values(["outcome", "wellset", "tp53_group"])
     t.to_csv(os.path.join(out, "mdm2_mg53_single_cell.csv"), index=False)
+    return t
+
+
+def unit_singlecell_all(res, out):
+    """Unit 5b. The same single-cell model at full scale: every well class, not two well sets.
+
+    `single_cell_all` runs unit 5's quasi-Poisson GLM over every (well, cell line) group in the run - 20,120
+    of them carry a usable MDM2 comparison, over 1,289 wells and 47 lines - with Hartung-Knapp stage-2
+    inference, 16 detection-matched placebo predictors, 62 to 66 placebo outcomes, ambient-contamination
+    controls, and a per-doubling bound the two-well table does not publish. Its declared primary estimand is
+    WT minus altered, because an MG53 -> p53 effect can only act where p53 works.
+
+    Not quite the same fit: the group is one well rather than a line's two or four, lines are pooled in two
+    stages rather than one, and each group is capped at 2,000 cells. The run checks the two against each
+    other on the exposure they share (single_cell_all checks.csv, idarubicin 5 uM P53_SCORE: 1.0198 here
+    against 1.0195 in unit 5 for WT, 0.9817 against 0.9832 for altered).
+
+    Unit 5 is six wells of two exposures; this is all of them, and the pooled ratio comes out POSITIVE, so
+    both are carried. Nothing here overturns unit 5's cells - its DMSO class is the same contrast over all
+    28 untreated wells instead of the 4 behind unit 5's untreated row - but the sign is no more stable across
+    well classes than it was across plates 6 and 14.
+
+    Three columns decide what any one cell is worth, and all three are needed: `q_bh` within the step's own
+    p53 + screen family (41 or 42 outcomes per cell, `n_outcomes_in_family`),
+    `placebo_outcome_percentile` (the same fit on 62-66 unrelated genes as the outcome) and
+    `placebo_predictor_percentile` (16 genes with TRIM72's detection rate as the predictor). The two placebo
+    families disagree about the class-specific negatives, which is the honest summary of them. An empirical
+    p from 16 placebos cannot fall below 1/17 = 0.059.
+    """
+    T = os.path.join(res, "single_cell_all/tables")
+    genes = [GENE, PARTNER, "P53_SCORE"]
+    meta = pd.read_csv(os.path.join(T, "trim72_meta_by_tp53_group.csv"))
+    wma = pd.read_csv(os.path.join(T, "trim72_WT_minus_altered.csv"))
+    pdb = pd.read_csv(os.path.join(T, "per_doubling_bounds.csv"))
+    pon = pd.read_csv(os.path.join(T, "placebo_outcome_null.csv"))
+    ppn = pd.read_csv(os.path.join(T, "placebo_predictor_null.csv"))
+    gf = pd.read_csv(os.path.join(T, "group_fits_TRIM72_p53_screen.csv.gz"),
+                     usecols=["sample", "well_class", "cell_line_id", "tp53_group", "outcome"])
+
+    # wells behind each cell. A "well" is a (plate, well) sample; 'all wells' is the union over classes, so
+    # it is not the sum of them. n_groups (from the meta table) counts the line x well fits that enter.
+    w = gf[gf["outcome"].isin(genes)].rename(columns={"well_class": "class"})
+    rows = []
+    for g in genes:
+        s = w[w["outcome"] == g]
+        for cl in list(s["class"].unique()) + ["all wells"]:
+            c = s if cl == "all wells" else s[s["class"] == cl]
+            for grp in ("WT", "altered", "all lines", "WT minus altered"):
+                u = c if grp in ("all lines", "WT minus altered") else c[c["tp53_group"] == grp]
+                rows.append({"outcome": g, "class": cl, "contrast": grp,
+                             "n_wells": int(u["sample"].nunique())})
+    wells = pd.DataFrame(rows)
+
+    # how many of the step's own p53 + screen outcomes clear q < 0.1 in the same cell: the context a single
+    # q 0.02 needs before it reads as a result
+    def qcount(df):
+        f = df[df["family"] == "p53 + screen"].copy()
+        f["hit"] = f["q_bh"] < 0.10
+        return f.groupby(["class", "contrast"]).agg(n_outcomes_in_family=("hit", "size"),
+                                                    n_outcomes_q_lt_010=("hit", "sum")).reset_index()
+
+    nq = pd.concat([qcount(meta.rename(columns={"tp53_group": "contrast"})),
+                    qcount(wma.assign(contrast="WT minus altered"))], ignore_index=True)
+
+    keep = ["outcome", "class", "contrast", "n_lines", "n_groups", "rate_ratio", "ci_lo", "ci_hi", "df",
+            "p", "q_bh", "median_line_log_rr", "I2_lines", "p_perm"]
+    m = meta[meta["outcome"].isin(genes)].rename(columns={"tp53_group": "contrast"}).assign(p_perm=np.nan)
+    d = wma[wma["outcome"].isin(genes)].assign(contrast="WT minus altered").rename(
+        columns={"ratio_of_rate_ratios": "rate_ratio", "df_diff": "df"})
+    d["n_lines"] = d["n_lines_WT"] + d["n_lines_altered"]
+    d["n_groups"] = d["median_line_log_rr"] = d["I2_lines"] = np.nan
+    t = pd.concat([m[keep], d[keep]], ignore_index=True)
+
+    t = t.merge(pdb[(pdb["outcome"].isin(genes)) & (pdb["alpha_scenario"] == "alpha as estimated")][
+        ["outcome", "class", "contrast", "log2_true_ratio", "per_doubling_rr", "per_doubling_ci_lo",
+         "per_doubling_ci_hi", "largest_change_not_excluded_pct", "mde80_per_doubling_pct"]].rename(
+             columns={"per_doubling_rr": "per_doubling_rate_ratio"}),
+                on=["outcome", "class", "contrast"], how="left")
+    t = t.merge(pon[["outcome", "class", "contrast", "n_placebo_outcomes",
+                     "percentile_among_placebo_outcomes", "empirical_p"]].rename(
+                         columns={"percentile_among_placebo_outcomes": "placebo_outcome_percentile",
+                                  "empirical_p": "placebo_outcome_empirical_p"}),
+                on=["outcome", "class", "contrast"], how="left")
+    t = t.merge(ppn[ppn["placebos"] == "all placebos"][
+        ["outcome", "class", "contrast", "n_placebos", "TRIM72_percentile_among_placebos",
+         "empirical_p"]].rename(columns={"TRIM72_percentile_among_placebos": "placebo_predictor_percentile",
+                                         "empirical_p": "placebo_predictor_empirical_p"}),
+                on=["outcome", "class", "contrast"], how="left")
+    t = t.merge(wells, on=["outcome", "class", "contrast"], how="left")
+    t = t.merge(nq, on=["class", "contrast"], how="left")
+    t["pct_change_in_outcome"] = 100 * (t["rate_ratio"] - 1)
+    t["is_primary_estimand"] = t["contrast"] == "WT minus altered"
+    t["_c"] = t["class"].map({"all wells": 0, "DMSO": 1, "TRIM72 raisers": 2, "p53 activators": 3,
+                              "other drugs": 4}).fillna(9)
+    t = t.sort_values(["outcome", "_c", "contrast"]).drop(columns="_c")
+    t.to_csv(os.path.join(out, "mdm2_mg53_single_cell_all.csv"), index=False)
     return t
 
 
@@ -622,13 +790,33 @@ def level_by_plate(res, out, models):
     return t
 
 
-def per_exposure_rho(e, out):
+def per_exposure_rho(res, e, out):
     """Within one exposure, across the cell lines: do the lines that raise MG53 most show least MDM2?
 
-    This is the pipeline's own statistic (a_pooled_over_drugdoses): a Spearman per drug-dose over the lines
-    in that group, then the mean over drug-doses. It is kept separate from the pooled within-drug-dose fit
-    because mean-of-correlations and pooled-residual-slope are different estimators and here they disagree,
-    which is itself worth seeing.
+    A Spearman per drug-dose over the lines in that group, then the mean over drug-doses. TWO means, because
+    they are different numbers and only one of them is the pipeline's:
+
+      mean_rho            the arithmetic mean of the per-drug-dose rhos. This document's own statistic. The
+                          two part company whenever the rhos spread, and which one is further from zero
+                          depends on which tail is longer: Fisher z stretches the large |rho| values, so it
+                          is 10% further out on the wild-type MDM2 row and 1% closer in on the all-lines
+                          one.
+      mean_rho_fisher_z   tanh of the mean of the rhos' Fisher z. THIS is the pipeline's estimator
+                          (a_pooled_over_drugdoses, README "mean rho over a set of drug-doses (Fisher z
+                          average)", downstream_p53.py: mean_rho = float(np.tanh(obs)) over mean z).
+                          -0.162473 against -0.179022 on the wild-type MDM2 row of all 18.
+
+    The pipeline's own row for the same cell travels alongside in the pipeline_* columns, so the two can be
+    compared without leaving this file. It is the same statistic on the same per-line table; it differs only
+    in using 5,000 line-label draws against this file's 2,000 and an add-one p rather than a bare
+    proportion. There is no "all lines" row there - the pipeline only pools within a TP53 group.
+
+    Kept separate from the pooled within-drug-dose fit because mean-of-correlations and
+    pooled-residual-slope are different estimators and here they disagree, which is itself worth seeing.
+
+    Three exposure sets, because the 18 are not one panel: 13 drug-doses selected for raising MG53 (panel
+    call up, z >= 4) and 5 p53 reference activators that were not, 4 of which LOWER MG53. The whole
+    wild-type tilt sits in the raisers, so the union is the diluted version of the contrast.
 
     Two nulls, and the difference between them is the whole question:
 
@@ -636,65 +824,279 @@ def per_exposure_rho(e, out):
                               line count and both marginal distributions fixed. But it also destroys the
                               fact that the SAME 17 or 30 lines appear in all 18 exposures, so if a line
                               simply tends to run high in MG53 and low in MDM2 as a standing property, the
-                              real statistic keeps that and the null throws it away. The p is then too
-                              small, and this is the null the pipeline reports.
+                              real statistic keeps that and the null throws it away. Its p is then too
+                              small: this is the anti-conservative one of the two, and it is NOT a null the
+                              pipeline reports.
       line-label shuffle      ONE permutation of the line labels, applied to every exposure at once. Each
                               line's whole MDM2 profile travels together and is attached to a different
                               line's MG53 profile. Line-level structure survives in the null, so what is
                               tested is the thing actually claimed: that within an exposure, the lines that
                               raise MG53 more are the ones showing less MDM2. With 17 lines the permutation
-                              space is large but the effective sample is 17, not 306.
+                              space is large but the effective sample is 17, not 306. This is the null the
+                              pipeline reports, as p_line_permutation.
     """
+    sel = pd.read_csv(os.path.join(res, "downstream_p53/tables/a_selected_drugdoses.csv"))
+    sel["dd"] = sel["drug"].astype(str) + " @ " + sel["conc"].astype(str)
+    raiser = sel["role"].str.contains("TRIM72 raiser")
+    pool = pd.read_csv(os.path.join(res, "downstream_p53/tables/a_pooled_over_drugdoses.csv"))
+    pool = pool[pool.adjustment.eq("none")].set_index(["set", "tp53_group", "predictor", "outcome"])
+    sets = (("all 18 selected", None, "all selected"),
+            ("13 MG53 raisers", set(sel.loc[raiser, "dd"]), "TRIM72 raisers"),
+            ("5 p53 reference activators, MG53 not raised", set(sel.loc[~raiser, "dd"]),
+             "p53 reference activators that do not raise TRIM72"))
     rng = np.random.default_rng(SEED)
     rows = []
-    for grp, s in (("all lines", e), ("TP53-WT", e[e.tp53_group.eq("WT")]),
-                   ("TP53-altered", e[e.tp53_group.eq("altered")])):
-        for xcol, yc, nm in (("TRIM72_r2", GENE, "MG53 change"), ("TRIM72_level", GENE, "MG53 level"),
-                             ("TRIM72_r2", PARTNER, "MG53 change (contrast gene CDKN1A)")):
-            per, obs = [], []
-            for dd, g in s.groupby("dd"):
-                v = g[[xcol, yc, "cell_line_id"]].dropna()
-                if len(v) < 6:
+    for setname, keep, pipeset in sets:
+        for grp, arm in (("all lines", e), ("TP53-WT", e[e.tp53_group.eq("WT")]),
+                         ("TP53-altered", e[e.tp53_group.eq("altered")])):
+            s = arm if keep is None else arm[arm["dd"].isin(keep)]
+            for xcol, yc, nm in (("TRIM72_r2", GENE, "MG53 change"),
+                                 ("TRIM72_level", GENE, "MG53 level"),
+                                 ("TRIM72_r2", PARTNER, "MG53 change (contrast gene CDKN1A)")):
+                per, obs = [], []
+                for dd, g in s.groupby("dd"):
+                    v = g[[xcol, yc, "cell_line_id"]].dropna()
+                    if len(v) < 6:
+                        continue
+                    per.append(float(st.spearmanr(v[xcol], v[yc]).statistic))
+                    obs.append(v)
+                if len(per) < 3:
                     continue
-                per.append(float(st.spearmanr(v[xcol], v[yc]).statistic))
-                obs.append(v)
-            if len(per) < 3:
-                continue
-            mean = float(np.mean(per))
-            draws = []
-            for _ in range(NDRAW):
-                vals = [float(st.spearmanr(v[xcol], rng.permutation(v[yc].to_numpy())).statistic)
-                        for v in obs]
-                draws.append(np.mean(vals))
-            draws = np.asarray(draws)
-            # line-label shuffle: one relabelling of cell lines, reused across every exposure
-            lines = pd.unique(s["cell_line_id"])
-            ldraws = []
-            for _ in range(NDRAW):
-                mp = dict(zip(lines, rng.permutation(lines)))
-                vals = []
-                for v in obs:
-                    y = v.set_index("cell_line_id")[yc]
-                    yp = pd.Series([y.get(mp[c], np.nan) for c in v["cell_line_id"]]).to_numpy(float)
-                    ok = ~np.isnan(yp)
-                    if ok.sum() >= 6:
-                        vals.append(float(st.spearmanr(v[xcol].to_numpy()[ok], yp[ok]).statistic))
-                if vals:
-                    ldraws.append(np.mean(vals))
-            ldraws = np.asarray(ldraws)
-            rows.append(dict(group=grp, x=nm, y=yc, n_drugdoses=len(per),
-                             n_lines_median=int(np.median([len(v) for v in obs])),
-                             mean_rho=mean, n_negative=int(sum(p < 0 for p in per)),
-                             min_rho=float(min(per)), max_rho=float(max(per)),
-                             p_per_exposure_shuffle=float((np.abs(draws) >= abs(mean)).mean()),
-                             null_sd_per_exposure=float(draws.std()),
-                             p_line_label_shuffle=float((np.abs(ldraws) >= abs(mean)).mean())
-                             if len(ldraws) else np.nan,
-                             null_sd_line_label=float(ldraws.std()) if len(ldraws) else np.nan,
-                             n_permutations=NDRAW))
+                mean = float(np.mean(per))
+                fisher = float(np.tanh(np.mean(np.arctanh(np.clip(per, -0.999999, 0.999999)))))
+                draws = []
+                for _ in range(NDRAW):
+                    vals = [float(st.spearmanr(v[xcol], rng.permutation(v[yc].to_numpy())).statistic)
+                            for v in obs]
+                    draws.append(np.mean(vals))
+                draws = np.asarray(draws)
+                # line-label shuffle: one relabelling of cell lines, reused across every exposure
+                lines = pd.unique(s["cell_line_id"])
+                ldraws = []
+                for _ in range(NDRAW):
+                    mp = dict(zip(lines, rng.permutation(lines)))
+                    vals = []
+                    for v in obs:
+                        y = v.set_index("cell_line_id")[yc]
+                        yp = pd.Series([y.get(mp[c], np.nan) for c in v["cell_line_id"]]).to_numpy(float)
+                        ok = ~np.isnan(yp)
+                        if ok.sum() >= 6:
+                            vals.append(float(st.spearmanr(v[xcol].to_numpy()[ok], yp[ok]).statistic))
+                    if vals:
+                        ldraws.append(np.mean(vals))
+                ldraws = np.asarray(ldraws)
+                # the pipeline's own row for the same cell, for comparison; absent for "all lines"
+                pipe = {}
+                if (pipeset, grp, xcol, yc) in pool.index:
+                    pr = pool.loc[(pipeset, grp, xcol, yc)]
+                    pipe = dict(pipeline_n_drugdoses=int(pr["n_drugdoses"]),
+                                pipeline_mean_rho_fisher_z=float(pr["mean_rho"]),
+                                pipeline_n_negative=int(pr["n_drugdoses_rho_negative"]),
+                                pipeline_p_line_permutation=float(pr["p_line_permutation"]),
+                                pipeline_q_bh_within_set_group_adjustment=float(
+                                    pr["q_bh_within_set_group_adjustment"]),
+                                pipeline_n_permutations=int(pr["n_permutations"]))
+                rows.append(dict(exposure_set=setname, group=grp, x=nm, y=yc, n_drugdoses=len(per),
+                                 n_lines_median=int(np.median([len(v) for v in obs])),
+                                 # how much the predictor actually varies between lines inside an exposure:
+                                 # a Spearman is scale-free, but an exposure that barely moves MG53 ranks
+                                 # the lines mostly on noise, so its rho is attenuated toward zero
+                                 x_sd_between_lines_median=float(np.median([v[xcol].std() for v in obs])),
+                                 x_mean_median=float(np.median([v[xcol].mean() for v in obs])),
+                                 mean_rho=mean, mean_rho_fisher_z=fisher,
+                                 n_negative=int(sum(p < 0 for p in per)),
+                                 min_rho=float(min(per)), max_rho=float(max(per)),
+                                 p_per_exposure_shuffle=float((np.abs(draws) >= abs(mean)).mean()),
+                                 null_sd_per_exposure=float(draws.std()),
+                                 p_line_label_shuffle=float((np.abs(ldraws) >= abs(mean)).mean())
+                                 if len(ldraws) else np.nan,
+                                 null_sd_line_label=float(ldraws.std()) if len(ldraws) else np.nan,
+                                 n_permutations=NDRAW, **pipe))
     t = pd.DataFrame(rows)
     t.to_csv(os.path.join(out, "mdm2_mg53_per_exposure_rho.csv"), index=False)
     return t
+
+
+def spearman_rho(x, y):
+    """Tie-corrected Spearman as Pearson on average ranks. Same number as scipy's, ~10x faster per call,
+    which matters because the line-label null calls it 2,000 x 87 times per arm."""
+    rx, ry = st.rankdata(x), st.rankdata(y)
+    rx, ry = rx - rx.mean(), ry - ry.mean()
+    d = np.sqrt(float(rx @ rx) * float(ry @ ry))
+    return float(rx @ ry / d) if d > 0 else np.nan
+
+
+def mean_of_rhos(s, ddl, ndraw=NDRAW, seed=SEED, minlines=6):
+    """Mean of the per-drug-dose Spearman over the lines in one arm, with the line-label permutation null.
+
+    `s` is one arm's long frame (dd, cell_line_id, mg53, mdm2). The null applies ONE relabelling of cell
+    lines to every drug-dose at once, so each line's whole MDM2 profile travels together - the same null
+    per_exposure_rho uses, and the only one that tests the claim actually made. Drug-doses with fewer than
+    `minlines` usable lines are dropped, here and inside each draw.
+
+    Vectorised on the drug-doses where every line in the arm has both values: a relabelling then permutes the
+    same multiset of MDM2 values inside the drug-dose, so its rank vector is the gathered rank vector and the
+    whole arm's rhos are one matrix product. Drug-doses with a missing line fall back to re-ranking.
+    """
+    lines = np.array(sorted(s["cell_line_id"].unique()))
+    pos = {c: i for i, c in enumerate(lines)}
+    L = len(lines)
+    X, Y = (np.full((len(ddl), L), np.nan) for _ in range(2))
+    row = {d: i for i, d in enumerate(ddl)}
+    for dd, cl, xv, yv in zip(s["dd"], s["cell_line_id"], s["mg53"], s["mdm2"]):
+        X[row[dd], pos[cl]], Y[row[dd], pos[cl]] = xv, yv
+    ok = np.isfinite(X) & np.isfinite(Y)
+    keep = ok.sum(1) >= minlines
+    X, Y, ok = X[keep], Y[keep], ok[keep]
+    per = np.array([spearman_rho(X[i][ok[i]], Y[i][ok[i]]) for i in range(len(X))])
+    mean = float(per.mean())
+    full = ok.all(1)
+    Rx = np.array([st.rankdata(v) for v in X[full]]) if full.any() else np.zeros((0, L))
+    Ry = np.array([st.rankdata(v) for v in Y[full]]) if full.any() else np.zeros((0, L))
+    Rx, Ry = Rx - Rx.mean(1, keepdims=True), Ry - Ry.mean(1, keepdims=True)
+    norm = np.sqrt((Rx ** 2).sum(1) * (Ry ** 2).sum(1))
+    part = np.where(~full)[0]
+    rng = np.random.default_rng(seed)
+    draws = np.empty(ndraw)
+    for k in range(ndraw):
+        p = rng.permutation(L)
+        vals = list((Rx * Ry[:, p]).sum(1) / norm)
+        for i in part:
+            yp = Y[i][p]
+            m = np.isfinite(X[i]) & np.isfinite(yp)
+            if m.sum() >= minlines:
+                vals.append(spearman_rho(X[i][m], yp[m]))
+        draws[k] = np.mean(vals)
+    # how much MG53 actually moves across the lines inside one exposure: the mean of rhos gives every
+    # exposure the same weight whatever this is, a pooled slope weights each exposure by it
+    spread = np.array([float(np.std(X[i][ok[i]], ddof=1)) for i in range(len(X))])
+    return dict(n_drugdoses=int(len(X)), n_lines=L, n_rows=int(ok.sum()), mean_rho=mean,
+                n_negative=int((per < 0).sum()), min_rho=float(per.min()), max_rho=float(per.max()),
+                p_line_label_shuffle=float((np.abs(draws) >= abs(mean)).mean()),
+                null_sd_line_label=float(draws.std()), n_permutations=ndraw,
+                mg53_within_drugdose_sd_median=float(np.median(spread)))
+
+
+def out_of_sample(res, e, out, models):
+    """Unit 3's contrast again on a larger panel: 87 drug-doses instead of 18, 70 of them genuinely held out.
+
+    Provenance first, because an earlier version of this document said this data did not exist. Two tables in
+    the run carry per-gene PER-LINE values, and unit 3 uses the smaller one.
+      downstream_p53/tables/a_per_line_effects.csv       MG53, five p53 genes and the program score x 18
+                                                         drug-doses x 50 lines, 900 rows (unit 3)
+      p53_dependence/tables/per_line_effects_selected.csv  10 genes x 87 drug-doses x 50 lines at scope
+                                                         "mean of used wells", 40,583 rows, 4,179 MDM2
+    Seventeen of the 87 are 17 of unit 3's 18 - only Panobinostat 5 uM is unique to unit 3 - and on every
+    cell the two tables share, every shared gene is the same number rounded to six significant figures
+    (max |diff| 5.0e-06, and 0 after rounding unit 3's value to 6 s.f.). The larger table is therefore a
+    strict superset of unit 3's quantity, and its other 70 drug-doses are an out-of-sample set for the one
+    row unit 3 nominated for follow-up. The agreement is recomputed here, not asserted.
+
+    The p53_dependence step asks whether p53 regulates MG53, which is not one of this project's questions and
+    whose conclusions stay out of scope. Only its per-line table is used, as raw per-line gene values.
+
+    Both estimators of unit 3 are carried over:
+      mean of rhos   a Spearman per drug-dose across the lines in the arm, then the arithmetic mean, with the
+                     line-label permutation null. This is the statistic the document published for the 18.
+      pooled slope   MDM2 on MG53 with each drug-dose's mean removed INSIDE the arm being fitted - an
+                     exposure fixed effect - bootstrap clustered on cell line. It is the primary estimator
+                     here because it does not care that a mean over 87 rhos and a mean over 17 are averaging
+                     different numbers of exposures with different line-level ranges. One convention note:
+                     unit 3's -0.060 removes each exposure's mean over all 50 lines and then subsets to the
+                     arm, which leaves a per-exposure offset inside the arm; removing the arm's own mean, as
+                     here, gives -0.067 on the same 18 drug-doses - the last panel in the table below, which
+                     is there so that the 17 and the 18 can be compared without the convention in the way.
+
+    Six panels, because the subset needs testing as much as the whole. The whole 87, the 17 in sample, the
+    70 held out, then the 24 drug-doses this panel labels with an MG53-raiser ROLE of its own - not the 24
+    screen hits named below, a different 24, and a looser cut than unit 3's z >= 4: of the 17 shared it
+    marks 14, adding Idarubicin 0.5, Topotecan 0.5 and Mitoxantrone 0.5 (the last two LOWER MG53) and
+    dropping Harringtonine 5.0 - split the same way (14 in sample, 10 held out), and last unit 3's own 18
+    under this function's convention. The raiser split is here because per_exposure_rho() finds
+    the whole wild-type tilt in unit 3's 13 raisers rather than in the 18-exposure union, which leaves that
+    subset as the one cell of unit 3 clearing its own BH accounting - so it gets the same out-of-sample test
+    the union gets, on the 10 raiser-role drug-doses it never saw.
+
+    Two limits the bigger panel does not relieve. It is the same 50 cell lines, 17 wild-type, so it buys
+    drug-doses and not lines. And it is not label-free: 24 of the 87 are in it because they were TRIM72
+    wild-type-versus-altered screen hits, i.e. selected using the TP53 labels, and all 24 sit in the 70.
+    """
+    sel = pd.read_csv(os.path.join(res, "p53_dependence/tables/per_line_effects_selected.csv"))
+    sel = sel[sel["scope"].eq("mean of used wells")].copy()
+    sel["dd"] = sel["drug"].astype(str) + " @ " + sel["conc"].astype(str)
+    sel["log2FC_corrected"] = pd.to_numeric(sel["log2FC_corrected"], errors="coerce")
+
+    # is it the same quantity? every cell the two tables share, for every gene they share
+    agree = []
+    for gene, col in ((GENE, GENE), (PARTNER, PARTNER), ("TRIM72", "TRIM72_r2"), ("P53_SCORE", "P53_SCORE"),
+                      ("BBC3", "BBC3"), ("PMAIP1", "PMAIP1"), ("TP53", "TP53")):
+        if col not in e.columns:
+            continue
+        m = (sel[sel["gene"].eq(gene)][["dd", "cell_line_id", "log2FC_corrected"]]
+             .merge(e[["dd", "cell_line_id", col]], on=["dd", "cell_line_id"]))
+        y = pd.to_numeric(m[col], errors="coerce")
+        d = (m["log2FC_corrected"] - y).abs()
+        r6 = y.map(lambda v: float("%.6g" % v) if np.isfinite(v) else np.nan)
+        agree.append(dict(gene=gene, n_shared_cells=int(d.notna().sum()), max_abs_diff=float(d.max()),
+                          max_abs_diff_after_6sf=float((r6 - m["log2FC_corrected"]).abs().max())))
+    agree = pd.DataFrame(agree)
+
+    w = (sel[sel["gene"].isin([GENE, "TRIM72"])]
+         .pivot_table(index=["dd", "cell_line_id", "tp53_group"], columns="gene",
+                      values="log2FC_corrected").reset_index()
+         .rename(columns={"TRIM72": "mg53", GENE: "mdm2"}))
+    # unit 3's own 18, from unit 3's own table, so the last panel differs from the 17 only by Panobinostat
+    # 5 uM and both are fitted under this function's convention - the two slopes are then comparable
+    u3 = (e[["dd", "cell_line_id", "tp53_group", "TRIM72_r2", GENE]]
+          .rename(columns={"TRIM72_r2": "mg53", GENE: "mdm2"}))
+    dd18 = set(e["dd"])
+    dd87 = sorted(w["dd"].unique())
+
+    # how much of each panel was selected with the TP53 labels, and which drug-doses carry a raiser role
+    sd = pd.read_csv(os.path.join(res, "p53_dependence/tables/selected_drugdoses.csv"))
+    sd["dd"] = sd["drug"].astype(str) + " @ " + sd["conc"].astype(str)
+    sd = sd.set_index("dd")
+    raiser = set(sd.index[sd["role"].astype(str).str.contains("TRIM72 raiser")]) & set(dd87)
+    panels = [("87 drug-doses (whole panel)", w, dd87),
+              ("17 in sample (shared with unit 3)", w, [d for d in dd87 if d in dd18]),
+              ("70 held out", w, [d for d in dd87 if d not in dd18]),
+              ("14 in sample, MG53-raiser role", w, [d for d in dd87 if d in raiser and d in dd18]),
+              ("10 held out, MG53-raiser role", w, [d for d in dd87 if d in raiser and d not in dd18]),
+              ("18 (unit 3's own exposures)", u3, sorted(dd18))]
+
+    U = "3b. cell line x drug-dose (87-drug-dose panel: 17 in sample, 70 held out)"
+    rows = []
+    for pname, frame, ddl in panels:
+        in_p = sd.reindex(ddl)
+        for arm in ("TP53-WT", "TP53-altered", "all lines"):
+            s = frame if arm == "all lines" else frame[frame["tp53_group"].eq(arm.split("-")[1])]
+            s = s[s["dd"].isin(ddl)].dropna(subset=["mg53", "mdm2"]).copy()
+            if s.empty:
+                continue
+            tag = "%s | %s" % (pname, arm)
+            r = mean_of_rhos(s, [d for d in ddl if d in set(s["dd"])], seed=SEED)
+            for c in ("mg53", "mdm2"):                 # exposure fixed effect, inside the arm being fitted
+                s[c + "_w"] = s[c] - s.groupby("dd")[c].transform("mean")
+            o = fit(s["mg53_w"], s["mdm2_w"], s["cell_line_id"], "pooled within drug-dose, %s" % tag, tag)
+            models.append(dict(unit=U, group="%s (%s)" % (arm, pname), x="TRIM72 log2FC",
+                               y="%s log2FC" % GENE, adjustment="drug-dose mean removed within arm", **o))
+            rows.append(dict(panel=pname, group=arm, **r,
+                             slope_within_drugdose=o.get("b"), slope_lo=o.get("b_lo"),
+                             slope_hi=o.get("b_hi"), slope_p_boot=o.get("p_boot"),
+                             slope_p_cluster=o.get("p_cluster"), n_slope_rows=o.get("n"),
+                             n_clusters=o.get("n_clusters"),
+                             n_label_selected_screen_hit_role=int(
+                                 in_p["role"].eq("TRIM72 WT-vs-altered screen hit").sum()),
+                             n_screen_hit_flag=int(in_p["screen_hit"].fillna(False).astype(bool).sum()),
+                             n_role_mg53_raiser=int(
+                                 in_p["role"].astype(str).str.contains("TRIM72 raiser").sum()),
+                             n_drugdoses_in_panel=len(ddl),
+                             shared_cells_vs_unit3=int(agree["n_shared_cells"].sum()),
+                             max_abs_diff_vs_unit3=float(agree["max_abs_diff"].max()),
+                             max_abs_diff_vs_unit3_after_6sf=float(agree["max_abs_diff_after_6sf"].max())))
+    t = pd.DataFrame(rows)
+    t.to_csv(os.path.join(out, "mdm2_mg53_out_of_sample.csv"), index=False)
+    return t, agree
 
 
 # ----------------------------------------------------------------------------- joint table and extremes
@@ -757,7 +1159,12 @@ def context(res, d, e):
                          drugdose_fold_max=float(d["%s_fold_change" % nm].max()),
                          note="p53 regulator (p53 induces it, it degrades p53)" if nm == GENE
                               else "p53 effector (arrest)"))
-    rows.append(dict(gene="MG53 (TRIM72)", median_line_cpm=5.89, n_lines_expressing=50,
+    # MG53's detection count is read from the export like the other two, not asserted: export/all_genes
+    # gives n_lines_expressing 49 (NCI-H661 is the line that fails the expression filter), and an earlier
+    # version of this file hardcoded 50 here and printed "50 of 50" into the document.
+    ag = pd.read_csv(os.path.join(res, "export/all_genes/genes.csv")).set_index("gene")
+    rows.append(dict(gene="MG53 (TRIM72)", median_line_cpm=5.89,
+                     n_lines_expressing=int(ag.loc["TRIM72", "n_lines_expressing"]),
                      in_p53_program="not a member", rank_in_program=np.nan,
                      drugdose_fold_min=float(d["TRIM72_fold_change"].min()),
                      drugdose_fold_max=float(d["TRIM72_fold_change"].max()),
@@ -790,11 +1197,13 @@ def main():
     extremes(d, out)
     cx = context(res, d, e)
     cx.to_csv(os.path.join(out, "mdm2_mg53_context.csv"), index=False)
-    pex = per_exposure_rho(e, out)
+    pex = per_exposure_rho(res, e, out)
+    oos, agree = out_of_sample(res, e, out, models)
     plt = level_by_plate(res, out, models)
     mt = pd.DataFrame(models)                                  # level_by_plate appends to models
     mt.to_csv(os.path.join(out, "mdm2_mg53_models.csv"), index=False)
     sc = unit_singlecell(res, out)
+    sca = unit_singlecell_all(res, out)
     gi = genotype_interaction(e, out)
     nul = placebo_screen(res, out)
 
@@ -819,7 +1228,20 @@ def main():
     print(scr[scr.gene == GENE][["arm", "covariate_set", "b", "pct_per_doubling_measured",
                                  "pct_per_doubling_true", "p"]].to_string(index=False))
     print("\n===== within one exposure, across lines (mean of per-drug-dose Spearman)")
-    print(pex.to_string(index=False))
+    print("mean_rho is arithmetic over the drug-doses; mean_rho_fisher_z is the pipeline's estimator, and"
+          " the pipeline_ columns are its own row for the same cell (5,000 line-label draws, add-one p)")
+    print(pex[["exposure_set", "group", "x", "y", "n_drugdoses", "n_lines_median",
+               "x_sd_between_lines_median", "mean_rho", "mean_rho_fisher_z", "n_negative", "min_rho",
+               "max_rho", "p_per_exposure_shuffle", "p_line_label_shuffle", "pipeline_mean_rho_fisher_z",
+               "pipeline_n_negative", "pipeline_p_line_permutation",
+               "pipeline_q_bh_within_set_group_adjustment"]].to_string(index=False))
+    print("\n===== the same contrast on the 87-drug-dose per-line panel: 17 in sample, 70 held out")
+    print("same quantity as unit 3 on every shared cell: %d cells, max |diff| %.1e, %.0f after rounding to "
+          "6 significant figures" % (agree["n_shared_cells"].sum(), agree["max_abs_diff"].max(),
+                                     agree["max_abs_diff_after_6sf"].max()))
+    print(oos[["panel", "group", "n_drugdoses", "n_lines", "mean_rho", "n_negative",
+               "p_line_label_shuffle", "slope_within_drugdose", "slope_lo", "slope_hi", "slope_p_boot",
+               "n_slope_rows", "n_label_selected_screen_hit_role"]].to_string(index=False))
     print("\n===== LEVEL (CPM) split into between-plate and within-plate")
     print(plt[["plate", "n_drugdoses", "mg53_cpm_median", "mdm2_cpm_median",
                "rho_within_plate"]].to_string(index=False))
@@ -834,16 +1256,31 @@ def main():
     print("The raw fit confounds WHICH EXPOSURE a line was in with the line itself; the within-exposure fit"
           " is the one that answers the question.")
     print("\n===== single cells: MDM2 in MG53-detected vs MG53-undetected cells of the same line and well")
+    print("the control genes do not centre on 1.00 after the fit, so pct_change_vs_control_median is the"
+          " relative version of rate_ratio; the last three columns are per-cell, not per-profile")
     print(sc[sc.outcome.isin([GENE, PARTNER])][
         ["outcome", "wellset", "tp53_group", "n_lines", "rate_ratio", "p", "percentile_among_controls",
-         "n_controls", "mh_depth_rate_ratio", "mh_depth_p"]].to_string(index=False))
+         "n_controls", "control_median_rate_ratio", "pct_change_vs_control_median", "mh_depth_rate_ratio",
+         "mh_depth_p", "mg53_pct_cells_detected_median_over_lines", "mg53_umi_per_detected_cell",
+         "depth_gap_detected_vs_not_pct"]].to_string(index=False))
+    print("\n===== the same fit at full scale: every well class, 20,120 line x well groups")
+    print("WT minus altered is this step's primary estimand; the pooled ratio is the secondary one. q_bh is"
+          " within the step's own p53 + screen family (n_outcomes_in_family, 41 or 42 per cell); the two"
+          " placebo columns are 62-66 unrelated outcome genes and 16 detection-matched predictor genes"
+          " (empirical p floor 1/17 = 0.059).")
+    print(sca[sca.outcome.isin([GENE, PARTNER])][
+        ["outcome", "class", "contrast", "n_lines", "n_groups", "n_wells", "rate_ratio", "ci_lo", "ci_hi",
+         "p", "p_perm", "q_bh", "n_outcomes_q_lt_010", "n_outcomes_in_family", "placebo_outcome_percentile",
+         "placebo_outcome_empirical_p", "placebo_predictor_percentile", "per_doubling_rate_ratio",
+         "per_doubling_ci_lo", "per_doubling_ci_hi", "largest_change_not_excluded_pct",
+         "mde80_per_doubling_pct"]].to_string(index=False))
     print("\n===== is MDM2 unusual? MDM2 against MG53 placed in the all-gene distribution")
     print(nul[["gene", "quantity", "n_genes_in_null", "rho", "r", "rho_percentile_among_genes",
                "r_percentile_among_genes", "all_gene_rho_median", "all_gene_rho_q05", "all_gene_rho_q95",
                "verdict"]].to_string(index=False))
     print("\n===== joint quintiles, chi2 p = %.4g" % ct["chi2_p"].iloc[0])
     print(ct.pivot(index="mg53_quintile", columns="mdm2_quintile", values="n").to_string())
-    print("\nwrote 13 CSVs to %s" % out)
+    print("\nwrote 15 CSVs to %s" % out)
 
 
 if __name__ == "__main__":
