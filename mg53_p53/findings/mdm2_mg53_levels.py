@@ -3,9 +3,11 @@
 
 MDM2 is a p53 *regulator*, not a p53 effector: p53 induces it, and the MDM2 protein then ubiquitinates p53
 and sends it for degradation. So a relationship between MG53 and MDM2 is not a reading of p53's output - and
-in this data it does not behave like one either, which is the point of the table. MDM2 is also the single
-best-measured gene in the whole analysis: 185.8 CPM median, detected in all 50 lines, moved up by 96 of 98
-reference compounds. MG53 sits at 5.89 CPM with 12.4% zeros. Whatever MDM2 shows is not a detection problem.
+in this data it does not behave like one either, which is the point of the table. MDM2 is also well
+measured: 185.8 CPM median, detected in all 50 lines, moved up by 96 of 98 reference compounds. It is not
+the best-measured gene in the analysis, which an earlier version of this docstring claimed: 185.8 CPM is
+903rd of 16,643 genes by level. MG53 sits at 5.89 CPM (DMSO wells, median over lines) with 12.4% zeros.
+Whatever MDM2 shows is not a detection problem.
 
 The question asked here is deliberately flat-footed: take different levels of MG53 and different levels of
 MDM2 and put them side by side. There are four resolutions at which both genes exist in a run's output, and
@@ -13,7 +15,7 @@ they do not agree with each other, which is the finding:
 
   unit 1  baseline across lines          48 lines           each line's untreated level of both genes
   unit 2  drug-dose, lines pooled      1,132 drug-doses     each exposure's effect on both genes
-  unit 3  line x drug-dose               861 cells          18 selected exposures x 50 lines: 13 MG53
+  unit 3  line x drug-dose               843 cells          18 selected exposures x 50 lines: 13 MG53
                                                             raisers + 5 p53 reference activators, 4 of which
                                                             lower MG53
   unit 3b line x drug-dose, wider      4,094 cells          the same quantity from per_line_effects_selected:

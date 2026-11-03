@@ -28,7 +28,7 @@ point is only that nothing MDM2 shows or fails to show here is a detection probl
 
 | | MG53 (TRIM72) | MDM2 | CDKN1A (contrast gene) |
 |---|---|---|---|
-| Median level across lines | 5.89 CPM | 185.8 CPM (903rd of 16,643) | 56.4 CPM |
+| Median level across lines | 5.89 CPM over the **DMSO wells** (3.95 CPM over all wells, which is the scope of the other two cells; 6.13 on reliable plates) | 185.8 CPM (903rd of 16,643) | 56.4 CPM |
 | Lines where detected | **49 of 50** (NCI-H661 fails the expression filter); 12.42% of usable profiles from expressing lines are zero | 50 of 50 | 47 of 50 |
 | Role | the exposure | p53 regulator (p53 induces it; its protein degrades p53) | p53 effector (arrest) |
 | In the data-defined p53 program | not a member | induction arm, **rank 3** of 180 | induction arm, rank 29 |
@@ -42,7 +42,7 @@ point is only that nothing MDM2 shows or fails to show here is a detection probl
 per-line baseline measurement finds MDM2 running 3.07x higher in TP53-wild-type lines than in TP53-altered
 ones — the p53 → MDM2 feedback loop, textbook — and finds nothing from MG53. The exact comparisons, since
 they are not identical: MDM2 is 17 WT against 33 altered lines, ratio of geometric means 3.07x, Welch
-p 3.3e-12 (Mann-Whitney on the medians: 3.14x, p 1.8e-7); MG53 is 17 against 31 lines, 1.08x, Welch p 0.77
+p 3.4e-12 (Mann-Whitney on the medians: 3.14x, p 1.8e-7); MG53 is 17 against 31 lines, 1.08x, Welch p 0.77
 (Mann-Whitney median ratio 1.20x, p 0.78).
 
 What that licenses is narrow but real: **MDM2's side of every null below is sound** — a gene whose 3x
@@ -128,20 +128,20 @@ Correlations on the same 1,132 exposures, with each statistic's own p:
 
 | Pair | Spearman | its p | Pearson | slope, compound-bootstrap CI |
 |---|---|---|---|---|
-| MG53 z x MDM2 z | **-0.092** | **0.0020** | +0.003 | -0.29 to +0.26 |
+| MG53 z x MDM2 z | **-0.092** | **0.0020** | +0.003 | -0.28 to +0.25 |
 | MG53 log2 fold x MDM2 log2 fold (the table above) | -0.080 | 0.0074 | +0.006 | -0.046 to +0.048 |
 | after adjusting for transcriptome-wide activity | -0.022 (partial) | 0.45 | +0.062 | -0.15 to +0.29 |
 
 The -0.092 reproduces the run's own figure exactly, and its drug-bootstrap CI (-0.156 to -0.022, also the
 run's) excludes zero. But the Pearson on the same pairs is **+0.003**, and this file's own compound bootstrap
-of that Pearson spans **-0.209 to +0.213**. When rank and product-moment statistics disagree that completely,
+of that Pearson spans **-0.204 to +0.213**. When rank and product-moment statistics disagree that completely,
 neither is describing a line: it is a cloud with a slight tilt through the middle and the opposite tilt at
 the end. Adjusting for how much the whole transcriptome moved (`atlas_n_sig_genes`, cell counts, S and G2M
 phase, UMI per cell) takes the partial Spearman to **-0.022** (its own p 0.45) and the compound-bootstrap p
 on the slope to 0.46.
 
 The bound this unit supports, rather than a bare "nothing": per doubling of measured MG53, MDM2 changes by
-between **-3.2% and +3.4%** (95%, compound-clustered).
+between **-3.1% and +3.4%** (95%, compound-clustered).
 
 ## Table 2 — MG53 level against MDM2 level, and why the big number here is an artefact
 
@@ -433,7 +433,7 @@ activators or screen hits. Over all 87 exposures the slope is **-0.031 log2 MDM2
 of MG53, interval -4.1% to -0.4%** — against **-0.072 (-0.144 to -0.004, p 0.040, n 288)** on the 17, and
 **-0.014 (-0.043 to +0.013, p 0.378, n 1,190)** on the 70 held out alone. So the tilt as a slope is 43% of
 what the 17 exposures said, undetectable on held-out exposures by itself, and inside the bound Table 1
-already put on this pair (-3.2% to +3.4% per doubling). It is also wild-type-only on this panel, as it was
+already put on this pair (-3.1% to +3.4% per doubling). It is also wild-type-only on this panel, as it was
 on the 18: the altered arm reads **-0.005 (-0.027 to +0.015, p 0.637, n 2,616)** over the same 87 exposures,
 and all 49 lines pooled read **-0.004 (-0.023 to +0.016, p 0.650, n 4,094)**. **The 87-exposure slope is
 this document's estimate of the within-exposure tilt**; the 17- and 18-exposure figures above are what a
@@ -866,7 +866,7 @@ Every contrast in the document, with what it came to:
 | 843 line x exposure | genotype interaction, **within exposure** | WT extra -0.045 ± 0.049, p 0.36 | no genotype effect |
 
 **The relationship between MG53 and MDM2 is bounded and small, not demonstrably zero**, and the bound is
-what the data give: per doubling of measured MG53, MDM2 moves between **-3.2% and +3.4%** at the exposure
+what the data give: per doubling of measured MG53, MDM2 moves between **-3.1% and +3.4%** at the exposure
 level, between **-0.61% and -0.08%** in the genome-wide screen, between **-4.1% and -0.4%** within an
 exposure across the 17 wild-type lines on the 87-exposure per-line panel, and by nothing detectable across
 untreated cell lines (where the bound is weak, |r| < 0.36) or between the MG53-positive and MG53-negative
@@ -891,7 +891,7 @@ scale — 0.956 (0.917–0.997) over all 28 untreated wells rather than four —
 statistically distinguishable either (difference +0.105 ± 0.077, p 0.17).
 
 **What the data are good for, and what they are not.** MDM2's side of the measurement is sound: the 3.07x
-wild-type/altered baseline split at p 3.3e-12 is the p53-MDM2 feedback loop recovered from this very table,
+wild-type/altered baseline split at p 3.4e-12 is the p53-MDM2 feedback loop recovered from this very table,
 so a comparable MG53 effect would not be missed for want of detection in the outcome. The limit is on the
 MG53 side: 5.89 CPM, 12.42% zeros among usable profiles from expressing lines, a split-half reliability of
 0.289 whose subset values are not scope-matched and which cannot be divided out at all, the largest
@@ -924,7 +924,7 @@ protein measurement. Not more exposures.
 | File | Contents |
 |---|---|
 | `tables/mdm2_mg53_bins.csv` | every binned table above, long form: unit, group, which variable was binned, bin bounds, n, mean / median / SD / SE / CI of the outcome in each bin, and the across-bin trend |
-| `tables/mdm2_mg53_models.csv` | one row per contrast: slope, SE, t, p, Pearson, Spearman, and the compound-clustered bootstrap interval and p |
+| `tables/mdm2_mg53_models.csv` | one row per contrast: slope, SE, t, p, Pearson, Spearman, and the cluster bootstrap's interval and p. The cluster is per unit - compound at the drug-dose unit, cell line at the per-line one - and `n_clusters` records which |
 | `tables/mdm2_mg53_cpm_by_plate.csv` | the LEVEL comparison split by plate: per-plate medians of both genes, the within-plate correlation on each plate, and the between / within decomposition |
 | `tables/mdm2_mg53_single_cell.csv` | the single-cell rate ratios with their control-gene percentiles and the depth-matched version, each also expressed relative to the control genes' own median (1.05 to 1.13 in the untreated well sets, 0.99 to 1.04 under idarubicin, not 1.00), and the well set's MG53 detection rate, UMIs per detected cell and detected-against-undetected depth gap |
 | `tables/mdm2_mg53_single_cell_all.csv` | the same fit at full scale, from `single_cell_all`: every well class x TP53 contrast for both genes, with lines, groups and wells behind each cell, the step's own BH q within its p53/screen family (41 or 42 outcomes per cell, and how many of them clear q < 0.1 there), both placebo families (62 to 66 outcome genes, 16 detection-matched predictor genes), and the per-doubling bound with its 80%-power threshold |

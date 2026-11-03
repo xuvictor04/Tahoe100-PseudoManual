@@ -11,7 +11,7 @@ p53 effectors to clear the calibrated threshold, and the only one of [[p53 progr
 clear it at all. Condensed from `mg53_p53/findings/MDM2_MG53.md`, which carries every number here.
 
 > [!summary] In one line
-> Across five resolutions the association is **bounded and small, not demonstrably zero**: −3.2% to +3.4% per
+> Across five resolutions the association is **bounded and small, not demonstrably zero**: −3.1% to +3.4% per
 > doubling of measured MG53 at the exposure level, −0.61% to −0.08% in the genome-wide screen, −4.1% to
 > −0.4% within an exposure across the 17 wild-type lines on the 87-exposure panel, nothing detectable
 > between untreated lines (a weak bound, \|r\| < 0.36) and **nothing larger than about 8%** between the
@@ -32,7 +32,7 @@ one gene in the set where an association could speak to what regulates p53 inste
 > (903rd of 16,643 by level — **not** the best-measured gene, see the corrections), detected in all 50 lines,
 > moved up by 96 of 98 reference compounds, against [[MG53 (TRIM72)]]'s 5.89 CPM with 12.4% of profiles at
 > zero ([[Why MG53 is hard to measure here]]). Per-line baselines then put MDM2 **3.07× higher in
-> TP53-wild-type than TP53-altered lines** (17 vs 33 lines, geometric means, Welch p 3.3e-12; Mann-Whitney on
+> TP53-wild-type than TP53-altered lines** (17 vs 33 lines, geometric means, Welch p 3.4e-12; Mann-Whitney on
 > medians 3.14×, p 1.8e-7) — the p53 → MDM2 feedback loop recovered from this very table — against MG53's
 > **1.08×, p 0.77**. So MDM2's side of every null below is sound. It licenses **nothing** about MG53's
 > reliability, which is separately poor and badly characterised: **0.289 full-data split-half** (0.301 in
@@ -93,7 +93,7 @@ contrast column, 0.947 → 1.080 climbing with the bins, is what tracking MG53 l
 The two correlations disagree, which is itself the finding: Spearman **−0.092** (p 0.0020, drug-bootstrap CI
 −0.156 to −0.022, reproducing the run exactly) against Pearson **+0.003** on the same pairs, compound
 bootstrap **−0.204 to +0.213**. Adjusting for transcriptome-wide activity gives partial Spearman
-**−0.022299** (its own p 0.4535; drug-clustered bootstrap p 0.46). Bound: **−3.2% to +3.4%** per doubling of
+**−0.022299** (its own p 0.4535; drug-clustered bootstrap p 0.46). Bound: **−3.1% to +3.4%** per doubling of
 measured MG53.
 [`mg53_p53/findings/tables/mdm2_mg53_models.csv`]
 

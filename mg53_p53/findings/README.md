@@ -188,7 +188,7 @@ of all 195 program genes.
 
 The short answer is a small bounded association and no p53 route, with the measurement proving itself along
 the way: MDM2's baseline runs **3.07x higher in TP53-wild-type lines than in TP53-altered ones**
-(p 3.3e-12), exactly as the p53 feedback loop predicts, while MG53's baseline shows nothing (1.08x, p 0.77)
+(p 3.4e-12), exactly as the p53 feedback loop predicts, while MG53's baseline shows nothing (1.08x, p 0.77)
 — so MDM2's side of every null below is sound. Across MG53 fold-change deciles MDM2 stays within 2% of 1.00
 with no trend. The one large number, a -0.614 correlation between the two genes' CPM, is a plate batch
 effect in full (between plate medians -0.763, within plate **+0.074**). In the unselected 16,642-gene

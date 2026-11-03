@@ -57,12 +57,12 @@ The run reports the same split-half under several subsets:
 | λ | Subset | Correction factor 1/λ |
 |---|---|---|
 | **0.289** | primary specification (`i_all`) | **3.46×** |
-| 0.425 | active, plates 3/13 excluded | 2.35× |
-| 0.586 | one of the active / p53-responsive subsets — the source lists four values against three descriptors and does not say which | 1.71× |
+| 0.425 | the 102 replicated drug-doses only — **not** `ii_active_no_plate3_13`, which reads **0.590** on its 58 | 2.35× |
+| 0.586 | the 50 p53-activating exposures (`ii_p53`; 0.585 under `ddxg` fixed effects) | 1.71× |
 | 0.610 | active exposures (`ii_active`) | 1.64× |
 | **0.705** | MG53-moving exposures | **1.42×** |
 
-[`two_way/tables/trim72_reliability.csv`; subset list as given in `MDM2_MG53.md` line 454.]
+[`two_way/tables/trim72_reliability.csv`, variant by variant; the menu is the one `MDM2_MG53.md` lists in Table 7.]
 
 The endpoints differ by **2.4×** in the correction. Reliability rises on the active subsets for the obvious
 reason — where MG53 actually moves, the signal-to-noise ratio is better — so the choice of subset is a
@@ -102,7 +102,7 @@ measured MG53** [95% CI −0.61% to −0.08%, line-clustered]:
 | λ used | Per doubling of **true** MG53 | 95% interval |
 |---|---|---|
 | 0.289 (primary) | **−1.19%** | −2.11% to −0.26% |
-| 0.425 (active, plates 3/13 excluded) | −0.81% | — |
+| 0.425 (the 102 replicated drug-doses) | −0.81% | — |
 | 0.610 (active exposures) | **−0.57%** | −1.01% to −0.12% |
 | 0.705 (MG53-moving exposures) | −0.49% | — |
 

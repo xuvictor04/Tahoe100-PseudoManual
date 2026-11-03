@@ -18,7 +18,7 @@ status: current
 | Median level across the 50 lines | **5.89 CPM** (per-line range 0.93–23.6) | `export/downstream/` per-line levels, quoted in `MDM2_MG53.md` Table at line 29 |
 | Profiles with zero TRIM72 counts | **12.42%** of the 62,611 usable profiles from expressing lines | recomputed, `verify_raisers_0` |
 | Median TRIM72 UMIs per profile | **5** | `verify_variance_1`, recomputed |
-| Split-half reliability, primary spec | **0.289** — but 0.425 to 0.705 on active subsets | `two_way/tables/trim72_reliability.csv` |
+| Split-half reliability, primary spec | **0.289** — but 0.586 to 0.705 on the active subsets, and 0.425 on the 102 replicated drug-doses | `two_way/tables/trim72_reliability.csv` |
 
 > [!warning] The zero fraction depends on its denominator, and the headline figure uses the narrowest one
 > 12.42% over the 62,611 usable profiles from *expressing* lines; **13.69%** over all 63,921 usable
