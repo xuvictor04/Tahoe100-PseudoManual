@@ -4,7 +4,10 @@ The runner talks to it through the REAL SDK: `FakeAPI.client(secret)` is an `ant
 transport is an httpx2.MockTransport answering from the script. So the SDK serialises every request as it would for
 the API (and the fake checks it), parses every answer into real BetaMessage objects, and builds every error with its
 own factory (anthropic._error_classes.make_status_error) from the HTTP status and error body: the runner's typed
-error handling is exercised exactly as against the API.
+error handling is exercised exactly as against the API. A streamed request ("stream": true, as the runner sends
+them: client.beta.messages.stream) is answered with server-sent events (message_start, content_block_start / delta
+/ stop per block - text and tool input in pieces, thinking signatures as signature_delta -, message_delta with the
+stop reason, stop details and usage, message_stop), which the SDK's stream accumulates into the message.
 
 Script (JSON):
     {
@@ -23,13 +26,19 @@ A step is consumed per request of that entity's conversation (reviewer and check
     {"web_search": "query"}  (+ "pause": true: stop with pause_turn before the result; with "tool_use" /
                              "submit_review" in the same step: a finished search, then those calls)
     {"end_turn": "text"}                                                     text only, end_turn
+    {"submit_check": "auto"}                                                 the auto check (every claim supported)
     {"refusal": "bio"}                                                       stop_reason refusal + stop_details
+            (+ "recommended_model": "claude-opus-4-8": the fallback model was busy - a transient refusal)
     {"max_tokens": true}  (+ "partial_tool": "submit_review": a cut-off tool_use block)
+    {"empty": true}                                                          no content blocks at all, end_turn
     {"error": 402 | 401 | 403 | 429 | 529 | 500 | 400 | 404 | 413 | "billing" | "spend_limit" | "on_hold" |
               "connection" | "timeout"}                                     the SDK raises its typed error
 modifiers on any step: "text": "...", "usage": {...} (overrides), "fallback": "claude-opus-5" (a fallback block and
 a fallback_message usage iteration at that model), "signal": "SIGINT" (sent to this process before answering),
-"sleep": seconds.
+"sleep": seconds (before the signal), "sleep_after": seconds (after it: the answer comes late), "drop": true (a
+streamed answer breaks off with a network error after its first block: a lost response), "drop": "clean" (it just
+ends there, without message_stop), "drop": "overloaded" (an overloaded_error event in the middle of the stream) or
+"drop": "empty" (the stream closes before message_start).
 Usage is made up from the request size (4 characters a token; the previous context read from cache).
 
 Every request is checked like the API would: first message from the user, every tool_use answered by a tool_result
@@ -41,8 +50,8 @@ FakeLiterature: a tiny local PubMed / Europe PMC / Crossref (install() patches t
 sdk_error(what): the SDK's own exception for an HTTP status / named error, built the way the SDK builds it
 (anthropic._error_classes.make_status_error on an httpx2.Response with its request), for tests of keys.classify.
 FakeAPI.calls: one record per request (entity, role, key's last 4 characters, number of messages and the
-messages_sha256 of what was sent, step, thread, start/end times). FakeAPI.violations: what the API would have
-rejected (the runner logs them at the end of a fake run).
+messages_sha256 of what was sent, step, thread, start/end times, whether it was streamed, max_tokens).
+FakeAPI.violations: what the API would have rejected (the runner logs them at the end of a fake run).
 """
 
 import json
@@ -167,6 +176,7 @@ class FakeAPI:
                 step = {"error": dead} if dead is not None else {"error": 400, "message": "; ".join(problems)}
             self.calls.append({"n": n, "entity": ent, "role": role, "key": secret[-4:],
                                "n_messages": len(body.get("messages") or []), "step": _step_name(step),
+                               "stream": bool(body.get("stream")), "max_tokens": body.get("max_tokens"),
                                "thread": threading.current_thread().name, "t0": time.monotonic(),
                                "messages_sha256": messages_sha256(body.get("messages") or [])})
         try:
@@ -182,11 +192,17 @@ class FakeAPI:
         if step.get("signal"):
             os.kill(os.getpid(), getattr(signal, step["signal"]))
             time.sleep(0.2)                          # let the main thread run its handler
+        if step.get("sleep_after"):
+            time.sleep(float(step["sleep_after"]))
         if "error" in step:
             return self._error(req, step)
         with self.lock:
             msg = self._message(body, step, n)
-            self.returned.setdefault(key, []).append(msg["content"])
+            if not step.get("drop") and msg["content"]:      # (an empty turn is never sent back)
+                self.returned.setdefault(key, []).append(msg["content"])
+        if body.get("stream"):
+            return httpx2.Response(200, content=sse_stream(msg, drop=step.get("drop")),
+                                   headers={"content-type": "text/event-stream", "request-id": f"req_fake_{n}"})
         return httpx2.Response(200, json=msg, headers={"request-id": f"req_fake_{n}"})
 
     def _validate(self, req, body, key):
@@ -319,7 +335,10 @@ class FakeAPI:
             stop = "tool_use"
         elif "submit_review" in step or "submit_check" in step:
             name = "submit_review" if "submit_review" in step else "submit_check"
-            content.append({"type": "tool_use", "id": f"toolu_fake_{n}_0", "name": name, "input": step[name]})
+            payload = step[name]
+            if payload == "auto":
+                payload = self._auto_check(_first)
+            content.append({"type": "tool_use", "id": f"toolu_fake_{n}_0", "name": name, "input": payload})
             stop = "tool_use"
         elif "web_search" in step:
             sid = f"srvtoolu_fake_{n}"
@@ -335,6 +354,10 @@ class FakeAPI:
         elif "refusal" in step:
             stop = "refusal"
             details = {"type": "refusal", "category": step["refusal"], "explanation": "declined (fake)"}
+            if step.get("recommended_model"):
+                details["recommended_model"] = step["recommended_model"]
+        elif step.get("empty"):
+            content = []
         elif "max_tokens" in step:
             content.append({"type": "text", "text": "This answer is cut off mid-"})
             if step.get("partial_tool"):
@@ -357,6 +380,71 @@ class FakeAPI:
             model = step["fallback"]
         return {"id": f"msg_fake_{n}", "type": "message", "role": "assistant", "model": model, "content": content,
                 "stop_reason": stop, "stop_sequence": None, "stop_details": details, "usage": usage}
+
+
+def _chunks(text, n=3):
+    k = max(1, -(-len(text) // n))
+    return [text[i:i + k] for i in range(0, len(text), k)] or [""]
+
+
+def sse_events(msg):
+    """The server-sent events of a streamed answer that accumulates to `msg` (as the API streams a message)."""
+    u = msg["usage"]
+    start = dict(msg, content=[], stop_reason=None, stop_sequence=None, stop_details=None,
+                 usage={k: u.get(k) for k in ("input_tokens", "cache_creation_input_tokens",
+                                              "cache_read_input_tokens")} | {"output_tokens": 1})
+    yield "message_start", {"type": "message_start", "message": start}
+    for i, b in enumerate(msg["content"]):
+        t = b.get("type")
+        if t == "text":
+            yield "content_block_start", {"type": "content_block_start", "index": i,
+                                          "content_block": {"type": "text", "text": ""}}
+            for c in _chunks(b.get("text", "")):
+                yield "content_block_delta", {"type": "content_block_delta", "index": i,
+                                              "delta": {"type": "text_delta", "text": c}}
+        elif t == "thinking":
+            yield "content_block_start", {"type": "content_block_start", "index": i,
+                                          "content_block": {"type": "thinking", "thinking": "", "signature": ""}}
+            if b.get("thinking"):
+                yield "content_block_delta", {"type": "content_block_delta", "index": i,
+                                              "delta": {"type": "thinking_delta", "thinking": b["thinking"]}}
+            yield "content_block_delta", {"type": "content_block_delta", "index": i,
+                                          "delta": {"type": "signature_delta", "signature": b.get("signature", "")}}
+        elif t in ("tool_use", "server_tool_use"):
+            yield "content_block_start", {"type": "content_block_start", "index": i,
+                                          "content_block": dict(b, input={})}
+            for c in _chunks(json.dumps(b.get("input") or {})):
+                yield "content_block_delta", {"type": "content_block_delta", "index": i,
+                                              "delta": {"type": "input_json_delta", "partial_json": c}}
+        else:                                        # web_search_tool_result, fallback ...: whole at the start
+            yield "content_block_start", {"type": "content_block_start", "index": i, "content_block": b}
+        yield "content_block_stop", {"type": "content_block_stop", "index": i}
+    yield "message_delta", {"type": "message_delta",
+                            "delta": {"stop_reason": msg["stop_reason"], "stop_sequence": None,
+                                      "stop_details": msg.get("stop_details")}, "usage": u}
+    yield "message_stop", {"type": "message_stop"}
+
+
+def sse_stream(msg, drop=None):
+    """The bytes of sse_events(msg); with drop, the stream breaks off after the first content block (True: with a
+    network error, 'clean': it just ends, 'overloaded': with an error event; 'empty': nothing after a ping)."""
+    import httpx2
+    blocks = 0
+    yield b"event: ping\ndata: {\"type\": \"ping\"}\n\n"
+    if drop == "empty":                              # the connection closes before message_start
+        return
+    for name, data in sse_events(msg):
+        yield f"event: {name}\ndata: {json.dumps(data)}\n\n".encode("utf-8")
+        if name == "content_block_stop":
+            blocks += 1
+        if drop and (blocks >= 1 or name == "message_delta"):
+            if drop == "clean":
+                return
+            if drop == "overloaded":                 # an error event in the middle of the stream (HTTP 200)
+                err = {"type": "error", "error": {"type": "overloaded_error", "message": "Overloaded (fake)"}}
+                yield f"event: error\ndata: {json.dumps(err)}\n\n".encode("utf-8")
+                return
+            raise httpx2.ReadError("fake: connection reset by peer in the middle of the response")
 
 
 def messages_sha256(messages):
@@ -395,7 +483,7 @@ def sdk_error(what, message=None, retry_after=None):
 
 def _step_name(step):
     for k in ("error", "tool_use", "submit_review", "submit_check", "web_search", "refusal", "max_tokens",
-              "end_turn"):
+              "empty", "end_turn"):
         if k in step:
             if k == "tool_use":
                 return "tool_use:" + ",".join(t["name"] for t in step["tool_use"])

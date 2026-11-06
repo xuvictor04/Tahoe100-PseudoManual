@@ -53,16 +53,21 @@ API keys can run out mid-run and be switched; the run resumes where it stopped.
 
 ### Surface
 
-The Anthropic Python SDK (`anthropic`, `client.beta.messages.create`), our own agent loop (so every turn is logged and
+The Anthropic Python SDK (`anthropic`; every request streamed: `client.beta.messages.stream(...)` as a context manager,
+then `get_final_message()`), our own agent loop (so every turn is logged and
 every error is typed), custom tools we execute locally, and Anthropic's server tools for the web. Model: every agent
 defaults to `claude-opus-5-5` (the user can choose per agent: `--model`, or the agent file). Effort via
 `output_config={"effort": ...}` (reviewers `high`, checker `medium` by default); adaptive thinking (omit `thinking`);
 refusal fallback opted in by default: `betas=["server-side-fallback-2026-07-01"]`, `fallbacks="default"`; prompt
 caching: the system prompt (agent + skills) carries `cache_control`, and top-level `cache_control={"type":
 "ephemeral"}` caches the growing conversation. Append each `response.content` unchanged to the messages (thinking and
-server-tool blocks included). `stop_reason`: `tool_use` → run our tools, return all results in one user message;
-`pause_turn` → resend as is; `refusal` → record status `refused` with `stop_details.category`; `max_tokens` → one
-nudge; `end_turn` without a submitted review → one nudge, then status `no_review`.
+server-tool blocks included; an empty `content` is never sent back). `max_tokens` by effort: 64K up to `high`, 128K
+at `xhigh` / `max`. `stop_reason`: `tool_use` → run our tools, return all results in one user message;
+`pause_turn` → resend as is; `refusal` → record status `refused` with `stop_details.category` (but when
+`stop_details.recommended_model` is set the fallback model was not tried: a temporary `failed`, retried later);
+`max_tokens` → a nudge (two cut-offs in a row end the attempt); `end_turn` without a submitted review → a nudge (two in
+a row: status `no_review`). Each user message after the first ends with a budget line (spend and requests so far; near
+the cap or `max_turns`: submit now), appended and never edited, so the cached prefix stays stable.
 Before writing SDK calls, read (do not guess):
 `/tmp/claude-0/bundled-skills/2.1.319/80c569fdc02ccc03f6aacbfd35f8757c/claude-api/` → `python/claude-api/README.md`,
 `python/claude-api/tool-use.md`, `shared/tool-use-concepts.md`, `shared/error-codes.md`, `shared/prompt-caching.md`,
@@ -146,11 +151,17 @@ Classify errors by the SDK's typed exceptions / `.type`:
 - **dead key** (rotate, retry the entity from the start with the next key): `AuthenticationError` (401),
   `PermissionDeniedError` (403), status 402 / `type == "billing_error"`, `EnforcedSpendLimitReachedError`,
   `OrganizationOnHoldError`.
-- **wait** (SDK retries first; then exponential backoff with jitter up to 10 min, no rotation): `RateLimitError`,
-  `OverloadedError` / 529, ≥ 500, `APIConnectionError`, `APITimeoutError`.
+- **wait** (SDK retries once first; then exponential backoff with jitter up to 10 min, no rotation): `RateLimitError`,
+  `OverloadedError` / 529, ≥ 500, an error event in the middle of a stream; `APIConnectionError`, `APITimeoutError`
+  and a stream cut short ("lost responses") only twice, each charged a conservative estimate when it may have
+  reached the API (an attempt over its cap only through estimates is `failed`, not `over_budget`).
+- **systematic**: the same error on 5 entities in a row stops the run (exit code 4); those failures are not counted
+  against the entities (ledger `note` lines).
 - **entity failure** (record, move on): 400 other than billing, 404, 413.
 When every key is dead: interactive (a TTY) → ask for a new key with `getpass` ("press Enter to stop"); otherwise
-(and on Enter) → **pause**: unfinished entities stay pending, exit code 3, message: add a key and run again.
+(and on Enter or Ctrl-C) → **pause**: unfinished entities stay pending, exit code 3, message: add a key and run
+again. The main thread asks (the pool lock is not held while asking); a key given to `--keys-file` instead of a path
+is refused without being shown.
 
 **History and ledger** (`history.py`):
 - `OUT/review/history/<kind>/<safe name>/<run_id>.jsonl` — every event of one attempt: `start` (agent, model,
@@ -161,7 +172,10 @@ When every key is dead: interactive (a TTY) → ask for a new key with `getpass`
 - `OUT/review/ledger.jsonl` — one line per finished attempt: entity_id, kind, name, run_id, agent, model, status
   (`done`, `refused`, `no_review`, `over_budget`, `failed`, `paused`, `key_rotated`), cost_usd, input / output /
   cache tokens, web searches, n_requests, n_tool_calls, key_id, started, finished, error. The latest line per
-  entity is its state (`done` and `refused` are final unless `--redo`; `failed` is retried up to 2 times).
+  entity is its state (`done` and `refused` are final unless `--redo`; `failed` is retried up to 2 times, then only
+  with `--retry-failed`). Lines with status `note` (a late response's cost, an uncounted systematic failure) are
+  bookkeeping, not states. Every line is written after a newline guard, so a line cut by a crash never swallows the
+  next one.
 - Outputs: `OUT/review/reviews/<kind>/<safe name>.json` (submitted payload + verification + metadata),
   `OUT/review/notes/<kind>/<safe name>.md` (note body for the vault), `OUT/review/connections.parquet` and
   `OUT/review/findings.parquet` (built by `status --tables` / at the end of each run from the review JSONs).
@@ -178,10 +192,14 @@ start without `--max-usd` or `--limit` unless `--no-cap` is given, and prints th
   (from the dossier sizes; after some reviews, from the mean real cost per kind).
 - `run` → options `--kinds gene,drug,line`, `--only NAMES` (comma list or @file), `--limit N`, `--max-usd X`,
   `--per-entity-usd Y`, `--concurrency 4` (threads; each owns one entity's loop), `--model`, `--effort`,
-  `--verify llm|ids|off`, `--web/--no-web`, `--web-max-uses 5`, `--keys-file`, `--redo`, `--dry-run` (writes the
-  dossiers and the first request of each to `OUT/review/dry_run/`, calls nothing), `--fake SCRIPT` (tests).
+  `--verify llm|ids|off`, `--web/--no-web`, `--web-max-uses 5`, `--keys-file`, `--redo`, `--retry-failed`,
+  `--recheck` (only the verification stored reviews lack: the id look-ups, the citation checker), `--dry-run` (writes
+  the dossiers and the first request of each to `OUT/review/dry_run/`, calls nothing), `--fake SCRIPT` (tests).
 - `status` → counts by status and kind, spend total and per kind, projected cost of the rest, dead keys (ids only).
-- Ctrl-C / SIGTERM: finish no new entities, mark running ones `paused`, write the ledger, exit.
+- Ctrl-C / SIGTERM / SIGHUP: finish no new entities, mark running ones `paused` (a review already submitted is
+  stored as `done`, its unfinished verification marked not run), write the ledger, exit (130 / 143 / 129). A response
+  arriving after its attempt was closed is recorded (a `late` history event, a ledger `note`). `review/.run.lock`
+  holds pid, host and process start time; a lock whose process is gone is stale (POSIX and Windows).
 - The vault stage splices `OUT/review/notes/...` into the gene / drug / line notes under "## What the literature says"
   (a callout: AI-agent review, model, date, verification counts, link to the history file) and adds a `literature`
   column (connection verdict) to the partner tables; the map's side panel shows the verdicts.

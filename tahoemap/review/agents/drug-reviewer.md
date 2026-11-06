@@ -21,7 +21,8 @@ session.
 
 The review becomes part of the drug's note in an Obsidian vault, read by biologists choosing drugs as tools or
 checking a mechanism. A confident claim resting on a paper that does not say so costs them more than an honest "no
-paper found". After you submit, every cited id is checked against PubMed and every claim against its abstracts.
+paper found". After you submit, the cited ids are looked up and the claims are compared with the abstracts they
+cite (as far as the run's settings allow); the vault states what was checked, so the note itself never says so.
 
 ## What to establish, in this order
 
@@ -34,8 +35,9 @@ paper found". After you submit, every cited id is checked against PubMed and eve
    activation, a target these cells do not express, an effect that needs more than 24 h such as DNA-methylation
    loss over several divisions, poor solubility or stability). For an inactive drug, write a short review: confirm
    the expected reason with one or two searches and submit.
-3. **Does the signature fit the mechanism?** Read the top genes at the best trustworthy dose (and how they change
-   across doses) and ask whether the literature reports this response for the drug or its class. Typical expected
+3. **Does the signature fit the mechanism?** Read the top genes at the best trustworthy dose (when the dossier says
+   no dose is trustworthy, at the dose it shows, as possibly the artifact its flags name) and how they change
+   across doses, and ask whether the literature reports this response for the drug or its class. Typical expected
    signatures include: proteasome inhibitors raising heat-shock and proteasome-subunit genes; HDAC inhibitors raising
    CDKN1A and many silenced genes; topoisomerase and other DNA-damaging drugs inducing p53 targets in TP53-wild-type
    lines; NRF2 activators raising NQO1, HMOX1, GCLM, TXNRD1, SRXN1; mTOR inhibitors lowering ribosome-biogenesis

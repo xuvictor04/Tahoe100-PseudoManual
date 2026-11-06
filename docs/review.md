@@ -29,8 +29,12 @@ For each entity the runner builds a **dossier** from the run's own outputs (tabl
 reference annotations, vector space) — for a gene: its identity, expression, the drug-doses that raise and lower it,
 its module and arm, its 25 strongest partners each way with their evidence, the literature-known partners that are
 *not* among its data partners, and its novel candidate pairs; for a drug: targets, mechanism, the genes each dose
-moves, the lines it depletes, the nearest drugs; for a cell line: organ, drivers, TP53, the genes specifically high
-or low, the drugs that deplete it. `tahoe review run --dry-run` writes the dossiers so you can read them.
+moves (the full lists at the best trustworthy dose - an active dose without an artifact flag - and, marked as
+flagged, at the drug's vector dose when that one carries a flag; when no dose is trustworthy the dossier says so and
+lists the flags), the lines it depletes, the nearest drugs; for a cell line:
+organ, drivers, TP53, its Cellosaurus links (written out, because web fetch opens only URLs that appear in the
+conversation), the genes specifically high or low, the drugs that deplete it. `tahoe review run --dry-run` writes
+the dossiers so you can read them.
 
 The agent then:
 
@@ -40,8 +44,9 @@ The agent then:
 - reads the abstracts of the papers it wants to cite;
 - submits a structured **review**: a summary; what is **established** (with citations); what in the data is
   **unexpected**; which expected connections are **missing** (and the likely reason); what is **contradicted**; a
-  **verdict for each connection** it judged (established, indirect, plausible, unexpected, contradicted); open
-  questions; and the text of the vault section.
+  **verdict for each connection** it judged (established, indirect, plausible, unexpected, contradicted), with the
+  relation the papers report and the direction and numbers in the data; open questions; and the text of the vault
+  section (it writes no line about verification: a line generated after the checks says what was checked).
 
 After it submits, every cited PMID / DOI is looked up, and a second agent, the **citation checker**, compares each
 claim with the abstracts it cites ([Verification](#verification)).
@@ -104,7 +109,16 @@ current price list before a large run):
 
 Web searches cost $0.01 each. The cost of every response is computed from its `usage` (each `usage.iterations`
 entry at its own model, so a response finished by a fallback model is counted at that model's price) and stored in
-the history and the ledger.
+the history and the ledger. Every request is **streamed** (so a long answer is never cut by an HTTP timeout), with
+room for 64,000 output tokens (thinking included) at effort low to high and 128,000 at `xhigh` / `max`. A response
+**lost on the way** — a timeout, a dropped connection, a stream that breaks off — may still have been billed, so it is
+charged a conservative **estimate** (the whole context at the full input price, plus the output of a long answer:
+twice the attempt's longest answer so far, at least 16,000 tokens; about $0.5 with the default agents, twice that
+when the SDK had re-sent it) to the attempt and to the run's total, so the caps stay safe; it is marked as estimated
+(`estimated_usd` in the ledger, `estimated_cost_usd` on the history's error event, and in `tahoe review status`). A
+request that never reached the API (the connection could not be made) is not charged. An attempt that reaches its
+cap only through these estimates is recorded as `failed` (a network problem: a later run retries it), not
+`over_budget`.
 
 **Per-entity estimate**: before any review of a kind exists, the runner estimates from the size of the agent's
 system prompt and tool definitions and of a few dossiers: ~14 requests whose context grows by ~2,500 tokens each
@@ -127,8 +141,12 @@ the drugs and lines together ~$500. So start small and project from real costs:
    then `--kinds gene --limit 500 --max-usd 600`, and so on: each run continues where the last stopped.
 
 **Caps**: `--per-entity-usd Y` (default: the agent file's `max_usd`, $3.00): an attempt that has spent it stops
-(status `over_budget`; its partial history is kept); the citation checker has its own cap ($0.50). `--max-usd X`: no
-new entity starts once the run has spent X, and the running ones pause. The runner **refuses to start** without
+(status `over_budget`; its partial history is kept); the citation checker has its own cap ($0.50). The agent knows
+where it stands: every message the runner sends it after the dossier ends with a line such as *[runner] Budget:
+$1.20 of $3.00 used; 7 of 40 requests made.*, and past 75% of the cap (or 3 requests before its `max_turns`) the
+line asks it to stop searching and submit, on the last request it can make firmly — so a review is stored rather
+than cut off. `--max-usd X`: no new entity starts once the run has spent X, and the running ones pause (a review
+already submitted is still stored). The runner **refuses to start** without
 `--max-usd` or `--limit` (unless you give `--no-cap`), and always prints the projected cost first. `--concurrency N`
 (default 4) reviews N entities at once; it changes speed, not cost.
 
@@ -142,7 +160,9 @@ The runner looks for keys in this order and uses them in that order:
    sk-ant-api03-AAAA...
    sk-ant-api03-BBBB...
    ```
-   Make it readable only by you (`chmod 600 FILE`); the runner warns when other users can read it.
+   Make it readable only by you (`chmod 600 FILE`); the runner warns when other users can read it. A key given
+   to `--keys-file` by mistake (instead of a file's path) is refused without being printed or logged — clear it
+   from your shell history.
 2. `ANTHROPIC_API_KEYS` (comma-separated), then `ANTHROPIC_API_KEY`.
 3. With none of these, the SDK's own credentials (`ANTHROPIC_AUTH_TOKEN`, or a profile of the `ant` CLI) if found.
 
@@ -158,13 +178,26 @@ and every error message is scrubbed of anything that looks like a key before it 
 (no permission), 402 / `billing_error` (credit used up), a spend limit reached, an organisation on hold — marks the
 key **dead** (`tahoe review status` lists dead key ids), and the entity in progress **restarts from the beginning
 with the next key** (the cut-off attempt is recorded as `key_rotated`, with its history and cost). Rate limits,
-overload (429, 529), server errors and network errors do not rotate: the SDK retries, then the runner waits with
-exponential back-off (up to 10 minutes, Retry-After honoured) and retries the same request.
+overload (429, 529) and server errors do not rotate: the SDK retries once, then the runner waits with exponential
+back-off (up to 10 minutes, Retry-After honoured) and retries the same request, up to 12 times. Timeouts and
+dropped connections get a small budget of their own: the request is sent again at most twice (after the SDK's own
+retry), then the entity fails; each lost response is charged an estimate ([Costs](#costs)).
+
+A refusal is final (`refused`) — except when the API says the fallback model was not tried because it was
+rate-limited or overloaded (`stop_details.recommended_model` is set): that is temporary, so the attempt is recorded
+as `failed` (with `transient_refusal`, the category and `recommended_model` in the ledger, and a log line naming the
+model) and the entity is retried by a later run.
+
+**The same error on every entity** — say the model is not available to your organisation (404), or a beta is not
+enabled for it (400) — does not sweep the whole queue: after **5 entities in a row** fail with the same error the run
+stops with exit code **4** and says which error. Those 5 failures are not counted against the entities (a ledger
+`note` line each); fix the cause and run the same command again.
 
 When **every** key is dead:
 
 - in the foreground (a terminal), the run asks: *Paste a new Anthropic API key (it is not saved anywhere), or press
-  Enter to stop*. A pasted key is used at once (and only for this run);
+  Enter to stop*. A pasted key is used at once (and only for this run). Ctrl-C at that prompt works like Enter: the
+  prompt ends at once, the terminal is left as it was (echo on), and the run stops cleanly;
 - in the background, or when you press Enter, the run **pauses**: the entities not finished stay pending, the exit
   code is 3, and the message says to add a key. Add credit or a key (`ANTHROPIC_API_KEY`, `ANTHROPIC_API_KEYS`, the
   keys file) and run **the same command again**: it continues with the entities still pending.
@@ -173,12 +206,19 @@ When **every** key is dead:
 
 `tahoe review run` runs **in the foreground** by default, so that it can ask for a new key: keep the terminal open
 (or use `screen` / `tmux`). Ctrl-C stops it cleanly: no new entity starts, the ones in progress get 15 seconds and are
-then marked `paused`, the ledger and the tables are written (a second Ctrl-C stops at once).
+then marked `paused` — except one whose review was already submitted (it was being verified): that review is
+**stored as done**, with its verification as far as it got and the rest marked not run (`review run --recheck`
+completes it) — and the ledger and the tables are written (a second Ctrl-C stops at once). Closing the terminal
+(SIGHUP) and `tahoe stop` (SIGTERM) stop it the same way (exit codes 129, 143; Ctrl-C 130). A response that arrives
+after its attempt was closed is still counted: a `note` line in the ledger and a `late` event in the history.
 
 `tahoe review run --background ...` runs it as a job like `tahoe run` (safe to log out): `tahoe` shows that it runs
 and its last lines, `tahoe log` follows it, `tahoe stop` stops it as Ctrl-C does. A job cannot ask for a key, so it
 needs `--keys-file` or `ANTHROPIC_API_KEY(S)`, and it pauses (exit code 3) when they are all used up. One review run
-at a time per output folder (`review/.run.lock`); `tahoe review run` refuses while a pipeline job runs on the folder.
+at a time per output folder (`review/.run.lock`, which holds the run's process id, computer and start time); a lock
+whose process is gone — also on Windows, after a closed window or a reboot — is removed by the next run, and
+`tahoe review status` says whether the lock is live or stale. `tahoe review run` refuses while a pipeline job runs on
+the folder.
 
 | Option | |
 |---|---|
@@ -191,12 +231,22 @@ at a time per output folder (`review/.run.lock`); `tahoe review run` refuses whi
 | `--no-web`, `--web-max-uses 5` | Anthropic's web search / fetch off, or the uses per request |
 | `--concurrency 4` | entities at once |
 | `--redo` | review again entities that are done |
+| `--retry-failed` | also retry the entities left alone after 3 failed attempts (not the done ones) |
+| `--recheck` | only complete the verification of stored reviews that lack it (see below); no reviewer runs |
 | `--dry-run` | write the dossiers and first requests to `review/dry_run/`; send nothing |
 
 **Resuming** needs nothing special: the latest ledger line of each entity is its state, and a run starts only what
 is not final. `done` and `refused` (the model declined; `stop_details.category` is recorded) are final unless
-`--redo`; `failed` and `no_review` (it never submitted) are retried, up to 3 attempts; `over_budget` is retried only
-with a higher `--per-entity-usd`; `paused` and `key_rotated` start again from the beginning.
+`--redo`; `failed` and `no_review` (it never submitted) are retried, up to 3 attempts (then left alone:
+`--retry-failed` tries them again); `over_budget` is retried only with a higher `--per-entity-usd`; `paused` and
+`key_rotated` start again from the beginning.
+
+**Completing a verification**: a review stored while its verification could not finish — the run stopped during
+the citation check, every key ran out there, PubMed / Crossref could not be reached, or it ran with `--verify ids`
+and you now want the claims checked — is `done`, and `tahoe review status` counts it. `tahoe review run --recheck
+--max-usd 5` (with `--verify llm`, the default, or `--verify ids`) runs only what it lacks — the id look-ups and / or
+the citation checker — on the stored review, rewrites its JSON and note, and adds a `done` ledger line (`recheck`)
+with the checker's cost (projected ~$0.10 each with the default checker); the reviewer is not run again.
 
 ## Histories and the ledger
 
@@ -213,16 +263,21 @@ Everything is under `<output>/review/`:
 | `dry_run/`, `cache/`, `keys_state.json`, `review.log` | dry-run files, the literature cache, key ids and which are dead, the log |
 
 A **ledger** line: entity_id, kind, name, run_id, agent, model, status (`done`, `refused`, `no_review`,
-`over_budget`, `failed`, `paused`, `key_rotated`), cost_usd, input / output / cache-write / cache-read tokens, web
-searches, number of requests and tool calls, key id, start and end time, the error (scrubbed), and the path of its
-history file.
+`over_budget`, `failed`, `paused`, `key_rotated`), cost_usd (with `estimated_usd`, the part estimated for lost
+responses), input / output / cache-write / cache-read tokens, web searches, number of requests and tool calls, key
+id, start and end time, the error (scrubbed), and the path of its history file; a done line also has the
+verification's state (`ids_status`, `llm_status`). Lines with status `note` are bookkeeping, not attempts: the cost
+of a response that arrived after its attempt was closed (`late`), or a failure the run put down to a systematic
+error (`uncount_failed`); they never change an entity's state. A line cut short by a crash or a full disk is
+skipped, and the next line is still read.
 
 A **history** file holds one JSON object a line, in order: `start` (agent, model, effort, key id, the full system
 prompt and its sha256, the tool definitions, the full dossier and its sha256, the code version, the request
 settings), then for every API call a `request` (the messages added since the previous request) and a `response`
 (the whole response as returned, with usage and cost), a `tool` event per tool call (input, result — cut at 20,000
 characters — whether it failed, seconds), `error` events (class, status, request id, the scrubbed message, what the
-runner did), the citation checker's own `start` / `request` / `response` events, and `end` (status and totals). The
+runner did; for a lost response the estimate charged for it), the citation checker's own `start` / `request` /
+`response` events, and `end` (status and totals; after it only `late` events). The
 dossier is stored once, in `start`; the first request refers to it as `{{dossier}}`.
 
 To read one:
@@ -252,33 +307,75 @@ print(led.groupby(["kind", "status"])["cost_usd"].agg(["count", "sum"]))
 
 `--verify llm` (the default) does both steps, `--verify ids` only the first, `--verify off` neither:
 
-1. **Ids**: every cited PMID is looked up in PubMed, every DOI in Europe PMC and Crossref. A citation that does not
-   exist is removed from its item, the item is marked `unverified`, and in the note the link becomes "PMID:n
-   (citation removed: not found in PubMed)". Retracted papers stay cited but are listed. A paper cited without
-   having been retrieved in the session is flagged (and the agent was asked to read it before submitting).
+1. **Ids**: every cited PMID is looked up in PubMed, every DOI in Europe PMC and Crossref (DOIs are read whole,
+   parentheses included: `10.1016/S0092-8674(00)81096-3`). A citation that does not exist is removed from its item,
+   the item is marked `unverified`, and in the note the link becomes "PMID:n (citation removed: not found in
+   PubMed)". The note may cite only papers that an item of the review cites (only those are checked against a
+   claim): any other PMID or DOI in it becomes "PMID:n (citation removed: cited only in this text ...)" and is
+   counted (the agent is warned once at submission). **Retractions**: a PMID whose PubMed type is *Retracted
+   Publication*, or a DOI that Europe PMC types so or whose Crossref record carries a retraction (Crossref's update
+   notices, which include the Retraction Watch data), stays cited but is marked on its item
+   (`retracted_citations`) and counted; a retraction *notice* is not itself counted as retracted (items list notices
+   in `retraction_notices`). Ids that could not be looked up (a service down) are kept and marked
+   (`unchecked_citations`). A paper cited without having been retrieved in the session is flagged (and the agent was
+   asked to read it before submitting).
 2. **Claims**: the citation checker gets each claim (established, missing, contradicted, connection verdicts) with
-   the abstracts of its citations and gives a verdict per claim: supported, partly, not supported, not checkable.
+   the abstracts of its citations, the relation in this run's data the claim is about (each connection verdict
+   carries `relation`, what the papers report, and `data_evidence`, the direction and numbers in the data), and for
+   a connection verdict the rubric's strict meaning ("established" needs a paper on the relation itself: the same
+   pathway or complex alone is not enough; "indirect" needs a paper per gene, which `submit_review` already
+   enforces). It gives a verdict per claim - supported, partly, not supported, not checkable - and the direction
+   the papers report compared with the data; papers that report the opposite direction do not support an
+   "established" (a "supported" or "partly" given against the direction is stored as not supported).
 
-The review JSON keeps both (`verification.ids`, `verification.llm`, `verification.counts`, and a `check` on each
-item); the vault's callout gives the counts. "Supported" means *the abstract says so*, not that the claim is true.
+The review JSON keeps both. Every connection verdict, and every other item that cites (or cited) a paper, carries
+`check_status` - `supported`, `partly`, `not_supported`, `not_checkable` (the checker's verdict; also: ids valid but
+no claim check), `unchecked` (an id not verified) or `citations_removed` (every citation was not found) - and
+`shown_verdict`, the verdict to display: the agent's, or `unverified` when the status is `not_supported` or
+`citations_removed`. The top level has `verification` (`ids`: checked, removed, unchecked, retracted ...; `llm`:
+status done / not_run / failed and the counts per verdict; `counts`) and `note_footer`, a provenance line generated
+from those counts and shown under the note (the agents are told never to write their own). "Supported" means *the
+abstract says so*, not that the claim is true.
 
 ## In the vault and the map
 
 The vault and map stages read `review/` when it holds reviews; without reviews nothing in them changes. After a
 review run, `tahoe` (status) shows the vault and map out of date ("the literature reviews changed"); `tahoe run`, or
-`tahoe vault` then `tahoe map`, rebuilds them (about two minutes on the full data).
+`tahoe vault` then `tahoe map`, rebuilds them (about two minutes on the full data). The verdicts come from
+`review/connections.parquet`, rebuilt at the end of every review run; when that table is older than a review JSON
+(a run killed before its end) it is ignored and the verdicts are read from the JSONs (`tahoe review tables`
+rebuilds it), and the vault and map show out of date until they are rebuilt.
 
 - A reviewed gene, drug or line note gets the tag `#literature-review`, a `literature_review` date in its
   frontmatter, and a section **What the literature says** (in a gene note after "Where it sits"; in a drug or line
-  note before "Data"): a callout — written by an AI agent, which agent, model and effort, the date, the verification
-  counts, and relative links to the history file and the review JSON (they are in the run folder, outside the
-  vault: Obsidian shows the link, open the file in a text editor) — then the agent's text, then its connection
-  verdicts. Wikilinks the agent wrote are kept only where the vault has that note.
+  note before "Data"): a callout — written by an AI agent, which agent, model and effort, the date, the
+  verification, and relative links to the history file and the review JSON (they are in the run folder, outside
+  the vault: Obsidian shows the link, open the file in a text editor) — then the agent's text, then its connection
+  verdicts, then the provenance line generated from the verification (`note_footer`). The callout's verification
+  sentence is built from the review's `verification` counts: how many cited ids were looked up, removed as not
+  found, or could not be looked up (a service down: "every cited id looked up" is said only when none was left
+  unchecked), retracted papers, papers cited without having been read, how many verdicts are shown as unverified,
+  and whether the citation checker ran (its counts), was not run or failed (`review run --recheck` completes it).
+- The agent's text is cleaned before it goes into the note: no raw HTML (script, iframe, img, a, style ... any tag
+  is removed), no HTML or Obsidian (`%%`) comment, no image or embedded note, no link other than markdown links to
+  PubMed, doi.org, Europe PMC, NCBI and Cellosaurus (any other link keeps only its text; a bare URL to another site
+  is not made a link), code fences closed and shown as plain code (no `dataviewjs`, `mermaid` ...), no setext
+  heading, its own headings demoted below the note's. A line in which the agent vouches for its own verification
+  ("citations were checked ...", its own "AI-generated ..." footer) is dropped: the generated line replaces it.
+  Wikilinks the agent wrote are kept only where the vault has that note. Partner names and citation ids in the
+  generated lines and tables are escaped.
 - A gene note's partner tables get a **Literature** column when a partner shown has a verdict: the verdict of this
   gene's review on that partner, else the partner's review's verdict on this gene (marked with its name), with the
-  cited papers linked.
-- The map's side panel shows a `lit: established` (etc.) badge next to such a partner; hover it for the citation
-  count.
+  cited papers linked. Every verdict is shown with its check, from `shown_verdict` and `check_status`:
+  `established (supported)`, `established (partly supported)`, `established (not checked)` (the ids exist; the
+  claim was not checked against the abstracts), `established (ids not checked)` (not looked up), and
+  **unverified** when the citation checker found the cited abstracts do not support it or none of its papers exists
+  (`unverified (agent: established; citations not found)`): such a verdict is never shown as established. When a
+  review gives one partner several verdicts, one is shown, in the vault and the map alike: the strongest verified
+  one (established, contradicted, indirect, plausible, unexpected, among those supported, partly supported or with
+  valid ids), else the agent's first ("of 2 verdicts it gave").
+- The map's side panel shows the same label as a badge next to such a partner (`lit: established (supported)`,
+  `lit: unverified` ...); hover it for what the agent said, what the check found and the citation count.
 
 ## The duplicate workflow
 

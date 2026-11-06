@@ -51,6 +51,7 @@ KNOWN_MAX = 30
 DEPLETE_Z = Q.DEPLETE_Z
 LFC_MIN = A.LFC_MIN
 Q_CUT = A.Q_CUT
+CELLOSAURUS_URL = "https://www.cellosaurus.org/{}"   # a line's entry; + ".txt" for the plain-text record
 
 # list lengths at scale 1.0 (build shrinks them to fit MAX_CHARS)
 LIMITS = {"drugs": 12, "flagged": 6, "single": 10, "partners": 25, "known": KNOWN_MAX, "novel": 10, "members": 6,
@@ -1090,7 +1091,27 @@ def _drug(C, drug, lim, short=False):
         e = e[(e["drug"] == drug)]
         if len(e) and bool(e.iloc[0].get("trusted", True)):
             trusted_dd = int(e.iloc[0]["dd"])
-    show_dd = trusted_dd if trusted_dd is not None else best_dd
+    # The dose whose genes get the full lists: a trustworthy one has no artifact flag (toxic, transcription drop,
+    # cell-cycle shift ... - not only the embedding's 'untrusted' flags) and moved genes. The drug's vector dose
+    # when it is clean, else the clean dose with the most significant genes; with none, the vector (or best) dose,
+    # said plainly to be untrustworthy. A flagged vector dose keeps its full lists too (marked FLAGGED): its
+    # response can be the drug's own effect (an antimitotic's cell-cycle shift).
+    def _count(x):
+        v = _num(x)
+        return int(v) if np.isfinite(v) else 0
+    art_dd = {int(r["dd"]): _artifacts(r["flags"]) for _, r in rows_dd.iterrows()}
+    n_sig = {int(r["dd"]): _count(r.get("n_genes_up")) + _count(r.get("n_genes_down")) for _, r in rows_dd.iterrows()}
+    clean = [d for d in dds if not art_dd[d] and n_sig[d] > 0]
+    vec_dd = trusted_dd if trusted_dd is not None else best_dd
+    if vec_dd not in dds:
+        vec_dd = dds[-1]
+    if vec_dd in clean:
+        show_dd = vec_dd
+    elif clean:
+        show_dd = max(clean, key=lambda d: (n_sig[d], dds.index(d)))
+    else:
+        show_dd = vec_dd
+    trustworthy = show_dd in clean
     D = {"drug": drug, "salt_base": sb, "other_salt_forms": others, "drugdoses": dds}
     P = [f"# {'Summary' if short else 'Dossier'}: drug {drug}", f"entity_id drug:{drug}", "",
          "## Identity (Tahoe drug metadata: may be incomplete or wrong; verify)"]
@@ -1109,9 +1130,25 @@ def _drug(C, drug, lim, short=False):
                               "lowest_active_dose": _text(dr["lowest_active_dose"]),
                               "signature_r_between_doses": _text(dr["signature_r_between_doses"])})
     sdd = rows_dd[rows_dd["dd"] == show_dd].iloc[0]
-    P.append(f"- Best trustworthy dose (the drug's vector; used for the gene lists below): {sdd['dose']} uM"
-             + (" (no trustworthy dose: shown is the best dose)" if trusted_dd is None else ""))
+    vdose = rows_dd[rows_dd["dd"] == vec_dd].iloc[0]["dose"]
+    flagged = " · ".join(f"{r['dose']} uM: {art_dd[int(r['dd'])]}" for _, r in rows_dd.iterrows()
+                        if art_dd[int(r["dd"])])
+    if trustworthy:
+        P.append(f"- Best trustworthy dose (no artifact flag; its full gene lists come first below): {sdd['dose']} uM"
+                 + (" (also the drug's vector)" if show_dd == vec_dd else
+                    f" (the drug's vector uses {vdose} uM, flagged: {art_dd[vec_dd]}; its full lists follow, "
+                    "marked FLAGGED)" if art_dd[vec_dd] else f" (the drug's vector uses {vdose} uM)"))
+    else:
+        P.append("- No trustworthy dose: no dose that moved genes is free of artifact flags ("
+                 + (flagged or "no dose moved any gene significantly")
+                 + f"). The full gene lists below use {sdd['dose']} uM, the "
+                 + ("drug's vector dose" if trusted_dd is not None else "best dose")
+                 + ", and may show the artifact (a flag can also be the drug's own effect, e.g. a cell-cycle shift "
+                   "from a CDK4/6 inhibitor: say which).")
     D["shown_dose"] = sdd["dose"]
+    D["shown_dose_trustworthy"] = bool(trustworthy)
+    D["vector_dose"] = vdose
+    D["dose_artifact_flags"] = {str(r["dose"]): art_dd[int(r["dd"])] for _, r in rows_dd.iterrows()}
 
     # per dose
     per = []
@@ -1143,9 +1180,10 @@ def _drug(C, drug, lim, short=False):
             "n_lines_up", "n_lines_down"]
     de = o.pq("tables/drug_effects.parquet", columns=cols, filters=[("dd", "in", dds)])
     D["top_genes"] = {}
-    order = [show_dd] + [d for d in dds if d != show_dd]
+    full = [show_dd] + ([vec_dd] if vec_dd != show_dd else [])        # the doses with the full lists
+    order = full + [d for d in dds if d not in full]
     for d in order:
-        k = lim["top_genes"] if d == show_dd else lim["top_genes_other"]
+        k = lim["top_genes"] if d in full else lim["top_genes_other"]
         if not k:
             continue
         r = rows_dd[rows_dd["dd"] == d].iloc[0]
@@ -1170,7 +1208,9 @@ def _drug(C, drug, lim, short=False):
                     P.append(f"- {r['dose']} uM {word} ({rec['n_' + key]}): " + ", ".join(
                         f"{y['gene']} {_fold(y['fold'])}" for y in rec[key]))
             continue
-        head = f"## Top genes at {r['dose']} uM" + (" (best trustworthy dose)" if d == show_dd else "")
+        tag = " (best trustworthy dose)" if trustworthy else " (best dose; NO dose is trustworthy)"
+        head = f"## Top genes at {r['dose']} uM" + (tag if d == show_dd else " (the drug's vector dose)"
+                                                    if d == vec_dd else "")
         P += ["", head + (f" - FLAGGED: {art}: these changes may be the artifact" if art else "")]
         for key, word in (("up", "Raised"), ("down", "Lowered")):
             n_ = rec["n_" + key]
@@ -1328,7 +1368,7 @@ def _drug(C, drug, lim, short=False):
         if near:
             P.append("- Nearest drugs: " + ", ".join(f"{x['drug']} {_cos(x['cos'])}" for x in near))
         return P, D
-    P += ["", "## Nearest drugs by transcriptional effect (cosine of drug vectors, each drug's best trustworthy dose; "
+    P += ["", "## Nearest drugs by transcriptional effect (cosine of drug vectors, each at the drug's vector dose; "
               "drugs with >= 10 significant genes)"]
     if D.get("vector_note"):
         P.append(f"- NOTE: {D['vector_note']}")
@@ -1354,6 +1394,13 @@ def _line(C, l, lim, short=False):
     D["identity"] = ident
     P.append(f"- Organ: {ident['Organ'] or '-'} · Cellosaurus {D['cell_line_id']} · DepMap {ident['Cell_ID_DepMap'] or '-'}"
              f" · TP53: {ident['tp53_status'] or 'unknown'} (from the drivers list)")
+    cvcl = D["cell_line_id"].strip()
+    if re.fullmatch(r"CVCL_[A-Z0-9]{4,6}", cvcl):
+        # written out in full: web_fetch only opens URLs that are already in the conversation (the dossier, a
+        # tool result), never one the model composes from a template
+        D["cellosaurus_urls"] = [CELLOSAURUS_URL.format(cvcl) + ".txt", CELLOSAURUS_URL.format(cvcl)]
+        P.append(f"- Cellosaurus entry (mutations, synonyms, misidentification / contamination warnings): "
+                 f"{D['cellosaurus_urls'][0]} (plain text) · {D['cellosaurus_urls'][1]}")
     if ident["drivers"]:
         P.append(f"- Drivers: {ident['drivers']}")
     if ident["driver_changes"]:

@@ -122,6 +122,11 @@ def make_parser():
                    help="review run: write the dossiers and first requests to OUT/review/dry_run/; send nothing")
     g.add_argument("--fake", default=None, metavar="SCRIPT",
                    help="review run: a scripted fake API instead of Anthropic's (tests; tahoemap/review/fake.py)")
+    g.add_argument("--retry-failed", action="store_true",
+                   help="review run: also retry entities left alone after repeated failures (not the done ones)")
+    g.add_argument("--recheck", action="store_true",
+                   help="review run: only complete the verification of stored reviews that lack it (ids that could "
+                        "not be looked up, a citation check that did not run); the reviewer is not run again")
     g.add_argument("--tables", action="store_true", help="review status: also rebuild the review tables")
     g.add_argument("--repo", default=None, metavar="DIR",
                    help="duplicate: also clone this code repository into DIR (git clone)")

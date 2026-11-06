@@ -6,8 +6,9 @@ description: How to write note_markdown, the review section spliced into the ent
 # Writing the note
 
 `note_markdown` is placed in the vault note of the gene, drug or cell line, under the heading "What the literature
-says". The vault adds a callout above it with the agent, model, date, verification counts and a link to the full
-history. Readers are biologists deciding what to trust and what to test.
+says". The vault adds a callout above it with the agent, model, date and a link to the full history, and a line
+under it, generated after verification, that says what was checked (cited ids, claims against abstracts) and what
+was removed. Readers are biologists deciding what to trust and what to test.
 
 ## Structure
 
@@ -33,10 +34,10 @@ leave out a part that would be empty:
 
 ### Open questions
 - one to three concrete, testable questions
-
-_AI-generated literature review of this run's data; citations were checked against PubMed and their abstracts.
-Verify before relying on it._
 ```
+
+End with the open questions. Write no footer, disclaimer or statement that anything was verified: the note is
+written before anything is checked, and the vault adds the generated line that says what verification actually did.
 
 ## Style
 
@@ -54,3 +55,6 @@ Verify before relying on it._
   `[[HMOX1]]`, drugs `[[Dimethyl fumarate (drug)]]`, cell lines `[[A549 (line)]]`. Write any other name as plain
   text, so that no link points to a note that does not exist.
 - Citations inline, right after the claim: `... ([PMID:24390086](https://pubmed.ncbi.nlm.nih.gov/24390086/))`.
+  Cite in the note only papers that are also in the citations of the review's items (established, missing,
+  contradicted, connection_verdicts): only those are checked against a claim, and any other PMID or DOI is removed
+  from the note after submission ("citation removed: cited only in this text").

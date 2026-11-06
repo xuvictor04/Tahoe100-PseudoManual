@@ -104,7 +104,8 @@ start_job() {                    # run `python -m tahoemap ARGS` detached; its o
       say "  stop it:             tahoe stop$SAME"
       say "  where things stand:  tahoe$SAME"
     fi
-  elif grep -qs "Run done\|nothing to do\|Nothing to review\|Dry run:\|^\[[0-9:]*\] Review run:" "$CONSOLE"; then
+  elif grep -qs "Run done\|nothing to do\|Nothing to review\|Nothing to check again\|Dry run:\|^\[[0-9:]*\] Review run:" \
+       "$CONSOLE"; then
     tail -n 3 "$CONSOLE"
   else
     say "The job ended at once. Its output:"
@@ -251,14 +252,24 @@ cmd_test() {
 }
 
 ABS=()
+not_a_key() {                    # a key given to --keys-file by mistake: refused, never echoed (it is no path)
+  case "$1" in *sk-ant-*)
+    die "--keys-file expects the path of a FILE with one key a line; the value given looks like an API key itself" \
+        "(not shown). Put the key in a file (chmod 600) or in ANTHROPIC_API_KEY, and clear it from your shell" \
+        "history." ;;
+  esac
+}
 abs_paths() {                    # path options made absolute (tm runs in the repository folder): ABS=(...)
   ABS=()
   while [ $# -gt 0 ]; do
     case "$1" in
       --keys-file|--fake|--repo)
         [ $# -ge 2 ] || die "$1 needs a path"
+        [ "$1" = --keys-file ] && not_a_key "$2"
         ABS+=("$1" "$(absolute "$2")"); shift 2 ;;
-      --keys-file=*|--fake=*|--repo=*) ABS+=("${1%%=*}=$(absolute "${1#*=}")"); shift ;;
+      --keys-file=*|--fake=*|--repo=*)
+        case "$1" in --keys-file=*) not_a_key "${1#*=}" ;; esac
+        ABS+=("${1%%=*}=$(absolute "${1#*=}")"); shift ;;
       --only)
         [ $# -ge 2 ] || die "--only needs names (or @FILE)"
         case "$2" in @*) ABS+=("$1" "@$(absolute "${2#@}")") ;; *) ABS+=("$1" "$2") ;; esac
@@ -340,7 +351,8 @@ tahoe - every gene, drug and cell line of Tahoe-100M in one map
   review plan           AI literature-review agents (docs/review.md): the queue, in priority order, and its cost
   review run [options]  review genes / drugs / lines: needs --max-usd X or --limit N (or --no-cap); --kinds
                         gene,drug,line  --only NAMES|@FILE  --keys-file FILE  --dry-run (sends nothing)  --model
-                        --effort  --verify llm|ids|off  --no-web  --concurrency N  --redo. In the foreground:
+                        --effort  --verify llm|ids|off  --no-web  --concurrency N  --redo  --retry-failed
+                        --recheck (only the verification stored reviews lack). In the foreground:
                         Ctrl-C pauses, the same command resumes, a new key is asked for when all have run out;
                         --background: as a job (stop, log; needs --keys-file or ANTHROPIC_API_KEY(S))
   review status|tables  counts, spend and projected cost of the rest / rebuild review/connections + findings

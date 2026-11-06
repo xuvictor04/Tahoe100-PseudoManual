@@ -36,7 +36,7 @@
         validates a submit_check call (executed via tools.execute); with ctx.notes["claim_ids"] set by the runner,
         every claim id must get exactly one verdict (one correction allowed). The payload goes to ctx.submitted.
     apply_check(review, check) -> (review, summary)
-        each checked item gets "check": {verdict, direction, reason}. A 'supported' verdict whose direction
+        each checked item gets "check": {verdict, direction, reason}. A 'supported' or 'partly' verdict whose direction
         contradicts what the claim needs (an established relation the papers report in the opposite direction; a
         contradiction the papers report in the same direction) is stored as 'not supported'. review
         ["citation_check"] = summary = {summary, counts, unmatched, supported, partly, not_supported,
@@ -59,7 +59,8 @@
         "checked", "removed", "unchecked", "retracted", ... (the check_ids report)}, "llm": {"status": done |
         not_run | failed, "detail", "supported", "partly", "not_supported", "not_checkable", "summary", ...},
         "counts": counts(review)}, and "note_footer" = note_footer(verification): a provenance line generated
-        from those counts (never written by the agent). A review whose llm status is not 'done' can be checked
+        from those counts (never written by the agent; a paragraph of the note in which the agent vouches for its
+        own verification is dropped). A review whose llm status is not 'done' can be checked
         again later (claims -> fetch_abstracts -> build_check_prompt -> the checker -> apply_check -> finalize).
     note_footer(verification) -> str
     counts(review) -> dict
@@ -415,10 +416,13 @@ def build_check_prompt(review, abstracts, entity=None):
             P.append(f"    the verdict requires: {c['meaning']}")
         P.append(f"    cites: {', '.join(c['citations'])}")
     P += ["</claims>", "", "<abstracts>"]
+    ret, notices = _retracted_in(review)
     for cid in dict.fromkeys(x for c in cl for x in c["citations"]):
         t = abstracts.get(cid)
-        P.append(t if t else f"=== {cid} ===\n(no abstract available: claims resting only on this citation are "
-                             "not checkable)")
+        mark = ("  [RETRACTED: do not cite as support]" if cid in ret else
+                "  [RETRACTION NOTICE: a notice, not the retracted paper]" if cid in notices else "")
+        P.append(t if t else f"=== {cid} ==={mark}\n(no abstract available: claims resting only on this citation "
+                             "are not checkable)")
         P.append("")
     P += ["</abstracts>", "", f"There are {len(cl)} claims: " + ", ".join(c["claim_id"] for c in cl) + ". Give one "
           "verdict, with the direction, for each with submit_check."]
@@ -481,11 +485,11 @@ def apply_check(review, check):
         direction = v.get("direction") if v.get("direction") in DIRECTIONS else "not stated"
         reason = v.get("reason", "")
         need = _needed_direction(c["section"], it)
-        if verdict == "supported" and need and direction in (SAME, OPPOSITE) and direction != need:
-            verdict = "not supported"
+        if verdict in ("supported", "partly") and need and direction in (SAME, OPPOSITE) and direction != need:
             said = {SAME: "in the data's direction", OPPOSITE: "in the direction opposite to the data"}
             reason = (f"direction: the cited papers report the relation {said[direction]}, the claim needs it "
-                      f"{said[need]} (checker's reason: {reason})")
+                      f"{said[need]} (checker's verdict: {verdict}; reason: {reason})")
+            verdict = "not supported"
         it["check"] = {"verdict": verdict, "direction": direction, "reason": reason}
         cnt[verdict] += 1
     summ = {"summary": (check or {}).get("summary", ""), "counts": dict(cnt), "unmatched": sorted(by_id)}
@@ -534,6 +538,8 @@ def _llm_block(llm, mode, review):
     raw = str(llm.get("status") or "")
     if mode != "llm":
         status, detail = "not_run", f"--verify {mode}"
+    elif raw in ("done", "not_run", "failed") and "detail" in llm:     # already in this form (a stored review)
+        status, detail = raw, str(llm.get("detail") or "")
     elif raw == "done":
         status, detail = "done", ""
     elif raw.startswith("no claims"):
@@ -558,8 +564,10 @@ def _ids_block(report, mode, review):
         return {"status": "not_run", "detail": f"--verify {mode}", "checked": 0, "removed": 0, "unchecked": n,
                 "retracted": 0, "n_cited": n}
     if not report or report.get("error"):
-        return {"status": "failed", "detail": str((report or {}).get("error") or "the id check did not run"),
-                "checked": 0, "removed": 0, "unchecked": n, "retracted": 0, "n_cited": n}
+        err = str((report or {}).get("error") or "not run")
+        st = "not_run" if err.startswith(("not run", "not_run")) else "failed"
+        return {"status": st, "detail": err[7:].lstrip(": ") if st == "not_run" else err, "checked": 0,
+                "removed": 0, "unchecked": n, "retracted": 0, "n_cited": n}
     out = dict(report)
     out.setdefault("status", "done")
     for k in ("checked", "removed", "unchecked", "retracted"):
@@ -568,9 +576,30 @@ def _ids_block(report, mode, review):
     return out
 
 
+_SELF_CHECK = re.compile(r"\b(?:citations?|references|claims)\s+(?:were|have been|was|are)\s+(?:checked|verified)",
+                         re.I)
+_CHECK_CONTEXT = re.compile(r"PubMed|abstracts|Crossref|Europe PMC|AI-generated|citation checker|before relying", re.I)
+
+
+def drop_self_check(md):
+    """note_markdown without a short paragraph in which the agent vouches for its own verification (the footer an
+    earlier writing-the-note template asked for: '_AI-generated ...; citations were checked against PubMed ..._'):
+    a paragraph under 400 characters that says its citations / claims were checked or verified and names what
+    against (PubMed, abstracts ...) or is a disclaimer ('AI-generated', 'before relying')."""
+    paras = re.split(r"\n[ \t]*\n", md or "")
+    keep = [p for p in paras if not (len(p) < 400 and _SELF_CHECK.search(p) and _CHECK_CONTEXT.search(p))]
+    if len(keep) == len(paras):
+        return md
+    out = "\n\n".join(keep).rstrip()
+    return out + "\n" if out else out
+
+
 def finalize(review, mode, ids_report=None, llm=None):
-    """The review to store (a copy): annotate(), "verification" and "note_footer" (see the module docstring)."""
+    """The review to store (a copy): annotate(), "verification" and "note_footer" (see the module docstring); a
+    paragraph of the note in which the agent says its citations were checked is dropped (drop_self_check)."""
     r = copy.deepcopy(review)
+    if r.get("note_markdown"):
+        r["note_markdown"] = drop_self_check(r["note_markdown"])
     ids = _ids_block(ids_report, mode, r)
     annotate(r, ids_checked=ids["status"] == "done")
     ver = {"mode": mode, "ids": ids, "llm": _llm_block(llm, mode, r), "counts": counts(r)}
@@ -591,7 +620,9 @@ def note_footer(verification):
     head = "_AI-generated literature review of this run's data, not checked by a person."
     if mode not in ("ids", "llm"):
         return head + " Its citations were not checked (verification off). Verify before relying on it._"
-    if ids.get("status") != "done":
+    if ids.get("status") == "not_run":
+        s = head + f" Its cited ids were not looked up ({_clip(ids.get('detail')) or 'not run'})."
+    elif ids.get("status") != "done":
         s = head + f" The id check failed ({_clip(ids.get('detail'))}): its citations were not verified."
     else:
         s = (head + f" Cited ids looked up in PubMed / Crossref: {ids.get('checked', 0)} checked, "

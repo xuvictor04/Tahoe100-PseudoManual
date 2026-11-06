@@ -7,15 +7,16 @@ description: Citation rules for the review agents - formats for PMIDs and DOIs, 
 
 ## Formats
 
-- In the citation lists of the review: `PMID:12345678` or `DOI:10.1016/j.redox.2024.103134`. PMC ids are not
-  accepted: give the paper's PMID.
+- In the citation lists of the review: `PMID:12345678` or `DOI:10.1016/j.redox.2024.103134`, the DOI exactly as
+  the paper gives it (parentheses and other characters included, e.g. `DOI:10.1016/S0092-8674(00)81096-3`). PMC ids
+  are not accepted: give the paper's PMID.
 - In `note_markdown`: `[PMID:12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)` and
   `[DOI:10.xxxx/yyyy](https://doi.org/10.xxxx/yyyy)`, placed right after the sentence they support.
 
 ## What may be cited
 
 Only papers that a tool returned in this session, and a PMID only after its abstract was read with pubmed_abstracts.
-The review is refused once if it cites anything else, and every citation is checked afterwards. Papers you remember,
+The review is refused once if it cites anything else, and its citations are checked afterwards. Papers you remember,
 however well known, must be found and read like any other: search for them (author, year, topic) and read the
 abstract; if the search does not find them, do not cite them.
 
@@ -33,7 +34,8 @@ A citation supports a claim when its abstract states the claim, or the title sta
 One or two precise citations per claim are better than several loose ones. A review is a good source for
 well-established background (a factor's canonical targets); for a specific relation prefer the primary paper when
 you found it. A preprint can be cited (say "preprint" in the note; confidence at most medium). A paper the tools
-mark as retracted is never support.
+mark as retracted is never support, and a retraction notice ("Retraction of Publication") supports only the fact of
+the retraction.
 
 Database facts (STRING score, Reactome or Hallmark membership, HGNC groups, Cellosaurus or DepMap entries) are not
 citations: state them in the text with their source ("STRING 916").
@@ -43,7 +45,9 @@ and usual for `plausible`.
 
 ## Verification after submission
 
-Every cited PMID is looked up in PubMed and every DOI in Europe PMC or Crossref; an id that does not exist is removed,
-its item is marked unverified and the note shows the removal. Then a citation checker reads each claim next to the
-abstracts it cites and records supported, partly, not supported or not checkable. Both results are shown with the
-review in the vault.
+Depending on the run's settings, every cited PMID is looked up in PubMed and every DOI in Europe PMC and Crossref
+(also for retraction); an id that does not exist is removed, its item is marked unverified and the note shows the
+removal. A PMID or DOI that the note cites but no item cites is removed from the note. Then a citation checker reads
+each claim - with the relation and direction in the data (`data_evidence`) - next to the abstracts it cites, and
+records supported, partly, not supported or not checkable; a connection verdict whose citations do not carry it is
+shown as "unverified". The vault adds a generated line saying what was checked: never write one yourself.

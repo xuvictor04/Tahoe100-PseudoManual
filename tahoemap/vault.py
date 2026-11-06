@@ -39,11 +39,18 @@ says so.
 Literature reviews (optional; tahoemap/review, docs/review.md): when OUT/review holds reviews (review/notes/<kind>/,
 review/reviews/<kind>/, review/connections.parquet), the note of every reviewed gene, drug or cell line gets a section
 "## What the literature says": a callout (written by an AI agent: which agent, model and effort, the date, the
-verification counts, relative links to the run's history file and review JSON) above the agent's note body (its
-headings demoted below the note's own, its wikilinks kept only where a note exists), then its connection verdicts.
-The partner tables of a gene note get a Literature column (the connection verdict of the gene's review, else of the
-partner's, with linked citations) when a shown partner has a verdict. The vault and map stamps record
-review_fingerprint(OUT), so a review run makes both out of date. Without reviews no note changes.
+verification from the review's "verification" counts - ids checked, removed, not looked up, the citation check's
+status and counts -, relative links to the run's history file and review JSON) above the agent's note body
+(sanitize_note: no raw HTML, comment, image or link other than to PubMed / doi.org / Europe PMC / NCBI /
+Cellosaurus, code fences closed; its headings demoted below the note's own, its wikilinks kept only where a note
+exists), then its connection verdicts (one per partner, pick_verdict), then the provenance line generated from the
+verification (the review's note_footer; never the agent's own). A verdict is shown as verdict_label says: the shown
+verdict (shown_verdict: 'unverified' when the citation check found it not supported or every citation was removed)
+and its check_status. The partner tables of a gene note get a Literature column (the verdict of the gene's review,
+else of the partner's, with linked citations) when a shown partner has a verdict; the map's badges use the same
+choice and labels. Verdicts come from review/connections.parquet, or from the review JSONs when that table is older
+than a review (connections_stale). The vault and map stamps record review_fingerprint(OUT), so a review run makes
+both out of date. Without reviews no note changes.
 """
 
 import hashlib
@@ -370,14 +377,37 @@ def _slices(keys, n):
 REVIEW_KINDS = ("gene", "drug", "line")
 LIT_CITES = 3                        # citations linked in a partner-table cell (the rest are counted)
 LIT_HEADING = "What the literature says"
+LIT_RENDER = 2                       # how reviews are drawn into notes and the map: part of review_fingerprint
 VERDICTS = ("established", "indirect", "plausible", "unexpected", "contradicted")   # submit_review's verdicts
+STRENGTH = {"established": 5, "contradicted": 4, "indirect": 3, "plausible": 2, "unexpected": 1}
+CHECK_STATUSES = ("supported", "partly", "not_supported", "not_checkable", "unchecked", "citations_removed")
+VERIFIED = {"supported": 3, "partly": 2, "not_checkable": 1}        # check_status whose verdict stands, best first
+UNVERIFIED = ("not_supported", "citations_removed")                 # shown as 'unverified'
+CHECK_SHORT = {"supported": "supported", "partly": "partly supported", "not_checkable": "not checked",
+               "unchecked": "ids not checked", "not_supported": "not supported",
+               "citations_removed": "citations not found"}
+CHECK_LONG = {"supported": "the citation checker found that the cited abstracts support it",
+              "partly": "the citation checker found that the cited abstracts support only part of it",
+              "not_checkable": "its cited ids exist, but the claim was not (or could not be) checked against the "
+                               "abstracts",
+              "unchecked": "its cited ids were not looked up (verification off, or PubMed / Crossref could not be "
+                           "reached): not verified",
+              "not_supported": "the citation checker found that the cited abstracts do not support it",
+              "citations_removed": "every paper it cited was removed: the ids were not found in PubMed / Crossref"}
+# markdown links the agent may keep in a note (anything else becomes its text): PubMed, DOIs, Europe PMC, NCBI,
+# Cellosaurus
+LIT_LINK_PREFIXES = ("https://pubmed.ncbi.nlm.nih.gov/", "https://doi.org/", "https://europepmc.org/",
+                     "https://www.ncbi.nlm.nih.gov/", "https://www.cellosaurus.org/")
+GENERIC_FOOTER = ("_AI-generated literature review of this run's data, not checked by a person. Verify before relying "
+                  "on it._")                    # under a review stored without a generated note_footer
 
 
 def review_fingerprint(out):
     """What of OUT/review the vault and the map show: None when there is no review (no folder, or only a queue, dry
     run or cache), else {"notes": n, "reviews": n, "sha": ...} over the names, sizes and modification times of the
-    review notes and JSONs and the content of connections.parquet (rewritten at the end of every review run). The
-    vault and map stamps record it, so a review run makes both out of date (cli.stage_state)."""
+    review notes and JSONs, the content of connections.parquet (rewritten at the end of every review run) and
+    LIT_RENDER (how the reviews are drawn). The vault and map stamps record it, so a review run - or a change in how
+    reviews are drawn - makes both out of date (cli.stage_state)."""
     rd = os.path.join(out, "review")
     if not os.path.isdir(rd):
         return None
@@ -394,7 +424,7 @@ def review_fingerprint(out):
                     n[sub] += 1
     if not items:
         return None
-    h = hashlib.sha256("\n".join(sorted(items)).encode("utf-8"))
+    h = hashlib.sha256("\n".join(sorted(items) + [f"render {LIT_RENDER}"]).encode("utf-8"))
     p = os.path.join(rd, "connections.parquet")
     if os.path.exists(p):
         with open(p, "rb") as fh:
@@ -402,21 +432,118 @@ def review_fingerprint(out):
     return {**n, "sha": h.hexdigest()[:16]}
 
 
-def review_connections(out, gene_col=None):
+def _truthy(x):
+    if isinstance(x, (bool, np.bool_)):
+        return bool(x)
+    if isinstance(x, str):
+        return x.strip().lower() in ("true", "1", "yes")
+    return _finite(x) and bool(float(x))
+
+
+def connections_stale(out):
+    """True when review/connections.parquet is older than a review JSON or than a change of the review folders (a
+    review written, replaced or deleted after the table was last rebuilt: a run that was killed before its end,
+    `tahoe review run` interrupted hard). The table is then ignored and the verdicts read from the JSONs."""
+    rd = os.path.join(out, "review")
+    p = os.path.join(rd, "connections.parquet")
+    try:
+        t = os.stat(p).st_mtime_ns
+    except OSError:
+        return False
+    for kind in REVIEW_KINDS:
+        d = os.path.join(rd, "reviews", kind)
+        if not os.path.isdir(d):
+            continue
+        if os.stat(d).st_mtime_ns > t:
+            return True
+        for e in os.scandir(d):
+            if e.name.endswith(".json") and e.stat().st_mtime_ns > t:
+                return True
+    return False
+
+
+def lit_status(v):
+    """(check_status, shown_verdict) of a connection verdict - a review item or a review/connections.parquet row -
+    as the shared verification contract defines them (docs/review.md, Verification). For a review stored before the
+    contract (no check_status): from its older fields - the citation checker's 'check', 'unverified' with no
+    citation left (every one removed) - else 'unchecked'. A verdict whose status is not_supported or
+    citations_removed is always shown as 'unverified', whatever shown_verdict says."""
+    verdict = sval(v.get("verdict")).strip()
+    st = sval(v.get("check_status")).strip()
+    if st not in CHECK_STATUSES:
+        ck = v.get("check")
+        ck = sval(ck.get("verdict") if isinstance(ck, dict) else ck).strip()
+        cits = v.get("citations")
+        n = len([x for x in (cits.split(";") if isinstance(cits, str) else cits or []) if str(x).strip()])
+        if ck in ("supported", "partly", "not supported", "not checkable"):
+            st = ck.replace(" ", "_")
+        elif _truthy(v.get("unverified")) and not n:
+            st = "citations_removed"
+        else:
+            st = "unchecked"
+    shown = sval(v.get("shown_verdict")).strip()
+    if st in UNVERIFIED:
+        shown = "unverified"
+    elif not shown:
+        shown = verdict
+    return st, shown
+
+
+def _partner_id(r):
+    pk = sval(r.get("partner_kind")) or "gene"
+    pc = r.get("partner_col")
+    if pk == "gene" and _finite(pc):
+        return ("gene", int(pc))
+    return (pk, sval(r.get("partner")).strip().upper())
+
+
+def pick_verdict(vs):
+    """The one verdict shown for a review's verdicts on one partner (the vault's partner tables and verdict list and
+    the map's badge all use this rule): the strongest verified verdict - established, contradicted, indirect,
+    plausible, unexpected, among those whose check_status is supported, partly or not_checkable; then the better
+    check; then the first given - else, when none is verified, the agent's first."""
+    ok = [(i, v) for i, v in enumerate(vs) if v.get("check_status") in VERIFIED]
+    if not ok:
+        return vs[0]
+    return max(ok, key=lambda t: (STRENGTH.get(sval(t[1].get("verdict")), 0), VERIFIED[t[1]["check_status"]],
+                                  -t[0]))[1]
+
+
+def one_verdict_per_partner(rows):
+    """rows (connection verdicts with check_status) -> one per (review, partner) by pick_verdict, in the order the
+    partners first appear; each kept row gets n_verdicts (how many the review gave on that partner)."""
+    groups = {}
+    for r in rows:
+        groups.setdefault((sval(r.get("entity_id")), _partner_id(r)), []).append(r)
+    out = []
+    for vs in groups.values():
+        v = dict(pick_verdict(vs))
+        v["n_verdicts"] = len(vs)
+        out.append(v)
+    return out
+
+
+def review_connections(out, gene_col=None, one_per_partner=True):
     """The connection verdicts of the reviews in OUT/review, one dict per verdict with the columns of
     review/connections.parquet (entity_id, kind, name, partner, partner_kind, partner_col, verdict, citations as
-    'PMID:1;DOI:x', check, unverified, ...): from that table, else (not built yet: `tahoe review tables`) from the
-    review JSONs. gene_col(name) -> col or None resolves gene partners the table left unresolved."""
+    'PMID:1;DOI:x', check, unverified, check_status, shown_verdict, ...): from that table, else from the review
+    JSONs - when the table is missing (not built yet: `tahoe review tables`), unreadable, or older than a review
+    (connections_stale: a review run that was killed before rebuilding it). check_status / shown_verdict are always
+    set (lit_status, also for reviews stored before they existed). gene_col(name) -> col or None resolves gene
+    partners the table left unresolved. one_per_partner: one verdict per (review, partner), by pick_verdict."""
     rd = os.path.join(out, "review")
-    rows = []
+    rows = None
     p = os.path.join(rd, "connections.parquet")
     if os.path.exists(p):
-        try:
-            rows = pd.read_parquet(p).to_dict("records")
-        except Exception as e:  # noqa: BLE001
-            log(f"  vault: cannot read {p} ({type(e).__name__}: {e}); verdicts read from the review JSONs")
-            rows = None
-    if not os.path.exists(p) or rows is None:
+        if connections_stale(out):
+            log(f"  literature: {p} is older than the review JSONs (the run that wrote them stopped before rebuilding "
+                "it; `tahoe review tables` rebuilds it): verdicts read from the JSONs")
+        else:
+            try:
+                rows = pd.read_parquet(p).to_dict("records")
+            except Exception as e:  # noqa: BLE001
+                log(f"  literature: cannot read {p} ({type(e).__name__}: {e}); verdicts read from the review JSONs")
+    if rows is None:
         rows = []
         for kind in REVIEW_KINDS:
             d = os.path.join(rd, "reviews", kind)
@@ -426,35 +553,177 @@ def review_connections(out, gene_col=None):
                     continue
                 meta = r.get("meta") or {}
                 for it in r.get("connection_verdicts") or []:
+                    if not isinstance(it, dict):
+                        continue
                     pt = str(it.get("partner") or "")
                     pk = pt.split(":", 1)[0] if pt.split(":", 1)[0] in ("drug", "line") and ":" in pt else "gene"
                     cits = [str(x) for x in it.get("citations") or []]
+                    ck = it.get("check")
                     rows.append({"entity_id": meta.get("entity_id"), "kind": kind, "name": meta.get("name"),
                                  "partner": pt, "partner_kind": pk, "partner_col": None, "verdict": it.get("verdict"),
                                  "citations": ";".join(cits), "n_citations": len(cits),
-                                 "check": (it.get("check") or {}).get("verdict", ""),
-                                 "unverified": bool(it.get("unverified")), "model": meta.get("model"),
+                                 "check": ck.get("verdict", "") if isinstance(ck, dict) else sval(ck),
+                                 "unverified": bool(it.get("unverified")),
+                                 "check_status": it.get("check_status") or "",
+                                 "shown_verdict": it.get("shown_verdict") or "", "model": meta.get("model"),
                                  "run_id": meta.get("run_id"), "reviewed": meta.get("reviewed")})
+    for r in rows:
+        r["check_status"], r["shown_verdict"] = lit_status(r)
     if gene_col is not None:
         for r in rows:
             if sval(r.get("partner_kind")) in ("", "gene") and not _finite(r.get("partner_col")):
                 c = gene_col(sval(r.get("partner")))
                 r["partner_col"] = c if c is not None else None
-    return rows
+    return one_verdict_per_partner(rows) if one_per_partner else rows
+
+
+def md_text(s):
+    """Text from a review (a partner's name, a citation id, an error) safe inline in a note or a table cell: no HTML,
+    link, emphasis, tag or wikilink syntax survives, and no '|' or line break."""
+    s = re.sub(r"\s+", " ", sval(s)).strip().replace("|", "/")
+    s = re.sub(r"([\\`*_\[\]#~=%$!])", r"\\\1", s)
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def citation_link(cid):
-    """'PMID:123' -> [PMID:123](https://pubmed.ncbi.nlm.nih.gov/123/); 'DOI:10.x/y' -> a doi.org link; other text
-    as it is."""
+    """'PMID:123' -> [PMID:123](https://pubmed.ncbi.nlm.nih.gov/123/); 'DOI:10.x/y' -> a doi.org link (the DOI
+    escaped in the text, percent-encoded in the URL); other text escaped (md_text)."""
     s = str(cid).strip()
     m = re.match(r"(?i)^(?:PMID\s*:?\s*)?(\d{1,9})$", s)
     if m:
         return f"[PMID:{int(m.group(1))}](https://pubmed.ncbi.nlm.nih.gov/{int(m.group(1))}/)"
-    m = re.match(r"(?i)^(?:DOI\s*:\s*|https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}/\S+)$", s)
+    m = re.match(r"(?i)^(?:DOI\s*:\s*|https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}/[^\s<>\"'`\[\]{}|\\]+)$", s)
     if m:
         doi = m.group(1)
-        return f"[DOI:{doi}](https://doi.org/{urllib.parse.quote(doi, safe='/:;._-')})"
-    return cell(s)
+        return f"[DOI:{md_text(doi)}](https://doi.org/{urllib.parse.quote(doi, safe='/:;._-')})"
+    return md_text(s)
+
+
+def verdict_label(v):
+    """(label, explanation) of a connection verdict (with check_status / shown_verdict, see lit_status): the label
+    the vault's Literature column and the map's 'lit:' badge show - the shown verdict and the check, e.g.
+    'established (supported)', 'indirect (ids not checked)', 'unverified' - and a sentence saying what the agent
+    said and what the verification found."""
+    st, shown = v.get("check_status") or "unchecked", v.get("shown_verdict") or sval(v.get("verdict"))
+    verdict = sval(v.get("verdict")) or "?"
+    n = int(v.get("n_citations") or 0) if _finite(v.get("n_citations")) else \
+        len([x for x in sval(v.get("citations")).split(";") if x.strip()])
+    if st in UNVERIFIED:
+        label = "unverified"
+    elif st == "not_checkable" and not n:
+        label = shown                                          # it cites nothing: nothing to check
+    else:
+        label = f"{shown} ({CHECK_SHORT.get(st, st)})"
+    expl = f"the agent's verdict: {verdict}; " + ("it cites no paper" if st == "not_checkable" and not n
+                                                  else CHECK_LONG.get(st, st))
+    return label, expl
+
+
+# -- the agent's note: sanitised before it is spliced into a vault note
+_FENCE_RE = re.compile(r"^[ \t]*(`{3,}|~{3,})(.*)$")
+SAFE_FENCE_INFO = {"text", "txt", "plain", "python", "py", "r", "bash", "sh", "shell", "json", "yaml", "yml", "tsv",
+                   "csv", "markdown", "md"}             # languages Obsidian shows as code (no plugin renders them)
+_RAW_ELEMENTS = re.compile(r"<(script|style|iframe|object|embed|template|textarea|noscript|svg|math|xmp|title|select|"
+                           r"frameset|noframes|applet|canvas|audio|video)\b[^>]*>.*?</\1\s*>", re.I | re.S)
+_TAG = re.compile(r"</?[A-Za-z][A-Za-z0-9:-]*(?:\s[^<>]*)?/?>|<![A-Za-z][^<>]*>|<\?.*?\?>", re.S)
+_BR = r"(?:[^\[\]\\]|\\.)"
+_LINK_TEXT = rf"\[((?:{_BR}|\[{_BR}*\])*)\]"
+_LINK_DEST = (r"\(\s*(<[^<>\n]*>|(?:[^\s()\\]|\\.|\((?:[^\s()\\]|\\.)*\))*)"          # destination
+              r"(?:\s+(?:\"[^\"]*\"|'[^']*'|\([^()]*\)))?\s*\)")                     # optional title
+_IMAGE = re.compile(r"!" + _LINK_TEXT + rf"(?:{_LINK_DEST}|\[[^\]]*\])", re.S)
+_LINK = re.compile(_LINK_TEXT + _LINK_DEST, re.S)
+_REFDEF = re.compile(r"^ {0,3}\[(?!\^)((?:[^\[\]\\]|\\.)+)\]:[ \t]*\n?[ \t]*(<[^<>\n]*>|\S+)[^\n]*$", re.M)
+_LINK_OR_URL = re.compile(rf"({_LINK_TEXT}{_LINK_DEST})|(?:https?://|(?<![\w.])www\.)[^\s<>]*", re.S | re.I)
+
+
+def _lit_link_ok(url):
+    u = url.strip().strip("<>").strip()
+    return u.startswith(LIT_LINK_PREFIXES) and not re.search(r"[\s\\<>\"']", u)
+
+
+def _sanitize_chunk(t):
+    """Text outside code fences (sanitize_note)."""
+    t = re.sub(r"<!--.*?-->", "", t, flags=re.S)                   # HTML comments
+    t = re.sub(r"%%.*?%%", "", t, flags=re.S)                      # Obsidian comments
+    t = t.replace("%%", "")                                        # ... and an unclosed one
+    t = _RAW_ELEMENTS.sub("", t)                                   # script, style, iframe ... with their content
+    t = re.sub(r"<([A-Za-z][A-Za-z0-9+.-]{1,31}:[^\s<>]*)>", lambda m: f"[{m.group(1)}]({m.group(1)})"
+               if _lit_link_ok(m.group(1)) else m.group(1), t)   # autolinks: allowed ones as links, others text
+    t = _TAG.sub("", t)                                            # any other HTML tag (its text is kept)
+    t = re.sub(r"<(?=[A-Za-z/!?%])", "&lt;", t)                    # whatever could still start a tag
+    t = t.replace("![[", "[[")                                     # no embedded notes
+    t = _IMAGE.sub(lambda m: m.group(1), t)                        # no images (remote or not): their alt text
+    t = _REFDEF.sub(lambda m: m.group(0) if _lit_link_ok(m.group(2)) else "", t)
+    t = _LINK.sub(lambda m: m.group(0) if _lit_link_ok(m.group(2)) else m.group(1), t)
+
+    def bare(m):                                                   # a bare URL elsewhere is not made a link
+        if m.group(1) is not None or _lit_link_ok(m.group(0)):
+            return m.group(0)
+        u = m.group(0)
+        return re.sub(r"(?i)^(https?:)(//)|^(www)(\.)", lambda k: (k.group(1) or k.group(3)) + "\u200b"
+                      + (k.group(2) or k.group(4)), u)
+    t = _LINK_OR_URL.sub(bare, t)
+    t = re.sub(r"(`+)([ \t]*)(\$?=)", "\\1\u200b\\2\\3", t)  # no Dataview inline query (`= ...`, `$= ...`)
+    t = re.sub(r"\\(href|url)\b", r"\1", t)                    # no link from a LaTeX formula
+    if t.count("$$") % 2:                                        # an unclosed display formula
+        i = t.rfind("$$")
+        t = t[:i] + "\\$\\$" + t[i + 2:]
+    out, prev = [], ""
+    for line in t.split("\n"):                                     # no setext heading ('text' over '---' / '===')
+        if re.match(r"^ {0,3}(?:=+|-+)[ \t]*$", line) and prev.strip():
+            out.append("")
+        out.append(line)
+        prev = line
+    return "\n".join(out)
+
+
+def sanitize_note(md):
+    """An agent's note made safe to splice into a vault note: code fences closed (an unclosed one closed at the
+    end) and written plainly (no plugin languages such as dataviewjs or mermaid); outside them no HTML comment or
+    Obsidian %% comment, no raw HTML (script, iframe, img, a, style ... any tag), no image or embedded note, no link
+    other than markdown links to PubMed, doi.org, Europe PMC, NCBI and Cellosaurus (others keep their text; a bare
+    URL to another site is not made a link), and no setext heading."""
+    lines = sval(md).replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    out, chunk, fence = [], [], None
+    for line in lines:
+        m = _FENCE_RE.match(line)
+        if fence is None:
+            if m and not (m.group(1)[0] == "`" and "`" in m.group(2)):
+                if chunk:
+                    out.append(_sanitize_chunk("\n".join(chunk)))
+                chunk = []
+                info = m.group(2).strip().split(" ")[0].lower() if m.group(2).strip() else ""
+                fence = m.group(1)
+                out.append(fence + (info if info in SAFE_FENCE_INFO else ""))
+            else:
+                chunk.append(line)
+        elif m and m.group(1)[0] == fence[0] and len(m.group(1)) >= len(fence) and not m.group(2).strip():
+            out.append(fence)
+            fence = None
+        else:
+            out.append(line)
+    if chunk:
+        out.append(_sanitize_chunk("\n".join(chunk)))
+    if fence is not None:
+        out.append(fence)
+    return "\n".join(out)
+
+
+_SELF_CHECK_LINE = re.compile(r"(?i)\b(?:citations?|references|claims|sources|ids)\s+(?:were|have been|was|are|had "
+                              r"been)\s+(?:checked|verified|validated)")
+_AGENT_FOOTER = re.compile(r"(?i)^[\s_*>]*(?:AI-generated literature review|verify before relying)"
+                           r"|\bcitations?\s+(?:were|have been|had been)\s+(?:checked|verified)\b")
+
+
+def drop_self_check(md):
+    """The note without the agent's own provenance (the vault appends the line generated from the verification
+    instead): a short line that is a footer ('_AI-generated literature review ..._', 'Verify before relying ...'),
+    that says its citations were checked, or an italic line saying its claims or references were checked or
+    verified. (The runner already drops such a paragraph from notes it stores: verify.drop_self_check.)"""
+    lines = sval(md).split("\n")
+    keep = [x for x in lines if not (len(x) < 400 and (_AGENT_FOOTER.search(x) or (
+        _SELF_CHECK_LINE.search(x) and re.match(r"^\s*(?:_|\*(?!\s))", x))))]   # an italic line (not a bullet)
+    return md if len(keep) == len(lines) else "\n".join(keep)
 
 
 class Run:
@@ -846,27 +1115,36 @@ class Vault:
                 old = self.lit.get((kind, key))
                 if old and str(old["meta"].get("reviewed", "")) > str(meta.get("reviewed", "")):
                     continue                                    # two files for one entity: the latest review
+                ftr = js.get("note_footer")
                 self.lit[(kind, key)] = {
                     "kind": kind, "stem": stem, "text": text, "meta": meta,
                     "verification": js.get("verification") or {}, "summary": str(js.get("summary") or ""),
+                    "footer": ftr.strip() if isinstance(ftr, str) and ftr.strip() else GENERIC_FOOTER,
                     "review_rel": f"review/reviews/{kind}/{stem}.json" if js else None,
                     "note_rel": f"review/notes/{kind}/{stem}.md" if os.path.exists(np_) else None}
+        # one verdict per (review, partner): review_connections applies pick_verdict, the rule the map uses too
         for r in review_connections(self.out, gene_col=lambda s: self._gene_by_name.get(str(s).upper())):
             eid = sval(r.get("entity_id"))
             kind = eid.split(":", 1)[0] if ":" in eid else sval(r.get("kind"))
             key = self.lit_key(kind, eid, sval(r.get("name")))
             if key is None or not sval(r.get("verdict")):
                 continue
+            rec = self.lit.get((kind, key))
+            if rec is not None and sval(r.get("run_id")) and sval(rec["meta"].get("run_id")) and \
+                    sval(r.get("run_id")) != sval(rec["meta"].get("run_id")):
+                continue                                        # an older review of the same entity
             pk, pt = sval(r.get("partner_kind")) or "gene", sval(r.get("partner"))
             if pk == "gene":
                 pc = r.get("partner_col")
                 pkey = int(pc) if _finite(pc) and 0 <= int(pc) < R.gK else None
             else:
                 pkey = self.lit_key(pk, pt, pt.split(":", 1)[1] if ":" in pt else pt)
-            uv = r.get("unverified")
             v = {"partner": pt, "pkey": (pk, pkey) if pkey is not None else None, "verdict": sval(r.get("verdict")),
                  "citations": [x.strip() for x in sval(r.get("citations")).split(";") if x.strip()],
-                 "check": sval(r.get("check")), "unverified": _finite(uv) and bool(float(uv))}
+                 "check": sval(r.get("check")), "unverified": _truthy(r.get("unverified")),
+                 "check_status": r["check_status"], "shown_verdict": r["shown_verdict"],
+                 "n_verdicts": int(r.get("n_verdicts") or 1)}
+            v["n_citations"] = len(v["citations"])
             self.lit_verdicts.setdefault((kind, key), []).append(v)
             if kind == "gene" and v["pkey"] and v["pkey"][0] == "gene":
                 self.lit_pairs.setdefault((key, v["pkey"][1]), v)
@@ -948,14 +1226,17 @@ class Vault:
         return fm
 
     def _verdict_text(self, v, partner_review=None):
-        cits = v["citations"]
-        s = v["verdict"]
-        if v["unverified"]:
-            s += " (unverified)"
-        if v["check"] and v["check"] != "supported":
-            s += f" (check: {v['check']})"
+        """A connection verdict as the vault shows it (verdict_label: the shown verdict and its check; for an
+        unverified one what the agent said), then the papers it cites."""
+        label, _expl = verdict_label(v)
+        s = md_text(label)
+        if v["check_status"] in UNVERIFIED:
+            s += f" (agent: {md_text(v['verdict'])}; {CHECK_SHORT[v['check_status']]})"
+        if int(v.get("n_verdicts") or 1) > 1:
+            s += f" (of {int(v['n_verdicts'])} verdicts it gave)"
         if partner_review:
-            s += f" ({partner_review}'s review)"
+            s += f" ({md_text(partner_review)}'s review)"
+        cits = v["citations"]
         if cits:
             s += " · " + " ".join(citation_link(x) for x in cits[:LIT_CITES]) + \
                 (f" +{len(cits) - LIT_CITES}" if len(cits) > LIT_CITES else "")
@@ -974,29 +1255,117 @@ class Vault:
     def _plink(self, v):
         pk = v["pkey"]
         if pk is None:
-            return cell(v["partner"])
+            return md_text(v["partner"])
         kind, key = pk
         return self.glink(key) if kind == "gene" else self.dlink(key) if kind == "drug" else self.llink(key)
 
+    @staticmethod
+    def _verification_text(ver, meta):
+        """The callout's verification sentence, from the review JSON's "verification" (the id look-ups: checked,
+        removed, could not be checked, retracted; the citation check: done / not run / failed and its counts), for
+        reviews stored before that form too."""
+        cnt, ids, llm = ver.get("counts") or {}, ver.get("ids") or {}, ver.get("llm") or {}
+        mode = ver.get("mode")
+
+        def num(x):
+            return len(x) if isinstance(x, (list, tuple)) else int(float(x)) if _finite(x) else 0
+
+        def pl(k, one):
+            return f"{k} {one}" + ("" if k == 1 else "s")
+
+        def why(x):
+            t = md_text(x)
+            return t if len(t) <= 120 else t[:117] + "..."
+        n_cited = num(cnt.get("n_citations")) if "n_citations" in cnt else num(ids.get("n_cited"))
+        unchecked = num(ids.get("unchecked"))
+        if mode not in ("ids", "llm"):
+            return ("> Verification: none (the review ran with `--verify off`): its " + pl(n_cited, "cited paper")
+                    + " were not looked up and its claims were not checked against the abstracts, so its verdicts "
+                    "are marked \"ids not checked\".")
+        ist = sval(ids.get("status"))
+        if ist not in ("done", "not_run", "failed"):
+            ist = "failed" if ids.get("error") else "done" if ids else "not_run"
+        idet = sval(ids.get("detail") or ids.get("error"))
+        s = f"> Verification: {pl(n_cited, 'paper')} cited"
+        if ist == "done":
+            removed = num(ids["removed"]) if "removed" in ids else num(ids.get("missing"))
+            checked = num(ids["checked"]) if "checked" in ids else max(0, n_cited - unchecked)
+            found = num(ids["found"]) if "found" in ids else max(0, checked - removed)
+            if not unchecked:
+                s += (f"; every cited id looked up in PubMed / Crossref: {found} found, {removed} removed as not "
+                      "found")
+            else:
+                s += (f"; {checked} of the {pl(n_cited, 'cited id')} looked up in PubMed / Crossref ({found} found, "
+                      f"{removed} removed as not found), {unchecked} could not be looked up (the service did not "
+                      "answer): the claims citing them are marked \"ids not checked\"")
+            if num(ids.get("retracted")):
+                s += f", {num(ids.get('retracted'))} retracted (still cited)"
+            nr = num(ids.get("note_removed")) if "note_removed" in ids else num(cnt.get("note_removed"))
+            if nr:
+                s += f"; {pl(nr, 'paper')} cited only in the text removed"
+        elif ist == "not_run":
+            s += (f"; the cited ids were not looked up ({why(idet or 'not run')}): the claims citing them are marked "
+                  "\"ids not checked\"")
+        else:
+            s += (f"; the id check failed ({why(idet or 'failed')}): no cited id was verified, and the claims citing "
+                  "them are marked \"ids not checked\"")
+        nrs = num(ids.get("not_retrieved_in_session")) or num(meta.get("not_retrieved"))
+        if nrs:
+            s += f"; {pl(nrs, 'paper')} cited without having been read in the session (flagged)"
+        if "status_not_supported" in cnt or "status_citations_removed" in cnt:
+            k = num(cnt.get("status_not_supported")) + num(cnt.get("status_citations_removed"))
+            if k:
+                s += (f"; {k} shown as \"unverified\" (no cited paper found, or the cited abstracts do not "
+                      "support it)")
+        elif num(cnt.get("unverified_items")):
+            k = num(cnt.get("unverified_items"))
+            s += f"; {pl(k, 'item')} left unverified"
+        raw = sval(llm.get("status"))
+        if raw in ("done", "not_run", "failed") and "detail" in llm:
+            lst, ldet = raw, sval(llm.get("detail"))
+        elif raw == "done":
+            lst, ldet = "done", ""
+        elif raw.startswith("no claims"):
+            lst, ldet = "done", "no claim cites a paper"
+        elif not raw or raw.startswith(("not run", "not_run")):
+            lst, ldet = "not_run", raw[7:].lstrip(": ") or "not run"
+        else:
+            lst, ldet = "failed", raw + (f": {sval(llm.get('error'))}" if llm.get("error") else "")
+        if mode == "llm" and lst == "done" and ldet:
+            s += ". No claim cites a paper, so none was checked against the abstracts."
+        elif mode == "llm" and lst == "done":
+            c4 = [num(llm[k]) if k in llm else num(cnt.get(k2)) for k, k2 in (
+                ("supported", "supported"), ("partly", "partly"), ("not_supported", "not supported"),
+                ("not_checkable", "not checkable"))]
+            nc = num(cnt.get("claims_checked")) or sum(c4)
+            checker = sval(meta.get("checker_model"))
+            s += (". Claims checked against the abstracts they cite (`citation-checker`"
+                  + (f", `{md_text(checker)}`" if checker else "") + f"): of {pl(nc, 'claim')}, {c4[0]} supported, "
+                  f"{c4[1]} partly, {c4[2]} not supported, {c4[3]} not checkable.")
+        elif mode == "llm":
+            s += (". The claims were not checked against the abstracts (" + ("the check failed: " if lst == "failed"
+                                                                              else "") + why(ldet or lst)
+                  + "); `tahoe review run --recheck` completes the check without reviewing again.")
+        else:
+            s += ". The claims were not checked against the abstracts (`--verify ids`)."
+        return s
+
     def sec_literature(self, kind, key, note_rel):
-        """'## What the literature says' of a reviewed entity: the callout, the agent's note, its verdicts."""
+        """'## What the literature says' of a reviewed entity: the callout, the agent's note (sanitised:
+        sanitize_note), its connection verdicts, and the provenance line generated from the verification counts
+        (the review's note_footer; a paragraph in which the agent vouches for its own verification is dropped)."""
         rec = self.lit.get((kind, key))
         if rec is None:
             return []
         self.n_lit_notes += 1
         meta, ver = rec["meta"], rec["verification"]
-        cnt = ver.get("counts") or {}
-        ids = ver.get("ids") or {}
-        llm = ver.get("llm") or {}
-        mode = ver.get("mode")
-        agent = sval(meta.get("agent")) or f"{kind}-reviewer"
-        model = sval(meta.get("model"))
-        served = [m for m in (meta.get("served_models") or []) if m and m != model]
-        when = sval(meta.get("reviewed"))[:10]
-        n = lambda k: int(cnt.get(k) or 0)  # noqa: E731
+        agent = md_text(sval(meta.get("agent")) or f"{kind}-reviewer")
+        model = md_text(sval(meta.get("model")))
+        served = [md_text(m) for m in (meta.get("served_models") or []) if m and m != sval(meta.get("model"))]
+        when = md_text(sval(meta.get("reviewed"))[:10])
         how = ", ".join(([f"model `{model}`"] if model else [])
                         + ([f"in part by the fallback `{'`, `'.join(served)}`"] if served else [])
-                        + ([f"effort {sval(meta.get('effort'))}"] if sval(meta.get("effort")) else []))
+                        + ([f"effort {md_text(meta.get('effort'))}"] if sval(meta.get("effort")) else []))
         C = ["> [!info] AI-agent literature review",
              f"> Written by the `{agent}` agent" + (f" ({how})" if how else "") + (f" on {when}" if when else "")
              + ", from this run's data on it and the papers it retrieved. It is not checked by a person: read it as "
@@ -1004,31 +1373,8 @@ class Vault:
         if not rec["review_rel"]:
             C.append(f"> No review record (`review/reviews/{kind}/{rec['stem']}.json`) was found for this note: its "
                      "model, date and verification are unknown.")
-        elif mode in ("ids", "llm"):
-            s = f"> Verification: {n('n_citations')} paper{'s' if n('n_citations') != 1 else ''} cited"
-            if ids and not ids.get("error"):
-                s += (f"; every cited id looked up in PubMed / Crossref: {int(ids.get('found') or 0)} found, "
-                      f"{n('removed_citations')} removed as not found")
-                if n("retracted_citations"):
-                    s += f", {n('retracted_citations')} retracted"
-            elif ids.get("error"):
-                s += "; the id check failed (" + cell(sval(ids.get("error")))[:120] + ")"
-            if n("unverified_items"):
-                s += f"; {n('unverified_items')} item{'s' if n('unverified_items') != 1 else ''} left unverified"
-            if mode == "llm" and llm.get("status") == "done":
-                checker = sval(meta.get("checker_model"))
-                s += (". Claims checked against the abstracts they cite (`citation-checker`"
-                      + (f", `{checker}`" if checker else "") + f"): of {n('claims_checked')} claim"
-                      + ("s" if n("claims_checked") != 1 else "") + f", {n('supported')} supported, {n('partly')} "
-                      f"partly, {n('not supported')} not supported, {n('not checkable')} not checkable.")
-            elif mode == "llm":
-                why = cell(sval(llm.get("status")) or "not run")
-                s += f". The claims were not checked against the abstracts ({why})."
-            else:
-                s += ". The claims were not checked against the abstracts (`--verify ids`)."
-            C.append(s)
         else:
-            C.append("> Verification: none (the review ran with `--verify off`): its citations were not checked.")
+            C.append(self._verification_text(ver, meta))
         links = []
         hist = sval(meta.get("history"))
         if hist and os.path.exists(os.path.join(self.out, hist)):
@@ -1041,24 +1387,34 @@ class Vault:
             C.append("> Files: " + "; ".join(links) + ". They are in the run folder, outside the vault ("
                      + ", ".join(f"`{p}`" for p in (hist, rec["review_rel"]) if p) + "): open them in a text editor.")
         body = []
-        fence = False
-        for line in self.resolve_any(rec["text"]).split("\n"):
-            if line.lstrip().startswith(("```", "~~~")):
-                fence = not fence
-            m = None if fence else re.match(r"^(#{1,6})\s+(.*?)\s*#*\s*$", line)
+        fence = None
+        for line in sanitize_note(self.resolve_any(drop_self_check(rec["text"]))).split("\n"):
+            f = re.match(r"^(`{3,}|~{3,})", line)
+            if fence is None and f:
+                fence = f.group(1)
+            elif fence is not None and line == fence:
+                fence = None
+            m = None if fence is not None else re.match(r"^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*(?:[ \t]#+)?[ \t]*$",
+                                                        line)
             if m:
-                if not any(x.strip() for x in body) and m.group(2).strip().rstrip(":").lower() == LIT_HEADING.lower():
+                title = (m.group(2) or "").strip()
+                if not any(x.strip() for x in body) and title.rstrip(":").lower() == LIT_HEADING.lower():
                     continue                                    # the vault supplies this heading
+                if not title:
+                    continue                                    # an empty heading
                 if len(m.group(1)) < 3:                         # below the note's own '##' sections
-                    line = "### " + m.group(2)
+                    line = "### " + title
             body.append(line)
         while body and not body[0].strip():
             body.pop(0)
+        while body and not body[-1].strip():
+            body.pop()
         L = [f"## {LIT_HEADING}", ""] + C + [""] + body + [""]
         vs = self.lit_verdicts.get((kind, key)) or []
         if vs:
-            L += ["**Connection verdicts** of this review (`review/connections.parquet`): " +
+            L += ["**Connection verdicts** of this review (`review/connections.parquet`; one per partner): " +
                   "; ".join(f"{self._plink(v)} {self._verdict_text(v)}" for v in vs) + ".", ""]
+        L += [sanitize_note(rec["footer"]).strip() or GENERIC_FOOTER, ""]
         return L
 
     def load_fragments(self):
@@ -1465,9 +1821,11 @@ class Vault:
         if lit:
             L += [f"*Literature = the connection verdict of the AI-agent literature review of this gene (see "
                   f"\"{LIT_HEADING}\"), else of the partner's review (named), with the papers it cites "
-                  "(`review/connections.parquet`): "
-                  "established, indirect, plausible, unexpected or contradicted; \"check\" = what the citation checker "
-                  "found in the abstracts when it did not find the claim supported.*", ""]
+                  "(`review/connections.parquet`): established, indirect, plausible, unexpected or contradicted, "
+                  "and in brackets its check: supported / partly supported (the citation checker read the cited "
+                  "abstracts), not checked (the ids exist; the claim was not checked against the abstracts), ids not "
+                  "checked (not looked up). **unverified** = the cited abstracts do not support the agent's verdict, "
+                  "or none of its papers exists (the agent's verdict follows in brackets).*", ""]
         return L
 
     def sec_where(self, c):
@@ -2755,15 +3113,20 @@ agent (tahoemap's literature-review agents, `tahoe review`; see `docs/review.md`
 agent read the entity's dossier (what this run's data say about it), searched PubMed, Europe PMC and the web, read
 abstracts, and reported what is established, what in the data is unexpected, which expected connections are missing
 and what is contradicted. The callout at the top of the section names the agent, the model, the date and the
-verification: every cited PMID / DOI was looked up (a nonexistent one is removed and its claim marked unverified),
-and a second agent, the citation checker, compared each claim with the abstracts it cites (supported / partly / not
-supported / not checkable). It also links the run's full history (every request, response and tool call) and the
-review as data; both are in the run folder (`review/`), outside the vault.
+verification: how many cited PMIDs / DOIs were looked up, removed as not found, or could not be looked up (a service
+down), and whether a second agent, the citation checker, compared each claim with the abstracts it cites (supported
+/ partly / not supported / not checkable) or why it did not. It also links the run's full history (every request,
+response and tool call) and the review as data; both are in the run folder (`review/`), outside the vault. The
+agent's text is shown without HTML, images or links other than to PubMed, doi.org, Europe PMC, NCBI and Cellosaurus;
+the line under it, on what was checked, is generated from the verification, not written by the agent.
 
 In a gene note the partner tables then have a **Literature** column: the agent's verdict on that pair (established,
-indirect, plausible, unexpected or contradicted) with its citations, from `review/connections.parquet`; a verdict
-from the partner's review is marked with the partner's name. The reviews are leads, not established facts: no person
-has checked them. A new review replaces the section at the next `tahoe vault` (or `tahoe run`).
+indirect, plausible, unexpected or contradicted) with its check in brackets and its citations, from
+`review/connections.parquet`; a verdict from the partner's review is marked with the partner's name. A verdict the
+citation checker found not supported, or whose papers do not exist, reads **unverified**. When a review gave one
+partner several verdicts, the strongest verified one is shown (else its first), here and in the map. The reviews are
+leads, not established facts: no person has checked them. A new review replaces the section at the next `tahoe
+vault` (or `tahoe run`).
 """
 
 

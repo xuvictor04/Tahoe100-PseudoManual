@@ -137,8 +137,12 @@ A module has a + and a - arm only when its two sides anti-correlate under the sa
   separate drugs.
 - Doses: compare with the drug's known potency and exposure. A nanomolar inhibitor active only at 5 uM is probably
   acting off target or through toxicity; a 0.05 uM response of a potent drug is on target.
-- The best dose has the most significant genes; the best trustworthy dose (no untrusted flag) defines the drug's
-  vector. Read its flags before reading its genes.
+- The best dose has the most significant genes. The best trustworthy dose is the active dose with no artifact flag;
+  its full gene lists come first. The drug's vector (nearest drugs) uses the embedding's dose, which may carry a
+  toxic, transcription-drop or cell-cycle flag: the dossier names it and gives that dose's full lists too, marked
+  FLAGGED (a flag can be the drug's own effect, such as an antimitotic's cell-cycle shift: say which). When no dose
+  is trustworthy the dossier says so and lists the flags: read every gene list as possibly the artifact. Read a
+  dose's flags before reading its genes.
 - The targets' own mRNA: inhibiting a protein rarely changes its mRNA; feedback can raise it (statins raise HMGCR
   through SREBP2, proteasome inhibitors raise proteasome genes through NFE2L1, HSP90 inhibitors raise HSP70 genes).
 - Modules it moves: module score = mean pooled z of the + arm minus the - arm.

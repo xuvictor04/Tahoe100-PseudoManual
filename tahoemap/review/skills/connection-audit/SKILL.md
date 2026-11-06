@@ -17,7 +17,7 @@ Give one `connection_verdicts` entry per partner you examined, with this rubric:
 | verdict | use it when | citations |
 |---|---|---|
 | `established` | a retrieved paper reports this relation: the two genes co-regulated (e.g. both shown as targets of one factor in one study, or co-induced by the same stimulus), in the same complex or pathway with co-expression or co-regulation shown, one regulating the other's transcription, or, for a drug, the drug's known effect on the gene (or on its direct regulator, with the gene named as a target) | required |
-| `indirect` | no paper on the pair, but retrieved papers place both genes under one regulator or process that the drugs are known to drive (each gene shown as an NRF2 target in its own paper; both p53 targets; both E2F/DREAM cell-cycle genes) | required: at least one per gene, or a review naming both |
+| `indirect` | no paper on the pair, but retrieved papers place both genes under one regulator or process that the drugs are known to drive (each gene shown as an NRF2 target in its own paper; both p53 targets; both E2F/DREAM cell-cycle genes) | required: at least one per gene, or a review naming both (submit_review refuses an `indirect` with one citation that is not a review) |
 | `plausible` | consistent with known biology (related function, the drug's mechanism could explain it) but no paper ties the two or a shared regulator | optional (background only) |
 | `unexpected` | no support after the searches you list (pair query with aliases in PubMed; Europe PMC including full text; the shared-regulator query) | none; list the queries in `unexpected[].literature_checked` |
 | `contradicted` | a retrieved paper reports the opposite direction in a comparable setting (a drug lowering a gene that the data show raised; anti-correlation where the data show co-variation) | required |
@@ -90,6 +90,11 @@ partner at all. Then the usual reasons:
 - `contradicted`: rare; needs a paper with the opposite direction in a comparable setting.
 - `connection_verdicts`: the partners you examined, typically 8-20 entries: the strongest replicated partners on
   both sides, every novel candidate, and any partner named in another section. Write genes as their symbols in the
-  dossier, drugs as `drug:<name as in the dossier>`, cell lines as `line:<cell name>`.
+  dossier, drugs as `drug:<name as in the dossier>`, cell lines as `line:<cell name>`. Each entry says, in one short
+  sentence each, `relation`: what the cited papers report, with its direction ("each an NRF2 target, induced by
+  electrophiles"; for `plausible` / `unexpected` the reasoning or "no paper found"), and `data_evidence`: the
+  relation in this run's data with its direction and numbers ("moves opposite: cos -0.37, both halves, fdr 0.01").
+  The citation checker reads both, and grades a verdict whose papers report the opposite direction from the data as
+  not supported: papers showing two genes co-induced do not make a pair that moves opposite `established`.
 - `open_questions`: concrete and testable ("Does DMF induce PIR through NRF2 in these lines? NFE2L2 knockdown plus
   DMF, PIR mRNA at 24 h").

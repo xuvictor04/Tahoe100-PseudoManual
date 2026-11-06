@@ -59,10 +59,13 @@ somewhere: read the abstract (pubmed_abstracts, when there is a PMID) and cite o
 ## Web search and web fetch (when available)
 
 Use them for facts that abstracts rarely state: a drug's mechanism, potency or approval (FDA label, DrugBank,
-ChEMBL), a cell line's mutations, subtype or misidentification status (Cellosaurus, e.g.
-https://www.cellosaurus.org/CVCL_0023.txt; DepMap), gene aliases and function (NCBI Gene, UniProt), and very recent
-work. Do not use them to replace PubMed for literature claims, and do not cite web pages, vendor sites or summaries
-in the citation lists; name a database in the note text instead ("Cellosaurus lists KEAP1 p.G333C").
+ChEMBL), a cell line's mutations, subtype or misidentification status (Cellosaurus; DepMap), gene aliases and
+function (NCBI Gene, UniProt), and very recent work. web_fetch opens only URLs that already appear in the
+conversation - in the dossier, a tool result (tahoe_lookup of a line gives its Cellosaurus URLs) or a web_search
+result - never one composed from a pattern: fetch a line's Cellosaurus entry through the URL its dossier gives, and
+find any other page with web_search first. Do not use them to replace PubMed for literature claims, and do not
+cite web pages, vendor sites or summaries in the citation lists; name a database in the note text instead
+("Cellosaurus lists KEAP1 p.G333C").
 
 ## Planning, budget and stopping
 

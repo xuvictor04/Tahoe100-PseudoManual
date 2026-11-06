@@ -267,6 +267,7 @@ _DOI = re.compile(r"^(?:doi\s*:?\s*|https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}/\S
 # taken. trim_doi() then drops the punctuation that ends the sentence around it.
 _DOI_CH = r"[-._;:/A-Za-z0-9<>#+%]"
 DOI_BODY = r"10\.\d{4,9}/(?:" + _DOI_CH + r"|\(" + _DOI_CH + r"*\))+"
+_DOI_WHOLE = re.compile(DOI_BODY)
 
 
 def trim_doi(d):
@@ -288,14 +289,17 @@ def clean_doi(raw):
 
 def norm_citation(s):
     """'PMID:123' / 'DOI:10.x/y' for a PMID or DOI in any common spelling (bare digits = PMID; doi.org URLs, also
-    percent-encoded); None otherwise."""
+    percent-encoded); None otherwise - also for a DOI with characters outside DOI_BODY's set (quotes, spaces,
+    brackets, '=' ...), which is no DOI a paper carries and could break the link it becomes."""
     t = str(s or "").strip().rstrip(".,;")
     m = _PMID.match(t)
     if m:
         return f"PMID:{int(m.group(1))}"
     m = _DOI.match(t)
     if m:
-        return "DOI:" + clean_doi(m.group(1))[0]
+        d = clean_doi(m.group(1))[0]
+        if _DOI_WHOLE.fullmatch(d):
+            return "DOI:" + d
     return None
 
 
@@ -699,8 +703,10 @@ SUBMIT_REVIEW = {
         "when the searches are done, with every section filled (use [] for a section with nothing in it). "
         "Citations are PMIDs or DOIs of papers retrieved in this session with pubmed_search, pubmed_abstracts or "
         "europepmc_search; a PMID must have had its abstract read with pubmed_abstracts. The call is checked: if "
-        "it returns an error listing problems, fix them and call it again. After the review is stored, every "
-        "cited id is checked against PubMed / Crossref and every claim against the abstracts it cites."),
+        "it returns an error listing problems, fix them and call it again. A connection verdict 'established' or "
+        "'contradicted' needs a citation, 'indirect' one per gene (or one review naming both). After submission "
+        "the cited ids and the claims are checked as far as the run's settings allow; the vault says what was "
+        "checked, so note_markdown says nothing about verification."),
     "strict": True,
     "input_schema": _obj({
         "summary": _s("2-4 sentences: what the data show about the entity and how that compares with the "
@@ -741,7 +747,8 @@ SUBMIT_REVIEW = {
             "citations": _CIT_ITEMS}), "one verdict per data partner (or drug / line) examined"),
         "open_questions": _arr({"type": "string"}, "questions the data raise that the literature does not answer"),
         "note_markdown": _s("the vault note section (writing-the-note); citations as "
-                            "[PMID:123](https://pubmed.ncbi.nlm.nih.gov/123/)")}),
+                            "[PMID:123](https://pubmed.ncbi.nlm.nih.gov/123/), only of papers that an item above "
+                            "cites (any other is removed from the note)")}),
 }
 
 TOOLS = {
@@ -971,7 +978,8 @@ def normalize_review(payload, ctx=None):
                 n = norm_citation(c)
                 if n is None:
                     errs.append(f"{sec}[{i}].citations: '{c}' is not a PMID or DOI (write 'PMID:12345678' or "
-                                f"'DOI:10.xxxx/yyy'; PMC ids: give the paper's PMID)")
+                                f"'DOI:10.xxxx/yyy'; PMC ids: give the paper's PMID; a DOI with characters other "
+                                f"than letters, digits, - . _ ; : / ( ) < > # +: cite its PMID)")
                 elif n not in cits:
                     cits.append(n)
             it["citations"] = cits
@@ -1034,8 +1042,7 @@ def submit_review(ctx, payload):
         raise ToolError("\n".join(msg))
     ctx.notes["not_retrieved"] = unread + unseen
     ctx.submitted = r
-    return ("Review received. It will be checked: every cited id against PubMed / Crossref, every claim against "
-            "the abstracts it cites. Nothing more is needed; end your turn.")
+    return "Review received. Nothing more is needed; end your turn."
 
 
 # ----------------------------------------------------------------------------- dispatch

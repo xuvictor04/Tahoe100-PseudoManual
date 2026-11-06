@@ -8,9 +8,11 @@
             request   the messages appended since the previous request (the first: the dossier message, with
                       the dossier text, stored once in the start event, as the placeholder {{dossier}};
                       conversation() puts it back)
-            response  response.to_dict() in full, usage, cost of this response, cost of the attempt so far
+            response  response.to_dict() in full, usage, cost of this response, cost of the attempt so far ("late":
+                      true after the end event: it arrived after the attempt was closed)
             tool      name, input, result (cut at 20,000 characters, with a note), is_error, seconds
             error     typed class, status, error type / code, request id, scrubbed message, what the runner did
+                      (and for a lost response: estimated_cost_usd, the estimate charged for it)
             end       status, totals
         The citation checker's events go to the same file, "agent": "citation-checker", after a start event of
         its own ("phase": "citation check": its system prompt, tools, claim ids, key id, sha256 of its prompt).
@@ -19,10 +21,14 @@
         they were sent (placeholders filled from the start event).
     Ledger(out)
         OUT/review/ledger.jsonl: one line per finished attempt (append-only; the latest line of an entity is its
-        state). latest() / states() / frame() read it back.
+        state). latest() / states() / frame() read it back. Bookkeeping lines have status "note" and a "note"
+        text: the cost of a response that arrived after its attempt was closed ("late": true), or a failure the
+        run put down to a systematic error ("uncount_failed": true); they change the spend or the failure count,
+        never the state.
 
 Every line is written whole (one write, then flush) under a lock, and passes through keys.scrub() first, so an API
-key can never reach these files. Lines are never rewritten.
+key can never reach these files. Lines are never rewritten. A file that ends in a cut line (a crash, a full disk)
+gets a newline before the next line, and read_jsonl skips a cut line but keeps a whole line glued to its end.
 """
 
 import json
@@ -41,6 +47,7 @@ TOOL_RESULT_CHARS = 20_000
 DOSSIER_REF = "{{dossier}}"                 # in the first request event: the dossier text of the start event
 PLACEHOLDER_SOURCE = {DOSSIER_REF: "start.dossier"}
 STATUSES = ("done", "refused", "no_review", "over_budget", "failed", "paused", "key_rotated")
+NOTE = "note"                               # a bookkeeping ledger line (a late response's cost, an uncounted failure)
 LEDGER_FIELDS = ("entity_id", "kind", "name", "run_id", "agent", "model", "status", "cost_usd", "input_tokens",
                  "output_tokens", "cache_creation_input_tokens", "cache_read_input_tokens", "web_searches",
                  "web_fetches", "n_requests", "n_tool_calls", "key_id", "started", "finished", "error")

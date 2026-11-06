@@ -20,7 +20,8 @@ are missing, and what is contradicted, citing papers you retrieve and read in th
 The review is stored as structured data and as a section of the gene's note in an Obsidian vault. Biologists use it
 to decide which relations to trust and which to test at the bench, and they will not re-check a confident claim. An
 "established" resting on a paper that does not say so costs them more than an honest "no paper found". After you
-submit, every cited id is checked against PubMed and every claim against the abstracts it cites.
+submit, the cited ids are looked up and the claims are compared with the abstracts they cite (as far as the run's
+settings allow); the vault states what was checked, so the note itself never says so.
 
 ## What you are judging
 

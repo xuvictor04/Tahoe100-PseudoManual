@@ -21,11 +21,14 @@ What the page shows
     quadtree (theta 0.8; genes visited in tree order for cache locality), a weak pull to the centre, velocity damping
     and a cooling alpha (d3-force's integration). The sign switch makes red (cos < 0) edges either springs ("opposite
     genes attract": the nodal view) or pushers ("opposite genes repel": push up to 6 rest lengths, no pull beyond: the
-    signed view, the - arm parts from the + arm). Drag (a gene's partners follow), double-click to pin, click to
-    select, pan / zoom, pause (space), re-heat, reset, fit; sliders for repulsion, springs and minimum |cos|; an
-    evidence filter; colour by module or arm; labels for the selected gene, its partners, pinned genes and (zoomed
-    in) everyone. The all-genes tab runs as many steps per frame as fit in a ~13 ms budget (one step every other
-    frame when one step takes > 45 ms). window.TAHOE_MAP exposes tab(), sim(), screen(), stats(), benchTick() for
+    signed view, the - arm parts from the + arm). Drag (a gene's partners follow), double-click to pin (also a slow
+    one: a click selects only after 400 ms without a second click, and the double-click pins the gene clicked first
+    without re-centring), click to select, pan / zoom, pause (space), re-heat, reset, fit; sliders for repulsion,
+    springs and minimum |cos|; an evidence filter; colour by module or arm; labels for the selected gene, its
+    partners, pinned genes and (zoomed in) everyone. Each tab runs at most 120 steps a second (so a small simulation
+    plays a re-heat or the sign switch over ~2 s instead of settling in a few frames) and as many per frame as fit in
+    a ~13 ms budget (one step every other frame when one step takes > 45 ms: the all-genes tab at 15,000 genes).
+    window.TAHOE_MAP exposes tab(), sim(), screen(), stats(), benchTick() for
     tests (tests/checks.py drives the page with Playwright when it is installed).
     The maps: the NODAL map (graph x, y: genes that respond to the same drugs sit together whether they go up together
     or in opposite directions; the two arms of a pathway form one island) and the SIGNED vector map (graph xs, ys:
@@ -94,12 +97,15 @@ Scaled integers: cos x100, fdr x100 (-1 = none), lfc x100 (log2), z x10.
                                    halves)}: ~6 bytes per edge before base64 (~1.4 MB at 177,000 edges)
     k_edges                        graph/info.json k_edges (partners per gene in the kNN graph), or null
     lit, lit_v                     only when OUT/review holds literature reviews (tahoemap/review): flat [entry a,
-                                   entry b, verdict, citations] x the connection verdicts of gene a's review on gene b
-                                   (review/connections.parquet) where a and b are partners in `rel` (one way or the
-                                   other); lit_v = the verdict names. The side
-                                   panel's partner list shows them as a small "lit:" badge (a's verdict on b, else
-                                   b's on a). The stamp records vault.review_fingerprint, so a review run makes the
-                                   map out of date.
+                                   entry b, kind, citations] x the connection verdicts of gene a's review on gene b
+                                   (review/connections.parquet, one per review and partner by vault.pick_verdict, the
+                                   vault's rule) where a and b are partners in `rel` (one way or the other); lit_v[kind]
+                                   = [label, explanation, shown verdict, check_status] (vault.verdict_label: e.g.
+                                   "established (supported)", "indirect (ids not checked)", "unverified" when the
+                                   citation check found it not supported or every citation was removed as not found).
+                                   The side panel's partner list shows them as a small "lit:" badge (a's verdict on b,
+                                   else b's on a). The stamp records vault.review_fingerprint, so a review run makes
+                                   the map out of date.
 """
 
 import base64
@@ -116,7 +122,8 @@ from . import atlas_core as A
 from . import vault as V
 from .common import folder, log, stamp_stage
 
-VERSION = 3                    # 3: tabs, the three physics simulations, graph/edges.parquet embedded
+VERSION = 4                    # 3: tabs, the physics simulations, graph/edges.parquet embedded; 4: a slow
+                               # double-click pins, at most 120 steps a second, literature badges with their check
 N_PARTNERS = 15
 N_DRUGS = 8
 N_LINES = 5
@@ -599,7 +606,10 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
 def _literature(out, tg, ent, gK, n, shown_pairs):
     """The gene-gene connection verdicts of the literature reviews (OUT/review) on the side panel's partner pairs
     (shown_pairs: sorted min(a, b) * n + max(a, b) of the embedded top-partner lists), as the {"lit": [...],
-    "lit_v": [...]} entries of the page data; {} without reviews (the page is then as before)."""
+    "lit_v": [...]} entries of the page data; {} without reviews (the page is then as before). One verdict per
+    (review, partner), chosen by vault.pick_verdict (the vault's rule); each is shown as vault.verdict_label says:
+    the shown verdict (shown_verdict: 'unverified' when the citation check found it not supported or every citation
+    was removed as not found) and its check_status."""
     if V.review_fingerprint(out) is None:
         return {}
     by = {}
@@ -608,8 +618,7 @@ def _literature(out, tg, ent, gK, n, shown_pairs):
         for k in (lab, s_):
             if k:
                 by.setdefault(k.upper(), int(c))
-    names = list(V.VERDICTS)
-    flat = []
+    kinds, flat = {}, []
     for r in V.review_connections(out, gene_col=lambda x: by.get(str(x).upper())):
         eid, pk = _str(r.get("entity_id")), _str(r.get("partner_kind")) or "gene"
         pc = r.get("partner_col")
@@ -622,16 +631,15 @@ def _literature(out, tg, ent, gK, n, shown_pairs):
         i = np.searchsorted(shown_pairs, key)
         if i >= len(shown_pairs) or shown_pairs[i] != key:
             continue                                       # not a pair the side panel lists
-        v = _str(r.get("verdict"))
-        if not v:
+        if not _str(r.get("verdict")):
             continue
-        if v not in names:
-            names.append(v)
-        flat += [int(ent[a]), int(ent[b]), names.index(v), int(len([x for x in _str(r.get("citations")).split(";")
-                                                                      if x.strip()]))]
+        label, expl = V.verdict_label(r)
+        k = kinds.setdefault((label, expl, r["shown_verdict"], r["check_status"]), len(kinds))
+        n_c = len([x for x in _str(r.get("citations")).split(";") if x.strip()])
+        flat += [int(ent[a]), int(ent[b]), k, n_c]
     log(f"  literature: {len(flat) // 4:,} connection verdicts on the side panel's partner pairs "
-        "(review/connections.parquet)")
-    return {"lit": flat, "lit_v": names}
+        "(review/connections.parquet, one per review and partner)")
+    return {"lit": flat, "lit_v": [list(k) for k in kinds]}
 
 
 def _encode(data):
@@ -794,6 +802,8 @@ table.pt td:first-child{white-space:nowrap}
 .bd.rt{border-color:#d03b3b;color:#a02020}
 .bd.lit{border-color:#2a78d6;color:#104281;background:#eef4fb}
 .bd.lit.lit-contradicted{border-color:#d03b3b;color:#a02020;background:#fbeeee}
+.bd.lit.lit-unverified{border-color:#b98a2e;color:#6b4d0f;background:#fbf4e6;border-style:dashed}
+.bd.lit.lit-st-unchecked,.bd.lit.lit-st-not_checkable{border-style:dashed}
 a,.lk{color:var(--accent);cursor:pointer;text-decoration:none}
 a:hover,.lk:hover{text-decoration:underline}
 .mcard{background:#f4f6f9;border:1px solid var(--grid);border-radius:8px;padding:8px 10px;margin:0 0 10px}
@@ -1536,9 +1546,13 @@ function PhysPane(kind) {
     depth: 2, maxN: 300, minCos: 0.3, ev: 1, module: -1, ring: false,
     ids: new Int32Array(0), dim: new Uint8Array(0), level: new Uint8Array(0), byDeg: new Int32Array(0), centre: -1,
     msg: "", info: "", hover: -1, drag: -1, groups: null, groupsDirty: true, avgTick: 0, tpf: 0, drawMs: 0, frames: [],
-    skip: 0, centreSel: false, lastStatus: 0, src: ""};
+    skip: 0, centreSel: false, lastStatus: 0, src: "", lastRun: 0, debt: 0};
   const loc = new Int32Array(NA).fill(-1), nloc = new Int32Array(NA).fill(-1);
   let W = 1, H = 1, DPR = 1, fitK = 1, sized = false, clickTimer = 0, dragged = false, downAt = null, pinch = null, lastFit = null;
+  // a click on a gene selects it after DBL_MS without a second click; the last two clicks are kept so that a
+  // double-click - even a slow one, after the first click's selection re-centred the view - pins the gene clicked first
+  const DBL_MS = 400;
+  let prevClick = null, lastClick = null;
   const V = {k: 1, tx: 0, ty: 0}, T = {k: 1, tx: 0, ty: 0}, ptrs = new Map();
   const visible = () => active === kind;
   const nodeColour = i => st.colour === 1 ? (ARMC[D.arm[i]] || GREY) : modColour(D.mod[i]);
@@ -1749,22 +1763,28 @@ function PhysPane(kind) {
   }
 
   // ---------------------------------------------------------------- frame: simulation steps within a time budget, then draw
-  const BUDGET = 13, MAXT = 12;
+  // at most TPS steps a second, whatever the size: alpha cools from a re-heat (0.8) in ~290 steps, so a small
+  // simulation (cheap steps) plays the sign switch or a re-heat over ~2.4 s instead of settling in a few frames
+  const BUDGET = 13, MAXT = 12, TPS = 120;
   function frame(now) {
     if (!sized) resize();
     const run = S.moving() && !st.paused;
     if (run) {
       st.frames.push(now);
       while (st.frames.length > 2 && st.frames[0] < now - 1000) st.frames.shift();
-      // several steps per frame when fast; one step every other frame when one step takes longer than ~3 frames
-      if (st.avgTick < 45 || (st.skip ^= 1)) {
+      st.debt = Math.min(MAXT, st.debt + (st.lastRun ? Math.min(100, now - st.lastRun) : 1000 / 60) * TPS / 1000);
+      st.lastRun = now;
+      // several steps per frame when fast (up to the TPS allowance); one step every other frame when one step takes
+      // longer than ~3 frames
+      if (st.debt >= 1 && (st.avgTick < 45 || (st.skip ^= 1))) {
         const t0 = performance.now();
         let k = 0;
-        do { S.tick(); k++; } while (k < MAXT && performance.now() - t0 + st.avgTick < BUDGET);
+        do { S.tick(); k++; } while (k < MAXT && k + 1 <= st.debt && performance.now() - t0 + st.avgTick < BUDGET);
+        st.debt = Math.max(0, st.debt - k);
         const dt = (performance.now() - t0) / k;
         st.avgTick = st.avgTick ? 0.8 * st.avgTick + 0.2 * dt : dt; st.tpf = k;
       }
-    } else st.frames.length = 0;
+    } else { st.frames.length = 0; st.lastRun = 0; st.debt = 0; }
     const f = computeFit();
     if (st.autoFit) Object.assign(T, f);
     let moving = false;
@@ -2035,21 +2055,28 @@ function PhysPane(kind) {
     const wasDrag = dragged, u = st.drag;
     endP(e);
     if (u >= 0) { S.fixed[u] &= ~2; S.alphaTarget = 0; st.drag = -1; req(); }
-    if (!wasDrag && e.button === 0 && u >= 0) {
-      const i = st.ids[u];
-      clearTimeout(clickTimer);
-      const g0 = selGen;                                         // wait: a double-click pins instead; any other
-      if (i !== sel) clickTimer = setTimeout(() => { if (selGen === g0) select(i, false, kind); }, 240);   // selection meanwhile wins
+    if (!wasDrag && e.button === 0) {
+      const i = u >= 0 ? st.ids[u] : -1, c = {id: i, t: performance.now(), pinned: u >= 0 && (S.fixed[u] & 5) !== 0};
+      prevClick = lastClick; lastClick = c;
+      if (i >= 0 && i !== sel) {
+        clearTimeout(clickTimer);
+        const g0 = selGen;                                       // wait: a double-click pins instead; any other
+        clickTimer = setTimeout(() => { if (selGen === g0) select(i, false, kind); }, DBL_MS);   // selection meanwhile wins
+      }
     }
   });
   cvs.addEventListener("pointercancel", e => { endP(e); if (st.drag >= 0) { S.fixed[st.drag] &= ~2; S.alphaTarget = 0; st.drag = -1; } });
   cvs.addEventListener("pointerleave", () => { if (st.hover >= 0) { st.hover = -1; req(); } hideTipP(); });
   cvs.addEventListener("dblclick", e => {
-    clearTimeout(clickTimer);
-    const p = local(e, cvs), u = hit(p[0], p[1]);
+    clearTimeout(clickTimer);                                    // the second click selects nothing (no re-centring)
+    const p = local(e, cvs);
+    // the gene of the double-click's first click, wherever it is now (its selection may have rebuilt the view)
+    const c = prevClick && lastClick && lastClick.t - prevClick.t < 1000 && performance.now() - lastClick.t < 1000 ? prevClick : null;
+    prevClick = lastClick = null;
+    const u = c ? (c.id >= 0 ? loc[c.id] : -1) : hit(p[0], p[1]);
     if (u < 0) { zoomAtP(p[0], p[1], 2, false); return; }
-    if (S.fixed[u] & 5) S.fixed[u] &= ~5;
-    else { S.fixed[u] |= 1; S.fx[u] = S.x[u]; S.fy[u] = S.y[u]; }
+    if (c ? c.pinned : (S.fixed[u] & 5)) S.fixed[u] &= ~5;      // pinned (by you, or the centre) before: unpin
+    else { S.fixed[u] = (S.fixed[u] & ~4) | 1; S.fx[u] = S.x[u]; S.fy[u] = S.y[u]; }   // else pinned by you
     S.heat(0.1); setPaused(false); req();
     if (st.hover === u) showTipP(u, p[0], p[1]);
   });
@@ -2202,15 +2229,16 @@ function lineTable(a) {
     (D.line_z_cal ? " (calibrated on this run" + (D.line_chance != null ? ": about " + D.line_chance + " chance calls per gene and line" : "") + ")" : " (not calibrated in this run: a per-line z of 4-5 can arise by chance)") +
     "; the strongest of them is shown, &ndash; = none.</p>";
 }
-const LIT = new Map();                             // literature verdicts (OUT/review): a * NA + b -> [verdict, citations]
+const LIT = new Map();                             // literature verdicts (OUT/review): a * NA + b -> [kind, citations]
 if (D.lit) for (let t = 0; t + 3 < D.lit.length; t += 4) LIT.set(D.lit[t] * NA + D.lit[t + 1], [D.lit[t + 2], D.lit[t + 3]]);
 function litBadge(i, j) {
+  // lit_v[kind] = [label, explanation, shown verdict, check_status] (vault.verdict_label): an unverified verdict reads "unverified"
   let v = LIT.get(i * NA + j), from = "";
   if (!v) { v = LIT.get(j * NA + i); if (v) from = " (in " + D.sym[j] + "'s review)"; }
   if (!v) return "";
-  const name = D.lit_v[v[0]] || "?";
-  return "<span class='bd lit lit-" + esc(name) + "' title='AI-agent literature review" + esc(from) + ": " + esc(name) + ", " + v[1] +
-    " citation" + (v[1] === 1 ? "" : "s") + " (review/connections.parquet; the vault note has the review and its links)'>lit: " + esc(name) + "</span>";
+  const k = D.lit_v[v[0]] || ["?", "", "", ""];
+  return "<span class='bd lit lit-" + esc(k[2]) + " lit-st-" + esc(k[3]) + "' title='AI-agent literature review" + esc(from) + ": " + esc(k[1]) + "; " + v[1] +
+    " citation" + (v[1] === 1 ? "" : "s") + " (review/connections.parquet; the vault note has the review and its links)'>lit: " + esc(k[0]) + "</span>";
 }
 function partnerTable() {
   if (!P.length) return "<p class='note'>No partners recorded.</p>";
@@ -2232,7 +2260,7 @@ function partnerTable() {
       "</td><td class='r'>" + (p.cos > 0 ? "+" : "") + p.cos.toFixed(2) + "</td><td>" + EVS[p.ev] + "</td><td class='r'>" + fdrTxt(p.fdr) + "</td><td>" + f + "</td></tr>";
   }
   h += "</table>";
-  if (nLit) h += "<p class='note'><span class='bd lit'>lit:</span> = the verdict of an AI-agent literature review on the pair (established, indirect, plausible, unexpected, contradicted); not checked by a person. The review itself is in the gene's vault note.</p>";
+  if (nLit) h += "<p class='note'><span class='bd lit'>lit:</span> = the verdict of an AI-agent literature review on the pair (established, indirect, plausible, unexpected, contradicted) and its check: supported / partly supported (the citation checker read the cited abstracts), not checked (ids exist, claim not checked), ids not checked (not looked up); <i>unverified</i> = the abstracts do not support it, or none of its papers exists. Not checked by a person; hover for details. The review itself is in the gene's vault note.</p>";
   if (!D.novel_ok) h += "<p class='note'>Novelty not assessed: " + esc((D.novel_blocked || []).join(", ") || "reference sources") + " missing, so no pair is called novel.</p>";
   return h;
 }
@@ -2370,8 +2398,8 @@ const HOWTO_PHYS = "<div class='howto'><h3>The tabs</h3><ul>" +
   "<li>Genes: by module (the legend's colours) or by arm (<b style='color:" + ARMC["+"] + "'>+ arm</b>, <b style='color:" + ARMC["-"] + "'>&minus; arm</b>, grey = no module). A dark ring = the selected gene; a grey ring = a pinned gene; grey dots in the module tab = genes outside the module.</li></ul>" +
   "<h4>Neighbourhood</h4><p>The selected gene (pinned at the start), its partners (depth 1) and their partners (depth 2), strongest first, at most <i>Max genes</i> (default 300). The springs are the genes' top partners from the relations table (the lists in the side panel) that pass <i>Min |cos|</i> and <i>Evidence</i>. Click another gene to move the neighbourhood to it; the genes already there keep their places.</p>" +
   "<h4>Module</h4><p>One module: pick it from the list, use <i>Selected gene's module</i>, click <i>simulate</i> on a module card in the side panel, or click a module in the map legend. Its springs are the edges of the kNN graph that defines the modules (" + KTXT + ", |cos| &ge; 0.3), among the module's genes. Coloured by arm by default; <i>outside genes (1 hop)</i> adds, dimmed, the genes outside the module that its genes link to.</p>" +
-  "<h4>All genes</h4><p>Every gene on the map, starting from its place on the nodal map, with every kNN-graph edge as a spring. Edges are drawn for the selected gene only (while the layout moves, 177,000 lines would hide everything). Each frame runs as many simulation steps as fit in about 13 ms, so the page stays responsive at any size; the status line shows frames per second.</p>" +
-  "<h4>Controls</h4><ul><li><b>Drag a gene</b> to move it: its partners follow. <b>Double-click</b> a gene to pin or unpin it. <b>Click</b> a gene to select it. Drag the background to pan; wheel or pinch to zoom.</li>" +
+  "<h4>All genes</h4><p>Every gene on the map, starting from its place on the nodal map, with every kNN-graph edge as a spring. Edges are drawn for the selected gene only (while the layout moves, 177,000 lines would hide everything). Each frame runs as many simulation steps as fit in about 13 ms (at most 120 a second in every tab, so a re-heat or the sign switch plays out over about two seconds), so the page stays responsive at any size; the status line shows frames per second.</p>" +
+  "<h4>Controls</h4><ul><li><b>Drag a gene</b> to move it: its partners follow. <b>Double-click</b> a gene to pin or unpin it (a slow double-click works too: it pins the gene you clicked first). <b>Click</b> a gene to select it (after a short pause, in case a second click follows). Drag the background to pan; wheel or pinch to zoom.</li>" +
   "<li><b>Pause / Resume</b> (space bar), <b>Re-heat</b> (let it move again), <b>Reset</b> (start the layout again and unpin everything), <b>Fit</b> (show every gene).</li>" +
   "<li><b>Repulsion</b> and <b>Springs</b>: the strengths of the two forces. <b>Min |cos|</b>: weaker relations are not springs. <b>Evidence</b>: only relations replicated in both random halves of the compounds, or also those strong in one half.</li>" +
   "<li>Labels: the selected gene, its springs' partners and pinned genes; everyone when zoomed in (labels that would overlap are left out).</li></ul></div>";

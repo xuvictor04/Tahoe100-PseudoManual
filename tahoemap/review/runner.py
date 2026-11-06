@@ -3,40 +3,63 @@
     run(out, **options) -> RunResult      review the pending entities (see Options); RunResult.exit_code:
                                           0 finished (or stopped at --limit / --max-usd), 2 refused to start
                                           (no cap, bad option), 3 paused: no working API key (add one and run
-                                          again), 130 / 143 stopped by Ctrl-C / SIGTERM (run again to resume)
+                                          again), 4 stopped: the same error on SYSTEMATIC_N entities in a row (fix
+                                          the cause and run again), 129 / 130 / 143 stopped by SIGHUP / Ctrl-C /
+                                          SIGTERM (run again to resume)
     plan(out, kinds, only)                OUT/review/queue.parquet (entities in priority order, with their state)
                                           + counts and the projected cost
-    status(out, tables=False)             counts by status and kind, spend, projected cost of the rest, dead keys
+    status(out, tables=False)             counts by status and kind, spend, projected cost of the rest, dead keys,
+                                          reviews whose verification is incomplete, the run lock
     build_tables(out)                     OUT/review/connections.parquet and findings.parquet from the reviews
+                                          (with check_status and shown_verdict of every item)
     cli(a)                                `python -m tahoemap review plan|run|status|tables` (cli.py)
 
-The agent loop (docs/DESIGN-review-and-physics.md, Part 2, "Surface"): client.beta.messages.create with the agent's
-system prompt (agent + skills, cache_control), its tools (custom, strict, then web_search / web_fetch), output_config
-effort, adaptive thinking (thinking omitted), fallbacks="default" with the server-side-fallback-2026-07-01 beta, and
-top-level automatic caching. Each response.content is appended unchanged. stop_reason: tool_use -> our tools run and
-all results go back in one user message (a valid submit_review ends the loop); pause_turn -> resent as is; refusal ->
-status refused (stop_details.category); max_tokens -> one nudge (cut-off tool calls answered as not run); end_turn
-without a review -> one nudge, then no_review. The citation checker (verify.py) runs the same loop.
+The agent loop (docs/DESIGN-review-and-physics.md, Part 2, "Surface"): every request is streamed -
+client.beta.messages.stream(**kw) as a context manager, then get_final_message() - with the agent's system prompt
+(agent + skills, cache_control), its tools (custom, strict, then web_search / web_fetch), output_config effort,
+adaptive thinking (thinking omitted), fallbacks="default" with the server-side-fallback-2026-07-01 beta, top-level
+automatic caching, and max_tokens by effort (64K up to high, 128K at xhigh / max). Each non-empty response.content
+is appended unchanged (an empty one is never sent back). stop_reason: tool_use -> our tools run and all results go
+back in one user message (a valid submit_review ends the loop); pause_turn -> resent as is; refusal -> status
+refused (stop_details.category), except when stop_details.recommended_model is set (the fallback model was rate-
+limited or overloaded, so it was not tried): then the attempt is 'failed' (retried later) and the recommended model
+is logged; max_tokens -> a nudge (cut-off tool calls answered as not run; two cut-offs in a row end it); end_turn
+without a review -> a nudge (two in a row: no_review). Every user message after the dossier ends with a budget
+line - the spend and requests so far, and near the cap or max_turns a request to submit now - appended, never
+edited, so the cached prefix stays the same. The citation checker (verify.py) runs the same loop.
 
 Keys and errors (keys.py): a dead key (401, 402 / billing_error, 403, spend limit, organization on hold) ends the
-attempt as key_rotated and the entity restarts from the beginning with the next key; rate limits, overload, 5xx and
-network errors wait (after the SDK's own retries: exponential backoff with jitter up to 10 minutes, Retry-After
-honoured) and retry the same request; other errors fail the entity. With every key dead the run pauses: on a
-terminal it asks for a new key (getpass), else it stops with exit code 3 and the unfinished entities stay pending.
+attempt as key_rotated and the entity restarts from the beginning with the next key; rate limits, overload and 5xx
+wait (after the SDK's own retry: exponential backoff with jitter up to 10 minutes, Retry-After honoured, MAX_WAITS
+times) and retry the same request; a response lost to a timeout or a dropped connection is re-sent at most
+MAX_NET_RETRIES times, and when it may have reached the API it is charged an estimate (lost_cost: the context at the
+full input price plus the output of a long answer) to the attempt and the run, marked as estimated in the history
+and the ledger; an attempt that reaches its cap only through such estimates is 'failed' (retried later), not
+over_budget. Other errors fail the entity; the same error on SYSTEMATIC_N entities in a row stops the run (exit code 4)
+and those failures are not counted against the entities. With every key dead the run pauses: on a terminal the main
+thread asks for a new key (getpass; Enter or Ctrl-C there pauses, the terminal restored), else it stops with exit
+code 3 and the unfinished entities stay pending.
 
-Resume: the latest ledger line of an entity is its state. done and refused are final (unless --redo); failed and
-no_review are retried up to 2 more times; over_budget only with a higher per-entity cap; paused and key_rotated
-entities start again from the beginning. Nothing is redone that the ledger marks final.
+Stopping (Ctrl-C, SIGTERM, SIGHUP, `tahoe stop`, the --max-usd cap): no new entity starts; after STOP_GRACE seconds
+the running attempts are closed - a review already submitted is stored as done with its verification as far as it
+got (the rest marked not run), the others are paused. A response that arrives after its attempt was closed is still
+recorded (a late event in the history, a note line in the ledger).
+
+Resume: the latest ledger line of an entity is its state (bookkeeping 'note' lines aside). done and refused are
+final (unless --redo); failed and no_review are retried up to 2 more times (--retry-failed: again); over_budget only
+with a higher per-entity cap; paused and key_rotated entities start again from the beginning. --recheck runs only
+the verification a stored review lacks (ids that could not be looked up, a citation check that did not run).
 
 Models and effort: the agent files' (reviewers claude-opus-5-5 / high, checker claude-opus-5-5 / medium); --model and
 --effort set the reviewers, or per agent with AGENT=VALUE,... (gene, drug, line, checker, reviewers, all).
 
 Costs (USD; PRICES): from response.usage, per usage.iterations entry at that entry's model when present (a fallback
 model bills at its own price), cache writes at 1.25x input (2x for 1-hour entries), cache reads at the model's
-cache-read price (claude-opus-5-5: $0.20 per million, 0.05x input), web searches $0.01 each. --per-entity-usd caps
-one attempt (a request is not started once the attempt has spent it; the citation checker has its own cap, its
-agent's max_usd); --max-usd caps this run (no new entity starts and running ones pause once it is reached). Without
---max-usd or --limit the runner refuses to start unless --no-cap is given; it always prints the projected cost first.
+cache-read price (claude-opus-5-5: $0.20 per million, 0.05x input), web searches $0.01 each, plus the estimates of
+lost responses. --per-entity-usd caps one attempt (a request is not started once the attempt has spent it; the
+citation checker has its own cap, its agent's max_usd); --max-usd caps this run (no new entity starts and running
+ones pause once it is reached). Without --max-usd or --limit the runner refuses to start unless --no-cap is given;
+it always prints the projected cost first.
 
 Tests: `--fake SCRIPT` (fake.py) answers every request through the real SDK from a script, with no key and no
 network; tests/test_review.py drives every path above with it.
@@ -48,7 +71,9 @@ import json
 import os
 import random
 import signal
+import socket
 import subprocess
+import sys
 import threading
 import time
 import traceback
@@ -79,6 +104,7 @@ FINAL = ("done", "refused")
 MAX_FAILED = 3                      # failed / no_review attempts in a row before an entity is left alone
 MAX_WAITS = 12                      # back-offs of one request before the entity fails (~1 h at the 10-min cap)
 MAX_NET_RETRIES = 2                 # re-sends of a request lost to a timeout / dropped connection (after the SDK's own)
+LOST_OUT_MIN = 16_000               # output tokens a lost response is charged at least (see lost_cost)
 BACKOFF_BASE, BACKOFF_MAX = 5.0, 600.0
 STOP_GRACE = 15.0                   # seconds the running entities get to notice Ctrl-C before they are marked paused
 SYSTEMATIC_N = 5                    # the same error on this many entities in a row stops the run
@@ -435,6 +461,10 @@ class Run:
         """Called once per finished attempt: tracks the same error on entity after entity (keys_state#1)."""
         with self.lock:
             sig = att.fail_sig if status == "failed" else None
+            if self.systematic is not None:            # stopped: only the same error joins (to be uncounted)
+                if sig is not None and sig == self.systematic[0]:
+                    self.streak.append((sig, att.entity_id, rec))
+                return
             if sig is not None:
                 if self.streak and self.streak[-1][0] != sig:
                     self.streak = []
@@ -551,16 +581,19 @@ class _Failed(Exception):
 
 
 class Attempt:
-    """One try at one entity with one key: the conversation(s), its history file and its ledger line."""
+    """One try at one entity with one key: the conversation(s), its history file and its ledger line. With
+    recheck=True: only the verification a stored review lacks (`review run --recheck`), no reviewer."""
 
-    def __init__(self, run, ent, key, n):
+    def __init__(self, run, ent, key, n, recheck=False):
         self.run, self.ent, self.key, self.n = run, ent, key, n
         self.kind, self.name, self.entity_id = ent["kind"], ent["name"], ent["entity_id"]
         self.run_id = new_run_id()
         self.hist = History(run.out, self.kind, self.name, self.run_id)
         self.started = now()
         self.cost = 0.0
+        self.estimated = 0.0            # USD of it charged as estimates for responses lost on the way
         self.tok = Counter()
+        self.max_out = 0                # the largest output_tokens of a response of this attempt (lost_cost)
         self.n_requests = 0
         self.n_tool_calls = 0
         self.models = []
@@ -569,20 +602,51 @@ class Attempt:
         self.agent = run.agents[self.kind]
         self.cap = entity_cap(run.opts, self.agent)
         self.extra = {}
+        self.recheck = recheck
+        self.fail_sig = None            # the error of a failed attempt (the systematic-failure check)
+        self.pending = None             # once the review is submitted: pending(reason) stores it as done
 
     # -------------------------------------------------------------- bookkeeping
     def add(self, usd, summ, model):
         with self.lock:
             self.cost += usd
             self.tok.update(summ)
+            self.max_out = max(self.max_out, int(summ.get("output_tokens") or 0))
             self.n_requests += 1
             if model and model not in self.models:
                 self.models.append(model)
         self.run.add_spend(usd)
 
+    def add_estimate(self, usd):
+        """Charge the estimated cost of a lost response (it may have been billed) to the attempt and the run."""
+        with self.lock:
+            self.cost += usd
+            self.estimated += usd
+        self.run.add_spend(usd)
+
+    def record_response(self, agent, n, d, usd, summ):
+        """Count one response and put it in the history. A response that arrives after the attempt was closed (the
+        run stopped and marked it) still counts: a late event after the history's end, and a ledger note line."""
+        with self.lock:                                 # (finish() takes the same lock: counted once, in order)
+            late = self.finalized
+            self.add(usd, summ, d.get("model"))
+            if not late:
+                self.hist.event("response", agent=agent.name, n=n, response=d, usage=d.get("usage"),
+                                cost_usd=round(usd, 6), attempt_cost_usd=round(self.cost, 6))
+                return
+            self.hist.event("response", late=True, agent=agent.name, n=n, response=d, usage=d.get("usage"),
+                            cost_usd=round(usd, 6))
+        self.run.ledger.append({
+            "entity_id": self.entity_id, "kind": self.kind, "name": self.name, "run_id": self.run_id,
+            "agent": agent.name, "model": d.get("model"), "status": "note", "cost_usd": round(usd, 6),
+            "note": "a response that arrived after its attempt had been closed (the run was stopping)",
+            "late": True, "key_id": self.key.key_id, "finished": now(), "history": self.hist.rel,
+            **{k: int(v) for k, v in summ.items()}})
+
     def finish(self, status, error=None, store=None, **extra):
         """Write the ledger line and the history's end event, once (the first caller wins). `store` runs first,
-        under the same lock (the review files of a done attempt). Returns the status written, or None."""
+        under the same lock (the review files of a done attempt). Returns the status written, or None. A recheck
+        attempt writes 'done' or, for any other outcome, a ledger note (the entity stays done)."""
         with self.lock:
             if self.finalized:
                 return None
@@ -590,27 +654,44 @@ class Attempt:
             if store is not None:
                 store()
             err = K.scrub(error)[:2000] if error else None
+            written = status
+            if self.recheck and status != "done":
+                written = "note"
+                extra = dict(extra, note=f"recheck: {status}", recheck=True)
             rec = {"entity_id": self.entity_id, "kind": self.kind, "name": self.name, "run_id": self.run_id,
-                   "agent": self.agent.name, "model": self.agent.model, "status": status,
+                   "agent": self.agent.name, "model": self.agent.model, "status": written,
                    "cost_usd": round(self.cost, 6), "n_requests": self.n_requests, "n_tool_calls": self.n_tool_calls,
                    "key_id": self.key.key_id, "started": self.started, "finished": now(), "error": err,
                    "cap_usd": self.cap, "attempt": self.n, "served_models": list(self.models),
                    "history": self.hist.rel, **{k: int(self.tok.get(k, 0)) for k in (
                        "input_tokens", "output_tokens", "cache_creation_input_tokens", "cache_read_input_tokens",
                        "web_searches", "web_fetches")}}
+            if self.estimated:
+                rec["estimated_usd"] = round(self.estimated, 6)
             rec.update(self.extra)
             rec.update(extra)
             self.run.ledger.append(rec)
             self.hist.event("end", status=status, error=err, totals={
-                "cost_usd": round(self.cost, 6), "n_requests": self.n_requests, "n_tool_calls": self.n_tool_calls,
+                "cost_usd": round(self.cost, 6), "estimated_usd": round(self.estimated, 6),
+                "n_requests": self.n_requests, "n_tool_calls": self.n_tool_calls,
                 **{k: int(v) for k, v in self.tok.items()}}, **{k: v for k, v in extra.items()})
         with self.run.lock:
-            self.run.counts[status] += 1
+            self.run.counts[status if not self.recheck else f"recheck {status}"] += 1
             self.run.active.pop(self.entity_id, None)
+        if not self.recheck:
+            self.run.outcome(self, status, rec)
         if not self.run.opts.quiet:
-            log(f"  {self.entity_id} ({self.name}): {status}  {_fmt_usd(self.cost)}"
-                + (f"  [{err[:160]}]" if err and status != "done" else ""))
+            log(f"  {self.entity_id} ({self.name}): {'recheck ' if self.recheck else ''}{status}  "
+                f"{_fmt_usd(self.cost)}" + (f"  [{err[:160]}]" if err and status != "done" else ""))
         return status
+
+    def finish_pending(self, reason):
+        """The run is stopping and this attempt is still running: a submitted review is stored as done (with the
+        verification as far as it got; the rest is marked not run), a recheck leaves the stored review as it is,
+        anything else is paused (and starts again next run)."""
+        if self.pending is not None:
+            return self.pending(reason)
+        return self.finish("paused", error=reason)
 
     # -------------------------------------------------------------- the attempt
     def execute(self):
@@ -618,6 +699,7 @@ class Attempt:
         try:
             dos = D.build(r.out, self.kind, self.entity_id)
         except Exception as e:  # noqa: BLE001
+            self.fail_sig = ("dossier", type(e).__name__)
             return self.finish("failed", error=f"dossier: {type(e).__name__}: {e}")
         agent = self.agent
         kw = build_request(agent, r.opts.web, r.opts.web_max_uses)
@@ -638,43 +720,118 @@ class Attempt:
             return self.finish("key_rotated", error=_info_text(info))
         if status == "refused":
             return self.finish("refused", error=_info_text(info), refusal_category=info.get("category"))
+        if status == "refused_transient":           # the fallback model was busy: not final, retried later
+            log(f"  {self.entity_id}: refused ({info.get('category') or 'no category'}) while the fallback model "
+                f"was unavailable; it will be retried (recommended model: {info.get('recommended_model')})")
+            return self.finish("failed", error=_info_text(info), refusal_category=info.get("category"),
+                               recommended_model=info.get("recommended_model"), transient_refusal=True)
+        if status == "failed":
+            self.fail_sig = _signature(info)
         return self.finish(status, error=_info_text(info))
 
     def complete(self, dos, ctx):
-        """Verification, then the review JSON + note, then the ledger line."""
+        """Verification, then the review JSON + note, then the ledger line. From here on the attempt is stored as
+        done whatever happens: if the run stops (Ctrl-C, SIGTERM, SIGHUP, the --max-usd cap, no key left) before
+        the verification is finished, the review is stored with the verification as far as it got, the rest
+        marked not run (`review run --recheck` completes it later)."""
         r = self.run
-        review = ctx.submitted
         mode = r.opts.verify
-        report, llm = None, None
-        checked = review
-        if mode in ("ids", "llm"):
+        st = {"ids": (ctx.submitted, None), "llm": None}       # each entry replaced whole (read by another thread)
+        self.pending = lambda why: self.store_done(dos, ctx, st, mode, stopping=why)
+        if mode in ("ids", "llm") and not r.stop.is_set():
             try:
-                checked, report = V.check_ids(review, ctx)
+                st["ids"] = V.check_ids(ctx.submitted, ctx)
             except Exception as e:  # noqa: BLE001
-                report = {"error": K.scrub(f"{type(e).__name__}: {e}")}
-                self.hist.event("error", agent="verify", **{"class": type(e).__name__, "message": report["error"]})
+                err = K.scrub(f"{type(e).__name__}: {e}")
+                self.hist.event("error", agent="verify", **{"class": type(e).__name__, "message": err})
+                st["ids"] = (ctx.submitted, {"error": err})
         if mode == "llm" and not r.stop.is_set():
-            checked, llm = self.citation_check(checked, ctx)
+            st["llm"] = self.citation_check(st["ids"][0], ctx)
+        return self.store_done(dos, ctx, st, mode)
+
+    def store_done(self, dos, ctx, st, mode, stopping=None):
+        r = self.run
+        checked, report = st["ids"]
+        llm = None
+        if st["llm"] is not None:
+            checked, llm = st["llm"]
         elif mode == "llm":
-            llm = {"status": "not run: the run was stopping"}
-        final = dict(checked)
-        final["verification"] = {"mode": mode, "ids": report, "llm": llm, "counts": V.counts(checked)}
+            llm = {"status": "not run: " + (stopping or r.stop_reason or "the run was stopping")}
+        if mode in ("ids", "llm") and report is None:
+            report = {"error": "not run: " + (stopping or r.stop_reason or "the run was stopping")}
+        final = V.finalize(checked, mode, report, llm)
         final["meta"] = {
             "entity_id": self.entity_id, "kind": self.kind, "name": self.name, "agent": self.agent.name,
             "model": self.agent.model, "served_models": list(self.models), "effort": self.agent.effort,
             "checker_model": r.agents["checker"].model if mode == "llm" else None, "run_id": self.run_id,
             "key_id": self.key.key_id, "reviewed": now(), "cost_usd": round(self.cost, 6),
-            "tokens": {k: int(v) for k, v in self.tok.items()}, "n_requests": self.n_requests,
-            "n_tool_calls": self.n_tool_calls, "history": self.hist.rel, "dossier_sha256": dos.sha256,
-            "system_sha256": self.agent.system_sha256, "code_version": r.code,
+            "estimated_usd": round(self.estimated, 6), "tokens": {k: int(v) for k, v in self.tok.items()},
+            "n_requests": self.n_requests, "n_tool_calls": self.n_tool_calls, "history": self.hist.rel,
+            "dossier_sha256": dos.sha256, "system_sha256": self.agent.system_sha256, "code_version": r.code,
             "not_retrieved": list(ctx.notes.get("not_retrieved") or [])}
         paths = review_paths(r.out, self.kind, self.name)
 
         def store():
             write_json(final, paths["review"])
             D.write_text(paths["note"], final.get("note_markdown") or "")
-        check = (llm or {}).get("status") if mode == "llm" else mode
-        return self.finish("done", store=store, verify=mode, check_status=check,
+        ver = final["verification"]
+        return self.finish("done", store=store, verify=mode, check_status=ver["llm"]["status"] if mode == "llm"
+                           else ver["ids"]["status"] if mode == "ids" else "off",
+                           ids_status=ver_status(ver, "ids"), llm_status=ver_status(ver, "llm"),
+                           review=os.path.relpath(paths["review"], r.out).replace(os.sep, "/"),
+                           **({"stopped_during_verification": stopping} if stopping else {}))
+
+    def recheck_review(self):
+        """`review run --recheck`: the verification a stored review lacks - the id look-ups when they did not run
+        or could not reach PubMed / Crossref, and (with --verify llm) the citation check when it did not finish -
+        without running the reviewer again. The review JSON and note are rewritten; the ledger gets a done line
+        with the cost of the check."""
+        r = self.run
+        paths = review_paths(r.out, self.kind, self.name)
+        stored = read_json_safe(paths["review"])
+        if not isinstance(stored, dict):
+            return self.finish("failed", error="--recheck: the stored review is missing or unreadable")
+        self.pending = lambda why: self.finish("done", error=f"recheck stopped: {why}; the stored review is "
+                                               "unchanged", recheck=True, review_unchanged=True)
+        mode = r.opts.verify
+        ver0, meta0 = stored.get("verification") or {}, stored.get("meta") or {}
+        need_ids, need_llm = needs_recheck(stored, mode)
+        eff = "llm" if (mode == "llm" or ver_status(ver0, "llm") == "done") else "ids"
+        review = {k: v for k, v in stored.items() if k not in ("verification", "meta", "note_footer")}
+        ent = {"kind": self.kind, "name": self.name, "entity_id": self.entity_id}
+        ctx = TL.make_context(r.out, ent)
+        nr = set(meta0.get("not_retrieved") or [])
+        cited = {c for c, _s, _i in TL.cited_ids(review)}
+        ctx.read_ids |= {c for c in cited if c.startswith("PMID:") and c not in nr}
+        ctx.seen_ids |= {c for c in cited if c not in nr}
+        self.hist.event("start", agent="recheck", phase="recheck", entity=ent, key_id=self.key.key_id,
+                        code_version=r.code, verify=mode, review=os.path.relpath(paths["review"], r.out),
+                        ids=need_ids, llm=need_llm, previous={"ids": ver_status(ver0, "ids"),
+                                                             "llm": ver_status(ver0, "llm")})
+        checked, report = review, ver0.get("ids")
+        if need_ids:
+            try:
+                checked, report = V.check_ids(review, ctx)
+            except Exception as e:  # noqa: BLE001
+                report = {"error": K.scrub(f"{type(e).__name__}: {e}")}
+                self.hist.event("error", agent="verify", **{"class": type(e).__name__, "message": report["error"]})
+        llm = ver0.get("llm")
+        if need_llm and not r.stop.is_set():
+            checked, llm = self.citation_check(checked, ctx)
+        elif need_llm:
+            llm = {"status": "not run: " + (r.stop_reason or "the run was stopping")}
+        final = V.finalize(checked, eff, report, llm)
+        final["meta"] = dict(meta0, rechecked=now(), recheck_run_id=self.run_id, recheck_history=self.hist.rel,
+                             recheck_cost_usd=round(self.cost, 6),
+                             checker_model=r.agents["checker"].model if need_llm else meta0.get("checker_model"))
+
+        def store():
+            write_json(final, paths["review"])
+            D.write_text(paths["note"], final.get("note_markdown") or "")
+        ver = final["verification"]
+        return self.finish("done", store=store, verify=eff, recheck=True, check_status=ver["llm"]["status"]
+                           if eff == "llm" else ver["ids"]["status"], ids_status=ver_status(ver, "ids"),
+                           llm_status=ver_status(ver, "llm"),
                            review=os.path.relpath(paths["review"], r.out).replace(os.sep, "/"))
 
     def citation_check(self, checked, rctx):
@@ -710,14 +867,64 @@ class Attempt:
             try:
                 key = r.pool.current()
             except K.AllKeysDead:
-                r.keys_paused = True
+                if not r.stop.is_set():
+                    r.keys_paused = True
                 r.request_stop("no working API key")
                 return checked, {"status": "not run: no working API key"}
         if status == "submitted":
             out, summ = V.apply_check(checked, ctx.submitted)
             summ["status"] = "done"
             return out, summ
+        if status == "paused":
+            return checked, {"status": "not run: " + (_info_text(info) or "the run was stopping")}
         return checked, {"status": status, "error": _info_text(info)}
+
+
+def _signature(info):
+    """What makes two failures 'the same error' (the systematic-failure check)."""
+    return (str(info.get("class") or "?"), info.get("status"), str(info.get("type") or info.get("error_code") or ""))
+
+
+def ver_status(ver, what):
+    """The status (done | not_run | failed | partial) of the 'ids' or 'llm' step of a stored verification, also for
+    reviews stored by older versions."""
+    b = (ver or {}).get(what)
+    if not isinstance(b, dict) or not b:
+        return "not_run"
+    st = str(b.get("status") or "")
+    if what == "ids":
+        if b.get("error") or st == "failed":
+            return "failed"
+        if st == "not_run":
+            return "not_run"
+        u = b.get("unchecked")
+        return "partial" if (len(u) if isinstance(u, (list, tuple)) else int(u or 0)) else "done"
+    if st in ("done", "no claims cite a paper"):
+        return "done"
+    if not st or st.startswith(("not run", "not_run")):
+        return "not_run"
+    return "failed"
+
+
+def needs_recheck(review, mode):
+    """(ids, llm): which verification steps `review run --recheck --verify MODE` would run on a stored review."""
+    ver = (review or {}).get("verification") or {}
+    if mode not in ("ids", "llm"):
+        return False, False
+    return ver_status(ver, "ids") != "done", mode == "llm" and ver_status(ver, "llm") != "done"
+
+
+def recheck_pending(out, state, mode):
+    """True when a done entity's stored review lacks verification `--recheck --verify MODE` would run: from its
+    ledger line (ids_status / llm_status) when it has them, else from the review JSON."""
+    last = (state or {}).get("last") or {}
+    if (state or {}).get("status") != "done" or mode not in ("ids", "llm"):
+        return False
+    if "ids_status" in last and "llm_status" in last:
+        return last["ids_status"] != "done" or (mode == "llm" and last["llm_status"] != "done")
+    rel = last.get("review")
+    js = read_json_safe(os.path.join(out, rel)) if rel else None
+    return isinstance(js, dict) and any(needs_recheck(js, mode))
 
 
 def _info_text(info):
@@ -737,20 +944,72 @@ def review_paths(out, kind, name):
 
 
 # ----------------------------------------------------------------------------- the agent loop
-def call(att, agent, client, kw):
-    """One request, with the wait-class errors retried here (after the SDK's own retries). Raises _KeyDead,
-    _Failed or _Stopped."""
-    waits = 0
+def lost_cost(kw, sends=1, max_out=0):
+    """A conservative estimate (USD) of a response lost on the way (a timeout, a dropped connection, a stream cut
+    short), which may have been processed and billed: the whole context (~3 characters a token) at the full input
+    price (no cache discount) plus the output of a long answer - twice the longest answer of this attempt so far
+    (`max_out` tokens), at least LOST_OUT_MIN tokens (~6x a typical answer at effort high), at most max_tokens -
+    once per send that may have reached the API. (A stream is cut when the connection drops, so the full max_tokens
+    is not a likely bill.)"""
+    chars = sum(len(json.dumps(to_jsonable(kw.get(k)))) for k in ("system", "tools", "messages"))
+    tokens = chars / 3.0
+    pin, pout, _ = price(kw.get("model"), tokens)
+    out = min(int(kw.get("max_tokens") or 64_000), max(LOST_OUT_MIN, 2 * int(max_out or 0)))
+    return sends * (tokens * pin + out * pout) / 1e6
+
+
+def call(att, agent, client, kw, conv):
+    """One request, streamed (client.beta.messages.stream(**kw) as a context manager, then get_final_message(): no
+    HTTP timeout limits a long generation, and bytes keep flowing). Wait-class errors are retried here (after the
+    SDK's own retry): rate limits / overload / 5xx up to MAX_WAITS times, timeouts and dropped connections (a
+    'lost response') only MAX_NET_RETRIES times. A lost response that may have reached the API is charged an
+    estimate (lost_cost) to the attempt and the run, logged as estimated, and counted in conv["spent"] (and
+    conv["estimated"]) against the conversation's cap. Raises _KeyDead, _Failed, _OverBudget or _Stopped."""
+    waits = nets = 0
     while True:
+        opened = False
         try:
-            return client.beta.messages.create(**kw)
+            with client.beta.messages.stream(**kw) as stream:      # (the request is sent here)
+                opened = True
+                try:
+                    resp = stream.get_final_message()
+                except (AssertionError, RuntimeError) as e:        # no message_start, events out of order
+                    raise _StreamCut(f"the response stream broke off ({type(e).__name__})") from None
+            if resp is None or resp.stop_reason is None:
+                raise _StreamCut("the response stream ended before the message was complete")
+            return resp
         except Exception as e:  # noqa: BLE001  (classified below)
-            cat, info = K.classify(e)
+            if isinstance(e, _StreamCut):
+                cat, info = K.WAIT, {"class": "StreamCut", "status": None, "type": None, "message": str(e),
+                                     "network": True, "sent": True}
+            else:
+                cat, info = K.classify(e)
+            sends = 0
+            if opened:                                  # cut after the response had started: it was processed
+                info["phase"] = "stream"
+                sends = 1
+            elif info.get("network") and info.get("sent"):
+                sends = 1 + int(getattr(client, "max_retries", K.SDK_MAX_RETRIES) or 0)
+            est = 0.0
+            if sends:
+                est = lost_cost(kw, sends, att.max_out)
+                att.add_estimate(est)
+                conv["spent"] += est
+                conv["estimated"] += est
+                info["estimated_cost_usd"], info["estimated_sends"] = round(est, 6), sends
+            net = bool(info.get("network"))
+            used, limit = (nets, MAX_NET_RETRIES) if net else (waits, MAX_WAITS)
             act = {K.DEAD_KEY: "rotate the key and restart the entity", K.ENTITY: "fail the entity",
                    K.WAIT: "wait and retry"}[cat]
-            if cat == K.WAIT and waits >= MAX_WAITS:
-                act = f"fail the entity (still failing after {waits} waits)"
+            over = conv["spent"] >= conv["cap"]
+            if cat == K.WAIT and used >= limit:
+                act = f"fail the entity (still failing after {used} {'re-sends' if net else 'waits'})"
+            elif cat == K.WAIT and over:
+                act = "fail the attempt: with the estimated cost of lost responses it reached its cap"
             att.hist.event("error", agent=agent.name, category=cat, action=act, **info)
+            if est:
+                log(f"  {att.entity_id}: a response was lost ({info['class']}); charged an estimated "
+                    f"{_fmt_usd(est)} (it may have been billed)")
             if cat == K.DEAD_KEY:
                 raise _KeyDead(info) from None
             if cat == K.ENTITY:
@@ -758,13 +1017,23 @@ def call(att, agent, client, kw):
                     info["traceback"] = K.scrub("".join(traceback.format_exception(type(e), e, e.__traceback__,
                                                                                    limit=4)))[-3000:]
                 raise _Failed(info) from None
-            if waits >= MAX_WAITS:
+            if used >= limit:
                 raise _Failed(info) from None
-            waits += 1
-            delay = min(BACKOFF_MAX, BACKOFF_BASE * 2 ** (waits - 1)) * random.uniform(0.75, 1.25)
+            if over:
+                raise _OverBudget() from None
+            if att.run.cap_reached():
+                raise _Stopped(f"the total cap of this run (--max-usd {att.run.opts.max_usd}) was reached") from None
+            if net:
+                nets += 1
+            else:
+                waits += 1
+            k = waits + nets
+            delay = min(BACKOFF_MAX, BACKOFF_BASE * 2 ** (k - 1)) * random.uniform(0.75, 1.25)
             if info.get("retry_after"):
                 delay = max(delay, min(BACKOFF_MAX, float(info["retry_after"])))
             log(f"  {att.entity_id}: {info['class']} ({info.get('status') or 'network'}); waiting {delay:.0f} s "
+                f"({nets}/{MAX_NET_RETRIES} re-sends)" if net else
+                f"  {att.entity_id}: {info['class']} ({info.get('status') or 'network'}); waiting {delay:.0f} s "
                 f"({waits}/{MAX_WAITS})")
             if att.run.sleep(delay):
                 raise _Stopped() from None
@@ -815,24 +1084,51 @@ def _elided(msgs, elide):
     return out
 
 
+def _over_cap(conv, cap):
+    """(status, info) of a conversation that reached its cap: over_budget (final at this cap) when its own responses
+    cost that much; 'failed' (retried later, like other failures) when only the estimates of lost responses took it
+    there - a network problem, not the entity."""
+    real, est = conv["spent"] - conv.get("estimated", 0.0), conv.get("estimated", 0.0)
+    if est and real < cap:
+        return "failed", {"class": "LostResponses", "message": (
+            f"{_fmt_usd(real)} spent and {_fmt_usd(est)} estimated for responses lost on the way (timeouts, dropped "
+            f"connections) reached the cap of {_fmt_usd(cap)}; retried by a later run")}
+    return "over_budget", {"message": f"{_fmt_usd(conv['spent'])} spent" + (
+        f" ({_fmt_usd(est)} of it estimated for lost responses)" if est else "") + f"; the cap is {_fmt_usd(cap)}"}
+
+
+def budget_text(spent, cap, turns, max_turns, last_usd, tool):
+    """The line each user message ends with, so the agent knows its spend and requests (and wraps up in time)."""
+    t = BUDGET_LINE.format(spent=_fmt_usd(spent), cap=_fmt_usd(cap), turns=turns, max_turns=max_turns)
+    left = max_turns - turns
+    if left <= 1 or spent + last_usd >= cap:
+        t += BUDGET_LAST.format(tool=tool)
+    elif spent >= BUDGET_WARN * cap or left <= TURNS_WARN:
+        t += BUDGET_NEAR.format(tool=tool)
+    return t
+
+
 def converse(att, agent, client, kw, messages, ctx, cap, elide=None):
-    """The agent loop of one conversation -> (status, info). status: submitted | refused | no_review |
-    over_budget | paused | key_dead | failed. elide: {placeholder: text stored in the start event} for the
-    history's first request event."""
+    """The agent loop of one conversation -> (status, info). status: submitted | refused | refused_transient |
+    no_review | over_budget | paused | key_dead | failed. elide: {placeholder: text stored in the start event} for
+    the history's first request event. Every user message after the first ends with a budget line (spend and
+    requests so far; near the cap or max_turns it asks for the final call), appended - never edited - so the
+    cached prefix stays the same."""
     run = att.run
     tool = agent.submit_tool or "submit_review"
     what = "review" if tool == "submit_review" else "check"
-    spent = 0.0
+    conv = {"spent": 0.0, "cap": cap, "estimated": 0.0}
     logged = 0
     nudged = {"end": False, "max": False}
     turns = 0
+    last_usd = 0.0
     while True:
         if run.stop.is_set():
             return "paused", {"message": run.stop_reason or "stopped"}
         if run.cap_reached():
             return "paused", {"message": f"the total cap of this run (--max-usd {run.opts.max_usd}) was reached"}
-        if spent >= cap:
-            return "over_budget", {"message": f"{_fmt_usd(spent)} spent; the cap is {_fmt_usd(cap)}"}
+        if conv["spent"] >= cap:
+            return _over_cap(conv, cap)
         if turns >= agent.max_turns:
             return "no_review", {"message": f"{agent.max_turns} requests (max_turns) without a {what}"}
         if logged == 0 and elide:
@@ -842,52 +1138,64 @@ def converse(att, agent, client, kw, messages, ctx, cap, elide=None):
             att.hist.event("request", agent=agent.name, n=turns + 1, messages=_serialize(messages[logged:]))
         logged = len(messages)
         try:
-            resp = call(att, agent, client, dict(kw, messages=messages))
+            resp = call(att, agent, client, dict(kw, messages=messages), conv)
         except _KeyDead as e:
             return "key_dead", e.info
         except _Failed as e:
             return "failed", e.info
-        except _Stopped:
-            return "paused", {"message": run.stop_reason or "stopped"}
+        except _OverBudget:
+            return _over_cap(conv, cap)
+        except _Stopped as e:
+            return "paused", {"message": e.message or run.stop_reason or "stopped"}
         turns += 1
         d = resp.to_dict(mode="json")
         usd, summ = usage_cost(d.get("usage") or {}, kw["model"], d.get("model"))
-        spent += usd
-        att.add(usd, summ, d.get("model"))
-        att.hist.event("response", agent=agent.name, n=turns, response=d, usage=d.get("usage"), cost_usd=round(usd, 6),
-                       attempt_cost_usd=round(att.cost, 6))
-        messages.append({"role": "assistant", "content": resp.content})
+        conv["spent"] += usd
+        last_usd = usd
+        att.record_response(agent, turns, d, usd, summ)
+        if resp.content:                               # never an empty assistant turn (the API rejects it)
+            messages.append({"role": "assistant", "content": resp.content})
         sr = resp.stop_reason
         uses = [b for b in resp.content if getattr(b, "type", None) == "tool_use"]
+        if sr != "max_tokens":
+            nudged["max"] = False                      # only cut-offs in a row end the conversation
         if sr == "refusal":
             sd = resp.stop_details
-            return "refused", {"category": getattr(sd, "category", None),
-                               "explanation": getattr(sd, "explanation", None),
-                               "message": f"refused ({getattr(sd, 'category', None) or 'no category'})"}
+            cat, rm = getattr(sd, "category", None), getattr(sd, "recommended_model", None)
+            info = {"category": cat, "explanation": getattr(sd, "explanation", None), "recommended_model": rm,
+                    "message": f"refused ({cat or 'no category'})"}
+            if rm:                                     # the fallback model was rate-limited / overloaded: transient
+                info["message"] += (f"; the fallback model was unavailable, so it was not tried (a retry may "
+                                    f"succeed; recommended model: {rm})")
+                return "refused_transient", info
+            return "refused", info
         if sr == "pause_turn":
             continue                                   # resend as is: the server resumes its tool loop
+        budget = budget_text(conv["spent"], cap, turns, agent.max_turns, last_usd, tool)
         if sr == "max_tokens":
             if nudged["max"]:
-                return "no_review", {"message": f"cut off at max_tokens twice without a {what}"}
+                return "no_review", {"message": f"cut off at max_tokens twice in a row without a {what}"}
             nudged["max"] = True
             content = [{"type": "tool_result", "tool_use_id": b.id, "is_error": True,
                         "content": "Not run: your response was cut off at the output limit, so this call may be "
                                    "incomplete. Call it again if you still need it."} for b in uses]
             cut = f" (the {len(uses)} tool call(s) in it were not run)" if uses else ""
-            content.append({"type": "text", "text": NUDGE_MAX.format(cut=cut, tool=tool)})
+            content.append({"type": "text", "text": NUDGE_MAX.format(cut=cut, tool=tool) + "\n\n" + budget})
             messages.append({"role": "user", "content": content})
             continue
         if uses:                                       # tool_use (also if a tool call came with another reason)
             results = run_tools(att, agent, resp, ctx)
-            messages.append({"role": "user", "content": results})
+            nudged["end"] = False
             if ctx.submitted is not None:
+                messages.append({"role": "user", "content": results})
                 return "submitted", {}
+            messages.append({"role": "user", "content": results + [{"type": "text", "text": budget}]})
             continue
         if nudged["end"]:
             return "no_review", {"message": f"ended its turn twice without calling {tool}"}
-        nudged["end"] = True
-        messages.append({"role": "user", "content": [{"type": "text",
-                                                      "text": NUDGE_END.format(tool=tool, what=what)}]})
+        nudged["end"] = True                           # (after an empty response: a second user turn in a row,
+        messages.append({"role": "user", "content": [  # which the API joins to the one before)
+            {"type": "text", "text": NUDGE_END.format(tool=tool, what=what) + "\n\n" + budget}]})
 
 
 # ----------------------------------------------------------------------------- the run
@@ -902,7 +1210,9 @@ def _make_pool(out, opts, fake):
 
 
 class _RunLock:
-    """OUT/review/.run.lock: one review run per output folder at a time."""
+    """OUT/review/.run.lock: one review run per output folder at a time. It holds the pid, the host and the start
+    time of the process; a lock whose process is gone (or whose pid now belongs to a younger process) is stale and
+    removed - on POSIX and on Windows."""
 
     def __init__(self, out):
         self.path = os.path.join(review_dir(out), ".run.lock")
@@ -913,17 +1223,15 @@ class _RunLock:
             try:
                 fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
                 with os.fdopen(fd, "w") as fh:
-                    json.dump({"pid": os.getpid(), "started": now()}, fh)
+                    json.dump({"pid": os.getpid(), "host": socket.gethostname(), "started": now(),
+                               "process_start": _proc_start(os.getpid())}, fh)
                 self.held = True
                 return True, ""
             except FileExistsError:
-                try:
-                    with open(self.path, encoding="utf-8") as fh:
-                        pid = int(json.load(fh).get("pid"))
-                except (OSError, ValueError, TypeError, AttributeError):
-                    pid = None
-                if pid and pid != os.getpid() and _alive(pid):
-                    return False, f"another review run (pid {pid}) is working on this output"
+                alive, who = lock_state(self.path)
+                if alive:
+                    return False, (f"another review run ({who}) is working on this output (lock file {self.path}; "
+                                   "if you are sure no review run is going on, delete that file)")
                 try:
                     os.remove(self.path)                # stale: its process is gone
                 except OSError:
@@ -939,19 +1247,107 @@ class _RunLock:
             self.held = False
 
 
-def _alive(pid):
-    if os.name != "posix":
-        return True
+def lock_state(path):
+    """(alive, description) of a review/.run.lock: alive unless its process is certainly gone."""
     try:
-        os.kill(pid, 0)
-        return True
-    except ProcessLookupError:
+        with open(path, encoding="utf-8") as fh:
+            rec = json.load(fh)
+        pid = int(rec.get("pid"))
+    except (OSError, ValueError, TypeError, AttributeError):
+        return False, "unreadable lock"
+    host = rec.get("host")
+    who = f"pid {pid}" + (f" on {host}" if host else "") + (f", started {rec['started']}" if rec.get("started") else "")
+    if host and host != socket.gethostname():
+        return True, who + " (another computer: its process cannot be checked from here)"
+    if pid == os.getpid() or not _alive(pid):
+        return False, who
+    t0, t1 = rec.get("process_start"), _proc_start(pid)
+    if isinstance(t0, (int, float)) and t1 is not None and abs(t1 - t0) > 2.0:
+        return False, who + " (that pid is now another process)"
+    return True, who
+
+
+def _proc_start(pid):
+    """The start time (epoch seconds) of process pid, where it can be told (psutil, Linux /proc, Windows); else
+    None."""
+    try:
+        import psutil
+        return float(psutil.Process(pid).create_time())
+    except Exception:  # noqa: BLE001  (not installed, no such process, no access)
+        pass
+    if sys.platform.startswith("linux"):
+        try:
+            with open(f"/proc/{pid}/stat", encoding="utf-8") as fh:
+                ticks = int(fh.read().rsplit(")", 1)[1].split()[19])
+            with open("/proc/stat", encoding="utf-8") as fh:
+                btime = next(int(x.split()[1]) for x in fh if x.startswith("btime"))
+            return round(btime + ticks / os.sysconf("SC_CLK_TCK"), 2)
+        except (OSError, ValueError, IndexError, StopIteration):
+            return None
+    if os.name == "nt":
+        try:
+            import ctypes
+            from ctypes import wintypes
+            k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            k32.OpenProcess.restype = wintypes.HANDLE
+            k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+            h = k32.OpenProcess(0x1000, False, pid)                     # PROCESS_QUERY_LIMITED_INFORMATION
+            if not h:
+                return None
+            try:
+                ft = [wintypes.FILETIME() for _ in range(4)]
+                if not k32.GetProcessTimes(h, *(ctypes.byref(f) for f in ft)):
+                    return None
+                t = (ft[0].dwHighDateTime << 32) | ft[0].dwLowDateTime    # 100-ns ticks since 1601
+                return round(t / 1e7 - 11644473600.0, 2)
+            finally:
+                k32.CloseHandle(h)
+        except Exception:  # noqa: BLE001
+            return None
+    return None
+
+
+def _alive(pid):
+    """False when process pid is certainly gone (POSIX: kill 0; Windows: OpenProcess / GetExitCodeProcess, or
+    psutil when installed); True when it runs or cannot be told."""
+    if pid <= 0:
         return False
-    except PermissionError:
+    if os.name == "posix":
+        try:
+            os.kill(pid, 0)
+            return True
+        except ProcessLookupError:
+            return False
+        except OSError:                                 # PermissionError: it exists (another user's)
+            return True
+    try:
+        import psutil
+        return bool(psutil.pid_exists(pid))
+    except ImportError:
+        pass
+    try:
+        import ctypes
+        from ctypes import wintypes
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        k32.OpenProcess.restype = wintypes.HANDLE
+        k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        h = k32.OpenProcess(0x1000, False, pid)                         # PROCESS_QUERY_LIMITED_INFORMATION
+        if not h:
+            return ctypes.get_last_error() == 5                         # ERROR_ACCESS_DENIED: it exists
+        try:
+            code = wintypes.DWORD()
+            if not k32.GetExitCodeProcess(h, ctypes.byref(code)):
+                return True
+            return code.value == 259                                    # STILL_ACTIVE
+        finally:
+            k32.CloseHandle(h)
+    except Exception:  # noqa: BLE001  (cannot tell: assume it runs; the message names the lock file)
         return True
 
 
 def _install_signals(run):
+    """Ctrl-C (SIGINT), SIGTERM and, where it exists, SIGHUP (the terminal closed) stop the run cleanly. Ctrl-C at
+    the key prompt interrupts it (getpass restores the terminal) and the run pauses."""
     if threading.current_thread() is not threading.main_thread():
         return {}
     old = {}
@@ -962,7 +1358,10 @@ def _install_signals(run):
             raise KeyboardInterrupt                     # a second Ctrl-C: stop waiting
         run.request_stop(f"stopped by {name}", signum)
         log(f"{name}: no new entities start; the running ones are paused (Ctrl-C again to stop at once)")
-    for s in (signal.SIGINT, signal.SIGTERM):
+        if run.pool.prompting_here():
+            raise KeyboardInterrupt                     # out of getpass (it restores the terminal): the prompt stops
+    sigs = [signal.SIGINT, signal.SIGTERM] + ([signal.SIGHUP] if hasattr(signal, "SIGHUP") else [])
+    for s in sigs:
         try:
             old[s] = signal.signal(s, handler)
         except (ValueError, OSError):
@@ -985,42 +1384,77 @@ def _load_fake(fake):
     return F.load(fake) if isinstance(fake, str) else fake
 
 
+def _say(*a):
+    """print(), scrubbed of anything shaped like a key, and quiet when the console is gone (SIGHUP, closed pipe)."""
+    try:
+        print(*(K.scrub(x) for x in a), flush=True)
+    except (OSError, ValueError):
+        pass
+
+
+def recheck_cost(agents):
+    """Projected USD of one --recheck (one citation-checker conversation)."""
+    c = agents["checker"]
+    cin, cout, _ = price(c.model, EST_CHECK_IN)
+    return (EST_CHECK_IN * CACHE_WRITE_5M * cin + EST_CHECK_OUT * cout) / 1e6
+
+
 def run(out, **kw):
     """Review the pending entities of OUT (see the module docstring and Options)."""
     opts = Options(**kw)
     out = os.path.abspath(out)
-    say = (lambda *a: None) if opts.quiet else print
+    say = (lambda *a: None) if opts.quiet else _say
     try:
         opts.kinds = parse_kinds(opts.kinds)
         if opts.verify not in ("llm", "ids", "off"):
             raise ValueError("--verify must be llm, ids or off")
         if int(opts.concurrency) < 1:
             raise ValueError("--concurrency must be at least 1")
+        if opts.recheck and (opts.verify == "off" or opts.dry_run or opts.redo):
+            raise ValueError("--recheck re-runs the verification of stored reviews: it goes with --verify llm or "
+                             "ids, not with --verify off, --dry-run or --redo")
         agents = load_agents(opts)
         sel = select(out, opts.kinds, opts.only)
     except (ValueError, FileNotFoundError) as e:
         say(f"review run: {e}")
-        return RunResult(EXIT_REFUSED, message=str(e))
+        return RunResult(EXIT_REFUSED, message=K.scrub(e))
     ledger = Ledger(out)
     states = ledger.states()
-    todo = []
+    todo, left_failed = [], 0
     for r in sel.to_dict("records"):
-        ok, _why = to_run(states.get(r["entity_id"]), opts.redo, entity_cap(opts, agents[r["kind"]]))
+        s = states.get(r["entity_id"])
+        if opts.recheck:
+            if recheck_pending(out, s, opts.verify):
+                todo.append(r)
+            continue
+        ok, _why = to_run(s, opts.redo, entity_cap(opts, agents[r["kind"]]), opts.retry_failed)
         if ok:
             todo.append(r)
+        elif s and s["status"] in ("failed", "no_review"):
+            left_failed += 1
     if opts.limit and opts.limit > 0:
         todo = todo[:int(opts.limit)]
     by_kind = Counter(r["kind"] for r in todo)
-    proj = projection(out, pd.DataFrame(todo) if todo else sel.head(0), states, agents, opts)
-    est = sum(proj[k][0] * n for k, n in by_kind.items() if k in proj)
-    say(f"{len(todo):,} entities to review " + "(" + ", ".join(f"{n:,} {k}s" for k, n in by_kind.items()) + ")"
-        + f" of {len(sel):,} selected; projected cost {_fmt_usd(est)}")
-    for k, (usd, basis) in proj.items():
-        if by_kind.get(k):
-            say(f"  {k}: ~{_fmt_usd(usd)} each ({basis})")
+    if opts.recheck:
+        est = recheck_cost(agents) * len(todo) if opts.verify == "llm" else 0.0
+        say(f"{len(todo):,} stored reviews to check again (--recheck --verify {opts.verify}: the verification they "
+            f"lack, not the review) of {len(sel):,} selected; projected cost {_fmt_usd(est)}")
+    else:
+        proj = projection(out, pd.DataFrame(todo) if todo else sel.head(0), states, agents, opts)
+        est = sum(proj[k][0] * n for k, n in by_kind.items() if k in proj)
+        say(f"{len(todo):,} entities to review " + "(" + ", ".join(f"{n:,} {k}s" for k, n in by_kind.items()) + ")"
+            + f" of {len(sel):,} selected; projected cost {_fmt_usd(est)}")
+        for k, (usd, basis) in proj.items():
+            if by_kind.get(k):
+                say(f"  {k}: ~{_fmt_usd(usd)} each ({basis})")
     if not todo:
-        say("Nothing to review: every selected entity is done (or left alone after repeated failures); --redo "
-            "reviews them again.")
+        if opts.recheck:
+            say(f"Nothing to check again: every selected stored review has its verification (--verify {opts.verify}).")
+        else:
+            say("Nothing to review: every selected entity is done (or left alone after repeated failures); --redo "
+                "reviews them again." + (f" Left alone after {MAX_FAILED} failed attempts: {left_failed:,} "
+                                         "(--retry-failed tries those again, and not the done ones)."
+                                         if left_failed else ""))
         build_tables(out)
         return RunResult(EXIT_OK, message="nothing to do")
     if opts.dry_run:
@@ -1045,9 +1479,9 @@ def run(out, **kw):
     try:
         try:
             pool = _make_pool(out, opts, fake)
-        except OSError as e:                            # --keys-file missing or unreadable
-            say(f"review run: {e}")
-            return RunResult(EXIT_REFUSED, message=str(e))
+        except (OSError, ValueError) as e:              # --keys-file missing, unreadable, or a key itself
+            say(f"review run: {K.scrub(e)}")
+            return RunResult(EXIT_REFUSED, message=K.scrub(e))
         rn = Run(out, opts, pool, agents, fake)
         pool.on_dead = rn.save_keys
         try:
@@ -1058,7 +1492,7 @@ def run(out, **kw):
             say(msg)
             rn.save_keys()
             return RunResult(EXIT_PAUSED, message=msg, paused=True)
-        res = _run_threads(rn, todo, states, say)
+        res = _run_threads(rn, todo, states, say, recheck=opts.recheck)
         if fake is not None:
             res.violations = list(fake.violations)
             log(f"Fake API: {len(fake.calls)} requests, "
@@ -1071,7 +1505,7 @@ def run(out, **kw):
             lit.uninstall()
 
 
-def _process(rn, ent, prior):
+def _process(rn, ent, prior, recheck=False):
     n = prior
     while True:
         if rn.stop.is_set():
@@ -1079,18 +1513,20 @@ def _process(rn, ent, prior):
         try:
             key = rn.pool.current()
         except K.AllKeysDead:
-            rn.keys_paused = True
+            if not rn.stop.is_set():
+                rn.keys_paused = True
             rn.request_stop("no working API key")
             return
         n += 1
-        att = Attempt(rn, ent, key, n)
+        att = Attempt(rn, ent, key, n, recheck=recheck)
         with rn.lock:
             rn.active[ent["entity_id"]] = att
         try:
-            status = att.execute()
+            status = att.recheck_review() if recheck else att.execute()
         except Exception as e:  # noqa: BLE001  (a bug: record it and go on with the next entity)
             tb = K.scrub("".join(traceback.format_exception(type(e), e, e.__traceback__, limit=6)))
             att.hist.event("error", agent=att.agent.name, **{"class": type(e).__name__, "message": tb[-3000:]})
+            att.fail_sig = ("bug", type(e).__name__)
             status = att.finish("failed", error=f"{type(e).__name__}: {e}")
         if status == "key_rotated":
             rn.pool.mark_dead(key, att.extra.get("dead_reason") or "dead key")
@@ -1098,7 +1534,7 @@ def _process(rn, ent, prior):
         return
 
 
-def _run_threads(rn, todo, states, say):
+def _run_threads(rn, todo, states, say, recheck=False):
     q = deque(todo)
     t0 = time.time()
 
@@ -1110,33 +1546,44 @@ def _run_threads(rn, todo, states, say):
                 ent = q.popleft()
                 rn.started += 1
             prior = (states.get(ent["entity_id"]) or {}).get("attempts", 0)
-            _process(rn, ent, prior)
+            _process(rn, ent, prior, recheck)
 
     n = max(1, min(int(rn.opts.concurrency), len(todo)))
-    log(f"Reviewing {len(todo):,} entities with {n} thread(s); keys: "
+    log(f"{'Checking again' if recheck else 'Reviewing'} {len(todo):,} entities with {n} thread(s); keys: "
         + ", ".join(f"{k['key_id']} ({k['source']})" for k in rn.pool.describe()))
     old = _install_signals(rn)
+    rn.pool.main_prompts = bool(old)                    # this (main) thread asks for a key when a worker needs one
     threads = [threading.Thread(target=worker, name=f"review-{i}", daemon=True) for i in range(n)]
     try:
         for t in threads:
             t.start()
+        deadline = None
         while any(t.is_alive() for t in threads):
+            rn.pool.serve_prompt()
             for t in threads:
-                t.join(0.2)
-            if rn.stop.is_set() and not rn.keys_paused:
-                deadline = time.time() + STOP_GRACE
-                while any(t.is_alive() for t in threads) and time.time() < deadline:
-                    for t in threads:
-                        t.join(0.2)
-                break
+                t.join(0.2 / len(threads))
+            if rn.stop.is_set():
+                deadline = deadline or time.time() + STOP_GRACE
+                if time.time() >= deadline:
+                    break
     except KeyboardInterrupt:
         rn.request_stop("stopped by Ctrl-C", signal.SIGINT)
     finally:
+        rn.pool.main_prompts = False
         _restore_signals(old)
     with rn.lock:
         running = list(rn.active.values())
-    for att in running:                                 # still in a request: paused, resumed by the next run
-        att.finish("paused", error=rn.stop_reason or "stopped")
+    for att in running:                                 # still running: submitted reviews stored, the rest paused
+        att.finish_pending(rn.stop_reason or "stopped")
+    if rn.systematic is not None:                       # those failures are the run's, not the entities': uncounted
+        with rn.lock:
+            streak = list(rn.streak)
+        for _sig, eid, rec in streak:
+            rn.ledger.append({"entity_id": eid, "kind": rec.get("kind"), "name": rec.get("name"),
+                              "run_id": rec.get("run_id"), "status": "note", "cost_usd": 0.0,
+                              "note": "systematic error: the run stopped; this failure is not counted against the "
+                                      "entity", "uncount_failed": True, "finished": now(),
+                              "error": rec.get("error")})
     rn.save_keys()
     try:
         n_conn, n_find = build_tables(rn.out)
@@ -1150,13 +1597,22 @@ def _run_threads(rn, todo, states, say):
                + f"; tables: {n_conn:,} connections, {n_find:,} findings")
     log(summary)
     res = RunResult(EXIT_OK, counts=c, spent_usd=rn.spent, started=rn.started, message=summary)
-    if rn.keys_paused:
+    if rn.systematic is not None:
+        sig, err = rn.systematic
+        res.exit_code, res.paused = EXIT_SYSTEMATIC, True
+        res.message = (f"STOPPED: the same error on {len(rn.streak)} entities in a row ({' '.join(map(str, sig))}): "
+                       f"{K.scrub(err)[:400]}. It is not about these entities: fix the cause (the model's "
+                       "availability to your organisation, a beta, the network ...) and run the same command again; "
+                       "these failures are not counted against the entities.")
+        log(res.message)
+    elif rn.keys_paused:
         res.exit_code, res.paused = EXIT_PAUSED, True
         res.message = (f"PAUSED: {rn.stop_reason}. The unfinished entities stay pending: add a key "
                        "(ANTHROPIC_API_KEY, ANTHROPIC_API_KEYS or --keys-file) and run the same command again.")
         log(res.message)
     elif rn.stop_signal is not None:
-        res.exit_code = EXIT_SIGTERM if rn.stop_signal == signal.SIGTERM else EXIT_SIGINT
+        res.exit_code = {signal.SIGTERM: EXIT_SIGTERM, getattr(signal, "SIGHUP", -1): EXIT_SIGHUP}.get(
+            rn.stop_signal, EXIT_SIGINT)
         res.paused = True
         res.message = f"Stopped ({rn.stop_reason}); run the same command again to resume."
         log(res.message)
@@ -1181,7 +1637,7 @@ def dry_run(out, todo, agents, opts, est, say):
         kw["messages"] = [{"role": "user", "content": dos.user_message()}]
         base = os.path.join(review_dir(out, "dry_run", k), safe_filename(dos.name))
         D.write_text(base + ".dossier.md", dos.text)
-        write_json({"call": "client.beta.messages.create", "agent": a.name, "entity_id": dos.entity_id,
+        write_json({"call": "client.beta.messages.stream", "agent": a.name, "entity_id": dos.entity_id,
                     "dossier_sha256": dos.sha256, "system_sha256": a.system_sha256, "request": kw},
                    base + ".request.json")
         rows.append({"entity_id": dos.entity_id, "kind": k, "name": dos.name, "agent": a.name, "model": a.model,
@@ -1263,10 +1719,18 @@ def status(out, tables=False, say=print, **kw):
         say(f"  ({len(extra)} reviewed entities are not in the queue: {', '.join(extra[:5])} ...)")
     rows = led.read()
     spend = Counter()
+    est = 0.0
     for r in rows:
         spend[r.get("kind") or "?"] += float(r.get("cost_usd") or 0.0)
-    say(f"Spent: {_fmt_usd(sum(spend.values()))} in {len(rows):,} attempts"
-        + (" (" + ", ".join(f"{k} {_fmt_usd(v)}" for k, v in sorted(spend.items())) + ")" if spend else ""))
+        est += float(r.get("estimated_usd") or 0.0)
+    n_att = sum(1 for r in rows if not r.get("note"))
+    say(f"Spent: {_fmt_usd(sum(spend.values()))} in {n_att:,} attempts"
+        + (" (" + ", ".join(f"{k} {_fmt_usd(v)}" for k, v in sorted(spend.items())) + ")" if spend else "")
+        + (f"; {_fmt_usd(est)} of it estimated for responses lost on the way" if est else ""))
+    open_usd = _unfinished_spend(out, rows)
+    if open_usd[0]:
+        say(f"  plus {_fmt_usd(open_usd[1])} in {open_usd[0]} attempt(s) without a ledger line (running now, or their "
+            "run was killed): in their history files only")
     pend = q[q["to_review"]]
     if len(pend):
         proj = projection(out, pend, states, agents, opts)
@@ -1281,12 +1745,39 @@ def status(out, tables=False, say=print, **kw):
         + (f"   (as of {ks.get('updated')})" if ks.get("updated") else ""))
     lp = os.path.join(out, "review", ".run.lock")
     if os.path.exists(lp):
-        say(f"A review run holds {lp} (if no run is going on, it is stale: the next run removes it)")
+        alive, who = lock_state(lp)
+        if alive:
+            say(f"A review run ({who}) holds {lp}; if you are sure none is going on, delete that file")
+        else:
+            say(f"{lp} is stale ({who}: that process is gone): the next run removes it (or delete it)")
+    rc = sum(1 for st in states.values() if recheck_pending(out, st, opts.verify))
+    if rc:
+        say(f"{rc:,} stored reviews lack part of their verification (--verify {opts.verify}): "
+            f"`review run --recheck --verify {opts.verify}` completes it without reviewing them again")
     if tables:
         n_c, n_f = build_tables(out)
         say(f"Tables: {n_c:,} connection verdicts -> review/connections.parquet, {n_f:,} findings -> "
             "review/findings.parquet")
     return q
+
+
+def _unfinished_spend(out, rows):
+    """(n, USD) of history files with responses but no end event and no ledger line (an attempt running now, or one
+    whose run was killed). Only the files the ledger does not name are read."""
+    known = {r.get("history") for r in rows}
+    n, usd = 0, 0.0
+    for f in glob.glob(os.path.join(out, "review", "history", "*", "*", "*.jsonl")):
+        rel = os.path.relpath(f, out).replace(os.sep, "/")
+        if rel in known:
+            continue
+        ev = read_jsonl(f)
+        if any(e.get("event") == "end" for e in ev):
+            continue
+        c = sum(float(e.get("cost_usd") or 0.0) for e in ev if e.get("event") == "response")
+        c += sum(float(e.get("estimated_cost_usd") or 0.0) for e in ev if e.get("event") == "error")
+        if c:
+            n, usd = n + 1, usd + c
+    return n, usd
 
 
 def read_json_safe(p):
@@ -1298,9 +1789,10 @@ def read_json_safe(p):
 
 
 CONN_COLS = ["entity_id", "kind", "name", "partner", "partner_kind", "partner_col", "verdict", "citations",
-             "n_citations", "check", "unverified", "model", "run_id", "reviewed"]
+             "n_citations", "check", "unverified", "check_status", "shown_verdict", "model", "run_id", "reviewed"]
 FIND_COLS = ["entity_id", "kind", "name", "section", "item", "title", "detail", "data_evidence", "confidence",
-             "source", "citations", "n_citations", "check", "unverified", "model", "run_id", "reviewed"]
+             "source", "citations", "n_citations", "check", "unverified", "check_status", "shown_verdict", "model",
+             "run_id", "reviewed"]
 SECTIONS = {"established": ("partner_or_topic", "relation", "data_evidence"),
             "unexpected": ("observation", "why_unexpected", "data_evidence"),
             "missing": ("expected_connection", "likely_reason", "data_status"),
@@ -1320,6 +1812,23 @@ def _gene_cols(out):
     return m
 
 
+def _annotated(review):
+    """A copy of a stored review with check_status / shown_verdict on its items (verify.annotate), for reviews
+    stored before those fields existed: their ids count as checked when the id check ran and reached the
+    services."""
+    import copy
+    r = copy.deepcopy(review)
+    ids = ((r.get("verification") or {}).get("ids") or {})
+    u = ids.get("unchecked")
+    n_un = len(u) if isinstance(u, (list, tuple)) else int(u or 0)
+    ok = bool(ids) and not ids.get("error") and not n_un
+    try:
+        V.annotate(r, ids_checked=True if ok else None)
+    except Exception:  # noqa: BLE001  (an older verify module, an odd file: the columns stay empty)
+        pass
+    return r
+
+
 def build_tables(out):
     """OUT/review/connections.parquet (one row per connection verdict) and findings.parquet (one row per item of
     established / unexpected / missing / contradicted, and per open question) from the stored reviews."""
@@ -1332,6 +1841,8 @@ def build_tables(out):
             if not isinstance(r, dict):
                 continue
             meta = r.get("meta") or {}
+            if any("check_status" not in it for it in r.get("connection_verdicts") or []):
+                r = _annotated(r)                      # a review stored before check_status existed
             base = {"entity_id": meta.get("entity_id"), "kind": kind, "name": meta.get("name"),
                     "model": meta.get("model"), "run_id": meta.get("run_id"), "reviewed": meta.get("reviewed")}
             for it in r.get("connection_verdicts") or []:
@@ -1346,7 +1857,8 @@ def build_tables(out):
                 conn.append({**base, "partner": p, "partner_kind": pk, "partner_col": pc,
                              "verdict": it.get("verdict"), "citations": ";".join(cits), "n_citations": len(cits),
                              "check": (it.get("check") or {}).get("verdict", ""),
-                             "unverified": bool(it.get("unverified"))})
+                             "unverified": bool(it.get("unverified")), "check_status": it.get("check_status") or "",
+                             "shown_verdict": it.get("shown_verdict") or it.get("verdict") or ""})
             for sec, (tk, dk, ek) in SECTIONS.items():
                 for i, it in enumerate(r.get(sec) or []):
                     cits = it.get("citations") or []
@@ -1357,11 +1869,13 @@ def build_tables(out):
                                  "data_evidence": it.get(ek, ""), "confidence": it.get("confidence", ""),
                                  "source": it.get("source", ""), "citations": ";".join(cits),
                                  "n_citations": len(cits), "check": (it.get("check") or {}).get("verdict", ""),
-                                 "unverified": bool(it.get("unverified"))})
+                                 "unverified": bool(it.get("unverified")),
+                                 "check_status": it.get("check_status") or "",
+                                 "shown_verdict": it.get("shown_verdict") or (sec if it.get("check_status") else "")})
             for i, qn in enumerate(r.get("open_questions") or []):
                 find.append({**base, "section": "open_questions", "item": i, "title": qn, "detail": "",
                              "data_evidence": "", "confidence": "", "source": "", "citations": "", "n_citations": 0,
-                             "check": "", "unverified": False})
+                             "check": "", "unverified": False, "check_status": "", "shown_verdict": ""})
     c = pd.DataFrame(conn, columns=CONN_COLS)
     c["partner_col"] = c["partner_col"].astype("Int64")
     write_parquet(c, os.path.join(review_dir(out), "connections.parquet"))
@@ -1381,10 +1895,10 @@ def cli(a):
     action = names[0] if names else "status"
     out = a.out
     if action not in ("plan", "run", "status", "tables"):
-        print(f"review: unknown action '{action}'; use plan, run, status or tables")
+        _say(f"review: unknown action '{action}'; use plan, run, status or tables")
         return EXIT_REFUSED
     if not os.path.isdir(os.path.join(out, "tables")):
-        print(f"review: {out} holds no finished run (no tables/ folder); give --out with a tahoemap output folder")
+        _say(f"review: {out} holds no finished run (no tables/ folder); give --out with a tahoemap output folder")
         return EXIT_REFUSED
     common = {"model": a.model, "effort": a.effort, "verify": a.verify, "web": a.web,
               "web_max_uses": a.web_max_uses, "per_entity_usd": a.per_entity_usd}
@@ -1401,10 +1915,16 @@ def cli(a):
                   f"{n_f:,} findings -> {os.path.join(out, 'review', 'findings.parquet')}")
             return EXIT_OK
     except (ValueError, FileNotFoundError) as e:
-        print(f"review {action}: {e}")
+        _say(f"review {action}: {e}")
         return EXIT_REFUSED
     from ..tlib import start_run_log
     start_run_log(os.path.join(review_dir(out), "review.log"), "tahoemap review run")
-    res = run(out, kinds=a.kinds, only=a.only, limit=a.limit, max_usd=a.max_usd, concurrency=a.concurrency,
-              keys_file=a.keys_file, redo=a.redo, dry_run=a.dry_run, fake=a.fake, no_cap=a.no_cap, **common)
+    try:
+        res = run(out, kinds=a.kinds, only=a.only, limit=a.limit, max_usd=a.max_usd, concurrency=a.concurrency,
+                  keys_file=a.keys_file, redo=a.redo, dry_run=a.dry_run, fake=a.fake, no_cap=a.no_cap,
+                  retry_failed=getattr(a, "retry_failed", False), recheck=getattr(a, "recheck", False), **common)
+    except KeyboardInterrupt:                  # a second Ctrl-C: stopped at once (the ledger has what finished)
+        _say("review run: stopped at once (second Ctrl-C). Finished reviews are kept; run the same command again to "
+             "resume.")
+        return EXIT_SIGINT
     return res.exit_code                       # (run() has said why)

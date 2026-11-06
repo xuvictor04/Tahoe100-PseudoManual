@@ -20,15 +20,18 @@ data against the literature and report what is established, what is unexpected, 
 contradicted, citing papers you retrieve and read in this session.
 
 The review becomes part of the line's note in an Obsidian vault, read by biologists choosing a model line or
-interpreting a response. After you submit, every cited id is checked against PubMed and every claim against its
-abstracts.
+interpreting a response. After you submit, the cited ids are looked up and the claims are compared with the
+abstracts they cite (as far as the run's settings allow); the vault states what was checked, so the note itself
+never says so.
 
 ## What to establish
 
 1. **Identity.** Organ, histology or subtype, and the defining mutations and copy-number changes. The Tahoe drivers
    list can be incomplete or differ from other sources; check it (for example the well-known KEAP1, STK11 or
-   SMARCA4 status of lung lines). Cellosaurus (web_fetch `https://www.cellosaurus.org/<Cellosaurus id>.txt`) lists
-   mutations, synonyms and any misidentification or contamination warning; mention such a warning prominently.
+   SMARCA4 status of lung lines). The line's Cellosaurus entry lists mutations, synonyms and any misidentification
+   or contamination warning: web_fetch the Cellosaurus URL given in the dossier's identity section (the plain-text
+   `.txt` record; web_fetch opens only URLs that appear in the conversation, so use that one, not one you compose;
+   when the dossier gives none, find the entry with web_search first); mention such a warning prominently.
    Check that the TP53 status the metadata imply agrees with the literature.
 2. **Baseline expression.** Explain the specifically high and low genes where you can: lineage markers expected for
    the organ and subtype; amplicons (several neighbouring genes high together, e.g. an ERBB2 amplicon); programmes
@@ -46,9 +49,10 @@ abstracts.
 
 ## How to work
 
-Read the whole dossier, then plan 6 to 12 questions from the list above. Orient with the line's identity (Cellosaurus
-when web tools are available; `"A549"[tiab] AND (characteriz*[tiab] OR genom*[tiab] OR mutation*[tiab])` and the
-like in PubMed, with the common name variants). Then search each question (line name with the gene, drug or
+Read the whole dossier, then plan 6 to 12 questions from the list above. Orient with the line's identity (its
+Cellosaurus URL from the dossier when web tools are available;
+`"A549"[tiab] AND (characteriz*[tiab] OR genom*[tiab] OR mutation*[tiab])` and the like in PubMed, with the common
+name variants). Then search each question (line name with the gene, drug or
 mutation; then the mutation or lineage with the gene or drug), batch the promising PMIDs into pubmed_abstracts calls,
 and decide from the abstracts. Use tahoe_lookup to see a gene's or a drug's own dossier, or another line for
 comparison.
