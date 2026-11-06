@@ -6,8 +6,9 @@
 #   tahoe              where things stand (= tahoe status)
 #   tahoe gene MDM2    which drugs raise / lower MDM2, in which cell lines, which genes move with it
 #
-# Folders: data = $TAHOE_DATA or ~/Tahoe-100M; output = $TAHOE_OUT or <data>/tahoemap; venv = $TAHOE_VENV or
-# ~/tahoe-venv. Windows: run `python -m tahoemap run --data C:\tahoe\Tahoe-100M` from this folder (see README.md).
+# Folders: data = --data DIR, else $TAHOE_DATA, else ~/Tahoe-100M; output = --out DIR, else $TAHOE_OUT, else
+# <data>/tahoemap; venv = $TAHOE_VENV or ~/tahoe-venv. --data / --out go with any command (give the same ones to
+# run, stop, log and the look-ups). Windows has no wrapper: see docs/quick-start.md.
 set -uo pipefail
 
 resolve() {                      # this script's real path, through symlinks (no readlink -f on macOS)
@@ -21,16 +22,42 @@ resolve() {                      # this script's real path, through symlinks (no
 }
 absolute() { case "$1" in /*) echo "$1" ;; "~"*) echo "$HOME${1#\~}" ;; *) echo "$PWD/$1" ;; esac; }
 
+# --data / --out on the command line (`--out DIR` or `--out=DIR`, anywhere) choose this command's folders, and so the
+# job's pid file and console log; every other argument is passed on unchanged.
+DATA_ARG="" OUT_ARG="" ARGS=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --data|--out)
+      [ $# -ge 2 ] || { printf 'tahoe: %s needs a folder\n' "$1" >&2; exit 1; }
+      if [ "$1" = --data ]; then DATA_ARG="$2"; else OUT_ARG="$2"; fi
+      shift 2 ;;
+    --data=*) DATA_ARG="${1#--data=}"; shift ;;
+    --out=*) OUT_ARG="${1#--out=}"; shift ;;
+    *) ARGS+=("$1"); shift ;;
+  esac
+done
+set -- ${ARGS[@]+"${ARGS[@]}"}
+
 SELF="$(resolve "${BASH_SOURCE[0]}")"
 REPO="$(dirname "$SELF")"
-DATA="$(absolute "${TAHOE_DATA:-$HOME/Tahoe-100M}")"
-OUT="$(absolute "${TAHOE_OUT:-$DATA/tahoemap}")"
+DATA="$(absolute "${DATA_ARG:-${TAHOE_DATA:-$HOME/Tahoe-100M}}")"
+if [ -n "$OUT_ARG" ]; then OUT="$(absolute "$OUT_ARG")"; else OUT="$(absolute "${TAHOE_OUT:-$DATA/tahoemap}")"; fi
 VENV="$(absolute "${TAHOE_VENV:-$HOME/tahoe-venv}")"
 PY="python3"
 [ -x "$VENV/bin/python" ] && PY="$VENV/bin/python"
-PIDF="$OUT/.job.pid"
+PIDF="$OUT/.job.pid"             # the job's pid; the job removes it when it ends (tahoemap/cli.py, JOB_PID)
 CONSOLE="$OUT/console.log"
 PKGS="numpy pandas pyarrow scipy scikit-learn networkx psutil huggingface_hub hf_xet brotli>=1.2.0"
+SAME=""                          # the folder options to repeat in the commands suggested to the user
+[ -n "$DATA_ARG" ] && SAME="$SAME --data $(printf %q "$DATA")"
+[ -n "$OUT_ARG" ] && SAME="$SAME --out $(printf %q "$OUT")"
+# A background job gets its own session (setsid) or process group (no setsid on macOS: Python's setpgrp, then exec),
+# keeping its pid, so `tahoe stop` reaches every worker and download it started.
+if command -v setsid >/dev/null 2>&1; then
+  LAUNCH=(setsid nohup)
+else
+  LAUNCH=(nohup "$PY" -c 'import os, sys; os.setpgrp(); os.execvp(sys.argv[1], sys.argv[1:])')
+fi
 
 say() { printf '%s\n' "$*"; }
 die() { printf 'tahoe: %s\n' "$*" >&2; exit 1; }
@@ -41,27 +68,43 @@ need_packages() {
     die "Python packages missing: run 'tahoe setup' first (or: $PY -m pip install $PKGS)"
 }
 
-job_pid() {                      # the running job's pid, if it is alive
+job_cmd() { ps -ww -p "$1" -o command= 2>/dev/null; }
+
+job_pid() {                      # the running job's pid: alive, and a tahoemap job or the download (not a reused pid)
   [ -f "$PIDF" ] || return 1
   local p
   p="$(cat "$PIDF" 2>/dev/null)"
-  [ -n "$p" ] && kill -0 "$p" 2>/dev/null && { echo "$p"; return 0; }
+  case "$p" in ''|*[!0-9]*) return 1 ;; esac
+  kill -0 "$p" 2>/dev/null || return 1
+  case "$(job_cmd "$p")" in *tahoemap*|*"hf download"*) echo "$p"; return 0 ;; esac
   return 1
 }
 
+streamed_build_unfinished() { [ -f "$OUT/hf/file_plates.json" ] && [ ! -f "$OUT/stages/build.json" ]; }
+
 start_job() {                    # run `python -m tahoemap ARGS` detached; its own log is $OUT/run.log
   local p
-  if p="$(job_pid)"; then die "a job is already running (pid $p): 'tahoe log' to watch it, 'tahoe stop' to stop it"; fi
+  if p="$(job_pid)"; then
+    die "a job is already running (pid $p): 'tahoe log$SAME' to watch it, 'tahoe stop$SAME' to stop it"
+  fi
   mkdir -p "$OUT"
   [ -f "$CONSOLE" ] && mv -f "$CONSOLE" "$CONSOLE.prev"
-  local launcher=(nohup)
-  command -v setsid >/dev/null 2>&1 && launcher=(setsid nohup)
-  (cd "$REPO" && "${launcher[@]}" "$PY" -m tahoemap "$@" --data "$DATA" --out "$OUT" </dev/null >"$CONSOLE" 2>&1 &
+  (cd "$REPO" || exit 1
+   export TAHOE_JOB=1
+   exec "${LAUNCH[@]}" "$PY" -m tahoemap "$@" --data "$DATA" --out "$OUT" </dev/null >"$CONSOLE" 2>&1 &
    echo $! >"$PIDF")
   sleep 2
   if p="$(job_pid)"; then
     say "Started (pid $p): tahoemap $*"
-    say "  follow it:  tahoe log        stop it:  tahoe stop        where things stand:  tahoe"
+    if [ -z "$SAME" ]; then
+      say "  follow it:  tahoe log        stop it:  tahoe stop        where things stand:  tahoe"
+    else
+      say "  follow it:           tahoe log$SAME"
+      say "  stop it:             tahoe stop$SAME"
+      say "  where things stand:  tahoe$SAME"
+    fi
+  elif grep -qs "Run done\|nothing to do" "$CONSOLE"; then
+    tail -n 3 "$CONSOLE"
   else
     say "The job ended at once. Its output:"
     tail -n 30 "$CONSOLE"
@@ -93,20 +136,24 @@ cmd_setup() {
 
 cmd_download() {                 # the expression files and the four small metadata tables (~338 GB)
   [ -x "$VENV/bin/hf" ] || die "run 'tahoe setup' first"
-  if job_pid >/dev/null; then die "a job is running; wait for it or 'tahoe stop'"; fi
+  if job_pid >/dev/null; then die "a job is running; wait for it or 'tahoe stop$SAME'"; fi
   mkdir -p "$DATA" "$OUT"
   df -hP "$DATA" | tail -1 | awk '{print "Free space at " $6 ": " $4 " (the download needs ~340 GB; or use: tahoe run --stream)"}'
-  local launcher=(nohup)
-  command -v setsid >/dev/null 2>&1 && launcher=(setsid nohup)
-  ("${launcher[@]}" env PATH="$VENV/bin:$PATH" bash -c '
+  # the last line of download.log says how it ended (DOWNLOAD DONE / FAILED; tahoe stop adds STOPPED)
+  ("${LAUNCH[@]}" env PATH="$VENV/bin:$PATH" bash -c '
+     ok=1
      for i in 1 2 3; do
        hf download tahoebio/Tahoe-100M --repo-type dataset --local-dir "$0" \
          --include "data/*.parquet" --include "metadata/gene_metadata.parquet" \
          --include "metadata/sample_metadata.parquet" --include "metadata/cell_line_metadata.parquet" \
-         --include "metadata/drug_metadata.parquet" && exit 0
+         --include "metadata/drug_metadata.parquet" && { ok=0; break; }
        sleep 10
-     done; exit 1' "$DATA" </dev/null >"$OUT/download.log" 2>&1 & echo $! >"$PIDF")
-  say "Downloading into $DATA in the background (resumes if restarted). Log: tahoe log download"
+     done
+     if [ $ok = 0 ]; then echo "DOWNLOAD DONE $(date "+%Y-%m-%d %H:%M:%S")"
+     else echo "DOWNLOAD FAILED after 3 tries $(date "+%Y-%m-%d %H:%M:%S")"; fi
+     [ "$(cat "$1" 2>/dev/null)" = "$$" ] && rm -f "$1"
+     exit $ok' "$DATA" "$PIDF" </dev/null >"$OUT/download.log" 2>&1 & echo $! >"$PIDF")
+  say "Downloading into $DATA in the background (resumes if restarted). Log: tahoe log download$SAME"
 }
 
 cmd_log() {
@@ -119,26 +166,60 @@ cmd_log() {
 }
 
 cmd_stop() {
-  local p
-  p="$(job_pid)" || { say "Nothing is running."; return 0; }
-  say "Stopping pid $p (finished stages are kept; 'tahoe run' continues from there) ..."
-  kill -TERM -- "-$p" 2>/dev/null || kill -TERM "$p"
-  for _ in $(seq 1 15); do kill -0 "$p" 2>/dev/null || break; sleep 1; done
-  kill -0 "$p" 2>/dev/null && { kill -KILL -- "-$p" 2>/dev/null || kill -KILL "$p"; }
-  echo "[$(date +%H:%M:%S)] STOPPED by tahoe stop" >>"$OUT/run.log"
+  local p g kind=job log="$OUT/run.log"
+  p="$(job_pid)" || { rm -f "$PIDF"; say "Nothing is running."; return 0; }
+  case "$(job_cmd "$p")" in *"hf download"*) kind=download; log="$OUT/download.log" ;; esac
+  g="$(ps -o pgid= -p "$p" 2>/dev/null | tr -d ' ')"
+  local target=("$p")
+  [ "$g" = "$p" ] && target=(-- "-$p")        # it leads its own process group: its workers and downloads too
+  alive() { kill -0 "${target[@]}" 2>/dev/null; }
+  say "Stopping the $kind (pid $p) ..."
+  kill -TERM "${target[@]}" 2>/dev/null
+  for _ in $(seq 1 15); do alive || break; sleep 1; done
+  if alive; then
+    kill -KILL "${target[@]}" 2>/dev/null
+    for _ in 1 2 3 4 5; do alive || break; sleep 1; done
+  fi
+  if alive; then
+    say "pid $p (or a process it started) is still running: try 'tahoe stop$SAME' again, or: kill -9 $p"
+    return 1
+  fi
+  if [ $kind = download ]; then
+    echo "DOWNLOAD STOPPED by tahoe stop $(date "+%Y-%m-%d %H:%M:%S")" >>"$log"
+    rm -f "$PIDF"
+    say "Stopped. 'tahoe download$SAME' resumes it."
+    return 0
+  fi
+  echo "[$(date +%H:%M:%S)] STOPPED by tahoe stop" >>"$log"
   rm -f "$PIDF"
-  say "Stopped."
+  if streamed_build_unfinished; then
+    say "Stopped. Finished plates are kept: 'tahoe run$SAME' continues the streamed build (it keeps streaming," \
+        "as 'tahoe run --stream$SAME' does)."
+  else
+    say "Stopped. Finished stages are kept: 'tahoe run$SAME' continues from there."
+  fi
 }
 
 cmd_status() {
   need_packages
   local p
   if p="$(job_pid)"; then
-    say "Running (pid $p). Last lines of the log:"
-    tail -n 4 "$OUT/run.log" 2>/dev/null | sed 's/^/  /'
+    case "$(job_cmd "$p")" in
+      *"hf download"*) say "Downloading into $DATA (pid $p). Last lines of its log:"
+                       tail -n 4 "$OUT/download.log" 2>/dev/null | sed 's/^/  /' ;;
+      *) say "Running (pid $p). Last lines of the log:"
+         tail -n 4 "$OUT/run.log" 2>/dev/null | sed 's/^/  /' ;;
+    esac
     say ""
+  elif [ -f "$OUT/download.log" ]; then
+    case "$(tail -n 1 "$OUT/download.log" 2>/dev/null)" in
+      "DOWNLOAD FAILED"*|"DOWNLOAD STOPPED"*)
+        say "The download into $DATA did not finish ($(tail -n 1 "$OUT/download.log"));" \
+            "'tahoe download$SAME' resumes it."
+        say "" ;;
+    esac
   fi
-  tm status
+  tm status "$@"
 }
 
 cmd_test() {
@@ -149,9 +230,9 @@ cmd_test() {
 }
 
 cmd_update() {
-  if job_pid >/dev/null; then die "a job is running; wait for it or 'tahoe stop' first"; fi
+  if job_pid >/dev/null; then die "a job is running; wait for it or 'tahoe stop$SAME' first"; fi
   git -C "$REPO" pull --ff-only || die "git pull failed"
-  say "Updated. 'tahoe run' redoes only the stages whose method changed."
+  say "Updated. 'tahoe run' redoes the first stage whose method changed and every stage after it."
 }
 
 cmd_help() {
@@ -169,8 +250,10 @@ tahoe - every gene, drug and cell line of Tahoe-100M in one map
   update                newest scripts (git pull)
   <stage> [options]     one stage now, in the foreground: build effects tensor tables embed reference
                         relations graph validate vault map
-Folders: data $DATA   output $OUT   (set TAHOE_DATA / TAHOE_OUT to change)
+Folders: data $DATA   output $OUT
+  (change them with --data DIR / --out DIR on every command, or set TAHOE_DATA / TAHOE_OUT)
 Options go to python -m tahoemap (e.g. tahoe run --dims 96 --offline); see README.md.
+  run --from reference  fetch the public annotations again (a source that failed is retried by any run online)
 EOF
 }
 
@@ -178,7 +261,7 @@ main() {
   local c="${1:-status}"
   [ $# -gt 0 ] && shift
   case "$c" in
-    status|st) cmd_status ;;
+    status|st) cmd_status "$@" ;;
     run) need_packages; start_job run "$@" ;;
     setup|install) cmd_setup ;;
     download) cmd_download ;;

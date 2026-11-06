@@ -99,29 +99,27 @@ The gene × gene table ("relative to each gene") is `OUT/relations/gene_relation
 ## embed (OUT/embed/) — the vector space
 
 Contexts = (drug-dose, line) pairs of *active, trustworthy* drug-doses: not `unreliable plate only`,
-`position not correctable` or `wells disagree`, and n_sig_genes ≥ `--min-active` (default 10). Value = DDL_z
-clipped to ±8, NaN → 0. Genes included = not noise RNA and |z| ≥ 3 in ≥ `--min-responsive` (default 5) contexts.
-1. Broad components: SVD of X (genes × contexts); among the first 3, a component whose gene-component correlation
-   is |r| ≥ 0.3 for ≥ max(200, 5% of genes) genes is removed (atlas programs rule). Logged in
-   `broad_components.csv` (variance %, top genes, top drug-doses).
-2. Truncated randomized SVD (k = `--dims`, default 64; seed from `stable_seed("embed")`): X ≈ U Σ Vᵀ.
-   Gene vector a_g = U_g Σ^½; context vector b_j = V_j Σ^½, so X[g, j] ≈ a_g · b_j ("vector comparison reproduces
-   the observed activity"). Unit gene vectors û_g = a_g / |a_g| define the signed cosine.
-3. Drug-dose vectors for every drug-dose (active or not) by projection: v = Σ^-½ Uᵀ x, x = its pooled DD_z
-   column (clipped, NaN → 0) over included genes; per (drug-dose, line) likewise from DDL_z. Drug vector = its best
-   dose's vector.
-4. Line vectors: response sensitivity s_lk = slope (through 0) of b_(dd,l),k on the drug-dose's mean b_dd,k across
-   active drug-doses (1 = typical, 0 = that program does not respond in this line); baseline vector = projection of
-   the line's log2 baseline (line_cpm vs the median line) over included genes.
+`position not correctable` or `wells disagree`, and either n_sig_genes ≥ `--min-active` (default 10) or
+≥ `--min-active` genes at per-line |z| ≥ 5 in ≥ 2 lines. Value = DDL_z clipped to ±8, NaN → 0. Genes included = not
+noise RNA, |z| ≥ 3 in ≥ `--min-responsive` (default 5) contexts, AND a significant clean pooled drug-dose (q < 0.1,
+≥ 1.2×) or per-line |z| ≥ max(5, tables `line_z_threshold`) in ≥ 2 lines of one trustworthy drug-dose.
+1. Rows centred and scaled by max(own SD, median SD). Broad components: among the first 3 components, one whose
+   gene-component correlation is |r| ≥ 0.3 for ≥ max(200, 5% of genes) genes is removed (atlas programs rule).
+   Logged in `broad_components.csv`.
+2. Truncated randomized SVD (k = `--dims`, default 64; seed from `stable_seed`): X ≈ U S Vᵀ. Gene vector
+   g = U S (principal coordinates; cosine = correlation of denoised profiles); context vector c = V; X[g, j] ≈ g · c.
+3. Drug-dose vector for every drug-dose: d = S⁻¹ Uᵀ x, x = its pooled DD_z column standardised like X, over included
+   genes (g · d ≈ its z). Drug vector (for drug–drug cosine) = Uᵀ x of its best trustworthy dose.
+4. Line vectors: response sensitivity s_lk = slope (through 0) of the line's context vectors on the drug-doses' mean
+   over lines (1 = typical, 0 = no response); baseline vector = projection of the line's log2 baseline (line_cpm vs
+   the median line).
 5. Split halves: compounds (salt forms merged by `tlib.salt_base`) are dealt into two halves by
-   `stable_seed(salt_base) % 2`; steps 1-2 are repeated on each half's contexts → unit vectors per half.
-Files: `gene_vectors.npy` (gK × k f32; NaN rows for excluded genes), `gene_unit.npy`, `gene_unit_half1.npy`,
-`gene_unit_half2.npy`, `genes.parquet` (col, symbol, included, n_responsive_contexts, vector_norm,
-represented_fraction = |a_g|²... share of the gene's variance captured), `contexts.parquet` (j, dd, line index,
-drug, dose, cell_name), `context_vectors.npy`, `drugdose_vectors.npy` (Dn × k), `drug_vectors.npy` +
-`drugs.parquet`, `line_response_vectors.npy`, `line_baseline_vectors.npy`, `components.parquet` (k rows:
-variance_pct, top_pos_genes, top_neg_genes, top_pos_drugdoses, top_neg_drugdoses, most_sensitive_lines),
-`info.json` (k, n contexts, n genes, removed broad components, singular values).
+   `stable_seed("half", salt_base) % 2`; steps 1-2 are repeated on each half's contexts → unit vectors per half.
+Files: `gene_vectors.npy` (gK × k; NaN rows for excluded genes), `gene_unit.npy`, `gene_unit_half1/2.npy`,
+`genes.parquet` (col, symbol, included, n_responsive_contexts, vector_norm, represented_fraction),
+`contexts.parquet`, `context_vectors.npy`, `drugdose_vectors.npy` (Dn × k), `drug_vectors.npy` + `drugs.parquet`
+(trusted), `line_response_vectors.npy`, `line_baseline_vectors.npy`, `components.parquet`, `gene_row_mean/scale.npy`,
+`included_cols.npy`, `singular_values.npy`, `info.json`.
 
 ## reference (OUT/reference/) — public annotations, cached, optional
 
@@ -137,27 +135,31 @@ Match Tahoe genes by Ensembl id first, then symbol, then previous symbol; alias-
 
 ## relations (OUT/relations/) — gene × gene, "relative to each gene"
 
-Signed cosine of unit gene vectors (blockwise). For each included gene, the top 100 partners by |cos| with:
-cos, abs_cos, rank, z_gene (robust z of cos over all partners of that gene), cos_half1, cos_half2,
-reproducible (same sign in the full space and both halves and min |half cos| ≥ 0.2), fdr (sign-concordance
-estimate: for score t = min(|cos_half1|, |cos_half2|), FDR(t) = #pairs whose halves disagree in sign with score ≥ t
-/ #pairs that agree with score ≥ t, monotone), genomic flags (same_chrom, distance_bp, same_strand, locus = ≤ 50 kb,
-readthrough_risk = same strand ≤ 20 kb with the 5′ gene ≥ 8× more expressed), known flags (shared_gene_group,
-shared_pathway (Reactome set ≤ 300 genes or Hallmark), string_score), known (any), novel_candidate
-(reproducible, fdr ≤ 0.05, |cos| ≥ 0.5, not known, not locus). Files: `gene_relations.parquet` (col_a, symbol_a,
-col_b, symbol_b, …), `fdr_curve.csv`, `info.json`.
+Signed cosine of unit gene vectors (blockwise). For each included gene, the top 100 partners by |cos| with: cos,
+abs_cos, rank, z_gene (robust z of cos over all partners of that gene), cos_half1, cos_half2, fdr (sign-concordance:
+pairs selected in one half's space are scored in the other half; FDR(t) = (#disagreeing + 1) / #agreeing with
+|other-half cos| ≥ t, both directions pooled, monotone; a pair's fdr is read at t = min(|cos_half1|, |cos_half2|)),
+evidence ("both halves" = same sign in all three, min |half cos| ≥ 0.2 and fdr ≤ 0.10 — `reproducible`; "one half" =
+|cos| ≥ 0.5 in one random half only; else "not reproduced"), genomic flags (coords_known, same_chrom, distance_bp,
+same_strand, locus = ≤ 50 kb, readthrough_risk = same strand ≤ 20 kb with the 5′ gene ≥ 8× more expressed), known
+flags (shared_gene_group, shared_pathway (Reactome set ≤ 300 genes or Hallmark), string_score), known (any),
+both_annotated, novel_candidate (reproducible, fdr ≤ 0.05, |cos| ≥ 0.5, not known, not locus, both annotated and
+placed, and only when HGNC, Ensembl, STRING and Hallmark or Reactome loaded). Files: `gene_relations.parquet`,
+`fdr_curve.csv`, `info.json` (novel_assessed, novel_blocked_by).
 
 ## graph (OUT/graph/) — the nodal map
 
-Undirected kNN graph on |cos| (top 15 reproducible partners per gene, weight |cos|, sign kept as an attribute).
-Communities = Louvain (networkx, seed fixed, resolution 1.0); communities < 5 genes → module 0 (unassigned).
-Arms: within a module, the sign of each member's projection on the first principal direction of the members' unit
-vectors (+ / −). Layouts: `x, y` = nodal map = t-SNE (sklearn, metric precomputed on the sparse top-90 |cos|
-neighbour distances 1 − |cos|, init spectral) — genes doing opposite things in one pathway land together;
-`xs, ys` = signed map = the same on the top-90 by signed cos (distance 1 − cos) — opposite genes land apart.
-Files: `nodes.parquet` (col, symbol, module, arm, x, y, xs, ys, degree), `edges.parquet` (col_a, col_b, cos, sign),
-`modules.parquet` (module, n_genes, n_plus, n_minus, top_plus, top_minus, centroid x/y, top drugs up/down by mean
-z of the + arm minus the − arm, most responsive lines), `info.json`.
+Undirected kNN graph: each gene's 15 strongest partners by |cos| ≥ 0.3 with evidence "both halves", or "one half"
+with |cos| ≥ 0.5 (weight |cos|, sign kept). Communities = Louvain (networkx, seed fixed, resolution 1.0); < 5 genes →
+module 0 (unassigned). Arms: the sign of each member's projection on the module's first principal direction; a "−"
+arm is kept only with ≥ 5 members and a mean cosine between the sides ≤ −0.2 (`arms_opposite`), else all members are
+"+". Layouts: `x, y` = nodal map = t-SNE (sklearn, precomputed sparse top-90 |cos| neighbour distances 1 − |cos|,
+PCA-based init) — genes doing opposite things in one pathway land together; `xs, ys` = signed map = the same on the
+top-90 by signed cos (1 − cos) — opposite genes land apart. Module scores = mean z of the + arm minus the − arm.
+Files: `nodes.parquet` (col, symbol, module, arm, axis_proj, x, y, xs, ys, degree), `edges.parquet`,
+`modules.parquet` (module, n_genes, n_plus, n_minus, top_plus, top_minus, centroids, drugs_up/down,
+responsive_lines, mean_cos_within_plus/minus, mean_cos_between_arms, arms_opposite), `module_scores.npy`
+(modules × drug-doses × lines), `module_pooled_z.npy` (modules × drug-doses), `info.json`.
 
 ## validate (OUT/validation/)
 

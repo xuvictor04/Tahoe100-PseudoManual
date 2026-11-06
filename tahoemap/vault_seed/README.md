@@ -60,3 +60,10 @@ sentences that only made sense inside it were rephrased, and numbers that come f
 earlier MG53/p53 study". Where a transcription-factor fragment discusses a "regulon" or an "inferred activity", it
 refers to target-set activity inference used in that study; tahoemap does not compute transcription-factor
 activities.
+
+So that a reader of the vault cannot take such a sentence for a result of this run, `tahoe vault` puts a callout
+("Written for the earlier MG53/p53 study ...: its score / rank / regulon refer to that study's analysis, which
+tahoemap does not compute") above every fragment whose text matches `regulon`, `activity score`, `rank` (the word),
+`this batch`, `the association` or `MG53` (case-insensitive; `vault.OLD_STUDY_RE`), and the vault's "How to read"
+note says so. A fragment rewritten so that it no longer leans on that study's analysis loses the callout on the next
+build.

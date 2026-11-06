@@ -46,7 +46,7 @@ opposite directions (e.g. 40 genes raised and 25 lowered by the same three HDAC 
 | mean cosine within each module | 0.76 / 0.67 | 0.67 / 0.74 | 0.72 / 0.75 |
 | mean cosine **between** the two modules | **−0.70** | **−0.70** | **−0.73** |
 | same nodal-map module? arms | yes, + / − | yes, − / + | yes, − / + |
-| centre-to-centre distance, nodal map (in map widths) | **0.04** | **0.02** | **0.01** |
+| centre-to-centre distance, nodal map (in map spreads, √(var x + var y)) | **0.04** | **0.02** | **0.01** |
 | centre-to-centre distance, signed map | **2.80** | **1.48** | **1.28** |
 
 Random gene pairs have a mean cosine of +0.01. So: anti-aligned in the vector space, one island on the nodal map.
@@ -79,4 +79,7 @@ Drugs, drug-doses, every drug-dose × cell-line context and every cell line get 
   a repressed arm), but it can also mean two pathways that the same drugs push in opposite directions.
 - t-SNE layouts preserve neighbourhoods, not long distances: two islands far apart on the nodal map are "not
   neighbours", not "maximally different". Use the cosine (`tahoe pair A B`) for any quantitative question.
-- Genes that barely respond to any drug are not in the space (they still have tables and notes).
+- Genes without evidence of a response (no significant clean pooled drug-dose and no strong per-line response in
+  two lines of one drug-dose) are not in the space; they still have tables and notes, which say why.
+- A module's − arm exists only when its two sides really anti-correlate; `graph/modules.parquet` gives the mean
+  cosine between the arms, and the vault says when a module is single-armed.

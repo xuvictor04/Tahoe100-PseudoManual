@@ -1,7 +1,13 @@
 """embed - one vector space for genes, drug-doses, drug-dose x cell-line contexts and cell lines.
 
 Every gene is described by how it moves across perturbations: its per-line z (tensor DDL_z) in every
-(drug-dose, cell line) context of an active, trustworthy drug-dose. That matrix X (genes x contexts) is factorised,
+(drug-dose, cell line) context of an active, trustworthy drug-dose (not 'unreliable plate only', 'position not
+correctable' or 'wells disagree'; active = >= min_active significant genes pooled over lines, OR >= min_active genes
+at per-line |z| >= 5 in >= 2 lines, so a response confined to a few lines enters too). A gene enters the space only
+if it reaches |z| >= 3 in >= min_responsive of these contexts AND has real evidence of a response: a significant
+clean pooled drug-dose (the atlas's q < 0.1 and >= 1.2x, BH within the gene), or a per-line |z| >= max(5, the
+tables stage's calibrated per-line cut) in >= 2 lines of one trustworthy drug-dose. At full scale almost every
+expressed gene reaches a fixed count of |z| >= 3 contexts by chance alone, so the count is not enough. That matrix X (genes x contexts) is factorised,
 X ~ U S V', after removing the broad components that make every gene look related (global toxicity / shutdown axes;
 the atlas's "programs" rule). Then, in one k-dimensional space:
 
@@ -10,6 +16,8 @@ the atlas's "programs" rule). Then, in one k-dimensional space:
     context vector       c = V            (one per drug-dose x line)
     drug-dose vector     d = S^-1 U' x    (x = its pooled z profile, standardised like X; also for drug-doses that
                                            were not used to fit the space)
+    drug vector          U' x = S d       (of the drug's best trustworthy dose; principal coordinates, for
+                                           drug-drug cosine)
     predicted z          g . c  or  g . d (the dot product reproduces the observed activity)
     line vector          s_l[k] = how strongly component k responds in line l relative to the typical line
                                   (slope of the line's context vectors on the drug-doses' mean vectors)
@@ -34,8 +42,9 @@ from . import tlib as T
 from .common import (folder, log, read_effects_index, save_npy, stable_seed, stamp_stage, write_json,
                      write_parquet)
 
-VERSION = 1
+VERSION = 2
 UNTRUSTED = ("unreliable plate only", "position not correctable", "wells disagree")
+LINE_ACTIVE_Z = 5.0    # a drug-dose is also active when >= min_active genes reach this per-line |z| in >= 2 lines
 Z_CLIP = 8.0
 BROAD_R = 0.3          # a broad component: |gene-component r| >= this ...
 BROAD_FRAC = 0.05      # ... for >= this share of the genes (and >= BROAD_MIN genes), among the first BROAD_MAXPC
@@ -103,25 +112,62 @@ def run(out, dims=64, min_active=10, min_responsive=5, chunk=512, halves=True):
     DDL_z = np.load(os.path.join(out, "tensor", "DDL_z.npy"), mmap_mode="r")
     flags = dd["flags"].fillna("").astype(str)
     trusted = ~flags.apply(lambda f: any(u in f for u in UNTRUSTED)).to_numpy()
-    active = trusted & (dd["n_sig_genes"].to_numpy() >= min_active)
+    pooled_active = trusted & (dd["n_sig_genes"].to_numpy() >= min_active)
+    noise = genes["symbol"].astype(str).str.match(A.NOISE_RNA_RE).to_numpy()[:gK]
+
+    # pass 1 over every drug-dose: per gene x drug-dose, how many lines reach |z| >= 3 and |z| >= line_z; per
+    # drug-dose x line, how many genes reach |z| >= LINE_ACTIVE_Z (a response confined to a few lines)
+    line_z = LINE_ACTIVE_Z
+    tinfo = os.path.join(out, "tables", "info.json")
+    if os.path.exists(tinfo):                             # the calibrated per-line cut of the tables stage
+        import json
+        with open(tinfo, encoding="utf-8") as fh:
+            line_z = max(line_z, float(json.load(fh).get("line_z_threshold", line_z) or line_z))
+    hit = np.zeros((gK, Dn), dtype=np.int16)
+    strong = np.zeros((gK, Dn), dtype=np.int16)
+    line_hits = np.zeros((Dn, L), dtype=np.int64)
+    for g0 in range(0, gK, chunk):
+        Z = np.abs(np.nan_to_num(np.asarray(DDL_z[g0:g0 + chunk], dtype=np.float32)))   # chunk x Dn x L
+        hit[g0:g0 + chunk] = (Z >= 3).sum(axis=2)
+        strong[g0:g0 + chunk] = (Z >= line_z).sum(axis=2)
+        line_hits += (Z >= LINE_ACTIVE_Z).sum(axis=0)
+    line_active = trusted & ((line_hits >= min_active).sum(axis=1) >= 2)
+    active = pooled_active | line_active
     dsel = np.flatnonzero(active)
     if dsel.size < 5:                                     # tiny runs: fall back to every trusted drug-dose
         dsel = np.flatnonzero(trusted)
-    log(f"Embed: {dsel.size:,} active trustworthy drug-doses (of {Dn:,}) x {L} lines as contexts")
-    noise = genes["symbol"].astype(str).str.match(A.NOISE_RNA_RE).to_numpy()[:gK]
+    log(f"Embed: {dsel.size:,} active trustworthy drug-doses (of {Dn:,}; {int((line_active & ~pooled_active).sum())} "
+        f"of them active only in single lines) x {L} lines as contexts")
 
-    # pass 1: responsiveness of every gene, and which contexts carry data
-    n_resp = np.zeros(gK, dtype=np.int64)
+    # a gene enters the space only if it really responds: a fixed count of |z| >= 3 contexts is reached by chance by
+    # almost every expressed gene at full scale, so it also needs a significant clean pooled drug-dose (the atlas's
+    # BH within the gene), or a strong per-line response (|z| >= line_z) in >= 2 lines of one trustworthy drug-dose
+    n_resp = hit[:, dsel].sum(axis=1).astype(np.int64)
+    qup = np.load(os.path.join(fxd, "DD_qup.npy"), mmap_mode="r")
+    qdn = np.load(os.path.join(fxd, "DD_qdn.npy"), mmap_mode="r")
+    lfc = np.load(os.path.join(fxd, "DD_lfc.npy"), mmap_mode="r")
+    clean = ~flags.apply(A.has_artifact).to_numpy()
+    sig = np.zeros(gK, dtype=bool)
+    for g0 in range(0, gK, 4096):
+        g1 = min(gK, g0 + 4096)
+        u = (np.asarray(qup[:, g0:g1]) < A.Q_CUT) & (np.asarray(lfc[:, g0:g1]) >= A.LFC_MIN)
+        d_ = (np.asarray(qdn[:, g0:g1]) < A.Q_CUT) & (np.asarray(lfc[:, g0:g1]) <= -A.LFC_MIN)
+        sig[g0:g1] = ((u | d_) & clean[:, None]).any(axis=0)
+    line_resp = ((strong >= 2) & trusted[None, :]).any(axis=1)
+    evidence_ok = sig | line_resp
+    by_chance = (n_resp >= min_responsive) & ~evidence_ok
+    gsel = np.flatnonzero((n_resp >= min_responsive) & evidence_ok & ~noise)
+    del hit, strong
     ctx_fin = np.zeros(dsel.size * L, dtype=np.int64)
     for g0 in range(0, gK, chunk):
         Z = np.asarray(DDL_z[g0:g0 + chunk][:, dsel, :], dtype=np.float32).reshape(-1, dsel.size * L)
-        n_resp[g0:g0 + chunk] = (np.abs(Z) >= 3).sum(axis=1)
         ctx_fin += np.isfinite(Z).sum(axis=0)
-    gsel = np.flatnonzero((n_resp >= min_responsive) & ~noise)
     cmask = ctx_fin >= max(10, 0.2 * gK)
     cidx = np.flatnonzero(cmask)
-    log(f"  {gsel.size:,} responsive genes (|z| >= 3 in >= {min_responsive} contexts, no noise RNAs) of {gK:,}; "
-        f"{cidx.size:,} contexts with data")
+    log(f"  {gsel.size:,} responsive genes of {gK:,} (|z| >= 3 in >= {min_responsive} contexts, and a significant "
+        f"clean pooled drug-dose ({int((sig & ~noise).sum()):,} genes) or per-line |z| >= {line_z:g} in >= 2 lines of "
+        f"one drug-dose ({int((line_resp & ~noise).sum()):,})); {int(by_chance.sum()):,} reached the count without "
+        f"either; {cidx.size:,} contexts with data")
     if gsel.size < 10 or cidx.size < 10:
         raise SystemExit("embed: too few responsive genes or contexts to build a vector space")
 
@@ -238,13 +284,15 @@ def run(out, dims=64, min_active=10, min_responsive=5, chunk=512, halves=True):
     write_parquet(ddt, os.path.join(ed, "drugdoses.parquet"))
 
     # one vector per drug: its best dose (most significant genes; tie -> higher dose)
-    dd2 = dd.assign(dd=np.arange(Dn), conc_num=pd.to_numeric(dd["conc"], errors="coerce").fillna(0))
-    best = dd2.sort_values(["drug", "n_sig_genes", "conc_num"], ascending=[True, False, False]) \
+    # one vector per drug: its best trustworthy dose (most significant genes; tie -> higher dose), in principal
+    # coordinates (U'x = S d), which weight the components by their size: these are for drug-drug cosine
+    dd2 = dd.assign(dd=np.arange(Dn), conc_num=pd.to_numeric(dd["conc"], errors="coerce").fillna(0),
+                    trusted=trusted, untrusted=~trusted)
+    best = dd2.sort_values(["drug", "untrusted", "n_sig_genes", "conc_num"], ascending=[True, True, False, False]) \
         .drop_duplicates("drug").sort_values("drug")
-    save_npy(os.path.join(ed, "drug_vectors.npy"), dvec[best["dd"].to_numpy()].astype(np.float32))
-    write_parquet(best[["drug", "dose", "dd", "n_sig_genes", "moa_fine", "targets"]].reset_index(drop=True)
-                  if {"moa_fine", "targets"} <= set(best.columns) else best[["drug", "dose", "dd", "n_sig_genes"]]
-                  .reset_index(drop=True), os.path.join(ed, "drugs.parquet"))
+    save_npy(os.path.join(ed, "drug_vectors.npy"), (dvec[best["dd"].to_numpy()] * S[None, :]).astype(np.float32))
+    cols_ = [c for c in ("drug", "dose", "dd", "n_sig_genes", "trusted", "moa_fine", "targets") if c in best.columns]
+    write_parquet(best[cols_].reset_index(drop=True), os.path.join(ed, "drugs.parquet"))
 
     # components: what each axis is
     comp = []
@@ -265,10 +313,16 @@ def run(out, dims=64, min_active=10, min_responsive=5, chunk=512, halves=True):
     info = {"version": VERSION, "dims": k, "genes_included": int(gsel.size), "genes_total": gK,
             "contexts": int(cidx.size), "drugdoses_active": int(dsel.size), "drugdoses_total": Dn, "lines": L,
             "min_active": min_active, "min_responsive": min_responsive, "z_clip": Z_CLIP,
+            "drugdoses_active_pooled": int(pooled_active.sum()), "drugdoses_active_lines_only":
+                int((line_active & ~pooled_active).sum()), "line_active_z": LINE_ACTIVE_Z,
+            "line_z_responsive": line_z, "n_genes_significant_pooled": int((sig & ~noise).sum()),
+            "n_genes_line_responsive": int((line_resp & ~noise).sum()),
+            "n_genes_excluded_chance": int(by_chance.sum()),
             "broad_removed": [int(j) + 1 for j in removed], "halves": bool(halves),
             "variance_captured_pct": round(captured, 2),
             "singular_values": [float(s) for s in S], "minutes": round((time.time() - t0) / 60, 2),
-            "model": "X ~ U S V'; gene g = U S; context c = V; drug-dose d = S^-1 U' x; predicted z = g . c"}
+            "model": "X ~ U S V'; gene g = U S; context c = V; drug-dose d = S^-1 U' x; predicted z = g . c or "
+                     "g . d (in standardised units); drug_vectors = U' x of the best trustworthy dose (cosine)"}
     write_json(info, os.path.join(ed, "info.json"))
     save_npy(os.path.join(ed, "gene_row_mean.npy"), mu.astype(np.float32))
     save_npy(os.path.join(ed, "gene_row_scale.npy"), sc.astype(np.float32))

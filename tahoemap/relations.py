@@ -7,21 +7,25 @@ For every gene in the vector space (embed stage) the 100 partners with the large
   z_gene         that cosine as a robust z against all of this gene's partners (a gene with a broad response
                  has many moderate cosines; z says how exceptional this partner is for this gene)
   cos_half1/2    the same cosine in the two spaces fitted on two disjoint halves of the compounds
-  evidence       "both halves"     same sign in the full space and in both halves, min |half cos| >= 0.2
-                 "one half"        strong (>= 0.5) in one half only: the driving compounds sit in one half
-                                   (a relation seen with one drug family; real, but not replicated across drugs)
-                 "not reproduced"  otherwise
   fdr            sign-concordance false discovery rate. Pairs are selected in one half's space and their sign is
                  checked in the other half, whose noise is independent: under no relation the sign agrees half the
-                 time, so FDR(t) = #disagreeing / #agreeing pairs with |other-half cos| >= t (both directions pooled,
-                 made monotone). A pair's fdr is read at t = min(|cos_half1|, |cos_half2|) (conservative).
+                 time, so FDR(t) = (#disagreeing + 1) / #agreeing pairs with |other-half cos| >= t (both directions
+                 pooled, made monotone). A pair's fdr is read at t = min(|cos_half1|, |cos_half2|) (conservative).
+  evidence       "both halves"     same sign in the full space and in both halves, min |half cos| >= 0.2, AND
+                                   fdr <= 0.10: replicated across two disjoint, random halves of the compounds
+                 "one half"        strong (|cos| >= 0.5) in one of the two random halves only (the halves are a
+                                   hash split of compound names): not replicated, no error estimate. Often a
+                                   response driven by a single compound.
+                 "not reproduced"  otherwise
   genomic flags  same chromosome, gap in bp, same strand, locus (<= 50 kb apart), readthrough_risk (same strand,
                  <= 20 kb, the 5' gene >= 8x more expressed: transcription running past the 5' gene is counted as
                  the 3' gene's mRNA, so the pair correlates without any regulation)
   known flags    shared HGNC gene group, shared pathway (Hallmark, or a Reactome pathway of <= 300 genes),
                  STRING combined score (>= 400 kept)
-  novel_candidate  evidence "both halves", fdr <= 0.05, |cos| >= 0.5, not known, not the same locus, and both
-                 genes have a registry (HGNC) record (for an undescribed gene "not known" means nothing)
+  novel_candidate  evidence "both halves", fdr <= 0.05, |cos| >= 0.5, not known, not the same locus, both genes
+                 have a registry (HGNC) record and coordinates (for an undescribed or unplaced gene "not known" and
+                 "not the same locus" mean nothing), and only when the sources that define "known" loaded (HGNC,
+                 Ensembl, STRING, and Hallmark or Reactome); otherwise info.json says which were missing.
 
 Without the reference stage the genomic and known flags are empty and nothing is called novel.
 """
@@ -35,9 +39,10 @@ import pandas as pd
 
 from .common import folder, log, stamp_stage, write_csv, write_json, write_parquet
 
-VERSION = 1
+VERSION = 2
 TOP = 100
 REPRO_MIN = 0.2
+REPRO_FDR = 0.10
 ONE_HALF = 0.5
 NOVEL_COS = 0.5
 NOVEL_FDR = 0.05
@@ -91,7 +96,7 @@ def _fdr_curve(U1, U2, top):
     grid = np.round(np.arange(0.0, 1.0001, 0.01), 2)
     n_ag = np.array([(agree & (s >= t)).sum() for t in grid], dtype=float)
     n_dis = np.array([(~agree & (s >= t)).sum() for t in grid], dtype=float)
-    raw = np.minimum(1.0, np.where(n_ag > 0, n_dis / np.maximum(n_ag, 1), 1.0))
+    raw = np.minimum(1.0, np.where(n_ag > 0, (n_dis + 1) / np.maximum(n_ag, 1), 1.0))   # +1: target-decoy
     # a pair passing threshold t is also called at every lower threshold: its q is the smallest FDR over t' <= t
     fdr = np.minimum.accumulate(raw)
     return pd.DataFrame({"t": grid, "pairs_agree": n_ag.astype(int), "pairs_disagree": n_dis.astype(int),
@@ -133,6 +138,22 @@ def _set_index(sets, gK):
     return groups, paths, names
 
 
+NOVEL_SOURCES = (("hgnc",), ("ensembl",), ("string_links",), ("string_info",), ("hallmark", "reactome"))
+
+
+def _missing_sources(out):
+    """The sources that define 'known' and 'same locus' and did not load (empty list: novelty can be assessed)."""
+    import json
+    p = os.path.join(out, "reference", "sources.json")
+    try:
+        with open(p, encoding="utf-8") as fh:
+            st = {k: (v or {}).get("status", "") for k, v in json.load(fh).get("sources", {}).items()}
+    except (OSError, ValueError):
+        return ["reference/sources.json"]
+    ok = {k for k, v in st.items() if v in ("cached", "downloaded")}
+    return [" or ".join(alts) for alts in NOVEL_SOURCES if not any(a in ok for a in alts)]
+
+
 def run(out, top=TOP):
     t0 = time.time()
     warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -161,16 +182,18 @@ def run(out, top=TOP):
         h1 = _pair_cos(U1[a], U1[b])
         h2 = _pair_cos(U2[a], U2[b])
         rel["cos_half1"], rel["cos_half2"] = h1, h2
+        curve = _fdr_curve(U1, U2, min(top, 50))
+        write_csv(curve, os.path.join(rd, "fdr_curve.csv"))
+        agree = np.sign(h1) == np.sign(h2)
+        t = np.where(agree, np.minimum(np.abs(h1), np.abs(h2)), 0.0)
+        fdr = np.where(agree, np.interp(t, curve["t"].to_numpy(), curve["fdr"].to_numpy()), 1.0)
+        rel["fdr"] = fdr.astype(np.float32)
         sg = np.sign(cosv)
-        both = (np.sign(h1) == sg) & (np.sign(h2) == sg) & (np.minimum(np.abs(h1), np.abs(h2)) >= REPRO_MIN)
+        both = (np.sign(h1) == sg) & (np.sign(h2) == sg) & (np.minimum(np.abs(h1), np.abs(h2)) >= REPRO_MIN) & \
+            (fdr <= REPRO_FDR)
         one = ~both & (np.maximum(np.abs(h1), np.abs(h2)) >= ONE_HALF) & \
             (np.minimum(np.abs(h1), np.abs(h2)) < REPRO_MIN)
         rel["evidence"] = np.where(both, "both halves", np.where(one, "one half", "not reproduced"))
-        curve = _fdr_curve(U1, U2, min(top, 50))
-        write_csv(curve, os.path.join(rd, "fdr_curve.csv"))
-        t = np.where(np.sign(h1) == np.sign(h2), np.minimum(np.abs(h1), np.abs(h2)), 0.0)
-        fdr = np.interp(t, curve["t"].to_numpy(), curve["fdr"].to_numpy())
-        rel["fdr"] = np.where(np.sign(h1) == np.sign(h2), fdr, 1.0).astype(np.float32)
     else:
         rel["cos_half1"] = rel["cos_half2"] = np.nan
         rel["evidence"] = "not reproduced"
@@ -187,6 +210,7 @@ def run(out, top=TOP):
         same = (chrom[ca] == chrom[cb]) & (chrom[ca] != "nan") & (chrom[ca] != "None") & np.isfinite(st[ca]) \
             & np.isfinite(st[cb])
         gap = np.maximum(0, np.maximum(st[ca], st[cb]) - np.minimum(en[ca], en[cb]))
+        rel["coords_known"] = np.isfinite(st[ca]) & np.isfinite(st[cb])
         rel["same_chrom"] = same
         rel["distance_bp"] = np.where(same, gap, np.nan)
         rel["same_strand"] = same & (strand[ca] == strand[cb])
@@ -201,7 +225,7 @@ def run(out, top=TOP):
         rel["readthrough_risk"] = rel["same_strand"].to_numpy() & (gap <= READTHROUGH_BP) & \
             (cpm[up] >= READTHROUGH_RATIO * np.maximum(cpm[dn], 1e-9))
     else:
-        for c in ("same_chrom", "same_strand", "locus", "readthrough_risk"):
+        for c in ("coords_known", "same_chrom", "same_strand", "locus", "readthrough_risk"):
             rel[c] = False
         rel["distance_bp"] = np.nan
     groups, paths, names = _set_index(sets, gK)
@@ -229,8 +253,12 @@ def run(out, top=TOP):
     else:
         both_recorded = np.zeros(len(rel), dtype=bool)
     rel["both_annotated"] = both_recorded
-    rel["novel_candidate"] = have_ref & both_recorded & rel["reproducible"] & (rel["fdr"] <= NOVEL_FDR) & \
-        (rel["abs_cos"] >= NOVEL_COS) & ~rel["known"] & ~rel["locus"]
+    blocked = _missing_sources(out) if have_ref else ["reference stage not run"]
+    rel["novel_candidate"] = (not blocked) & both_recorded & rel["coords_known"] & rel["reproducible"] & \
+        (rel["fdr"] <= NOVEL_FDR) & (rel["abs_cos"] >= NOVEL_COS) & ~rel["known"] & ~rel["locus"]
+    if blocked:
+        log(f"  novel candidates not assessed: missing {', '.join(blocked)} (run 'tahoe run --from reference' "
+            "with network access)")
     write_parquet(rel, os.path.join(rd, "gene_relations.parquet"))
     und = rel[rel["col_a"] < rel["col_b"]]
     info = {"version": VERSION, "genes": int(n), "top": int(kk), "pairs": int(len(rel)),
@@ -240,6 +268,7 @@ def run(out, top=TOP):
             "known_pairs": int(und["known"].sum()), "locus_pairs": int(und["locus"].sum()),
             "readthrough_risk_pairs": int(und["readthrough_risk"].sum()),
             "novel_candidate_pairs": int(und["novel_candidate"].sum()), "reference": bool(have_ref),
+            "novel_assessed": not blocked, "novel_blocked_by": blocked, "repro_fdr": REPRO_FDR,
             "minutes": round((time.time() - t0) / 60, 2)}
     write_json(info, os.path.join(rd, "info.json"))
     stamp_stage(out, "relations", VERSION, info)

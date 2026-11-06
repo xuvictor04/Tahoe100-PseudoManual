@@ -17,7 +17,10 @@ tahoe run              # then everything, from the local files
 ```
 
 `tahoe run` works in the background (safe to log out). `tahoe` alone says where things stand; `tahoe log` follows
-the log; `tahoe stop` stops (finished stages are kept, and the next `tahoe run` continues from there).
+the log; `tahoe stop` stops (finished stages and finished plates of the build are kept, and the next `tahoe run`
+continues from there; a streamed build keeps streaming, so `tahoe run` and `tahoe run --stream` do the same). A
+local build first checks that the download is complete and names the missing files if not (`tahoe download`
+resumes it; `--allow-partial` builds from what is there).
 
 When it is done:
 
@@ -45,26 +48,57 @@ tahoe run --reuse-atlas ~/Tahoe-100M/atlas
 
 | Setting | Default | Change with |
 |---|---|---|
-| Tahoe-100M data | `~/Tahoe-100M` | `TAHOE_DATA=/path` or `--data` |
-| Output | `<data>/tahoemap` | `TAHOE_OUT=/path` or `--out` |
+| Tahoe-100M data | `~/Tahoe-100M` | `--data /path` on any `tahoe` command, or `TAHOE_DATA=/path` |
+| Output | `<data>/tahoemap` | `--out /path` on any `tahoe` command, or `TAHOE_OUT=/path` |
 | Python environment | `~/tahoe-venv` | `TAHOE_VENV=/path` |
+
+`--data` / `--out` choose the folders of that one command, so give the same ones to every command on that run
+(`tahoe run --out /big/tm`, then `tahoe --out /big/tm`, `tahoe stop --out /big/tm`, `tahoe gene MDM2 --out /big/tm`);
+the environment variables set them once for the session.
 
 Options go through `tahoe run` to `python -m tahoemap run` (all of them: `python -m tahoemap --help`):
 `--offline` (no annotation downloads), `--dims 64` (vector space size), `--from STAGE` / `--to STAGE`, `--redo`,
 `--tensor-dtype float16` (halves the 4.4 GB per-well tensor), `--no-well-tensor`, `--workers N`,
 `--unreliable-plates plate13|none`, `--min-cells 30`.
 
+The options that change results (`--dims`, `--min-active`, `--min-responsive`, `--min-cells`,
+`--unreliable-plates`, `--layout`, `--tensor-dtype`, `--no-well-tensor`) are remembered for the output folder: a
+later `tahoe run` without them keeps them, and giving one with another value redoes the stage it belongs to and every
+stage after it (`tahoe` says which stage is out of date and why). The public annotations are downloaded once and
+cached; a source that failed to download is retried by the next `tahoe run` with network (`--offline` keeps the run
+as it is), and `tahoe run --from reference` (or `tahoe run --refresh-reference`, which downloads even what is cached)
+fetches them again and redoes the stages that use them, the vault included.
+
 ## Windows
 
-There is no `tahoe` wrapper; run the package directly from the repository folder in PowerShell:
+There is no `tahoe` wrapper; run the package with Python in PowerShell. It needs Python 3.10 or newer
+(python.org; tick *Add python.exe to PATH*) and Git (git-scm.com):
 
 ```powershell
-C:\tahoe\.venv\Scripts\python.exe -m pip install numpy pandas pyarrow scipy scikit-learn networkx psutil
-C:\tahoe\.venv\Scripts\python.exe -m tahoemap run --data C:\tahoe\Tahoe-100M
-C:\tahoe\.venv\Scripts\python.exe -m tahoemap gene MDM2 --data C:\tahoe\Tahoe-100M
+git clone -b finalized https://github.com/xuvictor04/Tahoe100-PseudoManual C:\tahoe\repo
+cd C:\tahoe\repo
+python -m venv C:\tahoe\.venv
+C:\tahoe\.venv\Scripts\python.exe -m pip install -r requirements.txt
+C:\tahoe\.venv\Scripts\python.exe -m tahoemap run --stream --out C:\tahoe\out
 ```
 
-(`--stream` needs `curl`, which ships with Windows 10 and later.)
+The run works in this window (keep it open; the computer is kept awake): Ctrl-C stops it, and the same command
+continues from the finished stages. Then, from `C:\tahoe\repo`, with the same `--out`:
+
+```powershell
+C:\tahoe\.venv\Scripts\python.exe -m tahoemap status --out C:\tahoe\out
+C:\tahoe\.venv\Scripts\python.exe -m tahoemap gene MDM2 --out C:\tahoe\out
+```
+
+The vault is `C:\tahoe\out\vault` and the map `C:\tahoe\out\map\gene_map.html`. `--stream` reads Tahoe-100M from
+Hugging Face with `curl`, which ships with Windows 10 and later. To work from a local copy instead (~340 GB):
+
+```powershell
+C:\tahoe\.venv\Scripts\hf.exe download tahoebio/Tahoe-100M --repo-type dataset --local-dir C:\tahoe\Tahoe-100M `
+  --include "data/*.parquet" --include "metadata/gene_metadata.parquet" --include "metadata/sample_metadata.parquet" `
+  --include "metadata/cell_line_metadata.parquet" --include "metadata/drug_metadata.parquet"
+C:\tahoe\.venv\Scripts\python.exe -m tahoemap run --data C:\tahoe\Tahoe-100M --out C:\tahoe\out
+```
 
 ## Resources
 

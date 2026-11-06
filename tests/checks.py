@@ -41,21 +41,61 @@ def run_all(out, data, truth, check):
                 f"reproduces the atlas: W1 {info['check_W1_max_diff']:.1e}, W2 {info['check_W2_max_diff']:.1e}")
     check("tensor", "per-line residuals reproduce the atlas exactly", tensor_exact)
 
-    DDL = np.load(os.path.join(out, "tensor", "DDL_lfc.npy"), mmap_mode="r")
-    DDZ = np.load(os.path.join(out, "tensor", "DDL_z.npy"), mmap_mode="r")
+    td = os.path.join(out, "tensor")
+    DDL = np.load(os.path.join(td, "DDL_lfc.npy"), mmap_mode="r")
+    DDZ = np.load(os.path.join(td, "DDL_z.npy"), mmap_mode="r")
     DD = np.load(os.path.join(fx, "DD_lfc.npy"))
+    tinfo = json.load(open(os.path.join(td, "info.json")))
+    LM = np.load(os.path.join(td, "line_measured.npy"))                     # lines x genes
+    EM = np.load(os.path.join(fx, "expr_mask.npy"))[:, :gK]
+    LCPM = np.load(os.path.join(fx, "line_cpm.npy"))[:, :gK]
 
     def median_matches():
+        """Where the tensor masked nothing (no ambient-only line, every profile >= e_min expected counts), the median
+        over lines of the per-line values is the atlas's pooled value."""
         one = np.flatnonzero(dd["n_wells"].to_numpy() == 1)
+        wl = pd.read_csv(os.path.join(fx, "wells.csv"))
+        w_of = {int(r): i for i, (r, u) in enumerate(zip(wl["drugdose_row"], wl["used_in_drugdose"]))
+                if str(u).lower() in ("true", "1") and int(r) >= 0}
+        w1 = np.array([w_of[d] for d in one])
+        umi = np.load(os.path.join(td, "well_line_umi.npy"))[w1]                 # n1 x lines
+        cells = np.load(os.path.join(td, "well_line_cells.npy"))[w1]
+        prof = (cells >= tinfo["min_cells"])[:, :, None] & EM[None]           # profiles the atlas measured
+        masked = (prof & (~LM[None] | (LCPM[None] * umi[:, :, None] / 1e6 < tinfo["e_min"]))).any(axis=1)
         with np.errstate(all="ignore"):
             import warnings
             warnings.simplefilter("ignore")
             med = np.nanmedian(np.asarray(DDL[:, one, :], dtype=np.float32), axis=2).T
         ref = DD[one][:, :gK]
-        ok = np.isfinite(med) & np.isfinite(ref)
+        ok = np.isfinite(med) & np.isfinite(ref) & ~masked
         d = float(np.max(np.abs(med[ok] - ref[ok])))
-        return d < 0.01, f"median over lines vs DD_lfc (single-well drug-doses): max |diff| {d:.4f} (float16)"
+        return d < 0.01 and ok.sum() > 0.3 * ok.size, (
+            f"median over lines vs DD_lfc (single-well drug-doses, {int(ok.sum()):,} of {ok.size:,} values where "
+            f"the tensor masked no line): max |diff| {d:.4f} (float16)")
     check("tensor", "per-line fold changes collapse to the atlas's", median_matches)
+
+    def masks_applied():
+        fin = np.isfinite(np.asarray(DDL, dtype=np.float32)).any(axis=1).T          # lines x genes: any value
+        leak = int((fin & ~LM).sum())
+        sub = bool((LM <= EM).all())
+        rule = bool((LM == (EM & (LCPM >= tinfo["amb_frac"] * genes["pooled_cpm"].to_numpy()[:gK][None]))).all())
+        return (leak == 0 and sub and rule and tinfo["n_ambient_line_gene_pairs"] > 0
+                and tinfo["n_low_count_values"] >= 0,
+                f"ambient-only (line, gene) pairs {tinfo['n_ambient_line_gene_pairs']:,}, low-count values masked "
+                f"{tinfo['n_low_count_values']:,}; values where line_measured is False: {leak}; "
+                f"line_measured within expr_mask {sub}, follows the rule {rule}")
+    check("tensor", "ambient-only lines and low-count profiles are NaN", masks_applied)
+
+    def il1b_ambient():
+        grp = set(truth["groups"].get("il1b_expressing", []))
+        names = lines["cell_name"].to_numpy()
+        c = col["IL1B"]
+        meas = {n for n, v in zip(names, LM[:, c]) if v}
+        atlas = {n for n, v in zip(names, EM[:, c]) if v}
+        return (meas == grp, f"IL1B (made only by {sorted(grp)}): measured in {sorted(meas)}; the atlas's "
+                             f"expr_mask also lets through {sorted(atlas - grp)}")
+    if "IL1B" in col:
+        check("tensor", "a gene made by few lines is measured only in those (ambient rule)", il1b_ambient)
 
     def p53_lines():
         c = col["CDKN1A"]
@@ -94,6 +134,75 @@ def run_all(out, data, truth, check):
         check("tables", "line_effects has every gene x line", lambda: (
             len(pd.read_parquet(os.path.join(tb, "line_effects.parquet"), columns=["col"])) == gK * len(lines),
             f"{gK} genes x {len(lines)} lines"))
+
+        tinfo_t = json.load(open(os.path.join(tb, "info.json")))
+        le = pd.read_parquet(os.path.join(tb, "line_effects.parquet"))
+        dlt = pd.read_parquet(os.path.join(tb, "drug_line_top.parquet"))
+        t = float(tinfo_t["line_z_threshold"])
+
+        def line_cut_used():
+            e = tinfo_t["line_z_expected_chance"]
+            up, dn = le[le["best_up_dd"] >= 0], le[le["best_down_dd"] >= 0]
+            ok = (t >= 4 and e is not None and e <= 0.05 and abs(tinfo_t["line_fold_min"] - np.log2(1.5)) < 1e-9
+                  and bool((up["best_up_z"] >= t).all()) and bool((dn["best_down_z"] <= -t).all())
+                  and bool((up["best_up_lfc"] >= np.log2(1.5) - 1e-6).all())
+                  and bool(((le["n_dd_up"] > 0) == (le["best_up_dd"] >= 0)).all())
+                  and bool(((le["n_dd_down"] > 0) == (le["best_down_dd"] >= 0)).all())
+                  and bool((dlt["z"].abs() >= t).all()))
+            return ok, (f"line_z_threshold {t:g} (expected chance per gene x line {e:.3g}; null P(|z|>=3) "
+                        f"{tinfo_t['line_z_null_tail'].get('3')}, >=4 {tinfo_t['line_z_null_tail'].get('4')}); "
+                        f"best_* and drug_line_top all beyond it; {len(dlt):,} drug_line_top rows")
+        check("tables", "per-line |z| cut is calibrated and used", line_cut_used)
+
+        def null_genes_line_calls():
+            moved = set()
+            for v in _sets(truth).values():
+                moved |= set(v)
+            nullc = [col[s] for s in col if s.startswith("SYNTH") and s not in moved]
+            sub = le[le["col"].isin(nullc) & le["expressed"]]
+            rate = float((sub["n_dd_up"] + sub["n_dd_down"]).mean()) if len(sub) else float("nan")
+            return (True if rate <= 0.1 else "warn"), (
+                f"un-planted genes: {rate:.3f} per-line calls per (gene, line) over the clean drug-doses "
+                f"(calibrated expectation {tinfo_t['line_z_expected_chance']:.3f}; {len(sub):,} gene x line rows)")
+        check("tables", "un-planted genes rarely pass the per-line cut", null_genes_line_calls)
+
+        def p53_line_top():
+            c = col["CDKN1A"]
+            r = dlt[(dlt["col"] == c) & (dlt["direction"] == "up") & dlt["drug"].str.startswith(
+                ("Doxorubicin", "Topotecan", "5-Fluorouracil"))]
+            bad = sorted(set(r["cell_name"]) - wt)
+            return (len(r) >= 1 and not bad,
+                    f"CDKN1A up in drug_line_top under DNA-damage drugs: {len(r)} cells in "
+                    f"{sorted(set(r['cell_name']))}; not TP53-WT: {bad}")
+        check("tables", "per-line p53 response is in drug_line_top, TP53-WT lines only", p53_line_top)
+
+        def expressed_is_measured():
+            M = LM.T.ravel()                                      # gene-major, as line_effects
+            return (bool((le.sort_values(["col", "line"])["expressed"].to_numpy() == M).all())
+                    and bool((g["n_lines_expressing"].to_numpy() == LM.sum(axis=0)).all()),
+                    f"line_effects expressed == tensor line_measured ({int(M.sum()):,} of {M.size:,}); "
+                    "genes.n_lines_expressing counts it")
+        check("tables", "'expressed' is the tensor's line_measured", expressed_is_measured)
+
+        def depleted_counts():
+            lt = pd.read_parquet(os.path.join(tb, "lines.parquet"))
+            ga = lt["in_growth_analysis"].astype(str).str.lower().isin(["true", "1"]).to_numpy()
+            Az = np.load(os.path.join(fx, "DD_Az.npy"))
+            fl = [set(str(f).split("; ")) for f in dd["flags"].fillna("")]
+            from tahoemap.atlas_core import ARTIFACT_FLAGS
+            untrusted = np.array([bool(f & {"unreliable plate only", "position not correctable", "wells disagree"})
+                                  for f in fl])
+            art = np.array([bool(f & set(ARTIFACT_FLAGS)) for f in fl])
+            meas = ga & np.isfinite(Az).any(axis=0)
+            exp_all = np.where(meas, ((Az <= -3) & ~untrusted[:, None]).sum(axis=0), -1)
+            exp_cln = np.where(meas, ((Az <= -3) & ~art[:, None]).sum(axis=0), -1)
+            ok = (bool((lt["n_dd_depleted"].to_numpy() == exp_all).all())
+                  and bool((lt["n_dd_depleted_clean"].to_numpy() == exp_cln).all())
+                  and bool((lt["n_dd_depleted"] >= lt["n_dd_depleted_clean"]).all()))
+            return ok, (f"lines not in the growth analysis (-> -1): {int((~ga).sum())}; depleting drug-doses summed "
+                        f"over lines: {int(exp_all[meas].sum())} (artifact-flagged ones but untrusted counts "
+                        f"included), {int(exp_cln[meas].sum())} clean")
+        check("tables", "lines.n_dd_depleted: abundance-trusted drug-doses, -1 = not measured", depleted_counts)
 
     # ---------------------------------------------------------------- embed
     ed = os.path.join(out, "embed")

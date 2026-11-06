@@ -58,19 +58,43 @@ line *l* and drug-dose *d*:
   that gene in that line over the reference wells.
 
 It checks itself while running: the median over lines of its residuals must reproduce the atlas's W1 on every plate,
-and its re-derived position effect must reproduce W2 — both to float32 precision, or the run stops.
+and its re-derived position effect must reproduce W2 — both to float32 precision, or the run stops. (On the real
+data, all 14 plates reproduce W1 with a maximum difference of 0.0.)
+
+After that check, two kinds of per-line values are set to "not measured" (NaN), because they would otherwise look
+like responses:
+
+- **ambient-only lines**: a line whose own level of the gene is below 0.25 × the gene's pooled level reads mostly the
+  well's ambient RNA, which mirrors what the other lines do (the atlas's "expressed" rule compares with the median
+  line, so for a gene expressed in a minority of lines it lets ambient lines through). `tensor/line_measured.npy`
+  records which lines measure which genes.
+- **uncountable profiles**: where the expected count (the line's level × the profile's total UMI) is below 2, the
+  +0.5 pseudocount dominates and a line thinned out by a drug shows false rises.
 
 ## 4. Tables — the fold-change tables
 
 Per gene × drug-dose (pooled over lines), per gene × cell line, the top (drug-dose, line) cells per gene, per drug,
-per line, per plate, per well. `tables/README.md` (written by the stage) documents every column. "Lines up" counts
-the lines where that drug-dose moves the gene by ≥ 1.2× with per-line z ≥ 2.
+per line, per plate, per well. `tables/README.md` (written by the stage) documents every column.
+
+- The **pooled** tables (`drug_effects`, the raised / lowered lists) are the atlas's: the effect is the **median over
+  cell lines**, so a response seen in fewer than about half of the measured lines (e.g. one confined to TP53-wild-type
+  lines) does not reach them; it appears in the per-line tables.
+- "Lines up / down" next to a pooled call is descriptive: the lines where that drug-dose moves the gene by ≥ 1.2× with
+  per-line z ≥ 2.
+- The **per-line** tables (`line_effects`, `drug_line_top`) search ~1,100 drug-doses per gene and line, so their cut
+  is calibrated on the run itself: from the per-line |z| of (gene, clean drug-dose) pairs with no pooled response, the
+  threshold at which fewer than 0.05 chance hits are expected per gene and line (never below 4); it is written to
+  `tables/info.json`.
 
 ## 5. Embed — the vector space
 
 Each gene is described by its per-line z in every (drug-dose, cell line) context of an *active, trustworthy*
-drug-dose (≥ 10 significant genes; not `unreliable plate only`, `position not correctable` or `wells disagree`).
-Genes that never respond (|z| ≥ 3 in < 5 contexts) and noise RNAs are left out of the space (they keep their tables).
+drug-dose: not `unreliable plate only`, `position not correctable` or `wells disagree`, and either ≥ 10 significant
+genes pooled over lines, or ≥ 10 genes at per-line |z| ≥ 5 in ≥ 2 lines (so a response confined to a few lines
+counts). A gene enters the space only if it responds: |z| ≥ 3 in ≥ 5 contexts **and** a significant clean pooled
+drug-dose (q < 0.1, ≥ 1.2×) or a per-line |z| ≥ max(5, the calibrated per-line cut) in ≥ 2 lines of one drug-dose. (A
+count alone is reached by chance by almost every expressed gene at full scale.) Noise RNAs are left out. Genes outside
+the space keep all their tables and notes.
 Each gene's row is centred and scaled; broad components that a large share of genes follow (global toxicity or
 shutdown; the earlier atlas's rule) are removed; then a truncated SVD, `X ≈ U S Vᵀ`, gives (64 dimensions by
 default):
@@ -80,6 +104,7 @@ default):
 | gene | `g = U S` | its direction is the gene's response pattern; cosine between two genes = correlation of their denoised response profiles |
 | context (drug-dose × line) | `c = V` | `g · c` ≈ the gene's z in that context |
 | drug-dose | `d = S⁻¹ Uᵀ x` (x = its pooled z profile) | `g · d` ≈ the drug-dose's z on the gene ("vector comparison reproduces activity") |
+| drug | `Uᵀ x` of its best trustworthy dose | drug–drug cosine (weights the components by their size) |
 | line (response) | per component, the slope of the line's context vectors on the drug-doses' mean | 1 = typical line, 0 = that programme does not respond in this line |
 | line (baseline) | its untreated profile projected the same way | which programmes are constitutively high in the line |
 
@@ -89,21 +114,26 @@ be checked on independent perturbations.
 ## 6. Relations — gene × gene
 
 For each gene, its 100 partners with the largest |cosine|, each with: the signed cosine; `z_gene` (how exceptional
-the partner is for this gene); the cosines in the two half-spaces; **evidence** (`both halves` = same sign in the full
-space and both halves with |cos| ≥ 0.2 in each; `one half` = strong in one half only, i.e. a relation seen with one
-drug family); a **sign-concordance FDR** (pairs are selected in one half and checked in the other, whose noise is
-independent; under no relation the sign agrees half the time, so FDR(t) = disagreeing / agreeing pairs above t); and
+the partner is for this gene); the cosines in the two half-spaces; a **sign-concordance FDR** (pairs are selected in
+one half and checked in the other, whose noise is independent; under no relation the sign agrees half the time, so
+FDR(t) = (disagreeing + 1) / agreeing pairs above t; a pair is scored at the smaller of its two half cosines);
+**evidence** (`both halves` = same sign in the full space and both halves, |cos| ≥ 0.2 in each, **and FDR ≤ 0.10**;
+`one half` = strong, |cos| ≥ 0.5, in one of the two random halves only — the halves are a hash split of compound
+names, so this is not replication and carries no error estimate; often a response driven by one compound); and
 genomic and literature flags (same locus ≤ 50 kb; readthrough risk = same strand, ≤ 20 kb, the 5′ gene ≥ 8× more
 expressed; shared HGNC gene group; shared Hallmark or Reactome pathway of ≤ 300 genes; STRING score ≥ 400).
 A **novel candidate** is a pair with evidence in both halves, FDR ≤ 0.05, |cos| ≥ 0.5, no literature link, not the
-same locus, and both genes described by HGNC.
+same locus, both genes described by HGNC and placed on the genome — and only when HGNC, Ensembl, STRING and
+Hallmark or Reactome all loaded (otherwise `relations/info.json` and the report say novelty was not assessed).
 
 ## 7. Graph — the nodal map
 
 See [vector-space-and-nodal-map.md](vector-space-and-nodal-map.md). In short: modules are Louvain communities of the
-graph linking each gene to its 15 strongest partners by |cos| (excluding "not reproduced"); each module has a + and a
-− arm (the sign of each member on the module's main direction); the nodal map is a t-SNE layout of 1 − |cos|; the
-signed map is the same on 1 − cos.
+graph linking each gene to its 15 strongest partners by |cos| ≥ 0.3 that are replicated (`both halves`) or very strong
+in one half (|cos| ≥ 0.5). A module has a − arm only when ≥ 5 members sit on the negative side of its main direction
+and the two sides anti-correlate (mean cosine between them ≤ −0.2); otherwise it is single-armed (all +).
+`graph/modules.parquet` gives the mean cosine within each arm and between the arms. The nodal map is a t-SNE layout
+of 1 − |cos|; the signed map is the same on 1 − cos.
 
 ## 8. Reference, validation, vault, map
 
@@ -124,8 +154,11 @@ and the HTML map present all of it.
 - **Dose is confounded with plate** (each plate holds one dose).
 - **Readthrough**: transcription running past a highly expressed 5′ gene on the same strand is counted as the 3′
   gene's mRNA, so such pairs correlate without regulation. They are flagged, never called novel.
-- **Ambient RNA**: lines that do not express a gene read only the well's ambient RNA; they are not measured for that
-  gene (NaN), which also means re-expression of a silenced gene in that line is not detected by these tables.
+- **Ambient RNA**: lines that do not express a gene (or express it below a quarter of its pooled level) read mostly
+  the well's ambient RNA; they are not measured for that gene (NaN), which also means re-expression of a silenced gene
+  in that line is not detected by these tables.
+- **Pooled = median over lines**: a drug that moves a gene in only a few lines does not appear in the pooled lists;
+  read the per-line tables (and the vault's "In which cell lines" section).
 
 ## Provenance
 

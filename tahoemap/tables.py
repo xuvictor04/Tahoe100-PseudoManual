@@ -7,7 +7,26 @@ drug-doses x lines). Answering "select a gene: which drugs raise it, in which li
 the matrices, the index tables, the flag rules and the significance rules at once. This stage does that join once,
 genome-wide, and writes plain parquet tables keyed by gene col / drug-dose row (dd) / line, with symbols, drug names,
 doses, flags and cell-line names spelled out. Every number is taken from, or is a simple summary of, the atlas and
-tensor values; nothing is re-estimated.
+tensor values; the one thing estimated here is the per-line |z| cut (below).
+
+Pooled vs per line. The pooled values are the atlas's median over the cell lines, so a response that only a minority
+of the measured lines show (fewer than about half: e.g. a p53 response in the TP53-wild-type lines only) does not
+reach drug_effects or the n_dd_* / best_* columns of genes.parquet. line_effects and drug_line_top are where such
+responses appear.
+
+Per-line significance. A per-line z rests on one or two wells and on a spread estimated from that line's reference
+wells, and its tails are heavier than a normal's: with ~1,000 clean drug-doses per (gene, line), a fixed cut of 3 or 4
+passes by chance. The cut is therefore calibrated on the data: the null is the per-line z of the (gene, clean
+drug-dose) pairs whose pooled |z| < 2 (in up to CAL_MAX_GENES evenly spaced genes), and the cut t is the smallest grid
+value >= LINE_Z_FLOOR whose expected number of chance passes per (gene, line) over the clean drug-doses, P(|z| >= t) x
+(clean drug-doses), is <= LINE_CHANCE_MAX. line_effects (n_dd_up / n_dd_down and best_*) and drug_line_top use t;
+tables/info.json records it (line_z_threshold, line_z_expected_chance, the null's tail). The 'lines up' of
+drug_effects (per-line z >= 2, fold >= 1.2, given a pooled call) stays a descriptive, uncalibrated count of where
+the pooled effect shows up.
+
+Lines that do not express a gene. 'expressed' and n_lines_expressing are tensor/line_measured.npy: the atlas's
+expr_mask AND a line level >= tensor.AMB_FRAC x the gene's pooled CPM; below it the line reads only the wells'
+ambient RNA, and its per-line values are NaN (tensor stage).
 
 Baseline. Every fold change here is relative to the SAME cell line's median over the plate's DRUG wells (the typical
 treated well: most drugs leave most genes alone), never to DMSO. Per line and well the atlas takes log2 CPM minus that
@@ -26,15 +45,18 @@ Outputs in OUT/tables/ (README.md there documents every column, its units and it
                            clean), specificity (z gap to the next compound), correlation with the S / G2M modules
     drug_effects.parquet   gene x drug-dose rows with |z| >= 3 or q_up / q_down < 0.1: pooled fold change, z, q,
                            flags, how many / which lines move, dose pattern
-    line_effects.parquet   gene x line: baseline level, spread of the line's responses, clean drug-doses moving the
-                           gene >= 1.5x at per-line |z| >= 3, best drug-dose up / down in that line
-    drug_line_top.parquet  per gene: the 15 strongest (drug-dose, line) cells up and down (clean, per-line |z| >= 3)
+    line_effects.parquet   gene x line: baseline level, whether the line expresses it, spread of the line's
+                           responses, clean drug-doses moving the gene >= 1.5x at per-line |z| >= t (calibrated, >= 4),
+                           strongest of them up / down in that line
+    drug_line_top.parquet  per gene: the 15 strongest (drug-dose, line) cells up and down (clean, per-line |z| >= t)
     drugdoses.parquet      drugdose.csv + dd, salt_base, top 15 significant genes up / down
     drugs.parquet          per drug: doses, significant genes by dose, best dose, lowest active dose, flags, signature
                            similarity between doses
-    lines.parquet          lines.csv + TP53 status, drug-doses that deplete the line, median response strength
+    lines.parquet          lines.csv + TP53 status, drug-doses that deplete the line (-1 = not measured), median
+                           response strength
     plates.parquet         per plate: wells, doses, reliability, plate factor, DMSO and failed wells, cells per well
     wells.parquet          wells.csv + total UMI per well (per-gene counts stay in tensor/well_counts.npy)
+    info.json              row counts and the per-line |z| calibration (line_z_threshold, line_fold_min, ...)
 
 Memory: the pooled drug-dose x gene matrices are held in memory (~75 MB each at full scale); the per-line tensor
 (~1.9 GB per array in float16) is read in gene chunks sized by mem_gb, and drug_effects.parquet is streamed to disk
@@ -55,16 +77,25 @@ import scipy.sparse as sp
 
 from . import atlas_core as A
 from . import tlib as T
-from .common import log, read_effects_index, stamp_stage, write_parquet
+from .common import log, read_effects_index, stamp_stage, write_json, write_parquet
+from .tensor import AMB_FRAC, measured_mask
 
-VERSION = 1
+VERSION = 2
 
 LFC_MIN = A.LFC_MIN                 # log2(1.2): smallest change the atlas counts
 Q_CUT = A.Q_CUT                     # 0.10: the atlas FDR cut
 KEEP_Z = 3.0                        # drug_effects keeps |pooled z| >= this, or q_up / q_down < Q_CUT
-LINE_Z = 2.0                        # drug_effects: a line is 'up' at per-line z >= 2 and lfc >= log2 1.2
-STRONG_Z = 3.0                      # line_effects counts and drug_line_top: per-line |z| >= 3
+LINE_Z = 2.0                        # drug_effects (descriptive): a line is 'up' at per-line z >= 2 and lfc >= log2 1.2
+LINE_Z_FLOOR = 4.0                  # per-line significance: the calibrated |z| cut t is never below this
+LINE_CHANCE_MAX = 0.05              # t: expected chance passes per (gene, line) over the clean drug-doses <= this
+NULL_POOLED_Z = 2.0                 # calibration null: (gene, clean drug-dose) pairs with pooled |z| < this
+CAL_MAX_GENES = 3000                # calibration: at most this many genes (evenly spaced cols)
+CAL_STEP = 0.05                     # calibration: grid of candidate cuts (and histogram bin width)
+CAL_Z_MAX = 50.0                    # calibration: the grid ends here (|z| above it share the last bin)
 STRONG_LFC = math.log2(1.5)         # line_effects counts: fold >= 1.5 (or <= 1/1.5)
+DEPLETE_Z = -3.0                    # lines.n_dd_depleted: relative-abundance z (DD_Az) <= this
+ABUNDANCE_UNTRUSTED = ("unreliable plate only", "position not correctable", "wells disagree")   # flags that make a
+                                    # drug-dose's cell counts untrustworthy (toxic etc. are what depletion means)
 MIN_SD_DD = 10                      # response_sd needs >= this many measured clean drug-doses
 MAX_LINES_LISTED = 12               # lines_up / lines_down: at most this many names
 TOP_CELLS = 15                      # drug_line_top: (drug-dose, line) cells per gene and direction
@@ -178,6 +209,55 @@ def _dd_gene_scale(wells, fxd, Dn, gK):
     out = np.asarray(agg @ fw, dtype=np.float32)
     out[nw == 0] = 1.0
     return out
+
+
+def calibrate_line_z(DZ, z, clean, measured, chunk):
+    """The per-line |z| cut t (module docstring, 'Per-line significance'). DZ = tensor DDL_z (genes x drug-doses x
+    lines), z = pooled DD_z and clean = clean matrix (drug-doses x genes), measured = tensor line_measured (lines x
+    genes). Null = per-line z of the (gene, clean drug-dose) pairs with pooled |z| < NULL_POOLED_Z, over up to
+    CAL_MAX_GENES evenly spaced genes. Returns the dict stored in tables/info.json."""
+    gK = z.shape[1]
+    gsel = np.unique(np.linspace(0, gK - 1, min(gK, CAL_MAX_GENES)).round().astype(np.int64))
+    nb = int(round(CAL_Z_MAX / CAL_STEP)) + 1
+    h_pos = np.zeros(nb, dtype=np.int64)                         # histogram of z >= 0 by floor(z / CAL_STEP)
+    h_neg = np.zeros(nb, dtype=np.int64)                         # the same for -z, z < 0
+    for i in range(0, gsel.size, chunk):
+        gs = gsel[i:i + chunk]
+        Zl = np.asarray(DZ[gs], dtype=np.float32)                # genes x drug-doses x lines
+        null = (clean[:, gs] & (np.abs(z[:, gs]) < NULL_POOLED_Z)).T[:, :, None] & measured[:, gs].T[:, None, :]
+        v = Zl[null & np.isfinite(Zl)]
+        b = np.minimum((np.abs(v) / CAL_STEP).astype(np.int64), nb - 1)
+        h_pos += np.bincount(b[v >= 0], minlength=nb)
+        h_neg += np.bincount(b[v < 0], minlength=nb)
+        del Zl, null, v, b
+    n = int(h_pos.sum() + h_neg.sum())
+    n_clean = int(np.median(clean.sum(axis=0))) if gK else 0      # clean drug-doses of the typical gene
+    grid = np.round(np.arange(nb) * CAL_STEP, 6)
+
+    def tail(h):                                                 # P(value >= grid[k]) for every k
+        return np.cumsum(h[::-1])[::-1] / max(n, 1)
+
+    p_abs, p_up, p_dn = tail(h_pos + h_neg), tail(h_pos), tail(h_neg)
+    ok = np.flatnonzero((grid >= LINE_Z_FLOOR) & (p_abs * n_clean <= LINE_CHANCE_MAX))
+    k = int(ok[0]) if ok.size else nb - 1
+    if n == 0:
+        k = int(np.searchsorted(grid, LINE_Z_FLOOR))
+    t = float(grid[k])
+
+    def at(pp):                                                  # the tail at a few round values, for the docs
+        return {f"{x:g}": (float(pp[int(np.searchsorted(grid, x))]) if n else None) for x in (2, 3, 4, 5, 6, 8, 10)}
+    k2 = int(np.searchsorted(grid, LINE_Z))
+    return {"line_z_threshold": t, "line_fold_min": STRONG_LFC,
+            "line_z_expected_chance": float(p_abs[k] * n_clean) if n else None,
+            "line_z_method": (f"smallest |z| on a {CAL_STEP:g} grid, >= {LINE_Z_FLOOR:g}, with P(|per-line z| >= t) x "
+                              f"(clean drug-doses of the typical gene, {n_clean}) <= {LINE_CHANCE_MAX:g}; null = "
+                              f"per-line z of (gene, clean drug-dose) pairs with pooled |z| < {NULL_POOLED_Z:g} in "
+                              f"{gsel.size} evenly spaced genes ({n:,} values); both directions counted"),
+            "line_z_n_clean_drugdoses": n_clean, "line_z_null_values": n, "line_z_null_genes": int(gsel.size),
+            "line_z_null_tail": at(p_abs), "line_z_null_tail_up": at(p_up), "line_z_null_tail_down": at(p_dn),
+            "lines_up_chance_rate": float(p_up[k2]) if n else None,
+            "lines_down_chance_rate": float(p_dn[k2]) if n else None,
+            "lines_up_rule": f"descriptive: per-line z >= {LINE_Z:g} and fold >= 1.2 (drug_effects n_lines_up)"}
 
 
 def _z_gap(Zc, comp):
@@ -334,6 +414,15 @@ def _run(out, chunk, mem_gb, t0):
         raise SystemExit(f"tables: tensor shape {DZ.shape} does not match the effects ({gK}, {Dn}, {L}); "
                          "rerun 'tensor'")
     log(f"Tables: {gK:,} genes x {Dn:,} drug-doses x {L} lines ({N:,} wells)")
+    line_cpm = np.load(os.path.join(fxd, "line_cpm.npy"), mmap_mode="r")
+    expr = np.load(os.path.join(fxd, "expr_mask.npy"), mmap_mode="r")
+    p = os.path.join(tdir, "line_measured.npy")
+    if os.path.exists(p) and np.load(p, mmap_mode="r").shape == (L, gK):
+        measured = np.asarray(np.load(p), dtype=bool)          # lines x genes: the line truly expresses the gene
+    else:                                                      # an older tensor: the same rule, applied here
+        measured = measured_mask(expr[:, :gK], line_cpm[:, :gK], genes["pooled_cpm"].to_numpy()[:gK])
+        log(f"  {p} missing (tensor from an older version): ambient-only lines (< {AMB_FRAC:g} x the pooled CPM) "
+            "are masked here; low-count profiles are not - rerun 'tensor'")
 
     # ---- index vectors
     gsub = genes.iloc[:gK]
@@ -402,8 +491,9 @@ def _run(out, chunk, mem_gb, t0):
         log("  gene metadata not found: ensembl_id left empty")
     gtab["ensembl_id"] = ens.to_numpy(dtype=object)
     gtab["token"] = gsub["token"].to_numpy(dtype=np.int64)
-    for c in ("pooled_cpm", "median_line_cpm", "n_lines_expressing"):
+    for c in ("pooled_cpm", "median_line_cpm"):
         gtab[c] = gsub[c].to_numpy()
+    gtab["n_lines_expressing"] = measured.sum(axis=0).astype(np.int32)    # tensor line_measured, not the atlas's
     gtab["noise_rna"] = [bool(A.NOISE_RNA_RE.match(s)) for s in symbol]
     W2 = np.load(os.path.join(fxd, "W2.npy"), mmap_mode="r")
     dw = np.flatnonzero(~wells["is_dmso"].to_numpy(dtype=bool))
@@ -452,7 +542,12 @@ def _run(out, chunk, mem_gb, t0):
 
     # ---- the per-line tensor, in gene chunks
     if not chunk:
-        chunk = max(1, min(gK, int(mem_gb * 1e9 / (44.0 * Dn * L))))
+        chunk = max(1, min(gK, int(mem_gb * 1e9 / (48.0 * Dn * L))))
+    cal = calibrate_line_z(DZ, z, clean, measured, chunk)
+    t_line = cal["line_z_threshold"]
+    log(f"  per-line |z| cut: {t_line:g} (expected chance passes per gene x line over the "
+        f"{cal['line_z_n_clean_drugdoses']} clean drug-doses: {cal['line_z_expected_chance']}; null P(|z| >= 3) = "
+        f"{cal['line_z_null_tail'].get('3')}, P(|z| >= 4) = {cal['line_z_null_tail'].get('4')})")
     keep = (np.abs(z) >= KEEP_Z) | (qu < Q_CUT) | (qd < Q_CUT)
     log(f"  drug_effects: {int(keep.sum()):,} gene x drug-dose rows (|z| >= {KEEP_Z:g} or q < {Q_CUT:g}); "
         f"per-line tensor in chunks of {chunk} genes ...")
@@ -476,6 +571,9 @@ def _run(out, chunk, mem_gb, t0):
             loc = np.arange(c)
             Z = np.asarray(DZ[g0:g1], dtype=np.float32)          # genes x drug-doses x lines
             X = np.asarray(DL[g0:g1], dtype=np.float32)
+            meas = measured[:, g0:g1].T[:, None, :]                 # genes x 1 x lines (the tensor's NaN already)
+            Z = np.where(meas, Z, np.nan)
+            X = np.where(meas, X, np.nan)
             upl = (Z >= LINE_Z) & (X >= LFC_MIN)
             dnl = (Z <= -LINE_Z) & (X <= -LFC_MIN)
             n_meas = np.isfinite(Z).sum(axis=2).astype(np.int16)
@@ -517,25 +615,26 @@ def _run(out, chunk, mem_gb, t0):
             mad, _ = _nanmedian_last(np.abs(Xc - med[..., None]))
             sd_l[g0:g1] = np.where(k >= MIN_SD_DD, 1.4826 * mad, np.nan)
             del Xc
-            nu_l[g0:g1] = (cl & (Z >= STRONG_Z) & (X >= STRONG_LFC)).sum(axis=1)
-            nd_l[g0:g1] = (cl & (Z <= -STRONG_Z) & (X <= -STRONG_LFC)).sum(axis=1)
-            for sign, bl, bz, bx in ((1, bu_l, bu_z, bu_lfc), (-1, bd_l, bd_z, bd_lfc)):
-                S = np.where(cl & np.isfinite(Z), sign * Z, -np.inf)
+            for sign, nl, bl, bz, bx in ((1, nu_l, bu_l, bu_z, bu_lfc), (-1, nd_l, bd_l, bd_z, bd_lfc)):
+                passz = cl & (sign * Z >= t_line)                    # clean, per-line z beyond the calibrated cut
+                hit = passz & (sign * X >= STRONG_LFC)               # ... and fold >= 1.5 that way
+                nl[g0:g1] = hit.sum(axis=1)
+                S = np.where(hit, sign * Z, -np.inf)                 # best_*: the strongest of those counted
                 b = S.argmax(axis=1)                                 # genes x lines
                 ok = np.isfinite(np.take_along_axis(S, b[:, None, :], axis=1)[:, 0, :])
                 bl[g0:g1] = np.where(ok, b, -1)
                 bz[g0:g1] = np.where(ok, np.take_along_axis(Z, b[:, None, :], axis=1)[:, 0, :], np.nan)
                 bx[g0:g1] = np.where(ok, np.take_along_axis(X, b[:, None, :], axis=1)[:, 0, :], np.nan)
-                # drug_line_top: the strongest clean (drug-dose, line) cells with per-line |z| >= 3
-                F = np.where(sign * Z >= STRONG_Z, S, -np.inf).reshape(c, Dn * L)
+                # drug_line_top: the strongest clean (drug-dose, line) cells with per-line |z| >= t
+                F = np.where(passz, sign * Z, -np.inf).reshape(c, Dn * L)
                 idx, vals = _top_k(F, TOP_CELLS)
                 r_, k_ = np.nonzero(np.isfinite(vals))
                 if r_.size:
                     flat = idx[r_, k_]
                     tops.append((g0 + r_, np.full(r_.size, sign, np.int8), (k_ + 1).astype(np.int16),
                                  flat // L, flat % L, X.reshape(c, -1)[r_, flat], Z.reshape(c, -1)[r_, flat]))
-                del S, F
-            del Z, X
+                del S, F, passz, hit
+            del Z, X, meas
             if (g0 // chunk) % 10 == 0 or g1 == gK:
                 log(f"    genes {g0:,}-{g1:,} of {gK:,} ({(time.time() - t0) / 60:.1f} min; drug_effects rows {n_fx:,})")
     finally:
@@ -559,12 +658,10 @@ def _run(out, chunk, mem_gb, t0):
     # ---- line_effects.parquet
     gg = np.repeat(cols, L)
     ll = np.tile(np.arange(L), gK)
-    line_cpm = np.load(os.path.join(fxd, "line_cpm.npy"), mmap_mode="r")
-    expr = np.load(os.path.join(fxd, "expr_mask.npy"), mmap_mode="r")
     le = pd.DataFrame({"col": gg.astype(np.int32), "symbol": symbol[gg], "line": ll.astype(np.int16),
                        "cell_line_id": line_id[ll], "cell_name": line_name[ll],
                        "baseline_cpm": np.asarray(line_cpm[:, :gK], dtype=np.float32).T.ravel(),
-                       "expressed": np.asarray(expr[:, :gK], dtype=bool).T.ravel(),
+                       "expressed": measured.T.ravel(),
                        "response_sd": sd_l.ravel(), "n_dd_up": nu_l.ravel(), "n_dd_down": nd_l.ravel()})
     for prefix, bl, bx, bz in (("best_up", bu_l, bu_lfc, bu_z), ("best_down", bd_l, bd_lfc, bd_z)):
         b = bl.ravel()
@@ -639,8 +736,18 @@ def _run(out, chunk, mem_gb, t0):
     lt.insert(0, "line", np.arange(L, dtype=np.int16))
     lt["tp53_status"] = tp53
     p = os.path.join(fxd, "DD_Az.npy")
-    lt["n_dd_depleted"] = ((np.load(p) <= -3) & ~art_dd[:, None]).sum(axis=0).astype(np.int32) \
-        if os.path.exists(p) else -1
+    if os.path.exists(p):
+        Az = np.load(p)                                          # drug-doses x lines (NaN: not measured)
+        in_ga = (lines["in_growth_analysis"].astype(str).str.lower().isin(["true", "1", "1.0"]).to_numpy()
+                 if "in_growth_analysis" in lines else np.ones(L, dtype=bool))
+        meas_l = in_ga & np.isfinite(Az).any(axis=0)
+        dep = Az <= DEPLETE_Z
+        untrusted = np.array([any(u in set(f.split("; ")) for u in ABUNDANCE_UNTRUSTED) for f in dd_flags], dtype=bool)
+        lt["n_dd_depleted"] = np.where(meas_l, (dep & ~untrusted[:, None]).sum(axis=0), -1).astype(np.int32)
+        lt["n_dd_depleted_clean"] = np.where(meas_l, (dep & ~art_dd[:, None]).sum(axis=0), -1).astype(np.int32)
+        del Az, dep
+    else:
+        lt["n_dd_depleted"] = lt["n_dd_depleted_clean"] = np.full(L, -1, dtype=np.int32)
     p = os.path.join(fxd, "DD_beta.npy")
     lt["median_response"] = np.nanmedian(np.load(p), axis=0).astype(np.float32) if os.path.exists(p) else np.nan
     write_parquet(lt, os.path.join(od, "lines.parquet"))
@@ -682,7 +789,7 @@ def _run(out, chunk, mem_gb, t0):
               "drugdoses.parquet": list(ddt.columns), "drugs.parquet": list(drugs_df.columns),
               "lines.parquet": list(lt.columns), "plates.parquet": list(plates_df.columns),
               "wells.parquet": list(wt.columns)}
-    text, undocumented = readme(tables)
+    text, undocumented = readme(tables, cal)
     _write_text(os.path.join(od, "README.md"), text)
     if undocumented:
         log(f"  WARNING: columns without a description in README.md: {', '.join(undocumented)}")
@@ -696,7 +803,9 @@ def _run(out, chunk, mem_gb, t0):
                                              & (gtab["best_clean_up_fold"] >= 2 ** LFC_MIN)).sum()),
             "genes_with_clean_repressor": int(((gtab["best_clean_down_q"] < Q_CUT)
                                                & (gtab["best_clean_down_fold"] <= 2 ** -LFC_MIN)).sum()),
+            "n_measured_line_gene_pairs": int(measured.sum()), **cal,
             "undocumented_columns": undocumented, "minutes": round((time.time() - t0) / 60, 2)}
+    write_json(info, os.path.join(od, "info.json"))
     log("  rows: " + ", ".join(f"{k} {v:,}" for k, v in info["rows"].items()))
     return info
 
@@ -724,7 +833,9 @@ def _gene_docs():
          "for repeated symbols", "ensembl_id": "Ensembl gene id from the Tahoe gene metadata (joined on token; '' when "
          "missing)", "token": "Tahoe gene token id", "pooled_cpm": "level over all wells and lines (counts per million)",
          "median_line_cpm": "median over cell lines of the line's level (CPM)", "n_lines_expressing":
-         "lines whose level is >= 25% of the median line (the atlas's 'expressed')", "noise_rna": "True for noise-class "
+         "lines that truly express the gene (line_effects 'expressed', tensor/line_measured.npy): level >= 25% of the "
+         "median line's (the atlas's expr_mask) AND >= 25% of the gene's pooled level (otherwise the line reads only "
+         "ambient RNA); atlas/effects/genes.csv keeps the atlas's count", "noise_rna": "True for noise-class "
          "RNAs (atlas NOISE_RNA_RE on the symbol: 7SK, snoRNA, snRNA, mitochondrial, ribosomal-protein pseudogenes, "
          "replication histones, ENSG-only names): read their drug responses with care",
          "corr_with_S": "Pearson r over all drug wells (pairwise complete) of the gene's corrected well effect (W2) with "
@@ -743,9 +854,10 @@ def _gene_docs():
         for k, v in _BEST.items():
             d[f"{pre}_{k}"] = f"{what}: {v}"
     d["best_clean_up_n_lines_up"] = ("best clean drug-dose up: lines with per-line z >= 2 and fold >= 1.2 (tensor "
-                                     "DDL_z / DDL_lfc); -1 = no clean drug-dose")
-    d["best_clean_down_n_lines_down"] = ("best clean drug-dose down: lines with per-line z <= -2 and fold <= 1/1.2; "
-                                         "-1 = none")
+                                     "DDL_z / DDL_lfc; descriptive, not a per-line test: see drug_effects "
+                                     "n_lines_up); -1 = no clean drug-dose")
+    d["best_clean_down_n_lines_down"] = ("best clean drug-dose down: lines with per-line z <= -2 and fold <= 1/1.2 "
+                                         "(descriptive); -1 = none")
     d["best_clean_up_pattern"] = "dose pattern of that drug for this gene (atlas dose_shape over its doses' pooled z)"
     d["best_clean_down_pattern"] = "the same for the decrease (z negated)"
     return d
@@ -759,7 +871,10 @@ DOCS = {
     "drug_effects.parquet": (
         "Fold change relative to each drug: one row per gene x drug-dose with |pooled z| >= 3 or q_up < 0.10 or "
         "q_down < 0.10 (sorted by col, then z from high to low). Pooled = over the cell lines (median per well, mean "
-        "over the drug-dose's used wells). Per-line values come from the tensor (DDL_z, DDL_lfc).",
+        "over the drug-dose's used wells), so a response seen in fewer than about half of the measured lines is not "
+        "here: look in line_effects / drug_line_top. Per-line values come from the tensor (DDL_z, DDL_lfc). The "
+        "line counts (n_lines_up / n_lines_down / lines_*) are descriptive: per-line z >= 2 is not a per-line test "
+        "(see 'Per-line significance' above).",
         {"col": "gene column", "symbol": "gene symbol", "dd": _DD_COLS["dd"], "drug": _DD_COLS["drug"],
          "dose": _DD_COLS["dose"], "conc": _DD_COLS["conc"], "lfc": "pooled " + _FC + " (DD_lfc)",
          "fold": "2**lfc (linear fold change; 1 = no change)", "z": "pooled z (DD_z: Stouffer over the used wells of "
@@ -768,8 +883,10 @@ DOCS = {
          "flags": "drug-dose flags + this gene's flags ('noisy plate (z scaled)' from its own plate factor, 'position "
          "correction uncertain', 'position effect removed'), '; '-joined, the exact strings of the atlas",
          "clean": "True when flags hold no artifact flag (see genes.parquet)", "n_lines_measured": "lines with a "
-         "per-line value (expressing the gene, with enough cells in the wells)", "n_lines_up": "lines with per-line "
-         "z >= 2 and fold >= 1.2", "n_lines_down": "lines with per-line z <= -2 and fold <= 1/1.2", "lines_up":
+         "per-line value (truly expressing the gene, enough cells in the wells, >= 2 expected counts)", "n_lines_up":
+         "lines with per-line z >= 2 and fold >= 1.2: where the pooled effect shows up (descriptive; at z >= 2 a "
+         "line also passes by chance, at the rate lines_up_chance_rate of tables/info.json)", "n_lines_down":
+         "lines with per-line z <= -2 and fold <= 1/1.2 (descriptive, as n_lines_up)", "lines_up":
          "cell names of those lines, strongest per-line z first, at most 12, ', '-joined", "lines_down":
          "cell names of the lines counted in n_lines_down, most negative per-line z first, at most 12", "pattern_up": "how the increase behaves over the drug's "
          "doses (atlas dose_shape over the pooled z by ascending dose; the same for every dose of the drug): none / "
@@ -783,19 +900,25 @@ DOCS = {
         {"col": "gene column", "symbol": "gene symbol", "line": "line index (row of lines.parquet / atlas lines.csv, "
          "last axis of the tensor)", "cell_line_id": "Cellosaurus id", "cell_name": "cell line name",
          "baseline_cpm": "the line's level of the gene over all its wells (CPM; atlas line_cpm)", "expressed":
-         "the line's level is >= 25% of the median line's (atlas expr_mask); not expressed -> no per-line values",
+         "the line truly expresses the gene (tensor/line_measured.npy): the atlas's expr_mask (level >= 25% of the "
+         "median line's) AND level >= 25% of the gene's pooled level; below that the line reads only the wells' "
+         "ambient RNA, and its per-line values are NaN",
          "response_sd": "1.4826 x MAD over the clean drug-doses of the line's per-line log2 fold change: the typical "
          "spread of this gene's responses in this line (log2; NaN with < 10 measured clean drug-doses)",
-         "n_dd_up": "clean drug-doses with per-line z >= 3 and fold >= 1.5 in this line", "n_dd_down":
-         "clean drug-doses with per-line z <= -3 and fold <= 1/1.5", "best_up_dd": "clean drug-dose with the highest "
-         "per-line z in this line (-1 = none; may be non-significant: check best_up_z)", "best_up_drug": "its drug",
+         "n_dd_up": "clean drug-doses with per-line z >= line_z_threshold (calibrated; tables/info.json) and fold "
+         ">= 1.5 in this line", "n_dd_down": "clean drug-doses with per-line z <= -line_z_threshold and fold <= 1/1.5",
+         "best_up_dd": "the drug-dose counted in n_dd_up with the highest per-line z in this line (-1 = none passes)",
+         "best_up_drug": "its drug",
          "best_up_dose": "its dose key (uM)", "best_up_lfc": "its per-line log2 fold change", "best_up_z":
-         "its per-line z", "best_down_dd": "clean drug-dose with the lowest per-line z (-1 = none)", "best_down_drug":
+         "its per-line z", "best_down_dd": "the drug-dose counted in n_dd_down with the lowest per-line z (-1 = "
+         "none passes)", "best_down_drug":
          "its drug", "best_down_dose": "its dose key (uM)", "best_down_lfc": "its per-line log2 fold change",
          "best_down_z": "its per-line z"}),
     "drug_line_top.parquet": (
         "Per gene, the 15 strongest (drug-dose, cell line) cells up and the 15 strongest down among the clean "
-        "drug-doses for the gene with per-line |z| >= 3 (fewer when fewer qualify).",
+        "drug-doses for the gene with per-line |z| >= line_z_threshold (calibrated; tables/info.json; no fold "
+        "condition), fewer when fewer qualify. Responses confined to a few lines, which the pooled tables miss, show "
+        "up here.",
         {"col": "gene column", "symbol": "gene symbol", "direction": "up / down", "rank": "1 = strongest per-line z "
          "in that direction", "dd": _DD_COLS["dd"], "drug": _DD_COLS["drug"], "dose": _DD_COLS["dose"],
          "line": "line index", "cell_name": "cell line name", "lfc": "per-line " + _FC + " (DDL_lfc)",
@@ -845,7 +968,7 @@ DOCS = {
          "drug-doses) of consecutive doses (low-mid / mid-high): near 1 = the same response growing with dose"}),
     "lines.parquet": (
         "atlas/effects/lines.csv (one row per cell line, in the order of the line axis) plus line, tp53_status, "
-        "n_dd_depleted, median_response.",
+        "n_dd_depleted, n_dd_depleted_clean, median_response.",
         {"line": "line index (last axis of the tensor)", "cell_line_id": "Cellosaurus id", "n_cells_total":
          "cells of the line over all wells", "cell_name": "cell line name", "Cell_ID_DepMap": "DepMap id",
          "Organ": "organ of origin", "drivers": "driver genes (variant type) from the Tahoe cell-line metadata",
@@ -853,8 +976,12 @@ DOCS = {
          "the relative-abundance (growth) analysis", "wells_usable": "wells with >= min_cells cells of the line "
          "(usable expression)", "pct_wells_usable": "the same as % of all wells", "tp53_status": "altered (a TP53 "
          "row in the cell-line metadata) / wild type (the line is in the metadata without one) / unknown",
-         "n_dd_depleted": "clean drug-doses (no artifact flag) that deplete the line: relative-abundance z "
-         "(DD_Az) <= -3", "median_response": "median over drug-doses of the line's response strength (DD_beta: "
+         "n_dd_depleted": "drug-doses that deplete the line: relative-abundance z (DD_Az) <= -3, leaving out only "
+         "drug-doses whose cell counts are untrustworthy (unreliable plate only, position not correctable, wells "
+         "disagree); toxic, transcription drop and cell-cycle shift drug-doses count (depletion is what makes them "
+         "toxic). -1 = not measured: the line is not in the growth analysis (too few cells)",
+         "n_dd_depleted_clean": "the same among clean drug-doses only (no artifact flag at all); -1 = not measured",
+         "median_response": "median over drug-doses of the line's response strength (DD_beta: "
          "slope of the line's changes on the drug-dose's consensus over its significant genes; 1 = a typical line, "
          "0 = no response; only drug-doses with >= 20 significant genes)"}),
     "plates.parquet": (
@@ -895,8 +1022,44 @@ DOCS = {
 }
 
 
-def readme(tables):
-    """README.md text for the written tables ({file: [columns]}) and the columns lacking a description."""
+def _fmt_p(v):
+    return "n/a" if v is None else f"{v:.2g}"
+
+
+def _calibration_text(cal):
+    """The 'Per-line significance' paragraph of README.md, with this run's numbers (cal = calibrate_line_z)."""
+    cal = cal or {}
+    t = cal.get("line_z_threshold", LINE_Z_FLOOR)
+    tail = cal.get("line_z_null_tail") or {}
+    return [
+        "**Pooled vs per line**: the pooled values are the atlas's *median over the measured lines*, so a response "
+        "seen in fewer than about half of the measured lines (e.g. a p53 response in the TP53-wild-type lines only) "
+        "does not appear in drug_effects or in the n_dd_* / best_* columns of genes.parquet. Such responses are in "
+        "line_effects (per gene x line) and drug_line_top (each gene's strongest drug-dose x line cells).", "",
+        f"**Per-line significance** (line_effects n_dd_up / n_dd_down / best_*, drug_line_top): per-line |z| >= "
+        f"**{t:g}** (`line_z_threshold` in tables/info.json; fold >= 1.5 for line_effects). A per-line z rests on one "
+        "or two wells and its tails are heavier than a normal's, so the cut is calibrated on this run: among "
+        f"(gene, clean drug-dose) pairs whose pooled |z| < {NULL_POOLED_Z:g} (the null), P(|per-line z| >= 3) = "
+        f"{_fmt_p(tail.get('3'))}, >= 4: {_fmt_p(tail.get('4'))}, >= 5: {_fmt_p(tail.get('5'))}, >= 6: "
+        f"{_fmt_p(tail.get('6'))}. t is the smallest value >= {LINE_Z_FLOOR:g} at which the expected number of "
+        f"chance passes per (gene, line) over the {cal.get('line_z_n_clean_drugdoses', '?')} clean drug-doses is <= "
+        f"{LINE_CHANCE_MAX:g}; at t it is {_fmt_p(cal.get('line_z_expected_chance'))} "
+        "(`line_z_expected_chance`). The 'lines up / down' of drug_effects and genes.parquet (per-line z >= 2 and "
+        "fold >= 1.2, given a pooled call) are descriptive: they say where the pooled effect shows up, and a line "
+        f"with no effect reaches z >= 2 at a rate of {_fmt_p(cal.get('lines_up_chance_rate'))} and z <= -2 at "
+        f"{_fmt_p(cal.get('lines_down_chance_rate'))} (`lines_up_chance_rate`, `lines_down_chance_rate`; the "
+        "null's tails per direction are `line_z_null_tail_up` / `_down`: low counts make the lower tail heavier).",
+        "",
+        f"**Lines that do not express a gene** (line_effects `expressed` = False) have no per-line values: below "
+        f"{AMB_FRAC:g} x the gene's pooled level a line reads only the wells' ambient RNA (the average of all the "
+        "well's cells), whose 'responses' are other lines' (tensor/line_measured.npy). Profiles with < 2 expected "
+        "counts of the gene (few cells or a low level) are not measured either. So re-expression of a gene a line "
+        "does not make is not detected here.", ""]
+
+
+def readme(tables, cal=None):
+    """README.md text for the written tables ({file: [columns]}) and the columns lacking a description; cal = the
+    per-line |z| calibration (calibrate_line_z) whose numbers the text quotes."""
     missing = []
     out = ["# tables/ - the fold-change tables", "",
            "Written by `tahoemap tables` (tahoemap/tables.py). Keys: `col` = gene column (0 .. genes-1, the order of "
@@ -915,8 +1078,8 @@ def readme(tables):
            "(" + ", ".join(A.ARTIFACT_FLAGS) + ") in the drug-dose's flags plus the gene's own flags. Soft caveats "
            "that do not make a value unclean: low cells (technical?), plate-row cell shift, composition shift, noisy "
            "plate (z scaled), position effect removed.", "",
-           "Missing values: NaN / null = not measured (line not expressing, too few cells) or no candidate; -1 in "
-           "an index column = none.", ""]
+           "Missing values: NaN / null = not measured (line not expressing, too few cells or counts) or no "
+           "candidate; -1 in an index or count column = none / not measured.", ""] + _calibration_text(cal)
     for name, cols in tables.items():
         intro, docs = DOCS[name]
         out += [f"## {name}", "", intro, "", "| column | meaning |", "|---|---|"]

@@ -99,8 +99,9 @@ FDR is monotone and calibrated, the vault has a note per gene and no broken link
   plate**. Fold changes are against the same line's median drug well on the same plate, not DMSO.
 - Pairs of neighbouring genes on the same strand can correlate through **readthrough** transcription; such pairs are
   flagged and never called novel.
-- A relation seen in only one half of the compounds (one drug family) is labelled as such: real in that family, not
-  replicated across drugs.
+- "Moves with / opposite" partners carry their evidence: `both halves` = replicated in two random halves of the
+  compounds with a false discovery rate ≤ 10%; `one half` = strong in one half only (not replicated, often one
+  compound). Pooled lists are medians over the 50 lines: responses confined to a few lines are in the per-line tables.
 
 ## Repository layout
 

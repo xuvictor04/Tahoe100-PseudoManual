@@ -10,10 +10,14 @@ Two different questions give two different maps:
 
 Both are t-SNE layouts of the top-90 neighbour distances (sklearn, precomputed sparse metric, the same PCA-based
 start, a fixed seed). Modules are Louvain communities (networkx) of the kNN graph that links each gene to its 15
-strongest partners by |cos| that are not marked "not reproduced" (weight |cos|, sign kept). Inside a module, each
-gene's arm (+ or -) is the sign of its projection on the module's main direction: the + arm and the - arm move
-opposite to each other under the same drugs. Module scores per (drug-dose, line) = mean z of the + arm minus mean z
-of the - arm, from tensor DDL_z.
+strongest partners by |cos| >= 0.3 whose relation is replicated ("both halves", i.e. fdr <= 0.10) or very strong in
+one half of the compounds (|cos| >= 0.5) (weight |cos|, sign kept). Inside a module, each gene's side of the
+module's main direction gives its arm; a module has a real "-" arm only when >= 5 genes sit on that side AND the two
+sides anti-correlate (mean cosine between them <= -0.2): then the + arm and the - arm move opposite to each other
+under the same drugs. Otherwise every member is "+" (a single-armed module). modules.parquet records the mean cosine
+within each arm and between the arms. Module scores per (drug-dose, line) = mean z of the + arm minus mean z of the
+- arm (the + arm alone in single-armed modules), from tensor DDL_z; pooled scores likewise from atlas DD_z. A
+module's responsive lines are those with the largest mean |score| over its 8 strongest drug-doses.
 """
 
 import os
@@ -26,11 +30,13 @@ import pandas as pd
 from .common import folder, log, read_effects_index, save_npy, stable_seed, stamp_stage, write_json, \
     write_parquet
 
-VERSION = 1
+VERSION = 2
 K_EDGES = 15
 K_LAYOUT = 90
 MIN_MODULE = 5
-MIN_EDGE = 0.25
+MIN_EDGE = 0.3
+ONE_HALF_EDGE = 0.5      # a "one half" relation joins the graph only when this strong
+ARMS_OPPOSITE = -0.2     # mean cosine between the two sides at or below this: two real, opposite arms
 
 
 def _layout(n, rows, cols, dist, init, seed):
@@ -85,7 +91,8 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
     log(f"Graph: {n:,} genes")
 
     # kNN graph for communities: each gene's strongest partners that are not 'not reproduced'
-    e = rel[(rel["evidence"] != "not reproduced") & (rel["abs_cos"] >= MIN_EDGE)]
+    e = rel[(rel["abs_cos"] >= MIN_EDGE) & ((rel["evidence"] == "both halves") |
+                                            ((rel["evidence"] == "one half") & (rel["abs_cos"] >= ONE_HALF_EDGE)))]
     e = e.sort_values(["col_a", "abs_cos"], ascending=[True, False]).groupby("col_a").head(k_edges)
     a = e["col_a"].map(pos).to_numpy()
     b = e["col_b"].map(pos).to_numpy()
@@ -102,14 +109,30 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
         module[c] = m
     arm = np.array([""] * n, dtype=object)
     axis_proj = np.zeros(n, dtype=np.float32)
+    arm_stats = {}
+
+    def mean_cos(A, B, same):
+        if len(A) < 2 if same else (len(A) == 0 or len(B) == 0):
+            return float("nan")
+        C = U[A] @ U[B].T
+        if same:
+            C = C[~np.eye(len(A), dtype=bool)]
+        return float(C.mean())
+
     for m, c in enumerate(comms, 1):
         M = U[c]
         _, _, vt = np.linalg.svd(M, full_matrices=False)
         p = M @ vt[0]
-        if (p > 0).sum() < (p < 0).sum():                 # the larger arm is "+"
+        if (p > 0).sum() < (p < 0).sum():                 # the larger side is "+"
             p = -p
-        arm[c] = np.where(p >= 0, "+", "-")
+        cp = [i for i, v in zip(c, p) if v >= 0]
+        cm = [i for i, v in zip(c, p) if v < 0]
+        between = mean_cos(cp, cm, False)
+        opposite = len(cm) >= MIN_MODULE and np.isfinite(between) and between <= ARMS_OPPOSITE
+        arm[c] = np.where(p >= 0, "+", "-") if opposite else "+"
         axis_proj[c] = p
+        arm_stats[m] = {"mean_cos_within_plus": mean_cos(cp, cp, True), "mean_cos_within_minus": mean_cos(cm, cm, True),
+                        "mean_cos_between_arms": between, "arms_opposite": bool(opposite)}
     log(f"  {len(comms)} modules of >= {MIN_MODULE} genes (Louvain on {len(edges):,} edges); "
         f"{int((module == 0).sum()):,} genes unassigned")
 
@@ -147,18 +170,24 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
     rows = []
     for m, c in enumerate(comms, 1):
         cols = inc[c]
-        sgn = np.where(arm[c] == "+", 1.0, -1.0).astype(np.float32)
-        Zm = np.asarray(DDL_z[np.sort(cols)], dtype=np.float32)
+        is_plus = arm[c] == "+"
         order = np.argsort(cols)
-        sg = sgn[order]
-        with np.errstate(invalid="ignore"):
-            num = np.nansum(Zm * sg[:, None, None], axis=0)
-            den = np.isfinite(Zm).sum(axis=0)
-        scores[m - 1] = np.where(den > 0, num / np.maximum(den, 1), np.nan)
-        pz = np.asarray(DD_z[:, cols], dtype=np.float32) * sgn[None, :]
-        pooled[m - 1] = np.nanmean(pz, axis=1)
+        Zm = np.asarray(DDL_z[cols[order]], dtype=np.float32)          # members x drug-doses x lines
+        plus_o = is_plus[order]
+        with np.errstate(invalid="ignore"), warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            sc = np.nanmean(Zm[plus_o], axis=0)
+            pz = np.nanmean(np.asarray(DD_z[:, cols[is_plus]], dtype=np.float32), axis=1)
+            if (~plus_o).any():                                        # + arm minus - arm
+                sc = sc - np.nanmean(Zm[~plus_o], axis=0)
+                pz = pz - np.nanmean(np.asarray(DD_z[:, cols[~is_plus]], dtype=np.float32), axis=1)
+        scores[m - 1] = sc
+        pooled[m - 1] = pz
         o = np.argsort(-np.nan_to_num(pooled[m - 1], nan=0.0))
-        spread = np.nanmedian(np.abs(scores[m - 1]), axis=0)
+        strongest = np.argsort(-np.abs(np.nan_to_num(pooled[m - 1], nan=0.0)))[:8]
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            spread = np.nanmean(np.abs(scores[m - 1][strongest]), axis=0)
         ol = np.argsort(-np.nan_to_num(spread, nan=-1.0))
         plus = [cc for cc, a_ in zip(c, arm[c]) if a_ == "+"]
         minus = [cc for cc, a_ in zip(c, arm[c]) if a_ == "-"]
@@ -170,7 +199,7 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
                      "xs": float(xys[c, 0].mean()), "ys": float(xys[c, 1].mean()),
                      "drugs_up": "; ".join(f"{dlabel[i]} ({pooled[m - 1, i]:+.1f})" for i in o[:8]),
                      "drugs_down": "; ".join(f"{dlabel[i]} ({pooled[m - 1, i]:+.1f})" for i in o[::-1][:8]),
-                     "responsive_lines": ", ".join(cell[ol[:8]])})
+                     "responsive_lines": ", ".join(cell[ol[:8]]), **arm_stats[m]})
     write_parquet(pd.DataFrame(rows), os.path.join(gd, "modules.parquet"))
     save_npy(os.path.join(gd, "module_scores.npy"), scores.astype(np.float16))
     save_npy(os.path.join(gd, "module_pooled_z.npy"), pooled)

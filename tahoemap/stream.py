@@ -1,11 +1,17 @@
-"""stream - the build driver, and the build without the 430 GB download: every expression file is fetched from Hugging Face, summed into
-its plate's pseudobulk, and deleted. Disk need: the pseudobulk only (~17 GB), plus ~1 GB of files in flight.
+"""stream - the build driver, and the build without the 430 GB download: every expression file is fetched from
+Hugging Face, summed into its plate's pseudobulk, and deleted. Disk need: the pseudobulk only (~17 GB), plus ~1 GB of
+files in flight.
 
 The summing is the ported atlas_core._build_group itself, unchanged: in each worker process the module's
 `pq.ParquetFile` is swapped for a shim that downloads the requested file (and the next ones of the same plate, in the
-background) before opening it, and deletes the file read before. The output is the same pseudobulk folder a local
-build writes, so every later stage is the same. Files are assigned to plates from their parquet footers (a file can
-span two plates; profiles are keyed by well and line and summed across groups by the effects step, as in the atlas).
+background) before opening it, and deletes the files read before (on Windows a file still open is deleted at a
+later call, once released). The output is the same pseudobulk folder a local build writes, so every later stage is
+the same. Files are assigned to plates from their parquet footers (a file can span two plates; profiles are keyed by
+well and line and summed across groups by the effects step, as in the atlas).
+
+A stopped build keeps its finished plates and continues where it stopped (a streamed one keeps streaming: cli
+switches to --stream when <out>/hf/file_plates.json is there). A build never deletes finished plates because fewer
+files are found, and a local build stops when the download is incomplete (unless --allow-partial).
 """
 
 import glob
@@ -25,12 +31,16 @@ import pyarrow.parquet as _pq
 
 from . import atlas_core as A
 from . import tlib as T
-from .common import log
+from .common import log, mark_output
 
 REPO = "https://huggingface.co/datasets/tahoebio/Tahoe-100M/resolve/main/"
 API = "https://huggingface.co/api/datasets/tahoebio/Tahoe-100M/tree/main/data"
 META = ("gene_metadata", "sample_metadata", "cell_line_metadata", "drug_metadata")
 PREFETCH = 2
+FILE_PLATES = "file_plates.json"   # in <out>/hf: the plate of each streamed file (there = a streamed build)
+IN_FLIGHT = "in_flight"            # in <out>/hf: the files being summed; never indexed as data
+DELETE_TRIES = 3                   # failed deletions of a finished file before a warning (Windows: still open)
+OF_RE = re.compile(r"-(\d+)-of-(\d+)\.parquet$")   # Tahoe's file naming: train-00012-of-03388.parquet
 
 
 def fetch(url, dest, tries=6):
@@ -149,7 +159,7 @@ _W = {}
 
 
 def _init_worker(next_of, tmp):
-    _W.update(next_of=next_of, tmp=tmp, pool=ThreadPoolExecutor(PREFETCH), futs={}, prev=None,
+    _W.update(next_of=next_of, tmp=tmp, pool=ThreadPoolExecutor(PREFETCH), futs={}, prev=None, to_delete=[],
               lock=threading.Lock())
     shim = types.ModuleType("pq_shim")
     for k in dir(_pq):
@@ -179,12 +189,26 @@ def _open_streamed(url, *a, **kw):
     path = _W["futs"].pop(url).result()
     pf = _pq.ParquetFile(path, *a, **kw)
     prev, _W["prev"] = _W["prev"], path
-    if prev and os.path.exists(prev):
-        try:
-            os.remove(prev)
-        except OSError:
-            pass
+    if prev:
+        _W["to_delete"].append([prev, 0])
+    _sweep()
     return pf
+
+
+def _sweep():
+    """Delete the files already read. On Windows the file read just before is often still open (the caller still holds
+    its ParquetFile): it is kept on the list and deleted at a later call, once released."""
+    keep = []
+    for item in _W["to_delete"]:
+        try:
+            if os.path.exists(item[0]):
+                os.remove(item[0])
+        except OSError as e:
+            item[1] += 1
+            if item[1] == DELETE_TRIES:
+                log(f"  could not delete {item[0]} yet ({e}); trying again with the next files")
+            keep.append(item)
+    _W["to_delete"] = keep
 
 
 # ----------------------------------------------------------------------------- driver
@@ -201,17 +225,17 @@ def build(args, hf_dir):
     """args as for atlas_core.cmd_build (out = <OUT>/atlas). hf_dir holds metadata/ and the plate map cache."""
     D = A.dirs(args.out)
     fetch_metadata(os.path.join(hf_dir, "metadata"))
-    tmp = os.path.join(hf_dir, "in_flight")
+    tmp = os.path.join(hf_dir, IN_FLIGHT)
     os.makedirs(tmp, exist_ok=True)
     for f in glob.glob(os.path.join(tmp, "*")):
         os.remove(f)
+    mark_output(tmp)                                         # the files in flight are never indexed as the data
     idx = T.discover(hf_dir, args.out, refresh=True)
     gm = T.read_tables(idx["gene"], ["token_id", "gene_symbol", "ensembl_id"])
     G = int(gm["token_id"].max()) + 1
-    rels = list_files()
-    if args.limit_files:
-        rels = rels[:args.limit_files]
-    pmap_path = os.path.join(hf_dir, "file_plates.json")
+    names = list_files()
+    rels = names[:args.limit_files] if args.limit_files else names
+    pmap_path = os.path.join(hf_dir, FILE_PLATES)
     pmap = json.load(open(pmap_path, encoding="utf-8")) if os.path.exists(pmap_path) else {}
     todo = [r for r in rels if r not in pmap]
     if todo:
@@ -230,11 +254,8 @@ def build(args, hf_dir):
         for a, b in zip(by_plate[p], by_plate[p][1:]):
             next_of[a] = b
     jobs = [(gid, p, by_plate[p], G, D["pb"], args.batch_size) for gid, p in enumerate(plates)]
-    for old in glob.glob(os.path.join(D["pb"], "group*_profiles.csv")):
-        gid = int(re.search(r"group(\d+)_", old).group(1))
-        if gid >= len(jobs):
-            for f in glob.glob(old.replace("_profiles.csv", "*")):
-                os.remove(f)
+    check_extra_groups(D["pb"], len(jobs), "the Hugging Face file list" +
+                      (f" (--limit-files {args.limit_files})" if args.limit_files else ""))
     workers = min(args.workers or T.auto_workers(), len(jobs))
     per_worker = 5000 * G * 4 / 1e9 * 1.3 + 1.0
     mem = T.mem_available_gb()
@@ -242,43 +263,110 @@ def build(args, hf_dir):
         workers = max(1, min(workers, int(mem / per_worker)))
     log(f"{len(rels)} files on {len(plates)} plates, streamed from Hugging Face -> one group per plate, "
         f"{workers} at a time (~{per_worker:.1f} GB each)")
-    run_groups(jobs, workers, initializer=_init_worker, initargs=(next_of, tmp))
+    run_groups(jobs, workers, initializer=_init_worker, initargs=(next_of, tmp), streamed=True)
+    left = []
     for f in glob.glob(os.path.join(tmp, "*")):              # the last file of each plate
-        os.remove(f)
-    finish_build(args, idx, len(jobs), "streamed from Hugging Face")
+        try:
+            os.remove(f)
+        except OSError:
+            left.append(f)
+    if left:
+        log(f"  {len(left)} finished file(s) could not be deleted from {tmp}; delete them by hand")
+    finish_build(args, idx, len(jobs), "streamed from Hugging Face", n_files=len(rels), expected=len(names))
 
 
-def run_groups(jobs, workers, initializer=None, initargs=()):
+def check_extra_groups(pb, n_groups, source):
+    """Plate groups numbered n_groups and above belong to an earlier build that found more plates. The build stops
+    rather than delete them: files that are missing now (an unfinished download, a folder of files in flight) must
+    never cost finished plates."""
+    extra = [f for f in glob.glob(os.path.join(pb, "group*_profiles.csv"))
+             if int(re.search(r"group(\d+)_", os.path.basename(f)).group(1)) >= n_groups]
+    if extra:
+        raise SystemExit(f"build: {pb} holds {len(extra)} more plate groups than the {n_groups} plates found in "
+                         f"{source}. Nothing was deleted. If those files are complete and the earlier build should "
+                         f"go, delete {pb} (or use a new --out) and run again.")
+
+
+def expected_files(exprs):
+    """(total, missing): Tahoe names its expression files train-NNNNN-of-TOTAL.parquet; (None, 0) without such names."""
+    seen = defaultdict(set)
+    for f in exprs:
+        m = OF_RE.search(os.path.basename(f))
+        if m:
+            seen[int(m.group(2))].add(int(m.group(1)))
+    if not seen:
+        return None, 0
+    total = max(seen)
+    return total, total - len(seen[total])
+
+
+def run_groups(jobs, workers, initializer=None, initargs=(), streamed=False):
     """Run atlas_core._build_group (verbatim) for every plate group, biggest first, `workers` at a time.
 
     A process pool that loses a worker (most often: killed for lack of memory) makes multiprocessing.Pool wait
-    forever; this executor raises instead, and finished plates are kept for the next run."""
+    forever; this executor raises instead. A plate that fails is logged at once and the build stops; finished plates
+    are kept for the next run (the plates still being summed are redone)."""
     from concurrent.futures import ProcessPoolExecutor, as_completed
     from concurrent.futures.process import BrokenProcessPool
+    again = "run again" + (" (it continues streaming; or with --stream)" if streamed else "")
     order = sorted(jobs, key=lambda j: -len(j[2]))            # biggest plates first: a shorter tail
     t0, done = time.time(), 0
+    ex = ProcessPoolExecutor(workers, mp_context=mp.get_context("spawn"), initializer=initializer,
+                             initargs=initargs)
     try:
-        with ProcessPoolExecutor(workers, mp_context=mp.get_context("spawn"), initializer=initializer,
-                                 initargs=initargs) as ex:
-            futs = [ex.submit(A._build_group, j) for j in order]
-            for fu in as_completed(futs):
+        futs = {ex.submit(A._build_group, j): j[1] for j in order}
+        for fu in as_completed(futs):
+            try:
                 _gid, name, _nc, reused = fu.result()
-                done += 1
-                log(f"  {name} {'already built' if reused else 'done'} ({done}/{len(jobs)} plates, "
-                    f"{(time.time() - t0) / 60:.1f} min)")
+            except BrokenProcessPool:
+                raise
+            except Exception as e:  # noqa: BLE001 - any plate's failure stops the build now, not after the others
+                msg = f"{type(e).__name__}: {e}"
+                log(f"  plate {futs[fu]} FAILED: {msg}")
+                _stop_pool(ex)
+                raise SystemExit(f"build: plate {futs[fu]} failed ({msg}). The {done} finished plates are kept: "
+                                 f"fix the cause and {again} to continue.")
+            done += 1
+            log(f"  {name} {'already built' if reused else 'done'} ({done}/{len(jobs)} plates, "
+                f"{(time.time() - t0) / 60:.1f} min)")
     except BrokenProcessPool:
+        _stop_pool(ex)
         raise SystemExit(f"build: a worker process died (most often it ran out of memory with {workers} plates at "
                          f"a time). The {done} finished plates are kept: run again with --workers "
-                         f"{max(1, workers - 1)}.")
+                         f"{max(1, workers - 1)}" + (" --stream." if streamed else "."))
+    except BaseException:
+        _stop_pool(ex)
+        raise
+    ex.shutdown(wait=True)
+
+
+def _stop_pool(ex):
+    """Cancel the queued plates and end the ones running (their partial sums are never written)."""
+    ex.shutdown(wait=False, cancel_futures=True)
+    for p in list((getattr(ex, "_processes", None) or {}).values()):
+        try:
+            p.terminate()
+        except Exception:  # noqa: BLE001
+            pass
 
 
 def build_local(args):
     """atlas_core.cmd_build's driver, with run_groups' pool (the per-plate work is the verbatim _build_group)."""
     D = A.dirs(args.out)
     idx = T.discover(args.data, args.out, refresh=args.reindex)
-    exprs = idx["expression"]
+    exprs = [f for f in idx["expression"] if IN_FLIGHT not in os.path.normpath(f).split(os.sep)]
     if not exprs:
         raise SystemExit("No expression parquet files found under " + os.path.abspath(args.data) + T.REINDEX_HINT)
+    total, missing = expected_files(exprs)
+    partial = bool(missing) and not args.limit_files
+    if partial and not getattr(args, "allow_partial", False):
+        raise SystemExit(f"build: {missing:,} of the {total:,} expression files are missing under "
+                         f"{os.path.abspath(args.data)} (is the download unfinished?). Finish it ('tahoe download' "
+                         f"resumes it) and run again, or add --allow-partial to build from the {len(exprs):,} files "
+                         "there (the build is redone once the rest are there).")
+    if partial:
+        log(f"WARNING: {missing:,} of the {total:,} expression files are missing; building from the {len(exprs):,} "
+            "there (--allow-partial)")
     if args.limit_files:
         exprs = exprs[:args.limit_files]
     gm = T.read_tables(idx["gene"], ["token_id", "gene_symbol", "ensembl_id"])
@@ -293,11 +381,7 @@ def build_local(args):
         by_plate[fplate[f]].append(f)
     plates = sorted(by_plate, key=lambda p: (len(p), p))
     jobs = [(gid, p, by_plate[p], G, D["pb"], args.batch_size) for gid, p in enumerate(plates)]
-    for old in glob.glob(os.path.join(D["pb"], "group*_profiles.csv")):
-        gid = int(re.search(r"group(\d+)_", old).group(1))
-        if gid >= len(jobs):
-            for f in glob.glob(old.replace("_profiles.csv", "*")):
-                os.remove(f)
+    check_extra_groups(D["pb"], len(jobs), f"the {len(exprs)} files under {os.path.abspath(args.data)}")
     workers = min(args.workers or T.auto_workers(), len(jobs))
     per_worker = 5000 * G * 4 / 1e9 * 1.3 + 1.0
     mem = T.mem_available_gb()
@@ -308,10 +392,10 @@ def build_local(args):
     if not args.workers and workers > 2 and T.disk_kind(args.data) == "hdd":
         log("  the data seem to sit on a hard drive: if reading is slow, stop and rerun with --workers 2")
     run_groups(jobs, workers)
-    finish_build(args, idx, len(jobs), "local files")
+    finish_build(args, idx, len(jobs), "local files", n_files=len(exprs), expected=total, partial=partial)
 
 
-def finish_build(args, idx, n_groups, how):
+def finish_build(args, idx, n_groups, how, n_files=None, expected=None, partial=False):
     """The tail of atlas_core.cmd_build (sample map, well positions, build_info.json), for a build made elsewhere."""
     D = A.dirs(args.out)
     metas = sorted(glob.glob(os.path.join(D["pb"], "group*_profiles.csv")))
@@ -328,7 +412,9 @@ def finish_build(args, idx, n_groups, how):
     with open(os.path.join(args.out, "build_info.json"), "w", encoding="utf-8") as fh:
         json.dump({"G": _G(idx),
                    "groups": n_groups, "cells": int(prof["n_cells"].sum()), "profiles": len(prof),
-                   "well_position_source": source, "limit_files": args.limit_files, "how": how}, fh, indent=1)
+                   "well_position_source": source, "limit_files": args.limit_files, "how": how,
+                   "data": os.path.abspath(args.data), "n_files": n_files, "n_files_expected": expected,
+                   "partial": bool(partial)}, fh, indent=1)
     log(f"Build done: {int(prof['n_cells'].sum()):,} cells in {len(prof):,} well x line profiles, "
         f"{sm['sample'].nunique()} wells ({how}); well positions from {source} "
         f"(median purity {sm['slot_purity'].median():.3f})")

@@ -13,7 +13,21 @@ the saved W1 exactly as the atlas did (two passes, clean donors), and keeps the 
 
 where c, s are the robust centre and scale (median, 1.4826 MAD) of R over the reference wells (drug wells on reliable
 plates) for that gene and line, and the plate factor is the atlas's own per-gene z divisor (plate_scale_gene.npy).
-Lines that do not express a gene, and profiles with fewer than min_cells cells, are NaN, never 0.
+
+What is NaN (never 0), and why. Besides what the atlas leaves out (profiles with fewer than min_cells cells, and lines
+outside the atlas's expr_mask, i.e. below 25% of the median line), two kinds of value are set to NaN here, because the
+per-line values cannot be read there although the atlas's median over lines could:
+  - ambient-only lines: line_measured[l, g] = expr_mask[l, g] AND line_cpm[l, g] >= AMB_FRAC x the gene's pooled CPM
+    (genes.csv pooled_cpm). Every well holds ambient RNA, the average of all its cells, so a line that does not make
+    the gene still reads about the ambient fraction (~0.1) of the pooled level. For a gene that fewer than half of the
+    lines express, the median line is such a line and expr_mask lets the rest through; their "responses" are then
+    the well's ambient RNA moving (other lines' responses, cell loss), not the line's own. Those (line, gene) pairs
+    are NaN in R, DDL_lfc and DDL_z; line_measured.npy says which pairs are measured.
+  - low-count profiles: a profile's value is NaN when its expected count line_cpm[l, g] x profile UMI / 1e6 < E_MIN.
+    With ~0-1 expected counts the log2 CPM is the pseudocount and a single read; a line depleted by the drug (few
+    cells, so few UMI) then shows large false rises of low-level genes, and the line's spread s (estimated from
+    deeper wells) makes their z over-confident.
+Both masks are applied after the W1 self-check below, so the check still compares like with like.
 
 It checks itself as it goes: per plate, the median over lines of r1 must reproduce the saved W1, and the
 re-derived eff must reproduce W1 - W2 wherever both are finite (both to float32 precision); the run stops otherwise.
@@ -22,11 +36,12 @@ Outputs in <out>/tensor/ (the row/column order of every index is that of <out>/a
     R.npy            genes x wells x lines      (optional, --no-well-tensor drops it)
     DDL_lfc.npy      genes x drug-doses x lines (float16)
     DDL_z.npy        genes x drug-doses x lines (float16)
+    line_measured.npy  lines x genes (bool): the line truly expresses the gene (see above); False -> NaN values
     line_center.npy, line_scale.npy  genes x lines: c and s above
     plate_base.npy   plates x lines x genes: each line's baseline (median log2 CPM over the plate's drug wells)
     well_counts.npy  wells x genes: raw UMI counts summed over the well's cell lines (the raw layer, per well)
     well_umi.npy, well_line_cells.npy, well_line_umi.npy   wells, wells x lines: totals and cells
-    info.json
+    info.json        sizes, the self-check deviations, amb_frac, e_min and how many values each mask removed
 """
 
 import json
@@ -38,7 +53,18 @@ import numpy as np
 from . import atlas_core as A
 from .common import log, open_memmap, read_effects_index, save_npy, stamp_stage
 
-VERSION = 1
+VERSION = 2
+
+AMB_FRAC = 0.25      # a line truly expresses a gene at >= this fraction of the gene's pooled CPM (ambient reads ~0.1)
+E_MIN = 2.0          # a profile's value needs >= this many expected counts (line_cpm x profile UMI / 1e6)
+
+
+def measured_mask(expr_mask, line_cpm, pooled_cpm):
+    """lines x genes (gene columns only): the line truly expresses the gene - the atlas's expr_mask AND a level of
+    at least AMB_FRAC x the gene's pooled CPM (below it the line reads only the wells' ambient RNA)."""
+    lc = np.asarray(line_cpm, dtype=np.float64)
+    pc = np.asarray(pooled_cpm, dtype=np.float64)
+    return np.asarray(expr_mask, dtype=bool) & (lc >= AMB_FRAC * pc[None, :])
 
 
 def _position_effect(W1, wells, unreliable, gK):
@@ -91,6 +117,12 @@ def run(out, dtype="float32", keep_well=True, chunk=384, check=True):
         modules = {k: np.asarray(v, dtype=np.int64) for k, v in json.load(fh).items()}
     keep = genes["token"].to_numpy()[:gK].astype(np.int64)
     comp_mask = expr_mask[:, :gK] & (line_cpm[:, :gK] >= A.COMP_MIN_CPM)
+    measured = measured_mask(expr_mask[:, :gK], line_cpm[:, :gK], genes["pooled_cpm"].to_numpy()[:gK])
+    n_amb = int((expr_mask[:, :gK] & ~measured).sum())
+    lcpm = np.asarray(line_cpm[:, :gK], dtype=np.float32)
+    log(f"  ambient-only (line, gene) pairs: {n_amb:,} of {int(expr_mask[:, :gK].sum()):,} the atlas counts as "
+        f"expressed (line level < {AMB_FRAC:g} x the gene's pooled CPM) -> NaN; profiles with < {E_MIN:g} expected "
+        "counts -> NaN")
 
     log("  position effect: re-deriving the atlas's two-pass leave-drug-out correction from W1 ...")
     eff, grp, ref, is_drug = _position_effect(W1, wells, unreliable, gK)
@@ -115,6 +147,7 @@ def run(out, dtype="float32", keep_well=True, chunk=384, check=True):
     wl_umi = np.zeros((N, L), dtype=np.float32)
     plate_base = np.full((len(plates), L, gK), np.nan, dtype=np.float32)
     worst = 0.0
+    n_low = 0
     for pi, p in enumerate(plates):
         rows = np.flatnonzero(wells["plate"].to_numpy() == p)
         if not rows.size:
@@ -136,6 +169,13 @@ def run(out, dtype="float32", keep_well=True, chunk=384, check=True):
             if d > 1e-4:
                 raise SystemExit(f"tensor: plate {p}: the per-line residuals do not reproduce W1 (max diff {d:.3g})")
         r2 = r1[:, :, :gK] - eff[rows][:, None, :gK]
+        # the per-line masks (module docstring), after the W1 check: ambient-only lines, then low expected counts
+        r2[:, ~measured] = np.nan
+        cpm_min = np.where(tot > 0, E_MIN * 1e6 / np.maximum(tot, 1.0), np.inf).astype(np.float32)   # lowest CPM kept
+        low = (lcpm[None, :, :] < cpm_min[:, :, None]) & np.isfinite(r2)
+        n_low += int(low.sum())
+        r2[low] = np.nan
+        del low
         if np.all(np.diff(rows) == 1):                     # a plate's wells are contiguous in the atlas order
             R[:, rows[0]:rows[-1] + 1, :] = r2.transpose(2, 0, 1).astype(R.dtype)
         else:
@@ -166,7 +206,8 @@ def run(out, dtype="float32", keep_well=True, chunk=384, check=True):
     refw = np.flatnonzero(ref)
     for g0 in range(0, gK, chunk):
         g1 = min(gK, g0 + chunk)
-        X = np.asarray(R[g0:g1], dtype=np.float32)                      # cg x N x L
+        # a copy, not a view: no view of the R memmap may outlive the loop, or Windows refuses the rename / delete
+        X = np.array(R[g0:g1], dtype=np.float32)                        # cg x N x L
         sub = X[:, refw, :]
         c = np.nanmedian(sub, axis=1)
         s = 1.4826 * np.nanmedian(np.abs(sub - c[:, None, :]), axis=1)
@@ -190,21 +231,27 @@ def run(out, dtype="float32", keep_well=True, chunk=384, check=True):
             log(f"    genes {g0:,}-{g1:,} of {gK:,} ({(time.time() - t0) / 60:.1f} min)")
     DDL_lfc.flush()
     DDL_z.flush()
-    del R, DDL_lfc, DDL_z
+    del R, DDL_lfc, DDL_z                       # close the memmaps before the files are renamed or removed
     for name in ("DDL_lfc", "DDL_z", "R"):
         tmp = os.path.join(td, f"{name}.npy.tmp")
         if name == "R" and not keep_well:
             os.remove(tmp)
+            final = os.path.join(td, "R.npy")
+            if os.path.exists(final):          # an earlier run's R.npy would not match this run's DDL_*
+                os.remove(final)
             continue
         os.replace(tmp, os.path.join(td, f"{name}.npy"))
-    for name, arr in [("line_center", centre), ("line_scale", scale), ("plate_base", plate_base),
+    for name, arr in [("line_measured", measured), ("line_center", centre), ("line_scale", scale),
+                      ("plate_base", plate_base),
                       ("well_counts", well_counts), ("well_umi", well_umi.astype(np.float64)),
                       ("well_line_cells", wl_cells), ("well_line_umi", wl_umi)]:
         save_npy(os.path.join(td, f"{name}.npy"), arr)
     meta = {"version": VERSION, "genes": gK, "wells": N, "drugdoses": Dn, "lines": L, "plates": plates,
             "R_dtype": dtype if keep_well else None, "layout": "gene-major: R[g, w, l], DDL_*[g, d, l]",
-            "min_cells": A.MIN_CELLS, "unreliable_plates": unreliable,
-            "check_W1_max_diff": worst, "check_W2_max_diff": dev, "minutes": round((time.time() - t0) / 60, 2)}
+            "min_cells": A.MIN_CELLS, "unreliable_plates": unreliable, "amb_frac": AMB_FRAC, "e_min": E_MIN,
+            "n_measured_line_gene_pairs": int(measured.sum()), "n_ambient_line_gene_pairs": n_amb,
+            "n_low_count_values": n_low, "check_W1_max_diff": worst, "check_W2_max_diff": dev,
+            "minutes": round((time.time() - t0) / 60, 2)}
     with open(os.path.join(td, "info.json"), "w", encoding="utf-8") as fh:
         json.dump(meta, fh, indent=1)
     stamp_stage(out, "tensor", VERSION, meta)

@@ -842,8 +842,19 @@ def _report(path, ctx):
                 for _, r in labels.sort_values("n_genes", ascending=False).head(20).iterrows()]
         L += [_md_table(["module", "genes", "+/-", "label", "from (arm)", "q", "top + arm", "top - arm"], rows), ""]
 
-    L += ["## 5. Novel gene relations", "",
-          f"{len(edges):,} pairs (one row per pair) are reproduced in both halves of the compounds (fdr <= 0.05, "
+    rinfo = {}
+    try:
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(path))), "relations", "info.json"),
+                  encoding="utf-8") as fh:
+            rinfo = json.load(fh)
+    except (OSError, ValueError):
+        pass
+    L += ["## 5. Novel gene relations", ""]
+    if rinfo.get("novel_blocked_by"):
+        L += [f"**Novelty was not assessed**: these reference sources did not load: "
+              f"{', '.join(rinfo['novel_blocked_by'])}. Without them a known link or a shared locus cannot be ruled "
+              "out, so no pair is called novel. Run `tahoe run --from reference` with network access.", ""]
+    L += [f"{len(edges):,} pairs (one row per pair) are reproduced in both halves of the compounds (fdr <= 0.05, "
           f"|cos| >= 0.5) and have no shared HGNC gene group, no shared Hallmark / Reactome pathway and no STRING "
           f"link, and are not the same locus or a read-through pair. Top 25 by |cos| (novel_edges.csv has all):", ""]
     if len(edges):
@@ -890,8 +901,9 @@ def _report(path, ctx):
           "same.",
           "- Cancer cell lines only (50 lines): relations driven by mutated pathways or lost checkpoints (e.g. TP53) "
           "may not hold in normal cells, and tissue-specific programmes are under-represented.",
-          "- Relations seen with one drug family only ('one half' in relations) are real in that family but not "
-          "replicated across compounds; they are never called novel here.",
+          "- Relations strong in only one of the two random halves of the compounds ('one half' in relations; the "
+          "halves are a hash split of compound names) are not replicated and carry no error estimate; they are "
+          "never called novel here.",
           "- Neighbouring genes (same locus, <= 50 kb) and read-through pairs (the 5' gene's transcription running "
           "into the 3' gene) correlate without regulation: they are excluded from 'novel'.",
           "- 'Not known' means no shared HGNC gene group, Hallmark / Reactome pathway or STRING link (score >= 400) "
