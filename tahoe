@@ -47,7 +47,7 @@ PY="python3"
 [ -x "$VENV/bin/python" ] && PY="$VENV/bin/python"
 PIDF="$OUT/.job.pid"             # the job's pid; the job removes it when it ends (tahoemap/cli.py, JOB_PID)
 CONSOLE="$OUT/console.log"
-PKGS="numpy pandas pyarrow scipy scikit-learn networkx psutil huggingface_hub hf_xet brotli>=1.2.0"
+PKGS="numpy pandas pyarrow scipy scikit-learn networkx psutil huggingface_hub hf_xet brotli>=1.2.0 anthropic"
 SAME=""                          # the folder options to repeat in the commands suggested to the user
 [ -n "$DATA_ARG" ] && SAME="$SAME --data $(printf %q "$DATA")"
 [ -n "$OUT_ARG" ] && SAME="$SAME --out $(printf %q "$OUT")"
@@ -246,6 +246,9 @@ tahoe - every gene, drug and cell line of Tahoe-100M in one map
   gene SYMBOL           drugs that raise / lower it, in which lines, genes that move with / opposite it
   drug NAME | line NAME | pair GENE1 GENE2 | module N        the same for a drug, a cell line, two genes
   open                  where the interactive map, the Obsidian vault and the validation report are
+  review plan|run|status|tables   literature-review agents (Anthropic API key; run needs --max-usd X or
+                        --limit N; --dry-run sends nothing); in the foreground, Ctrl-C pauses, rerun resumes
+  duplicate DEST [--repo DIR]     copy the output for review work (big arrays hard-linked; --repo: clone the code)
   test                  the whole pipeline on synthetic data with planted answers (a few minutes)
   update                newest scripts (git pull)
   <stage> [options]     one stage now, in the foreground: build effects tensor tables embed reference
@@ -271,6 +274,10 @@ main() {
     update) cmd_update ;;
     help|-h|--help) cmd_help ;;
     gene|drug|line|pair|module) need_packages; tm "$c" "$@" ;;
+    review) need_packages
+      "$PY" -c "import anthropic" 2>/dev/null || die "the Anthropic SDK is missing: $PY -m pip install anthropic"
+      tm "$c" "$@" ;;
+    duplicate) need_packages; tm "$c" "$@" ;;
     open|where)
       say "Interactive map:  $OUT/map/gene_map.html   (open it in a browser)"
       say "Obsidian vault:   $OUT/vault   (Obsidian: Open folder as vault)"

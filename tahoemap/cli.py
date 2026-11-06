@@ -4,6 +4,8 @@
     build ... map   one stage (and nothing else)
     status      what is done, what is out of date (and why), what runs next
     gene SYMBOL | drug NAME | line NAME | pair A B | module N     look-ups on a finished run
+    review plan|run|status|tables   the literature-review agents (tahoemap/review; docs/DESIGN-review-and-physics.md)
+    duplicate DEST [--repo DIR]     copy a finished output folder for review work (big arrays hard-linked)
 
 A stage is out of date when it never finished, its method changed, it ran with other values of the options that
 change its results (--dims, --min-cells, ...: once given they stay in force for the output folder, so a stopped run
@@ -33,6 +35,7 @@ STAGE_MODULE = {"tensor": "tensor", "tables": "tables", "embed": "embed", "refer
                 "relations": "relations", "graph": "graph", "validate": "validate", "vault": "vault",
                 "map": "html_map"}
 LOOKUPS = ("gene", "drug", "line", "pair", "module")
+EXTRA_COMMANDS = ("review", "duplicate")   # not stages: they read a finished output (and never run the pipeline)
 
 # Options that change a stage's results. Each stage records them in its stamp (info.options); a run that sets one to
 # another value than the stage ran with redoes that stage and every later one. Once given they are remembered for the
@@ -53,8 +56,9 @@ JOB_ENV = "TAHOE_JOB"                      # set by the wrapper for a background
 def make_parser():
     ap = argparse.ArgumentParser(prog="tahoemap", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=["run", "status"] + STAGES + list(LOOKUPS))
-    ap.add_argument("names", nargs="*", help="look-ups: the gene / drug / line / module (pair: two genes)")
+    ap.add_argument("command", choices=["run", "status"] + STAGES + list(LOOKUPS) + list(EXTRA_COMMANDS))
+    ap.add_argument("names", nargs="*", help="look-ups: the gene / drug / line / module (pair: two genes); review: "
+                                             "plan, run, status or tables; duplicate: the destination folder")
     ap.add_argument("--data", default=None, help="Tahoe-100M folder (default $TAHOE_DATA or ~/Tahoe-100M)")
     ap.add_argument("--out", default=None, help="output folder (default <data>/tahoemap)")
     ap.add_argument("--stream", action="store_true",
@@ -63,7 +67,8 @@ def make_parser():
     ap.add_argument("--reuse-atlas", default=None, help="an old tahoe_atlas.py output folder whose build to reuse")
     ap.add_argument("--from", dest="start", choices=STAGES, default=None, help="run: start at this stage")
     ap.add_argument("--to", dest="stop", choices=STAGES, default=None, help="run: stop after this stage")
-    ap.add_argument("--redo", action="store_true", help="run: redo every stage")
+    ap.add_argument("--redo", action="store_true", help="run: redo every stage; review run: review entities again "
+                                                        "that are done")
     ap.add_argument("--offline", action="store_true",
                     help="no downloads: the reference stage uses only its cache (else Tahoe's own gene names)")
     ap.add_argument("--refresh-reference", action="store_true",
@@ -88,6 +93,36 @@ def make_parser():
     ap.add_argument("--min-responsive", type=int, default=5, help="embed: contexts with |z| >= 3 a gene needs")
     ap.add_argument("--top", type=int, default=15, help="look-ups: rows per table")
     ap.add_argument("--truth", default=None, help="validate: ground_truth.json of synthetic test data (tests only)")
+    g = ap.add_argument_group("review (python -m tahoemap review plan|run|status|tables) and duplicate")
+    g.add_argument("--kinds", default=None, help="review: which entities, a comma list of gene,drug,line (default all)")
+    g.add_argument("--only", default=None, help="review: only these entities (comma list of names or ids such as "
+                                                "gene:12, drug:NAME, line:CVCL_0023; or @FILE with one a line)")
+    g.add_argument("--limit", type=int, default=0, help="review run: start at most N entities")
+    g.add_argument("--max-usd", type=float, default=None,
+                   help="review run: the most this run may spend, in USD (no default: give it, --limit, or --no-cap)")
+    g.add_argument("--per-entity-usd", type=float, default=None,
+                   help="review run: the most one entity's attempt may spend (default: the agent file's max_usd)")
+    g.add_argument("--no-cap", action="store_true", help="review run: run without --max-usd / --limit")
+    g.add_argument("--concurrency", type=int, default=4, help="review run: entities reviewed at once (threads)")
+    g.add_argument("--model", default=None, help="review: the reviewers' model (default: the agent files', "
+                                                 "claude-opus-5-5)")
+    g.add_argument("--effort", default=None, choices=["low", "medium", "high", "xhigh", "max"],
+                   help="review: the reviewers' effort (default: the agent files', high)")
+    g.add_argument("--verify", default="llm", choices=["llm", "ids", "off"],
+                   help="review run: check cited ids (ids), and the claims against the abstracts (llm, default)")
+    g.add_argument("--web", dest="web", action="store_true", default=True,
+                   help="review run: let the agents use Anthropic's web search / fetch (default)")
+    g.add_argument("--no-web", dest="web", action="store_false", help="review run: no web search / fetch")
+    g.add_argument("--web-max-uses", type=int, default=5, help="review run: web searches (and fetches) per request")
+    g.add_argument("--keys-file", default=None,
+                   help="review run: Anthropic API keys, one a line (else ANTHROPIC_API_KEYS / ANTHROPIC_API_KEY)")
+    g.add_argument("--dry-run", action="store_true",
+                   help="review run: write the dossiers and first requests to OUT/review/dry_run/; send nothing")
+    g.add_argument("--fake", default=None, metavar="SCRIPT",
+                   help="review run: a scripted fake API instead of Anthropic's (tests; tahoemap/review/fake.py)")
+    g.add_argument("--tables", action="store_true", help="review status: also rebuild the review tables")
+    g.add_argument("--repo", default=None, metavar="DIR",
+                   help="duplicate: also clone this code repository into DIR (git clone)")
     return ap
 
 
@@ -380,6 +415,109 @@ def cmd_status(a):
     print("next: " + (" -> ".join(nxt) + f"   ({why})" if nxt else "nothing; everything is up to date"))
 
 
+# duplicate: in these folders the arrays and tables are written once (to a .tmp file, then swapped in), so a hard link
+# shares them safely: a stage that runs again in either copy replaces the file instead of writing into it.
+HARDLINK_DIRS = ("atlas", "tensor", "tables", "embed", "relations", "graph")
+HARDLINK_EXT = (".npy", ".npz", ".parquet")
+DUPLICATED = "duplicated_from.json"
+
+
+def _git(repo, *args):
+    try:
+        r = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True, timeout=60)
+        return r.stdout.strip() if r.returncode == 0 else None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def duplicate(src, dest, repo=None):
+    """Copy the output folder `src` to `dest` for review work: large immutable arrays hard-linked when on the same
+    file system (else copied), everything else copied, symbolic links kept as links; temporary and job files left
+    out. Writes dest/duplicated_from.json. With `repo`, also `git clone`s this code repository there. Returns the
+    record."""
+    src, dest = os.path.abspath(src), os.path.abspath(dest)
+    if not os.path.isdir(os.path.join(src, "stages")):
+        sys.exit(f"duplicate: {src} is not a tahoemap output folder (no stages/); give --out with one")
+    if os.path.exists(dest) and (not os.path.isdir(dest) or os.listdir(dest)):
+        sys.exit(f"duplicate: {dest} exists and is not empty; give a new folder")
+    if dest == src or dest.startswith(src + os.sep) or src.startswith(dest + os.sep):
+        sys.exit("duplicate: the destination must lie outside the output folder (and not contain it)")
+    code_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if repo:
+        repo = os.path.abspath(os.path.expanduser(repo))
+        if os.path.exists(repo) and os.listdir(repo):
+            sys.exit(f"duplicate --repo: {repo} exists and is not empty; give a new folder")
+        if _git(code_root, "rev-parse", "--show-toplevel") is None:
+            sys.exit(f"duplicate --repo: {code_root} is not a git repository")
+    os.makedirs(dest, exist_ok=True)
+    n = {"hard_linked": 0, "copied": 0, "symlinks": 0, "skipped": 0}
+    size = {"hard_linked": 0, "copied": 0}
+    t0 = time.time()
+    log(f"Duplicating {src} -> {dest} ...")
+    for root, dirs, files in os.walk(src):
+        rel = os.path.relpath(root, src)
+        top = rel.split(os.sep)[0] if rel != "." else ""
+        droot = os.path.join(dest, rel) if rel != "." else dest
+        os.makedirs(droot, exist_ok=True)
+        for d in list(dirs):
+            sp = os.path.join(root, d)
+            if os.path.islink(sp):                 # e.g. atlas/pseudobulk of a --reuse-atlas output: keep the link
+                os.symlink(os.readlink(sp), os.path.join(droot, d), target_is_directory=True)
+                n["symlinks"] += 1
+                dirs.remove(d)
+        for f in files:
+            sp, dp = os.path.join(root, f), os.path.join(droot, f)
+            if f.endswith((".tmp", ".part")) or f in (JOB_PID, ".run.lock") or (rel == "." and f == DUPLICATED):
+                n["skipped"] += 1
+                continue
+            if os.path.islink(sp):
+                os.symlink(os.readlink(sp), dp)
+                n["symlinks"] += 1
+                continue
+            if top in HARDLINK_DIRS and f.endswith(HARDLINK_EXT):
+                try:
+                    os.link(sp, dp)
+                    n["hard_linked"] += 1
+                    size["hard_linked"] += os.path.getsize(sp)
+                    continue
+                except OSError:                    # another file system, or links not allowed: copy
+                    pass
+            shutil.copy2(sp, dp)
+            n["copied"] += 1
+            size["copied"] += os.path.getsize(sp)
+    stamps = {s: read_stamp(src, s) for s in STAGES}
+    rec = {"source": src, "destination": dest, "date": time.strftime("%Y-%m-%d %H:%M:%S"),
+           "code": {"version": __version__, "repository": code_root,
+                    "commit": _git(code_root, "rev-parse", "HEAD"),
+                    "branch": _git(code_root, "rev-parse", "--abbrev-ref", "HEAD"),
+                    "uncommitted_changes": bool(_git(code_root, "status", "--porcelain")),
+                    "remote": _git(code_root, "remote", "get-url", "origin")},
+           "stages": {s: v for s, v in stamps.items() if v}, "files": n,
+           "bytes": size, "hard_linked": f"*{', *'.join(HARDLINK_EXT)} under {', '.join(HARDLINK_DIRS)} "
+                                         "(when on the same file system)", "repo_clone": None}
+    if repo:
+        if rec["code"]["uncommitted_changes"]:
+            log("  note: the code repository has uncommitted changes; the clone gets only what is committed")
+        r = subprocess.run(["git", "clone", "--quiet", code_root, repo], capture_output=True, text=True)
+        if r.returncode != 0:
+            log(f"  git clone failed: {r.stderr.strip()[:500]}")
+        else:
+            rec["repo_clone"] = {"path": repo, "commit": _git(repo, "rev-parse", "HEAD"),
+                                 "branch": _git(repo, "rev-parse", "--abbrev-ref", "HEAD")}
+            log(f"  code cloned to {repo} (branch {rec['repo_clone']['branch']}, its origin is {code_root})")
+    write_json(rec, os.path.join(dest, DUPLICATED))
+    log(f"Duplicated in {time.time() - t0:.0f} s: {n['hard_linked']:,} files hard-linked "
+        f"({size['hard_linked'] / 1e9:.2f} GB shared), {n['copied']:,} copied ({size['copied'] / 1e9:.2f} GB), "
+        f"{n['symlinks']} links kept, {n['skipped']} temporary files left out. Use --out {dest} for the copy.")
+    return rec
+
+
+def cmd_duplicate(a):
+    if len(a.names or []) != 1:
+        sys.exit("usage: python -m tahoemap duplicate DEST [--out SOURCE_OUTPUT] [--repo DIR]")
+    return duplicate(a.out, os.path.expanduser(a.names[0]), a.repo)
+
+
 def _drop_pid_file(path, pid):
     try:
         with open(path, encoding="utf-8") as fh:
@@ -443,6 +581,14 @@ def main(argv=None):
         return query.main(a)
     if a.command == "status":
         return cmd_status(a)
+    if a.command == "review":
+        from .review import runner
+        code = runner.cli(a)
+        if code:
+            sys.exit(code)
+        return None
+    if a.command == "duplicate":
+        return cmd_duplicate(a)
     mark_output(a.out)
     job_setup(a.out)
     T.start_run_log(os.path.join(a.out, "run.log"), "tahoemap " + " ".join(sys.argv[1:] if argv is None else argv))

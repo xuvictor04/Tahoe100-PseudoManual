@@ -8,3 +8,4 @@ networkx>=3.0
 # optional
 psutil          # better free-memory detection when sizing build workers
 huggingface_hub # `tahoe download` (with hf_xet and brotli>=1.2.0)
+anthropic>=2.6     # `tahoe review`: the literature-review agents (tahoemap/review)
