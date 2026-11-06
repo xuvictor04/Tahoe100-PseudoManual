@@ -93,6 +93,13 @@ Scaled integers: cos x100, fdr x100 (-1 = none), lfc x100 (log2), z x10.
                                    uint8 evidence of the pair in relations (0 not reproduced, 1 one half, 2 both
                                    halves)}: ~6 bytes per edge before base64 (~1.4 MB at 177,000 edges)
     k_edges                        graph/info.json k_edges (partners per gene in the kNN graph), or null
+    lit, lit_v                     only when OUT/review holds literature reviews (tahoemap/review): flat [entry a,
+                                   entry b, verdict, citations] x the connection verdicts of gene a's review on gene b
+                                   (review/connections.parquet) where a and b are partners in `rel` (one way or the
+                                   other); lit_v = the verdict names. The side
+                                   panel's partner list shows them as a small "lit:" badge (a's verdict on b, else
+                                   b's on a). The stamp records vault.review_fingerprint, so a review run makes the
+                                   map out of date.
 """
 
 import base64
@@ -106,6 +113,7 @@ import numpy as np
 import pandas as pd
 
 from . import atlas_core as A
+from . import vault as V
 from .common import folder, log, stamp_stage
 
 VERSION = 3                    # 3: tabs, the three physics simulations, graph/edges.parquet embedded
@@ -444,6 +452,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
              + 32768 * (codes.astype(np.int64) + 1))
     rmat = np.column_stack([eb, _scaled(_num(rel, "cos"), 100), _scaled(_num(rel, "fdr"), 100, -1), flags])
     rel_lists = _lists(ea, rmat, n)
+    shown_pairs = np.unique(np.minimum(ea, eb) * n + np.maximum(ea, eb))   # the side panel's partner pairs
     log(f"  relations: {len(rel):,} partner rows for {int((np.diff(np.r_[-1, ea]) != 0).sum()):,} genes, "
         f"{len(pw):,} shared pathways")
     del rel
@@ -566,6 +575,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
         return np.round(np.nan_to_num(v, nan=0.0, posinf=0.0, neginf=0.0), 2).tolist()
 
     arm = "".join(a if a in ("+", "-") else "." for a in nodes["arm"].fillna("").astype(str).tolist())
+    lit = _literature(out, tg, ent, gK, n, shown_pairs)
     return {
         "v": VERSION, "title": "Tahoe-100M gene map", "made": time.strftime("%Y-%m-%d"),
         "n": n, "scale": {"cos": 100, "fdr": 100, "lfc": 100, "z": 10},
@@ -582,7 +592,46 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
         "line_chance": round(float(line_chance), 3) if line_chance is not None else None,
         "novel_ok": novel_ok, "novel_blocked": novel_blocked, "mod_z": MOD_Z,
         "edges": edges, "k_edges": int(k_edges) if isinstance(k_edges, (int, float)) else None,
+        **lit,
     }
+
+
+def _literature(out, tg, ent, gK, n, shown_pairs):
+    """The gene-gene connection verdicts of the literature reviews (OUT/review) on the side panel's partner pairs
+    (shown_pairs: sorted min(a, b) * n + max(a, b) of the embedded top-partner lists), as the {"lit": [...],
+    "lit_v": [...]} entries of the page data; {} without reviews (the page is then as before)."""
+    if V.review_fingerprint(out) is None:
+        return {}
+    by = {}
+    labels = tg["label"] if "label" in tg else tg["symbol"]
+    for c, s_, lab in zip(tg["col"].to_numpy(dtype=np.int64), tg["symbol"].map(_str), labels.map(_str)):
+        for k in (lab, s_):
+            if k:
+                by.setdefault(k.upper(), int(c))
+    names = list(V.VERDICTS)
+    flat = []
+    for r in V.review_connections(out, gene_col=lambda x: by.get(str(x).upper())):
+        eid, pk = _str(r.get("entity_id")), _str(r.get("partner_kind")) or "gene"
+        pc = r.get("partner_col")
+        if not eid.startswith("gene:") or pk != "gene" or not eid[5:].isdigit() or pc is None or pd.isna(pc):
+            continue
+        a, b = int(eid[5:]), int(pc)
+        if not (0 <= a < gK and 0 <= b < gK) or ent[a] < 0 or ent[a] >= n or ent[b] < 0 or ent[b] >= n:
+            continue
+        key = min(ent[a], ent[b]) * n + max(ent[a], ent[b])
+        i = np.searchsorted(shown_pairs, key)
+        if i >= len(shown_pairs) or shown_pairs[i] != key:
+            continue                                       # not a pair the side panel lists
+        v = _str(r.get("verdict"))
+        if not v:
+            continue
+        if v not in names:
+            names.append(v)
+        flat += [int(ent[a]), int(ent[b]), names.index(v), int(len([x for x in _str(r.get("citations")).split(";")
+                                                                      if x.strip()]))]
+    log(f"  literature: {len(flat) // 4:,} connection verdicts on the side panel's partner pairs "
+        "(review/connections.parquet)")
+    return {"lit": flat, "lit_v": names}
 
 
 def _encode(data):
@@ -631,7 +680,9 @@ def run(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=FN_CHAR
             "graph_edges": data["edges"].get("m", 0), "graph_edges_bytes": sum(len(data["edges"].get(k, ""))
                                                                               for k in ("a", "b", "cos", "ev")),
             "modules": len(data["mods"]), "module_labels_from": data["labels_from"], "reference": data["ref"],
-            "partners": partners, "drugs": drugs, "lines": lines, "minutes": round((time.time() - t0) / 60, 2)}
+            "partners": partners, "drugs": drugs, "lines": lines,
+            "literature_verdicts": len(data.get("lit") or []) // 4, "review": V.review_fingerprint(out),
+            "minutes": round((time.time() - t0) / 60, 2)}
     stamp_stage(out, "map", VERSION, info)
     log(f"Map done: {path} ({info['mb']} MB, {data['n']:,} genes on the map, {info['minutes']} min)")
     return info
@@ -741,6 +792,8 @@ table.pt td:first-child{white-space:nowrap}
 .bd.nov{border-color:#6250d6;color:#4a3aa7}
 .bd.loc{border-color:#eda100;color:#7a5200}
 .bd.rt{border-color:#d03b3b;color:#a02020}
+.bd.lit{border-color:#2a78d6;color:#104281;background:#eef4fb}
+.bd.lit.lit-contradicted{border-color:#d03b3b;color:#a02020;background:#fbeeee}
 a,.lk{color:var(--accent);cursor:pointer;text-decoration:none}
 a:hover,.lk:hover{text-decoration:underline}
 .mcard{background:#f4f6f9;border:1px solid var(--grid);border-radius:8px;padding:8px 10px;margin:0 0 10px}
@@ -2149,11 +2202,23 @@ function lineTable(a) {
     (D.line_z_cal ? " (calibrated on this run" + (D.line_chance != null ? ": about " + D.line_chance + " chance calls per gene and line" : "") + ")" : " (not calibrated in this run: a per-line z of 4-5 can arise by chance)") +
     "; the strongest of them is shown, &ndash; = none.</p>";
 }
+const LIT = new Map();                             // literature verdicts (OUT/review): a * NA + b -> [verdict, citations]
+if (D.lit) for (let t = 0; t + 3 < D.lit.length; t += 4) LIT.set(D.lit[t] * NA + D.lit[t + 1], [D.lit[t + 2], D.lit[t + 3]]);
+function litBadge(i, j) {
+  let v = LIT.get(i * NA + j), from = "";
+  if (!v) { v = LIT.get(j * NA + i); if (v) from = " (in " + D.sym[j] + "'s review)"; }
+  if (!v) return "";
+  const name = D.lit_v[v[0]] || "?";
+  return "<span class='bd lit lit-" + esc(name) + "' title='AI-agent literature review" + esc(from) + ": " + esc(name) + ", " + v[1] +
+    " citation" + (v[1] === 1 ? "" : "s") + " (review/connections.parquet; the vault note has the review and its links)'>lit: " + esc(name) + "</span>";
+}
 function partnerTable() {
   if (!P.length) return "<p class='note'>No partners recorded.</p>";
   let h = "<table class='pt'><tr><th>Gene</th><th class='r' title='signed cosine: +1 = same direction, -1 = opposite'>cos</th><th title='both = same sign with fdr &le; 0.10 in two random halves of the compounds; one = strong in one random half only (not replicated, no error estimate); none = neither'>halves</th><th class='r' title='estimated share of false relations among pairs at least this strong in both halves'>fdr</th><th>flags</th></tr>";
+  let nLit = 0;
   for (const p of P) {
-    let f = "";
+    let f = LIT.size ? litBadge(sel, p.j) : "";
+    if (f) nLit++;
     if (p.novel && D.novel_ok) f += "<span class='bd nov' title='both halves, fdr <= 0.05, |cos| >= 0.5, not in any reference set, not the same locus'>novel?</span>";
     if (p.locus) f += "<span class='bd loc' title='within 50 kb of each other'>same locus</span>";
     if (p.rt) f += "<span class='bd rt' title='same strand, <= 20 kb, the 5-prime gene much more expressed: read-through can make them correlate'>read-through risk</span>";
@@ -2167,6 +2232,7 @@ function partnerTable() {
       "</td><td class='r'>" + (p.cos > 0 ? "+" : "") + p.cos.toFixed(2) + "</td><td>" + EVS[p.ev] + "</td><td class='r'>" + fdrTxt(p.fdr) + "</td><td>" + f + "</td></tr>";
   }
   h += "</table>";
+  if (nLit) h += "<p class='note'><span class='bd lit'>lit:</span> = the verdict of an AI-agent literature review on the pair (established, indirect, plausible, unexpected, contradicted); not checked by a person. The review itself is in the gene's vault note.</p>";
   if (!D.novel_ok) h += "<p class='note'>Novelty not assessed: " + esc((D.novel_blocked || []).join(", ") || "reference sources") + " missing, so no pair is called novel.</p>";
   return h;
 }

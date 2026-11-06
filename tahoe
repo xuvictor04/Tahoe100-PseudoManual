@@ -5,6 +5,7 @@
 #   tahoe run          everything, in the background (safe to log out); `tahoe run --stream` needs no download
 #   tahoe              where things stand (= tahoe status)
 #   tahoe gene MDM2    which drugs raise / lower MDM2, in which cell lines, which genes move with it
+#   tahoe review ...   literature-review agents on a finished run (docs/review.md); tahoe duplicate DEST copies a run
 #
 # Folders: data = --data DIR, else $TAHOE_DATA, else ~/Tahoe-100M; output = --out DIR, else $TAHOE_OUT, else
 # <data>/tahoemap; venv = $TAHOE_VENV or ~/tahoe-venv. --data / --out go with any command (give the same ones to
@@ -103,7 +104,7 @@ start_job() {                    # run `python -m tahoemap ARGS` detached; its o
       say "  stop it:             tahoe stop$SAME"
       say "  where things stand:  tahoe$SAME"
     fi
-  elif grep -qs "Run done\|nothing to do" "$CONSOLE"; then
+  elif grep -qs "Run done\|nothing to do\|Nothing to review\|Dry run:\|^\[[0-9:]*\] Review run:" "$CONSOLE"; then
     tail -n 3 "$CONSOLE"
   else
     say "The job ended at once. Its output:"
@@ -156,9 +157,15 @@ cmd_download() {                 # the expression files and the four small metad
   say "Downloading into $DATA in the background (resumes if restarted). Log: tahoe log download$SAME"
 }
 
+job_is_review() { case "$(job_cmd "$1")" in *"tahoemap review"*) return 0 ;; esac; return 1; }
+
 cmd_log() {
-  local f="$OUT/run.log"
-  [ "${1:-}" = download ] && f="$OUT/download.log"
+  local f="$OUT/run.log" p
+  case "${1:-}" in
+    download) f="$OUT/download.log" ;;
+    review) f="$OUT/review/review.log" ;;
+    *) if p="$(job_pid)" && job_is_review "$p"; then f="$CONSOLE"; fi ;;   # a review job: its whole console
+  esac
   [ -f "$f" ] || f="$CONSOLE"
   [ -f "$f" ] || die "no log yet in $OUT"
   say "(Ctrl-C stops watching, not the job)"
@@ -166,16 +173,20 @@ cmd_log() {
 }
 
 cmd_stop() {
-  local p g kind=job log="$OUT/run.log"
+  local p g kind=job log="$OUT/run.log" wait=15
   p="$(job_pid)" || { rm -f "$PIDF"; say "Nothing is running."; return 0; }
-  case "$(job_cmd "$p")" in *"hf download"*) kind=download; log="$OUT/download.log" ;; esac
+  # a review gives its entities in progress 15 s to stop, then writes the ledger and its tables: wait longer for it
+  case "$(job_cmd "$p")" in
+    *"hf download"*) kind=download; log="$OUT/download.log" ;;
+    *"tahoemap review"*) kind=review; log="$OUT/review/review.log"; wait=90 ;;
+  esac
   g="$(ps -o pgid= -p "$p" 2>/dev/null | tr -d ' ')"
   local target=("$p")
   [ "$g" = "$p" ] && target=(-- "-$p")        # it leads its own process group: its workers and downloads too
   alive() { kill -0 "${target[@]}" 2>/dev/null; }
   say "Stopping the $kind (pid $p) ..."
   kill -TERM "${target[@]}" 2>/dev/null
-  for _ in $(seq 1 15); do alive || break; sleep 1; done
+  for _ in $(seq 1 "$wait"); do alive || break; sleep 1; done
   if alive; then
     kill -KILL "${target[@]}" 2>/dev/null
     for _ in 1 2 3 4 5; do alive || break; sleep 1; done
@@ -192,7 +203,10 @@ cmd_stop() {
   fi
   echo "[$(date +%H:%M:%S)] STOPPED by tahoe stop" >>"$log"
   rm -f "$PIDF"
-  if streamed_build_unfinished; then
+  if [ $kind = review ]; then
+    say "Stopped. Finished reviews are kept and the ones in progress are marked paused: the same 'tahoe review" \
+        "run ...$SAME' resumes it ('tahoe review status$SAME' says where it stands)."
+  elif streamed_build_unfinished; then
     say "Stopped. Finished plates are kept: 'tahoe run$SAME' continues the streamed build (it keeps streaming," \
         "as 'tahoe run --stream$SAME' does)."
   else
@@ -207,6 +221,9 @@ cmd_status() {
     case "$(job_cmd "$p")" in
       *"hf download"*) say "Downloading into $DATA (pid $p). Last lines of its log:"
                        tail -n 4 "$OUT/download.log" 2>/dev/null | sed 's/^/  /' ;;
+      *"tahoemap review"*) say "Literature review running (pid $p; 'tahoe review status$SAME' for counts and" \
+                               "spend). Last lines of its log:"
+                           tail -n 4 "$CONSOLE" 2>/dev/null | sed 's/^/  /' ;;
       *) say "Running (pid $p). Last lines of the log:"
          tail -n 4 "$OUT/run.log" 2>/dev/null | sed 's/^/  /' ;;
     esac
@@ -226,7 +243,81 @@ cmd_test() {
   need_packages
   local wd="${TAHOE_TEST_DIR:-${TMPDIR:-/tmp}/tahoemap_test}"
   say "Synthetic data and the whole pipeline in $wd (a few minutes) ..."
-  (cd "$REPO" && "$PY" tests/run_tests.py --workdir "$wd" "$@")
+  (cd "$REPO" && "$PY" tests/run_tests.py --workdir "$wd" "$@") || return 1
+  say ""
+  say "The literature-review layer on that output (fake client: no API key, no network) ..."
+  (cd "$REPO" && "$PY" tests/test_review.py --out "$wd/out_seed0") || return 1
+  (cd "$REPO" && "$PY" tests/test_port.py) || return 1
+}
+
+ABS=()
+abs_paths() {                    # path options made absolute (tm runs in the repository folder): ABS=(...)
+  ABS=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --keys-file|--fake|--repo)
+        [ $# -ge 2 ] || die "$1 needs a path"
+        ABS+=("$1" "$(absolute "$2")"); shift 2 ;;
+      --keys-file=*|--fake=*|--repo=*) ABS+=("${1%%=*}=$(absolute "${1#*=}")"); shift ;;
+      --only)
+        [ $# -ge 2 ] || die "--only needs names (or @FILE)"
+        case "$2" in @*) ABS+=("$1" "@$(absolute "${2#@}")") ;; *) ABS+=("$1" "$2") ;; esac
+        shift 2 ;;
+      --only=@*) ABS+=("--only=@$(absolute "${1#--only=@}")"); shift ;;
+      *) ABS+=("$1"); shift ;;
+    esac
+  done
+}
+
+cmd_review() {                   # tahoe review [plan|run|status|tables] [--background] [options]
+  need_packages
+  local bg=0 action=status a p args=()
+  for a in "$@"; do
+    if [ "$a" = --background ]; then bg=1; else args+=("$a"); fi
+  done
+  case "${args[0]:-}" in plan|run|status|tables) action="${args[0]}" ;; -*|'') ;;
+    *) die "review: unknown action '${args[0]}' (plan, run, status or tables; tahoe help)" ;; esac
+  abs_paths ${args[@]+"${args[@]}"}
+  if [ "$action" = run ]; then          # plan / status / tables (and the dossiers) need no SDK
+    "$PY" -c "import anthropic" 2>/dev/null || die "the Anthropic SDK is missing: $PY -m pip install anthropic"
+  fi
+  if [ $bg = 1 ]; then
+    [ "$action" = run ] || die "only 'tahoe review run' goes to the background (--background)"
+    case " ${ABS[*]} " in
+      *" --keys-file "*|*" --keys-file="*|*" --dry-run "*|*" --fake "*|*" --fake="*) ;;
+      *) [ -n "${ANTHROPIC_API_KEYS:-}${ANTHROPIC_API_KEY:-}" ] ||
+           die "a background review cannot ask for a new key when one runs out: give --keys-file FILE (one key a" \
+               "line, readable only by you) or set ANTHROPIC_API_KEY / ANTHROPIC_API_KEYS, or run it in the" \
+               "foreground (without --background)" ;;
+    esac
+    start_job review ${ABS[@]+"${ABS[@]}"}
+    return
+  fi
+  if [ "$action" = run ]; then
+    if p="$(job_pid)"; then
+      die "a job is running on $OUT (pid $p): wait for it, or 'tahoe stop$SAME' first"
+    fi
+    say "(in the foreground: Ctrl-C pauses the review and the same command resumes it; when every key has run out" \
+        "it asks for a new one; --background runs it as a job)"
+  fi
+  tm review ${ABS[@]+"${ABS[@]}"}
+}
+
+cmd_duplicate() {                # tahoe duplicate DEST [--repo DIR]: DEST and DIR as typed, from this folder
+  need_packages
+  local p dest="" args=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --repo) [ $# -ge 2 ] || die "--repo needs a folder"; args+=("$1" "$(absolute "$2")"); shift 2 ;;
+      --repo=*) args+=("--repo=$(absolute "${1#--repo=}")"); shift ;;
+      -*) args+=("$1"); shift ;;
+      *) [ -z "$dest" ] || die "duplicate: one destination folder (got '$dest' and '$1')"
+         dest="$(absolute "$1")"; args+=("$dest"); shift ;;
+    esac
+  done
+  [ -n "$dest" ] || die "usage: tahoe duplicate DEST [--repo DIR]   (copies $OUT; --out picks another run)"
+  if p="$(job_pid)"; then die "a job is running on $OUT (pid $p): wait for it, or 'tahoe stop$SAME' first"; fi
+  tm duplicate "${args[@]}"
 }
 
 cmd_update() {
@@ -242,13 +333,19 @@ tahoe - every gene, drug and cell line of Tahoe-100M in one map
   download              Tahoe-100M into $DATA (~340 GB; resumes)    [or skip it: run --stream]
   run [--stream]        every stage that is missing or out of date, in the background
   status                what is done and what runs next (also just: tahoe)
-  log [download]        follow the running job's log            stop    stop it (finished stages are kept)
+  log [download|review] follow the running job's log            stop    stop it (finished stages are kept)
   gene SYMBOL           drugs that raise / lower it, in which lines, genes that move with / opposite it
   drug NAME | line NAME | pair GENE1 GENE2 | module N        the same for a drug, a cell line, two genes
   open                  where the interactive map, the Obsidian vault and the validation report are
-  review plan|run|status|tables   literature-review agents (Anthropic API key; run needs --max-usd X or
-                        --limit N; --dry-run sends nothing); in the foreground, Ctrl-C pauses, rerun resumes
-  duplicate DEST [--repo DIR]     copy the output for review work (big arrays hard-linked; --repo: clone the code)
+  review plan           AI literature-review agents (docs/review.md): the queue, in priority order, and its cost
+  review run [options]  review genes / drugs / lines: needs --max-usd X or --limit N (or --no-cap); --kinds
+                        gene,drug,line  --only NAMES|@FILE  --keys-file FILE  --dry-run (sends nothing)  --model
+                        --effort  --verify llm|ids|off  --no-web  --concurrency N  --redo. In the foreground:
+                        Ctrl-C pauses, the same command resumes, a new key is asked for when all have run out;
+                        --background: as a job (stop, log; needs --keys-file or ANTHROPIC_API_KEY(S))
+  review status|tables  counts, spend and projected cost of the rest / rebuild review/connections + findings
+  duplicate DEST [--repo DIR]     copy this output for review work (big arrays hard-linked; --repo DIR: also
+                        clone this code repository there); then: tahoe review ... --out DEST
   test                  the whole pipeline on synthetic data with planted answers (a few minutes)
   update                newest scripts (git pull)
   <stage> [options]     one stage now, in the foreground: build effects tensor tables embed reference
@@ -274,10 +371,8 @@ main() {
     update) cmd_update ;;
     help|-h|--help) cmd_help ;;
     gene|drug|line|pair|module) need_packages; tm "$c" "$@" ;;
-    review) need_packages
-      "$PY" -c "import anthropic" 2>/dev/null || die "the Anthropic SDK is missing: $PY -m pip install anthropic"
-      tm "$c" "$@" ;;
-    duplicate) need_packages; tm "$c" "$@" ;;
+    review) cmd_review "$@" ;;
+    duplicate) cmd_duplicate "$@" ;;
     open|where)
       say "Interactive map:  $OUT/map/gene_map.html   (open it in a browser)"
       say "Obsidian vault:   $OUT/vault   (Obsidian: Open folder as vault)"

@@ -104,10 +104,12 @@ def make_parser():
                    help="review run: the most one entity's attempt may spend (default: the agent file's max_usd)")
     g.add_argument("--no-cap", action="store_true", help="review run: run without --max-usd / --limit")
     g.add_argument("--concurrency", type=int, default=4, help="review run: entities reviewed at once (threads)")
-    g.add_argument("--model", default=None, help="review: the reviewers' model (default: the agent files', "
-                                                 "claude-opus-5-5)")
-    g.add_argument("--effort", default=None, choices=["low", "medium", "high", "xhigh", "max"],
-                   help="review: the reviewers' effort (default: the agent files', high)")
+    g.add_argument("--model", default=None,
+                   help="review: the reviewers' model (default: the agent files', claude-opus-5-5); per agent: "
+                        "AGENT=MODEL,... with AGENT gene, drug, line, checker, reviewers or all")
+    g.add_argument("--effort", default=None,
+                   help="review: the reviewers' effort, low|medium|high|xhigh|max (default: the agent files': "
+                        "reviewers high, checker medium); per agent as for --model")
     g.add_argument("--verify", default="llm", choices=["llm", "ids", "off"],
                    help="review run: check cited ids (ids), and the claims against the abstracts (llm, default)")
     g.add_argument("--web", dest="web", action="store_true", default=True,
@@ -235,6 +237,12 @@ def stage_state(a, stage):
             now = len(glob.glob(os.path.join(data, "data", "*.parquet")))
             if now > n:
                 return f"it was built from {n} files (--allow-partial); {now} are there now"
+    if stage in ("vault", "map"):                    # they show the literature reviews of OUT/review (if any)
+        from .vault import review_fingerprint
+        now_fp = review_fingerprint(a.out)
+        if (info.get("review") or None) != now_fp:
+            return ("the literature reviews (review/) changed since it ran" if now_fp else
+                    "the literature reviews it shows (review/) are gone")
     if stage == "reference" and not a.offline:
         if a.refresh_reference:
             return "--refresh-reference"
@@ -583,7 +591,15 @@ def main(argv=None):
         return cmd_status(a)
     if a.command == "review":
         from .review import runner
+        from .vault import review_fingerprint
+        job_setup(a.out)                               # `tahoe review run --background`: a job like `tahoe run`
+        fp0 = review_fingerprint(a.out)
         code = runner.cli(a)
+        if (a.names or ["status"])[0] in ("run", "tables") and review_fingerprint(a.out) != fp0 \
+                and read_stamp(a.out, "vault") is not None:
+            print("To put the reviews into the vault notes and the map, rebuild those two stages: `tahoe vault` "
+                  "then `tahoe map` (python -m tahoemap vault, then map, with this --out); `tahoe run` does the same, "
+                  "as it sees both out of date.")
         if code:
             sys.exit(code)
         return None

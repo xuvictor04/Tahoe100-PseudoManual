@@ -35,13 +35,24 @@ its counts (embed/info.json); a module's arms are said to move opposite only whe
 short one; lines that are not measured (tensor/line_measured.npy: ambient-only) are marked. A written gene fragment
 that speaks of a score, rank, regulon or association of the earlier MG53/p53 study is spliced under a callout that
 says so.
+
+Literature reviews (optional; tahoemap/review, docs/review.md): when OUT/review holds reviews (review/notes/<kind>/,
+review/reviews/<kind>/, review/connections.parquet), the note of every reviewed gene, drug or cell line gets a section
+"## What the literature says": a callout (written by an AI agent: which agent, model and effort, the date, the
+verification counts, relative links to the run's history file and review JSON) above the agent's note body (its
+headings demoted below the note's own, its wikilinks kept only where a note exists), then its connection verdicts.
+The partner tables of a gene note get a Literature column (the connection verdict of the gene's review, else of the
+partner's, with linked citations) when a shown partner has a verdict. The vault and map stamps record
+review_fingerprint(OUT), so a review run makes both out of date. Without reviews no note changes.
 """
 
+import hashlib
 import json
 import math
 import os
 import re
 import time
+import urllib.parse
 import warnings
 
 import numpy as np
@@ -353,6 +364,97 @@ def _chunks(groups, size, prefix, names):
 def _slices(keys, n):
     """Start offsets of each key 0..n-1 in a sorted key array: rows of key c are [s[c], s[c+1])."""
     return np.searchsorted(keys, np.arange(n + 1), side="left")
+
+
+# ----------------------------------------------------------------------------- literature reviews (OUT/review)
+REVIEW_KINDS = ("gene", "drug", "line")
+LIT_CITES = 3                        # citations linked in a partner-table cell (the rest are counted)
+LIT_HEADING = "What the literature says"
+VERDICTS = ("established", "indirect", "plausible", "unexpected", "contradicted")   # submit_review's verdicts
+
+
+def review_fingerprint(out):
+    """What of OUT/review the vault and the map show: None when there is no review (no folder, or only a queue, dry
+    run or cache), else {"notes": n, "reviews": n, "sha": ...} over the names, sizes and modification times of the
+    review notes and JSONs and the content of connections.parquet (rewritten at the end of every review run). The
+    vault and map stamps record it, so a review run makes both out of date (cli.stage_state)."""
+    rd = os.path.join(out, "review")
+    if not os.path.isdir(rd):
+        return None
+    items, n = [], {"notes": 0, "reviews": 0}
+    for sub in ("notes", "reviews"):
+        for kind in REVIEW_KINDS:
+            d = os.path.join(rd, sub, kind)
+            if not os.path.isdir(d):
+                continue
+            for e in os.scandir(d):
+                if e.is_file() and e.name.endswith((".md", ".json")):
+                    st = e.stat()
+                    items.append(f"{sub}/{kind}/{e.name}\t{st.st_size}\t{st.st_mtime_ns}")
+                    n[sub] += 1
+    if not items:
+        return None
+    h = hashlib.sha256("\n".join(sorted(items)).encode("utf-8"))
+    p = os.path.join(rd, "connections.parquet")
+    if os.path.exists(p):
+        with open(p, "rb") as fh:
+            h.update(fh.read())
+    return {**n, "sha": h.hexdigest()[:16]}
+
+
+def review_connections(out, gene_col=None):
+    """The connection verdicts of the reviews in OUT/review, one dict per verdict with the columns of
+    review/connections.parquet (entity_id, kind, name, partner, partner_kind, partner_col, verdict, citations as
+    'PMID:1;DOI:x', check, unverified, ...): from that table, else (not built yet: `tahoe review tables`) from the
+    review JSONs. gene_col(name) -> col or None resolves gene partners the table left unresolved."""
+    rd = os.path.join(out, "review")
+    rows = []
+    p = os.path.join(rd, "connections.parquet")
+    if os.path.exists(p):
+        try:
+            rows = pd.read_parquet(p).to_dict("records")
+        except Exception as e:  # noqa: BLE001
+            log(f"  vault: cannot read {p} ({type(e).__name__}: {e}); verdicts read from the review JSONs")
+            rows = None
+    if not os.path.exists(p) or rows is None:
+        rows = []
+        for kind in REVIEW_KINDS:
+            d = os.path.join(rd, "reviews", kind)
+            for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+                r = _read_json(os.path.join(d, f)) if f.endswith(".json") else None
+                if not isinstance(r, dict):
+                    continue
+                meta = r.get("meta") or {}
+                for it in r.get("connection_verdicts") or []:
+                    pt = str(it.get("partner") or "")
+                    pk = pt.split(":", 1)[0] if pt.split(":", 1)[0] in ("drug", "line") and ":" in pt else "gene"
+                    cits = [str(x) for x in it.get("citations") or []]
+                    rows.append({"entity_id": meta.get("entity_id"), "kind": kind, "name": meta.get("name"),
+                                 "partner": pt, "partner_kind": pk, "partner_col": None, "verdict": it.get("verdict"),
+                                 "citations": ";".join(cits), "n_citations": len(cits),
+                                 "check": (it.get("check") or {}).get("verdict", ""),
+                                 "unverified": bool(it.get("unverified")), "model": meta.get("model"),
+                                 "run_id": meta.get("run_id"), "reviewed": meta.get("reviewed")})
+    if gene_col is not None:
+        for r in rows:
+            if sval(r.get("partner_kind")) in ("", "gene") and not _finite(r.get("partner_col")):
+                c = gene_col(sval(r.get("partner")))
+                r["partner_col"] = c if c is not None else None
+    return rows
+
+
+def citation_link(cid):
+    """'PMID:123' -> [PMID:123](https://pubmed.ncbi.nlm.nih.gov/123/); 'DOI:10.x/y' -> a doi.org link; other text
+    as it is."""
+    s = str(cid).strip()
+    m = re.match(r"(?i)^(?:PMID\s*:?\s*)?(\d{1,9})$", s)
+    if m:
+        return f"[PMID:{int(m.group(1))}](https://pubmed.ncbi.nlm.nih.gov/{int(m.group(1))}/)"
+    m = re.match(r"(?i)^(?:DOI\s*:\s*|https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}/\S+)$", s)
+    if m:
+        doi = m.group(1)
+        return f"[DOI:{doi}](https://doi.org/{urllib.parse.quote(doi, safe='/:;._-')})"
+    return cell(s)
 
 
 class Run:
@@ -698,6 +800,267 @@ class Vault:
             out.append(pat.sub(fix, line))
         return "\n".join(out)
 
+    # ------------------------------------------------------------------ literature reviews (OUT/review)
+    def load_literature(self):
+        """The reviews of OUT/review (tahoemap/review): per reviewed gene / drug / line its note body, the facts of
+        its callout and its connection verdicts. With no review, nothing is loaded and no note changes."""
+        R = self.R
+        self.lit, self.lit_pairs, self.lit_verdicts = {}, {}, {}
+        self.n_lit_notes = self.n_lit_cells = 0
+        self.lit_fp = review_fingerprint(self.out)
+        if self.lit_fp is None:
+            return
+        rd = os.path.join(self.out, "review")
+        self._gene_by_name = {}
+        for c in range(R.gK):                                  # symbol or label -> the first gene note's col
+            for k in (R.label[c], R.sym[c]):
+                if k:
+                    self._gene_by_name.setdefault(k.upper(), c)
+        self._drug_by_name = {d.lower(): d for d in self.drug_name}
+        ids = self.R.tl["cell_line_id"].astype(str).tolist() if "cell_line_id" in self.R.tl else []
+        self._line_by_id = {x: i for i, x in enumerate(ids)}
+        self._line_by_name, self._lit_stems = {}, {}
+        for i, nm in enumerate(R.cell):
+            self._line_by_name.setdefault(str(nm).lower(), i)
+        for kind in REVIEW_KINDS:
+            nd, jd = os.path.join(rd, "notes", kind), os.path.join(rd, "reviews", kind)
+            stems = set()
+            for d, ext in ((nd, ".md"), (jd, ".json")):
+                if os.path.isdir(d):
+                    stems |= {f[:-len(ext)] for f in os.listdir(d) if f.endswith(ext)}
+            for stem in sorted(stems):
+                js = _read_json(os.path.join(jd, stem + ".json")) or {}
+                meta = js.get("meta") or {}
+                key = self.lit_key(kind, meta.get("entity_id"), meta.get("name") or stem)
+                if key is None:
+                    log(f"  vault: review {kind}/{stem} matches no {kind} note of this run; left out")
+                    continue
+                np_ = os.path.join(nd, stem + ".md")
+                text = ""
+                if os.path.exists(np_):
+                    with open(np_, encoding="utf-8") as fh:
+                        text = fh.read()
+                text = text.strip() or str(js.get("note_markdown") or "").strip()
+                if not text:
+                    continue
+                old = self.lit.get((kind, key))
+                if old and str(old["meta"].get("reviewed", "")) > str(meta.get("reviewed", "")):
+                    continue                                    # two files for one entity: the latest review
+                self.lit[(kind, key)] = {
+                    "kind": kind, "stem": stem, "text": text, "meta": meta,
+                    "verification": js.get("verification") or {}, "summary": str(js.get("summary") or ""),
+                    "review_rel": f"review/reviews/{kind}/{stem}.json" if js else None,
+                    "note_rel": f"review/notes/{kind}/{stem}.md" if os.path.exists(np_) else None}
+        for r in review_connections(self.out, gene_col=lambda s: self._gene_by_name.get(str(s).upper())):
+            eid = sval(r.get("entity_id"))
+            kind = eid.split(":", 1)[0] if ":" in eid else sval(r.get("kind"))
+            key = self.lit_key(kind, eid, sval(r.get("name")))
+            if key is None or not sval(r.get("verdict")):
+                continue
+            pk, pt = sval(r.get("partner_kind")) or "gene", sval(r.get("partner"))
+            if pk == "gene":
+                pc = r.get("partner_col")
+                pkey = int(pc) if _finite(pc) and 0 <= int(pc) < R.gK else None
+            else:
+                pkey = self.lit_key(pk, pt, pt.split(":", 1)[1] if ":" in pt else pt)
+            uv = r.get("unverified")
+            v = {"partner": pt, "pkey": (pk, pkey) if pkey is not None else None, "verdict": sval(r.get("verdict")),
+                 "citations": [x.strip() for x in sval(r.get("citations")).split(";") if x.strip()],
+                 "check": sval(r.get("check")), "unverified": _finite(uv) and bool(float(uv))}
+            self.lit_verdicts.setdefault((kind, key), []).append(v)
+            if kind == "gene" and v["pkey"] and v["pkey"][0] == "gene":
+                self.lit_pairs.setdefault((key, v["pkey"][1]), v)
+        log(f"  vault: literature reviews of {len(self.lit):,} entities "
+            f"({', '.join(f'{sum(1 for k in self.lit if k[0] == kd)} {kd}s' for kd in REVIEW_KINDS)}), "
+            f"{sum(len(v) for v in self.lit_verdicts.values()):,} connection verdicts")
+
+    def lit_key(self, kind, eid, name):
+        """The note key of a reviewed entity: gene col, drug name or line index (None if this run has no note)."""
+        eid, name = sval(eid).strip(), sval(name).strip()
+        if eid.startswith(kind + ":"):
+            rest = eid.split(":", 1)[1].strip()
+            if kind == "gene" and rest.isdigit() and int(rest) < self.R.gK:
+                return int(rest)
+            if kind == "drug" and rest in self.drug_name:
+                return rest
+            if kind == "line" and rest in self._line_by_id:
+                return self._line_by_id[rest]
+            name = name or rest
+        if not name or kind not in REVIEW_KINDS:
+            return None
+        if kind == "gene":
+            key = self._gene_by_name.get(name.upper())
+        elif kind == "drug":
+            key = self._drug_by_name.get(name.lower())
+        else:
+            key = self._line_by_name.get(name.lower(), self._line_by_id.get(name))
+        if key is None:                                          # a file stem: safe_filename of the name
+            if kind not in self._lit_stems:
+                self._lit_stems[kind] = {}
+                items = (enumerate(self.R.label) if kind == "gene" else ((d, d) for d in self.drug_name)
+                         if kind == "drug" else enumerate(self.R.cell))
+                for k, nm in items:
+                    self._lit_stems[kind].setdefault(safe_filename(nm), k)
+            key = self._lit_stems[kind].get(name)
+        return key
+
+    def resolve_any(self, text):
+        """Wikilinks of an agent's note: kept where this vault has the note (any note name, a gene symbol, a drug
+        or cell-line name), else plain text, so no link is broken."""
+        taken = self.names.taken
+        pat = re.compile(r"\[\[([^\]|#]+)((?:#[^\]|]*)?)(?:(\\?\|)([^\]]*))?\]\]")
+        out = []
+        for line in text.split("\n"):
+            in_table = line.lstrip().startswith("|")
+
+            def fix(m):
+                tgt, anchor, alias = m.group(1).strip(), m.group(2) or "", m.group(4)
+                n = taken.get(tgt.lower())
+                if n is None and tgt in self.sym_note:
+                    n = self.sym_note[tgt]
+                if n is None:
+                    c = self._gene_by_name.get(tgt.upper())
+                    d = self._drug_by_name.get(tgt.lower())
+                    i = self._line_by_name.get(tgt.lower())
+                    n = self.gene_name[c] if c is not None else self.drug_name[d] if d is not None else \
+                        self.line_name[i] if i is not None else None
+                if n is None:
+                    return alias or tgt
+                if n == tgt and not alias:
+                    return f"[[{n}{anchor}]]"
+                bar = "\\|" if in_table else "|"
+                return f"[[{n}{anchor}{bar}{alias or tgt}]]"
+            out.append(pat.sub(fix, line))
+        return "\n".join(out)
+
+    def _run_link(self, note_rel, target_rel):
+        """A markdown link target from a vault note to a file of the run folder: relative, URL-encoded."""
+        here = os.path.dirname(os.path.join(self.root, note_rel))
+        rel = os.path.relpath(os.path.join(self.out, target_rel), here).replace(os.sep, "/")
+        return urllib.parse.quote(rel, safe="/")
+
+    def lit_frontmatter(self, kind, key, fm):
+        """A reviewed entity's frontmatter: the literature_review date and tag (nothing for the others)."""
+        rec = self.lit.get((kind, key))
+        if rec is not None:
+            fm["literature_review"] = sval(rec["meta"].get("reviewed"))[:10] or None
+            fm["tags"] = list(fm.get("tags") or []) + ["literature-review"]
+        return fm
+
+    def _verdict_text(self, v, partner_review=None):
+        cits = v["citations"]
+        s = v["verdict"]
+        if v["unverified"]:
+            s += " (unverified)"
+        if v["check"] and v["check"] != "supported":
+            s += f" (check: {v['check']})"
+        if partner_review:
+            s += f" ({partner_review}'s review)"
+        if cits:
+            s += " · " + " ".join(citation_link(x) for x in cits[:LIT_CITES]) + \
+                (f" +{len(cits) - LIT_CITES}" if len(cits) > LIT_CITES else "")
+        return s
+
+    def lit_partner_cell(self, c, b):
+        """The Literature cell of partner b in gene c's tables: c's review's verdict on b, else b's on c; '' if none."""
+        v = self.lit_pairs.get((int(c), int(b)))
+        if v is not None:
+            return self._verdict_text(v)
+        v = self.lit_pairs.get((int(b), int(c)))
+        if v is not None:
+            return self._verdict_text(v, partner_review=self.R.label[int(b)])
+        return ""
+
+    def _plink(self, v):
+        pk = v["pkey"]
+        if pk is None:
+            return cell(v["partner"])
+        kind, key = pk
+        return self.glink(key) if kind == "gene" else self.dlink(key) if kind == "drug" else self.llink(key)
+
+    def sec_literature(self, kind, key, note_rel):
+        """'## What the literature says' of a reviewed entity: the callout, the agent's note, its verdicts."""
+        rec = self.lit.get((kind, key))
+        if rec is None:
+            return []
+        self.n_lit_notes += 1
+        meta, ver = rec["meta"], rec["verification"]
+        cnt = ver.get("counts") or {}
+        ids = ver.get("ids") or {}
+        llm = ver.get("llm") or {}
+        mode = ver.get("mode")
+        agent = sval(meta.get("agent")) or f"{kind}-reviewer"
+        model = sval(meta.get("model"))
+        served = [m for m in (meta.get("served_models") or []) if m and m != model]
+        when = sval(meta.get("reviewed"))[:10]
+        n = lambda k: int(cnt.get(k) or 0)  # noqa: E731
+        how = ", ".join(([f"model `{model}`"] if model else [])
+                        + ([f"in part by the fallback `{'`, `'.join(served)}`"] if served else [])
+                        + ([f"effort {sval(meta.get('effort'))}"] if sval(meta.get("effort")) else []))
+        C = ["> [!info] AI-agent literature review",
+             f"> Written by the `{agent}` agent" + (f" ({how})" if how else "") + (f" on {when}" if when else "")
+             + ", from this run's data on it and the papers it retrieved. It is not checked by a person: read it as "
+               "a lead, and check a claim in the cited paper before relying on it."]
+        if not rec["review_rel"]:
+            C.append(f"> No review record (`review/reviews/{kind}/{rec['stem']}.json`) was found for this note: its "
+                     "model, date and verification are unknown.")
+        elif mode in ("ids", "llm"):
+            s = f"> Verification: {n('n_citations')} paper{'s' if n('n_citations') != 1 else ''} cited"
+            if ids and not ids.get("error"):
+                s += (f"; every cited id looked up in PubMed / Crossref: {int(ids.get('found') or 0)} found, "
+                      f"{n('removed_citations')} removed as not found")
+                if n("retracted_citations"):
+                    s += f", {n('retracted_citations')} retracted"
+            elif ids.get("error"):
+                s += "; the id check failed (" + cell(sval(ids.get("error")))[:120] + ")"
+            if n("unverified_items"):
+                s += f"; {n('unverified_items')} item{'s' if n('unverified_items') != 1 else ''} left unverified"
+            if mode == "llm" and llm.get("status") == "done":
+                checker = sval(meta.get("checker_model"))
+                s += (". Claims checked against the abstracts they cite (`citation-checker`"
+                      + (f", `{checker}`" if checker else "") + f"): of {n('claims_checked')} claim"
+                      + ("s" if n("claims_checked") != 1 else "") + f", {n('supported')} supported, {n('partly')} "
+                      f"partly, {n('not supported')} not supported, {n('not checkable')} not checkable.")
+            elif mode == "llm":
+                why = cell(sval(llm.get("status")) or "not run")
+                s += f". The claims were not checked against the abstracts ({why})."
+            else:
+                s += ". The claims were not checked against the abstracts (`--verify ids`)."
+            C.append(s)
+        else:
+            C.append("> Verification: none (the review ran with `--verify off`): its citations were not checked.")
+        links = []
+        hist = sval(meta.get("history"))
+        if hist and os.path.exists(os.path.join(self.out, hist)):
+            links.append(f"the full history of the run (every request, response and tool call): "
+                         f"[{os.path.basename(hist)}]({self._run_link(note_rel, hist)})")
+        if rec["review_rel"]:
+            links.append(f"the review as data: [{os.path.basename(rec['review_rel'])}]"
+                         f"({self._run_link(note_rel, rec['review_rel'])})")
+        if links:
+            C.append("> Files: " + "; ".join(links) + ". They are in the run folder, outside the vault ("
+                     + ", ".join(f"`{p}`" for p in (hist, rec["review_rel"]) if p) + "): open them in a text editor.")
+        body = []
+        fence = False
+        for line in self.resolve_any(rec["text"]).split("\n"):
+            if line.lstrip().startswith(("```", "~~~")):
+                fence = not fence
+            m = None if fence else re.match(r"^(#{1,6})\s+(.*?)\s*#*\s*$", line)
+            if m:
+                if not any(x.strip() for x in body) and m.group(2).strip().rstrip(":").lower() == LIT_HEADING.lower():
+                    continue                                    # the vault supplies this heading
+                if len(m.group(1)) < 3:                         # below the note's own '##' sections
+                    line = "### " + m.group(2)
+            body.append(line)
+        while body and not body[0].strip():
+            body.pop(0)
+        L = [f"## {LIT_HEADING}", ""] + C + [""] + body + [""]
+        vs = self.lit_verdicts.get((kind, key)) or []
+        if vs:
+            L += ["**Connection verdicts** of this review (`review/connections.parquet`): " +
+                  "; ".join(f"{self._plink(v)} {self._verdict_text(v)}" for v in vs) + ".", ""]
+        return L
+
     def load_fragments(self):
         self.fragments = {}
         gd = os.path.join(SEED_DIR, "genes")
@@ -771,6 +1134,7 @@ class Vault:
         if name != sym:
             fm["aliases"] = [sym]
         fm["tags"] = tags
+        self.lit_frontmatter("gene", c, fm)
         L = [frontmatter(fm), f"# {R.label[c]}", ""]
         sub = []
         if gname and gname != sym:
@@ -794,6 +1158,7 @@ class Vault:
         L += self.sec_lines(c)
         L += self.sec_partners(c)
         L += self.sec_where(c)
+        L += self.sec_literature("gene", c, self.gene_path[c])
         L += self.sec_record(c, an)
         L += self.sec_data(c, len(rows))
         L += ["## Sources", "",
@@ -804,6 +1169,10 @@ class Vault:
                "`tahoe vault`."),
               "Registry text: `reference/annotations.parquet` (HGNC, Ensembl GRCh38, UniProt, NCBI Gene; download "
               "dates in `reference/sources.json`). Paths are relative to the run folder."]
+        if ("gene", c) in self.lit:
+            L += ["", f"\"{LIT_HEADING}\" is an AI agent's review of this gene (tahoemap/review): "
+                  + (f"`{self.lit[('gene', c)]['note_rel']}`, " if self.lit[("gene", c)]["note_rel"] else "")
+                  + "spliced in by `tahoe vault`; a new review replaces it."]
         return "\n".join(L)
 
     def _de_row(self, rows, dd):
@@ -1048,6 +1417,12 @@ class Vault:
                     "## Genes that move opposite", "", "Not in the vector space, so no gene relations.", ""]
         rows = np.arange(R.rel_s[c], R.rel_s[c + 1])
         L = []
+        shown = [r for sign in (1, -1) for r in [r for r in rows if np.sign(rel["cos"][r]) == sign][:N_PARTNERS]]
+        lit = {int(rel["col_b"][r]): self.lit_partner_cell(c, rel["col_b"][r]) for r in shown} \
+            if self.lit_pairs else {}
+        if not any(lit.values()):                      # the Literature column only where a shown partner has one
+            lit = {}
+        self.n_lit_cells += sum(1 for v in lit.values() if v)
         for sign in (1, -1):
             sel = [r for r in rows if np.sign(rel["cos"][r]) == sign][:N_PARTNERS]
             if sign > 0:
@@ -1084,8 +1459,15 @@ class Vault:
                 notes += self._locus_note(c, b, r)
                 body.append([self.glink(b), fcos(rel["cos"][r]),
                              f"{fcos(rel['cos_half1'][r])} / {fcos(rel['cos_half2'][r])}", rel["evidence"][r],
-                             fq(rel["fdr"][r]), "; ".join(notes)])
-            L += table(["Gene", "cos", "Halves", "Evidence", "fdr", "Notes"], body) + [""]
+                             fq(rel["fdr"][r]), "; ".join(notes)] + ([lit.get(b) or "—"] if lit else []))
+            L += table(["Gene", "cos", "Halves", "Evidence", "fdr", "Notes"] + (["Literature"] if lit else []),
+                       body) + [""]
+        if lit:
+            L += [f"*Literature = the connection verdict of the AI-agent literature review of this gene (see "
+                  f"\"{LIT_HEADING}\"), else of the partner's review (named), with the papers it cites "
+                  "(`review/connections.parquet`): "
+                  "established, indirect, plausible, unexpected or contradicted; \"check\" = what the citation checker "
+                  "found in the abstracts when it did not find the claim supported.*", ""]
         return L
 
     def sec_where(self, c):
@@ -1376,6 +1758,7 @@ class Vault:
               "max_sig_genes": int(info["max_sig"]) if info is not None and _finite(info.get("max_sig")) else None,
               "tags": ["drug"] + ([f"moa/{safe_filename(g('moa_broad')).replace(' ', '-').lower()}"]
                                   if g("moa_broad") else [])}
+        self.lit_frontmatter("drug", d, fm)
         L = [frontmatter(fm), f"# {d}", ""]
         sub = [x for x in (" ".join(y for y in (g("moa_fine"), g("moa_broad") and f"({g('moa_broad')})") if y),)
                if x]
@@ -1500,6 +1883,7 @@ class Vault:
             L += ["- " + "; ".join(f"{self.dlink(n)} ({fcos(v)}"
                                    + (f", {cell(sval(moa.get(n)))}" if moa is not None and sval(moa.get(n)) else "")
                                    + ")" for n, v in near), ""]
+        L += self.sec_literature("drug", d, f"Drugs/{self.drug_name[d]}.md")
         L += ["## Data", "",
               "- `tables/drugs.parquet` — drug == " + json.dumps(d),
               "- `tables/drugdoses.parquet` — dd in " + ", ".join(str(i) for i in rows),
@@ -1559,6 +1943,7 @@ class Vault:
               "median_response": round(float(t["median_response"]), 3) if _finite(t.get("median_response")) else None,
               "tags": ["cell-line"] + ([f"organ/{safe_filename(sval(t.get('Organ'))).replace(' ', '-').lower()}"]
                                        if sval(t.get("Organ")) else [])}
+        self.lit_frontmatter("line", line, fm)
         L = [frontmatter(fm), f"# {R.cell[line]}", "",
              f"*{cell(sval(t.get('Organ')) or 'organ unknown')} · TP53 {R.tp53[line]} · "
              f"{cell(sval(t.get('cell_line_id')))} · {cell(sval(t.get('Cell_ID_DepMap')))}*", ""]
@@ -1642,6 +2027,7 @@ class Vault:
                 L += [f"- Every component responds within 0.7–1.5 of a typical line (range {g3(np.nanmin(s))} to "
                       f"{g3(np.nanmax(s))})."]
             L += [""]
+        L += self.sec_literature("line", line, f"Cell lines/{self.line_name[line]}.md")
         L += ["## Data", "",
               f"- `tables/lines.parquet` — line == {line}; `tables/line_effects.parquet` — line == {line}",
               f"- `atlas/effects/DD_A.npy`, `DD_Az.npy`, `DD_beta.npy`, `line_cpm.npy` — column / row {line}; "
@@ -2013,7 +2399,14 @@ class Vault:
              f"{fint(ei.get('contexts'))} (drug-dose, line) contexts) |",
              f"| Modules | {len(self.module_name)} |",
              f"| Drugs / drug-doses | {len(self.drug_name)} / {R.Dn:,} |",
-             f"| Cell lines | {R.L} |", f"| Plates / wells | {len(self.plate_name)} / {R.N:,} |", "",
+             f"| Cell lines | {R.L} |", f"| Plates / wells | {len(self.plate_name)} / {R.N:,} |"]
+        if self.lit:
+            nk = {k: sum(1 for x in self.lit if x[0] == k) for k in REVIEW_KINDS}
+            L += ["| Literature reviews (AI agents; `review/`) | " + ", ".join(
+                f"{nk[k]:,} {w if nk[k] == 1 else w + 's'}" for k, w in (("gene", "gene"), ("drug", "drug"),
+                                                                        ("line", "cell line")))
+                  + " (tag `#literature-review`) |"]
+        L += ["",
              "## Start here", "",
              "| If you want | Read |", "|---|---|",
              "| what every section of a note means, and the baseline of every fold change | [[How to read this vault]] |",
@@ -2089,6 +2482,8 @@ class Vault:
                                  novel_status=novel_status, arm_min=ARM_MIN, arms_opp=ARMS_OPPOSITE,
                                  n_old=self.n_old_study,
                                  artifacts=", ".join(f"`{a}`" for a in A.ARTIFACT_FLAGS))
+        if self.lit:
+            txt = txt.rstrip("\n") + "\n\n" + LIT_HOWTO
         self.W.write(f"{self.fixed['How to read this vault']}.md",
                      frontmatter({"type": "index", "tags": ["index", "help"]}) + "\n" + txt)
 
@@ -2174,6 +2569,7 @@ class Vault:
         self.R.load_predictions()
         self.load_fragments()
         self.assign_names()
+        self.load_literature()
         self.write_concepts()
         self.gene_notes()
         self.drug_notes()
@@ -2203,6 +2599,8 @@ class Vault:
                 "concept_notes": len(self.seed_notes), "fragments_spliced": self.n_fragments,
                 "fragments_marked_earlier_study": self.n_old_study,
                 "fragments_available": len(self.fragments), "written": self.W.n_written,
+                "literature_notes": self.n_lit_notes, "literature_partner_cells": self.n_lit_cells,
+                "review": self.lit_fp,
                 "unchanged": self.W.n_same, "stale_removed": removed, "mb": round(self.W.bytes / 1e6, 1),
                 "gene_note_kb_median": round(float(np.median(gs)) / 1e3, 1) if len(gs) else None,
                 "gene_note_kb_max": round(float(gs.max()) / 1e3, 1) if len(gs) else None,
@@ -2350,6 +2748,25 @@ seen.
 """
 
 
+LIT_HOWTO = """## What the literature says (AI-agent reviews)
+
+A gene, drug or cell line tagged `#literature-review` has a section **What the literature says**, written by an AI
+agent (tahoemap's literature-review agents, `tahoe review`; see `docs/review.md` of the tahoemap repository). The
+agent read the entity's dossier (what this run's data say about it), searched PubMed, Europe PMC and the web, read
+abstracts, and reported what is established, what in the data is unexpected, which expected connections are missing
+and what is contradicted. The callout at the top of the section names the agent, the model, the date and the
+verification: every cited PMID / DOI was looked up (a nonexistent one is removed and its claim marked unverified),
+and a second agent, the citation checker, compared each claim with the abstracts it cites (supported / partly / not
+supported / not checkable). It also links the run's full history (every request, response and tool call) and the
+review as data; both are in the run folder (`review/`), outside the vault.
+
+In a gene note the partner tables then have a **Literature** column: the agent's verdict on that pair (established,
+indirect, plausible, unexpected or contradicted) with its citations, from `review/connections.parquet`; a verdict
+from the partner's review is marked with the partner's name. The reviews are leads, not established facts: no person
+has checked them. A new review replaces the section at the next `tahoe vault` (or `tahoe run`).
+"""
+
+
 def run(out, **_):
     """Build OUT/vault/ from the run's tables (see the module docstring)."""
     t0 = time.time()
@@ -2363,5 +2780,7 @@ def run(out, **_):
     log(f"Vault done: {info['notes']:,} notes ({info['mb']} MB; gene notes median {info['gene_note_kb_median']} KB, "
         f"max {info['gene_note_kb_max']} KB; plates notes max {info['plates_note_kb_max']} KB), "
         f"{info['fragments_spliced']} written gene sections spliced ({info['fragments_available']} fragments), "
-        f"{info['stale_removed']} stale notes removed ({info['minutes']} min)")
+        + (f"{info['literature_notes']} literature reviews spliced ({info['literature_partner_cells']} partner-table "
+           "verdicts), " if info.get("literature_notes") else "")
+        + f"{info['stale_removed']} stale notes removed ({info['minutes']} min)")
     return info

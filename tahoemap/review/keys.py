@@ -222,10 +222,12 @@ def _retry_after(exc):
         return None
     for name, scale in (("retry-after-ms", 0.001), ("retry-after", 1.0)):
         v = h.get(name)
-        try:
-            return max(0.0, float(v) * scale) if v is not None else None
-        except (TypeError, ValueError):
+        if v is None:
             continue
+        try:
+            return max(0.0, float(v) * scale)
+        except (TypeError, ValueError):
+            continue                        # (an HTTP date: the exponential backoff decides)
     return None
 
 
@@ -235,9 +237,11 @@ def classify(exc):
     import anthropic as AN
     status = getattr(exc, "status_code", None)
     etype = getattr(exc, "type", None)
+    am = getattr(exc, "api_message", None)
     info = {"class": type(exc).__name__, "status": status, "type": etype if isinstance(etype, str) else None,
             "error_code": getattr(exc, "error_code", None), "request_id": getattr(exc, "request_id", None),
-            "retry_after": _retry_after(exc), "message": scrub(exc)[:2000]}
+            "retry_after": _retry_after(exc), "api_message": scrub(am)[:1000] if isinstance(am, str) else None,
+            "message": scrub(exc)[:2000]}
     spend = getattr(AN, "EnforcedSpendLimitReachedError", ())
     hold = getattr(AN, "OrganizationOnHoldError", ())
     if (spend and isinstance(exc, spend)) or (hold and isinstance(exc, hold)):

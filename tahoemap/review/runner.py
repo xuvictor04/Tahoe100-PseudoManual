@@ -28,15 +28,22 @@ Resume: the latest ledger line of an entity is its state. done and refused are f
 no_review are retried up to 2 more times; over_budget only with a higher per-entity cap; paused and key_rotated
 entities start again from the beginning. Nothing is redone that the ledger marks final.
 
+Models and effort: the agent files' (reviewers claude-opus-5-5 / high, checker claude-opus-5-5 / medium); --model and
+--effort set the reviewers, or per agent with AGENT=VALUE,... (gene, drug, line, checker, reviewers, all).
+
 Costs (USD; PRICES): from response.usage, per usage.iterations entry at that entry's model when present (a fallback
 model bills at its own price), cache writes at 1.25x input (2x for 1-hour entries), cache reads at the model's
-cache-read price, web searches $0.01 each. --per-entity-usd caps one attempt (a request is not started once the
-attempt has spent it; the citation checker has its own cap, its agent's max_usd); --max-usd caps this run (no new
-entity starts and running ones pause once it is reached). Without --max-usd or --limit the runner refuses to start
-unless --no-cap is given; it always prints the projected cost first.
+cache-read price (claude-opus-5-5: $0.20 per million, 0.05x input), web searches $0.01 each. --per-entity-usd caps
+one attempt (a request is not started once the attempt has spent it; the citation checker has its own cap, its
+agent's max_usd); --max-usd caps this run (no new entity starts and running ones pause once it is reached). Without
+--max-usd or --limit the runner refuses to start unless --no-cap is given; it always prints the projected cost first.
+
+Tests: `--fake SCRIPT` (fake.py) answers every request through the real SDK from a script, with no key and no
+network; tests/test_review.py drives every path above with it.
 """
 
 import glob
+import hashlib
 import json
 import os
 import random
@@ -57,7 +64,7 @@ from . import dossier as D
 from . import keys as K
 from . import tools as TL
 from . import verify as V
-from .history import History, Ledger, now, read_jsonl, to_jsonable
+from .history import DOSSIER_REF, PLACEHOLDER_SOURCE, History, Ledger, now, read_jsonl, to_jsonable
 from .. import __version__
 from ..common import log, safe_filename, write_json, write_parquet
 
@@ -147,12 +154,18 @@ def _tokens_usd(u, model):
             + _n(u, "output_tokens") * pout) / 1e6
 
 
-def usage_cost(usage, model):
-    """(USD, summary) of one response's usage dict (response.usage.to_dict()). With usage.iterations, every entry
-    is priced at its own model (the request's model when the entry names none)."""
+def usage_cost(usage, model, served=None):
+    """(USD, summary) of one response's usage dict (response.usage.to_dict()); `model` = the requested model,
+    `served` = response.model. With usage.iterations, every entry is priced at its own model (an entry that names
+    none: the requested model, or the served one for a fallback_message entry); without, all at the served model."""
     u = usage or {}
     its = u.get("iterations") or []
-    usd = sum(_tokens_usd(it, it.get("model") or model) for it in its) if its else _tokens_usd(u, model)
+    served = served or model
+    if its:
+        usd = sum(_tokens_usd(it, it.get("model") or (served if it.get("type") == "fallback_message" else model))
+                  for it in its)
+    else:
+        usd = _tokens_usd(u, served)
     st = u.get("server_tool_use") or {}
     web = _n(st, "web_search_requests")
     usd += web * WEB_SEARCH_USD
@@ -190,8 +203,8 @@ class Options:
     max_usd: float = None               # total cap of this run
     per_entity_usd: float = None        # default: the agent file's max_usd
     concurrency: int = 4
-    model: str = None                   # reviewers' model (default: the agent file's)
-    effort: str = None                  # reviewers' effort (default: the agent file's)
+    model: str = None                   # reviewers' model, or AGENT=MODEL,... (default: the agent files')
+    effort: str = None                  # reviewers' effort, or AGENT=EFFORT,... (default: the agent files')
     verify: str = "llm"                 # llm | ids | off
     web: bool = True
     web_max_uses: int = 5
@@ -217,6 +230,7 @@ class RunResult:
     started: int = 0
     message: str = ""
     paused: bool = False
+    violations: list = field(default_factory=list)   # --fake: requests the API would have rejected
 
 
 # ----------------------------------------------------------------------------- selection and state
@@ -308,16 +322,43 @@ def to_run(state, redo, cap):
     return True, ""
 
 
+def per_agent(value, what):
+    """--model / --effort -> {agent name: value}. A plain value sets the three reviewers; 'AGENT=X,AGENT=Y' sets
+    those agents, AGENT being an agent name (gene-reviewer, drug-reviewer, line-reviewer, citation-checker) or
+    gene / drug / line / checker / reviewers / all."""
+    if not value:
+        return {}
+    v = str(value).strip()
+    if "=" not in v:
+        return {AGENTS[k]: v for k in KINDS}
+    names = {**{k: [AGENTS[k]] for k in KINDS}, **{AGENTS[k]: [AGENTS[k]] for k in KINDS},
+             "checker": [CHECKER], CHECKER: [CHECKER], "reviewers": [AGENTS[k] for k in KINDS],
+             "all": [AGENTS[k] for k in KINDS] + [CHECKER]}
+    out = {}
+    for part in v.split(","):
+        if not part.strip():
+            continue
+        k, _eq, x = (t.strip() for t in part.partition("="))
+        if k not in names or not x:
+            raise ValueError(f"{what}: '{part.strip()}' is not AGENT=VALUE with AGENT one of "
+                             f"{', '.join(sorted(names))}")
+        for n in names[k]:
+            out[n] = x
+    return out
+
+
 def load_agents(opts):
+    """kind -> AgentDef for the three reviewers, plus 'checker', with --model / --effort applied."""
+    models, efforts = per_agent(opts.model, "--model"), per_agent(opts.effort, "--effort")
+    bad = sorted({e for e in efforts.values() if e not in DEF.EFFORTS})
+    if bad:
+        raise ValueError(f"--effort: {', '.join(bad)} is not one of {', '.join(DEF.EFFORTS)}")
     ag = {}
-    for k in KINDS:
-        a = DEF.load_agent(AGENTS[k], opts.agents_dir, opts.skills_dir)
-        if opts.model:
-            a.model = opts.model
-        if opts.effort:
-            a.effort = opts.effort
+    for k, name in [(k, AGENTS[k]) for k in KINDS] + [("checker", CHECKER)]:
+        a = DEF.load_agent(name, opts.agents_dir, opts.skills_dir)
+        a.model = models.get(name, a.model)
+        a.effort = efforts.get(name, a.effort)
         ag[k] = a
-    ag["checker"] = DEF.load_agent(CHECKER, opts.agents_dir, opts.skills_dir)
     return ag
 
 
@@ -350,7 +391,8 @@ def projection(out, sel, states, agents, opts, sample=3):
 
 
 def _fmt_usd(x):
-    return f"${x:,.2f}" if x < 1000 else f"${x:,.0f}"
+    x = float(x)
+    return f"${x:,.0f}" if x >= 1000 else f"${x:,.2f}" if x >= 0.1 or x == 0 else f"${x:.4f}"
 
 
 # ----------------------------------------------------------------------------- one run
@@ -362,6 +404,7 @@ class Run:
         self.stop_reason = ""
         self.stop_signal = None
         self.lock = threading.Lock()
+        self._keys_lock = threading.Lock()
         self.spent = 0.0
         self.started = 0
         self.active = {}                # entity_id -> Attempt
@@ -392,8 +435,10 @@ class Run:
         return bool(SLEEP(seconds, self.stop)) or self.stop.is_set()
 
     def save_keys(self, *_):
-        write_json({"updated": now(), "keys": self.pool.describe()}, os.path.join(review_dir(self.out),
-                                                                                  "keys_state.json"))
+        """OUT/review/keys_state.json: the key ids and which are dead (never a key itself)."""
+        with self._keys_lock:                       # several threads can see a key die at once
+            write_json({"updated": now(), "keys": self.pool.describe()},
+                       os.path.join(review_dir(self.out), "keys_state.json"))
 
 
 def code_version():
@@ -530,7 +575,8 @@ class Attempt:
                         dossier_sha256=dos.sha256, dossier=dos.text, request=request_settings(kw),
                         cap_usd=self.cap, verify=r.opts.verify, web=r.opts.web)
         ctx = TL.make_context(r.out, {"kind": self.kind, "name": self.name, "entity_id": self.entity_id})
-        status, info = converse(self, agent, r.pool.client(self.key), kw, messages, ctx, self.cap)
+        status, info = converse(self, agent, r.pool.client(self.key), kw, messages, ctx, self.cap,
+                                elide={DOSSIER_REF: dos.text})
         if status == "submitted":
             return self.complete(dos, ctx)
         if status == "key_dead":
@@ -592,15 +638,18 @@ class Attempt:
         kw = build_request(agent, web=False)
         key = self.key
         status, info = "failed", {}
+        psha = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
         while True:
             ctx = TL.make_context(r.out, ent)
             ctx.notes["claim_ids"] = [c["claim_id"] for c in claims]
             messages = [{"role": "user", "content": prompt}]
-            status, info = converse(self, agent, r.pool.client(key), kw, messages, ctx, float(agent.max_usd),
-                                    first_extra={"system": agent.system, "system_sha256": agent.system_sha256,
-                                                 "tools": [t["name"] for t in kw.get("tools", [])],
-                                                 "model": agent.model, "effort": agent.effort, "key_id": key.key_id,
-                                                 "request": request_settings(kw)})
+            self.hist.event("start", agent=agent.name, phase="citation check", model=agent.model,
+                            effort=agent.effort, key_id=key.key_id, system_sha256=agent.system_sha256,
+                            system=agent.system, tools=[t["name"] for t in kw.get("tools", [])],
+                            tool_definitions=kw.get("tools", []), prompt_sha256=psha,
+                            claim_ids=ctx.notes["claim_ids"], request=request_settings(kw),
+                            cap_usd=float(agent.max_usd))
+            status, info = converse(self, agent, r.pool.client(key), kw, messages, ctx, float(agent.max_usd))
             if status != "key_dead":
                 break
             r.pool.mark_dead(key, _info_text(info))
@@ -623,7 +672,7 @@ def _info_text(info):
     if isinstance(info, str):
         return info
     parts = [str(info.get(k)) for k in ("class", "status", "type", "error_code", "category") if info.get(k)]
-    msg = info.get("message") or info.get("explanation") or ""
+    msg = info.get("api_message") or info.get("message") or info.get("explanation") or ""
     return (" ".join(parts) + (": " if parts and msg else "") + str(msg)).strip()
 
 
@@ -701,9 +750,21 @@ def run_tools(att, agent, resp, ctx):
     return results
 
 
-def converse(att, agent, client, kw, messages, ctx, cap, first_extra=None):
+def _elided(msgs, elide):
+    """The first request's messages for the history, with texts already stored in the start event (the dossier)
+    replaced by their placeholder; history.conversation() puts them back."""
+    out = _serialize(msgs)
+    if elide and out and isinstance(out[0].get("content"), str):
+        for ph, text in elide.items():
+            if text and text in out[0]["content"]:
+                out[0]["content"] = out[0]["content"].replace(text, ph)
+    return out
+
+
+def converse(att, agent, client, kw, messages, ctx, cap, elide=None):
     """The agent loop of one conversation -> (status, info). status: submitted | refused | no_review |
-    over_budget | paused | key_dead | failed."""
+    over_budget | paused | key_dead | failed. elide: {placeholder: text stored in the start event} for the
+    history's first request event."""
     run = att.run
     tool = agent.submit_tool or "submit_review"
     what = "review" if tool == "submit_review" else "check"
@@ -720,10 +781,11 @@ def converse(att, agent, client, kw, messages, ctx, cap, first_extra=None):
             return "over_budget", {"message": f"{_fmt_usd(spent)} spent; the cap is {_fmt_usd(cap)}"}
         if turns >= agent.max_turns:
             return "no_review", {"message": f"{agent.max_turns} requests (max_turns) without a {what}"}
-        ev = {"agent": agent.name, "n": turns + 1, "messages": _serialize(messages[logged:])}
-        if logged == 0 and first_extra:
-            ev.update(first_extra)
-        att.hist.event("request", **ev)
+        if logged == 0 and elide:
+            att.hist.event("request", agent=agent.name, n=turns + 1, messages=_elided(messages, elide),
+                           placeholders={ph: PLACEHOLDER_SOURCE[ph] for ph in elide})
+        else:
+            att.hist.event("request", agent=agent.name, n=turns + 1, messages=_serialize(messages[logged:]))
         logged = len(messages)
         try:
             resp = call(att, agent, client, dict(kw, messages=messages))
@@ -735,7 +797,7 @@ def converse(att, agent, client, kw, messages, ctx, cap, first_extra=None):
             return "paused", {"message": run.stop_reason or "stopped"}
         turns += 1
         d = resp.to_dict(mode="json")
-        usd, summ = usage_cost(d.get("usage") or {}, d.get("model") or kw["model"])
+        usd, summ = usage_cost(d.get("usage") or {}, kw["model"], d.get("model"))
         spent += usd
         att.add(usd, summ, d.get("model"))
         att.hist.event("response", agent=agent.name, n=turns, response=d, usage=d.get("usage"), cost_usd=round(usd, 6),
@@ -878,8 +940,6 @@ def run(out, **kw):
         opts.kinds = parse_kinds(opts.kinds)
         if opts.verify not in ("llm", "ids", "off"):
             raise ValueError("--verify must be llm, ids or off")
-        if opts.effort and opts.effort not in DEF.EFFORTS:
-            raise ValueError(f"--effort must be one of {', '.join(DEF.EFFORTS)}")
         if int(opts.concurrency) < 1:
             raise ValueError("--concurrency must be at least 1")
         agents = load_agents(opts)
@@ -917,7 +977,8 @@ def run(out, **kw):
         say(msg)
         return RunResult(EXIT_REFUSED, message=msg)
     if opts.max_usd is not None:
-        say(f"Cap: {_fmt_usd(float(opts.max_usd))} for this run; per entity {', '.join(f'{k} ' + _fmt_usd(entity_cap(opts, agents[k])) for k in by_kind)}")
+        per = ", ".join(f"{k} {_fmt_usd(entity_cap(opts, agents[k]))}" for k in by_kind)
+        say(f"Cap: {_fmt_usd(float(opts.max_usd))} for this run; per entity {per}")
     fake = _load_fake(opts.fake)
     lit = fake.literature.install() if fake is not None and fake.literature is not None else None
     lock = _RunLock(out)
@@ -928,7 +989,11 @@ def run(out, **kw):
             lit.uninstall()
         return RunResult(EXIT_REFUSED, message=why)
     try:
-        pool = _make_pool(out, opts, fake)
+        try:
+            pool = _make_pool(out, opts, fake)
+        except OSError as e:                            # --keys-file missing or unreadable
+            say(f"review run: {e}")
+            return RunResult(EXIT_REFUSED, message=str(e))
         rn = Run(out, opts, pool, agents, fake)
         pool.on_dead = rn.save_keys
         try:
@@ -939,7 +1004,13 @@ def run(out, **kw):
             say(msg)
             rn.save_keys()
             return RunResult(EXIT_PAUSED, message=msg, paused=True)
-        return _run_threads(rn, todo, states, say)
+        res = _run_threads(rn, todo, states, say)
+        if fake is not None:
+            res.violations = list(fake.violations)
+            log(f"Fake API: {len(fake.calls)} requests, "
+                + (f"{len(fake.violations)} the API would have rejected: " + "; ".join(fake.violations[:5])
+                   if fake.violations else "none the API would have rejected"))
+        return res
     finally:
         lock.release()
         if lit:
@@ -1057,7 +1128,8 @@ def dry_run(out, todo, agents, opts, est, say):
         base = os.path.join(review_dir(out, "dry_run", k), safe_filename(dos.name))
         D.write_text(base + ".dossier.md", dos.text)
         write_json({"call": "client.beta.messages.create", "agent": a.name, "entity_id": dos.entity_id,
-                    "dossier_sha256": dos.sha256, "system_sha256": a.system_sha256, "request": kw}, base + ".request.json")
+                    "dossier_sha256": dos.sha256, "system_sha256": a.system_sha256, "request": kw},
+                   base + ".request.json")
         rows.append({"entity_id": dos.entity_id, "kind": k, "name": dos.name, "agent": a.name, "model": a.model,
                      "dossier_chars": len(dos.text), "system_chars": len(a.system),
                      "projected_usd": round(heuristic_cost(a, a.model, a.effort, len(dos.text), opts.web, opts.verify,

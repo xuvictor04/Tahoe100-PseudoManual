@@ -37,6 +37,7 @@ incomplete download unless `--allow-partial`; reference downloads that failed ar
 | `graph/` | The nodal map: modules with their + / − arms, layouts, module scores per drug-dose and line |
 | `tensor/` | Per-cell-line layer: every gene × drug-dose × line fold change and z; raw counts per well |
 | `atlas/` | The build (counts per well × line × gene) and the corrected effects (method v3) |
+| `review/` | *Optional, from `tahoe review` (below)*: AI-agent literature reviews of genes, drugs and cell lines — each review with its verification, the full history of every agent run, a ledger of attempts and costs, and every connection verdict and finding as tables; the vault and the map show them |
 
 `tahoe gene / drug / line / pair / module` answer from these files in the terminal.
 
@@ -71,6 +72,25 @@ pathway) point opposite ways and sit far apart; on the nodal map, which uses |co
 island with a + arm and a − arm. On planted data the opposite modules have cosine −0.7 yet share one island.
 [docs/vector-space-and-nodal-map.md](docs/vector-space-and-nodal-map.md) explains it in full.
 
+## Literature review agents
+
+`tahoe review` (optional; an Anthropic API key and money) runs one AI agent per gene, drug or cell line over a
+finished run: it reads a dossier of what the data say about that entity, searches PubMed, Europe PMC and the web,
+and submits a cited review — what is established, what is unexpected, which expected connections are missing, what
+is contradicted, and a verdict on each connection. Every cited paper is looked up and a second agent checks each
+claim against the abstracts; every request, response and tool call is kept. The reviews appear in the vault (a
+"What the literature says" section and a Literature column in the partner tables) and in the map. Keys can run out
+mid-run and be replaced; a stopped run resumes where it stopped. A full gene pass is expensive (~15,000 genes): start
+with `tahoe review plan`, `--dry-run` and `--limit`, ideally on a copy (`tahoe duplicate`).
+[docs/review.md](docs/review.md) explains the agents, costs, keys, histories, verification and the duplicate
+workflow.
+
+```bash
+tahoe review plan                          # the queue and its projected cost
+tahoe review run --kinds line --max-usd 75 # the 50 cell lines (~$60 projected), at most $75; Ctrl-C pauses
+tahoe vault; tahoe map                     # show the reviews in the vault and the map
+```
+
 ## What was carried over, and how it was checked
 
 This branch starts from scratch and takes only what it needs from the earlier work (branch
@@ -91,7 +111,14 @@ in `tahoemap/vault_seed/`). Checks:
 ```bash
 tahoe test                      # or: python3 tests/run_tests.py --workdir /tmp/tahoemap_test
 python3 tests/test_port.py      # the port is verbatim
+python3 tests/test_review.py --workdir /tmp/tahoemap_test   # the review agents against a scripted fake API
 ```
+
+`tests/test_review.py` (after `run_tests.py`, offline, no key, under a minute) drives the review runner through the
+real SDK against a scripted fake API: a review end to end with verification, refusals, nudges, budget caps, a key
+that runs out of credit and the rotation to the next, every key dead and the resume, rate limits, Ctrl-C and
+SIGTERM, concurrency, a dry run, the CLI, a fake review of a gene, a drug and a line spliced into the vault and the
+map, and `duplicate`; it also checks that no key reaches any file or any printed line.
 
 The synthetic data plant drug effects (some only in TP53-wild-type lines), co-regulated modules, pairs of modules
 moved in opposite directions, un-moved genes, and every artifact the method corrects. The tests check each stage
@@ -118,9 +145,10 @@ has a note per gene and no broken links, the look-ups answer.
 | Path | |
 |---|---|
 | `tahoe` | the command (Linux / macOS); Windows: `python -m tahoemap …` (see the quick start) |
+| `tahoemap/review/` | the literature-review agents: agent and skill files (Claude Code format), dossiers, tools, verification, key pool, histories, the runner |
 | `tahoemap/` | the package: `atlas_core.py` + `tlib.py` (ported method), `stream.py`, `tensor.py`, `tables.py`, `embed.py`, `reference.py`, `relations.py`, `graph.py`, `validate.py`, `vault.py`, `html_map.py`, `query.py`, `cli.py` |
 | `tahoemap/data/control_sets.json` | curated control programmes for validation (from the literature, not Tahoe) |
 | `tahoemap/vault_seed/` | the written layer of the vault (add `genes/SYMBOL.md` to add knowledge; it survives rebuilds) |
-| `docs/` | quick start, method, the two maps, design contract |
+| `docs/` | quick start, method, the two maps, the literature review ([review.md](docs/review.md)), design contracts |
 | `tests/` | synthetic data generator, end-to-end tests, port test |
 | `tools/port_from_old.py` | how the method was carried over |

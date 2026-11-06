@@ -5,12 +5,18 @@
         ({"event": ..., "time": ..., ...}):
             start     agent, model, effort, key_id, system prompt (text + sha256), tool list (names + definitions),
                       dossier (text + sha256), code version, request settings
-            request   the messages appended since the previous request (the first: the dossier message)
+            request   the messages appended since the previous request (the first: the dossier message, with
+                      the dossier text, stored once in the start event, as the placeholder {{dossier}};
+                      conversation() puts it back)
             response  response.to_dict() in full, usage, cost of this response, cost of the attempt so far
             tool      name, input, result (cut at 20,000 characters, with a note), is_error, seconds
             error     typed class, status, error type / code, request id, scrubbed message, what the runner did
             end       status, totals
-        The citation checker's events go to the same file with "agent": "citation-checker".
+        The citation checker's events go to the same file, "agent": "citation-checker", after a start event of
+        its own ("phase": "citation check": its system prompt, tools, claim ids, key id, sha256 of its prompt).
+    conversation(events, agent=None) -> list of messages
+        the messages of the last request of an agent's (latest) conversation, rebuilt from the events exactly as
+        they were sent (placeholders filled from the start event).
     Ledger(out)
         OUT/review/ledger.jsonl: one line per finished attempt (append-only; the latest line of an entity is its
         state). latest() / states() / frame() read it back.
@@ -32,6 +38,8 @@ from .keys import scrub
 from ..common import safe_filename
 
 TOOL_RESULT_CHARS = 20_000
+DOSSIER_REF = "{{dossier}}"                 # in the first request event: the dossier text of the start event
+PLACEHOLDER_SOURCE = {DOSSIER_REF: "start.dossier"}
 STATUSES = ("done", "refused", "no_review", "over_budget", "failed", "paused", "key_rotated")
 LEDGER_FIELDS = ("entity_id", "kind", "name", "run_id", "agent", "model", "status", "cost_usd", "input_tokens",
                  "output_tokens", "cache_creation_input_tokens", "cache_read_input_tokens", "web_searches",
@@ -130,6 +138,27 @@ class History:
 
     def events(self):
         return read_jsonl(self.path)
+
+
+def conversation(events, agent=None):
+    """The full messages of the last request of `agent`'s latest conversation in these history events (default:
+    the first agent of the file, the reviewer), with the placeholders filled from its start event."""
+    agent = agent or next((e.get("agent") for e in events if e.get("event") == "start"), None)
+    start, msgs = {}, []
+    for e in events:
+        if e.get("agent") != agent:
+            continue
+        if e.get("event") == "start":
+            start, msgs = e, []
+        elif e.get("event") == "request":
+            add = json.loads(json.dumps(e.get("messages") or []))
+            for ph, src in (e.get("placeholders") or {}).items():
+                text = start.get(src.split(".", 1)[1], "") if src.startswith("start.") else ""
+                for m in add:
+                    if isinstance(m.get("content"), str):
+                        m["content"] = m["content"].replace(ph, text)
+            msgs += add
+    return msgs
 
 
 class Ledger:

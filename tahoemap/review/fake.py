@@ -20,7 +20,8 @@ A step is consumed per request of that entity's conversation (reviewer and check
     {"tool_use": [{"name": "pubmed_search", "input": {...}}, ...]}           stop_reason tool_use
     {"submit_review": {payload}}                                             tool_use of submit_review
     {"submit_check": {payload}}                                              tool_use of submit_check
-    {"web_search": "query"}  (+ "pause": true: stop with pause_turn before the result)
+    {"web_search": "query"}  (+ "pause": true: stop with pause_turn before the result; with "tool_use" /
+                             "submit_review" in the same step: a finished search, then those calls)
     {"end_turn": "text"}                                                     text only, end_turn
     {"refusal": "bio"}                                                       stop_reason refusal + stop_details
     {"max_tokens": true}  (+ "partial_tool": "submit_review": a cut-off tool_use block)
@@ -37,6 +38,11 @@ no forced tool_choice / thinking budget / sampling parameters, the fallback beta
 prompt and top level, strict custom tools. A violation is answered with HTTP 400 and listed in FakeAPI.violations.
 
 FakeLiterature: a tiny local PubMed / Europe PMC / Crossref (install() patches tools.http_get).
+sdk_error(what): the SDK's own exception for an HTTP status / named error, built the way the SDK builds it
+(anthropic._error_classes.make_status_error on an httpx2.Response with its request), for tests of keys.classify.
+FakeAPI.calls: one record per request (entity, role, key's last 4 characters, number of messages and the
+messages_sha256 of what was sent, step, thread, start/end times). FakeAPI.violations: what the API would have
+rejected (the runner logs them at the end of a fake run).
 """
 
 import json
@@ -106,7 +112,7 @@ class FakeAPI:
         import httpx2
         transport = httpx2.MockTransport(lambda req: self.handle(req, secret or "sk-ant-fake-default-chain"))
         return anthropic.Anthropic(api_key=secret or "sk-ant-fake-default-chain", base_url=FAKE_BASE_URL,
-                                   http_client=httpx2.Client(transport=transport), max_retries=0)
+                                   http_client=anthropic.DefaultHttpxClient(transport=transport), max_retries=0)
 
     def keys(self):
         return list(self.script.get("keys") or DEFAULT_KEYS)
@@ -140,7 +146,6 @@ class FakeAPI:
         return self.script.get("default") or []
 
     def handle(self, req, secret):
-        import httpx2
         body = json.loads(req.content.decode("utf-8"))
         ent, role, first = self._conversation(body)
         key = f"{ent}|{role}"
@@ -161,7 +166,17 @@ class FakeAPI:
             else:
                 step = {"error": dead} if dead is not None else {"error": 400, "message": "; ".join(problems)}
             self.calls.append({"n": n, "entity": ent, "role": role, "key": secret[-4:],
-                               "n_messages": len(body.get("messages") or []), "step": _step_name(step)})
+                               "n_messages": len(body.get("messages") or []), "step": _step_name(step),
+                               "thread": threading.current_thread().name, "t0": time.monotonic(),
+                               "messages_sha256": messages_sha256(body.get("messages") or [])})
+        try:
+            return self._answer(req, body, step, n, key)
+        finally:
+            with self.lock:
+                self.calls[n - 1]["t1"] = time.monotonic()
+
+    def _answer(self, req, body, step, n, key):
+        import httpx2
         if step.get("sleep"):
             time.sleep(float(step["sleep"]))
         if step.get("signal"):
@@ -288,6 +303,13 @@ class FakeAPI:
         if step.get("text"):
             content.append({"type": "text", "text": step["text"]})
         stop, details = "end_turn", None
+        if "web_search" in step and ("tool_use" in step or "submit_review" in step or "submit_check" in step):
+            sid = f"srvtoolu_fake_{n}"                 # a finished web search, then the custom tool call(s)
+            content.append({"type": "server_tool_use", "id": sid, "name": "web_search",
+                            "input": {"query": step["web_search"]}})
+            content.append({"type": "web_search_tool_result", "tool_use_id": sid, "content": [
+                {"type": "web_search_result", "url": "https://example.org/fake", "title": "A fake page",
+                 "encrypted_content": "ZmFrZQ==", "page_age": None}]})
         if "tool_use" in step:
             for i, t in enumerate(step["tool_use"]):
                 content.append({"type": "tool_use", "id": f"toolu_fake_{n}_{i}", "name": t["name"],
@@ -333,6 +355,40 @@ class FakeAPI:
             model = step["fallback"]
         return {"id": f"msg_fake_{n}", "type": "message", "role": "assistant", "model": model, "content": content,
                 "stop_reason": stop, "stop_sequence": None, "stop_details": details, "usage": usage}
+
+
+def messages_sha256(messages):
+    """sha256 of a messages list as canonical JSON (compare what was sent with what a history file holds)."""
+    import hashlib
+    return hashlib.sha256(json.dumps(messages, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def sdk_error(what, message=None, retry_after=None):
+    """The exception the SDK raises for `what` (an HTTP status such as 402 / 429 / 529, a name of NAMED, or
+    "connection" / "timeout"), built by the SDK's own factory from an HTTP response, as for a real API answer."""
+    import anthropic
+    import httpx2
+    from anthropic._error_classes import make_status_error
+    req = httpx2.Request("POST", FAKE_BASE_URL + "/v1/messages")
+    if what == "connection":
+        return anthropic.APIConnectionError(message=message or "Connection error.", request=req)
+    if what == "timeout":
+        return anthropic.APITimeoutError(request=req)
+    code = None
+    if isinstance(what, str) and what in NAMED:
+        status, code = NAMED[what]
+    else:
+        status = int(what)
+    etype, msg = ERRORS.get(status, ("api_error", "error (fake)"))
+    err = {"type": etype, "message": message or msg}
+    if code:
+        err["details"] = {"error_code": code}
+    body = {"type": "error", "error": err, "request_id": "req_fake_error"}
+    headers = {"request-id": "req_fake_error"}
+    if retry_after is not None:
+        headers["retry-after"] = str(retry_after)
+    resp = httpx2.Response(status, json=body, headers=headers, request=req)
+    return make_status_error(f"Error code: {status} - {body}", body=body, response=resp)
 
 
 def _step_name(step):

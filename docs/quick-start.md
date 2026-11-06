@@ -36,6 +36,24 @@ tahoe open             # where the HTML map, the Obsidian vault and the validati
 Open the vault in Obsidian with *Open folder as vault* on `<output>/vault`, and the map by opening
 `<output>/map/gene_map.html` in a browser.
 
+## Literature review by AI agents (optional)
+
+With an Anthropic API key, `tahoe review` has an agent review genes, drugs and cell lines against the literature and
+puts its cited reviews into the vault and the map. It costs money (about a dollar an entity with the default model;
+~15,000 genes), so look first, then start small, best on a copy of the finished run:
+
+```bash
+read -rs ANTHROPIC_API_KEY && export ANTHROPIC_API_KEY   # paste the key (not echoed); or --keys-file FILE
+tahoe duplicate ~/tm/review1               # a copy of the output (big arrays hard-linked); then --out ~/tm/review1
+tahoe review plan --out ~/tm/review1       # the queue and its projected cost
+tahoe review run --out ~/tm/review1 --limit 20          # in the foreground: Ctrl-C pauses, rerun resumes
+tahoe review status --out ~/tm/review1     # real cost per entity, spend, what the rest would cost
+tahoe vault --out ~/tm/review1; tahoe map --out ~/tm/review1
+```
+
+[review.md](review.md) has the details: the agents and how to edit them, costs and caps, keys and what happens when
+credit runs out, histories, verification, and Windows.
+
 ## Already ran the earlier `tahoe_atlas.py`?
 
 Its build (the one long pass over all cells) can be reused, which saves the 1–2 hour build:
