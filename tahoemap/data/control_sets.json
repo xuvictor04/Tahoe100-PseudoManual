@@ -1,0 +1,28 @@
+{
+ "_about": "Curated control gene sets for the validation stage. Each is a well-established transcriptional programme from the literature (not derived from Tahoe-100M), so co-membership in the vector space is an independent test. 'opposite_pairs' list programmes expected to move in opposite directions under the same perturbation (anti-aligned in the signed vector space, adjacent on the nodal map). Membership is conservative: canonical, repeatedly reported targets only.",
+ "sets": {
+  "P53_TARGETS_UP": {"note": "direct p53 targets induced on p53 activation (Fischer 2017 high-confidence core)", "genes": ["CDKN1A","MDM2","BBC3","GDF15","FDXR","SESN1","SESN2","TP53I3","RRM2B","ZMAT3","AEN","PHLDA3","TNFRSF10B","DDB2","XPC","POLH","BAX","PMAIP1","TP53INP1","TRIAP1","CCNG1","GADD45A","BTG2","PLK3","SPATA18","EDA2R","ACER2","TIGAR","RPS27L","FAS","APAF1","DRAM1","SUSD6","ANKRA2","TNFRSF10D","PLK2","ABHD4","DCP1B","KITLG","ZNF79","SERTAD1","CMBL"]},
+  "DREAM_G2M_DOWN": {"note": "cell-cycle genes repressed through p53-p21-DREAM (G2/M cluster)", "genes": ["CCNB1","CCNB2","CDC20","PLK1","BUB1","BUB1B","AURKA","AURKB","KIF20A","KIF2C","CENPF","CENPA","TOP2A","CCNA2","CDC25C","CKS2","KIF11","KIF23","NUSAP1","PRC1","UBE2C","BIRC5","TPX2","CDKN3","DLGAP5","HMMR","NEK2","TTK","KIF4A","CENPE"]},
+  "E2F_G1S": {"note": "E2F-driven G1/S and DNA replication genes", "genes": ["MCM2","MCM3","MCM4","MCM5","MCM6","MCM7","PCNA","RRM1","RRM2","TYMS","CDC6","CDT1","E2F1","CCNE1","CCNE2","GINS2","CDC45","DHFR","POLA1","UNG","SLBP","CHAF1A","CHAF1B","CLSPN"]},
+  "PROTEASOME": {"note": "26S proteasome subunits (NRF1 bounce-back after proteasome inhibition)", "genes": ["PSMA1","PSMA2","PSMA3","PSMA4","PSMA5","PSMA6","PSMA7","PSMB1","PSMB2","PSMB3","PSMB4","PSMB5","PSMB6","PSMB7","PSMC1","PSMC2","PSMC3","PSMC4","PSMC5","PSMC6","PSMD1","PSMD2","PSMD3","PSMD4","PSMD6","PSMD7","PSMD8","PSMD11","PSMD12","PSMD13","PSMD14"]},
+  "CHOLESTEROL_SYNTHESIS": {"note": "SREBP2 targets: sterol biosynthesis and uptake", "genes": ["HMGCR","HMGCS1","LDLR","INSIG1","SQLE","MVD","MVK","IDI1","FDFT1","FDPS","DHCR7","DHCR24","SC5D","LSS","CYP51A1","MSMO1","NSDHL","HSD17B7","EBP","TM7SF2","STARD4","PCSK9","ACAT2"]},
+  "UPR_ER": {"note": "ER unfolded protein response (ATF6 / IRE1-XBP1 chaperones and ERAD)", "genes": ["HSPA5","HERPUD1","SEL1L","DNAJB9","SDF2L1","PDIA4","PDIA6","HYOU1","XBP1","EDEM1","MANF","CRELD2","DNAJC3","HSP90B1","CALR","SYVN1","DNAJB11","SEC61B"]},
+  "ISR_ATF4": {"note": "integrated stress response / amino-acid response (ATF4 targets)", "genes": ["ASNS","TRIB3","CHAC1","DDIT3","PSAT1","PHGDH","SLC7A11","SLC3A2","SLC7A5","CEBPB","ATF3","XPOT","CARS1","WARS1","SARS1","GARS1","MTHFD2","ALDH1L2","VEGFA","JDP2","ULBP1","SESN2"]},
+  "HEAT_SHOCK": {"note": "HSF1 heat-shock response", "genes": ["HSPA1A","HSPA1B","HSPA6","DNAJB1","HSPH1","HSPB1","BAG3","HSPA4L","DNAJA1","HSP90AA1","HSPD1","HSPE1","CRYAB","CHORDC1","FKBP4"]},
+  "NRF2": {"note": "NRF2 (NFE2L2) antioxidant response", "genes": ["NQO1","HMOX1","TXNRD1","GCLM","GCLC","SRXN1","OSGIN1","AKR1C1","AKR1C2","AKR1C3","AKR1B10","G6PD","PGD","ME1","FTL","FTH1","TALDO1","ABCC2","ABCC3","MAFG","SQSTM1"]},
+  "MAPK_OUTPUT": {"note": "ERK pathway output genes (fall under MEK/ERK/RAF/KRAS inhibition)", "genes": ["DUSP6","DUSP4","ETV4","ETV5","ETV1","SPRY2","SPRY4","SPRED1","SPRED2","FOSL1","PHLDA1","EGR1","IER3","CCND1","EPHA2","MYC","DUSP5","EGR3"]},
+  "INTERFERON": {"note": "type I interferon-stimulated genes", "genes": ["ISG15","IFIT1","IFIT2","IFIT3","IFI6","IFI27","IFI44","IFI44L","MX1","MX2","OAS1","OAS2","OAS3","OASL","RSAD2","STAT1","IRF7","IRF9","BST2","XAF1","HERC5","RIGI","IFIH1","PLSCR1","SAMD9L"]},
+  "RIBOSOME_BIOGENESIS": {"note": "rRNA processing and ribosome biogenesis", "genes": ["NOP56","NOP58","FBL","DKC1","NCL","NPM1","POLR1A","POLR1B","RRP9","RRP12","UTP20","WDR43","NOP2","BOP1","PES1","NOC2L","DDX21","GNL3","NIP7","NOL6","RRS1","MYBBP1A","PA2G4"]},
+  "IMMEDIATE_EARLY": {"note": "immediate-early genes", "genes": ["FOS","FOSB","JUN","JUNB","EGR1","EGR2","EGR3","IER2","IER3","ATF3","NR4A1","NR4A2","NR4A3","DUSP1","KLF2","KLF4","KLF6","ZFP36","CCN1","CCN2"]},
+  "GLUCOCORTICOID": {"note": "glucocorticoid receptor targets", "genes": ["FKBP5","TSC22D3","PER1","ZBTB16","KLF9","DDIT4","SGK1","ERRFI1","CEBPD"]},
+  "AHR": {"note": "aryl hydrocarbon receptor targets", "genes": ["CYP1A1","CYP1B1","AHRR","TIPARP","ALDH3A1","NQO1"]},
+  "METALLOTHIONEIN": {"note": "metal response (MTF1)", "genes": ["MT1X","MT2A","MT1E","MT1F","MT1G","MT1M","MT1A","MT1H","SLC30A1"]},
+  "HYPOXIA": {"note": "HIF targets", "genes": ["VEGFA","CA9","BNIP3","PDK1","NDRG1","EGLN3","SLC2A1","PGK1","LDHA","ANKRD37","P4HA1","KDM3A","BHLHE40","ADM","BNIP3L","ERO1A"]},
+  "NFKB": {"note": "NF-kB targets", "genes": ["NFKBIA","TNFAIP3","CXCL8","NFKB1","NFKB2","RELB","BIRC3","ICAM1","CXCL1","CXCL2","CXCL3","TNFAIP2","SOD2","TNIP1","NFKBIZ"]},
+  "SREBP1_LIPOGENESIS": {"note": "fatty-acid synthesis (SREBP1 / LXR)", "genes": ["FASN","SCD","ACACA","ACLY","ELOVL6","SREBF1","INSIG1","FADS1","FADS2","ME1"]}
+ },
+ "opposite_pairs": [
+  {"a": "P53_TARGETS_UP", "b": "DREAM_G2M_DOWN", "note": "p53 induces its targets and, through p21-DREAM, represses G2/M genes"},
+  {"a": "ISR_ATF4", "b": "RIBOSOME_BIOGENESIS", "note": "stress responses that raise ATF4 targets typically lower ribosome biogenesis (exploratory)"}
+ ]
+}

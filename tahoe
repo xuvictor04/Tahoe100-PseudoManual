@@ -1,0 +1,201 @@
+#!/usr/bin/env bash
+# tahoe - the one-shot Tahoe-100M gene map, in short commands (Linux / macOS). `tahoe help` lists them.
+#
+#   tahoe setup        Python environment (~/tahoe-venv) and the `tahoe` command on your PATH
+#   tahoe run          everything, in the background (safe to log out); `tahoe run --stream` needs no download
+#   tahoe              where things stand (= tahoe status)
+#   tahoe gene MDM2    which drugs raise / lower MDM2, in which cell lines, which genes move with it
+#
+# Folders: data = $TAHOE_DATA or ~/Tahoe-100M; output = $TAHOE_OUT or <data>/tahoemap; venv = $TAHOE_VENV or
+# ~/tahoe-venv. Windows: run `python -m tahoemap run --data C:\tahoe\Tahoe-100M` from this folder (see README.md).
+set -uo pipefail
+
+resolve() {                      # this script's real path, through symlinks (no readlink -f on macOS)
+  local p="$1" d
+  while [ -L "$p" ]; do
+    d="$(cd -P "$(dirname "$p")" && pwd)"
+    p="$(readlink "$p")"
+    case "$p" in /*) ;; *) p="$d/$p" ;; esac
+  done
+  echo "$(cd -P "$(dirname "$p")" && pwd)/$(basename "$p")"
+}
+absolute() { case "$1" in /*) echo "$1" ;; "~"*) echo "$HOME${1#\~}" ;; *) echo "$PWD/$1" ;; esac; }
+
+SELF="$(resolve "${BASH_SOURCE[0]}")"
+REPO="$(dirname "$SELF")"
+DATA="$(absolute "${TAHOE_DATA:-$HOME/Tahoe-100M}")"
+OUT="$(absolute "${TAHOE_OUT:-$DATA/tahoemap}")"
+VENV="$(absolute "${TAHOE_VENV:-$HOME/tahoe-venv}")"
+PY="python3"
+[ -x "$VENV/bin/python" ] && PY="$VENV/bin/python"
+PIDF="$OUT/.job.pid"
+CONSOLE="$OUT/console.log"
+PKGS="numpy pandas pyarrow scipy scikit-learn networkx psutil huggingface_hub hf_xet brotli>=1.2.0"
+
+say() { printf '%s\n' "$*"; }
+die() { printf 'tahoe: %s\n' "$*" >&2; exit 1; }
+tm() { (cd "$REPO" && "$PY" -m tahoemap "$@" --data "$DATA" --out "$OUT"); }
+
+need_packages() {
+  "$PY" -c "import numpy, pandas, pyarrow, scipy, sklearn, networkx" 2>/dev/null ||
+    die "Python packages missing: run 'tahoe setup' first (or: $PY -m pip install $PKGS)"
+}
+
+job_pid() {                      # the running job's pid, if it is alive
+  [ -f "$PIDF" ] || return 1
+  local p
+  p="$(cat "$PIDF" 2>/dev/null)"
+  [ -n "$p" ] && kill -0 "$p" 2>/dev/null && { echo "$p"; return 0; }
+  return 1
+}
+
+start_job() {                    # run `python -m tahoemap ARGS` detached; its own log is $OUT/run.log
+  local p
+  if p="$(job_pid)"; then die "a job is already running (pid $p): 'tahoe log' to watch it, 'tahoe stop' to stop it"; fi
+  mkdir -p "$OUT"
+  [ -f "$CONSOLE" ] && mv -f "$CONSOLE" "$CONSOLE.prev"
+  local launcher=(nohup)
+  command -v setsid >/dev/null 2>&1 && launcher=(setsid nohup)
+  (cd "$REPO" && "${launcher[@]}" "$PY" -m tahoemap "$@" --data "$DATA" --out "$OUT" </dev/null >"$CONSOLE" 2>&1 &
+   echo $! >"$PIDF")
+  sleep 2
+  if p="$(job_pid)"; then
+    say "Started (pid $p): tahoemap $*"
+    say "  follow it:  tahoe log        stop it:  tahoe stop        where things stand:  tahoe"
+  else
+    say "The job ended at once. Its output:"
+    tail -n 30 "$CONSOLE"
+    exit 1
+  fi
+}
+
+cmd_setup() {
+  command -v python3 >/dev/null || die "python3 not found: install Python 3.10 or newer"
+  python3 -c 'import sys; sys.exit(sys.version_info < (3, 10))' || say "warning: Python 3.10+ is recommended"
+  if [ ! -x "$VENV/bin/python" ]; then
+    say "Creating the Python environment $VENV ..."
+    python3 -m venv "$VENV" || die "could not create $VENV (Debian/Ubuntu: sudo apt-get install python3-venv)"
+  fi
+  "$VENV/bin/python" -m pip install -q -U pip
+  # shellcheck disable=SC2086
+  "$VENV/bin/python" -m pip install -q -U $PKGS || die "pip install failed"
+  "$VENV/bin/python" -m pip show brotlicffi >/dev/null 2>&1 && "$VENV/bin/python" -m pip install -q -U brotlicffi
+  mkdir -p "$HOME/.local/bin"
+  ln -sf "$SELF" "$HOME/.local/bin/tahoe"
+  case ":$PATH:" in
+    *":$HOME/.local/bin:"*) say "Done. Type: tahoe help" ;;
+    *) local rc="$HOME/.bashrc"
+       case "${SHELL:-}" in *zsh) rc="$HOME/.zshrc" ;; esac
+       grep -qs 'HOME/.local/bin' "$rc" || echo 'export PATH="$HOME/.local/bin:$PATH"' >>"$rc"
+       say "Done. Open a new terminal (or type: export PATH=\"\$HOME/.local/bin:\$PATH\"), then: tahoe help" ;;
+  esac
+}
+
+cmd_download() {                 # the expression files and the four small metadata tables (~338 GB)
+  [ -x "$VENV/bin/hf" ] || die "run 'tahoe setup' first"
+  if job_pid >/dev/null; then die "a job is running; wait for it or 'tahoe stop'"; fi
+  mkdir -p "$DATA" "$OUT"
+  df -hP "$DATA" | tail -1 | awk '{print "Free space at " $6 ": " $4 " (the download needs ~340 GB; or use: tahoe run --stream)"}'
+  local launcher=(nohup)
+  command -v setsid >/dev/null 2>&1 && launcher=(setsid nohup)
+  ("${launcher[@]}" env PATH="$VENV/bin:$PATH" bash -c '
+     for i in 1 2 3; do
+       hf download tahoebio/Tahoe-100M --repo-type dataset --local-dir "$0" \
+         --include "data/*.parquet" --include "metadata/gene_metadata.parquet" \
+         --include "metadata/sample_metadata.parquet" --include "metadata/cell_line_metadata.parquet" \
+         --include "metadata/drug_metadata.parquet" && exit 0
+       sleep 10
+     done; exit 1' "$DATA" </dev/null >"$OUT/download.log" 2>&1 & echo $! >"$PIDF")
+  say "Downloading into $DATA in the background (resumes if restarted). Log: tahoe log download"
+}
+
+cmd_log() {
+  local f="$OUT/run.log"
+  [ "${1:-}" = download ] && f="$OUT/download.log"
+  [ -f "$f" ] || f="$CONSOLE"
+  [ -f "$f" ] || die "no log yet in $OUT"
+  say "(Ctrl-C stops watching, not the job)"
+  exec tail -n 30 -F "$f"
+}
+
+cmd_stop() {
+  local p
+  p="$(job_pid)" || { say "Nothing is running."; return 0; }
+  say "Stopping pid $p (finished stages are kept; 'tahoe run' continues from there) ..."
+  kill -TERM -- "-$p" 2>/dev/null || kill -TERM "$p"
+  for _ in $(seq 1 15); do kill -0 "$p" 2>/dev/null || break; sleep 1; done
+  kill -0 "$p" 2>/dev/null && { kill -KILL -- "-$p" 2>/dev/null || kill -KILL "$p"; }
+  echo "[$(date +%H:%M:%S)] STOPPED by tahoe stop" >>"$OUT/run.log"
+  rm -f "$PIDF"
+  say "Stopped."
+}
+
+cmd_status() {
+  need_packages
+  local p
+  if p="$(job_pid)"; then
+    say "Running (pid $p). Last lines of the log:"
+    tail -n 4 "$OUT/run.log" 2>/dev/null | sed 's/^/  /'
+    say ""
+  fi
+  tm status
+}
+
+cmd_test() {
+  need_packages
+  local wd="${TAHOE_TEST_DIR:-${TMPDIR:-/tmp}/tahoemap_test}"
+  say "Synthetic data and the whole pipeline in $wd (a few minutes) ..."
+  (cd "$REPO" && "$PY" tests/run_tests.py --workdir "$wd" "$@")
+}
+
+cmd_update() {
+  if job_pid >/dev/null; then die "a job is running; wait for it or 'tahoe stop' first"; fi
+  git -C "$REPO" pull --ff-only || die "git pull failed"
+  say "Updated. 'tahoe run' redoes only the stages whose method changed."
+}
+
+cmd_help() {
+  cat <<EOF
+tahoe - every gene, drug and cell line of Tahoe-100M in one map
+  setup                 Python environment ($VENV) and this command on your PATH
+  download              Tahoe-100M into $DATA (~340 GB; resumes)    [or skip it: run --stream]
+  run [--stream]        every stage that is missing or out of date, in the background
+  status                what is done and what runs next (also just: tahoe)
+  log [download]        follow the running job's log            stop    stop it (finished stages are kept)
+  gene SYMBOL           drugs that raise / lower it, in which lines, genes that move with / opposite it
+  drug NAME | line NAME | pair GENE1 GENE2 | module N        the same for a drug, a cell line, two genes
+  open                  where the interactive map, the Obsidian vault and the validation report are
+  test                  the whole pipeline on synthetic data with planted answers (a few minutes)
+  update                newest scripts (git pull)
+  <stage> [options]     one stage now, in the foreground: build effects tensor tables embed reference
+                        relations graph validate vault map
+Folders: data $DATA   output $OUT   (set TAHOE_DATA / TAHOE_OUT to change)
+Options go to python -m tahoemap (e.g. tahoe run --dims 96 --offline); see README.md.
+EOF
+}
+
+main() {
+  local c="${1:-status}"
+  [ $# -gt 0 ] && shift
+  case "$c" in
+    status|st) cmd_status ;;
+    run) need_packages; start_job run "$@" ;;
+    setup|install) cmd_setup ;;
+    download) cmd_download ;;
+    log|logs) cmd_log "$@" ;;
+    stop) cmd_stop ;;
+    test) cmd_test "$@" ;;
+    update) cmd_update ;;
+    help|-h|--help) cmd_help ;;
+    gene|drug|line|pair|module) need_packages; tm "$c" "$@" ;;
+    open|where)
+      say "Interactive map:  $OUT/map/gene_map.html   (open it in a browser)"
+      say "Obsidian vault:   $OUT/vault   (Obsidian: Open folder as vault)"
+      say "Validation:       $OUT/validation/report.md" ;;
+    build|effects|tensor|tables|embed|reference|relations|graph|validate|vault|map)
+      need_packages; tm "$c" "$@" ;;
+    *) die "unknown command '$c' (tahoe help)" ;;
+  esac
+}
+
+main "$@"

@@ -1,0 +1,931 @@
+"""tables - the fold-change tables: for every gene, which drug-doses raise or lower it (pooled over the cell lines and
+line by line), in which cell lines, and the drug, drug-dose, cell-line, plate and well context needed to read them.
+
+Why this stage exists: the atlas (atlas/effects) keeps its results as dense matrices addressed by row numbers
+(drug-doses x genes, wells x genes, drug-doses x lines) and the tensor stage adds the per-cell-line layer (genes x
+drug-doses x lines). Answering "select a gene: which drugs raise it, in which lines, how cleanly?" from those needs
+the matrices, the index tables, the flag rules and the significance rules at once. This stage does that join once,
+genome-wide, and writes plain parquet tables keyed by gene col / drug-dose row (dd) / line, with symbols, drug names,
+doses, flags and cell-line names spelled out. Every number is taken from, or is a simple summary of, the atlas and
+tensor values; nothing is re-estimated.
+
+Baseline. Every fold change here is relative to the SAME cell line's median over the plate's DRUG wells (the typical
+treated well: most drugs leave most genes alone), never to DMSO. Per line and well the atlas takes log2 CPM minus that
+line's plate median, minus the profile's composition (library) shift, minus the well-position effect; pooled values
+(DD_lfc, DD_z) take the median over lines per well and then the mean (lfc) or Stouffer sum (z) over the drug-dose's
+used wells; per-line values (tensor DDL_lfc, DDL_z) skip the median over lines. fold = 2 ** lfc.
+
+Rules reused verbatim from the atlas: significance (up = q_up < 0.10 and lfc >= log2 1.2; down symmetric), the flag
+strings (drug-dose flags + atlas_core.gene_flags per gene), "clean" = no atlas_core.ARTIFACT_FLAGS flag (for a gene:
+the drug-dose's flags plus 'position correction uncertain' for that gene), dose patterns (atlas_core.dose_shape, here
+vectorised by dose_shape_codes and checked against it), noise-class RNAs (atlas_core.NOISE_RNA_RE) and salt forms
+(tlib.salt_base).
+
+Outputs in OUT/tables/ (README.md there documents every column, its units and its baseline):
+    genes.parquet          one row per gene: level, counts of drug-doses up / down, best drug-dose up / down (any and
+                           clean), specificity (z gap to the next compound), correlation with the S / G2M modules
+    drug_effects.parquet   gene x drug-dose rows with |z| >= 3 or q_up / q_down < 0.1: pooled fold change, z, q,
+                           flags, how many / which lines move, dose pattern
+    line_effects.parquet   gene x line: baseline level, spread of the line's responses, clean drug-doses moving the
+                           gene >= 1.5x at per-line |z| >= 3, best drug-dose up / down in that line
+    drug_line_top.parquet  per gene: the 15 strongest (drug-dose, line) cells up and down (clean, per-line |z| >= 3)
+    drugdoses.parquet      drugdose.csv + dd, salt_base, top 15 significant genes up / down
+    drugs.parquet          per drug: doses, significant genes by dose, best dose, lowest active dose, flags, signature
+                           similarity between doses
+    lines.parquet          lines.csv + TP53 status, drug-doses that deplete the line, median response strength
+    plates.parquet         per plate: wells, doses, reliability, plate factor, DMSO and failed wells, cells per well
+    wells.parquet          wells.csv + total UMI per well (per-gene counts stay in tensor/well_counts.npy)
+
+Memory: the pooled drug-dose x gene matrices are held in memory (~75 MB each at full scale); the per-line tensor
+(~1.9 GB per array in float16) is read in gene chunks sized by mem_gb, and drug_effects.parquet is streamed to disk
+chunk by chunk, so the peak stays near mem_gb + ~1 GB whatever the number of genes.
+"""
+
+import json
+import math
+import os
+import time
+import warnings
+
+import numpy as np
+import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
+import scipy.sparse as sp
+
+from . import atlas_core as A
+from . import tlib as T
+from .common import log, read_effects_index, stamp_stage, write_parquet
+
+VERSION = 1
+
+LFC_MIN = A.LFC_MIN                 # log2(1.2): smallest change the atlas counts
+Q_CUT = A.Q_CUT                     # 0.10: the atlas FDR cut
+KEEP_Z = 3.0                        # drug_effects keeps |pooled z| >= this, or q_up / q_down < Q_CUT
+LINE_Z = 2.0                        # drug_effects: a line is 'up' at per-line z >= 2 and lfc >= log2 1.2
+STRONG_Z = 3.0                      # line_effects counts and drug_line_top: per-line |z| >= 3
+STRONG_LFC = math.log2(1.5)         # line_effects counts: fold >= 1.5 (or <= 1/1.5)
+MIN_SD_DD = 10                      # response_sd needs >= this many measured clean drug-doses
+MAX_LINES_LISTED = 12               # lines_up / lines_down: at most this many names
+TOP_CELLS = 15                      # drug_line_top: (drug-dose, line) cells per gene and direction
+TOP_GENES = 15                      # drugdoses top_up / top_down
+MIN_ACTIVE_GENES = 10               # lowest_active_dose: significant genes a dose needs to count as active
+RESPONSIVE_MIN_DD = 3               # signature_r_between_doses: genes significant in >= this many drug-doses
+PATTERNS = ("none", "single dose", "all doses, stronger at high dose", "all doses, flat", "top dose only",
+            "rises with dose", "two highest doses", "inconsistent across doses")   # atlas_core.dose_shape outcomes
+_PAT = np.array(PATTERNS, dtype=object)
+
+
+# ----------------------------------------------------------------------------- vectorised atlas rules
+def dose_shape_codes(V, thr=2.0):
+    """atlas_core.dose_shape for many rows at once. V = rows x doses (ascending conc, signed so that positive = the
+    effect; NaN = no value at that dose) -> int8 codes into PATTERNS. Same rules in the same order: NaNs are dropped
+    first (the remaining doses keep their order), then none / single dose / all doses (stronger or flat) / top dose
+    only / rises with dose / two highest doses / inconsistent."""
+    V = np.asarray(V, dtype=np.float64)
+    if V.ndim == 1:
+        V = V[:, None]
+    nr, m = V.shape
+    fin = np.isfinite(V)
+    n = fin.sum(axis=1)
+    C = np.take_along_axis(V, np.argsort(~fin, axis=1, kind="stable"), axis=1)   # finite values first, in order
+    pos = np.arange(m)[None, :]
+    r = np.arange(nr)
+    first = C[:, 0]
+    last = C[r, np.maximum(n - 1, 0)]
+    sec = C[r, np.maximum(n - 2, 0)]
+    mx = np.max(np.where(pos < n[:, None], C, -np.inf), axis=1)
+    mn = np.min(np.where(pos < n[:, None], C, np.inf), axis=1)
+    mx_prev = np.max(np.where(pos < (n - 1)[:, None], C, -np.inf), axis=1)
+    if m > 1:
+        mono = ((C[:, 1:] >= C[:, :-1] - 0.5) | ~(pos[:, 1:] < n[:, None])).all(axis=1)
+    else:
+        mono = np.ones(nr, dtype=bool)
+    top = last >= thr
+    conds = [(n == 0) | (mx < thr), n == 1, (mn >= thr) & (last - first >= 1.0), mn >= thr,
+             top & (mx_prev < thr * 0.75), top & mono, (n >= 3) & (np.minimum(sec, last) >= thr)]
+    return np.select(conds, list(range(7)), 7).astype(np.int8)
+
+
+def flag_strings(base, d, posunc, poseff, pscale):
+    """Per (drug-dose d, gene) item: atlas_core.gene_flags(base[d], posunc, poseff, pscale=pscale) and whether it is
+    clean (no artifact flag). gene_flags only thresholds its inputs, so each distinct (d, noisy, uncertain, removed)
+    combination is formatted once."""
+    d = np.asarray(d, dtype=np.int64)
+    if d.size == 0:
+        return np.array([], dtype=object), np.array([], dtype=bool)
+    posunc = np.asarray(posunc, dtype=bool)
+    poseff = np.asarray(poseff, dtype=np.float64)
+    pscale = np.asarray(pscale, dtype=np.float64)
+    noisy = np.isfinite(pscale) & (pscale > A.PLATE_SCALE_FLAG)
+    moved = np.isfinite(poseff) & (np.abs(poseff) > 0.2)
+    key = d * 8 + noisy * 4 + posunc * 2 + moved
+    _, first, inv = np.unique(key, return_index=True, return_inverse=True)
+    strs = [A.gene_flags(base[d[i]], bool(posunc[i]), float(poseff[i]), pscale=float(pscale[i])) for i in first]
+    clean = np.array([not A.has_artifact(s) for s in strs], dtype=bool)
+    return np.array(strs, dtype=object)[inv.ravel()], clean[inv.ravel()]
+
+
+# ----------------------------------------------------------------------------- helpers
+def _nanmedian_last(V):
+    """Median over the last axis ignoring NaN (sort-based; NaN sorts last); all-NaN -> NaN. Also the counts."""
+    k = np.isfinite(V).sum(axis=-1)
+    S = np.sort(V, axis=-1)
+    lo = np.take_along_axis(S, np.maximum((k - 1) // 2, 0)[..., None], axis=-1)[..., 0]
+    hi = np.take_along_axis(S, np.maximum(k // 2, 0)[..., None], axis=-1)[..., 0]
+    return np.where(k > 0, (lo + hi) / 2, np.nan), k
+
+
+def _corr_with(W, v, chunk=4096):
+    """Pearson r of every column of W with v over the rows where both are finite (NaN with < 3 such rows)."""
+    v = np.asarray(v, dtype=np.float64)
+    fv = np.isfinite(v)
+    out = np.full(W.shape[1], np.nan, dtype=np.float32)
+    for g0 in range(0, W.shape[1], chunk):
+        x = np.asarray(W[:, g0:g0 + chunk], dtype=np.float64)
+        m = np.isfinite(x) & fv[:, None]
+        n = m.sum(axis=0).astype(np.float64)
+        xm = np.where(m, x, 0.0)
+        vm = np.where(m, np.where(fv, v, 0.0)[:, None], 0.0)
+        sx, sv = xm.sum(axis=0), vm.sum(axis=0)
+        nn = np.maximum(n, 1)
+        cov = (xm * vm).sum(axis=0) - sx * sv / nn
+        vx = (xm * xm).sum(axis=0) - sx * sx / nn
+        vv = (vm * vm).sum(axis=0) - sv * sv / nn
+        ok = (n >= 3) & (vx > 0) & (vv > 0)
+        out[g0:g0 + chunk] = np.where(ok, cov / np.sqrt(np.where(ok, vx * vv, 1.0)), np.nan)
+    return out
+
+
+def _dd_gene_scale(wells, fxd, Dn, gK):
+    """Drug-doses x genes: the mean over the drug-dose's used wells of the gene's z divisor (plate_scale_gene.npy row
+    of the well's plate group; 1 without a group) - atlas_core.FX.gene_plate_scale for every gene at once."""
+    N = len(wells)
+    ddr = wells["drugdose_row"].to_numpy(dtype=np.int64)
+    m = wells["used_in_drugdose"].to_numpy(dtype=bool) & (ddr >= 0)
+    nw = np.bincount(ddr[m], minlength=Dn).astype(np.float64)
+    agg = sp.csr_matrix((1.0 / nw[ddr[m]], (ddr[m], np.flatnonzero(m))), shape=(Dn, N))
+    p = os.path.join(fxd, "plate_scale_gene.npy")
+    if "plate_scale_group_id" in wells and os.path.exists(p):
+        gid = wells["plate_scale_group_id"].to_numpy(dtype=np.int64)
+        FG = np.load(p, mmap_mode="r")
+        fw = np.ones((N, gK), dtype=np.float32)
+        ok = gid >= 0
+        fw[ok] = np.asarray(FG[:, :gK], dtype=np.float32)[gid[ok]]
+    else:
+        f = wells["plate_scale"].to_numpy(dtype=np.float32) if "plate_scale" in wells else np.ones(N, np.float32)
+        fw = np.repeat(f[:, None], gK, axis=1)
+    out = np.asarray(agg @ fw, dtype=np.float32)
+    out[nw == 0] = 1.0
+    return out
+
+
+def _z_gap(Zc, comp):
+    """Per gene (column of Zc, rows = drug-doses, -inf = not eligible): the best z minus the best z of any other
+    compound (NaN unless two compounds have a value)."""
+    order = np.argsort(comp, kind="stable")
+    cs = comp[order]
+    starts = np.flatnonzero(np.r_[True, cs[1:] != cs[:-1]])
+    if starts.size < 2:
+        return np.full(Zc.shape[1], np.nan, dtype=np.float32)
+    M = np.maximum.reduceat(Zc[order], starts, axis=0)
+    P = np.partition(-M, 1, axis=0)[:2]
+    t1, t2 = -P[0], -P[1]
+    return np.where(np.isfinite(t1) & np.isfinite(t2), t1 - t2, np.nan).astype(np.float32)
+
+
+def _line_lists(names, V, M, sign, cap=MAX_LINES_LISTED):
+    """Per row: the names of the lines where M holds, strongest (sign * V largest) first, at most cap, ', '-joined."""
+    S = np.where(M, sign * V, -np.inf)
+    k = min(cap, S.shape[1])
+    o = np.argsort(-S, axis=1, kind="stable")[:, :k]
+    cnt = np.minimum(M.sum(axis=1), k)
+    nm = names[o]
+    out = np.full(len(S), "", dtype=object)
+    for i in np.flatnonzero(cnt):
+        out[i] = ", ".join(nm[i, :cnt[i]])
+    return out
+
+
+def _top_k(S, k):
+    """Per row of S: column indices of the k largest finite values, largest first, and the values (-inf = none)."""
+    k = min(k, S.shape[1])
+    part = np.argpartition(-S, k - 1, axis=1)[:, :k]
+    vals = np.take_along_axis(S, part, axis=1)
+    o = np.argsort(-vals, axis=1, kind="stable")
+    return np.take_along_axis(part, o, axis=1), np.take_along_axis(vals, o, axis=1)
+
+
+def _ext(arr, fill=None):
+    """arr with one extra element (fill) at the end, so that index -1 ... is mapped to it via np.where(i < 0, n, i)."""
+    a = np.asarray(arr, dtype=object)
+    return np.append(a, np.array([fill], dtype=object))
+
+
+def _pick(arr, idx, fill=None):
+    idx = np.asarray(idx)
+    return _ext(arr, fill)[np.where(idx < 0, len(arr), idx)]
+
+
+def _well_key(w):
+    s = T.slot_from_well(w)
+    return (s if np.isfinite(s) else 999.0, str(w))
+
+
+def _write_text(path, text):
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        fh.write(text)
+    os.replace(tmp, path)
+
+
+def _file_index(atl):
+    p = os.path.join(atl, "file_index.json")
+    if not os.path.exists(p):
+        return {}
+    try:
+        with open(p, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return {}
+
+
+def _read_meta(fi, key, cols):
+    files = [f for f in fi.get(key, []) or [] if os.path.exists(f)]
+    if not files:
+        return None
+    try:
+        return T.read_tables(files, cols)
+    except Exception as e:  # noqa: BLE001  (metadata is optional: log and go on)
+        log(f"  could not read the {key} metadata ({e}); going on without it")
+        return None
+
+
+def _tp53_status(lines, fi):
+    """'altered' (a TP53 row in the cell-line metadata), 'wild type' (the line is there without one), 'unknown'."""
+    cl = _read_meta(fi, "cell_line", ["Cell_ID_Cellosaur", "Driver_Gene_Symbol"])
+    ids = lines["cell_line_id"].astype(str)
+    if cl is not None and "Cell_ID_Cellosaur" in cl and "Driver_Gene_Symbol" in cl:
+        cid = cl["Cell_ID_Cellosaur"].astype(str)
+        present = set(cid)
+        altered = set(cid[cl["Driver_Gene_Symbol"].astype(str).str.strip().str.upper() == "TP53"])
+        return np.where(ids.isin(altered), "altered", np.where(ids.isin(present), "wild type", "unknown")), "metadata"
+    drv = lines["drivers"].fillna("").astype(str) if "drivers" in lines else pd.Series([""] * len(lines))
+    st = np.where(drv.str.contains(r"(?:^|; )TP53\(", regex=True), "altered",
+                  np.where(drv.str.len() > 0, "wild type", "unknown"))
+    return st, "lines.csv drivers"
+
+
+def _lowest_active(doses, nsig, min_genes=MIN_ACTIVE_GENES):
+    """The lowest dose such that it and every higher dose have >= min_genes significant genes (ascending conc);
+    'low dose only (noise?)' when only lower doses do; '' when no dose does (as the old atlas drug summary)."""
+    act = np.asarray(nsig) >= min_genes
+    if not act.any():
+        return ""
+    if not act[-1]:
+        return "low dose only (noise?)"
+    k = len(act) - 1
+    while k > 0 and act[k - 1]:
+        k -= 1
+    return str(doses[k])
+
+
+# ----------------------------------------------------------------------------- schema of the streamed table
+DRUG_EFFECTS_SCHEMA = pa.schema([
+    ("col", pa.int32()), ("symbol", pa.string()), ("dd", pa.int32()), ("drug", pa.string()), ("dose", pa.string()),
+    ("conc", pa.float64()), ("lfc", pa.float32()), ("fold", pa.float32()), ("z", pa.float32()),
+    ("q_up", pa.float32()), ("q_down", pa.float32()), ("flags", pa.string()), ("clean", pa.bool_()),
+    ("n_lines_measured", pa.int16()), ("n_lines_up", pa.int16()), ("n_lines_down", pa.int16()),
+    ("lines_up", pa.string()), ("lines_down", pa.string()), ("pattern_up", pa.string()),
+    ("pattern_down", pa.string())])
+
+
+# ----------------------------------------------------------------------------- the stage
+def run(out, chunk=None, mem_gb=1.5):
+    """out = the tahoemap output folder (atlas in out/atlas, tensor in out/tensor). Writes out/tables/.
+    chunk = genes per block of the per-line tensor (default: sized so one block's work stays near mem_gb GB)."""
+    t0 = time.time()
+    with warnings.catch_warnings(), np.errstate(invalid="ignore", divide="ignore", over="ignore"):
+        warnings.simplefilter("ignore", RuntimeWarning)
+        info = _run(out, chunk, mem_gb, t0)
+    stamp_stage(out, "tables", VERSION, info)
+    log(f"Tables done -> {os.path.join(out, 'tables')} ({info['minutes']} min)")
+    return info
+
+
+def _run(out, chunk, mem_gb, t0):
+    atl = os.path.join(out, "atlas")
+    fxd = os.path.join(atl, "effects")
+    tdir = os.path.join(out, "tensor")
+    od = os.path.join(out, "tables")
+    os.makedirs(od, exist_ok=True)
+    ix = read_effects_index(fxd)
+    genes, wells, dd, lines = ix["genes"], ix["wells"], ix["drugdose"].copy(), ix["lines"].copy()
+    gK = int((genes["kind"] == "gene").sum())
+    Dn, L, N = len(dd), len(lines), len(wells)
+    fi = _file_index(atl)
+    unreliable = list(ix["info"].get("unreliable_plates", []))
+    for p in ("DDL_z.npy", "DDL_lfc.npy"):
+        if not os.path.exists(os.path.join(tdir, p)):
+            raise SystemExit(f"tables: {os.path.join(tdir, p)} is missing; run the 'tensor' stage first")
+    DZ = np.load(os.path.join(tdir, "DDL_z.npy"), mmap_mode="r")
+    DL = np.load(os.path.join(tdir, "DDL_lfc.npy"), mmap_mode="r")
+    if DZ.shape != (gK, Dn, L) or DL.shape != (gK, Dn, L):
+        raise SystemExit(f"tables: tensor shape {DZ.shape} does not match the effects ({gK}, {Dn}, {L}); "
+                         "rerun 'tensor'")
+    log(f"Tables: {gK:,} genes x {Dn:,} drug-doses x {L} lines ({N:,} wells)")
+
+    # ---- index vectors
+    gsub = genes.iloc[:gK]
+    label = gsub["label"].fillna("").astype(str).to_numpy(dtype=object)
+    symbol = gsub["symbol"].fillna("").astype(str).to_numpy(dtype=object)
+    symbol = np.where(symbol == "", label, symbol)
+    names = lines["cell_name"].fillna("").astype(str) if "cell_name" in lines else lines["cell_line_id"]
+    line_name = np.where(names == "", lines["cell_line_id"].astype(str), names).astype(object)
+    line_id = lines["cell_line_id"].astype(str).to_numpy(dtype=object)
+    dd_drug = dd["drug"].astype(str).to_numpy(dtype=object)
+    dd_dose = dd["dose"].astype(str).to_numpy(dtype=object)
+    dd_conc = dd["conc"].to_numpy(dtype=np.float64)
+    dd_flags = dd["flags"].fillna("").astype(str).to_numpy(dtype=object)
+    art_dd = np.array([A.has_artifact(f) for f in dd_flags], dtype=bool)
+    drugs = list(dict.fromkeys(dd_drug))                       # first-seen order of drugdose.csv (sorted by drug)
+    drug_ix = {d: i for i, d in enumerate(drugs)}
+    drug_of_dd = np.array([drug_ix[d] for d in dd_drug], dtype=np.int64)
+    rows_of_drug = [np.flatnonzero(drug_of_dd == i) for i in range(len(drugs))]
+    rows_of_drug = [r[np.argsort(dd_conc[r], kind="stable")] for r in rows_of_drug]
+    m_dose = max(len(r) for r in rows_of_drug)
+    grid = np.full((len(drugs), m_dose), -1, dtype=np.int64)  # drugs x doses (ascending conc), -1 = none
+    for i, r in enumerate(rows_of_drug):
+        grid[i, :len(r)] = r
+    salt = np.array([T.salt_base(d) for d in dd_drug], dtype=object)
+    comp_ix = {c: i for i, c in enumerate(dict.fromkeys(salt))}
+    comp_of_dd = np.array([comp_ix[c] for c in salt], dtype=np.int64)
+
+    # ---- pooled drug-dose x gene matrices (gene columns only)
+    def load(name, dtype=np.float32):
+        return np.array(np.load(os.path.join(fxd, f"{name}.npy"), mmap_mode="r")[:, :gK], dtype=dtype)
+
+    lfc, z, qu, qd = load("DD_lfc"), load("DD_z"), load("DD_qup"), load("DD_qdn")
+    pe = load("DD_poseff") if os.path.exists(os.path.join(fxd, "DD_poseff.npy")) else np.zeros((Dn, gK), np.float32)
+    pu = load("DD_posunc", bool) if os.path.exists(os.path.join(fxd, "DD_posunc.npy")) \
+        else np.zeros((Dn, gK), dtype=bool)
+    ps = _dd_gene_scale(wells, fxd, Dn, gK)
+    sig_up = (qu < Q_CUT) & (lfc >= LFC_MIN)
+    sig_dn = (qd < Q_CUT) & (lfc <= -LFC_MIN)
+    clean = ~art_dd[:, None] & ~pu                              # drug-dose flags + this gene's position flag
+    finz = np.isfinite(z)
+    log(f"  pooled: {int(sig_up.sum()):,} significant gene x drug-dose increases, {int(sig_dn.sum()):,} decreases; "
+        f"{int((~art_dd).sum()):,} of {Dn:,} drug-doses without an artifact flag")
+
+    # ---- dose patterns per (drug, gene), both signs
+    P_up = np.zeros((len(drugs), gK), dtype=np.int8)
+    P_dn = np.zeros((len(drugs), gK), dtype=np.int8)
+    gsafe = np.maximum(grid, 0)
+    for g0 in range(0, gK, 2048):
+        g1 = min(gK, g0 + 2048)
+        V = z[:, g0:g1][gsafe].astype(np.float64)                 # drugs x doses x genes
+        V[grid < 0] = np.nan
+        V = V.transpose(0, 2, 1).reshape(-1, m_dose)
+        P_up[:, g0:g1] = dose_shape_codes(V).reshape(len(drugs), g1 - g0)
+        P_dn[:, g0:g1] = dose_shape_codes(-V).reshape(len(drugs), g1 - g0)
+    del V
+
+    # ---- per-gene pooled summary (genes.parquet, without the per-line counts)
+    cols = np.arange(gK)
+    gtab = pd.DataFrame({"col": cols.astype(np.int32), "symbol": symbol, "label": label})
+    ens = pd.Series([""] * gK, dtype=object)
+    gm = _read_meta(fi, "gene", ["token_id", "gene_symbol", "ensembl_id"])
+    if gm is not None and {"token_id", "ensembl_id"} <= set(gm.columns):
+        emap = gm.dropna(subset=["token_id"]).drop_duplicates("token_id").set_index("token_id")["ensembl_id"]
+        ens = gsub["token"].map(emap).fillna("").astype(str).reset_index(drop=True)
+    else:
+        log("  gene metadata not found: ensembl_id left empty")
+    gtab["ensembl_id"] = ens.to_numpy(dtype=object)
+    gtab["token"] = gsub["token"].to_numpy(dtype=np.int64)
+    for c in ("pooled_cpm", "median_line_cpm", "n_lines_expressing"):
+        gtab[c] = gsub[c].to_numpy()
+    gtab["noise_rna"] = [bool(A.NOISE_RNA_RE.match(s)) for s in symbol]
+    W2 = np.load(os.path.join(fxd, "W2.npy"), mmap_mode="r")
+    dw = np.flatnonzero(~wells["is_dmso"].to_numpy(dtype=bool))
+    Wd = np.asarray(W2[dw], dtype=np.float32)
+    mod_col = {s: int(c) for s, c, k in zip(genes["symbol"], genes["col"], genes["kind"]) if k == "module"}
+    for name, mod in (("corr_with_S", "S_PHASE"), ("corr_with_G2M", "G2M_PHASE")):
+        gtab[name] = _corr_with(Wd[:, :gK], Wd[:, mod_col[mod]]) if mod in mod_col else np.nan
+    del Wd
+    gtab["n_dd_up"] = sig_up.sum(axis=0).astype(np.int32)
+    gtab["n_dd_down"] = sig_dn.sum(axis=0).astype(np.int32)
+    gtab["n_dd_up_clean"] = (sig_up & clean).sum(axis=0).astype(np.int32)
+    gtab["n_dd_down_clean"] = (sig_dn & clean).sum(axis=0).astype(np.int32)
+
+    def best(S):
+        b = np.argmax(S, axis=0)
+        return np.where(np.isfinite(S[b, cols]), b, -1)
+
+    bu = best(np.where(finz, z, -np.inf))
+    bd = best(np.where(finz, -z, -np.inf))
+    Zc_up = np.where(finz & clean, z, -np.inf)
+    bcu = best(Zc_up)
+    up_gap = _z_gap(Zc_up, comp_of_dd)
+    del Zc_up
+    Zc_dn = np.where(finz & clean, -z, -np.inf)
+    bcd = best(Zc_dn)
+    dn_gap = _z_gap(Zc_dn, comp_of_dd)
+    del Zc_dn
+
+    def best_cols(prefix, b, q):
+        ok = b >= 0
+        bb = np.maximum(b, 0)
+        v = {f"{prefix}_dd": b.astype(np.int32), f"{prefix}_drug": _pick(dd_drug, b), f"{prefix}_dose": _pick(dd_dose, b),
+             f"{prefix}_fold": np.where(ok, 2.0 ** lfc[bb, cols], np.nan).astype(np.float32),
+             f"{prefix}_z": np.where(ok, z[bb, cols], np.nan).astype(np.float32),
+             f"{prefix}_q": np.where(ok, q[bb, cols], np.nan).astype(np.float32)}
+        fl = np.full(gK, None, dtype=object)
+        fl[ok] = flag_strings(dd_flags, b[ok], pu[b[ok], cols[ok]], pe[b[ok], cols[ok]], ps[b[ok], cols[ok]])[0]
+        v[f"{prefix}_flags"] = fl
+        return v
+
+    for prefix, b, q in (("best_up", bu, qu), ("best_down", bd, qd)):
+        for k, v in best_cols(prefix, b, q).items():
+            gtab[k] = v
+    bcu_nl = np.full(gK, -1, dtype=np.int32)                   # filled from the tensor below
+    bcd_nl = np.full(gK, -1, dtype=np.int32)
+
+    # ---- the per-line tensor, in gene chunks
+    if not chunk:
+        chunk = max(1, min(gK, int(mem_gb * 1e9 / (44.0 * Dn * L))))
+    keep = (np.abs(z) >= KEEP_Z) | (qu < Q_CUT) | (qd < Q_CUT)
+    log(f"  drug_effects: {int(keep.sum()):,} gene x drug-dose rows (|z| >= {KEEP_Z:g} or q < {Q_CUT:g}); "
+        f"per-line tensor in chunks of {chunk} genes ...")
+    sd_l = np.full((gK, L), np.nan, dtype=np.float32)
+    nu_l = np.zeros((gK, L), dtype=np.int16)
+    nd_l = np.zeros((gK, L), dtype=np.int16)
+    bu_l = np.full((gK, L), -1, dtype=np.int32)
+    bd_l = np.full((gK, L), -1, dtype=np.int32)
+    bu_lfc = np.full((gK, L), np.nan, dtype=np.float32)
+    bu_z = np.full((gK, L), np.nan, dtype=np.float32)
+    bd_lfc = np.full((gK, L), np.nan, dtype=np.float32)
+    bd_z = np.full((gK, L), np.nan, dtype=np.float32)
+    tops = []
+    fx_path = os.path.join(od, "drug_effects.parquet")
+    writer = pq.ParquetWriter(fx_path + ".tmp", DRUG_EFFECTS_SCHEMA)
+    n_fx, n_clean_rows, mismatch = 0, 0, 0
+    try:
+        for g0 in range(0, gK, chunk):
+            g1 = min(gK, g0 + chunk)
+            c = g1 - g0
+            loc = np.arange(c)
+            Z = np.asarray(DZ[g0:g1], dtype=np.float32)          # genes x drug-doses x lines
+            X = np.asarray(DL[g0:g1], dtype=np.float32)
+            upl = (Z >= LINE_Z) & (X >= LFC_MIN)
+            dnl = (Z <= -LINE_Z) & (X <= -LFC_MIN)
+            n_meas = np.isfinite(Z).sum(axis=2).astype(np.int16)
+            n_up = upl.sum(axis=2).astype(np.int16)
+            n_dn = dnl.sum(axis=2).astype(np.int16)
+            for b, dst, nn in ((bcu, bcu_nl, n_up), (bcd, bcd_nl, n_dn)):
+                bb = b[g0:g1]
+                ok = bb >= 0
+                dst[g0:g1][ok] = nn[loc[ok], bb[ok]]
+
+            # drug_effects rows of this chunk
+            gi, di = np.nonzero(keep[:, g0:g1].T)
+            if gi.size:
+                g = g0 + gi
+                fl, cl_s = flag_strings(dd_flags, di, pu[di, g], pe[di, g], ps[di, g])
+                mismatch += int((cl_s != clean[di, g]).sum())
+                Zs = Z[gi, di]
+                order = np.lexsort((-z[di, g], g))
+                lf = lfc[di, g]
+                part = pd.DataFrame({
+                    "col": g.astype(np.int32), "symbol": symbol[g], "dd": di.astype(np.int32), "drug": dd_drug[di],
+                    "dose": dd_dose[di], "conc": dd_conc[di], "lfc": lf, "fold": (2.0 ** lf).astype(np.float32),
+                    "z": z[di, g], "q_up": qu[di, g], "q_down": qd[di, g], "flags": fl, "clean": cl_s,
+                    "n_lines_measured": n_meas[gi, di], "n_lines_up": n_up[gi, di], "n_lines_down": n_dn[gi, di],
+                    "lines_up": _line_lists(line_name, Zs, upl[gi, di], 1),
+                    "lines_down": _line_lists(line_name, Zs, dnl[gi, di], -1),
+                    "pattern_up": _PAT[P_up[drug_of_dd[di], g]], "pattern_down": _PAT[P_dn[drug_of_dd[di], g]]})
+                part = part.iloc[order]
+                writer.write_table(pa.Table.from_pandas(part, schema=DRUG_EFFECTS_SCHEMA, preserve_index=False))
+                n_fx += len(part)
+                n_clean_rows += int(cl_s.sum())
+                del part, Zs
+            del upl, dnl
+
+            # line_effects: per gene and line, over the clean drug-doses
+            cl = clean[:, g0:g1].T[:, :, None]                      # genes x drug-doses x 1
+            Xc = np.where(cl, X, np.nan).transpose(0, 2, 1)         # genes x lines x drug-doses
+            med, k = _nanmedian_last(Xc)
+            mad, _ = _nanmedian_last(np.abs(Xc - med[..., None]))
+            sd_l[g0:g1] = np.where(k >= MIN_SD_DD, 1.4826 * mad, np.nan)
+            del Xc
+            nu_l[g0:g1] = (cl & (Z >= STRONG_Z) & (X >= STRONG_LFC)).sum(axis=1)
+            nd_l[g0:g1] = (cl & (Z <= -STRONG_Z) & (X <= -STRONG_LFC)).sum(axis=1)
+            for sign, bl, bz, bx in ((1, bu_l, bu_z, bu_lfc), (-1, bd_l, bd_z, bd_lfc)):
+                S = np.where(cl & np.isfinite(Z), sign * Z, -np.inf)
+                b = S.argmax(axis=1)                                 # genes x lines
+                ok = np.isfinite(np.take_along_axis(S, b[:, None, :], axis=1)[:, 0, :])
+                bl[g0:g1] = np.where(ok, b, -1)
+                bz[g0:g1] = np.where(ok, np.take_along_axis(Z, b[:, None, :], axis=1)[:, 0, :], np.nan)
+                bx[g0:g1] = np.where(ok, np.take_along_axis(X, b[:, None, :], axis=1)[:, 0, :], np.nan)
+                # drug_line_top: the strongest clean (drug-dose, line) cells with per-line |z| >= 3
+                F = np.where(sign * Z >= STRONG_Z, S, -np.inf).reshape(c, Dn * L)
+                idx, vals = _top_k(F, TOP_CELLS)
+                r_, k_ = np.nonzero(np.isfinite(vals))
+                if r_.size:
+                    flat = idx[r_, k_]
+                    tops.append((g0 + r_, np.full(r_.size, sign, np.int8), (k_ + 1).astype(np.int16),
+                                 flat // L, flat % L, X.reshape(c, -1)[r_, flat], Z.reshape(c, -1)[r_, flat]))
+                del S, F
+            del Z, X
+            if (g0 // chunk) % 10 == 0 or g1 == gK:
+                log(f"    genes {g0:,}-{g1:,} of {gK:,} ({(time.time() - t0) / 60:.1f} min; drug_effects rows {n_fx:,})")
+    finally:
+        writer.close()
+    os.replace(fx_path + ".tmp", fx_path)
+    if mismatch:
+        raise SystemExit(f"tables: {mismatch} drug_effects rows whose 'clean' differs between the flag strings and "
+                         "the clean matrix (tables.py and atlas_core disagree on the artifact rules)")
+
+    # ---- genes.parquet
+    for prefix, b, q, nl, nlname, P in (("best_clean_up", bcu, qu, bcu_nl, "n_lines_up", P_up),
+                                        ("best_clean_down", bcd, qd, bcd_nl, "n_lines_down", P_dn)):
+        for k, v in best_cols(prefix, b, q).items():
+            gtab[k] = v
+        gtab[f"{prefix}_{nlname}"] = np.where(b >= 0, nl, -1).astype(np.int32)
+        gtab[f"{prefix}_pattern"] = np.where(b >= 0, _PAT[P[drug_of_dd[np.maximum(b, 0)], cols]], None)
+    gtab["up_specificity_z_gap"] = up_gap
+    gtab["down_specificity_z_gap"] = dn_gap
+    write_parquet(gtab, os.path.join(od, "genes.parquet"))
+
+    # ---- line_effects.parquet
+    gg = np.repeat(cols, L)
+    ll = np.tile(np.arange(L), gK)
+    line_cpm = np.load(os.path.join(fxd, "line_cpm.npy"), mmap_mode="r")
+    expr = np.load(os.path.join(fxd, "expr_mask.npy"), mmap_mode="r")
+    le = pd.DataFrame({"col": gg.astype(np.int32), "symbol": symbol[gg], "line": ll.astype(np.int16),
+                       "cell_line_id": line_id[ll], "cell_name": line_name[ll],
+                       "baseline_cpm": np.asarray(line_cpm[:, :gK], dtype=np.float32).T.ravel(),
+                       "expressed": np.asarray(expr[:, :gK], dtype=bool).T.ravel(),
+                       "response_sd": sd_l.ravel(), "n_dd_up": nu_l.ravel(), "n_dd_down": nd_l.ravel()})
+    for prefix, bl, bx, bz in (("best_up", bu_l, bu_lfc, bu_z), ("best_down", bd_l, bd_lfc, bd_z)):
+        b = bl.ravel()
+        le[f"{prefix}_dd"] = b
+        le[f"{prefix}_drug"] = _pick(dd_drug, b)
+        le[f"{prefix}_dose"] = _pick(dd_dose, b)
+        le[f"{prefix}_lfc"] = bx.ravel()
+        le[f"{prefix}_z"] = bz.ravel()
+    write_parquet(le, os.path.join(od, "line_effects.parquet"))
+    n_le = len(le)
+    le_cols = list(le.columns)
+    del le, sd_l, nu_l, nd_l, bu_l, bd_l, bu_lfc, bu_z, bd_lfc, bd_z
+
+    # ---- drug_line_top.parquet
+    if tops:
+        tg, ts, tr, td, tl, tx, tz = (np.concatenate(a) for a in zip(*tops))
+    else:
+        tg = ts = tr = td = tl = np.zeros(0, dtype=np.int64)
+        tx = tz = np.zeros(0, dtype=np.float32)
+    o = np.lexsort((tr, -ts, tg))
+    tg, ts, tr, td, tl, tx, tz = (a[o] for a in (tg, ts, tr, td, tl, tx, tz))
+    dlt = pd.DataFrame({"col": tg.astype(np.int32), "symbol": symbol[tg],
+                        "direction": np.where(ts > 0, "up", "down").astype(object), "rank": tr.astype(np.int16),
+                        "dd": td.astype(np.int32), "drug": dd_drug[td], "dose": dd_dose[td],
+                        "line": tl.astype(np.int16), "cell_name": line_name[tl], "lfc": tx.astype(np.float32),
+                        "z": tz.astype(np.float32), "pooled_lfc": lfc[td, tg], "pooled_z": z[td, tg]})
+    write_parquet(dlt, os.path.join(od, "drug_line_top.parquet"))
+
+    # ---- drugdoses.parquet
+    ddt = dd.copy()
+    ddt.insert(0, "dd", np.arange(Dn, dtype=np.int32))
+    ddt.insert(3, "salt_base", salt)
+    for name, sig, sign in (("top_up", sig_up, 1), ("top_down", sig_dn, -1)):
+        idx, vals = _top_k(np.where(sig & finz, sign * z, -np.inf), TOP_GENES)
+        ddt[name] = ["; ".join(f"{label[g]} ({2.0 ** float(lfc[d, g]):.2f}x)"
+                               for g, v in zip(idx[d], vals[d]) if np.isfinite(v)) for d in range(Dn)]
+    write_parquet(ddt, os.path.join(od, "drugdoses.parquet"))
+
+    # ---- drugs.parquet
+    nsig = dd["n_sig_genes"].to_numpy(dtype=np.int64) if "n_sig_genes" in dd else (sig_up | sig_dn).sum(axis=1)
+    resp = np.flatnonzero((sig_up | sig_dn).sum(axis=0) >= RESPONSIVE_MIN_DD)
+    if resp.size < 50:
+        resp = cols
+    zr = np.nan_to_num(z[:, resp].astype(np.float64))
+    nrm = np.linalg.norm(zr, axis=1)
+    nrm[nrm == 0] = 1.0
+
+    def meta(col, i):
+        return str(dd[col].iloc[i]) if col in dd and pd.notna(dd[col].iloc[i]) else ""
+
+    drows = []
+    for name in sorted(drugs):
+        r = rows_of_drug[drug_ix[name]]
+        ns = nsig[r]
+        bi = r[np.lexsort((-dd_conc[r], -ns))[0]]               # most significant genes; tie -> higher dose
+        sim = [float(zr[a] @ zr[b] / (nrm[a] * nrm[b])) for a, b in zip(r[:-1], r[1:])]
+        drows.append({"drug": name, "salt_base": T.salt_base(name), "targets": meta("targets", r[0]),
+                      "moa_fine": meta("moa_fine", r[0]), "moa_broad": meta("moa_broad", r[0]),
+                      "approved": meta("approved", r[0]), "n_doses": int(len(r)),
+                      "doses": " / ".join(dd_dose[r]), "n_sig_by_dose": " / ".join(str(int(x)) for x in ns),
+                      "max_sig": int(ns.max()), "best_dose": dd_dose[bi], "best_dd": int(bi),
+                      "lowest_active_dose": _lowest_active(dd_dose[r], ns),
+                      "flags_by_dose": " / ".join(f or "-" for f in dd_flags[r]),
+                      "signature_r_between_doses": T.fmt_list(sim)})
+    del zr
+    drugs_df = pd.DataFrame(drows)
+    write_parquet(drugs_df, os.path.join(od, "drugs.parquet"))
+
+    # ---- lines.parquet
+    tp53, tp53_src = _tp53_status(lines, fi)
+    lt = lines.copy()
+    lt.insert(0, "line", np.arange(L, dtype=np.int16))
+    lt["tp53_status"] = tp53
+    p = os.path.join(fxd, "DD_Az.npy")
+    lt["n_dd_depleted"] = ((np.load(p) <= -3) & ~art_dd[:, None]).sum(axis=0).astype(np.int32) \
+        if os.path.exists(p) else -1
+    p = os.path.join(fxd, "DD_beta.npy")
+    lt["median_response"] = np.nanmedian(np.load(p), axis=0).astype(np.float32) if os.path.exists(p) else np.nan
+    write_parquet(lt, os.path.join(od, "lines.parquet"))
+
+    # ---- plates.parquet
+    p = os.path.join(fxd, "plate_scale.csv")
+    pscale = pd.read_csv(p, dtype={"plate": str}) if os.path.exists(p) else pd.DataFrame(columns=["plate", "factor"])
+    p = os.path.join(fxd, "failed_wells.csv")
+    failed = pd.read_csv(p, dtype={"plate": str, "well": str}) if os.path.exists(p) else pd.DataFrame()
+    prow = []
+    for pl in ix["plates"]["plate"].astype(str):
+        w = wells[wells["plate"] == pl]
+        dm = w["is_dmso"].to_numpy(dtype=bool)
+        dz = w[~dm].drop_duplicates("dose").sort_values("conc")["dose"].astype(str)
+        fac = pd.to_numeric(pscale.loc[pscale["plate"] == pl, "factor"], errors="coerce")
+        fw = failed[failed["plate"] == pl] if len(failed) else failed
+        prow.append({"plate": pl, "n_wells": int(len(w)), "n_drug_wells": int((~dm).sum()),
+                     "doses": " / ".join(dz), "unreliable": pl in unreliable or bool(w["unreliable_plate"].any()),
+                     "plate_factor": float(fac.max()) if fac.notna().any() else np.nan,
+                     "dmso_wells": ", ".join(sorted(w.loc[dm, "well"].astype(str), key=_well_key)),
+                     "n_dmso_wells": int(dm.sum()),
+                     "failed_wells": ", ".join(sorted(fw["well"].astype(str), key=_well_key)) if len(fw) else "",
+                     "n_failed_wells": int(len(fw)),
+                     "median_cells_per_well": float(np.median(w["n_cells"])) if len(w) else np.nan})
+    plates_df = pd.DataFrame(prow)
+    write_parquet(plates_df, os.path.join(od, "plates.parquet"))
+
+    # ---- wells.parquet
+    wt = wells.copy()
+    wt.insert(0, "w", np.arange(N, dtype=np.int32))
+    p = os.path.join(tdir, "well_umi.npy")
+    umi = np.load(p) if os.path.exists(p) else None
+    wt["umi_total"] = umi if umi is not None and len(umi) == N else np.nan
+    write_parquet(wt, os.path.join(od, "wells.parquet"))
+
+    # ---- README.md
+    tables = {"genes.parquet": list(gtab.columns), "drug_effects.parquet": DRUG_EFFECTS_SCHEMA.names,
+              "line_effects.parquet": le_cols, "drug_line_top.parquet": list(dlt.columns),
+              "drugdoses.parquet": list(ddt.columns), "drugs.parquet": list(drugs_df.columns),
+              "lines.parquet": list(lt.columns), "plates.parquet": list(plates_df.columns),
+              "wells.parquet": list(wt.columns)}
+    text, undocumented = readme(tables)
+    _write_text(os.path.join(od, "README.md"), text)
+    if undocumented:
+        log(f"  WARNING: columns without a description in README.md: {', '.join(undocumented)}")
+
+    info = {"version": VERSION, "genes": gK, "drugdoses": Dn, "lines": L, "wells": N, "chunk": int(chunk),
+            "rows": {"genes": len(gtab), "drug_effects": n_fx, "drug_effects_clean": n_clean_rows,
+                     "line_effects": n_le, "drug_line_top": len(dlt), "drugdoses": len(ddt), "drugs": len(drugs_df),
+                     "lines": len(lt), "plates": len(plates_df), "wells": len(wt)},
+            "tp53_source": tp53_src, "tp53_counts": {str(k): int(v) for k, v in pd.Series(tp53).value_counts().items()},
+            "genes_with_clean_inducer": int(((gtab["best_clean_up_q"] < Q_CUT)
+                                             & (gtab["best_clean_up_fold"] >= 2 ** LFC_MIN)).sum()),
+            "genes_with_clean_repressor": int(((gtab["best_clean_down_q"] < Q_CUT)
+                                               & (gtab["best_clean_down_fold"] <= 2 ** -LFC_MIN)).sum()),
+            "undocumented_columns": undocumented, "minutes": round((time.time() - t0) / 60, 2)}
+    log("  rows: " + ", ".join(f"{k} {v:,}" for k, v in info["rows"].items()))
+    return info
+
+
+# ----------------------------------------------------------------------------- README.md
+_FC = ("log2 fold change vs the same cell line's median over the plate's drug wells (not DMSO), after the "
+       "composition shift and the well-position effect are removed")
+_DD_COLS = {
+    "drug": "drug name as in Tahoe (salt forms are separate drugs; see salt_base)",
+    "dose": "dose key (text): the concentration formatted with %.6g, in the unit of the sample metadata (uM)",
+    "conc": "concentration (uM)",
+    "dd": "drug-dose row: row of atlas/effects/drugdose.csv and of every DD_* / DDL_* matrix",
+    "salt_base": "drug name without the trailing salt / form in brackets (tlib.salt_base): salt forms of one "
+                 "compound share it",
+}
+_BEST = {"dd": "drug-dose row (-1 = none)", "drug": "drug", "dose": "dose key (uM)",
+         "fold": "pooled fold change (linear; 2**lfc; " + _FC + ")", "z": "pooled z (DD_z)",
+         "q": "BH q-value of the atlas in that direction (q_up for up, q_down for down; within the gene over all "
+              "drug-doses)", "flags": "drug-dose flags + this gene's flags (atlas_core.gene_flags), '; '-joined"}
+
+
+def _gene_docs():
+    d = {"col": "gene column: row key of genes.csv and column of every gene matrix (0 .. genes-1). Key genes by col",
+         "symbol": "gene symbol (can repeat between columns)", "label": "unique label: the symbol, or 'SYM (ENSG...)' "
+         "for repeated symbols", "ensembl_id": "Ensembl gene id from the Tahoe gene metadata (joined on token; '' when "
+         "missing)", "token": "Tahoe gene token id", "pooled_cpm": "level over all wells and lines (counts per million)",
+         "median_line_cpm": "median over cell lines of the line's level (CPM)", "n_lines_expressing":
+         "lines whose level is >= 25% of the median line (the atlas's 'expressed')", "noise_rna": "True for noise-class "
+         "RNAs (atlas NOISE_RNA_RE on the symbol: 7SK, snoRNA, snRNA, mitochondrial, ribosomal-protein pseudogenes, "
+         "replication histones, ENSG-only names): read their drug responses with care",
+         "corr_with_S": "Pearson r over all drug wells (pairwise complete) of the gene's corrected well effect (W2) with "
+         "the S-phase module's: near 1 = the gene moves with the S-phase share of cells", "corr_with_G2M":
+         "the same with the G2/M module", "n_dd_up": "drug-doses that raise the gene significantly (q_up < 0.10 and "
+         "fold >= 1.2)", "n_dd_down": "drug-doses that lower it significantly (q_down < 0.10 and fold <= 1/1.2)",
+         "n_dd_up_clean": "n_dd_up among clean drug-doses (no artifact flag for this gene)", "n_dd_down_clean":
+         "n_dd_down among clean drug-doses", "up_specificity_z_gap": "best clean z up minus the best clean z up of any "
+         "OTHER compound (salt forms merged): large = one compound stands out; NaN with < 2 compounds",
+         "down_specificity_z_gap": "the same for decreases (in units of -z)"}
+    for pre, what in (("best_up", "highest pooled z over all drug-doses (flagged ones included; may be "
+                                  "non-significant: check q)"),
+                      ("best_down", "lowest pooled z over all drug-doses (flagged ones included)"),
+                      ("best_clean_up", "highest pooled z over the clean drug-doses for this gene"),
+                      ("best_clean_down", "lowest pooled z over the clean drug-doses for this gene")):
+        for k, v in _BEST.items():
+            d[f"{pre}_{k}"] = f"{what}: {v}"
+    d["best_clean_up_n_lines_up"] = ("best clean drug-dose up: lines with per-line z >= 2 and fold >= 1.2 (tensor "
+                                     "DDL_z / DDL_lfc); -1 = no clean drug-dose")
+    d["best_clean_down_n_lines_down"] = ("best clean drug-dose down: lines with per-line z <= -2 and fold <= 1/1.2; "
+                                         "-1 = none")
+    d["best_clean_up_pattern"] = "dose pattern of that drug for this gene (atlas dose_shape over its doses' pooled z)"
+    d["best_clean_down_pattern"] = "the same for the decrease (z negated)"
+    return d
+
+
+DOCS = {
+    "genes.parquet": ("One row per gene (gene columns of atlas/effects/genes.csv; the S_PHASE, G2M_PHASE and "
+                      "PROTEASOME module columns are not here). 'Clean' = the drug-dose's flags plus this gene's "
+                      "flags hold none of: toxic, transcription drop, cell-cycle shift, unreliable plate only, "
+                      "position not correctable, position correction uncertain, wells disagree.", _gene_docs()),
+    "drug_effects.parquet": (
+        "Fold change relative to each drug: one row per gene x drug-dose with |pooled z| >= 3 or q_up < 0.10 or "
+        "q_down < 0.10 (sorted by col, then z from high to low). Pooled = over the cell lines (median per well, mean "
+        "over the drug-dose's used wells). Per-line values come from the tensor (DDL_z, DDL_lfc).",
+        {"col": "gene column", "symbol": "gene symbol", "dd": _DD_COLS["dd"], "drug": _DD_COLS["drug"],
+         "dose": _DD_COLS["dose"], "conc": _DD_COLS["conc"], "lfc": "pooled " + _FC + " (DD_lfc)",
+         "fold": "2**lfc (linear fold change; 1 = no change)", "z": "pooled z (DD_z: Stouffer over the used wells of "
+         "the robust z of the corrected well effect, divided by the gene's plate factor)", "q_up": "BH q-value for an "
+         "increase (within the gene, over all drug-doses)", "q_down": "BH q-value for a decrease",
+         "flags": "drug-dose flags + this gene's flags ('noisy plate (z scaled)' from its own plate factor, 'position "
+         "correction uncertain', 'position effect removed'), '; '-joined, the exact strings of the atlas",
+         "clean": "True when flags hold no artifact flag (see genes.parquet)", "n_lines_measured": "lines with a "
+         "per-line value (expressing the gene, with enough cells in the wells)", "n_lines_up": "lines with per-line "
+         "z >= 2 and fold >= 1.2", "n_lines_down": "lines with per-line z <= -2 and fold <= 1/1.2", "lines_up":
+         "cell names of those lines, strongest per-line z first, at most 12, ', '-joined", "lines_down":
+         "cell names of the lines counted in n_lines_down, most negative per-line z first, at most 12", "pattern_up": "how the increase behaves over the drug's "
+         "doses (atlas dose_shape over the pooled z by ascending dose; the same for every dose of the drug): none / "
+         "single dose / all doses, stronger at high dose / all doses, flat / top dose only / rises with dose / two "
+         "highest doses / inconsistent across doses", "pattern_down": "the same for the decrease (z negated)"}),
+    "line_effects.parquet": (
+        "Fold change relative to each cell line: one row per gene x cell line (all genes x all lines). Counts and "
+        "bests use the clean drug-doses for the gene and the per-line tensor values (DDL_z, DDL_lfc): a per-line "
+        "fold change is the mean over the drug-dose's used wells of that line's " + _FC + "; per-line z = Stouffer "
+        "over those wells of (value - line centre) / line scale / plate factor.",
+        {"col": "gene column", "symbol": "gene symbol", "line": "line index (row of lines.parquet / atlas lines.csv, "
+         "last axis of the tensor)", "cell_line_id": "Cellosaurus id", "cell_name": "cell line name",
+         "baseline_cpm": "the line's level of the gene over all its wells (CPM; atlas line_cpm)", "expressed":
+         "the line's level is >= 25% of the median line's (atlas expr_mask); not expressed -> no per-line values",
+         "response_sd": "1.4826 x MAD over the clean drug-doses of the line's per-line log2 fold change: the typical "
+         "spread of this gene's responses in this line (log2; NaN with < 10 measured clean drug-doses)",
+         "n_dd_up": "clean drug-doses with per-line z >= 3 and fold >= 1.5 in this line", "n_dd_down":
+         "clean drug-doses with per-line z <= -3 and fold <= 1/1.5", "best_up_dd": "clean drug-dose with the highest "
+         "per-line z in this line (-1 = none; may be non-significant: check best_up_z)", "best_up_drug": "its drug",
+         "best_up_dose": "its dose key (uM)", "best_up_lfc": "its per-line log2 fold change", "best_up_z":
+         "its per-line z", "best_down_dd": "clean drug-dose with the lowest per-line z (-1 = none)", "best_down_drug":
+         "its drug", "best_down_dose": "its dose key (uM)", "best_down_lfc": "its per-line log2 fold change",
+         "best_down_z": "its per-line z"}),
+    "drug_line_top.parquet": (
+        "Per gene, the 15 strongest (drug-dose, cell line) cells up and the 15 strongest down among the clean "
+        "drug-doses for the gene with per-line |z| >= 3 (fewer when fewer qualify).",
+        {"col": "gene column", "symbol": "gene symbol", "direction": "up / down", "rank": "1 = strongest per-line z "
+         "in that direction", "dd": _DD_COLS["dd"], "drug": _DD_COLS["drug"], "dose": _DD_COLS["dose"],
+         "line": "line index", "cell_name": "cell line name", "lfc": "per-line " + _FC + " (DDL_lfc)",
+         "z": "per-line z (DDL_z)", "pooled_lfc": "the drug-dose's pooled log2 fold change for the gene (DD_lfc)",
+         "pooled_z": "the drug-dose's pooled z (DD_z)"}),
+    "drugdoses.parquet": (
+        "atlas/effects/drugdose.csv (one row per drug and dose) plus dd, salt_base, top_up and top_down.",
+        {"dd": _DD_COLS["dd"], "drug": _DD_COLS["drug"], "dose": _DD_COLS["dose"], "salt_base": _DD_COLS["salt_base"],
+         "conc": _DD_COLS["conc"], "n_wells": "used wells (those on reliable plates; all of them when the drug-dose "
+         "sits only on unreliable plates)", "n_wells_all": "all its wells", "wells": "well names of the used wells",
+         "plates": "plates of the used wells", "wells_left_out": "plate:well of wells left out (on unreliable plates)",
+         "unreliable_plate_only": "True when every well is on an unreliable plate",
+         "cells_log2_vs_plate": "cells per well, log2 vs the plate's median drug well (mean over used wells)",
+         "umi_per_cell_log2_vs_plate": "UMIs per cell, log2 vs the plate's median drug well",
+         "genes_per_cell_log2_vs_plate": "genes detected per cell, log2 vs the plate's median drug well",
+         "row_cells_log2": "the same as cells_log2_vs_plate for the other drug wells in the same plate row (median; "
+         "mean over the used wells)", "row_umi_per_cell_log2": "the same for UMIs per cell",
+         "row_genes_per_cell_log2": "the same for genes per cell", "composition_shift_log2": "median over the "
+         "wells' lines of the profile's composition (library-size) shift (log2)", "cells_log2_best_well":
+         "the largest cells_log2_beyond_row of the used wells ('toxic' needs it < -0.5)", "plate_scale":
+         "mean plate factor (z divisor) of the used wells", "position_wells_used": "mean number of other-drug wells "
+         "at the same position used for the position correction", "position_not_correctable": "True when a used well "
+         "had < 3 other-drug wells at its position", "S_PHASE_lfc": "S-phase module log2 fold change",
+         "S_PHASE_z": "S-phase module z", "G2M_PHASE_lfc": "G2/M module log2 fold change", "G2M_PHASE_z":
+         "G2/M module z", "PROTEASOME_lfc": "proteasome module log2 fold change", "PROTEASOME_z":
+         "proteasome module z", "cells_log2_best_higher_dose": "best cells_log2_vs_plate of the same drug at a "
+         "higher dose (NaN: none)", "flags": "drug-dose flags, '; '-joined (artifacts: toxic, transcription drop, "
+         "cell-cycle shift, unreliable plate only, position not correctable, wells disagree; caveats: low cells "
+         "(technical?), plate-row cell shift, composition shift, noisy plate (z scaled))", "n_genes_up":
+         "genes raised significantly (q_up < 0.10, fold >= 1.2)", "n_genes_down": "genes lowered significantly",
+         "n_sig_genes": "n_genes_up + n_genes_down", "replicate_r": "mean pairwise r of the used wells' z over the "
+         "top 500 genes (wells agree?)", "targets": "drug targets (Tahoe drug metadata)", "moa_fine":
+         "mechanism of action, fine", "moa_broad": "mechanism of action, broad", "approved": "human-approved (Tahoe "
+         "drug metadata)", "top_up": "up to 15 significantly raised genes, highest z first: 'LABEL (fold x)'",
+         "top_down": "up to 15 significantly lowered genes, lowest z first: 'LABEL (fold x)'"}),
+    "drugs.parquet": (
+        "One row per drug (all its doses).",
+        {"drug": _DD_COLS["drug"], "salt_base": _DD_COLS["salt_base"], "targets": "drug targets", "moa_fine":
+         "mechanism of action, fine", "moa_broad": "mechanism of action, broad", "approved": "human-approved",
+         "n_doses": "number of doses", "doses": "dose keys by ascending concentration (uM), ' / '-joined",
+         "n_sig_by_dose": "significant genes (n_sig_genes) per dose, same order", "max_sig": "the largest of them",
+         "best_dose": "the dose with the most significant genes (tie -> the higher dose)", "best_dd":
+         "its drug-dose row", "lowest_active_dose": "the lowest dose such that it and every higher dose have >= 10 "
+         "significant genes; 'low dose only (noise?)' when only lower doses do; '' when no dose does",
+         "flags_by_dose": "each dose's flags ('-' = none), ' / '-joined by ascending dose",
+         "signature_r_between_doses": "cosine similarity of the pooled z signatures (genes significant in >= 3 "
+         "drug-doses) of consecutive doses (low-mid / mid-high): near 1 = the same response growing with dose"}),
+    "lines.parquet": (
+        "atlas/effects/lines.csv (one row per cell line, in the order of the line axis) plus line, tp53_status, "
+        "n_dd_depleted, median_response.",
+        {"line": "line index (last axis of the tensor)", "cell_line_id": "Cellosaurus id", "n_cells_total":
+         "cells of the line over all wells", "cell_name": "cell line name", "Cell_ID_DepMap": "DepMap id",
+         "Organ": "organ of origin", "drivers": "driver genes (variant type) from the Tahoe cell-line metadata",
+         "driver_changes": "driver protein changes", "in_growth_analysis": "True when the line has enough cells for "
+         "the relative-abundance (growth) analysis", "wells_usable": "wells with >= min_cells cells of the line "
+         "(usable expression)", "pct_wells_usable": "the same as % of all wells", "tp53_status": "altered (a TP53 "
+         "row in the cell-line metadata) / wild type (the line is in the metadata without one) / unknown",
+         "n_dd_depleted": "clean drug-doses (no artifact flag) that deplete the line: relative-abundance z "
+         "(DD_Az) <= -3", "median_response": "median over drug-doses of the line's response strength (DD_beta: "
+         "slope of the line's changes on the drug-dose's consensus over its significant genes; 1 = a typical line, "
+         "0 = no response; only drug-doses with >= 20 significant genes)"}),
+    "plates.parquet": (
+        "One row per plate (atlas plate order).",
+        {"plate": "plate", "n_wells": "wells analysed (drug + DMSO; failed wells excluded)", "n_drug_wells":
+         "drug wells", "doses": "dose keys of the drug wells (uM), ' / '-joined", "unreliable": "True for plates "
+         "named unreliable (kept out of pooled drug-doses, centres and plate-factor peers)", "plate_factor":
+         "largest plate-group factor of the plate (z divisor; 1 = as noisy as its peers)", "dmso_wells": "DMSO "
+         "well names", "n_dmso_wells": "number of DMSO wells", "failed_wells": "well names excluded as technical "
+         "failures (< 1/8 of the plate's typical cells while the drug did fine elsewhere)", "n_failed_wells":
+         "number of them", "median_cells_per_well": "median cells per analysed well (all lines)"}),
+    "wells.parquet": (
+        "atlas/effects/wells.csv (one row per analysed well, the row order of W1/W2/Z and of the tensor's well "
+        "axis) plus w and umi_total. Per-gene raw counts per well are in tensor/well_counts.npy (wells x genes, UMI "
+        "summed over the well's lines), not here.",
+        {"w": "well row (axis of W1/W2/Z, tensor R and well_counts)", "sample": "Tahoe sample id", "plate": "plate",
+         "drug": "drug (DMSO_TF for vehicle)", "n_cells": "cells in the well (all lines)", "is_dmso": "vehicle well",
+         "plate_num": "plate number", "conc": "concentration (uM; 0 for DMSO)", "unit": "concentration unit",
+         "mean_gene_count": "mean genes per cell (Tahoe sample metadata)", "mean_tscp_count": "mean transcripts "
+         "per cell (Tahoe sample metadata)", "mean_pcnt_mito": "mean mitochondrial fraction (Tahoe sample metadata)",
+         "slot": "well position 1-96 (A1 = 1, row-major)", "slot_purity": "share of the well's cells whose barcode "
+         "gives that position", "well": "well name (A1 ... H12)", "dose": "dose key (uM)", "cells": "cells of the "
+         "analysed lines in the well", "umi_per_cell": "UMIs per cell", "genes_per_cell": "genes per cell",
+         "cells_log2_vs_plate": "cells, log2 vs the plate's median drug well", "umi_per_cell_log2_vs_plate":
+         "UMIs per cell, log2 vs the plate's median drug well", "genes_per_cell_log2_vs_plate": "genes per cell, "
+         "log2 vs the plate's median drug well", "row_cells_log2": "median cells_log2_vs_plate of the other drug "
+         "wells in the same plate row", "row_umi_per_cell_log2": "the same for UMIs per cell",
+         "row_genes_per_cell_log2": "the same for genes per cell", "cells_log2_beyond_row": "cell loss beyond the "
+         "plate row where the row itself moved > 0.8 log2, else cells_log2_vs_plate", "composition_shift_log2":
+         "median over the well's lines of the composition shift (log2)", "unreliable_plate": "well on an "
+         "unreliable plate", "position_wells_used": "other-drug wells at the same position (position correction "
+         "donors)", "position_clean_donors_median": "median over genes of the clean donors used",
+         "position_not_correctable": "< 3 donors: no position correction", "plate_scale_group": "plate-and-dose "
+         "group of the plate factor", "plate_scale_group_id": "row of atlas plate_scale_gene.npy (-1: none)",
+         "plate_scale_pass1": "the group's plate factor, pass 1", "plate_scale": "the group's plate factor (z "
+         "divisor)", "drugdose_row": "drug-dose row (dd; -1 = DMSO)", "used_in_drugdose": "the well counts in its "
+         "drug-dose", "umi_total": "total UMIs of the well over its analysed lines (tensor well_umi)"}),
+}
+
+
+def readme(tables):
+    """README.md text for the written tables ({file: [columns]}) and the columns lacking a description."""
+    missing = []
+    out = ["# tables/ - the fold-change tables", "",
+           "Written by `tahoemap tables` (tahoemap/tables.py). Keys: `col` = gene column (0 .. genes-1, the order of "
+           "atlas/effects/genes.csv), `dd` = drug-dose row (atlas/effects/drugdose.csv), `line` = cell-line index "
+           "(atlas/effects/lines.csv), `w` = well row (atlas/effects/wells.csv). Join on these, not on names: "
+           "symbols can repeat.", "",
+           "**Baseline of every fold change**: the same cell line's median over the plate's *drug* wells (the typical "
+           "treated well; most drugs leave most genes alone), **not DMSO**. For each line and well the atlas takes "
+           "log2 CPM minus that line's plate median, minus the profile's composition (library-size) shift, minus the "
+           "well-position effect. Pooled values (`lfc`, `z`, `q_*`, `pooled_*`) take the median over lines per well "
+           "and then the mean (lfc) or Stouffer sum (z) over the drug-dose's used wells; per-line values (tensor "
+           "DDL_lfc / DDL_z) keep each line. `lfc` is log2; `fold` = 2**lfc (1 = no change, 2 = doubled, 0.5 = "
+           "halved). z is a robust z (median / 1.4826 MAD of the drug wells), widened on noisy plates.", "",
+           f"**Significant** (as the atlas): q_up < {Q_CUT:g} and fold >= 1.2 (up), q_down < {Q_CUT:g} and fold <= "
+           "1/1.2 (down); q = Benjamini-Hochberg within each gene over all drug-doses. **Clean** = no artifact flag "
+           "(" + ", ".join(A.ARTIFACT_FLAGS) + ") in the drug-dose's flags plus the gene's own flags. Soft caveats "
+           "that do not make a value unclean: low cells (technical?), plate-row cell shift, composition shift, noisy "
+           "plate (z scaled), position effect removed.", "",
+           "Missing values: NaN / null = not measured (line not expressing, too few cells) or no candidate; -1 in "
+           "an index column = none.", ""]
+    for name, cols in tables.items():
+        intro, docs = DOCS[name]
+        out += [f"## {name}", "", intro, "", "| column | meaning |", "|---|---|"]
+        for c in cols:
+            d = docs.get(c)
+            if d is None:
+                missing.append(f"{name}:{c}")
+                d = "(see atlas/effects/README_effects.md)"
+            out.append(f"| `{c}` | {d.replace('|', '/')} |")
+        out.append("")
+    out += ["The gene x gene table ('relative to each gene') is relations/gene_relations.parquet.", ""]
+    return "\n".join(out), missing

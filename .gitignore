@@ -1,0 +1,26 @@
+# Outputs the pipeline writes (can be many GB): keep them out of the repository
+tahoemap_out/
+/out/
+*.npy
+*.npz
+*.log
+.job.pid
+
+# Tahoe-100M data, if this folder is also the download folder
+*.parquet
+.cache/
+/data/
+/metadata/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Per-user Obsidian state, if a vault is opened from inside the repository
+.obsidian/workspace*.json
+.obsidian/hotkeys.json
+.trash/
+
+# Temporary git worktrees made by Claude Code sessions
+.claude/worktrees/

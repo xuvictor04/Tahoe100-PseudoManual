@@ -1,0 +1,10 @@
+# tahoemap: Python 3.10+
+numpy>=1.24
+pandas>=2.0
+pyarrow>=14
+scipy>=1.10
+scikit-learn>=1.3
+networkx>=3.0
+# optional
+psutil          # better free-memory detection when sizing build workers
+huggingface_hub # `tahoe download` (with hf_xet and brotli>=1.2.0)
