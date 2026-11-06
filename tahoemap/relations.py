@@ -22,7 +22,13 @@ For every gene in the vector space (embed stage) the 100 partners with the large
                  the 3' gene's mRNA, so the pair correlates without any regulation)
   known flags    shared HGNC gene group, shared pathway (Hallmark, or a Reactome pathway of <= 300 genes),
                  STRING combined score (>= 400 kept)
-  novel_candidate  evidence "both halves", fdr <= 0.05, |cos| >= 0.5, not known, not the same locus, both genes
+  rank_ba, z_ba  the same pair seen from the partner's side (NaN when a is not among b's 100 strongest partners)
+  mutual_rank    max(rank, rank_ba);  specificity = min(|z_gene|, |z_ba|): how exceptional the pair is for both genes.
+                 At full scale broad programmes make most strong pairs replicable; specificity separates a particular
+                 relation from membership of the same large programme (mutually-top pairs are also ~3x more often
+                 already known, so specificity tracks real relations).
+  novel_candidate  mutual_rank <= 10, specificity >= 4, evidence "both halves", fdr <= 0.05, |cos| >= 0.5, not known,
+                 not the same locus, both genes
                  have a registry (HGNC) record and coordinates (for an undescribed or unplaced gene "not known" and
                  "not the same locus" mean nothing), and only when the sources that define "known" loaded (HGNC,
                  Ensembl, STRING, and Hallmark or Reactome); otherwise info.json says which were missing.
@@ -39,13 +45,15 @@ import pandas as pd
 
 from .common import folder, log, stamp_stage, write_csv, write_json, write_parquet
 
-VERSION = 2
+VERSION = 3
 TOP = 100
 REPRO_MIN = 0.2
 REPRO_FDR = 0.10
 ONE_HALF = 0.5
 NOVEL_COS = 0.5
 NOVEL_FDR = 0.05
+NOVEL_MUTUAL_RANK = 10      # each gene among the other's 10 strongest partners ...
+NOVEL_SPECIFICITY = 4.0     # ... and exceptional for both (|z_gene| >= 4 both ways)
 LOCUS_BP = 50_000
 READTHROUGH_BP = 20_000
 READTHROUGH_RATIO = 8.0
@@ -253,9 +261,19 @@ def run(out, top=TOP):
     else:
         both_recorded = np.zeros(len(rel), dtype=bool)
     rel["both_annotated"] = both_recorded
+    # specificity: is each gene among the other's strongest partners, and exceptional for it? At full scale broad,
+    # replicated programmes make hundreds of thousands of pairs reproducible; a candidate must also be specific.
+    rev = pd.DataFrame({"col_a": rel["col_b"].to_numpy(), "col_b": rel["col_a"].to_numpy(),
+                        "rank_ba": rel["rank"].to_numpy(), "z_ba": rel["z_gene"].to_numpy()})
+    rel = rel.merge(rev, on=["col_a", "col_b"], how="left")
+    rel["mutual_rank"] = np.maximum(rel["rank"], rel["rank_ba"].fillna(np.inf))
+    rel["specificity"] = np.minimum(rel["z_gene"].abs(), rel["z_ba"].abs().fillna(0.0))
+    ca, cb = rel["col_a"].to_numpy(), rel["col_b"].to_numpy()
+    both_recorded = rel["both_annotated"].to_numpy()
     blocked = _missing_sources(out) if have_ref else ["reference stage not run"]
     rel["novel_candidate"] = (not blocked) & both_recorded & rel["coords_known"] & rel["reproducible"] & \
-        (rel["fdr"] <= NOVEL_FDR) & (rel["abs_cos"] >= NOVEL_COS) & ~rel["known"] & ~rel["locus"]
+        (rel["fdr"] <= NOVEL_FDR) & (rel["abs_cos"] >= NOVEL_COS) & ~rel["known"] & ~rel["locus"] & \
+        (rel["mutual_rank"] <= NOVEL_MUTUAL_RANK) & (rel["specificity"] >= NOVEL_SPECIFICITY)
     if blocked:
         log(f"  novel candidates not assessed: missing {', '.join(blocked)} (run 'tahoe run --from reference' "
             "with network access)")

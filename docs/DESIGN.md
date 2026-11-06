@@ -193,5 +193,10 @@ lines. Data embedded as JSON.
 
 ## CLI
 
-`python -m tahoemap <command>`; the `tahoe` shell wrapper calls it. Commands: run, build, effects, tensor, tables,
-embed, reference, relations, graph, validate, vault, map, status, gene, drug, line, pair, module.
+`python -m tahoemap <command>`; the `tahoe` shell wrapper calls it. Commands: run, status, the stage names (build,
+effects, tensor, tables, embed, reference, relations, graph, validate, vault, map) and the look-ups gene, drug, line,
+pair, module. `run` executes every stage that is missing or out of date: a stage is out of date when its code
+VERSION changed, an earlier stage was redone, a result-changing option differs from the one stamped (options given
+once are remembered in `OUT/run_options.json`), or (reference) a source failed to load on a run with network.
+`--from` / `--to` / `--redo` override the plan; `--allow-partial`, `--refresh-reference`, `--well-tensor` /
+`--no-well-tensor`, `--reuse-atlas DIR` (an old tahoe_atlas.py build; recorded in `atlas/reused_from.json`).

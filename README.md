@@ -18,6 +18,12 @@ tahoe gene MDM2                 # then ask
 Start with [docs/quick-start.md](docs/quick-start.md). `tahoe test` runs the whole pipeline on synthetic data with
 planted answers in a few minutes.
 
+`tahoe run` can be stopped (`tahoe stop`) and resumed at any point: finished stages, and finished plates of the
+build, are kept. Options that change results (`--dims`, `--min-cells`, …) are remembered for the output folder
+(`run_options.json`); giving one with a new value redoes its stage and everything after it. A local build refuses an
+incomplete download unless `--allow-partial`; reference downloads that failed are retried by the next run
+(`--refresh-reference` fetches them all again).
+
 ## What a run produces
 
 | Output (under `<data>/tahoemap/`) | What it is |
@@ -40,19 +46,21 @@ planted answers in a few minutes.
 
 | Stage | What it does | Real-data time |
 |---|---|---|
-| build | one pass over all cells → counts per well × cell line × gene (`--stream`: no download) | 0.5–2.5 h |
-| effects | the corrected effect of every drug-dose on every gene (composition, plate, well-position corrections; flags) | ~10–20 min |
-| tensor | the same per cell line: gene × drug-dose × line fold changes and z | ~10–20 min |
-| tables | the fold-change tables | ~2–5 min |
-| embed | the vector space (genes, drugs, contexts, lines), also fitted on two halves of the compounds | ~5 min |
+| build | one pass over all cells → counts per well × cell line × gene (`--stream`: no download) | ~1.5 h streamed |
+| effects | the corrected effect of every drug-dose on every gene (composition, plate, well-position corrections; flags) | ~10 min |
+| tensor | the same per cell line: gene × drug-dose × line fold changes and z | ~9 min |
+| tables | the fold-change tables | ~2 min |
+| embed | the vector space (genes, drugs, contexts, lines), also fitted on two halves of the compounds | ~2 min |
 | reference | public annotations, downloaded once and cached (`--offline` skips) | ~3 min |
-| relations | gene × gene partners, evidence, FDR, known / novel | ~5 min |
-| graph | modules, arms, the nodal map and the signed map | ~5–10 min |
+| relations | gene × gene partners, evidence, FDR, known / novel | ~1 min |
+| graph | modules, arms, the nodal map and the signed map | ~2 min |
 | validate | control programmes, opposite-arm test, module labels, novel candidates | ~2 min |
-| vault | the Obsidian vault | ~5 min |
+| vault | the Obsidian vault | ~2 min |
 | map | the interactive HTML map | ~1 min |
 
-[docs/method.md](docs/method.md) explains every step and every flag.
+Times were measured on the full data on a 4-core, 15 GB machine (a scale test of this code; its outputs were not
+kept); see [docs/quick-start.md](docs/quick-start.md#resources) for disk and memory. [docs/method.md](docs/method.md)
+explains every step and every flag.
 
 ## The vector space and the nodal map
 
@@ -87,9 +95,11 @@ python3 tests/test_port.py      # the port is verbatim
 
 The synthetic data plant drug effects (some only in TP53-wild-type lines), co-regulated modules, pairs of modules
 moved in opposite directions, un-moved genes, and every artifact the method corrects. The tests check each stage
-against them: per-line effects appear only where planted, planted modules are tight in the space, opposite modules
-point opposite ways and share a nodal-map island on opposite arms, un-moved genes rarely form strong relations, the
-FDR is monotone and calibrated, the vault has a note per gene and no broken links.
+against them (29 checks): the tensor reproduces the atlas exactly, ambient-only lines and uncountable profiles are
+masked, per-line effects appear only where planted (e.g. p53 targets in TP53-wild-type lines only), the per-line cut
+is calibrated, planted modules are tight in the space, opposite modules point opposite ways and share a nodal-map
+island on opposite arms, un-moved genes rarely form strong relations, the FDR is monotone and calibrated, the vault
+has a note per gene and no broken links, the look-ups answer.
 
 ## Read the results with these in mind
 

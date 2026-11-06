@@ -43,13 +43,14 @@ opposite directions (e.g. 40 genes raised and 25 lowered by the same three HDAC 
 
 | | HDAC up / down | COLOC up / down | COLOC2 up / down |
 |---|---|---|---|
-| mean cosine within each module | 0.76 / 0.67 | 0.67 / 0.74 | 0.72 / 0.75 |
-| mean cosine **between** the two modules | **−0.70** | **−0.70** | **−0.73** |
+| mean cosine within each module | 0.75 / 0.66 | 0.66 / 0.71 | 0.71 / 0.74 |
+| mean cosine **between** the two modules | **−0.69** | **−0.69** | **−0.73** |
 | same nodal-map module? arms | yes, + / − | yes, − / + | yes, − / + |
-| centre-to-centre distance, nodal map (in map spreads, √(var x + var y)) | **0.04** | **0.02** | **0.01** |
-| centre-to-centre distance, signed map | **2.80** | **1.48** | **1.28** |
+| centre-to-centre distance, nodal map (in map spreads, √(var x + var y)) | **0.05** | **0.03** | **0.02** |
+| centre-to-centre distance, signed map | **3.00** | **1.45** | **2.47** |
 
-Random gene pairs have a mean cosine of +0.01. So: anti-aligned in the vector space, one island on the nodal map.
+The HDAC module of the nodal map holds 63 genes, 40 on its + arm and 23 on its − arm (planted: 40 and 25); the mean
+cosine between its arms is −0.69. Random gene pairs have a mean cosine of +0.01. So: anti-aligned in the vector space, one island on the nodal map.
 
 ## What this looks like on the real data
 

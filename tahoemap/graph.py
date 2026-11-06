@@ -14,7 +14,9 @@ strongest partners by |cos| >= 0.3 whose relation is replicated ("both halves", 
 one half of the compounds (|cos| >= 0.5) (weight |cos|, sign kept). Inside a module, each gene's side of the
 module's main direction gives its arm; a module has a real "-" arm only when >= 5 genes sit on that side AND the two
 sides anti-correlate (mean cosine between them <= -0.2): then the + arm and the - arm move opposite to each other
-under the same drugs. Otherwise every member is "+" (a single-armed module). modules.parquet records the mean cosine
+under the same drugs. Otherwise every member is "+" (a single-armed module). Modules larger than 300 genes or
+looser than a mean member |cosine| of 0.3 are split again by Louvain on their own subgraph (up to 4 levels): at full
+scale the first pass returns programme-sized communities of 1,000+ loosely related genes. modules.parquet records the mean cosine
 within each arm and between the arms. Module scores per (drug-dose, line) = mean z of the + arm minus mean z of the
 - arm (the + arm alone in single-armed modules), from tensor DDL_z; pooled scores likewise from atlas DD_z. A
 module's responsive lines are those with the largest mean |score| over its 8 strongest drug-doses.
@@ -30,13 +32,16 @@ import pandas as pd
 from .common import folder, log, read_effects_index, save_npy, stable_seed, stamp_stage, write_json, \
     write_parquet
 
-VERSION = 2
+VERSION = 3
 K_EDGES = 15
 K_LAYOUT = 90
 MIN_MODULE = 5
 MIN_EDGE = 0.3
 ONE_HALF_EDGE = 0.5      # a "one half" relation joins the graph only when this strong
 ARMS_OPPOSITE = -0.2     # mean cosine between the two sides at or below this: two real, opposite arms
+MAX_MODULE = 300         # larger modules are split again (Louvain on their own subgraph) ...
+LOOSE_COS = 0.3          # ... and so are modules whose members' mean |cosine| is below this
+SPLIT_DEPTH = 4
 
 
 def _layout(n, rows, cols, dist, init, seed):
@@ -55,6 +60,44 @@ def _layout(n, rows, cols, dist, init, seed):
         warnings.simplefilter("ignore")
         Y = ts.fit_transform(D)
     return Y.astype(np.float32)
+
+
+def _within_abs_cos(U, c, block=2048):
+    """Mean off-diagonal |cos| among the members: relatedness as the nodal map sees it (two opposite arms of one
+    module are tightly related although their signed cosine is negative)."""
+    n = len(c)
+    if n < 2:
+        return float("nan")
+    M = U[c]
+    tot = 0.0
+    for r0 in range(0, n, block):
+        tot += float(np.abs(M[r0:r0 + block] @ M.T).sum())
+    return (tot - n) / (n * (n - 1))
+
+
+def _refine(G, U, comms, seed):
+    """Louvain on a whole-genome kNN graph returns a few programme-sized communities of 1,000+ genes whose members
+    are only loosely alike. Split, by Louvain on the module's own subgraph, every module larger than MAX_MODULE
+    genes or looser than LOOSE_COS (mean |cosine| among members, so opposite arms count as related), up to
+    SPLIT_DEPTH times; members left in pieces
+    smaller than MIN_MODULE become unassigned (module 0)."""
+    import networkx as nx
+    out, n_split = [], 0
+    stack = [(c, 0) for c in comms]
+    while stack:
+        c, depth = stack.pop()
+        loose = len(c) > MAX_MODULE or (len(c) > 2 * MIN_MODULE and _within_abs_cos(U, c) < LOOSE_COS)
+        if not loose or depth >= SPLIT_DEPTH:
+            out.append(c)
+            continue
+        parts = nx.community.louvain_communities(G.subgraph(c), weight="weight", resolution=1.0, seed=seed + depth)
+        parts = [sorted(p) for p in parts]
+        if len(parts) <= 1:
+            out.append(c)
+            continue
+        n_split += 1
+        stack.extend((p, depth + 1) for p in parts)
+    return out, n_split
 
 
 def _knn(U, k, signed, block=2048):
@@ -101,9 +144,10 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
     G = nx.Graph()
     G.add_nodes_from(range(n))
     G.add_weighted_edges_from(zip(edges["i"], edges["j"], np.abs(edges["cos"])))
-    comms = nx.community.louvain_communities(G, weight="weight", resolution=resolution,
-                                             seed=stable_seed("louvain") % (2 ** 31))
-    comms = sorted([sorted(c) for c in comms if len(c) >= MIN_MODULE], key=lambda c: (-len(c), c[0]))
+    seed_l = stable_seed("louvain") % (2 ** 31)
+    comms = nx.community.louvain_communities(G, weight="weight", resolution=resolution, seed=seed_l)
+    comms, n_split = _refine(G, U, [sorted(c) for c in comms], seed_l)
+    comms = sorted([c for c in comms if len(c) >= MIN_MODULE], key=lambda c: (-len(c), c[0]))
     module = np.zeros(n, dtype=np.int64)
     for m, c in enumerate(comms, 1):
         module[c] = m
@@ -133,7 +177,8 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
         axis_proj[c] = p
         arm_stats[m] = {"mean_cos_within_plus": mean_cos(cp, cp, True), "mean_cos_within_minus": mean_cos(cm, cm, True),
                         "mean_cos_between_arms": between, "arms_opposite": bool(opposite)}
-    log(f"  {len(comms)} modules of >= {MIN_MODULE} genes (Louvain on {len(edges):,} edges); "
+    log(f"  {len(comms)} modules of >= {MIN_MODULE} genes (Louvain on {len(edges):,} edges, {n_split} large or loose "
+        f"modules split again); "
         f"{int((module == 0).sum()):,} genes unassigned")
 
     # layouts
@@ -204,6 +249,7 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
     save_npy(os.path.join(gd, "module_scores.npy"), scores.astype(np.float16))
     save_npy(os.path.join(gd, "module_pooled_z.npy"), pooled)
     info = {"version": VERSION, "genes": int(n), "modules": nm, "unassigned": int((module == 0).sum()),
+            "modules_split": int(n_split), "max_module": MAX_MODULE, "loose_cos": LOOSE_COS,
             "edges": int(len(edges)), "k_edges": k_edges, "k_layout": K_LAYOUT, "resolution": resolution,
             "minutes": round((time.time() - t0) / 60, 2)}
     write_json(info, os.path.join(gd, "info.json"))

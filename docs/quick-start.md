@@ -102,12 +102,21 @@ C:\tahoe\.venv\Scripts\python.exe -m tahoemap run --data C:\tahoe\Tahoe-100M --o
 
 ## Resources
 
-| | Time (4–8 cores) | Disk | Memory |
+Measured on the full data (95.6M cells) on a 4-core machine with 15 GB of memory:
+
+| Stage | Time | Disk it adds | Peak memory |
 |---|---|---|---|
-| build (local files) | 30–90 min | 17 GB | ~2.6 GB per worker |
-| build (`--stream`) | 1.5–2.5 h (network-bound) | 17 GB | ~2.6 GB per worker |
-| effects + tensor | 20–40 min | 0.7 GB + 6–8 GB | ~6 GB |
-| tables … map | 15–30 min | ~1–2 GB (vault ~0.5 GB) | ~4 GB |
+| build, `--stream` | ~95 min with 4 workers at ~90 MB/s (network-bound) | 20 GB | ~2.6–3 GB per worker |
+| build, local files | faster than streaming (disk-bound); one worker per plate | 20 GB | ~2.6–3 GB per worker |
+| effects | 10 min | 0.7 GB | 4.6 GB |
+| tensor | 9 min | 3.7 GB, plus 4.4 GB for the per-well tensor (2.2 GB with `--tensor-dtype float16`, none with `--no-well-tensor`) | ~3 GB |
+| tables, embed | 2 + 2 min | < 0.1 GB | 6.8 GB (embed) |
+| reference | ~3 min the first time (downloads ~200 MB), seconds after | 0.2 GB | ~1 GB |
+| relations, graph, validate | 1 + 2 + 1 min | 0.15 GB | ~3 GB |
+| vault, map | 2 min + seconds | 0.6 GB (35,000 notes), 10 MB | ~1.5 GB |
+
+So: about 30 GB of disk in all and ~30 minutes after the build. Build workers are sized from free memory; if one
+is killed for lack of memory the build stops and says so (finished plates are kept): rerun with fewer `--workers`.
 
 ## Test it first (3–5 minutes, no download)
 
