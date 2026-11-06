@@ -6,13 +6,19 @@ what an API error means for the run.
         by others), ANTHROPIC_API_KEYS (comma-separated), ANTHROPIC_API_KEY; with none of those, the SDK's default
         credential chain (`anthropic.Anthropic()` resolves ANTHROPIC_AUTH_TOKEN or an `ant auth` profile).
         current() -> Key        the key to start (or restart) an entity with; when every key is dead it asks for a
-                                new one with getpass on a terminal ("press Enter to stop"), else (and on Enter) it
-                                raises AllKeysDead: the run pauses.
+                                new one with getpass on a terminal ("press Enter to stop"), else (and on Enter or
+                                Ctrl-C) it raises AllKeysDead: the run pauses. The pool lock is never held while it
+                                asks (describe() and the other threads go on); with main_prompts set (the runner's
+                                main loop calls serve_prompt()), a worker thread's request is asked by the main
+                                thread, where Ctrl-C interrupts getpass and getpass restores the terminal.
         mark_dead(key, reason)  the key failed for good (401, 402, 403, spend limit, organization on hold)
         client(key)             one SDK client per key (thread-safe; shared by the threads using that key)
     classify(exc) -> (category, info)
         DEAD_KEY: rotate to the next key and restart the entity; WAIT: back off and retry the same request (no
-        rotation); ENTITY: the entity fails (recorded; the run moves on). `info` is JSON-ready and scrubbed.
+        rotation); ENTITY: the entity fails (recorded; the run moves on). `info` is JSON-ready and scrubbed;
+        info["network"] is True for timeouts and connection errors (also a stream cut mid-response), which the
+        runner retries on a small budget of their own, and info["sent"] says whether the request may have reached
+        the API (False only when the connection was never made), i.e. whether the lost response may be billed.
     key_id(secret)              last 4 characters + a short hash: what the ledger, histories and status show
     scrub(text)                 the text with every known key (and anything shaped like one) replaced by its id
 
@@ -32,12 +38,14 @@ from dataclasses import dataclass, field
 from ..common import log
 
 DEAD_KEY, WAIT, ENTITY = "dead_key", "wait", "entity"
-SDK_MAX_RETRIES = 3                  # the SDK's own retries (429, 5xx, connection) before an error reaches us
+SDK_MAX_RETRIES = 1                  # the SDK's own retries (429, 5xx, connection) before an error reaches us; the
+                                     # runner retries after that (waits; a small budget for timeouts / connections)
 DEFAULT_ID = "default-credentials"   # the key id of the SDK's default credential chain
 
 _SECRETS = {}                        # secret -> key id, for scrub()
 _SECRETS_LOCK = threading.Lock()
 _KEY_SHAPE = re.compile(r"sk-ant-[A-Za-z0-9_\-]{6,}")
+_KEY_LIKE = re.compile(r"^(sk-ant-\S+|[A-Za-z0-9_\-]{40,})$")     # a bare key, not a path
 _BEARER = re.compile(r"(?i)(bearer\s+|x-api-key['\"]?\s*[:=]\s*['\"]?)([A-Za-z0-9_\-\.]{16,})")
 
 
@@ -100,8 +108,18 @@ def _default_chain_works():
 
 
 def read_keys_file(path):
-    """The keys of a keys file (one per line; blank lines and '#' comments ignored). Warns when others can read it."""
-    path = os.path.abspath(os.path.expanduser(path))
+    """The keys of a keys file (one per line; blank lines and '#' comments ignored). Warns when others can read it.
+    A value that looks like a key itself (not a path) is refused without being shown: it would end up in messages
+    and logs."""
+    raw = str(path).strip()
+    base = os.path.basename(raw.rstrip("/\\"))
+    if not os.path.isfile(os.path.expanduser(raw)) and (_KEY_SHAPE.search(raw) or _KEY_LIKE.match(base)):
+        register_secret(base)
+        register_secret(raw)
+        raise ValueError("--keys-file expects the path of a FILE with one key a line; the value given looks like an "
+                         "API key itself (not shown). Put the key in a file (chmod 600) or in ANTHROPIC_API_KEY, and "
+                         "clear it from your shell history.")
+    path = os.path.abspath(os.path.expanduser(raw))
     if not os.path.exists(path):
         raise FileNotFoundError(f"--keys-file {path} does not exist")
     if os.name == "posix":
@@ -128,6 +146,11 @@ class KeyPool:
         self.interactive = (sys.stdin is not None and sys.stdin.isatty()) if interactive is None else interactive
         self.paused = False
         self.on_dead = on_dead
+        self._cond = threading.Condition(self._lock)
+        self._prompting = None               # the thread asking for a key right now
+        self._want_key = False               # a worker waits for the main thread to ask (main_prompts)
+        self.main_prompts = False            # set by the runner while its main loop calls serve_prompt()
+        self.stopping = lambda: False        # the runner's stop flag: no prompt while the run is stopping
         if keys_file:
             for k in read_keys_file(keys_file):
                 self.add(k, f"keys file {os.path.basename(keys_file)}")
@@ -168,28 +191,64 @@ class KeyPool:
             return [k.describe() for k in self.keys]
 
     def current(self):
-        """The first live key; with none: ask on a terminal, else raise AllKeysDead (and stay paused)."""
-        with self._lock:                     # one thread asks; the others wait here and then get its answer
-            for k in self.keys:
-                if not k.dead:
-                    return k
-            if self.paused or not self.interactive:
-                self.paused = True
-                raise AllKeysDead(self._why())
+        """The first live key; with none: ask on a terminal, else raise AllKeysDead (and stay paused). Only one thread
+        asks; the others wait for its answer. The pool lock is not held while asking."""
+        me = threading.current_thread()
+        with self._lock:
+            while True:
+                for k in self.keys:
+                    if not k.dead:
+                        return k
+                if self.paused or not self.interactive or self.stopping():
+                    self.paused = True
+                    raise AllKeysDead(self._why())
+                if self._prompting is not None or (self.main_prompts and me is not threading.main_thread()):
+                    self._want_key = self._want_key or self._prompting is None
+                    self._cond.notify_all()
+                    self._cond.wait(0.25)            # the main thread (or another one) asks; then look again
+                    continue
+                self._prompting = me
+                break
+        self._ask()
+        return self.current()
+
+    def serve_prompt(self):
+        """Main thread (runner loop): ask for a new key when a worker waits for one. True if it asked."""
+        with self._lock:
+            if not self._want_key or self._prompting is not None:
+                return False
+            self._want_key = False
+            if self.paused or any(not k.dead for k in self.keys) or self.stopping():
+                self._cond.notify_all()           # (the waiting workers look again: a key, or AllKeysDead)
+                return False
+            self._prompting = threading.current_thread()
+        self._ask()
+        return True
+
+    def prompting_here(self):
+        """True while this thread is asking for a key (the runner's Ctrl-C handler then interrupts getpass)."""
+        return self._prompting is threading.current_thread()
+
+    def _ask(self):
+        """Ask for a key (getpass) outside the lock; Enter, end of input or Ctrl-C mean: pause."""
+        new = ""
+        try:
             log("Every API key is used up or invalid: " + "; ".join(f"{k.key_id} ({k.reason})" for k in self.keys)
                 if self.keys else "No Anthropic API key found (--keys-file, ANTHROPIC_API_KEYS, ANTHROPIC_API_KEY).")
-            try:
-                new = self._prompt("Paste a new Anthropic API key (it is not saved anywhere), or press Enter to "
-                                   "stop: ")
-            except (EOFError, KeyboardInterrupt, OSError):
-                new = ""
-            if not (new or "").strip():
-                self.paused = True
-                raise AllKeysDead(self._why())
-            k = self.add(new.strip(), "typed in")
-            k.dead, k.reason = False, ""
-            log(f"Using the new key {k.key_id}")
-            return k
+            new = self._prompt("Paste a new Anthropic API key (it is not saved anywhere), or press Enter to stop: ")
+        except (EOFError, KeyboardInterrupt, OSError):
+            new = ""                          # (getpass restores the terminal in its own finally)
+        finally:
+            with self._lock:
+                self._prompting = None
+                self._want_key = False
+                if (new or "").strip():
+                    k = self.add(new.strip(), "typed in")
+                    k.dead, k.reason = False, ""
+                    log(f"Using the new key {k.key_id}")
+                else:
+                    self.paused = True
+                self._cond.notify_all()
 
     def _why(self):
         if not self.keys:
@@ -231,6 +290,31 @@ def _retry_after(exc):
     return None
 
 
+def _chain(exc):
+    seen = []
+    while exc is not None and exc not in seen and len(seen) < 8:
+        seen.append(exc)
+        exc = exc.__cause__ or exc.__context__
+    return seen
+
+
+def _is_transport_error(exc):
+    try:
+        import httpx2
+    except ImportError:
+        return False
+    return isinstance(exc, httpx2.TransportError)
+
+
+def _never_connected(exc):
+    """True when the request certainly never reached the API (the connection itself failed)."""
+    try:
+        import httpx2
+    except ImportError:
+        return False
+    return any(isinstance(e, (httpx2.ConnectError, httpx2.ConnectTimeout, httpx2.PoolTimeout)) for e in _chain(exc))
+
+
 def classify(exc):
     """(category, info) of an exception raised by a request; see the module docstring. The order matters:
     EnforcedSpendLimitReachedError is a RateLimitError and OrganizationOnHoldError a BadRequestError."""
@@ -250,11 +334,17 @@ def classify(exc):
         return DEAD_KEY, info
     if isinstance(exc, AN.APIStatusError) and (status == 402 or etype == "billing_error"):
         return DEAD_KEY, info
-    if isinstance(exc, (AN.RateLimitError, AN.InternalServerError, AN.APIConnectionError)):
-        return WAIT, info                  # APITimeoutError is an APIConnectionError; OverloadedError (529) a 5xx
+    if isinstance(exc, AN.APIConnectionError) or _is_transport_error(exc):
+        info["network"] = True             # APITimeoutError is an APIConnectionError; a raw httpx2 error: the stream
+        info["sent"] = not _never_connected(exc)    # was cut mid-response
+        return WAIT, info
+    if isinstance(exc, (AN.RateLimitError, AN.InternalServerError)):
+        return WAIT, info                  # OverloadedError (529) is a 5xx
     if isinstance(exc, AN.APIStatusError):
         if (status or 0) >= 500 or status in (408, 409):
             return WAIT, info              # 408 / 409: retried by the SDK too
+        if status == 200 and etype in ("overloaded_error", "api_error", "rate_limit_error", "timeout_error"):
+            return WAIT, info              # an error event in the middle of a stream (HTTP status 200)
         return ENTITY, info                # 400 (not billing), 404, 413, 422 ...
     if isinstance(exc, getattr(AN, "CredentialsError", ())) or (
             isinstance(exc, TypeError) and "resolve authentication method" in str(exc)):

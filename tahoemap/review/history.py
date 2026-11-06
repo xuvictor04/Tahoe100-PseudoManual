@@ -86,20 +86,54 @@ def to_jsonable(obj):
     return json.loads(json.dumps(obj, default=_default))
 
 
+def _ends_without_newline(path):
+    try:
+        with open(path, "rb") as fh:
+            fh.seek(0, os.SEEK_END)
+            if fh.tell() == 0:
+                return False
+            fh.seek(-1, os.SEEK_END)
+            return fh.read(1) != b"\n"
+    except OSError:
+        return False
+
+
 def append_line(path, rec):
-    """Append one scrubbed JSON line (atomic with respect to the other threads of this process)."""
+    """Append one scrubbed JSON line (atomic with respect to the other threads of this process). If the file ends
+    in a cut line (a crash or a full disk during an earlier write), a newline goes first, so the fragment stays a
+    line of its own (skipped by read_jsonl) and the new line is kept whole."""
     line = scrub(json.dumps(rec, default=_default, ensure_ascii=False))
     with _file_lock(path):
+        lead = "\n" if _ends_without_newline(path) else ""
         with open(path, "a", encoding="utf-8") as fh:
-            fh.write(line + "\n")
+            fh.write(lead + line + "\n")
             fh.flush()
 
 
+_DECODER = json.JSONDecoder()
+
+
+def _recover(line):
+    """A JSON object glued to the end of a cut line (written before the newline guard existed), or None."""
+    i = line.find("{", 1)
+    while i > 0:
+        try:
+            obj, end = _DECODER.raw_decode(line, i)
+            if end == len(line) and isinstance(obj, dict):
+                return obj
+        except ValueError:
+            pass
+        i = line.find("{", i + 1)
+    return None
+
+
 def read_jsonl(path):
+    """The JSON objects of a JSONL file. A line cut by a crash is skipped; a whole line glued to its end (an older
+    file without the newline guard) is kept."""
     out = []
     if not os.path.exists(path):
         return out
-    with open(path, encoding="utf-8") as fh:
+    with open(path, encoding="utf-8", errors="replace") as fh:
         for line in fh:
             line = line.strip()
             if not line:
@@ -107,7 +141,9 @@ def read_jsonl(path):
             try:
                 out.append(json.loads(line))
             except ValueError:
-                continue                                    # a line cut by a crash: skip it
+                obj = _recover(line)                        # a cut line, perhaps with a whole line after it
+                if obj is not None:
+                    out.append(obj)
     return out
 
 
@@ -120,13 +156,15 @@ class History:
         self.closed = False
         self._lock = threading.Lock()
 
-    def event(self, kind, **data):
+    def event(self, kind, late=False, **data):
+        """Append one event; after the end event only `late` ones (a response that arrived after the attempt was
+        closed, so its cost is on record)."""
         with self._lock:
-            if self.closed:
+            if self.closed and not late:
                 return
             if kind == "end":
                 self.closed = True
-            append_line(self.path, {"event": kind, "time": now(), **data})
+            append_line(self.path, {"event": kind, "time": now(), **({"late": True} if late else {}), **data})
 
     def tool(self, agent, name, tool_input, result, is_error, seconds):
         text = str(result)
@@ -176,24 +214,30 @@ class Ledger:
         return read_jsonl(self.path)
 
     def latest(self):
-        """entity_id -> its latest ledger line."""
+        """entity_id -> its latest ledger line (bookkeeping "note" lines left out)."""
         out = {}
         for r in self.read():
-            if r.get("entity_id"):
+            if r.get("entity_id") and not r.get("note"):
                 out[r["entity_id"]] = r
         return out
 
     def states(self):
         """entity_id -> {status, n_failed (failed / no_review attempts since the last other outcome), cost_usd (all
-        attempts), attempts, last (the latest line)}."""
+        attempts), attempts, last (the latest line)}. Bookkeeping lines ("note": the cost of a response that came
+        after its attempt ended; "uncount_failed": a failure the run put down to a systematic error) change the
+        cost or the failure count, not the state."""
         st = {}
         for r in self.read():
             e = r.get("entity_id")
             if not e:
                 continue
             s = st.setdefault(e, {"status": None, "n_failed": 0, "cost_usd": 0.0, "attempts": 0, "last": None})
-            s["attempts"] += 1
             s["cost_usd"] += float(r.get("cost_usd") or 0.0)
+            if r.get("note"):
+                if r.get("uncount_failed"):
+                    s["n_failed"] = max(0, s["n_failed"] - 1)
+                continue
+            s["attempts"] += 1
             if r.get("status") in ("failed", "no_review"):
                 s["n_failed"] += 1
             elif r.get("status") in ("done", "refused", "over_budget"):

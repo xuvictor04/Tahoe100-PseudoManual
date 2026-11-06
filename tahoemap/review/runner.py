@@ -71,14 +71,22 @@ from ..common import log, safe_filename, write_json, write_parquet
 AGENTS = {"gene": "gene-reviewer", "drug": "drug-reviewer", "line": "line-reviewer"}
 CHECKER = "citation-checker"
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
-MAX_TOKENS = 32_000                 # per response (thinking included); > 21,333 needs an explicit timeout (SDK)
-REQUEST_TIMEOUT = 1200.0            # seconds, per request
+# max_tokens per response (thinking included) by effort; every request is streamed, so no HTTP timeout limits it
+MAX_TOKENS = {"low": 64_000, "medium": 64_000, "high": 64_000, "xhigh": 128_000, "max": 128_000}
+MAX_TOKENS_64K = ("claude-haiku-4-5",)     # models whose output ceiling is 64K
+STREAM_TIMEOUT = 600.0              # seconds without a byte on a streamed response (the API sends pings): lost
 FINAL = ("done", "refused")
 MAX_FAILED = 3                      # failed / no_review attempts in a row before an entity is left alone
 MAX_WAITS = 12                      # back-offs of one request before the entity fails (~1 h at the 10-min cap)
+MAX_NET_RETRIES = 2                 # re-sends of a request lost to a timeout / dropped connection (after the SDK's own)
 BACKOFF_BASE, BACKOFF_MAX = 5.0, 600.0
 STOP_GRACE = 15.0                   # seconds the running entities get to notice Ctrl-C before they are marked paused
-EXIT_OK, EXIT_REFUSED, EXIT_PAUSED, EXIT_SIGINT, EXIT_SIGTERM = 0, 2, 3, 130, 143
+SYSTEMATIC_N = 5                    # the same error on this many entities in a row stops the run
+BUDGET_WARN, TURNS_WARN = 0.75, 3   # the agent is told to wrap up past 75% of its cap or 3 requests before max_turns
+EXIT_OK, EXIT_REFUSED, EXIT_PAUSED, EXIT_SYSTEMATIC = 0, 2, 3, 4
+EXIT_SIGHUP, EXIT_SIGINT, EXIT_SIGTERM = 129, 130, 143
+CHECK_STATUS = {"supported": "supported", "partly": "partly", "not supported": "not_supported",
+                "not checkable": "not_checkable"}
 
 # USD per million tokens: (input, output, cache read). Cache writes: 1.25x input (5-minute), 2x (1-hour).
 PRICES = {
@@ -108,6 +116,11 @@ NUDGE_END = ("You ended your turn without calling {tool}. The {what} is only sto
              "with every field filled (use [] for empty sections).")
 NUDGE_MAX = ("Your last response was cut off at the output limit{cut}. Keep the reasoning short and call {tool} "
              "now; shorten long fields (note_markdown at most ~600 words) if needed.")
+BUDGET_LINE = "[runner] Budget: {spent} of {cap} used; {turns} of {max_turns} requests made."
+BUDGET_NEAR = (" Little is left: stop searching and call {tool} soon with what you have (an attempt that runs out "
+               "stores nothing).")
+BUDGET_LAST = (" This is your last request: call {tool} now with what you have, with every field filled; anything "
+               "else ends the attempt and nothing is stored.")
 
 SLEEP = lambda seconds, stop_event: stop_event.wait(seconds)  # noqa: E731  (patched by tests; True = stopped)
 
@@ -210,6 +223,8 @@ class Options:
     web_max_uses: int = 5
     keys_file: str = None
     redo: bool = False
+    retry_failed: bool = False          # retry failed / no_review entities even after MAX_FAILED attempts
+    recheck: bool = False               # only re-run the verification of stored reviews that lack it (see recheck)
     dry_run: bool = False
     fake: object = None                 # path of a fake script, or a fake.FakeAPI (tests)
     no_cap: bool = False
@@ -308,15 +323,15 @@ def entity_cap(run_or_opts, agent):
     return float(p) if p else float(agent.max_usd)
 
 
-def to_run(state, redo, cap):
+def to_run(state, redo, cap, retry_failed=False):
     """(run it?, why not) for one entity's ledger state."""
     if redo or state is None:
         return True, ""
     st = state["status"]
     if st in FINAL:
         return False, st
-    if st in ("failed", "no_review") and state["n_failed"] >= MAX_FAILED:
-        return False, f"{st} {state['n_failed']} times"
+    if st in ("failed", "no_review") and state["n_failed"] >= MAX_FAILED and not retry_failed:
+        return False, f"{st} {state['n_failed']} times (--retry-failed retries it)"
     if st == "over_budget" and cap <= float((state["last"] or {}).get("cap_usd") or 0) + 1e-9:
         return False, "over_budget (raise --per-entity-usd to retry)"
     return True, ""
@@ -412,6 +427,25 @@ class Run:
         self.cap_hit = False
         self.keys_paused = False
         self.code = code_version()
+        self.streak = []                # the failed attempts in a row with the same error: (sig, entity_id, rec)
+        self.systematic = None          # (signature, error) once SYSTEMATIC_N in a row stopped the run
+        pool.stopping = self.stop.is_set
+
+    def outcome(self, att, status, rec):
+        """Called once per finished attempt: tracks the same error on entity after entity (keys_state#1)."""
+        with self.lock:
+            sig = att.fail_sig if status == "failed" else None
+            if sig is not None:
+                if self.streak and self.streak[-1][0] != sig:
+                    self.streak = []
+                self.streak.append((sig, att.entity_id, rec))
+                if len(self.streak) >= SYSTEMATIC_N and self.systematic is None:
+                    self.systematic = (sig, rec.get("error") or "")
+            elif status in ("done", "refused", "no_review", "over_budget"):
+                self.streak = []
+        if self.systematic is not None and sig is not None and not self.stop.is_set():
+            self.request_stop(f"the same error on {SYSTEMATIC_N} entities in a row ({' '.join(map(str, sig))})")
+            log(f"STOPPING: the same error on {SYSTEMATIC_N} entities in a row: {K.scrub(self.systematic[1])[:300]}")
 
     def add_spend(self, usd):
         with self.lock:
@@ -460,14 +494,24 @@ def new_run_id():
     return time.strftime("%Y%m%d-%H%M%S") + "-" + "%06x" % random.randrange(16 ** 6)
 
 
+def max_tokens_for(model, effort):
+    """max_tokens of one response (thinking included): 64K up to effort high, 128K at xhigh / max (64K on models
+    whose ceiling is 64K)."""
+    n = MAX_TOKENS.get(effort, 64_000)
+    if any(str(model or "").startswith(m) for m in MAX_TOKENS_64K):
+        n = min(n, 64_000)
+    return n
+
+
 def build_request(agent, web=True, web_max_uses=5):
-    """The static part of every request of one agent (messages are added per call)."""
-    kw = {"model": agent.model, "max_tokens": MAX_TOKENS,
+    """The static part of every request of one agent (messages are added per call); sent with
+    client.beta.messages.stream(**kw)."""
+    kw = {"model": agent.model, "max_tokens": max_tokens_for(agent.model, agent.effort),
           "system": [{"type": "text", "text": agent.system, "cache_control": {"type": "ephemeral"}}],
           "tools": TL.tool_definitions(agent, web=web, max_uses=web_max_uses),
           "output_config": {"effort": agent.effort},
           "cache_control": {"type": "ephemeral"},
-          "timeout": REQUEST_TIMEOUT}
+          "timeout": STREAM_TIMEOUT}
     if "haiku" not in agent.model:                 # no server-side fallback for Haiku
         kw["betas"] = [FALLBACK_BETA]
         kw["fallbacks"] = "default"
@@ -481,7 +525,17 @@ def request_settings(kw):
 
 
 class _Stopped(Exception):
+    def __init__(self, message=""):
+        super().__init__(message)
+        self.message = message
+
+
+class _OverBudget(Exception):
     pass
+
+
+class _StreamCut(Exception):
+    """The stream ended (without an error) before the response was complete."""
 
 
 class _KeyDead(Exception):

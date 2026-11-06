@@ -25,7 +25,8 @@ process, retries with exponential backoff (429 / 5xx / network errors; Retry-Aft
         with NCBI_API_KEY; the polite `tool` / `email` parameters come from HttpSettings (env NCBI_TOOL,
         NCBI_EMAIL).
     Europe PMC REST search (europepmc_search; also abstracts of DOI-only papers for verification): 3 requests/s.
-    Crossref works/<doi> (verification of DOIs that Europe PMC does not know): 3 requests/s, `mailto` when known.
+    Crossref works/<doi> (verification of DOIs: existence when Europe PMC does not know them, and retraction
+        status from the record's update notices): 3 requests/s, `mailto` when known.
 Cache: OUT/review/cache/<service>/<xx>/<sha1>.json. Records fetched by id (esummary, efetch, Crossref) are kept
 forever, except "does not exist" answers (1 day: a brand-new PMID can be missing for a few hours); search results
 are reused for HttpSettings.search_max_age_days (default 30). API keys and e-mail addresses never enter the cache
@@ -260,23 +261,48 @@ def http_get(ctx, service, url, params, max_age_days=None, cache=True):
 _PMID = re.compile(r"^(?:pmid\s*[:#]?\s*|https?://(?:www\.)?(?:pubmed\.ncbi\.nlm\.nih\.gov|ncbi\.nlm\.nih\.gov/pubmed)/)"
                    r"?(\d{1,9})/?$", re.I)
 _DOI = re.compile(r"^(?:doi\s*:?\s*|https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}/\S+)$", re.I)
+# A DOI inside running text or a URL: Crossref's recommended character set (- . _ ; : / letters digits), plus the
+# < > # + of old SICI DOIs and the % of URL-encoded ones, with parentheses only in balanced pairs - so
+# 'DOI:10.1016/S0092-8674(00)81096-3' is read whole, and the ')' that closes a markdown link or a remark is not
+# taken. trim_doi() then drops the punctuation that ends the sentence around it.
+_DOI_CH = r"[-._;:/A-Za-z0-9<>#+%]"
+DOI_BODY = r"10\.\d{4,9}/(?:" + _DOI_CH + r"|\(" + _DOI_CH + r"*\))+"
+
+
+def trim_doi(d):
+    """A DOI matched in text without trailing sentence punctuation (. , ; : quotes) or an unmatched '>' / ')'."""
+    while True:
+        e = d.rstrip(".,;:'\"")
+        if (e.endswith(">") and e.count("<") < e.count(">")) or (e.endswith(")") and e.count("(") < e.count(")")):
+            e = e[:-1]
+        if e == d:
+            return d
+        d = e
+
+
+def clean_doi(raw):
+    """(doi, rest): a DOI matched in text -> unquoted, lower-cased, trimmed; rest = the trimmed-off characters."""
+    d = trim_doi(raw)
+    return urllib.parse.unquote(d).lower(), raw[len(d):]
 
 
 def norm_citation(s):
-    """'PMID:123' / 'DOI:10.x/y' for a PMID or DOI in any common spelling (bare digits = PMID); None otherwise."""
+    """'PMID:123' / 'DOI:10.x/y' for a PMID or DOI in any common spelling (bare digits = PMID; doi.org URLs, also
+    percent-encoded); None otherwise."""
     t = str(s or "").strip().rstrip(".,;")
     m = _PMID.match(t)
     if m:
         return f"PMID:{int(m.group(1))}"
     m = _DOI.match(t)
     if m:
-        return "DOI:" + m.group(1).lower()
+        return "DOI:" + clean_doi(m.group(1))[0]
     return None
 
 
 def citation_url(cid):
+    """The link of a citation id; a DOI is percent-encoded, so its ( ) < > never end a markdown link early."""
     kind, v = cid.split(":", 1)
-    return PUBMED_URL.format(v) if kind == "PMID" else DOI_URL.format(v)
+    return PUBMED_URL.format(v) if kind == "PMID" else DOI_URL.format(urllib.parse.quote(v, safe="/"))
 
 
 def link(cid):
@@ -293,13 +319,29 @@ def _summary_line(s):
     au = [a.get("name", "") for a in s.get("authors") or [] if a.get("authtype", "Author") == "Author"]
     who = (au[0] + (" ... " + au[-1] if len(au) > 2 else (", " + au[1] if len(au) == 2 else ""))) if au else ""
     flags = ""
-    if any("Retract" in p for p in s.get("pubtype") or []):
-        flags = " | RETRACTED / RETRACTION NOTICE"
+    if retraction_status(s.get("pubtype")) == "retracted":
+        flags = " | RETRACTED: do not cite as support"
+    elif retraction_status(s.get("pubtype")) == "notice":
+        flags = " | RETRACTION NOTICE (a notice, not the retracted paper)"
     has_abs = "Has Abstract" in (s.get("attributes") or [])
     title = re.sub(r"\s+", " ", s.get("title") or "").strip()
     return (f"PMID {pid} | {year} | {s.get('source', '')} | {'; '.join(pt) or 'Journal Article'}{flags} | {title} | "
             f"{who}{f' ({len(au)} authors)' if len(au) > 2 else ''}" + (f" | DOI {doi}" if doi else "")
             + ("" if has_abs else " | no abstract"))
+
+
+def retraction_status(pubtypes):
+    """'retracted' (the paper was retracted: PubMed type 'Retracted Publication'), 'notice' (it is itself a
+    retraction notice: 'Retraction of Publication') or '' - from PubMed or Europe PMC publication types (a list, or
+    Europe PMC's '; '-separated string; any letter case)."""
+    if isinstance(pubtypes, str):
+        pubtypes = pubtypes.split(";")
+    pt = {str(p).strip().lower() for p in pubtypes or []}
+    if "retracted publication" in pt:
+        return "retracted"
+    if "retraction of publication" in pt:
+        return "notice"
+    return ""
 
 
 def esummary_records(ctx, pmids):
@@ -428,7 +470,10 @@ def format_record(r, max_chars=ABSTRACT_CHARS):
     au = r.get("authors") or []
     who = ", ".join(au[:3]) + (f", ... ({len(au)} authors)" if len(au) > 3 else "")
     pt = "; ".join(r.get("pubtypes") or []) or "Journal Article"
-    head = [f"=== PMID {r['pmid']} ===" + ("  [RETRACTED: do not cite as support]" if r.get("retracted") else ""),
+    mark = ("  [RETRACTED: do not cite as support]" if r.get("retracted") else
+            "  [RETRACTION NOTICE: a notice, not the retracted paper]"
+            if retraction_status(r.get("pubtypes")) == "notice" else "")
+    head = [f"=== PMID {r['pmid']} ===" + mark,
             f"Title: {r.get('title') or '-'}",
             f"Journal: {r.get('journal') or '-'} ({r.get('year') or '?'}) | Type: {pt}"
             + (f" | DOI {r['doi']}" if r.get("doi") else "") + (f" | {r['pmcid']}" if r.get("pmcid") else ""),
@@ -572,19 +617,42 @@ def europepmc_search(ctx, query, max_results):
 
 
 # ----------------------------------------------------------------------------- Crossref (verification)
+_RETRACT_UPDATES = ("retraction", "withdrawal", "removal")
+
+
+def crossref_work(ctx, doi):
+    """What verification needs of a DOI's Crossref record: {"exists", "retracted", "notice_of"}. exists False on a
+    404. retracted: the record's "updated-by" (Crossref's update notices, which include the Retraction Watch data)
+    holds a retraction, withdrawal or removal. notice_of: the DOIs this record's "update-to" retracts, i.e. the
+    DOI is itself a retraction notice. Cached (a "does not exist" answer for 1 day; retraction status for
+    HttpSettings.search_max_age_days, since a paper can be retracted later). Raises ToolError when Crossref cannot
+    be reached."""
+    key = hashlib.sha1(doi.lower().encode()).hexdigest()
+    rec = cache_get(ctx, "crossref_work", key)
+    if rec is not None and time.time() - rec["fetched"] < (
+            ctx.http.search_max_age_days * 86400 if rec.get("exists") else 86400):
+        return {k: rec.get(k) for k in ("exists", "retracted", "notice_of")}
+    try:
+        body = http_get(ctx, "crossref", CROSSREF + urllib.parse.quote(doi, safe="/"), {}, cache=False)
+        try:
+            msg = (json.loads(body) or {}).get("message") or {}
+        except ValueError:
+            msg = {}
+
+        def kinds(field):
+            return [u for u in msg.get(field) or [] if isinstance(u, dict)
+                    and str(u.get("type", "")).lower() in _RETRACT_UPDATES]
+        out = {"exists": True, "retracted": bool(kinds("updated-by")),
+               "notice_of": [str(u.get("DOI", "")).lower() for u in kinds("update-to")]}
+    except NotFoundError:
+        out = {"exists": False, "retracted": False, "notice_of": []}
+    cache_put(ctx, "crossref_work", key, dict(out, doi=doi))
+    return out
+
+
 def crossref_exists(ctx, doi):
     """True / False (404) for a DOI; raises ToolError when Crossref cannot be reached."""
-    key = hashlib.sha1(doi.lower().encode()).hexdigest()
-    rec = cache_get(ctx, "crossref", key)
-    if rec is not None and (rec.get("exists") or time.time() - rec["fetched"] < 86400):
-        return bool(rec.get("exists"))
-    try:
-        http_get(ctx, "crossref", CROSSREF + urllib.parse.quote(doi, safe="/"), {}, cache=False)
-        ok = True
-    except NotFoundError:
-        ok = False
-    cache_put(ctx, "crossref", key, {"exists": ok, "doi": doi})
-    return ok
+    return bool(crossref_work(ctx, doi)["exists"])
 
 
 # ----------------------------------------------------------------------------- tahoe_lookup
@@ -665,6 +733,11 @@ SUBMIT_REVIEW = {
         "connection_verdicts": _arr(_obj({
             "partner": _s("a gene symbol as in the dossier; 'drug:<name>' or 'line:<name>' for drugs and lines"),
             "verdict": {"type": "string", "enum": list(VERDICTS), "description": "connection-audit rubric"},
+            "relation": _s("one sentence: what the cited papers report about the two, with its direction (e.g. "
+                           "'each is an NRF2 target induced by electrophiles'); for plausible / unexpected the "
+                           "reasoning, or 'no paper found'"),
+            "data_evidence": _s("the relation in this run's data with its direction and numbers (e.g. 'moves "
+                                "opposite: cos -0.37, both halves, fdr 0.01'; 'raised 3.2x at 5 uM, z +8.1')"),
             "citations": _CIT_ITEMS}), "one verdict per data partner (or drug / line) examined"),
         "open_questions": _arr({"type": "string"}, "questions the data raise that the literature does not answer"),
         "note_markdown": _s("the vault note section (writing-the-note); citations as "
@@ -808,8 +881,11 @@ def schema_errors(payload, tool):
     return errs
 
 
-_LINK = re.compile(r"\[[^\]]*\]\([^)]*\)")
-_BARE = re.compile(r"\b(?:PMID\s*:?\s*(\d{4,9})|DOI\s*:\s*(10\.\d{4,9}/[^\s\])>,;]+))", re.I)
+_LINK = re.compile(r"\[[^\]]*\]\((?:[^()]|\([^()]*\))*\)")          # a markdown link; one level of ( ) in the URL
+_BARE = re.compile(r"\b(?:PMID\s*:?\s*(\d{4,9})(?!\d)|DOI\s*:\s*(" + DOI_BODY + "))", re.I)
+_REMOVED = " (citation removed"                                       # verify's marker after a removed id
+_NOTE_PMID = re.compile(r"pubmed\.ncbi\.nlm\.nih\.gov/(\d{1,9})|\bPMID\s*:?\s*(\d{4,9})(?!\d)", re.I)
+_NOTE_DOI = re.compile(r"doi\.org/(" + DOI_BODY + r")|\bDOI\s*:\s*(" + DOI_BODY + ")", re.I)
 
 
 def link_citations(md):
@@ -825,14 +901,41 @@ def link_citations(md):
 
 def _link_bare(s):
     def rep(m):
-        cid = f"PMID:{int(m.group(1))}" if m.group(1) else "DOI:" + m.group(2).rstrip(".").lower()
-        return link(cid)
+        if m.group(1):
+            cid, rest = f"PMID:{int(m.group(1))}", ""
+        else:
+            doi, rest = clean_doi(m.group(2))
+            cid = "DOI:" + doi
+        if m.string.startswith(_REMOVED, m.end() - len(rest)):
+            return m.group(0)                        # an id verification removed: plain text, as it put it
+        return link(cid) + rest
     return _BARE.sub(rep, s)
 
 
-def cited_ids(review):
-    """Every citation id of a review payload: (normalised id, section, index) for the item lists, plus the ids
-    linked or named in note_markdown (section 'note_markdown', index -1)."""
+def note_ids(md):
+    """[(citation id, start, end)] of every PMID / DOI linked or named in a note, except those already marked
+    '(citation removed ...)' by verification."""
+    out = []
+    for m in _NOTE_PMID.finditer(md):
+        if not md.startswith(_REMOVED, m.end()):
+            out.append((f"PMID:{int(m.group(1) or m.group(2))}", m.start(), m.end()))
+    for m in _NOTE_DOI.finditer(md):
+        g = 1 if m.group(1) else 2
+        doi, rest = clean_doi(m.group(g))
+        end = m.end(g) - len(rest)
+        if not md.startswith(_REMOVED, end):
+            out.append(("DOI:" + doi, m.start(), end))
+    return out
+
+
+def item_ids(review):
+    """The citation ids of the review's items (established, missing, contradicted, connection_verdicts)."""
+    return list(dict.fromkeys(c for c, sec, _i in cited_ids(review, note=False)))
+
+
+def cited_ids(review, note=True):
+    """Every citation id of a review payload: (normalised id, section, index) for the item lists, plus (note=True)
+    the ids linked or named in note_markdown (section 'note_markdown', index -1)."""
     out = []
     for sec in ("established", "missing", "contradicted", "connection_verdicts"):
         for i, it in enumerate(review.get(sec) or []):
@@ -840,17 +943,23 @@ def cited_ids(review):
                 n = norm_citation(c)
                 if n:
                     out.append((n, sec, i))
-    md = review.get("note_markdown") or ""
-    for m in re.finditer(r"pubmed\.ncbi\.nlm\.nih\.gov/(\d{1,9})|\bPMID\s*:?\s*(\d{4,9})", md, re.I):
-        out.append((f"PMID:{int(m.group(1) or m.group(2))}", "note_markdown", -1))
-    for m in re.finditer(r"doi\.org/(10\.\d{4,9}/[^\s)\]]+)|\bDOI\s*:\s*(10\.\d{4,9}/[^\s\])>,;]+)", md, re.I):
-        out.append(("DOI:" + (m.group(1) or m.group(2)).rstrip(".").lower(), "note_markdown", -1))
+    if note:
+        out += [(c, "note_markdown", -1) for c, _a, _b in note_ids(review.get("note_markdown") or "")]
     return out
 
 
-def normalize_review(payload):
-    """(normalised copy, problems): citations as 'PMID:n' / 'DOI:x' (unreadable ones are problems), bare ids in
-    note_markdown linked, whitespace trimmed."""
+def _is_review(ctx, cid):
+    """True when cid is a PMID whose PubMed record (in the cache: the agent has read it) is a review."""
+    if ctx is None or not cid.startswith("PMID:"):
+        return False
+    rec = (cache_get(ctx, "ncbi_record", cid.split(":", 1)[1]) or {}).get("record") or {}
+    return any("Review" in p for p in rec.get("pubtypes") or [])
+
+
+def normalize_review(payload, ctx=None):
+    """(normalised copy, problems): citations as 'PMID:n' / 'DOI:x' (unreadable ones are problems), the verdicts
+    the rubric requires citations for ('established', 'contradicted'; 'indirect': two, or one review - ctx gives
+    the cached PubMed records), bare ids in note_markdown linked, whitespace trimmed."""
     errs = schema_errors(payload, SUBMIT_REVIEW)
     if errs:
         return None, errs
@@ -874,9 +983,19 @@ def normalize_review(payload):
         if not it["citations"]:
             errs.append(f"contradicted[{i}]: a contradiction needs the citation that reports the opposite")
     for i, it in enumerate(r["connection_verdicts"]):
+        who = f"connection_verdicts[{i}] ({it['partner'][:40]})"
         if it["verdict"] in ("established", "contradicted") and not it["citations"]:
-            errs.append(f"connection_verdicts[{i}] ({it['partner'][:40]}): verdict '{it['verdict']}' needs a "
-                        "citation")
+            errs.append(f"{who}: verdict '{it['verdict']}' needs a citation")
+        elif it["verdict"] == "indirect" and len(it["citations"]) < 2 and not (
+                it["citations"] and _is_review(ctx, it["citations"][0])):
+            errs.append(f"{who}: verdict 'indirect' needs the papers placing both under the shared regulator or "
+                        "process - at least one citation per gene (or drug), or one review naming both; without "
+                        "them it is 'plausible'")
+        for k in ("relation", "data_evidence"):
+            it[k] = it[k].strip()
+            if not it[k]:
+                errs.append(f"{who}.{k}: empty (say what the papers report, and the direction and numbers in the "
+                            "data, so that the verdict can be checked)")
     if not r["summary"].strip():
         errs.append("summary: empty")
     if not r["note_markdown"].strip():
@@ -888,22 +1007,29 @@ def normalize_review(payload):
 
 def submit_review(ctx, payload):
     ctx.submit_attempts += 1
-    r, errs = normalize_review(payload)
+    r, errs = normalize_review(payload, ctx)
     if errs:
         raise ToolError("The review was not accepted; fix these and call submit_review again:\n- "
                         + "\n- ".join(errs[:40]))
     ids = list(dict.fromkeys(c for c, _s_, _i in cited_ids(r)))
     unread = [c for c in ids if c.startswith("PMID:") and c not in ctx.read_ids]
     unseen = [c for c in ids if c.startswith("DOI:") and c not in ctx.seen_ids]
-    if (unread or unseen) and not ctx.notes.get("retrieval_warned"):
+    in_items = set(item_ids(r))
+    note_only = [c for c in dict.fromkeys(x for x, _a, _b in note_ids(r["note_markdown"])) if c not in in_items]
+    if (unread or unseen or note_only) and not ctx.notes.get("retrieval_warned"):
         ctx.notes["retrieval_warned"] = True
-        msg = ["The review was not accepted yet: it cites papers this session has not retrieved."]
+        msg = ["The review was not accepted yet:"]
         if unread:
             msg.append(f"- PMIDs whose abstracts were not read (read them with pubmed_abstracts, or remove the "
                        f"citations): {', '.join(unread[:30])}")
         if unseen:
             msg.append(f"- DOIs no search returned (find them with europepmc_search 'DOI:\"...\"', or remove the "
                        f"citations): {', '.join(unseen[:30])}")
+        if note_only:
+            msg.append(f"- papers cited in note_markdown but in no item's citations, so no claim of the review is "
+                       f"checked against them; they are removed from the note unless an item cites them (add them "
+                       f"to the item whose claim they support, or take them out of the note): "
+                       f"{', '.join(note_only[:30])}")
         msg.append("Then call submit_review again.")
         raise ToolError("\n".join(msg))
     ctx.notes["not_retrieved"] = unread + unseen

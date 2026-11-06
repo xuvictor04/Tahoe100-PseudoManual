@@ -252,7 +252,9 @@ class FakeAPI:
 
     def _auto_check(self, prompt):
         ids = _CLAIM_RE.findall(prompt)
-        return {"verdicts": [{"claim_id": c, "verdict": "supported", "reason": "fake check: the abstract says so"}
+        return {"verdicts": [{"claim_id": c, "verdict": "supported", "reason": "fake check: the abstract says so",
+                              "direction": {"M": "not applicable", "C": "opposite to the data"}.get(
+                                  c[0], "same as the data")}
                              for c in ids], "summary": f"fake check of {len(ids)} claims"}
 
     def _error(self, req, step):
@@ -500,8 +502,11 @@ def sample_review(partner="NQO1", pmids=("31000001",), note=None):
                      "data_status": "cos 0.05, not among the 100 partners", "likely_reason": "regulated post-"
                      "translationally", "citations": cits[:1]}],
         "contradicted": [],
-        "connection_verdicts": [{"partner": partner, "verdict": "established", "citations": cits},
-                                {"partner": "GENE_X", "verdict": "unexpected", "citations": []}],
+        "connection_verdicts": [{"partner": partner, "verdict": "established", "relation": "both NRF2 targets, "
+                                 "co-induced by electrophiles", "data_evidence": "moves with: cos 0.71, both halves",
+                                 "citations": cits},
+                                {"partner": "GENE_X", "verdict": "unexpected", "relation": "no paper found",
+                                 "data_evidence": "moves opposite: cos -0.52", "citations": []}],
         "open_questions": ["Why does GENE_X move opposite?"],
         "note_markdown": note or f"## What the literature says\n\n{partner} is a known partner {links}.\n",
     }
