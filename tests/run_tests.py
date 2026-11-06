@@ -56,7 +56,7 @@ def ensure_data(work, seed, regen):
 
 def run_pipeline(data, out, extra=()):
     cmd = [sys.executable, "-m", "tahoemap", "run", "--data", data, "--out", out, "--min-cells", "10",
-           "--offline", "--dims", "32", *extra]
+           "--offline", "--dims", "32", "--truth", os.path.join(data, "ground_truth.json"), *extra]
     print("Running:", " ".join(cmd), flush=True)
     t0 = time.time()
     r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True)

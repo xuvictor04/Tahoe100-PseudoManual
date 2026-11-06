@@ -1,4 +1,4 @@
-"""stream - the build without the 430 GB download: every expression file is fetched from Hugging Face, summed into
+"""stream - the build driver, and the build without the 430 GB download: every expression file is fetched from Hugging Face, summed into
 its plate's pseudobulk, and deleted. Disk need: the pseudobulk only (~17 GB), plus ~1 GB of files in flight.
 
 The summing is the ported atlas_core._build_group itself, unchanged: in each worker process the module's
@@ -242,18 +242,73 @@ def build(args, hf_dir):
         workers = max(1, min(workers, int(mem / per_worker)))
     log(f"{len(rels)} files on {len(plates)} plates, streamed from Hugging Face -> one group per plate, "
         f"{workers} at a time (~{per_worker:.1f} GB each)")
-    order = sorted(jobs, key=lambda j: -len(j[2]))            # biggest plates first: a shorter tail
-    t0, done, cells = time.time(), 0, 0
-    ctx = mp.get_context("spawn")
-    with ctx.Pool(workers, initializer=_init_worker, initargs=(next_of, tmp)) as pool:
-        for _gid, name, nc, reused in pool.imap_unordered(A._build_group, order, chunksize=1):
-            done += 1
-            cells += nc
-            log(f"  {name} {'already built' if reused else 'done'} ({done}/{len(jobs)} plates, "
-                f"{(time.time() - t0) / 60:.1f} min)")
+    run_groups(jobs, workers, initializer=_init_worker, initargs=(next_of, tmp))
     for f in glob.glob(os.path.join(tmp, "*")):              # the last file of each plate
         os.remove(f)
     finish_build(args, idx, len(jobs), "streamed from Hugging Face")
+
+
+def run_groups(jobs, workers, initializer=None, initargs=()):
+    """Run atlas_core._build_group (verbatim) for every plate group, biggest first, `workers` at a time.
+
+    A process pool that loses a worker (most often: killed for lack of memory) makes multiprocessing.Pool wait
+    forever; this executor raises instead, and finished plates are kept for the next run."""
+    from concurrent.futures import ProcessPoolExecutor, as_completed
+    from concurrent.futures.process import BrokenProcessPool
+    order = sorted(jobs, key=lambda j: -len(j[2]))            # biggest plates first: a shorter tail
+    t0, done = time.time(), 0
+    try:
+        with ProcessPoolExecutor(workers, mp_context=mp.get_context("spawn"), initializer=initializer,
+                                 initargs=initargs) as ex:
+            futs = [ex.submit(A._build_group, j) for j in order]
+            for fu in as_completed(futs):
+                _gid, name, _nc, reused = fu.result()
+                done += 1
+                log(f"  {name} {'already built' if reused else 'done'} ({done}/{len(jobs)} plates, "
+                    f"{(time.time() - t0) / 60:.1f} min)")
+    except BrokenProcessPool:
+        raise SystemExit(f"build: a worker process died (most often it ran out of memory with {workers} plates at "
+                         f"a time). The {done} finished plates are kept: run again with --workers "
+                         f"{max(1, workers - 1)}.")
+
+
+def build_local(args):
+    """atlas_core.cmd_build's driver, with run_groups' pool (the per-plate work is the verbatim _build_group)."""
+    D = A.dirs(args.out)
+    idx = T.discover(args.data, args.out, refresh=args.reindex)
+    exprs = idx["expression"]
+    if not exprs:
+        raise SystemExit("No expression parquet files found under " + os.path.abspath(args.data) + T.REINDEX_HINT)
+    if args.limit_files:
+        exprs = exprs[:args.limit_files]
+    gm = T.read_tables(idx["gene"], ["token_id", "gene_symbol", "ensembl_id"])
+    if gm is None:
+        raise SystemExit("Gene metadata (token_id -> gene_symbol) not found" + T.REINDEX_HINT)
+    G = int(gm["token_id"].max()) + 1
+    log(f"Finding the plate of each of {len(exprs)} files ...")
+    with ThreadPoolExecutor(16) as ex:
+        fplate = dict(ex.map(A._file_plate, exprs))
+    by_plate = defaultdict(list)
+    for f in exprs:
+        by_plate[fplate[f]].append(f)
+    plates = sorted(by_plate, key=lambda p: (len(p), p))
+    jobs = [(gid, p, by_plate[p], G, D["pb"], args.batch_size) for gid, p in enumerate(plates)]
+    for old in glob.glob(os.path.join(D["pb"], "group*_profiles.csv")):
+        gid = int(re.search(r"group(\d+)_", old).group(1))
+        if gid >= len(jobs):
+            for f in glob.glob(old.replace("_profiles.csv", "*")):
+                os.remove(f)
+    workers = min(args.workers or T.auto_workers(), len(jobs))
+    per_worker = 5000 * G * 4 / 1e9 * 1.3 + 1.0
+    mem = T.mem_available_gb()
+    if mem:
+        workers = max(1, min(workers, int(mem / per_worker)))
+    log(f"{len(exprs)} files on {len(by_plate)} plates -> one group per plate, {workers} at a time "
+        f"(~{per_worker:.1f} GB each)")
+    if not args.workers and workers > 2 and T.disk_kind(args.data) == "hdd":
+        log("  the data seem to sit on a hard drive: if reading is slow, stop and rerun with --workers 2")
+    run_groups(jobs, workers)
+    finish_build(args, idx, len(jobs), "local files")
 
 
 def finish_build(args, idx, n_groups, how):

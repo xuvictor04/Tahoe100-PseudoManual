@@ -47,7 +47,10 @@ def run_all(out, data, truth, check):
 
     def median_matches():
         one = np.flatnonzero(dd["n_wells"].to_numpy() == 1)
-        med = np.nanmedian(np.asarray(DDL[:, one, :], dtype=np.float32), axis=2).T
+        with np.errstate(all="ignore"):
+            import warnings
+            warnings.simplefilter("ignore")
+            med = np.nanmedian(np.asarray(DDL[:, one, :], dtype=np.float32), axis=2).T
         ref = DD[one][:, :gK]
         ok = np.isfinite(med) & np.isfinite(ref)
         d = float(np.max(np.abs(med[ok] - ref[ok])))
@@ -205,7 +208,10 @@ def run_all(out, data, truth, check):
             for p in names.values():
                 if p.endswith(".md"):
                     links += [(p, m) for m in re.findall(r"\[\[([^\]|#]+)", open(p, encoding="utf-8").read())]
-            bad = [(os.path.basename(p), m) for p, m in links if m.strip().lower() not in names]
+            def target(m):
+                m = m.strip()
+                return os.path.splitext(m)[0] if m.lower().endswith((".md", ".canvas")) else m
+            bad = [(os.path.basename(p), m) for p, m in links if target(m).lower() not in names]
             n_gene = sum(1 for p in names.values() if f"{os.sep}Genes{os.sep}" in p and "plates" not in p)
             return (not bad and n_gene >= gK,
                     f"{len(names)} notes ({n_gene} gene notes), {len(links)} links, unresolved: {bad[:5]}")

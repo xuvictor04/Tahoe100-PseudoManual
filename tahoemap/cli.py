@@ -126,11 +126,11 @@ def run_stage(stage, a):
     t0 = time.time()
     clear_stamps_from(a.out, stage)
     if stage == "build":
+        from . import stream
         if a.stream:
-            from . import stream
             stream.build(atlas_args(a), a.data_in)
         else:
-            A.cmd_build(atlas_args(a))
+            stream.build_local(atlas_args(a))
         info = json.load(open(os.path.join(a.out, "atlas", "build_info.json"), encoding="utf-8"))
         stamp_stage(a.out, "build", A.EFFECTS_VERSION, info)
         tidy_atlas(a.out)
@@ -147,6 +147,8 @@ def run_stage(stage, a):
         kw = {"dtype": a.tensor_dtype, "keep_well": not a.no_well_tensor}
     elif stage == "embed":
         kw = {"dims": a.dims, "min_active": a.min_active, "min_responsive": a.min_responsive}
+    elif stage == "validate" and a.truth:
+        kw = {"truth": a.truth}
     elif stage == "reference":
         kw = {"offline": a.offline}
         if a.reference_cache:
@@ -166,7 +168,7 @@ def cmd_status(a):
         mark = "done" if cur else ("out of date" if st else "not run")
         when = st.get("finished", "") if st else ""
         print(f"  {s:<10} {mark:<12} {when}")
-    nxt = plan(a.out, skip=("reference",) if a.offline else ())
+    nxt = plan(a.out)
     print("next: " + (" -> ".join(nxt) if nxt else "nothing; everything is up to date"))
 
 
@@ -184,7 +186,8 @@ def main(argv=None):
     ap.add_argument("--from", dest="start", choices=STAGES, default=None, help="run: start at this stage")
     ap.add_argument("--to", dest="stop", choices=STAGES, default=None, help="run: stop after this stage")
     ap.add_argument("--redo", action="store_true", help="run: redo every stage")
-    ap.add_argument("--offline", action="store_true", help="no downloads: skip the reference annotations")
+    ap.add_argument("--offline", action="store_true",
+                    help="no downloads: the reference stage uses only its cache (else Tahoe's own gene names)")
     ap.add_argument("--reference-cache", default=None, help="folder that keeps the reference downloads")
     ap.add_argument("--workers", type=int, default=0, help="build: plates at once (default: from CPUs and memory)")
     ap.add_argument("--batch-size", type=int, default=20000)
@@ -200,6 +203,7 @@ def main(argv=None):
     ap.add_argument("--min-active", type=int, default=10, help="embed: significant genes a drug-dose needs")
     ap.add_argument("--min-responsive", type=int, default=5, help="embed: contexts with |z| >= 3 a gene needs")
     ap.add_argument("--top", type=int, default=15, help="look-ups: rows per table")
+    ap.add_argument("--truth", default=None, help="validate: ground_truth.json of synthetic test data (tests only)")
     a = ap.parse_args(argv)
     a.data = os.path.abspath(os.path.expanduser(a.data)) if a.data else default_data()
     a.out = os.path.abspath(os.path.expanduser(a.out)) if a.out else os.path.join(a.data, "tahoemap")
@@ -226,7 +230,7 @@ def main(argv=None):
             if a.reuse_atlas:
                 reuse_atlas(a.reuse_atlas, a.out)
             if a.command == "run":
-                todo = plan(a.out, a.start, a.stop, a.redo, skip=("reference",) if a.offline else ())
+                todo = plan(a.out, a.start, a.stop, a.redo)
                 log("Plan: " + (" -> ".join(todo) if todo else "nothing to do; everything is up to date"))
                 t0 = time.time()
                 for s in todo:
