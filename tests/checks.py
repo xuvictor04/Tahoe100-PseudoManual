@@ -335,6 +335,87 @@ def run_all(out, data, truth, check):
                                                                        open(html, encoding="utf-8").read()[:2000]),
             f"{os.path.getsize(html) / 1e6:.1f} MB"))
 
+        def map_data():
+            txt = open(html, encoding="utf-8").read()
+            m = re.search(r'<script id="tm-data" type="application/json">(.*?)</script>', txt, re.S)
+            return txt, json.loads(m.group(1))
+
+        def map_tabs_and_edges():
+            """the six tabs exist; the embedded graph edges are graph/edges.parquet between two map genes"""
+            import base64
+            txt, D = map_data()
+            tabs = re.findall(r'data-tab="(\w+)"', txt)
+            e, n = D["edges"], D["n"]
+            dt = "<u2" if e["bytes"] == 2 else "<u4"
+            a, b = (np.frombuffer(base64.b64decode(e[k]), dtype=dt).astype(np.int64) for k in ("a", "b"))
+            c = np.frombuffer(base64.b64decode(e["cos"]), dtype=np.int8) / 100
+            ev = np.frombuffer(base64.b64decode(e["ev"]), dtype=np.uint8)
+            ge = pd.read_parquet(os.path.join(out, "graph", "edges.parquet"))
+            ent = {cc: i for i, cc in enumerate(D["col"][:n])}
+            want = {}
+            for ca, cb, cc in zip(ge["col_a"], ge["col_b"], ge["cos"]):
+                if ca in ent and cb in ent and ent[ca] != ent[cb]:
+                    k = (min(ent[ca], ent[cb]), max(ent[ca], ent[cb]))
+                    if k not in want or abs(cc) > abs(want[k]):
+                        want[k] = float(cc)
+            got = {(int(x), int(y)): float(z) for x, y, z in zip(a, b, c)}
+            err = max((abs(got[k] - v) for k, v in want.items() if k in got), default=1.0)
+            ok = (tabs == ["nodal", "signed", "nbr", "mod", "all", "help"] and e["m"] == len(a) == len(want)
+                  and set(got) == set(want) and err <= 0.0051 and bool((a < b).all()) and int(b.max()) < n
+                  and set(np.unique(ev).tolist()) <= {0, 1, 2})
+            return ok, (f"tabs {tabs}; {e['m']:,} edges embedded ({len(want):,} in graph/edges.parquet between map "
+                        f"genes), max |cos error| {err:.4f}, evidence codes {sorted(np.unique(ev).tolist())}, "
+                        f"{sum(len(e[k]) for k in ('a', 'b', 'cos', 'ev')) / 1e3:.0f} kB")
+        check("map", "tabs, and the graph edges for the physics tabs", map_tabs_and_edges)
+
+        def map_physics():
+            """in a headless browser (when Playwright and its Chromium are installed): no script errors on any tab;
+            the module tab holds the planted HDAC module; flipping 'opposite genes repel' parts its two arms"""
+            try:
+                from playwright.sync_api import sync_playwright
+            except ImportError:
+                return "warn", "Playwright not installed: browser check skipped"
+            up, dn = set(sets["HDAC_UP"]), set(sets["HDAC_DOWN"])
+
+            def split(s, sym):
+                P = np.array([(x, y) for i, x, y in zip(s["ids"], s["x"], s["y"]) if sym[i] in up])
+                M = np.array([(x, y) for i, x, y in zip(s["ids"], s["x"], s["y"]) if sym[i] in dn])
+                spread = (np.sqrt(((P - P.mean(0)) ** 2).sum(1).mean()) + np.sqrt(((M - M.mean(0)) ** 2).sum(1).mean())) / 2
+                return float(np.linalg.norm(P.mean(0) - M.mean(0)) / spread), len(P), len(M)
+            try:
+                with sync_playwright() as p:
+                    b = p.chromium.launch()
+                    try:
+                        pg = b.new_page(viewport={"width": 1300, "height": 800})
+                        errs = []
+                        pg.on("pageerror", lambda e: errs.append(str(e)))
+                        pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
+                        pg.goto("file://" + os.path.abspath(html))
+                        pg.wait_for_function("() => !!window.TAHOE_MAP")
+                        sym = pg.evaluate("TAHOE_MAP.data.sym")
+                        g = next(s for s in sets["HDAC_UP"] if s in sym[:pg.evaluate("TAHOE_MAP.data.n")])
+                        pg.evaluate(f"TAHOE_MAP.select({sym.index(g)})")
+                        settled = "() => { const s = TAHOE_MAP.sim('{t}'); return s && s.n > 0 && !s.moving; }"
+                        for t in ("signed", "nbr", "all", "help", "mod"):
+                            pg.click(f"#tabs [data-tab='{t}']")
+                            if t in ("nbr", "all", "mod"):
+                                pg.wait_for_function(settled.replace("{t}", t), timeout=60000)
+                        r0 = split(pg.evaluate("TAHOE_MAP.sim('mod')"), sym)
+                        pg.click("#pane-mod [data-k='opp1']")
+                        pg.wait_for_timeout(300)
+                        pg.wait_for_function(settled.replace("{t}", "mod"), timeout=60000)
+                        r1 = split(pg.evaluate("TAHOE_MAP.sim('mod')"), sym)
+                    finally:
+                        b.close()
+            except Exception as e:  # noqa: BLE001  (no browser binary, sandbox, ...)
+                if "Executable doesn't exist" in str(e) or "playwright install" in str(e):
+                    return "warn", "Playwright's Chromium is not installed: browser check skipped"
+                raise
+            return (not errs and r1[0] > 2 * r0[0] and r1[0] > 1.5,
+                    f"HDAC module {r0[1]} + / {r0[2]} - genes: arm centroid distance / arm spread {r0[0]:.2f} when "
+                    f"opposite genes attract, {r1[0]:.2f} when they repel; script errors: {errs[:3]}")
+        check("map", "physics tabs run; the sign switch parts the planted HDAC arms", map_physics)
+
     # ---------------------------------------------------------------- look-ups
     def lookup_gene():
         r = subprocess.run([sys.executable, "-m", "tahoemap", "gene", "HMOX1", "--data", data, "--out", out],
