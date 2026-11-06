@@ -1,0 +1,648 @@
+{
+ "nodes": [
+  {
+   "id": "g_Controls_p53",
+   "type": "group",
+   "label": "Controls p53",
+   "x": -1176,
+   "y": -86,
+   "width": 282,
+   "height": 626
+  },
+  {
+   "id": "n_ATM",
+   "type": "file",
+   "file": "20-Genes/01 p53 and its regulators/ATM.md",
+   "x": -1150,
+   "y": -60,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_CHEK2",
+   "type": "file",
+   "file": "20-Genes/01 p53 and its regulators/CHEK2.md",
+   "x": -1150,
+   "y": 22,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_CDKN2A",
+   "type": "file",
+   "file": "20-Genes/01 p53 and its regulators/CDKN2A.md",
+   "x": -1150,
+   "y": 104,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_MDM4",
+   "type": "file",
+   "file": "20-Genes/01 p53 and its regulators/MDM4.md",
+   "x": -1150,
+   "y": 186,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_USP7",
+   "type": "file",
+   "file": "20-Genes/01 p53 and its regulators/USP7.md",
+   "x": -1150,
+   "y": 268,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_TP53BP1",
+   "type": "file",
+   "file": "20-Genes/01 p53 and its regulators/TP53BP1.md",
+   "x": -1150,
+   "y": 350,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_STK11",
+   "type": "file",
+   "file": "20-Genes/01 p53 and its regulators/STK11.md",
+   "x": -1150,
+   "y": 432,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "g_p53",
+   "type": "group",
+   "label": "p53",
+   "x": -646,
+   "y": -86,
+   "width": 282,
+   "height": 134
+  },
+  {
+   "id": "n_TP53",
+   "type": "file",
+   "file": "20-Genes/01 p53 and its regulators/TP53.md",
+   "x": -620,
+   "y": -60,
+   "width": 230,
+   "height": 60,
+   "color": "4"
+  },
+  {
+   "id": "g_Negative_feedback",
+   "type": "group",
+   "label": "Negative feedback",
+   "x": -146,
+   "y": -86,
+   "width": 282,
+   "height": 380
+  },
+  {
+   "id": "n_MDM2",
+   "type": "file",
+   "file": "20-Genes/02 p53 effectors - negative feedback/MDM2.md",
+   "x": -120,
+   "y": -60,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_PPM1D",
+   "type": "file",
+   "file": "20-Genes/02 p53 effectors - negative feedback/PPM1D.md",
+   "x": -120,
+   "y": 22,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_ZMAT3",
+   "type": "file",
+   "file": "20-Genes/02 p53 effectors - negative feedback/ZMAT3.md",
+   "x": -120,
+   "y": 104,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_CCNG1",
+   "type": "file",
+   "file": "20-Genes/03 p53 effectors - cell-cycle arrest/CCNG1.md",
+   "x": -120,
+   "y": 186,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "g_Arrest",
+   "type": "group",
+   "label": "Arrest",
+   "x": 374,
+   "y": -26,
+   "width": 282,
+   "height": 462
+  },
+  {
+   "id": "n_BTG2",
+   "type": "file",
+   "file": "20-Genes/03 p53 effectors - cell-cycle arrest/BTG2.md",
+   "x": 400,
+   "y": 0,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_CCNG1",
+   "type": "file",
+   "file": "20-Genes/03 p53 effectors - cell-cycle arrest/CCNG1.md",
+   "x": 400,
+   "y": 82,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_CDKN1A",
+   "type": "file",
+   "file": "20-Genes/03 p53 effectors - cell-cycle arrest/CDKN1A.md",
+   "x": 400,
+   "y": 164,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_GADD45A",
+   "type": "file",
+   "file": "20-Genes/03 p53 effectors - cell-cycle arrest/GADD45A.md",
+   "x": 400,
+   "y": 246,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_PLK3",
+   "type": "file",
+   "file": "20-Genes/03 p53 effectors - cell-cycle arrest/PLK3.md",
+   "x": 400,
+   "y": 328,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "g_Apoptosis",
+   "type": "group",
+   "label": "Apoptosis",
+   "x": 374,
+   "y": 474,
+   "width": 282,
+   "height": 626
+  },
+  {
+   "id": "n_AEN",
+   "type": "file",
+   "file": "20-Genes/04 p53 effectors - apoptosis/AEN.md",
+   "x": 400,
+   "y": 500,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_BAX",
+   "type": "file",
+   "file": "20-Genes/04 p53 effectors - apoptosis/BAX.md",
+   "x": 400,
+   "y": 582,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_BBC3",
+   "type": "file",
+   "file": "20-Genes/04 p53 effectors - apoptosis/BBC3.md",
+   "x": 400,
+   "y": 664,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_EDA2R",
+   "type": "file",
+   "file": "20-Genes/04 p53 effectors - apoptosis/EDA2R.md",
+   "x": 400,
+   "y": 746,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_PMAIP1",
+   "type": "file",
+   "file": "20-Genes/04 p53 effectors - apoptosis/PMAIP1.md",
+   "x": 400,
+   "y": 828,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_TNFRSF10B",
+   "type": "file",
+   "file": "20-Genes/04 p53 effectors - apoptosis/TNFRSF10B.md",
+   "x": 400,
+   "y": 910,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_TP53INP1",
+   "type": "file",
+   "file": "20-Genes/04 p53 effectors - apoptosis/TP53INP1.md",
+   "x": 400,
+   "y": 992,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "g_DNA_repair",
+   "type": "group",
+   "label": "DNA repair",
+   "x": 374,
+   "y": 1138,
+   "width": 282,
+   "height": 380
+  },
+  {
+   "id": "n_DDB2",
+   "type": "file",
+   "file": "20-Genes/05 p53 effectors - DNA repair/DDB2.md",
+   "x": 400,
+   "y": 1164,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_POLH",
+   "type": "file",
+   "file": "20-Genes/05 p53 effectors - DNA repair/POLH.md",
+   "x": 400,
+   "y": 1246,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_RRM2B",
+   "type": "file",
+   "file": "20-Genes/05 p53 effectors - DNA repair/RRM2B.md",
+   "x": 400,
+   "y": 1328,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_XPC",
+   "type": "file",
+   "file": "20-Genes/05 p53 effectors - DNA repair/XPC.md",
+   "x": 400,
+   "y": 1410,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "g_Metabolism___redox",
+   "type": "group",
+   "label": "Metabolism / redox",
+   "x": 374,
+   "y": 1556,
+   "width": 282,
+   "height": 462
+  },
+  {
+   "id": "n_ACER2",
+   "type": "file",
+   "file": "20-Genes/06 p53 effectors - metabolism and redox/ACER2.md",
+   "x": 400,
+   "y": 1582,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_FDXR",
+   "type": "file",
+   "file": "20-Genes/06 p53 effectors - metabolism and redox/FDXR.md",
+   "x": 400,
+   "y": 1664,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_SESN1",
+   "type": "file",
+   "file": "20-Genes/06 p53 effectors - metabolism and redox/SESN1.md",
+   "x": 400,
+   "y": 1746,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_TIGAR",
+   "type": "file",
+   "file": "20-Genes/06 p53 effectors - metabolism and redox/TIGAR.md",
+   "x": 400,
+   "y": 1828,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "n_TP53I3",
+   "type": "file",
+   "file": "20-Genes/06 p53 effectors - metabolism and redox/TP53I3.md",
+   "x": 400,
+   "y": 1910,
+   "width": 230,
+   "height": 60
+  },
+  {
+   "id": "note_scope",
+   "type": "text",
+   "x": -1150,
+   "y": 560,
+   "width": 700,
+   "height": 150,
+   "text": "**This board is the shape of the pathway, not a result.**\n\nEdges are relations from the literature and from curation, not measurements. For what this study found, see [[What this study found]]. The MG53 locus is deliberately absent: TRIM72's relation to FUS and PYCARD-AS1 is *position*, not regulation \u2014 see [[The TRIM72 locus]]."
+  }
+ ],
+ "edges": [
+  {
+   "id": "e_ATM_tp53",
+   "fromNode": "n_ATM",
+   "fromSide": "right",
+   "toNode": "n_TP53",
+   "toSide": "left",
+   "label": "controls"
+  },
+  {
+   "id": "e_CHEK2_tp53",
+   "fromNode": "n_CHEK2",
+   "fromSide": "right",
+   "toNode": "n_TP53",
+   "toSide": "left",
+   "label": "controls"
+  },
+  {
+   "id": "e_CDKN2A_tp53",
+   "fromNode": "n_CDKN2A",
+   "fromSide": "right",
+   "toNode": "n_TP53",
+   "toSide": "left",
+   "label": "controls"
+  },
+  {
+   "id": "e_MDM4_tp53",
+   "fromNode": "n_MDM4",
+   "fromSide": "right",
+   "toNode": "n_TP53",
+   "toSide": "left",
+   "label": "controls"
+  },
+  {
+   "id": "e_USP7_tp53",
+   "fromNode": "n_USP7",
+   "fromSide": "right",
+   "toNode": "n_TP53",
+   "toSide": "left",
+   "label": "controls"
+  },
+  {
+   "id": "e_TP53BP1_tp53",
+   "fromNode": "n_TP53BP1",
+   "fromSide": "right",
+   "toNode": "n_TP53",
+   "toSide": "left",
+   "label": "controls"
+  },
+  {
+   "id": "e_STK11_tp53",
+   "fromNode": "n_STK11",
+   "fromSide": "right",
+   "toNode": "n_TP53",
+   "toSide": "left",
+   "label": "controls"
+  },
+  {
+   "id": "e_tp53_MDM2",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_MDM2",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_MDM2_back",
+   "fromNode": "n_MDM2",
+   "fromSide": "top",
+   "toNode": "n_TP53",
+   "toSide": "top",
+   "label": "shuts down"
+  },
+  {
+   "id": "e_tp53_PPM1D",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_PPM1D",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_PPM1D_back",
+   "fromNode": "n_PPM1D",
+   "fromSide": "top",
+   "toNode": "n_TP53",
+   "toSide": "top",
+   "label": "shuts down"
+  },
+  {
+   "id": "e_tp53_ZMAT3",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_ZMAT3",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_ZMAT3_back",
+   "fromNode": "n_ZMAT3",
+   "fromSide": "top",
+   "toNode": "n_TP53",
+   "toSide": "top",
+   "label": "shuts down"
+  },
+  {
+   "id": "e_tp53_CCNG1",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_CCNG1",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_BTG2",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_BTG2",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_CDKN1A",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_CDKN1A",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_GADD45A",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_GADD45A",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_PLK3",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_PLK3",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_AEN",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_AEN",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_BAX",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_BAX",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_BBC3",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_BBC3",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_EDA2R",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_EDA2R",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_PMAIP1",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_PMAIP1",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_TNFRSF10B",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_TNFRSF10B",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_TP53INP1",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_TP53INP1",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_DDB2",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_DDB2",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_POLH",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_POLH",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_RRM2B",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_RRM2B",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_XPC",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_XPC",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_ACER2",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_ACER2",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_FDXR",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_FDXR",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_SESN1",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_SESN1",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_TIGAR",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_TIGAR",
+   "toSide": "left",
+   "label": "induces"
+  },
+  {
+   "id": "e_tp53_TP53I3",
+   "fromNode": "n_TP53",
+   "fromSide": "right",
+   "toNode": "n_TP53I3",
+   "toSide": "left",
+   "label": "induces"
+  }
+ ]
+}

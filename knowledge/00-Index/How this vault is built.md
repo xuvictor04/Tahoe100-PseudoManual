@@ -16,12 +16,12 @@ status: current
 |---|---|---|
 | **Who owns it** | `_build/build_vault.py` | people, and agents working for them |
 | **What it is** | every gene note's frontmatter and its whole `## In this dataset` block; `Home.md`; `Genes — Map of Content.md`; `Tables — what the study produced.md` | everything else: concepts, findings, methods, literature, and each gene's prose |
-| **Where it lives** | inlined into the note | gene prose in `20-Genes/_knowledge/<SYMBOL>.md`; other notes are their own files |
+| **Where it lives** | inlined into the note | gene prose in `_build/gene_knowledge/<SYMBOL>.md`; other notes are their own files |
 | **On rebuild** | overwritten from the tables | untouched, and spliced back in |
 
 So:
 
-- **To write about a gene** — create `20-Genes/_knowledge/MDM2.md` with just the prose body (no frontmatter,
+- **To write about a gene** — create `_build/gene_knowledge/MDM2.md` with just the prose body (no frontmatter,
   no `# MDM2` heading; the generator adds both) and rebuild. It will appear above the data block.
 - **To change what every gene note shows** — edit `_build/build_vault.py`.
 - **Never edit a `20-Genes/*.md` file directly.** The next rebuild will overwrite it. The fragment is the

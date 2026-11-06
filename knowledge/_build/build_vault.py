@@ -18,6 +18,7 @@ Usage:
     python3 knowledge/_build/build_vault.py --results ... --only-genes MDM2,CDKN1A   # faster while iterating
 """
 import argparse
+import json
 import os
 import re
 
@@ -30,7 +31,7 @@ REPO = os.path.dirname(VAULT)
 TABLES = os.path.join(REPO, "mg53_p53", "findings", "tables")
 
 GENES_DIR = os.path.join(VAULT, "20-Genes")
-FRAG_DIR = os.path.join(GENES_DIR, "_knowledge")
+FRAG_DIR = os.path.join(HERE, "gene_knowledge")
 IDX_DIR = os.path.join(VAULT, "00-Index")
 
 #: Genes that get a deep note because they are well studied and central to this work. The curated p53
@@ -56,6 +57,79 @@ ALIASES = {
     "RAD54B": ["RAD54B"], "MRPL37": ["mitochondrial ribosomal protein L37"], "MBOAT1": ["OACT1"],
     "POGLUT3": ["KDELC2"], "MIR924HG": ["MIR924 host gene"], "GRIN2C": ["NMDAR2C"], "ATF3": ["ATF3"],
 }
+
+#: Where the registry annotation lives, fetched by fetch_annotations.py and committed so the vault builds
+#: offline. Every fact in a gene note's "What is on record" block comes from here, with its accession.
+ANNOT_PATH = os.path.join(HERE, "annotations.json")
+
+#: Genes whose relation to p53 is that they CONTROL it, rather than being controlled by it. This is the
+#: distinction the old flat folder could not express: MDM2's mRNA is a p53 readout, but MDM2's job is to
+#: degrade p53, and a reader looking for "what regulates p53" needs to find it under that heading.
+P53_UPSTREAM = ["TP53", "ATM", "CHEK2", "CDKN2A", "MDM4", "USP7", "TP53BP1", "STK11", "RB1"]
+
+#: The locus. Position only - see [[The TRIM72 locus]]; never a regulatory claim.
+LOCUS_GENES = ["TRIM72", "FUS", "PYCARD", "PYCARD-AS1"]
+
+#: TRIM72's native-tissue drivers, which this panel of cancer lines does not express.
+MUSCLE_TFS = ["MYOD1", "MYOG", "MYF5", "MYF6", "MEF2A", "MEF2B", "MEF2C", "MEF2D", "SRF"]
+
+#: Folder per relation, numbered so Obsidian's file explorer sorts them into reading order. The key is the
+#: `pathway_role` written into frontmatter; the value is the folder under 20-Genes/.
+ROLE_FOLDER = [
+    ("p53 itself and what controls it", "01 p53 and its regulators"),
+    ("p53 effector: negative feedback", "02 p53 effectors - negative feedback"),
+    ("p53 effector: cell-cycle arrest", "03 p53 effectors - cell-cycle arrest"),
+    ("p53 effector: apoptosis", "04 p53 effectors - apoptosis"),
+    ("p53 effector: DNA repair", "05 p53 effectors - DNA repair"),
+    ("p53 effector: metabolism / redox", "06 p53 effectors - metabolism and redox"),
+    ("p53 effector: other", "07 p53 effectors - other"),
+    ("p53 program, induction arm", "08 p53 program - induction arm"),
+    ("p53 program, repression arm", "09 p53 program - repression arm"),
+    ("the MG53 locus", "10 MG53 locus"),
+    ("transcription factor, muscle programme", "11 Transcription factors - muscle"),
+    ("transcription factor", "12 Transcription factors - other"),
+    ("tracks MG53 genome-wide", "13 MG53 partners"),
+    ("unannotated locus", "14 Unannotated loci"),
+]
+FOLDER_OF = dict(ROLE_FOLDER)
+
+#: Maps a curated effector's `role` column onto a pathway_role. Anything unmatched falls to "other".
+EFFECTOR_ROLE = {
+    "negative feedback": "p53 effector: negative feedback",
+    "cell-cycle arrest": "p53 effector: cell-cycle arrest",
+    "apoptosis": "p53 effector: apoptosis",
+    "apoptosis (anti-)": "p53 effector: apoptosis",
+    "DNA repair": "p53 effector: DNA repair",
+    "metabolism / redox": "p53 effector: metabolism / redox",
+}
+
+
+def pathway_role(sym, o, annot):
+    """The gene's relation to the two questions - which decides its folder and its place in the indexes.
+
+    Order matters: the first match wins, and the order encodes which relation a reader is most likely to be
+    looking the gene up by. A gene can hold several relations at once (MDM2 is a p53 regulator, a curated
+    effector and a programme member); the frontmatter records all of them, this picks the primary one.
+    """
+    if sym in LOCUS_GENES:
+        return "the MG53 locus"
+    if sym in P53_UPSTREAM:
+        return "p53 itself and what controls it"
+    ef = o.get("effectors")
+    if ef is not None:
+        return EFFECTOR_ROLE.get(str(ef.get("role", "")).strip(), "p53 effector: other")
+    pr = o.get("program")
+    if pr is not None:
+        return ("p53 program, repression arm" if "down" in str(pr.get("arm", "")).lower()
+                else "p53 program, induction arm")
+    if sym in MUSCLE_TFS or o.get("muscle_tf") is not None:
+        return "transcription factor, muscle programme"
+    if o.get("tfs") is not None:
+        return "transcription factor"
+    if not (annot or {}).get("hgnc"):
+        return "unannotated locus"
+    return "tracks MG53 genome-wide"
+
 
 #: Concept notes every gene note links to, by what the gene is.
 CONCEPT_LINKS = {
@@ -132,6 +206,14 @@ def load(res):
     if os.path.exists(mt):
         d["muscle_tfs"] = pd.read_csv(mt)
     d["upstream_dd"] = read("tableB_upstream_mg53.csv")
+    d["annot"] = json.load(open(ANNOT_PATH)) if os.path.exists(ANNOT_PATH) else {}
+    # Gene family -> the symbols in this vault that belong to it. This is the relation the vault is
+    # organised on besides p53: it links genes to each other rather than only to the pathway.
+    fams = {}
+    for sym, a in d["annot"].items():
+        for fm in ((a or {}).get("hgnc") or {}).get("gene_family") or []:
+            fams.setdefault(fm, []).append(sym)
+    d["families"] = {k: sorted(v) for k, v in fams.items()}
     return d
 
 
@@ -304,6 +386,95 @@ def dataset_section(sym, o):
     return "\n".join(L)
 
 
+def annotation_section(sym, a, families):
+    """What the registries record, each fact with the accession that backs it.
+
+    This is the answer for the ~240 genes with no literature worth a written note. An accession is a
+    citation that cannot be fabricated: HGNC:16166 either is TRIM72 or it is not, and a reader can check it
+    in one click. Nothing in this block is paraphrased by a model - it is the registries' own text, marked
+    as theirs, including NCBI's own "Predicted to ..." hedges where the annotation is inferred rather than
+    demonstrated.
+    """
+    L = ["## What is on record", ""]
+    h = (a or {}).get("hgnc")
+    n = (a or {}).get("ncbi") or {}
+    u = (a or {}).get("uniprot") or {}
+    if not h:
+        L += ["> [!warning] No HGNC record",
+              "> This identifier has no entry with the gene-naming authority: no approved symbol, no name,",
+              "> no gene family, no cross-references. It is an Ensembl-only locus — the quantification",
+              "> assigned reads to it, and that is the whole of what is known. Nothing further can be said",
+              "> about it that would not be invented, so nothing is.", ""]
+        return "\n".join(L)
+
+    names = [h.get("name")] + list(h.get("prev_names") or [])
+    al = list(h.get("aliases") or []) + list(h.get("alias_names") or [])
+    L += ["| | |", "|---|---|",
+          "| Official name | %s |" % (h.get("name") or "—"),
+          "| Also known as | %s |" % (", ".join(al) if al else "— (no recorded alias)"),
+          "| Locus | %s — %s |" % (h.get("location") or "—", h.get("locus_type") or "—")]
+    fam = list(h.get("gene_family") or [])
+    if fam:
+        L += ["| Gene families | %s |" % "; ".join(fam)]
+        sib = sorted({s for fm in fam for s in families.get(fm, []) if s != sym})
+        if sib:
+            L += ["| Other genes here in those families | %s |"
+                  % ", ".join("[[%s]]" % slug(s) for s in sib[:14])]
+    if len(names) > 1 and names[1]:
+        L += ["| Previously named | %s |" % "; ".join(x for x in names[1:] if x)]
+    L += [""]
+
+    if u.get("function"):
+        tag = "reviewed" if u.get("reviewed") else "unreviewed — TrEMBL, computationally annotated"
+        L += ["**Function**, from UniProt [%s](https://www.uniprot.org/uniprotkb/%s) (%s):"
+              % (u["accession"], u["accession"], tag), "", "> " + u["function"].replace("\n", " "), ""]
+    elif u.get("accession"):
+        L += ["UniProt [%s](https://www.uniprot.org/uniprotkb/%s) carries no FUNCTION annotation%s."
+              % (u["accession"], u["accession"],
+                 "" if u.get("reviewed") else " and is unreviewed (TrEMBL)"), ""]
+
+    if n.get("summary"):
+        L += ["**Summary**, from NCBI Gene [%s](https://www.ncbi.nlm.nih.gov/gene/%s):"
+              % (n["entrez_id"], n["entrez_id"]), "", "> " + n["summary"].replace("\n", " "), "",
+              "> [!note] Read NCBI's hedges literally",
+              "> Where that summary says \"Predicted to …\" or \"Enables …\", the annotation is inferred —"
+              " from orthology, domain content or automated pipelines — not demonstrated for this gene.", ""]
+    elif h.get("locus_type", "").startswith("RNA"):
+        L += ["NCBI Gene carries no summary paragraph for this locus, which is usual for a non-coding RNA.",
+              ""]
+    else:
+        L += ["NCBI Gene carries no summary paragraph for this gene.", ""]
+
+    acc = []
+    if h.get("hgnc_id"):
+        acc.append("[%s](https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/%s)"
+                   % (h["hgnc_id"], h["hgnc_id"]))
+    if h.get("entrez_id"):
+        acc.append("Entrez [%s](https://www.ncbi.nlm.nih.gov/gene/%s)" % (h["entrez_id"], h["entrez_id"]))
+    if (h.get("uniprot_ids") or []):
+        acc.append("UniProt " + ", ".join("[%s](https://www.uniprot.org/uniprotkb/%s)" % (x, x)
+                                          for x in h["uniprot_ids"][:3]))
+    if h.get("ensembl_gene_id"):
+        acc.append("Ensembl [%s](https://www.ensembl.org/Homo_sapiens/Gene/Summary?g=%s)"
+                   % (h["ensembl_gene_id"], h["ensembl_gene_id"]))
+    for om in (h.get("omim_id") or [])[:2]:
+        acc.append("OMIM [%s](https://www.omim.org/entry/%s)" % (om, om))
+    if acc:
+        L += ["**Accessions** — " + " · ".join(acc), ""]
+    pm = [str(x) for x in (h.get("pubmed_id") or [])][:8]
+    if pm:
+        L += ["**PubMed**, as HGNC records for this gene — "
+              + ", ".join("[%s](https://pubmed.ncbi.nlm.nih.gov/%s/)" % (x, x) for x in pm), "",
+              "> [!note] What these are, and are not",
+              "> HGNC lists these against the gene's naming and characterisation. They are real identifiers,",
+              "> fetched rather than recalled. They are not a reading list chosen for this study, and the"
+              " written sections above cite their own sources separately.", ""]
+    if (a or {}).get("fetched_utc"):
+        L += ["*Fetched from HGNC, NCBI Gene and UniProt on %s by `knowledge/_build/fetch_annotations.py`.*"
+              % str(a["fetched_utc"])[:10], ""]
+    return "\n".join(L)
+
+
 def links_section(sym, o, uni):
     L = ["## Links", ""]
     kinds = []
@@ -332,11 +503,28 @@ def links_section(sym, o, uni):
     return "\n".join(L)
 
 
-def frontmatter(sym, o, tier, uni):
+def frontmatter(sym, o, tier, uni, a=None, families=None, role=None):
     pr, ef, sc = o.get("program"), o.get("effectors"), o.get("screen")
+    h = ((a or {}).get("hgnc") or {})
     fm = {"symbol": sym, "type": "gene", "tier": int(tier)}
-    if sym in ALIASES:
-        fm["aliases"] = ALIASES[sym]
+    if role:
+        fm["pathway_role"] = role
+    # Aliases: the hand-written list where there is one, else HGNC's, so Obsidian's search and its
+    # unlinked-mentions panel find the note under whatever name a reader types.
+    al = ALIASES.get(sym) or [x for x in (h.get("aliases") or []) if x][:6]
+    if al:
+        fm["aliases"] = al
+    if h.get("name"):
+        fm["gene_name"] = h["name"]
+    if h.get("location"):
+        fm["locus"] = h["location"]
+    if h.get("locus_type"):
+        fm["locus_type"] = h["locus_type"]
+    if h.get("gene_family"):
+        fm["gene_family"] = h["gene_family"]
+        sib = sorted({s for fmy in h["gene_family"] for s in (families or {}).get(fmy, []) if s != sym})
+        if sib:
+            fm["family_siblings_here"] = sib[:12]
     tags = ["gene"]
     direction = (pr or {}).get("p53_direction") or (ef or {}).get("p53_direction")
     if direction:
@@ -381,24 +569,28 @@ def frontmatter(sym, o, tier, uni):
     return "\n".join(out)
 
 
-def gene_note(sym, o, tier, uni):
+def gene_note(sym, o, tier, uni, a, families, role):
     frag_path = os.path.join(FRAG_DIR, slug(sym) + ".md")
     frag = open(frag_path).read().strip() if os.path.exists(frag_path) else ""
-    parts = [frontmatter(sym, o, tier, uni), "", "# " + sym, ""]
+    parts = [frontmatter(sym, o, tier, uni, a, families, role), "", "# " + sym, ""]
+    h = (a or {}).get("hgnc") or {}
+    if h.get("name") and h.get("name") != sym:
+        parts += ["*%s*%s" % (h["name"], " — " + h["location"] if h.get("location") else ""), ""]
     if frag:
         parts += [frag, ""]
     else:
-        tag = {1: "needs a written note — it is well studied and central here",
-               2: "needs a short written note",
-               3: "no written note; the tables below are what this vault knows about it"}[int(tier)]
-        parts += ["> [!abstract] Knowledge layer: %s" % tag,
-                  "> Nothing is written about this gene yet. Add"
-                  " `knowledge/20-Genes/_knowledge/%s.md` and rebuild; see"
-                  " [[How this vault is built]]." % slug(sym), ""]
+        parts += ["> [!abstract] No written note for this gene",
+                  "> What follows is what the registries record and what this study measured — nothing is"
+                  " paraphrased or inferred on top of it. To add a written note, create"
+                  " `knowledge/_build/gene_knowledge/%s.md` and rebuild; see [[How this vault is built]]."
+                  % slug(sym), ""]
+    parts += [annotation_section(sym, a, families)]
     parts += ["## In this dataset", "",
               "*Generated from the study's tables — do not edit by hand.*", "",
               dataset_section(sym, o), links_section(sym, o, uni)]
     parts += ["## Sources", "",
+              "- Registry annotation: `knowledge/_build/annotations.json`, fetched from HGNC, NCBI Gene and"
+              " UniProt by `knowledge/_build/fetch_annotations.py`",
               "- Program and MG53 columns: `mg53_p53/findings/tables/tableD_p53_target_genes.csv`",
               "- Genome-wide screen: `genome_wide/tables/c_screen_genes.csv.gz`",
               "- Curated effector columns: `mg53_p53/findings/tables/p53_effectors_per_gene.csv`"]
@@ -415,16 +607,198 @@ def write(path, text):
 
 
 def build_genes(d, uni, only=None):
+    """One note per gene, filed under the folder for its primary relation.
+
+    Obsidian resolves [[wikilinks]] by filename, not by path, so moving a note between folders never breaks
+    a link - which is what makes it safe to re-file every gene on each build. Stale copies left at the old
+    location are deleted, so a gene that changes relation does not end up with two notes.
+    """
     os.makedirs(FRAG_DIR, exist_ok=True)
-    n = 0
+    annot, families = d.get("annot") or {}, d.get("families") or {}
+    roles, n = {}, 0
     for _, r in uni.iterrows():
         sym = r["symbol"]
+        o = gene_facts(sym, d)
+        role = pathway_role(sym, o, annot.get(sym))
+        roles[sym] = role
         if only and sym not in only:
             continue
-        o = gene_facts(sym, d)
-        write(os.path.join(GENES_DIR, slug(sym) + ".md"), gene_note(sym, o, r["tier"], uni))
+        path = os.path.join(GENES_DIR, FOLDER_OF[role], slug(sym) + ".md")
+        write(path, gene_note(sym, o, r["tier"], uni, annot.get(sym), families, role))
         n += 1
+    if not only:                              # drop notes left behind by an earlier layout
+        keep = {os.path.join(GENES_DIR, FOLDER_OF[roles[s]], slug(s) + ".md") for s in roles}
+        for sub in [GENES_DIR] + [os.path.join(GENES_DIR, f) for _, f in ROLE_FOLDER]:
+            if not os.path.isdir(sub):
+                continue
+            for fn in os.listdir(sub):
+                p = os.path.join(sub, fn)
+                if fn.endswith(".md") and os.path.isfile(p) and p not in keep:
+                    os.remove(p)
+    uni["pathway_role"] = uni["symbol"].map(roles)
+    uni["folder"] = uni["pathway_role"].map(FOLDER_OF)
     return n
+
+
+def build_relation_moc(d, uni):
+    """The map of content the vault is actually navigated by: genes grouped by how they relate."""
+    annot, families = d.get("annot") or {}, d.get("families") or {}
+    L = ["---", "type: index", "tags: [index, genes, relations]",
+         "generated_by: knowledge/_build/build_vault.py", "---", "",
+         "# Genes by relation", "",
+         "The %d genes this study touches, grouped by how each one relates to the two questions. This is the"
+         " folder structure too: `20-Genes/` is laid out in this order, so the file explorer and this note"
+         " agree." % len(uni), "",
+         "A gene can hold several relations at once — [[MDM2]] regulates p53, is a curated effector, and is"
+         " a programme member — so each is filed under the relation a reader is most likely to look it up"
+         " by, with the others in its frontmatter. For the direction p53 moves each gene, and why an"
+         " unsigned tally of them misleads, see [[Signing genes by p53 direction]].", ""]
+
+    for role, folder in ROLE_FOLDER:
+        sub = uni[uni["pathway_role"] == role]
+        if not len(sub):
+            continue
+        L += ["## %s" % role, "", "*`20-Genes/%s/` — %d genes*" % (folder, len(sub)), ""]
+        blurb = {
+            "p53 itself and what controls it":
+                "p53 and the machinery that decides how much of it there is. These genes are **upstream** of"
+                " p53 in the regulatory sense: they set its level or its activity. Several are also p53"
+                " targets, which is the feedback loop, not a contradiction.",
+            "p53 effector: negative feedback":
+                "Induced by p53 and acting to shut the response down again. [[MDM2]] is the one to"
+                " understand: its mRNA is a p53 readout while its protein is p53's main regulator, so which"
+                " one is meant changes the direction of every inference.",
+            "p53 program, repression arm":
+                "Genes p53 **lowers**, and it does so indirectly — through p21 and the DREAM complex, not by"
+                " binding their promoters. See [[The p21-DREAM axis]]. Smaller effects than the induction"
+                " arm, and the weakest per-gene claims in the study.",
+            "the MG53 locus":
+                "Position, not regulation. TRIM72 sits 3′ of FUS and PYCARD-AS1 on the same strand, so"
+                " transcription running past them is counted as TRIM72 mRNA — [[Readthrough spillover]].",
+            "transcription factor, muscle programme":
+                "The factors that drive TRIM72 in striated muscle, where it belongs. In this panel of cancer"
+                " lines they are silent or not expressed at all, which is why no transcription-factor"
+                " account of MG53's movement here works.",
+            "unannotated locus":
+                "Ensembl-only identifiers with no HGNC record: no approved symbol, no name, no family. The"
+                " quantification assigned reads to them and that is the whole of what is known.",
+        }.get(role)
+        if blurb:
+            L += [blurb, ""]
+        rows = ["| Gene | Name | Locus | In this vault because |", "|---|---|---|---|"]
+        for _, r in sub.sort_values("symbol").iterrows():
+            h = ((annot.get(r["symbol"]) or {}).get("hgnc") or {})
+            rows.append("| [[%s]] | %s | %s | %s |" % (slug(r["symbol"]), h.get("name") or "—",
+                                                        h.get("location") or "—", r["roles"]))
+        L += rows + [""]
+
+    L += ["## By gene family", "",
+          "Membership is HGNC's, fetched not recalled. Only families with more than one gene here are"
+          " listed — these are the relations between genes rather than between a gene and p53.", ""]
+    multi = {k: v for k, v in families.items() if len(v) > 1}
+    for fmy in sorted(multi, key=lambda k: (-len(multi[k]), k)):
+        L += ["- **%s** (%d) — %s" % (fmy, len(multi[fmy]),
+                                      ", ".join("[[%s]]" % slug(s) for s in multi[fmy]))]
+    L += ["", "The full list, singletons included, is [[Gene families]].", ""]
+    write(os.path.join(IDX_DIR, "Genes by relation.md"), "\n".join(L))
+
+
+def build_family_index(d, uni):
+    annot, families = d.get("annot") or {}, d.get("families") or {}
+    n_fam = len(families)
+    no_fam = sorted(s for s in uni["symbol"]
+                    if not (((annot.get(s) or {}).get("hgnc") or {}).get("gene_family")))
+    L = ["---", "type: index", "tags: [index, genes, families]",
+         "generated_by: knowledge/_build/build_vault.py", "---", "",
+         "# Gene families", "",
+         "Every HGNC gene family with a member in this vault — %d of them across %d genes. Family membership"
+         " is a structural fact about the protein, independent of anything this study measured, which makes"
+         " it the one grouping here that no selection decision touched."
+         % (n_fam, len(uni) - len(no_fam)), "",
+         "| Family | Genes here |", "|---|---|"]
+    for fmy in sorted(families, key=lambda k: (-len(families[k]), k)):
+        L += ["| %s | %s |" % (fmy, ", ".join("[[%s]]" % slug(s) for s in families[fmy]))]
+    L += ["", "## No family on record (%d)" % len(no_fam), "",
+          "Either HGNC assigns the gene to no family, or — for the Ensembl-only identifiers — there is no"
+          " HGNC record at all.", "",
+          ", ".join("[[%s]]" % slug(s) for s in no_fam), ""]
+    write(os.path.join(IDX_DIR, "Gene families.md"), "\n".join(L))
+
+
+def build_canvas(d, uni):
+    """An Obsidian canvas of the p53 relations: who controls p53, and what p53 controls.
+
+    A canvas is JSON that Obsidian renders as a board of linked note cards. It carries no numbers - it is
+    the shape of the pathway, so that a reader can see the relation structure before reading any one note.
+    """
+
+    def present(syms):
+        have = set(uni["symbol"])
+        return [s for s in syms if s in have]
+
+    cols = [
+        ("Controls p53", present(["ATM", "CHEK2", "CDKN2A", "MDM4", "USP7", "TP53BP1", "STK11"]), -1150),
+        ("p53", present(["TP53"]), -620),
+        ("Negative feedback", present(["MDM2", "PPM1D", "ZMAT3", "CCNG1"]), -120),
+    ]
+    arms = [("Arrest", "p53 effector: cell-cycle arrest"), ("Apoptosis", "p53 effector: apoptosis"),
+            ("DNA repair", "p53 effector: DNA repair"),
+            ("Metabolism / redox", "p53 effector: metabolism / redox")]
+    nodes, edges = [], []
+    W, H, GAP = 230, 60, 22
+
+    def group(title, x, y, w, h):
+        nodes.append({"id": "g_" + slug(title).replace(" ", "_"), "type": "group", "label": title,
+                      "x": x, "y": y, "width": w, "height": h})
+
+    def card(sym, x, y):
+        nodes.append({"id": "n_" + slug(sym), "type": "file",
+                      "file": "20-Genes/%s/%s.md" % (FOLDER_OF[uni.loc[uni.symbol == sym,
+                                                                        "pathway_role"].iloc[0]], slug(sym)),
+                      "x": x, "y": y, "width": W, "height": H,
+                      "color": "4" if sym == "TP53" else None})
+        if nodes[-1]["color"] is None:
+            nodes[-1].pop("color")
+        return "n_" + slug(sym)
+
+    ids = {}
+    for title, syms, x in cols:
+        if not syms:
+            continue
+        group(title, x - 26, -60 - 26, W + 52, len(syms) * (H + GAP) + 52)
+        for i, s in enumerate(syms):
+            ids[s] = card(s, x, -60 + i * (H + GAP))
+    y0 = 0
+    for label, role in arms:
+        syms = present(sorted(uni.loc[uni.pathway_role == role, "symbol"]))[:7]
+        if not syms:
+            continue
+        group(label, 400 - 26, y0 - 26, W + 52, len(syms) * (H + GAP) + 52)
+        for i, s in enumerate(syms):
+            ids[s] = card(s, 400, y0 + i * (H + GAP))
+        y0 += len(syms) * (H + GAP) + 90
+
+    if "TP53" in ids:
+        for s in [c for _, syms, _ in cols[:1] for c in syms]:
+            edges.append({"id": "e_%s_tp53" % slug(s), "fromNode": ids[s], "fromSide": "right",
+                          "toNode": ids["TP53"], "toSide": "left", "label": "controls"})
+        for s in ids:
+            if s == "TP53" or s in [c for _, syms, _ in cols[:1] for c in syms]:
+                continue
+            fb = uni.loc[uni.symbol == s, "pathway_role"].iloc[0] == "p53 effector: negative feedback"
+            edges.append({"id": "e_tp53_%s" % slug(s), "fromNode": ids["TP53"], "fromSide": "right",
+                          "toNode": ids[s], "toSide": "left", "label": "induces"})
+            if fb:
+                edges.append({"id": "e_%s_back" % slug(s), "fromNode": ids[s], "fromSide": "top",
+                              "toNode": ids["TP53"], "toSide": "top", "label": "shuts down"})
+    nodes.append({"id": "note_scope", "type": "text", "x": -1150, "y": 560, "width": 700, "height": 150,
+                  "text": "**This board is the shape of the pathway, not a result.**\n\nEdges are "
+                          "relations from the literature and from curation, not measurements. For what this "
+                          "study found, see [[What this study found]]. The MG53 locus is deliberately "
+                          "absent: TRIM72's relation to FUS and PYCARD-AS1 is *position*, not regulation — "
+                          "see [[The TRIM72 locus]]."})
+    write(os.path.join(VAULT, "00-Index", "p53 relations.canvas"),
+          json.dumps({"nodes": nodes, "edges": edges}, indent=1))
 
 
 def build_gene_moc(d, uni):
@@ -584,16 +958,32 @@ def main():
     uni.to_csv(os.path.join(HERE, "gene_universe.csv"), index=False)
     only = set(x.strip() for x in a.only_genes.split(",") if x.strip())
     n = build_genes(d, uni, only or None)
+    uni.to_csv(os.path.join(HERE, "gene_universe.csv"), index=False)      # now carries role and folder
     if not only:
         build_gene_moc(d, uni)
+        build_relation_moc(d, uni)
+        build_family_index(d, uni)
+        build_canvas(d, uni)
         build_dataset_index(d)
         build_home(uni, d)
     frags = len([x for x in os.listdir(FRAG_DIR) if x.endswith(".md")]) if os.path.isdir(FRAG_DIR) else 0
+    annot = d.get("annot") or {}
+    have = [s for s in uni["symbol"] if (annot.get(s) or {}).get("hgnc")]
+    ncbi = [s for s in uni["symbol"] if ((annot.get(s) or {}).get("ncbi") or {}).get("summary")]
+    unip = [s for s in uni["symbol"] if ((annot.get(s) or {}).get("uniprot") or {}).get("function")]
     print("gene notes written: %d (of %d in the universe)" % (n, len(uni)))
     print("  tier 1 %d | tier 2 %d | tier 3 %d"
           % tuple(int((uni["tier"] == t).sum()) for t in (1, 2, 3)))
     print("knowledge fragments found and spliced in: %d" % frags)
-    print("indexes: Home, Genes — Map of Content, Tables — what the study produced")
+    print("registry annotation: HGNC %d | NCBI summary %d | UniProt function %d | families %d"
+          % (len(have), len(ncbi), len(unip), len(d.get("families") or {})))
+    print("\nfiled by relation:")
+    for role, folder in ROLE_FOLDER:
+        c = int((uni["pathway_role"] == role).sum())
+        if c:
+            print("  %-46s %3d  -> 20-Genes/%s" % (role, c, folder))
+    print("\nindexes: Home, Genes by relation, Gene families, Genes — Map of Content,"
+          " Tables — what the study produced, p53 relations.canvas")
     print("universe written to %s" % os.path.join(HERE, "gene_universe.csv"))
 
 
