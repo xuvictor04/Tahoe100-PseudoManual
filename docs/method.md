@@ -122,8 +122,13 @@ FDR(t) = (disagreeing + 1) / agreeing pairs above t; a pair is scored at the sma
 names, so this is not replication and carries no error estimate; often a response driven by one compound); and
 genomic and literature flags (same locus ≤ 50 kb; readthrough risk = same strand, ≤ 20 kb, the 5′ gene ≥ 8× more
 expressed; shared HGNC gene group; shared Hallmark or Reactome pathway of ≤ 300 genes; STRING score ≥ 400).
-A **novel candidate** is a pair with evidence in both halves, FDR ≤ 0.05, |cos| ≥ 0.5, no literature link, not the
-same locus, both genes described by HGNC and placed on the genome — and only when HGNC, Ensembl, STRING and
+Each pair also carries its **specificity**: whether each gene is among the other's strongest partners (`mutual_rank`)
+and how exceptional the pair is for both genes (`specificity` = the smaller of the two `z_gene`). On the full data,
+broad programmes make hundreds of thousands of pairs replicable; specificity separates a particular relation from
+membership of the same large programme (mutually-top pairs are ~3× more often already known).
+A **novel candidate** is a pair that is mutually among the 10 strongest partners with specificity ≥ 4, has evidence
+in both halves, FDR ≤ 0.05, |cos| ≥ 0.5, no literature link, is not the same locus, with both genes described by
+HGNC and placed on the genome — and only when HGNC, Ensembl, STRING and
 Hallmark or Reactome all loaded (otherwise `relations/info.json` and the report say novelty was not assessed).
 
 ## 7. Graph — the nodal map
@@ -132,7 +137,9 @@ See [vector-space-and-nodal-map.md](vector-space-and-nodal-map.md). In short: mo
 graph linking each gene to its 15 strongest partners by |cos| ≥ 0.3 that are replicated (`both halves`) or very strong
 in one half (|cos| ≥ 0.5). A module has a − arm only when ≥ 5 members sit on the negative side of its main direction
 and the two sides anti-correlate (mean cosine between them ≤ −0.2); otherwise it is single-armed (all +).
-`graph/modules.parquet` gives the mean cosine within each arm and between the arms. The nodal map is a t-SNE layout
+`graph/modules.parquet` gives the mean cosine within each arm and between the arms. A first Louvain pass over the
+whole genome returns programme-sized communities of 1,000+ loosely related genes, so modules larger than 300 genes
+or looser than a mean member |cos| of 0.3 are split again on their own subgraph (up to 4 levels). The nodal map is a t-SNE layout
 of 1 − |cos|; the signed map is the same on 1 − cos.
 
 ## 8. Reference, validation, vault, map
