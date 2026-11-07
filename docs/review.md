@@ -267,7 +267,7 @@ Everything is under `<output>/review/`:
 | `history/<kind>/<name>/<run_id>.jsonl` | every event of one attempt |
 | `reviews/<kind>/<name>.json` | the submitted review + its verification + metadata (model, date, cost, history path ...) |
 | `notes/<kind>/<name>.md` | the vault section the agent wrote |
-| `connections.parquet`, `findings.parquet` | every connection verdict / every finding of every review, one row each (rebuilt at the end of each run and by `tahoe review tables`) |
+| `connections.parquet`, `findings.parquet` | every connection verdict / every finding of every review, one row each, with its check (`check_status`, `shown_verdict`), its citations and the retracted papers among them (`citations`, `retracted`: `PMID:1;DOI:x`) (rebuilt at the end of each run and by `tahoe review tables`) |
 | `dry_run/`, `cache/`, `keys_state.json`, `review.log` | dry-run files, the literature cache, key ids and which are dead, the log |
 
 A **ledger** line: entity_id, kind, name, run_id, agent, model, status (`done`, `refused`, `no_review`,
@@ -348,7 +348,9 @@ The review JSON keeps both. Every connection verdict, and every other item that 
 `check_status` - `supported`, `partly`, `not_supported`, `not_checkable` (the checker's verdict; also: ids valid but
 no claim check), `unchecked` (an id not verified) or `citations_removed` (every citation was not found) - and
 `shown_verdict`, the verdict to display: the agent's, or `unverified` when the status is `not_supported` or
-`citations_removed`. The top level has `verification` (`ids`: checked, removed, unchecked, retracted ...; `llm`:
+`citations_removed`. An item that cites a retracted paper keeps its verdict there and lists the paper in
+`retracted_citations`; the vault and the map add a marker and, when the item cites nothing else, show it as
+unverified (see below). The top level has `verification` (`ids`: checked, removed, unchecked, retracted ...; `llm`:
 status done / not_run / failed and the counts per verdict; `counts`) and `note_footer`, a provenance line generated
 from those counts and shown under the note (the agents are told never to write their own; a sentence of the stored
 note that only vouches for its own verification, such as "citations were checked against PubMed and their
@@ -361,8 +363,10 @@ The vault and map stages read `review/` when it holds reviews; without reviews n
 review run, `tahoe` (status) shows the vault and map out of date ("the literature reviews changed"); `tahoe run`, or
 `tahoe vault` then `tahoe map`, rebuilds them (about two minutes on the full data). The verdicts come from
 `review/connections.parquet`, rebuilt at the end of every review run; when that table is older than a review JSON
-(a run killed before its end) it is ignored and the verdicts are read from the JSONs (`tahoe review tables`
-rebuilds it), and the vault and map show out of date until they are rebuilt.
+(a run killed before its end), or was written by an older version without its `retracted` column, it is ignored and
+the verdicts are read from the JSONs (`tahoe review tables` rebuilds it), and the vault and map show out of date
+until they are rebuilt. A change in how reviews are drawn (such as the retraction marker) also makes the vault and
+the map out of date, so `tahoe run` redraws them.
 
 - A reviewed gene, drug or line note gets the tag `#literature-review`, a `literature_review` date in its
   frontmatter, and a section **What the literature says** (in a gene note after "Where it sits"; in a drug or line
@@ -380,8 +384,11 @@ rebuilds it), and the vault and map show out of date until they are rebuilt.
   only its text; a reference definition to another site is removed wherever it is, in a blockquote, callout or list
   item too; a bare URL to another site is not made a link), code fences closed and shown as plain code (no
   `dataviewjs`, `mermaid` ..., in a blockquote, callout or list item too), no setext heading, its own headings
-  demoted below the note's. A line in which the agent vouches for its own verification
-  ("citations were checked ...", its own "AI-generated ..." footer) is dropped: the generated line replaces it.
+  demoted below the note's. A sentence in which the agent only vouches for its own verification
+  ("Citations were checked against PubMed and their abstracts.", its own "AI-generated ..." footer), and the
+  disclaimers in its paragraph, are dropped by the rule the runner applies to the notes it stores: the generated
+  line replaces them. A sentence that says anything more is kept whole ("Citations were checked, but none links
+  PIR to HMOX1 in hypoxia." stays).
   Wikilinks the agent wrote are kept only where the vault has that note. Partner names and citation ids in the
   generated lines and tables are escaped.
 - A gene note's partner tables get a **Literature** column when a partner shown has a verdict: the verdict of this
@@ -390,12 +397,20 @@ rebuilds it), and the vault and map show out of date until they are rebuilt.
   `established (supported)`, `established (partly supported)`, `established (not checked)` (the ids exist; the
   claim was not checked against the abstracts), `established (ids not checked)` (not looked up), and
   **unverified** when the citation checker found the cited abstracts do not support it or none of its papers exists
-  (`unverified (agent: established; citations not found)`): such a verdict is never shown as established. When a
-  review gives one partner several verdicts, one is shown, in the vault and the map alike: the strongest verified
-  one (established, contradicted, indirect, plausible, unexpected, among those supported, partly supported or with
-  valid ids), else the agent's first ("of 2 verdicts it gave").
+  (`unverified (agent: established; citations not found)`): such a verdict is never shown as established.
+- **Retracted papers.** A verdict that cites a retracted paper says so after its label, `established (supported)
+  (cites a retracted paper)`, and the paper is marked "(retracted)" after its link. A retracted paper is no support,
+  so a verdict whose only papers are retracted reads `unverified (cites a retracted paper) (agent: established; only
+  retracted papers cited)`, never established, whatever the citation check said; one that also cites a paper that
+  stands keeps its verdict and its check, with the marker. A review stored before retractions were recorded shows
+  no marker: nothing about its papers' retraction is known.
+- When a review gives one partner several verdicts, one is shown, in the vault and the map alike: the strongest
+  verified one (established, contradicted, indirect, plausible, unexpected, among those supported, partly supported
+  or with valid ids, and citing something besides retracted papers; between equal ones, one citing no retracted
+  paper), else the agent's first ("of 2 verdicts it gave").
 - The map's side panel shows the same label as a badge next to such a partner (`lit: established (supported)`,
-  `lit: unverified` ...); hover it for what the agent said, what the check found and the citation count.
+  `lit: unverified`, `lit: indirect (not checked) (cites a retracted paper)` ...); hover it for what the agent said,
+  what the check found (and which cited paper is retracted) and the citation count.
 
 ## The duplicate workflow
 

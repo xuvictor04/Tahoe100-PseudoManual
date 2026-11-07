@@ -102,7 +102,9 @@ Scaled integers: cos x100, fdr x100 (-1 = none), lfc x100 (log2), z x10.
                                    vault's rule) where a and b are partners in `rel` (one way or the other); lit_v[kind]
                                    = [label, explanation, shown verdict, check_status] (vault.verdict_label: e.g.
                                    "established (supported)", "indirect (ids not checked)", "unverified" when the
-                                   citation check found it not supported or every citation was removed as not found).
+                                   citation check found it not supported, every citation was removed as not found,
+                                   or every paper it cites is retracted; " (cites a retracted paper)" follows the
+                                   label when one is, and the explanation names it).
                                    The side panel's partner list shows them as a small "lit:" badge (a's verdict on b,
                                    else b's on a). The stamp records vault.review_fingerprint, so a review run makes
                                    the map out of date.
@@ -608,8 +610,9 @@ def _literature(out, tg, ent, gK, n, shown_pairs):
     (shown_pairs: sorted min(a, b) * n + max(a, b) of the embedded top-partner lists), as the {"lit": [...],
     "lit_v": [...]} entries of the page data; {} without reviews (the page is then as before). One verdict per
     (review, partner), chosen by vault.pick_verdict (the vault's rule); each is shown as vault.verdict_label says:
-    the shown verdict (shown_verdict: 'unverified' when the citation check found it not supported or every citation
-    was removed as not found) and its check_status."""
+    the shown verdict (shown_verdict: 'unverified' when the citation check found it not supported, every citation
+    was removed as not found, or every paper it cites is retracted) and its check_status, then ' (cites a retracted
+    paper)' when a paper it cites is retracted (the badge and its tooltip)."""
     if V.review_fingerprint(out) is None:
         return {}
     by = {}
@@ -2264,7 +2267,7 @@ function partnerTable() {
       "</td><td class='r'>" + (p.cos > 0 ? "+" : "") + p.cos.toFixed(2) + "</td><td>" + EVS[p.ev] + "</td><td class='r'>" + fdrTxt(p.fdr) + "</td><td>" + f + "</td></tr>";
   }
   h += "</table>";
-  if (nLit) h += "<p class='note'><span class='bd lit'>lit:</span> = the verdict of an AI-agent literature review on the pair (established, indirect, plausible, unexpected, contradicted) and its check: supported / partly supported (the citation checker read the cited abstracts), not checked (ids exist, claim not checked), ids not checked (not looked up); <i>unverified</i> = the abstracts do not support it, or none of its papers exists. Not checked by a person; hover for details. The review itself is in the gene's vault note.</p>";
+  if (nLit) h += "<p class='note'><span class='bd lit'>lit:</span> = the verdict of an AI-agent literature review on the pair (established, indirect, plausible, unexpected, contradicted) and its check: supported / partly supported (the citation checker read the cited abstracts), not checked (ids exist, claim not checked), ids not checked (not looked up); <i>unverified</i> = the abstracts do not support it, none of its papers exists, or all of them are retracted; (cites a retracted paper) = a paper it cites is retracted, which is no support. Not checked by a person; hover for details. The review itself is in the gene's vault note.</p>";
   if (!D.novel_ok) h += "<p class='note'>Novelty not assessed: " + esc((D.novel_blocked || []).join(", ") || "reference sources") + " missing, so no pair is called novel.</p>";
   return h;
 }

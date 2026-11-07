@@ -11,7 +11,8 @@
     status(out, tables=False)             counts by status and kind, spend, projected cost of the rest, dead keys,
                                           reviews whose verification is incomplete, the run lock
     build_tables(out)                     OUT/review/connections.parquet and findings.parquet from the reviews
-                                          (with check_status and shown_verdict of every item)
+                                          (with check_status and shown_verdict of every item, and
+                                          'retracted': the retracted papers it cites)
     cli(a)                                `python -m tahoemap review plan|run|status|tables` (cli.py)
 
 The agent loop (docs/DESIGN-review-and-physics.md, Part 2, "Surface"): every request is streamed -
@@ -1818,10 +1819,11 @@ def read_json_safe(p):
 
 
 CONN_COLS = ["entity_id", "kind", "name", "partner", "partner_kind", "partner_col", "verdict", "citations",
-             "n_citations", "check", "unverified", "check_status", "shown_verdict", "model", "run_id", "reviewed"]
+             "n_citations", "retracted", "check", "unverified", "check_status", "shown_verdict", "model", "run_id",
+             "reviewed"]
 FIND_COLS = ["entity_id", "kind", "name", "section", "item", "title", "detail", "data_evidence", "confidence",
-             "source", "citations", "n_citations", "check", "unverified", "check_status", "shown_verdict", "model",
-             "run_id", "reviewed"]
+             "source", "citations", "n_citations", "retracted", "check", "unverified", "check_status",
+             "shown_verdict", "model", "run_id", "reviewed"]
 SECTIONS = {"established": ("partner_or_topic", "relation", "data_evidence"),
             "unexpected": ("observation", "why_unexpected", "data_evidence"),
             "missing": ("expected_connection", "likely_reason", "data_status"),
@@ -1858,9 +1860,19 @@ def _annotated(review):
     return r
 
 
+def _retracted(it):
+    """An item's retracted citations (verify.check_ids: "retracted_citations") in the form of the 'citations' column,
+    'PMID:1;DOI:x'; '' when it cites none - also for a review stored before retractions were recorded."""
+    r = it.get("retracted_citations")
+    if isinstance(r, str):
+        r = r.split(";")
+    return ";".join(str(x).strip() for x in r if str(x).strip()) if isinstance(r, (list, tuple)) else ""
+
+
 def build_tables(out):
     """OUT/review/connections.parquet (one row per connection verdict) and findings.parquet (one row per item of
-    established / unexpected / missing / contradicted, and per open question) from the stored reviews."""
+    established / unexpected / missing / contradicted, and per open question) from the stored reviews. 'citations'
+    and 'retracted' (the retracted papers among them) are 'PMID:1;DOI:x' strings."""
     rd = os.path.join(out, "review", "reviews")
     conn, find = [], []
     cols = None
@@ -1885,7 +1897,7 @@ def build_tables(out):
                 cits = it.get("citations") or []
                 conn.append({**base, "partner": p, "partner_kind": pk, "partner_col": pc,
                              "verdict": it.get("verdict"), "citations": ";".join(cits), "n_citations": len(cits),
-                             "check": (it.get("check") or {}).get("verdict", ""),
+                             "retracted": _retracted(it), "check": (it.get("check") or {}).get("verdict", ""),
                              "unverified": bool(it.get("unverified")), "check_status": it.get("check_status") or "",
                              "shown_verdict": it.get("shown_verdict") or it.get("verdict") or ""})
             for sec, (tk, dk, ek) in SECTIONS.items():
@@ -1897,14 +1909,16 @@ def build_tables(out):
                     find.append({**base, "section": sec, "item": i, "title": it.get(tk, ""), "detail": detail,
                                  "data_evidence": it.get(ek, ""), "confidence": it.get("confidence", ""),
                                  "source": it.get("source", ""), "citations": ";".join(cits),
-                                 "n_citations": len(cits), "check": (it.get("check") or {}).get("verdict", ""),
+                                 "n_citations": len(cits), "retracted": _retracted(it),
+                                 "check": (it.get("check") or {}).get("verdict", ""),
                                  "unverified": bool(it.get("unverified")),
                                  "check_status": it.get("check_status") or "",
                                  "shown_verdict": it.get("shown_verdict") or (sec if it.get("check_status") else "")})
             for i, qn in enumerate(r.get("open_questions") or []):
                 find.append({**base, "section": "open_questions", "item": i, "title": qn, "detail": "",
                              "data_evidence": "", "confidence": "", "source": "", "citations": "", "n_citations": 0,
-                             "check": "", "unverified": False, "check_status": "", "shown_verdict": ""})
+                             "retracted": "", "check": "", "unverified": False, "check_status": "",
+                             "shown_verdict": ""})
     c = pd.DataFrame(conn, columns=CONN_COLS)
     c["partner_col"] = c["partner_col"].astype("Int64")
     write_parquet(c, os.path.join(review_dir(out), "connections.parquet"))

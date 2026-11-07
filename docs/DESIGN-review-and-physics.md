@@ -178,7 +178,10 @@ is refused without being shown.
   next one.
 - Outputs: `OUT/review/reviews/<kind>/<safe name>.json` (submitted payload + verification + metadata),
   `OUT/review/notes/<kind>/<safe name>.md` (note body for the vault), `OUT/review/connections.parquet` and
-  `OUT/review/findings.parquet` (built by `status --tables` / at the end of each run from the review JSONs).
+  `OUT/review/findings.parquet` (built by `status --tables` / at the end of each run from the review JSONs; each
+  row has its `citations` and the `retracted` papers among them, `PMID:1;DOI:x`, '' for a review stored before
+  retractions were recorded). The vault and the map mark a verdict that cites a retracted paper "(cites a retracted
+  paper)" and show one whose only papers are retracted as unverified (a retracted paper is no support).
 
 **Cost**: price table per model (USD / MTok: input, output, cache write 1.25× input, cache read 0.1× input ...
 `claude-opus-5-5` 4 / 20, `claude-sonnet-5-5` 2 / 10, `claude-haiku-5-5` 0.10 / 0.50; web search $0.01 each); cost

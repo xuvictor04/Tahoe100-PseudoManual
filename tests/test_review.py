@@ -1002,12 +1002,46 @@ def sanitize_gaps(c, VT):
     check(c, "ui#2: the sanitiser takes linear time on long runs of brackets (no backtracking blow-up)",
           time.time() - t0 < 3, f"{time.time() - t0:.2f} s")
     own = ["_Citations were checked against PubMed and their abstracts._", "_References were verified against PubMed._",
-           "*Citations were checked against PubMed.*", "_Citations were checked_"]
+           "*Citations were checked against PubMed.*"]
     kept = ["Two cohorts agree: these claims were verified in independent patient samples.",
             "_The references verified it in mice._"]
     dropped = VT.drop_self_check("Text.\n" + "\n".join(own + kept) + "\n")
     check(c, "ui#2: the vault drops the agent's own provenance in an underscore-italic line; other lines stay",
           dropped == "Text.\n" + "\n".join(kept) + "\n", dropped)
+    vault_self_check_rule(c, VT)
+
+
+def vault_self_check_rule(c, VT):
+    """The vault's drop_self_check is verify.drop_self_check, the sentence-level rule of the stored notes: a line that
+    reports a finding next to 'citations were checked' (or after 'Verify before relying on it', or in a line opening
+    'AI-generated literature review') is kept whole - the earlier line rule dropped any line under 400 characters
+    with those words; a sentence that only vouches for the checking, and the disclaimers of its paragraph, go."""
+    from tahoemap.review import verify as V
+    found = ["Citations were checked, but none links PIR to HMOX1 in hypoxia.",
+             "Verify before relying on it: the HMOX1 link rests on one mouse study.",
+             "_Citations were checked in PubMed for the pair; none reports PIR with HMOX1._",
+             "_AI-generated literature review: NQO1 rises 4x with every NRF2 activator._"]
+    mixed = ("NQO1 is an NRF2 target.\n" + "\n".join(found) + "\n_Citations were checked against PubMed and their "
+             "abstracts._\n")
+    footer = ("NQO1 is an NRF2 target.\n\n_AI-generated literature review of this run's data; citations were checked "
+              "against PubMed and their abstracts.\nVerify before relying on it._\n")
+    got = {x: VT.drop_self_check(x) for x in [mixed, footer] + [f + "\n" for f in found]}
+    check(c, "a finding next to 'citations were checked' (or a disclaimer's words) is kept whole; only the sentence "
+             "that just vouches for the checking goes",
+          got[mixed] == "NQO1 is an NRF2 target.\n" + "\n".join(found) + "\n"
+          and all(got[f + "\n"] == f + "\n" for f in found), got[mixed])
+    check(c, "the agent's own footer paragraph (self-check + disclaimers) is dropped whole",
+          got[footer] == "NQO1 is an NRF2 target.\n", got[footer])
+    emph = {"**NQO1 is up 4x.** Citations were checked against PubMed.\n**HMOX1 rises too.**":
+            "**NQO1 is up 4x.**\n**HMOX1 rises too.**\n",
+            "Text.\n_Citations were checked against PubMed._\n_The references verified it in mice._\n":
+            "Text.\n_The references verified it in mice._\n"}
+    got.update({x: VT.drop_self_check(x) for x in emph})
+    check(c, "a kept sentence that ends its paragraph keeps its closing emphasis ('_' / '**'), next to a dropped one",
+          all(got[x] == want for x, want in emph.items()), [got[x] for x in emph])
+    check(c, "the vault applies the same rule as the stored notes (verify.drop_self_check)",
+          all(VT.drop_self_check(x) == V.drop_self_check(x) for x in got) and VT.drop_self_check(None) == "",
+          [x[:40] for x in got if VT.drop_self_check(x) != V.drop_self_check(x)])
 
 
 @case
@@ -1548,6 +1582,158 @@ def retractions(work):
     check(c, "a retracted paper (or a notice) without an abstract is still marked in the checker's prompt",
           "=== DOI:10.1000/fake.31000007 ===  [RETRACTED" in p and "=== PMID:31000006 ===  [RETRACTION NOTICE" in p,
           [x for x in p.splitlines() if x.startswith("=== ")])
+
+
+@case
+def retractions_shown(work, src, ents):
+    """science#8 (what readers see): a retracted paper that a verdict cites is shown wherever the verdict is - the
+    review tables ('retracted' beside 'citations' in connections / findings; '' for a review stored before
+    retractions were recorded), the vault's Literature column and verdict list ('(cites a retracted paper)', the
+    paper marked '(retracted)') and the map's badge and tooltip. A verdict whose only papers are retracted reads
+    'unverified', never 'established', and is not the verdict picked for its partner (vault and map alike). A table
+    written before it had the column is not used (the JSONs are read), and outputs drawn before are out of date."""
+    from tahoemap import html_map, vault as VT
+    c = "retractions_shown"
+    # -- the rules, without a run
+    only = {"verdict": "established", "citations": "PMID:31000005", "retracted": "PMID:31000005",
+            "check_status": "supported", "shown_verdict": "established"}
+    some = {"verdict": "indirect", "citations": "PMID:31000005;PMID:31000001", "retracted": "PMID:31000005",
+            "check_status": "not_checkable", "shown_verdict": "indirect"}
+    item = {"verdict": "established", "citations": ["PMID:31000005"], "retracted_citations": ["PMID:31000005"],
+            "check_status": "not_checkable", "shown_verdict": "established"}
+    older = {"verdict": "established", "citations": "PMID:31000005", "check_status": "not_checkable",
+             "shown_verdict": "established"}                       # a table or review from before retractions
+    st = [VT.lit_status(x) for x in (only, some, item, older)]
+    check(c, "a verdict whose only papers are retracted is shown 'unverified' (table row or review item); one that "
+             "also cites another paper keeps its verdict; no record of retractions = none",
+          st == [("supported", "unverified"), ("not_checkable", "indirect"), ("not_checkable", "unverified"),
+                 ("not_checkable", "established")], st)
+    lab = [VT.verdict_label(dict(x, check_status=s[0], shown_verdict=s[1]))
+           for x, s in zip((only, some, older), (st[0], st[1], st[3]))]
+    check(c, "verdict_label (the vault's cell, the map's badge and tooltip): '(cites a retracted paper)' and the "
+             "paper named; the retracted-only verdict reads 'unverified (cites a retracted paper)'",
+          lab[0][0] == "unverified (cites a retracted paper)"
+          and "it cites a retracted paper (PMID:31000005) and nothing else" in lab[0][1]
+          and lab[1][0] == "indirect (not checked) (cites a retracted paper)"
+          and "it cites a retracted paper (PMID:31000005), which is no support" in lab[1][1]
+          and lab[2][0] == "established (not checked)" and "retracted" not in lab[2][1], lab)
+    pv = VT.pick_verdict
+    picked = [pv([dict(only), {"verdict": "plausible", "citations": "PMID:31000002", "check_status": "not_checkable"}]
+                 )["verdict"],
+              pv([dict(some, verdict="established", check_status="supported"),
+                  {"verdict": "established", "citations": "PMID:31000003", "check_status": "supported"}])["citations"]]
+    check(c, "pick_verdict: a verdict resting only on retracted papers is not a verified one; between equal verdicts "
+             "and checks, the one that cites no retracted paper",
+          picked == ["plausible", "PMID:31000003"], picked)
+    # -- a run: verdicts citing the fake library's retracted PMID 31000005, through the fake API
+    sv = own_view(work, src, "retracted_view")
+    g, g2 = ents["genes"][1], ents["genes"][2]
+    rel = pd.read_parquet(os.path.join(src, "relations", "gene_relations.parquet"), columns=["col_a", "col_b", "rank"])
+    genes = pd.read_parquet(os.path.join(src, "tables", "genes.parquet"), columns=["col", "label"]).set_index("col")
+    pcols = [int(x) for x in rel[rel["col_a"] == g["col"]].sort_values("rank")["col_b"].head(4)]
+    P = [str(genes.at[x, "label"]) for x in pcols]
+    cv = [{"partner": P[0], "verdict": "established", "citations": ["PMID:31000005"]},                 # only retracted
+          {"partner": P[1], "verdict": "indirect", "citations": ["PMID:31000005", "PMID:31000001"]},   # one of two
+          {"partner": P[2], "verdict": "established", "citations": ["PMID:31000005"]},                 # two on P[2]:
+          {"partner": P[2], "verdict": "plausible", "citations": ["PMID:31000002"]},                   # ... this one
+          {"partner": P[3], "verdict": "established", "citations": ["PMID:31000003"]}]                 # none
+    rv = F.sample_review(P[3], ("31000003",))
+    rv["connection_verdicts"] = [dict({"relation": "both NRF2 targets", "data_evidence": "moves with: cos +0.60"}, **v)
+                                 for v in cv]
+    steps = [{"tool_use": [{"name": "pubmed_abstracts", "input": {"pmids": ["31000001", "31000002", "31000003",
+                                                                            "31000005"]}}]},
+             {"submit_review": rv}]
+    res, _fk = run(sv, {"entities": {g["entity_id"]: steps}}, only=g["entity_id"], verify="ids")
+    rd = os.path.join(sv, "review", "reviews", "gene")
+    rj = os.path.join(rd, os.listdir(rd)[0])
+    js = json.load(open(rj, encoding="utf-8"))
+    # a review stored before retractions were recorded: the same review on another gene, without the lists
+    old = json.loads(json.dumps(js))
+    old["meta"].update(entity_id=g2["entity_id"], name=g2["name"])
+    for sec in ("established", "missing", "contradicted", "unexpected", "connection_verdicts"):
+        for it in old.get(sec) or []:
+            it.pop("retracted_citations", None)
+            it.pop("retraction_notices", None)
+    with open(os.path.join(rd, "old-format.json"), "w", encoding="utf-8") as fh:
+        json.dump(old, fh)
+    R.build_tables(sv)
+    conn = pd.read_parquet(os.path.join(sv, "review", "connections.parquet"))
+    find = pd.read_parquet(os.path.join(sv, "review", "findings.parquet"))
+    new_c, old_c = conn[conn["entity_id"] == g["entity_id"]], conn[conn["entity_id"] == g2["entity_id"]]
+    check(c, "the stored review lists the retracted paper on each verdict citing it",
+          res.counts == {"done": 1} and [v.get("retracted_citations") or [] for v in js["connection_verdicts"]] ==
+          [["PMID:31000005"], ["PMID:31000005"], ["PMID:31000005"], [], []],
+          [(v["partner"], v.get("retracted_citations")) for v in js["connection_verdicts"]])
+    check(c, "connections / findings carry 'retracted' in the form of 'citations'; '' for an older review JSON",
+          list(conn.columns) == R.CONN_COLS and list(find.columns) == R.FIND_COLS
+          and list(new_c["retracted"]) == ["PMID:31000005"] * 3 + ["", ""]
+          and len(old_c) == 5 and set(old_c["retracted"]) == {""}
+          and set(find["retracted"]) == {""} and find["retracted"].map(type).eq(str).all(),
+          {"new": list(new_c["retracted"]), "old": list(old_c["retracted"])})
+    with contextlib.redirect_stdout(io.StringIO()):
+        VT.run(sv)
+        html_map.run(sv)
+    gpath = next(os.path.join(dp, f) for dp, _d, fns in os.walk(os.path.join(sv, "vault")) for f in fns
+                 if f == g["name"] + ".md")
+    gt = open(gpath, encoding="utf-8").read()
+    rows = {}
+    for head in ("## Genes that move with it", "## Genes that move opposite"):
+        tab = gt.split(head, 1)[1].split("\n## ", 1)[0] if head in gt else ""
+        for line in tab.splitlines() if "| Literature |" in tab else []:
+            m = re.match(r"^\| \[\[([^\]|]+)\]\] \|.*\| ([^|]*) \|$", line)
+            if m:
+                rows[m.group(1)] = m.group(2).strip()
+    vline = next((x for x in lit_section(gt).splitlines() if x.startswith("**Connection verdicts**")), "")
+    link5 = "[PMID:31000005](https://pubmed.ncbi.nlm.nih.gov/31000005/) (retracted)"
+    check(c, "the vault's Literature column: '(cites a retracted paper)', the paper marked '(retracted)'; the verdict "
+             "resting only on it reads 'unverified', and P2 shows its other verdict; no marker without a retraction",
+          rows.get(P[0], "").startswith("unverified (cites a retracted paper) (agent: established; only retracted "
+                                        "papers cited) · " + link5)
+          and rows.get(P[1], "").startswith("indirect (not checked) (cites a retracted paper) · " + link5 +
+                                            " [PMID:31000001]")
+          and rows.get(P[2], "").startswith("plausible (not checked) (of 2 verdicts it gave) · [PMID:31000002]")
+          and rows.get(P[3], "").startswith("established (not checked) · [PMID:31000003]")
+          and "retracted" not in rows.get(P[2], "") + rows.get(P[3], ""), {p: rows.get(p) for p in P})
+    check(c, "the note's verdict list says it too, and never shows the retracted-only verdict as established",
+          f"[[{P[0]}]] unverified (cites a retracted paper)" in vline and f"[[{P[0]}]] established" not in vline
+          and f"[[{P[1]}]] indirect (not checked) (cites a retracted paper)" in vline
+          and "(cites a retracted paper) = a paper it cites is retracted" in gt, vline[:400])
+    trip, ent, n = map_lit(sv)
+    a = ent.get(int(g["col"]))
+    mp = {P[i]: trip.get((a, ent.get(pcols[i]))) for i in range(4) if ent.get(pcols[i], n) < n}
+    same = all(mp[p] is None or mp[p][0] == rows.get(p, "").split(" · ")[0].split(" (agent:")[0]
+               .replace(" (of 2 verdicts it gave)", "") for p in mp)
+    check(c, "the map's badge and tooltip show the same marker; the retracted-only verdict is 'unverified' there "
+             "too; the same labels and the same pick as the vault",
+          a is not None and len(mp) == 4 and same
+          and mp[P[0]][0] == "unverified (cites a retracted paper)" and mp[P[0]][2] == "unverified"
+          and "cites a retracted paper (PMID:31000005)" in mp[P[0]][1]
+          and mp[P[1]][0] == "indirect (not checked) (cites a retracted paper)"
+          and "cites a retracted paper (PMID:31000005)" in mp[P[1]][1]
+          and mp[P[2]][0] == "plausible (not checked)" and mp[P[3]][0] == "established (not checked)"
+          and "retracted paper" in open(os.path.join(sv, "map", "gene_map.html"), encoding="utf-8").read(),
+          {p: v[:3] if v else None for p, v in mp.items()})
+    # -- a connections.parquet written before the column: not used, the JSONs are read
+    p = os.path.join(sv, "review", "connections.parquet")
+    conn.drop(columns=["retracted"]).to_parquet(p, index=False)
+    with contextlib.redirect_stdout(io.StringIO()) as buf:
+        rows_old = VT.review_connections(sv, one_per_partner=False)
+    check(c, "a connections.parquet without the 'retracted' column is not used: the verdicts and their retracted "
+             "papers come from the review JSONs",
+          not VT.connections_stale(sv) and "written before it recorded retracted papers" in buf.getvalue()
+          and [(r["retracted"], r["shown_verdict"]) for r in rows_old if r["entity_id"] == g["entity_id"]][:2]
+          == [("PMID:31000005", "unverified"), ("PMID:31000005", "indirect")], buf.getvalue()[-300:])
+    fp = VT.review_fingerprint(sv)
+    VT.LIT_RENDER -= 1
+    try:
+        fp_before = VT.review_fingerprint(sv)
+    finally:
+        VT.LIT_RENDER += 1
+    check(c, "the render version is part of the vault and map stamps: outputs drawn before this change are out of "
+             "date", fp and fp_before and fp["sha"] != fp_before["sha"] and VT.LIT_RENDER >= 3, (fp, fp_before))
+    bad = scan_for_keys(os.path.join(sv, "review"))
+    check(c, "no API key in any file written", not bad, bad[:5])
+    shutil.rmtree(sv, ignore_errors=True)
 
 
 @case
@@ -2400,6 +2586,7 @@ def main():
     indirect_needs_citations(work)
     doi_parentheses(work)
     retractions(work)
+    retractions_shown(work, src, ents)
     drug_dossier_trustworthy_dose(view, ents)
     cellosaurus_url_in_dossier(view, ents, work)
     note_provenance(work)

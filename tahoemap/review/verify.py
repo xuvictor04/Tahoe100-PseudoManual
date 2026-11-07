@@ -675,7 +675,12 @@ def _drop_in_paragraph(p):
     if "```" in p or "~~~" in p:
         return p
     cuts = [0] + [m.end() for m in _SENT_END.finditer(p)] + [len(p)]
-    sents = [p[cuts[i]:cuts[i + 1]] for i in range(len(cuts) - 1) if cuts[i] < cuts[i + 1]]
+    sents = []
+    for x in (p[cuts[i]:cuts[i + 1]] for i in range(len(cuts) - 1) if cuts[i] < cuts[i + 1]):
+        if sents and not x.strip(" \t\n_*"):     # the closing '_' / '**' of the paragraph's last sentence (split
+            sents[-1] += x                       # off at its end): it shares that sentence's fate
+        else:
+            sents.append(x)
     kinds = []
     for x in sents:
         k = {_clause_kind(c) for c in re.split(r";|\s[-\u2013\u2014]\s", x)} - {"empty"}

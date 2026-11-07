@@ -46,11 +46,13 @@ Cellosaurus, code fences closed; its headings demoted below the note's own, its 
 exists), then its connection verdicts (one per partner, pick_verdict), then the provenance line generated from the
 verification (the review's note_footer; never the agent's own). A verdict is shown as verdict_label says: the shown
 verdict (shown_verdict: 'unverified' when the citation check found it not supported or every citation was removed)
-and its check_status. The partner tables of a gene note get a Literature column (the verdict of the gene's review,
-else of the partner's, with linked citations) when a shown partner has a verdict; the map's badges use the same
-choice and labels. Verdicts come from review/connections.parquet, or from the review JSONs when that table is older
-than a review (connections_stale). The vault and map stamps record review_fingerprint(OUT), so a review run makes
-both out of date. Without reviews no note changes.
+and its check_status, then ' (cites a retracted paper)' when one of its papers is retracted (a verdict whose only
+papers are retracted reads 'unverified': a retracted paper is no support). The partner tables of a gene note get a
+Literature column (the verdict of the gene's review, else of the partner's, with linked citations) when a shown
+partner has a verdict; the map's badges use the same choice and labels. Verdicts come from
+review/connections.parquet, or from the review JSONs when that table is older than a review (connections_stale) or
+lacks the retracted column. The vault and map stamps record review_fingerprint(OUT), so a review run (or a new
+LIT_RENDER) makes both out of date. Without reviews no note changes.
 """
 
 import hashlib
@@ -71,6 +73,8 @@ from . import relations as REL
 from . import tensor as TN
 from . import tlib as T
 from .common import folder, log, read_effects_index, safe_filename, stamp_stage
+# the sentence-level rule the runner applies to the notes it stores (verify imports only the standard library)
+from .review.verify import drop_self_check as _verify_drop_self_check
 
 VERSION = 2
 GEN = "tahoemap"
@@ -377,7 +381,8 @@ def _slices(keys, n):
 REVIEW_KINDS = ("gene", "drug", "line")
 LIT_CITES = 3                        # citations linked in a partner-table cell (the rest are counted)
 LIT_HEADING = "What the literature says"
-LIT_RENDER = 2                       # how reviews are drawn into notes and the map: part of review_fingerprint
+LIT_RENDER = 3                       # how reviews are drawn into notes and the map: part of review_fingerprint
+RETRACTED_MARK = " (cites a retracted paper)"   # after the label of a verdict that cites a retracted paper
 VERDICTS = ("established", "indirect", "plausible", "unexpected", "contradicted")   # submit_review's verdicts
 STRENGTH = {"established": 5, "contradicted": 4, "indirect": 3, "plausible": 2, "unexpected": 1}
 CHECK_STATUSES = ("supported", "partly", "not_supported", "not_checkable", "unchecked", "citations_removed")
@@ -462,12 +467,46 @@ def connections_stale(out):
     return False
 
 
+def _cid_list(x):
+    """Citation ids from a list or from the 'PMID:1;DOI:x' string of review/connections.parquet; [] for anything
+    else (missing, NaN)."""
+    if isinstance(x, str):
+        return [c.strip() for c in x.split(";") if c.strip()]
+    if isinstance(x, (list, tuple, np.ndarray)):
+        return [sval(c).strip() for c in x if sval(c).strip()]
+    return []
+
+
+def _cid_key(c):
+    return re.sub(r"\s+", "", c).upper()
+
+
+def retracted_cited(v):
+    """The retracted papers among a connection verdict's citations, in the order recorded: verify.check_ids lists
+    them in a review item's "retracted_citations" (a review/connections.parquet row: "retracted", 'PMID:1;DOI:x').
+    [] when it cites none - also for a review or a table written before retractions were recorded."""
+    ret = _cid_list(v.get("retracted")) or _cid_list(v.get("retracted_citations"))
+    if not ret:
+        return []
+    cited = {_cid_key(c) for c in _cid_list(v.get("citations"))}
+    return [c for c in ret if _cid_key(c) in cited]
+
+
+def retracted_only(v):
+    """True when a connection verdict cites papers and every one of them is retracted. A retracted paper is no
+    support (the citations skill), so such a verdict has none: it is shown as 'unverified' (lit_status) and never
+    picked as a verified verdict (pick_verdict)."""
+    ret = retracted_cited(v)
+    return bool(ret) and {_cid_key(c) for c in _cid_list(v.get("citations"))} <= {_cid_key(c) for c in ret}
+
+
 def lit_status(v):
     """(check_status, shown_verdict) of a connection verdict - a review item or a review/connections.parquet row -
     as the shared verification contract defines them (docs/review.md, Verification). For a review stored before the
     contract (no check_status): from its older fields - the citation checker's 'check', 'unverified' with no
     citation left (every one removed) - else 'unchecked'. A verdict whose status is not_supported or
-    citations_removed is always shown as 'unverified', whatever shown_verdict says."""
+    citations_removed, or whose every citation is a retracted paper (retracted_only), is always shown as
+    'unverified', whatever shown_verdict says; check_status stays the checker's."""
     verdict = sval(v.get("verdict")).strip()
     st = sval(v.get("check_status")).strip()
     if st not in CHECK_STATUSES:
@@ -482,7 +521,7 @@ def lit_status(v):
         else:
             st = "unchecked"
     shown = sval(v.get("shown_verdict")).strip()
-    if st in UNVERIFIED:
+    if st in UNVERIFIED or retracted_only(v):
         shown = "unverified"
     elif not shown:
         shown = verdict
@@ -500,13 +539,14 @@ def _partner_id(r):
 def pick_verdict(vs):
     """The one verdict shown for a review's verdicts on one partner (the vault's partner tables and verdict list and
     the map's badge all use this rule): the strongest verified verdict - established, contradicted, indirect,
-    plausible, unexpected, among those whose check_status is supported, partly or not_checkable; then the better
-    check; then the first given - else, when none is verified, the agent's first."""
-    ok = [(i, v) for i, v in enumerate(vs) if v.get("check_status") in VERIFIED]
+    plausible, unexpected, among those whose check_status is supported, partly or not_checkable and that cite
+    something besides retracted papers (retracted_only); then the better check; then one that cites no retracted
+    paper; then the first given - else, when none is verified, the agent's first."""
+    ok = [(i, v) for i, v in enumerate(vs) if v.get("check_status") in VERIFIED and not retracted_only(v)]
     if not ok:
         return vs[0]
     return max(ok, key=lambda t: (STRENGTH.get(sval(t[1].get("verdict")), 0), VERIFIED[t[1]["check_status"]],
-                                  -t[0]))[1]
+                                  not retracted_cited(t[1]), -t[0]))[1]
 
 
 def one_verdict_per_partner(rows):
@@ -526,11 +566,12 @@ def one_verdict_per_partner(rows):
 def review_connections(out, gene_col=None, one_per_partner=True):
     """The connection verdicts of the reviews in OUT/review, one dict per verdict with the columns of
     review/connections.parquet (entity_id, kind, name, partner, partner_kind, partner_col, verdict, citations as
-    'PMID:1;DOI:x', check, unverified, check_status, shown_verdict, ...): from that table, else from the review
-    JSONs - when the table is missing (not built yet: `tahoe review tables`), unreadable, or older than a review
-    (connections_stale: a review run that was killed before rebuilding it). check_status / shown_verdict are always
-    set (lit_status, also for reviews stored before they existed). gene_col(name) -> col or None resolves gene
-    partners the table left unresolved. one_per_partner: one verdict per (review, partner), by pick_verdict."""
+    'PMID:1;DOI:x', retracted (the retracted ones among them, in the same form), check, unverified, check_status,
+    shown_verdict, ...): from that table, else from the review JSONs - when the table is missing (not built yet:
+    `tahoe review tables`), unreadable, older than a review (connections_stale: a review run that was killed before
+    rebuilding it) or written before it had the retracted column. check_status / shown_verdict are always set
+    (lit_status, also for reviews stored before they existed). gene_col(name) -> col or None resolves gene partners
+    the table left unresolved. one_per_partner: one verdict per (review, partner), by pick_verdict."""
     rd = os.path.join(out, "review")
     rows = None
     p = os.path.join(rd, "connections.parquet")
@@ -540,9 +581,15 @@ def review_connections(out, gene_col=None, one_per_partner=True):
                 "it; `tahoe review tables` rebuilds it): verdicts read from the JSONs")
         else:
             try:
-                rows = pd.read_parquet(p).to_dict("records")
+                tab = pd.read_parquet(p)
             except Exception as e:  # noqa: BLE001
+                tab = None
                 log(f"  literature: cannot read {p} ({type(e).__name__}: {e}); verdicts read from the review JSONs")
+            if tab is not None and "retracted" not in tab.columns:
+                log(f"  literature: {p} was written before it recorded retracted papers (`tahoe review tables` "
+                    "rebuilds it): verdicts read from the review JSONs")
+            elif tab is not None:
+                rows = tab.to_dict("records")
     if rows is None:
         rows = []
         for kind in REVIEW_KINDS:
@@ -562,6 +609,7 @@ def review_connections(out, gene_col=None, one_per_partner=True):
                     rows.append({"entity_id": meta.get("entity_id"), "kind": kind, "name": meta.get("name"),
                                  "partner": pt, "partner_kind": pk, "partner_col": None, "verdict": it.get("verdict"),
                                  "citations": ";".join(cits), "n_citations": len(cits),
+                                 "retracted": ";".join(_cid_list(it.get("retracted_citations"))),
                                  "check": ck.get("verdict", "") if isinstance(ck, dict) else sval(ck),
                                  "unverified": bool(it.get("unverified")),
                                  "check_status": it.get("check_status") or "",
@@ -602,13 +650,15 @@ def citation_link(cid):
 def verdict_label(v):
     """(label, explanation) of a connection verdict (with check_status / shown_verdict, see lit_status): the label
     the vault's Literature column and the map's 'lit:' badge show - the shown verdict and the check, e.g.
-    'established (supported)', 'indirect (ids not checked)', 'unverified' - and a sentence saying what the agent
-    said and what the verification found."""
+    'established (supported)', 'indirect (ids not checked)', 'unverified' - followed by RETRACTED_MARK ' (cites a
+    retracted paper)' when a paper it cites is retracted, and a sentence saying what the agent said and what the
+    verification found. A verdict whose only papers are retracted (retracted_only) reads 'unverified (cites a
+    retracted paper)': a retracted paper is no support."""
     st, shown = v.get("check_status") or "unchecked", v.get("shown_verdict") or sval(v.get("verdict"))
     verdict = sval(v.get("verdict")) or "?"
-    n = int(v.get("n_citations") or 0) if _finite(v.get("n_citations")) else \
-        len([x for x in sval(v.get("citations")).split(";") if x.strip()])
-    if st in UNVERIFIED:
+    n = int(v.get("n_citations") or 0) if _finite(v.get("n_citations")) else len(_cid_list(v.get("citations")))
+    ret, only = retracted_cited(v), retracted_only(v)
+    if st in UNVERIFIED or only:
         label = "unverified"
     elif st == "not_checkable" and not n:
         label = shown                                          # it cites nothing: nothing to check
@@ -616,6 +666,12 @@ def verdict_label(v):
         label = f"{shown} ({CHECK_SHORT.get(st, st)})"
     expl = f"the agent's verdict: {verdict}; " + ("it cites no paper" if st == "not_checkable" and not n
                                                   else CHECK_LONG.get(st, st))
+    if ret:
+        label += RETRACTED_MARK
+        what = "a retracted paper" if len(ret) == 1 else f"{len(ret)} retracted papers"
+        expl += (f"; it cites {what} ({', '.join(ret)}) and nothing else: a retracted paper is no support, so the "
+                 "verdict is shown as unverified" if only else
+                 f"; it cites {what} ({', '.join(ret)}), which is no support: the verdict rests on its other papers")
     return label, expl
 
 
@@ -773,22 +829,15 @@ def sanitize_note(md):
     return "\n".join(out)
 
 
-# (?<![A-Za-z]) rather than \b: an italic line starts with '_', a word character ('_Citations were checked ..._')
-_SELF_CHECK_LINE = re.compile(r"(?i)(?<![A-Za-z])(?:citations?|references|claims|sources|ids)\s+(?:were|have been|was|"
-                              r"are|had been)\s+(?:checked|verified|validated)(?![A-Za-z])")
-_AGENT_FOOTER = re.compile(r"(?i)^[\s_*>]*(?:AI-generated literature review|verify before relying)"
-                           r"|(?<![A-Za-z])citations?\s+(?:were|have been|had been)\s+(?:checked|verified)(?![A-Za-z])")
-
-
 def drop_self_check(md):
-    """The note without the agent's own provenance (the vault appends the line generated from the verification
-    instead): a short line that is a footer ('_AI-generated literature review ..._', 'Verify before relying ...'),
-    that says its citations were checked, or an italic line saying its claims or references were checked or
-    verified. (The runner already drops such a paragraph from notes it stores: verify.drop_self_check.)"""
-    lines = sval(md).split("\n")
-    keep = [x for x in lines if not (len(x) < 400 and (_AGENT_FOOTER.search(x) or (
-        _SELF_CHECK_LINE.search(x) and re.match(r"^\s*(?:_|\*(?!\s))", x))))]   # an italic line (not a bullet)
-    return md if len(keep) == len(lines) else "\n".join(keep)
+    """The note without the sentences in which the agent vouches for its own verification (the vault appends the line
+    generated from the verification instead), by the rule the runner applies to the notes it stores,
+    verify.drop_self_check: a sentence made only of such a claim ('Citations were checked against PubMed and their
+    abstracts.') and, in the same paragraph, disclaimer sentences ('AI-generated ...', 'Verify before relying on
+    it'). A sentence that says anything more - a finding, a gene, a number ('Citations were checked, but none links
+    PIR to HMOX1 in hypoxia.') - is kept whole, and so is the rest of its paragraph. Applied again here for notes
+    stored before the runner applied it."""
+    return _verify_drop_self_check(sval(md))
 
 
 class Run:
@@ -1206,6 +1255,7 @@ class Vault:
                 pkey = self.lit_key(pk, pt, pt.split(":", 1)[1] if ":" in pt else pt)
             v = {"partner": pt, "pkey": (pk, pkey) if pkey is not None else None, "verdict": sval(r.get("verdict")),
                  "citations": [x.strip() for x in sval(r.get("citations")).split(";") if x.strip()],
+                 "retracted": retracted_cited(r),
                  "check": sval(r.get("check")), "unverified": _truthy(r.get("unverified")),
                  "check_status": r["check_status"], "shown_verdict": r["shown_verdict"],
                  "n_verdicts": int(r.get("n_verdicts") or 1)}
@@ -1291,19 +1341,24 @@ class Vault:
         return fm
 
     def _verdict_text(self, v, partner_review=None):
-        """A connection verdict as the vault shows it (verdict_label: the shown verdict and its check; for an
-        unverified one what the agent said), then the papers it cites."""
+        """A connection verdict as the vault shows it (verdict_label: the shown verdict and its check, and ' (cites a
+        retracted paper)' when it does; for an unverified one what the agent said), then the papers it cites, a
+        retracted one marked '(retracted)'."""
         label, _expl = verdict_label(v)
         s = md_text(label)
         if v["check_status"] in UNVERIFIED:
             s += f" (agent: {md_text(v['verdict'])}; {CHECK_SHORT[v['check_status']]})"
+        elif retracted_only(v):
+            s += f" (agent: {md_text(v['verdict'])}; only retracted papers cited)"
         if int(v.get("n_verdicts") or 1) > 1:
             s += f" (of {int(v['n_verdicts'])} verdicts it gave)"
         if partner_review:
             s += f" ({md_text(partner_review)}'s review)"
         cits = v["citations"]
+        ret = {_cid_key(x) for x in retracted_cited(v)}
         if cits:
-            s += " · " + " ".join(citation_link(x) for x in cits[:LIT_CITES]) + \
+            s += " · " + " ".join(citation_link(x) + (" (retracted)" if _cid_key(x) in ret else "")
+                                  for x in cits[:LIT_CITES]) + \
                 (f" +{len(cits) - LIT_CITES}" if len(cits) > LIT_CITES else "")
         return s
 
@@ -1890,7 +1945,9 @@ class Vault:
                   "and in brackets its check: supported / partly supported (the citation checker read the cited "
                   "abstracts), not checked (the ids exist; the claim was not checked against the abstracts), ids not "
                   "checked (not looked up). **unverified** = the cited abstracts do not support the agent's verdict, "
-                  "or none of its papers exists (the agent's verdict follows in brackets).*", ""]
+                  "or none of its papers exists, or all of them are retracted (the agent's verdict follows in "
+                  "brackets). (cites a retracted paper) = a paper it cites is retracted, marked (retracted) after its "
+                  "link: a retracted paper is no support.*", ""]
         return L
 
     def sec_where(self, c):
@@ -3188,8 +3245,10 @@ the line under it, on what was checked, is generated from the verification, not 
 In a gene note the partner tables then have a **Literature** column: the agent's verdict on that pair (established,
 indirect, plausible, unexpected or contradicted) with its check in brackets and its citations, from
 `review/connections.parquet`; a verdict from the partner's review is marked with the partner's name. A verdict the
-citation checker found not supported, or whose papers do not exist, reads **unverified**. When a review gave one
-partner several verdicts, the strongest verified one is shown (else its first), here and in the map. The reviews are
+citation checker found not supported, or whose papers do not exist, reads **unverified**. A verdict that cites a
+retracted paper says "(cites a retracted paper)" (the paper is marked "(retracted)"): a retracted paper is no
+support, so a verdict whose only papers are retracted reads **unverified** too. When a review gave one partner
+several verdicts, the strongest verified one is shown (else its first), here and in the map. The reviews are
 leads, not established facts: no person has checked them. A new review replaces the section at the next `tahoe
 vault` (or `tahoe run`).
 """
