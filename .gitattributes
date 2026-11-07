@@ -1,0 +1,3 @@
+# Keep LF line endings in every checkout, also on Windows with core.autocrlf=true: the bash wrapper `tahoe`
+# breaks with CRLF, and tests/test_port.py compares the ported method files with a fresh port.
+* text=auto eol=lf

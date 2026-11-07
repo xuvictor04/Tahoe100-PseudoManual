@@ -46,10 +46,10 @@ def ensure_data(work, seed, regen):
         h.update(open(f, "rb").read().replace(b"\r\n", b"\n"))
     key = f"{h.hexdigest()}-{seed}"
     stamp = os.path.join(data, "generator.key")
-    if regen or not (os.path.exists(stamp) and open(stamp).read() == key):
+    if regen or not (os.path.exists(stamp) and open(stamp, encoding="utf-8").read() == key):
         print(f"Generating synthetic data (seed {seed}) in {data} ...", flush=True)
         subprocess.run([sys.executable, gen, data, "--seed", str(seed)], check=True)
-        with open(stamp, "w") as fh:
+        with open(stamp, "w", encoding="utf-8") as fh:
             fh.write(key)
     return data
 
@@ -60,7 +60,7 @@ def run_pipeline(data, out, extra=()):
     print("Running:", " ".join(cmd), flush=True)
     t0 = time.time()
     r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True)
-    with open(os.path.join(out, "pipeline_console.log"), "w") as fh:
+    with open(os.path.join(out, "pipeline_console.log"), "w", encoding="utf-8") as fh:
         fh.write(r.stdout + "\n" + r.stderr)
     print(f"  pipeline exit code {r.returncode} in {(time.time() - t0) / 60:.1f} min "
           f"(log: {os.path.join(out, 'run.log')})", flush=True)
@@ -83,11 +83,11 @@ def main():
     if not (a.reuse and os.path.exists(os.path.join(out, "stages", "map.json"))):
         rc = run_pipeline(data, out, ("--redo",))
         check("run", "pipeline finishes", lambda: (rc == 0, f"exit code {rc}"))
-    truth = json.load(open(os.path.join(data, "ground_truth.json")))
+    truth = json.load(open(os.path.join(data, "ground_truth.json"), encoding="utf-8"))
     from tests import checks                                # noqa: E402  (the per-stage checks)
     checks.run_all(out, data, truth, check)
     n = {s: sum(r["status"] == s for r in RESULTS) for s in ("PASS", "WARN", "FAIL")}
-    with open(os.path.join(a.workdir, "test_results.json"), "w") as fh:
+    with open(os.path.join(a.workdir, "test_results.json"), "w", encoding="utf-8") as fh:
         json.dump({"counts": n, "results": RESULTS}, fh, indent=1)
     print(f"\n{n['PASS']} passed, {n['WARN']} warnings, {n['FAIL']} failed  "
           f"(details: {os.path.join(a.workdir, 'test_results.json')})")

@@ -2,6 +2,7 @@
 
 import json
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -28,15 +29,15 @@ def run_all(out, data, truth, check):
 
     # ---------------------------------------------------------------- effects (the verbatim port)
     check("effects", "method v3 complete", lambda: (
-        json.load(open(os.path.join(fx, "complete.json")))["version"] == 3, "complete.json version 3"))
+        json.load(open(os.path.join(fx, "complete.json"), encoding="utf-8"))["version"] == 3, "complete.json version 3"))
     check("effects", "plate13 unreliable, failed well removed", lambda: (
-        "plate13" in json.load(open(os.path.join(fx, "info.json"))).get("unreliable_plates", []) and
+        "plate13" in json.load(open(os.path.join(fx, "info.json"), encoding="utf-8")).get("unreliable_plates", []) and
         len(pd.read_csv(os.path.join(fx, "failed_wells.csv"))) >= 1,
         f"failed wells: {len(pd.read_csv(os.path.join(fx, 'failed_wells.csv')))}"))
 
     # ---------------------------------------------------------------- tensor
     def tensor_exact():
-        info = json.load(open(os.path.join(out, "tensor", "info.json")))
+        info = json.load(open(os.path.join(out, "tensor", "info.json"), encoding="utf-8"))
         return (info["check_W1_max_diff"] <= 1e-5 and info["check_W2_max_diff"] <= 1e-5,
                 f"reproduces the atlas: W1 {info['check_W1_max_diff']:.1e}, W2 {info['check_W2_max_diff']:.1e}")
     check("tensor", "per-line residuals reproduce the atlas exactly", tensor_exact)
@@ -45,7 +46,7 @@ def run_all(out, data, truth, check):
     DDL = np.load(os.path.join(td, "DDL_lfc.npy"), mmap_mode="r")
     DDZ = np.load(os.path.join(td, "DDL_z.npy"), mmap_mode="r")
     DD = np.load(os.path.join(fx, "DD_lfc.npy"))
-    tinfo = json.load(open(os.path.join(td, "info.json")))
+    tinfo = json.load(open(os.path.join(td, "info.json"), encoding="utf-8"))
     LM = np.load(os.path.join(td, "line_measured.npy"))                     # lines x genes
     EM = np.load(os.path.join(fx, "expr_mask.npy"))[:, :gK]
     LCPM = np.load(os.path.join(fx, "line_cpm.npy"))[:, :gK]
@@ -135,7 +136,7 @@ def run_all(out, data, truth, check):
             len(pd.read_parquet(os.path.join(tb, "line_effects.parquet"), columns=["col"])) == gK * len(lines),
             f"{gK} genes x {len(lines)} lines"))
 
-        tinfo_t = json.load(open(os.path.join(tb, "info.json")))
+        tinfo_t = json.load(open(os.path.join(tb, "info.json"), encoding="utf-8"))
         le = pd.read_parquet(os.path.join(tb, "line_effects.parquet"))
         dlt = pd.read_parquet(os.path.join(tb, "drug_line_top.parquet"))
         t = float(tinfo_t["line_z_threshold"])
@@ -285,16 +286,25 @@ def run_all(out, data, truth, check):
     check("graph", "opposite modules share a module, on opposite arms", same_module_opposite_arms)
 
     def maps_differ():
+        """t-SNE keeps neighbourhoods, not long distances: how far apart two separate islands of the signed map land
+        varies from machine to machine (tiny floating-point differences: the COLOC pair's centroid distance ranges
+        0.4-2.0 map spreads under 1e-6 perturbations of the input). What is stable, and what the maps promise, is the
+        mixing: on the nodal map the two sets share neighbourhoods; on the signed map no gene of one set has a gene
+        of the other among its nearest map neighbours (validate.map_mixing; 1 = as mixed as chance, 0 = apart)."""
+        from tahoemap.validate import map_mixing
         res, ok = {}, True
         sx = np.linalg.norm(nodes[["x", "y"]].std().to_numpy())
         ss = np.linalg.norm(nodes[["xs", "ys"]].std().to_numpy())
+        xy, xys = nodes[["x", "y"]].to_numpy(float), nodes[["xs", "ys"]].to_numpy(float)
         for a, b in OPPOSITE:
-            A, B = nodes[nodes["symbol"].isin(sets[a])], nodes[nodes["symbol"].isin(sets[b])]
-            dn = np.linalg.norm(A[["x", "y"]].mean().to_numpy() - B[["x", "y"]].mean().to_numpy()) / sx
-            ds = np.linalg.norm(A[["xs", "ys"]].mean().to_numpy() - B[["xs", "ys"]].mean().to_numpy()) / ss
-            res[f"{a}/{b}"] = f"nodal {dn:.2f}, signed {ds:.2f}"
-            ok &= dn < 0.3 and ds > 0.7
-        return ok, f"centroid distance / map spread: {res}"
+            ia = np.flatnonzero(nodes["symbol"].isin(sets[a]).to_numpy())
+            ib = np.flatnonzero(nodes["symbol"].isin(sets[b]).to_numpy())
+            dn = np.linalg.norm(xy[ia].mean(0) - xy[ib].mean(0)) / sx
+            ds = np.linalg.norm(xys[ia].mean(0) - xys[ib].mean(0)) / ss
+            mn, ms = map_mixing(xy, ia, ib), map_mixing(xys, ia, ib)
+            res[f"{a}/{b}"] = f"nodal: centroid {dn:.2f}, mixing {mn:.2f}; signed: centroid {ds:.2f}, mixing {ms:.2f}"
+            ok &= dn < 0.3 and mn >= 0.5 and ms <= 0.1
+        return ok, f"centroid distance / map spread, and neighbourhood mixing: {res}"
     check("graph", "opposite genes: together on the nodal map, apart on the signed map", maps_differ)
 
     # ---------------------------------------------------------------- validate
@@ -374,7 +384,8 @@ def run_all(out, data, truth, check):
             try:
                 from playwright.sync_api import sync_playwright
             except ImportError:
-                return "warn", "Playwright not installed: browser check skipped"
+                return "warn", ("Playwright not installed: browser check skipped (optional: pip install playwright, "
+                                "then python -m playwright install chromium)")
             up, dn = set(sets["HDAC_UP"]), set(sets["HDAC_DOWN"])
 
             def split(s, sym):
@@ -390,7 +401,7 @@ def run_all(out, data, truth, check):
                         errs = []
                         pg.on("pageerror", lambda e: errs.append(str(e)))
                         pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
-                        pg.goto("file://" + os.path.abspath(html))
+                        pg.goto(pathlib.Path(html).resolve().as_uri())     # file:///C:/... on Windows
                         pg.wait_for_function("() => !!window.TAHOE_MAP")
                         sym = pg.evaluate("TAHOE_MAP.data.sym")
                         g = next(s for s in sets["HDAC_UP"] if s in sym[:pg.evaluate("TAHOE_MAP.data.n")])
@@ -409,7 +420,8 @@ def run_all(out, data, truth, check):
                         b.close()
             except Exception as e:  # noqa: BLE001  (no browser binary, sandbox, ...)
                 if "Executable doesn't exist" in str(e) or "playwright install" in str(e):
-                    return "warn", "Playwright's Chromium is not installed: browser check skipped"
+                    return "warn", ("Playwright's Chromium is not installed: browser check skipped (optional: "
+                                    "python -m playwright install chromium)")
                 raise
             return (not errs and r1[0] > 2 * r0[0] and r1[0] > 1.5,
                     f"HDAC module {r0[1]} + / {r0[2]} - genes: arm centroid distance / arm spread {r0[0]:.2f} when "

@@ -108,6 +108,24 @@ C:\tahoe\.venv\Scripts\python.exe -m tahoemap status --out C:\tahoe\out
 C:\tahoe\.venv\Scripts\python.exe -m tahoemap gene MDM2 --out C:\tahoe\out
 ```
 
+To check the install first (about 5 minutes, synthetic data, no download), from `C:\tahoe\repo`:
+
+```powershell
+C:\tahoe\.venv\Scripts\python.exe tests\run_tests.py --workdir C:\tahoe\test
+C:\tahoe\.venv\Scripts\python.exe tests\test_port.py
+```
+
+- `run_tests.py` should end with "31 passed, 0 warnings, 0 failed".
+- The one warning you may see is "browser check skipped": that check opens the map in a headless browser and
+  needs Playwright. It is optional. To include it, run
+  `C:\tahoe\.venv\Scripts\python.exe -m pip install playwright`, then
+  `C:\tahoe\.venv\Scripts\python.exe -m playwright install chromium`.
+- `test_port.py` needs git. If git is not on PATH (for example a portable MinGit), set
+  `$env:TAHOE_GIT = "C:\path\to\git.exe"` first.
+- With Windows Smart App Control on, Windows may block a library file the first time Python loads it ("An
+  Application Control policy has blocked this file"). Running the same command again usually works. A stopped
+  run continues from its finished stages.
+
 The vault is `C:\tahoe\out\vault` and the map `C:\tahoe\out\map\gene_map.html`. `--stream` reads Tahoe-100M from
 Hugging Face with `curl`, which ships with Windows 10 and later. To work from a local copy instead (~340 GB):
 

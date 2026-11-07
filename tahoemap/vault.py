@@ -275,6 +275,7 @@ class Writer:
     def __init__(self, root):
         self.root = root
         self.paths = set()
+        self.keys = set()           # _pkey of every path: one note per file, also where names differ only in case
         self.n_written = 0
         self.n_same = 0
         self.bytes = 0
@@ -282,9 +283,10 @@ class Writer:
     def write(self, rel, text):
         if not text.endswith("\n"):
             text += "\n"
-        path = os.path.join(self.root, rel)
-        assert path not in self.paths, f"two notes at {rel}"
+        path = os.path.normpath(os.path.join(self.root, rel))
+        assert _pkey(path) not in self.keys, f"two notes at {rel}"
         self.paths.add(path)
+        self.keys.add(_pkey(path))
         data = text.encode("utf-8")
         self.bytes += len(data)
         try:
@@ -315,16 +317,30 @@ def _is_generated(path):
     return re.search(r'(?m)^generated_by:\s*"?' + GEN + r'\b', head[:end if end > 0 else len(head)]) is not None
 
 
+def _pkey(path):
+    """A path as a comparison key: one separator, and case-folded where the file system ignores case (Windows), so
+    'vault\\Genes/A/X.md' (a note path joined from a '/' name) and the 'vault\\Genes\\A\\X.md' os.walk yields are the
+    same file."""
+    return os.path.normcase(os.path.normpath(path))
+
+
+def _rel_posix(path, root):
+    """path relative to root with '/' separators (the manifest's form on every system)."""
+    return os.path.relpath(path, root).replace(os.sep, "/")
+
+
 def _clean_stale(root, keep, old_manifest):
     """Delete generated notes of an earlier build that this build did not write; never touch anything else."""
     removed = 0
+    keep = {_pkey(p) for p in keep}
+    old_manifest = {str(x).replace("\\", "/") for x in old_manifest}
     for dp, dn, fn in os.walk(root):
         dn[:] = [d for d in dn if not d.startswith(".")]
         for f in fn:
             p = os.path.join(dp, f)
-            if p in keep:
+            if _pkey(p) in keep:
                 continue
-            rel = os.path.relpath(p, root)
+            rel = _rel_posix(p, root)
             if f.endswith(".md.tmp") or f.endswith(".canvas.tmp"):
                 os.remove(p)
             elif f.endswith(".md") and _is_generated(p):
@@ -3224,7 +3240,7 @@ class Vault:
             seen[b] = p
         removed = _clean_stale(self.root, self.W.paths, old_manifest)
         self.obsidian()
-        files = sorted(os.path.relpath(p, self.root) for p in self.W.paths)
+        files = sorted(_rel_posix(p, self.root) for p in self.W.paths)
         tmp = mp + ".tmp"
         with open(tmp, "w", encoding="utf-8") as fh:
             json.dump({"generated_by": GEN, "version": VERSION, "files": files}, fh, indent=0)

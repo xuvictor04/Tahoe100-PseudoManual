@@ -1143,7 +1143,7 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
         "method_v3": v3,
         "layout": layout,
     }
-    with open(os.path.join(outdir, "ground_truth.json"), "w") as fh:
+    with open(os.path.join(outdir, "ground_truth.json"), "w", encoding="utf-8") as fh:
         json.dump(gt, fh, indent=1)
     return gt
 

@@ -958,7 +958,8 @@ class Attempt:
         ctx.read_ids |= {c for c in cited if c.startswith("PMID:") and c not in nr}
         ctx.seen_ids |= {c for c in cited if c not in nr}
         self.hist.event("start", agent="recheck", phase="recheck", entity=ent, key_id=self.key.key_id,
-                        code_version=r.code, verify=mode, review=os.path.relpath(paths["review"], r.out),
+                        code_version=r.code, verify=mode,
+                        review=os.path.relpath(paths["review"], r.out).replace(os.sep, "/"),
                         ids=need_ids, llm=need_llm, previous={"ids": ver_status(ver0, "ids"),
                                                              "llm": ver_status(ver0, "llm")})
         checked, report = review, ver0.get("ids")

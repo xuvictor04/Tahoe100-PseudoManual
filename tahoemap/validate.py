@@ -14,8 +14,11 @@ Every test runs on the genes in the vector space (embed/included_cols.npy); cos 
                    cross-set cos (expect < 0), share of cross pairs with cos < 0, share of cross pairs in the same
                    module (expect high: the nodal map is built on |cos|), and the distance between the two sets'
                    centroids on the nodal map (x, y) and on the signed map (xs, ys), each divided by that map's spread
-                   (sqrt(var x + var y)). Opposite genes should sit far apart in the signed space and together on the
-                   nodal map.
+                   (sqrt(var x + var y)), and the neighbourhood mixing of the two sets on each map (map_mixing: 1 = as
+                   mixed as chance, 0 = no gene of one set among the nearest map neighbours of the other). Opposite
+                   genes should share neighbourhoods on the nodal map and none on the signed map. (t-SNE keeps
+                   neighbourhoods, not long distances: how far apart two separate islands land varies from machine
+                   to machine, so the verdict rests on the mixing, not on the signed-map centroid distance.)
   module labels    every module, and each of its arms, against every set: hypergeometric upper tail (universe =
                    genes in the space), Benjamini-Hochberg over all tests. Label = the best set (smallest p among
                    sets of <= 300 genes, else any) with q < 0.05 and >= 3 shared genes, else the module's top genes.
@@ -48,7 +51,7 @@ from . import atlas_core as A
 from . import tlib as T
 from .common import folder, log, read_effects_index, stable_seed, stamp_stage, write_csv, write_json
 
-VERSION = 1
+VERSION = 2
 N_RANDOM = 20_000           # random gene pairs: the background of every AUROC
 N_NULL = 200                # random gene sets per set size for the empirical p of a set's AUROC
 NULL_SOURCES = ("control", "hallmark", "synthetic")
@@ -62,7 +65,10 @@ GBA_COS = 0.5
 GBA_MIN_ANNOT = 3
 GBA_PER_GENE = 5            # novel_members.csv keeps each gene's 5 most significant sets
 OPP_COS = -0.1              # 'opposite': mean cross-set cos <= this
-TOGETHER = 0.5              # 'together on the nodal map': centroid distance <= this many spreads and < half the signed
+TOGETHER = 0.5              # 'together on the nodal map': centroid distance <= this many spreads, and the two sets more
+                            # mixed there than on the signed map
+MIX_K = 5                   # map_mixing: nearest map neighbours per gene
+MIX_APART = 0.25            # 'apart on the signed map': mixing <= this (0 = no shared neighbourhood, 1 = chance)
 ENRICH_KEEP_P = 0.05        # module_enrichment.csv keeps tests with overlap >= 2 and p <= this
 TOP_DD = 5
 UNTRUSTED = ("unreliable plate only", "position not correctable", "wells disagree")
@@ -383,6 +389,30 @@ def _best_drugdoses(out, gK, sets):
 
 
 # ----------------------------------------------------------------------------- opposite pairs
+def map_mixing(xy, ia, ib, k=MIX_K):
+    """How mixed two gene sets are on a 2-D map (rows ia and ib of xy): for each gene of either set, the share of its
+    k nearest map neighbours among the genes of both sets that belong to the other set, divided by that share under
+    random labels (other set's size / (n - 1)); the mean over each set, averaged over the two sets. 1 = as mixed as
+    chance, 0 = no gene has a neighbour from the other set. NaN when a set has fewer than 2 placed genes."""
+    from sklearn.neighbors import NearestNeighbors
+    ia, ib = np.asarray(ia, dtype=np.int64), np.asarray(ib, dtype=np.int64)
+    P = np.asarray(xy, dtype=np.float64)
+    ia, ib = ia[np.isfinite(P[ia]).all(1)], ib[np.isfinite(P[ib]).all(1)]
+    na, nb = len(ia), len(ib)
+    if na < 2 or nb < 2:
+        return float("nan")
+    lab = np.r_[np.zeros(na, bool), np.ones(nb, bool)]
+    pts = P[np.r_[ia, ib]]
+    n = na + nb
+    kk = min(k, n - 1)
+    _, nbr = NearestNeighbors(n_neighbors=kk + 1).fit(pts).kneighbors(pts)
+    nbr = nbr[:, 1:]                                         # without the gene itself
+    other = (lab[nbr] != lab[:, None]).mean(axis=1)
+    expect = np.where(lab, na, nb) / (n - 1)
+    r = other / expect
+    return float((r[~lab].mean() + r[lab].mean()) / 2)
+
+
 def _opposite(sp, pa, pb):
     shared = np.intersect1d(pa, pb)
     pa = np.setdiff1d(pa, shared)
@@ -392,7 +422,7 @@ def _opposite(sp, pa, pb):
          "mean_cross_cos_half2": np.nan, "within_cos_a": np.nan, "within_cos_b": np.nan,
          "share_same_module": np.nan, "random_same_module": sp.p_same_module,
          "share_opposite_arms_in_same_module": np.nan, "nodal_centroid_dist": np.nan,
-         "signed_centroid_dist": np.nan}
+         "signed_centroid_dist": np.nan, "nodal_mixing": np.nan, "signed_mixing": np.nan}
     if not len(pa) or not len(pb):
         return r
     C = (sp.U[pa] @ sp.U[pb].T).astype(np.float64)
@@ -415,6 +445,7 @@ def _opposite(sp, pa, pb):
         r["nodal_centroid_dist"] = float(np.linalg.norm(sp.xy[pa].mean(0) - sp.xy[pb].mean(0)) / sp.spread)
     if sp.spread_s > 0:
         r["signed_centroid_dist"] = float(np.linalg.norm(sp.xys[pa].mean(0) - sp.xys[pb].mean(0)) / sp.spread_s)
+    r["nodal_mixing"], r["signed_mixing"] = map_mixing(sp.xy, pa, pb), map_mixing(sp.xys, pa, pb)
     return r
 
 
@@ -436,13 +467,18 @@ def _reading(r):
     if np.isfinite(r["share_opposite_arms_in_same_module"]):
         s += f", and {_pct(r['share_opposite_arms_in_same_module'])} of those sit on opposite arms"
     dn, ds = r["nodal_centroid_dist"], r["signed_centroid_dist"]
-    if np.isfinite(dn) and np.isfinite(ds):
-        s += f". Centroid distance: {dn:.2f} map spreads on the nodal map vs {ds:.2f} on the signed map"
-        together = dn <= TOGETHER and dn < 0.5 * ds
-        if mc <= OPP_COS and together:
-            s += " - together on the nodal map, apart in the signed vector space, as intended."
-        elif mc <= OPP_COS:
+    mn, ms = r.get("nodal_mixing", np.nan), r.get("signed_mixing", np.nan)
+    if np.isfinite(dn) and np.isfinite(ds) and np.isfinite(mn) and np.isfinite(ms):
+        s += (f". Neighbourhood mixing (1 = as mixed as chance, 0 = none): {mn:.2f} on the nodal map vs {ms:.2f} on "
+              f"the signed map; centroid distance {dn:.2f} vs {ds:.2f} map spreads")
+        together = dn <= TOGETHER and mn > ms
+        apart = ms <= MIX_APART
+        if mc <= OPP_COS and together and apart:
+            s += " - together on the nodal map, apart on the signed map, as intended."
+        elif mc <= OPP_COS and not together:
             s += " - opposite in the vector space, but the nodal map does not bring them together."
+        elif mc <= OPP_COS:
+            s += " - together on the nodal map, but the signed map does not keep them apart."
         else:
             s += " - with no opposite relation in the data, the map test does not apply."
     else:
@@ -750,11 +786,12 @@ def _opp_table(op):
         rows.append([f"{r['a']} / {r['b']}", f"{r['n_a']} / {r['n_b']}", _f(r["mean_cross_cos"], "{:+.2f}"),
                      _pct(r["frac_cross_neg"]), _f(r["auroc_anti"]),
                      f"{_pct(r['share_same_module'])} (random {_pct(r['random_same_module'])})",
-                     _pct(r["share_opposite_arms_in_same_module"]), _f(r["nodal_centroid_dist"]),
-                     _f(r["signed_centroid_dist"])])
+                     _pct(r["share_opposite_arms_in_same_module"]),
+                     f"{_f(r['nodal_centroid_dist'])} / {_f(r.get('nodal_mixing', np.nan))}",
+                     f"{_f(r['signed_centroid_dist'])} / {_f(r.get('signed_mixing', np.nan))}"])
     return _md_table(["pair", "genes a / b", "mean cross cos", "cross pairs < 0", "AUROC anti",
-                      "cross pairs in same module", "of those, opposite arms", "nodal map distance",
-                      "signed map distance"], rows)
+                      "cross pairs in same module", "of those, opposite arms", "nodal map: distance / mixing",
+                      "signed map: distance / mixing"], rows)
 
 
 def _report(path, ctx):
@@ -798,7 +835,11 @@ def _report(path, ctx):
           "space they should be anti-aligned (mean cross-set cosine < 0, most cross pairs negative); the nodal map "
           "is built on |cos|, so it should put them in the same module (on opposite arms) and close together, while "
           "the signed map keeps them apart. Map distances are centroid distances divided by the map's spread "
-          "(sqrt(var x + var y)); 'AUROC anti' = P(cross pair cos < random pair cos).", ""]
+          "(sqrt(var x + var y)); mixing = how often a gene's 5 nearest map neighbours (among both sets) come from "
+          "the other set, relative to chance (1 = as mixed as chance, 0 = never). t-SNE keeps neighbourhoods, not "
+          "long distances, so 'apart on the signed map' is read from the mixing (at most 0.25); how far apart two "
+          "separate islands land varies from machine to machine. 'AUROC anti' = P(cross pair cos < random pair cos).",
+          ""]
     ctl_op = op[op["source"] == "control"] if len(op) else op
     if len(ctl_op):
         L += [_opp_table(ctl_op), ""]

@@ -47,7 +47,15 @@ opposite directions (e.g. 40 genes raised and 25 lowered by the same three HDAC 
 | mean cosine **between** the two modules | **−0.69** | **−0.69** | **−0.73** |
 | same nodal-map module? arms | yes, + / − | yes, − / + | yes, − / + |
 | centre-to-centre distance, nodal map (in map spreads, √(var x + var y)) | **0.05** | **0.03** | **0.02** |
-| centre-to-centre distance, signed map | **3.00** | **1.45** | **2.47** |
+| neighbourhood mixing, nodal map (1 = as mixed as chance) | **0.84** | **0.98** | **0.88** |
+| neighbourhood mixing, signed map (0 = no shared neighbourhood) | **0.00** | **0.00** | **0.00** |
+| centre-to-centre distance, signed map (varies by machine, see below) | 3.00 | 1.45 | 2.47 |
+
+On the signed map the two sides of each pair never share a neighbourhood, on every machine. How far apart their two
+islands land does vary: t-SNE keeps neighbourhoods, not long distances, and tiny floating-point differences between
+machines move whole islands (the COLOC pair's signed-map centre distance ranged from 0.4 to 2.0 map spreads under
+one-in-a-million perturbations of its input). So the tests and `validation/report.md` judge "apart" by the mixing,
+and "together" by the nodal-map centre distance and mixing, never by the signed-map centre distance.
 
 The HDAC module of the nodal map holds 63 genes, 40 on its + arm and 23 on its − arm (planted: 40 and 25); the mean
 cosine between its arms is −0.69. Random gene pairs have a mean cosine of +0.01. So: anti-aligned in the vector space, one island on the nodal map.
@@ -57,7 +65,7 @@ cosine between its arms is −0.69. Random gene pairs have a mean cosine of +0.0
 Your run tests the same prediction on real biology, and reports it in `validation/report.md` ("opposite-pair
 test"): the p53-induced targets (CDKN1A, MDM2, BBC3, …) against the G2/M genes that p53 represses through
 p21–DREAM (`tahoemap/data/control_sets.json`). The prediction is a negative mean cosine between the two sets in the
-vector space, a large distance between them on the signed map, and a shared island on the nodal map. A second,
+vector space, no shared neighbourhood on the signed map, and a shared island on the nodal map. A second,
 exploratory pair (ATF4 stress targets against ribosome biogenesis) is reported the same way. Both sets come from the
 literature, not from Tahoe, so the test is independent of the data it is run on.
 

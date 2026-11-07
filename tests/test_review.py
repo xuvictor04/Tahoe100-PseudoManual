@@ -56,6 +56,7 @@ import hashlib
 import io
 import json
 import os
+import pathlib
 import re
 import shutil
 import socket
@@ -313,7 +314,7 @@ def end_to_end(view, ents):
     check(c, "end event: status and totals", end.get("status") == "done" and end.get("totals", {}).get("n_requests")
           == 5)
     rp = os.path.join(view, rec.get("review", "-"))
-    rv = json.load(open(rp)) if os.path.exists(rp) else {}
+    rv = json.load(open(rp, encoding="utf-8")) if os.path.exists(rp) else {}
     ver = rv.get("verification", {})
     est = (rv.get("established") or [{}])[0]
     check(c, "review JSON: payload + verification + meta", rv.get("meta", {}).get("entity_id") == g["entity_id"]
@@ -325,7 +326,7 @@ def end_to_end(view, ents):
           and est.get("check", {}).get("verdict") == "supported", {k: est.get(k) for k in (
               "citations", "removed_citations", "unverified", "check")})
     note = glob.glob(os.path.join(view, "review", "notes", "gene", "*.md"))
-    nt = open(note[0]).read() if note else ""
+    nt = open(note[0], encoding="utf-8").read() if note else ""
     check(c, "note written for the vault (links kept, removed citation marked)",
           "pubmed.ncbi.nlm.nih.gov/31000001" in nt and "citation removed" in nt, nt[:200])
     conn = pd.read_parquet(os.path.join(view, "review", "connections.parquet"))
@@ -452,7 +453,7 @@ def billing_rotation(view, ents):
     check(c, "history of the first attempt: typed error, status, type, action",
           len(err) == 1 and err[0]["class"] == "APIStatusError" and err[0]["status"] == 402
           and err[0]["type"] == "billing_error" and err[0]["category"] == K.DEAD_KEY, err[:1])
-    ks = json.load(open(os.path.join(view, "review", "keys_state.json")))
+    ks = json.load(open(os.path.join(view, "review", "keys_state.json"), encoding="utf-8"))
     dead = [k["key_id"] for k in ks["keys"] if k["dead"]]
     check(c, "keys_state.json: key 1 dead (ids only)", dead == [kid(KEY1)], dead)
     out = []
@@ -478,7 +479,7 @@ def all_keys_dead(view, ents, work):
           and st == [(a["entity_id"], "done", kid(KEY1)), (b["entity_id"], "key_rotated", kid(KEY1)),
                      (b["entity_id"], "key_rotated", kid(KEY2))], f"exit {res.exit_code}; {st}")
     kf = os.path.join(work, "keys.txt")
-    with open(kf, "w") as fh:
+    with open(kf, "w", encoding="utf-8") as fh:
         fh.write(f"# a new key\n{KEY3}\n")
     os.chmod(kf, 0o644)
     n0 = len(sc.calls)
@@ -539,7 +540,7 @@ def dry_run(view, ents):
     res, fk = run(view, {}, kinds="line,drug", limit=3, dry_run=True)
     c = "dry_run"
     d = os.path.join(view, "review", "dry_run")
-    summ = json.load(open(os.path.join(d, "summary.json"))) if os.path.exists(os.path.join(d, "summary.json")) \
+    summ = json.load(open(os.path.join(d, "summary.json"), encoding="utf-8")) if os.path.exists(os.path.join(d, "summary.json")) \
         else {}
     reqs = sorted(glob.glob(os.path.join(d, "*", "*.request.json")))
     doss = sorted(glob.glob(os.path.join(d, "*", "*.dossier.md")))
@@ -547,7 +548,7 @@ def dry_run(view, ents):
           not fk.calls and not os.path.exists(os.path.join(view, "review", "ledger.jsonl"))
           and len(summ.get("entities", [])) == 3 and len(reqs) == 3 and len(doss) == 3,
           f"{len(fk.calls)} calls, {len(reqs)} requests, {len(doss)} dossiers")
-    rq = json.load(open(reqs[0]))["request"] if reqs else {}
+    rq = json.load(open(reqs[0], encoding="utf-8"))["request"] if reqs else {}
     tools = rq.get("tools", [])
     custom = [t for t in tools if "input_schema" in t]
     check(c, "the request: adaptive thinking (no thinking field), effort, fallbacks + beta, caching, strict tools",
@@ -630,7 +631,7 @@ def plan_status_cli(view, ents):
           r1.returncode == 2 and "projected cost" in r1.stdout and "Refusing to start" in r1.stdout,
           f"exit {r1.returncode}: {r1.stdout[-200:]} {r1.stderr[-300:]}")
     sp = os.path.join(view, "script.json")
-    with open(sp, "w") as fh:
+    with open(sp, "w", encoding="utf-8") as fh:
         json.dump({"entities": {ents["lines"][0]["entity_id"]: good()}, "keys": [KEY3]}, fh)
     r2 = subprocess.run(py + ["run", "--out", view, "--only", ents["lines"][0]["entity_id"], "--limit", "1",
                               "--fake", sp, "--verify", "ids"], cwd=REPO, env=env, capture_output=True, text=True,
@@ -671,7 +672,7 @@ def duplicate(view, work, out):
           arrays and (len(linked) == len(arrays) if same_fs else not linked) and rec["files"]["hard_linked"] > 0
           and copied == notes, f"{rec['files']}; {rec['bytes']['hard_linked'] / 1e6:.0f} MB shared, "
                                f"{rec['bytes']['copied'] / 1e6:.0f} MB copied")
-    rec2 = json.load(open(os.path.join(dest, "duplicated_from.json")))
+    rec2 = json.load(open(os.path.join(dest, "duplicated_from.json"), encoding="utf-8"))
     head = subprocess.run(["git", "-C", REPO, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
     stamps = sorted(os.path.basename(f)[:-5] for f in glob.glob(os.path.join(out, "stages", "*.json")))
     check(c, "duplicated_from.json: source, date, code commit, stage stamps",
@@ -698,7 +699,7 @@ def duplicate(view, work, out):
         fh.write(b"\x93NUMPY" + b"0" * 4096)
     with open(os.path.join(src, "tensor", "R.npy.tmp"), "wb") as fh:
         fh.write(b"partial")
-    with open(os.path.join(src, "vault", "genes", "NQO1.md"), "w") as fh:
+    with open(os.path.join(src, "vault", "genes", "NQO1.md"), "w", encoding="utf-8") as fh:
         fh.write("# NQO1\n")
     os.makedirs(os.path.join(work, "elsewhere"), exist_ok=True)
     os.symlink(os.path.join(work, "elsewhere"), os.path.join(src, "atlas", "pseudobulk"))
@@ -753,7 +754,7 @@ def vault_splice(work, src, ents):
         vault.run(sv)
     before = notes()
     sv_vault = os.path.join(src, "vault")
-    same_code = (json.load(open(os.path.join(src, "stages", "vault.json"))).get("version") == vault.VERSION
+    same_code = (json.load(open(os.path.join(src, "stages", "vault.json"), encoding="utf-8")).get("version") == vault.VERSION
                  if os.path.exists(os.path.join(src, "stages", "vault.json")) else False)
     if same_code and os.path.isdir(sv_vault):
         diff = [k for k, t in before.items() if k != "Home.md" and (not os.path.exists(os.path.join(sv_vault, k))
@@ -1149,7 +1150,7 @@ def vault_map_literature(work, src, ents):
     res, _fk = run(sv, {"entities": {g["entity_id"]: steps}, "checker": [{"submit_check": chk}]},
                    only=g["entity_id"], verify="llm")
     rj = os.path.join(sv, "review", "reviews", "gene", os.listdir(os.path.join(sv, "review", "reviews", "gene"))[0])
-    js = json.load(open(rj))
+    js = json.load(open(rj, encoding="utf-8"))
     st = [(v["partner"], v.get("check_status"), v.get("shown_verdict")) for v in js.get("connection_verdicts") or []]
     check(c, "the review stored: the fabricated PMID removed, the checker's 'not supported', unverified shown",
           res.counts == {"done": 1} and [x[1:] for x in st] == [
@@ -1266,7 +1267,7 @@ def browser_checks(c, sv, gname, P):
                 errs = []
                 pg.on("pageerror", lambda e: errs.append(str(e)))
                 pg.on("dialog", lambda d: (errs.append("dialog: " + d.message), d.dismiss()))
-                pg.goto("file://" + os.path.abspath(os.path.join(sv, "map", "gene_map.html")))
+                pg.goto(pathlib.Path(sv, "map", "gene_map.html").resolve().as_uri())
                 pg.wait_for_function("() => !!window.TAHOE_MAP")
                 sym = pg.evaluate("TAHOE_MAP.data.sym")
                 gi = sym.index(gname)
@@ -2073,8 +2074,8 @@ def note_provenance(work):
     rd = os.path.join(REPO, "tahoemap", "review")
     claims_check = [p for p in glob.glob(os.path.join(rd, "agents", "*.md")) + glob.glob(os.path.join(rd, "skills",
                                                                                                       "*", "SKILL.md"))
-                    if re.search(r"citations were checked|were checked against PubMed", open(p).read(), re.I)]
-    wn = open(os.path.join(rd, "skills", "writing-the-note", "SKILL.md")).read()
+                    if re.search(r"citations were checked|were checked against PubMed", open(p, encoding="utf-8").read(), re.I)]
+    wn = open(os.path.join(rd, "skills", "writing-the-note", "SKILL.md"), encoding="utf-8").read()
     check(c, "no agent or skill file has the agent claim its own verification; writing-the-note forbids it",
           not claims_check and "Write no footer" in wn, claims_check)
     note = ("Known [PMID:31000001](https://pubmed.ncbi.nlm.nih.gov/31000001/); only here "
@@ -2264,7 +2265,7 @@ def note_links_and_structure(work, view, ents):
              {"submit_review": rv}, {"submit_review": rv}]
     res, _fk = run(view, {"entities": {g["entity_id"]: steps}}, only=g["entity_id"], verify="ids")
     rec = ledger(view)[-1] if ledger(view) else {}
-    st = json.load(open(os.path.join(view, rec["review"]))) if rec.get("review") else {}
+    st = json.load(open(os.path.join(view, rec["review"]), encoding="utf-8")) if rec.get("review") else {}
     nt = st.get("note_markdown") or ""
     shown = VA.sanitize_note(VA.drop_self_check(nt))
     warned = " ".join(x for x in map(json.dumps, events(view, rec) if rec else []) if "not accepted yet" in x)
@@ -2435,7 +2436,7 @@ def contract_end_to_end(view, ents):
     g = ents["genes"][5]
     res, _fk = run(view, {"entities": {g["entity_id"]: good()}}, only=g["entity_id"], verify="llm")
     rec = ledger(view)[-1] if ledger(view) else {}
-    rv = json.load(open(os.path.join(view, rec["review"]))) if rec.get("review") else {}
+    rv = json.load(open(os.path.join(view, rec["review"]), encoding="utf-8")) if rec.get("review") else {}
     ver = rv.get("verification") or {}
     cvs = rv.get("connection_verdicts") or []
     check(c, "every connection verdict and citing item has check_status / shown_verdict; verification and footer",
@@ -2642,7 +2643,7 @@ def stop_after_submit(view, ents):
     main = [r for r in L if r.get("status") != "note"]
     late = [r for r in L if r.get("status") == "note" and r.get("late")]
     rp = os.path.join(view, main[-1]["review"]) if main and main[-1].get("review") else ""
-    rv = json.load(open(rp)) if rp and os.path.exists(rp) else {}
+    rv = json.load(open(rp, encoding="utf-8")) if rp and os.path.exists(rp) else {}
     ver = rv.get("verification") or {}
     check(c, "Ctrl-C during the citation check: the review is stored as done (ids checked, claims not run)",
           res.exit_code == 130 and [r["status"] for r in main] == ["done"]
@@ -2679,7 +2680,7 @@ def stop_after_submit(view, ents):
         R.STOP_GRACE = grace
     L1 = ledger(view)
     st1 = Ledger(view).states()[g["entity_id"]]
-    rv1 = json.load(open(rp)) if rp else {}
+    rv1 = json.load(open(rp, encoding="utf-8")) if rp else {}
     out1 = []
     R.status(view, say=out1.append)
     check(c, "a --recheck stopped while the checker runs: a ledger note, the review unchanged, still --recheck-able",
@@ -2698,7 +2699,7 @@ def stop_after_submit(view, ents):
           {"llm": R.recheck_pending(view, st_old, "llm"), "ids": R.recheck_pending(view, st_old, "ids")})
     n_files = len(glob.glob(os.path.join(view, "review", "history", "gene", "*", "*.jsonl")))
     res2, fk2 = run(view, F.FakeAPI({"checker": "auto"}), only=g["entity_id"], verify="llm", recheck=True)
-    rv2 = json.load(open(rp)) if rp else {}
+    rv2 = json.load(open(rp, encoding="utf-8")) if rp else {}
     last = ledger(view)[-1]
     check(c, "--recheck: only the citation checker runs; the stored review gets the check (llm done)",
           res2.exit_code == 0 and fk2.calls and {x["role"] for x in fk2.calls} == {"checker"}
@@ -2762,7 +2763,7 @@ def key_prompt_ctrl_c(view, ents):
     res, _ = run(view, F.FakeAPI({"keys": [KEY1], "dead_keys": {KEY1[-4:]: 401}, "entities": {}}),
                  only=g["entity_id"], interactive=True, prompt=prompt, verify="ids")
     took = time.time() - t0
-    ks = json.load(open(os.path.join(view, "review", "keys_state.json")))
+    ks = json.load(open(os.path.join(view, "review", "keys_state.json"), encoding="utf-8"))
     check(c, "asked in the main thread; Ctrl-C interrupts the prompt at once (no hang) and works like Enter there: "
           "the run pauses for a key (exit code 3, the add-a-key message)",
           seen.get("main") and seen.get("restored") and not seen.get("timed_out") and took < 4
@@ -2813,11 +2814,11 @@ def run_lock(work):
     lp = os.path.join(d, "review", ".run.lock")
     p = subprocess.Popen([sys.executable, "-c", "pass"])
     p.wait()
-    with open(lp, "w") as fh:
+    with open(lp, "w", encoding="utf-8") as fh:
         json.dump({"pid": p.pid, "host": socket.gethostname(), "started": "x"}, fh)
     lk = R._RunLock(d)
     ok, why = lk.acquire()
-    rec = json.load(open(lp)) if ok else {}
+    rec = json.load(open(lp, encoding="utf-8")) if ok else {}
     lk.release()
     check(c, "a lock whose process is gone is removed; the new lock holds pid, host, process start",
           ok and rec.get("pid") == os.getpid() and rec.get("host") == socket.gethostname()
@@ -2826,16 +2827,16 @@ def run_lock(work):
     try:
         time.sleep(0.2)
         ps = R._proc_start(live.pid)
-        with open(lp, "w") as fh:
+        with open(lp, "w", encoding="utf-8") as fh:
             json.dump({"pid": live.pid, "host": socket.gethostname(), "started": "x", "process_start": ps}, fh)
         ok2, why2 = R._RunLock(d).acquire()
-        with open(lp, "w") as fh:
+        with open(lp, "w", encoding="utf-8") as fh:
             json.dump({"pid": live.pid, "host": socket.gethostname(), "started": "x",
                        "process_start": (ps or 0) - 3600}, fh)
         lk3 = R._RunLock(d)
         ok3, why3 = lk3.acquire()
         lk3.release()
-        with open(lp, "w") as fh:
+        with open(lp, "w", encoding="utf-8") as fh:
             json.dump({"pid": live.pid, "host": "some-other-computer", "started": "x"}, fh)
         ok4, why4 = R._RunLock(d).acquire()
     finally:
@@ -2864,7 +2865,7 @@ def keys_file_is_a_key(view, ents):
           and KEY5 not in printed and KEY5[8:30] not in printed, res.message[:160])
     env = {k: v for k, v in os.environ.items() if not k.startswith("ANTHROPIC")}
     sp = os.path.join(view, "script.json")
-    with open(sp, "w") as fh:
+    with open(sp, "w", encoding="utf-8") as fh:
         json.dump({"entities": {}}, fh)
     r = subprocess.run([sys.executable, "-m", "tahoemap", "review", "run", "--out", view, "--only", g["entity_id"],
                         "--limit", "1", "--fake", sp, "--keys-file", "/home/someone/" + KEY5], cwd=REPO, env=env,
@@ -3029,7 +3030,7 @@ def recheck_stopped(view, ents):
             res, fk = run(view, script, only=g["entity_id"], verify="llm", recheck=True, **kw)
             new = ledger(view)[n0:]
             st = Ledger(view).states()[g["entity_id"]]
-            meta = json.load(open(rp["review"])).get("meta") or {}
+            meta = json.load(open(rp["review"], encoding="utf-8")).get("meta") or {}
             check(c, f"{label}: exit {code}; the review and note unchanged; only a 'recheck: paused' note; still "
                   "--recheck-able", res.exit_code == code and (_sha(rp["review"]), _sha(rp["note"])) == before
                   and [(r["status"], r.get("note"), r.get("recheck")) for r in new] == [("note", "recheck: paused",
@@ -3041,7 +3042,7 @@ def recheck_stopped(view, ents):
     finally:
         R.STOP_GRACE = grace
     res, fk = run(view, {"checker": "auto"}, only=g["entity_id"], verify="llm", recheck=True)
-    rv = json.load(open(rp["review"]))
+    rv = json.load(open(rp["review"], encoding="utf-8"))
     check(c, "then a --recheck that is not stopped completes the check (a done line)", res.exit_code == 0
           and rv["verification"]["llm"]["status"] == "done" and rv["meta"].get("rechecked")
           and ledger(view)[-1]["status"] == "done", {"exit": res.exit_code, "llm": rv["verification"]["llm"]})
@@ -3223,7 +3224,7 @@ def malformed_key(view, ents):
         res, fk = run(view, {"entities": {g["entity_id"]: good()}}, only=g["entity_id"], verify="ids", env_keys=True)
     finally:
         os.environ.pop("ANTHROPIC_API_KEY", None)
-    ks = json.load(open(os.path.join(view, "review", "keys_state.json")))
+    ks = json.load(open(os.path.join(view, "review", "keys_state.json"), encoding="utf-8"))
     check(c, "two keys in ANTHROPIC_API_KEY: the key is dead from the start (malformed), nothing sent, paused "
           "(exit 3)", res.exit_code == 3 and not fk.calls and "malformed" in res.message
           and [(k["dead"], "malformed" in k["reason"]) for k in ks["keys"]] == [(True, True)]
@@ -3292,7 +3293,7 @@ def stop_foreground(view, ents):
     g = ents["genes"][5]
     env = {k: v for k, v in os.environ.items() if not k.startswith("ANTHROPIC")}
     sp = os.path.join(view, "script.json")
-    with open(sp, "w") as fh:
+    with open(sp, "w", encoding="utf-8") as fh:
         json.dump({"entities": {g["entity_id"]: [dict(good()[0], sleep=4)] + good()[1:]}}, fh)
     p = subprocess.Popen([sys.executable, "-m", "tahoemap", "review", "run", "--out", view, "--only", g["entity_id"],
                           "--limit", "1", "--fake", sp, "--verify", "ids"], cwd=REPO, env=env,
