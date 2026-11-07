@@ -42,8 +42,9 @@ review/reviews/<kind>/, review/connections.parquet), the note of every reviewed 
 verification from the review's "verification" counts - ids checked, removed, not looked up, the citation check's
 status and counts -, relative links to the run's history file and review JSON) above the agent's note body
 (sanitize_note: no raw HTML, comment, image or link other than to PubMed / doi.org / Europe PMC / NCBI /
-Cellosaurus, code fences closed; its headings demoted below the note's own, its wikilinks kept only where a note
-exists), then its connection verdicts (one per partner, pick_verdict), then the provenance line generated from the
+Cellosaurus, no autolinked URL, '//host' or e-mail address, no Dataview inline query, code fences closed; its
+headings demoted below the note's own, its wikilinks kept only where a note exists), then its connection verdicts
+(of the entity's latest review, review_rank; one per partner, pick_verdict), then the provenance line generated from the
 verification (the review's note_footer; never the agent's own). A verdict is shown as verdict_label says: the shown
 verdict (shown_verdict: 'unverified' when the citation check found it not supported or every citation was removed)
 and its check_status, then ' (cites a retracted paper)' when one of its papers is retracted (a verdict whose only
@@ -74,7 +75,7 @@ from . import tensor as TN
 from . import tlib as T
 from .common import folder, log, read_effects_index, safe_filename, stamp_stage
 # the sentence-level rule the runner applies to the notes it stores (verify imports only the standard library)
-from .review.verify import drop_self_check as _verify_drop_self_check
+from .review.verify import ITEM_SECTIONS, drop_self_check as _verify_drop_self_check
 
 VERSION = 2
 GEN = "tahoemap"
@@ -381,7 +382,7 @@ def _slices(keys, n):
 REVIEW_KINDS = ("gene", "drug", "line")
 LIT_CITES = 3                        # citations linked in a partner-table cell (the rest are counted)
 LIT_HEADING = "What the literature says"
-LIT_RENDER = 3                       # how reviews are drawn into notes and the map: part of review_fingerprint
+LIT_RENDER = 4                       # how reviews are drawn into notes and the map: part of review_fingerprint
 RETRACTED_MARK = " (cites a retracted paper)"   # after the label of a verdict that cites a retracted paper
 VERDICTS = ("established", "indirect", "plausible", "unexpected", "contradicted")   # submit_review's verdicts
 STRENGTH = {"established": 5, "contradicted": 4, "indirect": 3, "plausible": 2, "unexpected": 1}
@@ -549,6 +550,23 @@ def pick_verdict(vs):
                                   not retracted_cited(t[1]), -t[0]))[1]
 
 
+def review_rank(meta):
+    """The order of two reviews of one entity (a review JSON's meta, or a review/connections.parquet row): the later
+    'reviewed' time, then the later run_id. The vault's note and the verdicts of the vault and the map are the
+    latest review's."""
+    return (sval(meta.get("reviewed")), sval(meta.get("run_id")))
+
+
+def _review_entity(d):
+    """The entity a review (its meta) or a verdict row is about: its entity_id, else its kind and name."""
+    return sval(d.get("entity_id")).strip() or f"{sval(d.get('kind'))}:{sval(d.get('name')).strip()}"
+
+
+def _same_review(a, b):
+    """Two review_rank()s of one entity name the same review: the same run (run_id), else the same time."""
+    return (a[1] == b[1]) if a[1] and b[1] else a == b
+
+
 def one_verdict_per_partner(rows):
     """rows (connection verdicts with check_status) -> one per (review, partner) by pick_verdict, in the order the
     partners first appear; each kept row gets n_verdicts (how many the review gave on that partner)."""
@@ -570,8 +588,11 @@ def review_connections(out, gene_col=None, one_per_partner=True):
     shown_verdict, ...): from that table, else from the review JSONs - when the table is missing (not built yet:
     `tahoe review tables`), unreadable, older than a review (connections_stale: a review run that was killed before
     rebuilding it) or written before it had the retracted column. check_status / shown_verdict are always set
-    (lit_status, also for reviews stored before they existed). gene_col(name) -> col or None resolves gene partners
-    the table left unresolved. one_per_partner: one verdict per (review, partner), by pick_verdict."""
+    (lit_status, also for reviews stored before they existed). Only the latest review of each entity counts
+    (review_rank over the review JSONs, as the vault's note: an entity reviewed twice, in two files, shows the verdicts
+    of the latest, in the vault and the map alike - even when the latest gave none). gene_col(name) -> col or None
+    resolves gene partners the table left unresolved. one_per_partner: one verdict per (review, partner), by
+    pick_verdict."""
     rd = os.path.join(out, "review")
     rows = None
     p = os.path.join(rd, "connections.parquet")
@@ -590,15 +611,19 @@ def review_connections(out, gene_col=None, one_per_partner=True):
                     "rebuilds it): verdicts read from the review JSONs")
             elif tab is not None:
                 rows = tab.to_dict("records")
-    if rows is None:
-        rows = []
-        for kind in REVIEW_KINDS:
-            d = os.path.join(rd, "reviews", kind)
-            for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
-                r = _read_json(os.path.join(d, f)) if f.endswith(".json") else None
-                if not isinstance(r, dict):
-                    continue
-                meta = r.get("meta") or {}
+    from_json, latest = rows is None, {}
+    rows = [] if rows is None else rows
+    for kind in REVIEW_KINDS:
+        d = os.path.join(rd, "reviews", kind)
+        for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+            r = _read_json(os.path.join(d, f)) if f.endswith(".json") else None
+            if not isinstance(r, dict):
+                continue
+            meta = r.get("meta") or {}
+            e, rank = _review_entity({"kind": kind, **meta}), review_rank(meta)
+            if e not in latest or rank > latest[e]:
+                latest[e] = rank
+            if from_json:
                 for it in r.get("connection_verdicts") or []:
                     if not isinstance(it, dict):
                         continue
@@ -615,6 +640,13 @@ def review_connections(out, gene_col=None, one_per_partner=True):
                                  "check_status": it.get("check_status") or "",
                                  "shown_verdict": it.get("shown_verdict") or "", "model": meta.get("model"),
                                  "run_id": meta.get("run_id"), "reviewed": meta.get("reviewed")})
+    own = {}                                    # an entity whose review JSON is gone (a table not rebuilt): its rows'
+    for r in rows:
+        e, rank = _review_entity(r), review_rank(r)
+        if e not in latest and (e not in own or rank > own[e]):
+            own[e] = rank
+    latest.update(own)
+    rows = [r for r in rows if _same_review(review_rank(r), latest[_review_entity(r)])]
     for r in rows:
         r["check_status"], r["shown_verdict"] = lit_status(r)
     if gene_col is not None:
@@ -679,9 +711,13 @@ def verdict_label(v):
 _FENCE_RE = re.compile(r"^[ \t]*(`{3,}|~{3,})(.*)$")
 SAFE_FENCE_INFO = {"text", "txt", "plain", "python", "py", "r", "bash", "sh", "shell", "json", "yaml", "yml", "tsv",
                    "csv", "markdown", "md"}             # languages Obsidian shows as code (no plugin renders them)
-_RAW_ELEMENTS = re.compile(r"<(script|style|iframe|object|embed|template|textarea|noscript|svg|math|xmp|title|select|"
-                           r"frameset|noframes|applet|canvas|audio|video)\b[^>]*>.*?</\1\s*>", re.I | re.S)
-_TAG = re.compile(r"</?[A-Za-z][A-Za-z0-9:-]*(?:\s[^<>]*)?/?>|<![A-Za-z][^<>]*>|<\?.*?\?>", re.S)
+# the opening tag of an element removed with its content (_drop_raw_elements); its closing tag: _RAW_CLOSE[name]
+_RAW_OPEN = re.compile(r"<(script|style|iframe|object|embed|template|textarea|noscript|svg|math|xmp|title|select|"
+                       r"frameset|noframes|applet|canvas|audio|video)\b[^<>]*>", re.I)
+_RAW_CLOSE = {}
+# any other tag, declaration or processing instruction; each alternative stops at the next '<' or '>', so no opener
+# rescans the text after it (one left unclosed is escaped by the '&lt;' pass)
+_TAG = re.compile(r"</?[A-Za-z][A-Za-z0-9:-]*(?:\s[^<>]*)?/?>|<![A-Za-z][^<>]*>|<\?[^<>]*\?>")
 _BR = r"(?:[^\[\]\\]|\\.)"
 # link text: escapes and one level of nested brackets, at most 300 items, never backtracked (possessive: no item can
 # end on ']', so giving one back cannot find another match) and not started at an escaped '\[' - so a long run of
@@ -696,18 +732,44 @@ _LINK = re.compile(_LINK_TEXT + _LINK_DEST, re.S)
 _MARK = r"(?:>|(?:[-+*]|\d{1,9}[.)])(?=[ \t])|\[\^[^\[\]\s]+\]:)"
 _CONTAINER = rf"(?:[ \t]*{_MARK})*[ \t]*"
 # a reference definition '[label]: destination' at any container depth (top level, in a blockquote, callout or list
-# item); its destination may be on the next line (after that line's own container prefix)
-_REFDEF = re.compile(rf"^({_CONTAINER})\[(?!\^)((?:[^\[\]\\]|\\.)++)\]:[ \t]*(?:\n[ \t>]*)?(<[^<>\n]*>|\S+)[^\n]*$",
-                     re.M)
+# item); its destination may be on the next line (after that line's own container prefix). A label starting with '^'
+# is one too unless it is a footnote's ('[^1]:': no space, bracket or backslash in it) - '[^a b]:' and '[^a\]b]:' are
+# definitions to a renderer with footnotes as well as to one without
+_REFDEF = re.compile(rf"^({_CONTAINER})\[(?!\^[^\[\]\s\\]+\]:)((?:[^\[\]\\]|\\.)++)\]:[^\S\n]*(?:\n(?:[^\S\n]|>)*)?"
+                     r"(<[^<>\n]*>|\S+)[^\n]*$", re.M)
 # a fence opened inside a container ('> ```lang', '- ```lang', '1. ~~~lang'): sanitize_note handles top-level fences
 _NESTED_FENCE = re.compile(rf"^((?:[ \t]*{_MARK})+[ \t]*)(`{{3,}}|~{{3,}})(.*)$", re.M)
 # a footnote: a renderer without footnotes reads '[^1]: text' as a reference definition to its first word (entities
 # decoded: 'javascript&colon;...'), so that word gets a zero-width space in front unless it is an allowed link
-_FOOTNOTE_URL = re.compile(rf"^({_CONTAINER}\[\^[^\[\]\s]+\]:[ \t]*(?:\n[ \t>]*)?)(?=\S)(\S*)", re.M)
-_LINK_OR_URL = re.compile(rf"({_LINK_TEXT}{_LINK_DEST})|(?:(?:https?|ftp)://|www\.)[^\s<>\[\]]*", re.S | re.I)
+_FOOTNOTE_URL = re.compile(rf"^({_CONTAINER}\[\^[^\[\]\s]+\]:[^\S\n]*(?:\n(?:[^\S\n]|>)*)?)(?=\S)(\S*)", re.M)
+# a markdown link (kept as it is: _LINK left only allowed ones), else what an autolinker may start a link at: a URL,
+# a '//host' (linkify-it), an e-mail address's '@' (GFM, linkify-it) or 'mailto:' / 'xmpp:'
+_LINK_OR_URL = re.compile(rf"({_LINK_TEXT}{_LINK_DEST})|(?:(?:https?|ftp)://|www\.)[^\s<>\[\]]*"
+                          r"|(?<!\u200b)(?P<sl>//)|(?<!\u200b)(?P<at>@)(?=\S)|(?P<mt>mailto|xmpp)(?=:)", re.S | re.I)
 # where a renderer's autolinker starts a URL (some start one inside a word: 'xhttps://...'): defanged with a zero-width
 # space, so no bare URL to another site becomes a link
 _URL_START = re.compile(r"(?i)((?:https?|ftp):)(//)|(www)(\.)")
+# '/' and '@' written as a backslash escape or an entity: a renderer that autolinks after decoding them (markdown-it's
+# linkify) would see '//host' or an e-mail address, so they are written plainly before the defanging
+_SLASH_AT = re.compile(r"\\(.)|&(?:#0*(47|64)|#[xX]0*(2[fF]|40)|(sol|commat));", re.S)
+
+
+def _plain_slash_at(t):
+    """t with '\\/', '\\@', '&#47;', '&sol;', '&#64;', '&commat;' ... written as '/' and '@' (_SLASH_AT)."""
+    def one(m):
+        if m.group(1) is not None:                     # a backslash escape (pairs read left to right: '\\' stays)
+            return m.group(1) if m.group(1) in "/@" else m.group(0)
+        return "/" if (m.group(2) or m.group(3) or m.group(4)).lower() in ("47", "2f", "sol") else "@"
+    return _SLASH_AT.sub(one, t)
+
+
+# a Dataview inline query: a <code> whose text, trimmed (JavaScript's trim: any Unicode space, line break or BOM),
+# starts with '=' or '$=' (Dataview runs them in code blocks too). A zero-width space before the '=' ends that: in a
+# code span (after its backtick and any space or line break) and at the start of a line (after its container prefix:
+# an indented or fenced code block, or a code span's next line)
+_JS_WS = r"(?:\s|\ufeff)"
+_DV_SPAN = re.compile(rf"(`)({_JS_WS}*+)(\$?=)")
+_DV_LINE = re.compile(rf"^((?:[ \t]*+{_MARK})*+{_JS_WS}*+)(\$?=)")
 
 
 def _fence_info(info):
@@ -746,43 +808,100 @@ def _inline_dest_ok(t, i):
     return bool(d) and _lit_link_ok(d.group(1))
 
 
+def _drop_spans(t, start, end):
+    """t without each span from `start` to the first `end` after it, left to right (as re.sub(start.*?end, '')
+    would), in linear time: at the first opener with no `end` after it the scan stops (no later opener has one), and
+    what is left unclosed stays (an unclosed '<!--' is escaped by the '&lt;' pass)."""
+    out, keep = [], 0
+    while True:
+        i = t.find(start, keep)
+        j = t.find(end, i + len(start)) if i >= 0 else -1
+        if j < 0:
+            break
+        out.append(t[keep:i])
+        keep = j + len(end)
+    out.append(t[keep:])
+    return "".join(out)
+
+
+def _drop_raw_elements(t):
+    """t without its script, style, iframe ... elements (_RAW_OPEN), each with its content up to the first closing tag
+    of its name. An element left unclosed stays (the '&lt;' pass makes it text); a name whose closing tag is not
+    found after one opener is not looked for again (none follows a later opener either): linear time, however many
+    openers are left unclosed."""
+    out, keep, pos, dead = [], 0, 0, set()
+    while True:
+        m = _RAW_OPEN.search(t, pos)
+        if m is None:
+            break
+        name = m.group(1).lower()
+        e = None
+        if name not in dead:
+            if name not in _RAW_CLOSE:
+                _RAW_CLOSE[name] = re.compile(rf"</{name}\s*>", re.I)
+            e = _RAW_CLOSE[name].search(t, m.end())
+        if e is None:
+            dead.add(name)
+            pos = m.end()
+            continue
+        out.append(t[keep:m.start()])
+        keep = pos = e.end()
+    out.append(t[keep:])
+    return "".join(out)
+
+
+def _escape_lt(t):
+    """'<' escaped wherever it could start a tag, a comment, a declaration or an autolink."""
+    return re.sub(r"<(?=[A-Za-z/!?%])", "&lt;", t)
+
+
 def _sanitize_chunk(t):
-    """Text outside code fences (sanitize_note)."""
-    t = re.sub(r"<!--.*?-->", "", t, flags=re.S)                   # HTML comments
-    t = re.sub(r"%%.*?%%", "", t, flags=re.S)                      # Obsidian comments
+    """Text outside code fences (sanitize_note). Removals first; links and images are made text before reference
+    definitions are removed (a link made text cannot leave a definition behind); then the defanging, and the '&lt;'
+    pass once more at the end, so a tag or autolink that a removal or an un-escape put together ('<[img](x) src=x
+    onerror=...>', '<\\url ...>') is text."""
+    t = _drop_spans(t, "<!--", "-->")                              # HTML comments
+    t = _drop_spans(t, "%%", "%%")                                 # Obsidian comments
     t = t.replace("%%", "")                                        # ... and an unclosed one
-    t = _RAW_ELEMENTS.sub("", t)                                   # script, style, iframe ... with their content
+    t = _drop_raw_elements(t)                                      # script, style, iframe ... with their content
     t = re.sub(r"<([A-Za-z][A-Za-z0-9+.-]{1,31}:[^\s<>]*)>", lambda m: f"[{m.group(1)}]({m.group(1)})"
                if _lit_link_ok(m.group(1)) else m.group(1), t)   # autolinks: allowed ones as links, others text
     t = _TAG.sub("", t)                                            # any other HTML tag (its text is kept)
-    t = re.sub(r"<(?=[A-Za-z/!?%])", "&lt;", t)                    # whatever could still start a tag
+    t = _escape_lt(t)                                              # whatever could still start a tag
     t = t.replace("![[", "[[")                                     # no embedded notes
     t = _IMAGE.sub(lambda m: m.group(1), t)                        # no images (remote or not): their alt text
-    t = _REFDEF.sub(_refdef, t)
-    t = _plain_nested_fences(t)
     t = _LINK.sub(lambda m: m.group(0) if _lit_link_ok(m.group(2)) else m.group(1), t)
+    t = _REFDEF.sub(_refdef, t)                                    # ('[[r](x)]: url' is a definition by now)
+    t = _plain_nested_fences(t)
     # what the patterns above cannot parse (link text with a code span, deeper brackets ...) is still no image or link:
     # '![' never starts an image, '](' never starts a destination other than an allowed one
     t = t.replace("![", "!\\[")
     t = re.sub(r"\]\(", lambda m: m.group(0) if _inline_dest_ok(t, m.end() - 1) else "]\\(", t)
     t = _FOOTNOTE_URL.sub(lambda m: m.group(0) if _lit_link_ok(m.group(2)) else m.group(1) + "\u200b" + m.group(2), t)
-
-    def bare(m):                                                   # a bare URL elsewhere is not made a link
-        if m.group(1) is not None:
-            return m.group(0)
-        u = m.group(0)
-        keep = next((len(x) for x in LIT_LINK_PREFIXES if u.startswith(x)), 0) if _lit_link_ok(u) else 0
-        return u[:keep] + _URL_START.sub(lambda k: (k.group(1) or k.group(3)) + "\u200b" + (k.group(2) or k.group(4)),
-                                         u[keep:])                 # (an allowed one: a URL inside it is defanged)
-    t = _LINK_OR_URL.sub(bare, t)
-    t = re.sub(r"(`+)([ \t]*)(\$?=)", "\\1\u200b\\2\\3", t)  # no Dataview inline query (`= ...`, `$= ...`)
-    t = re.sub(r"\\(href|url)\b", r"\1", t)                    # no link from a LaTeX formula
+    t = re.sub(r"\\+(href|url)\b", r"\1", t)                   # no link from a LaTeX formula ('\\url' too)
     if t.count("$$") % 2:                                        # an unclosed display formula
         i = t.rfind("$$")
         t = t[:i] + "\\$\\$" + t[i + 2:]
     # what a removal above may have made: an Obsidian comment ('%<b></b>%'), a nested fence with a plugin language
     # ('> [```dataviewjs](x)'), a fence at the start of a line ('<b></b>```' - it would hide all that follows: text)
     t = _plain_nested_fences(re.sub(r"%{2,}", "%", t))
+
+    def bare(m):                                                   # a bare URL elsewhere is not made a link
+        if m.group(1) is not None:
+            return m.group(0)
+        if m.group("sl") or m.group("mt"):                         # '//host', 'mailto:'
+            return "\u200b//" if m.group("sl") else m.group("mt") + "\u200b"
+        if m.group("at"):                                          # an e-mail address (before the '@': no
+            return "\u200b@"                                      # name of one ends there, for linkify-it too)
+        u = m.group(0)
+        keep = next((len(x) for x in LIT_LINK_PREFIXES if u.startswith(x)), 0) if _lit_link_ok(u) else 0
+        rest = _URL_START.sub(lambda k: (k.group(1) or k.group(3)) + "\u200b" + (k.group(2) or k.group(4)), u[keep:])
+        if not keep:                                               # (an allowed one: a URL inside it is defanged)
+            rest = re.sub(r"(?<!\u200b)(//|@)", "\u200b\\1", rest)
+        return u[:keep] + rest
+    t = _LINK_OR_URL.sub(bare, _plain_slash_at(t))
+    t = _DV_SPAN.sub("\\1\\2\u200b\\3", t)                         # no Dataview inline query (`= ...`, `$= ...`)
+    t = _escape_lt(t)                                              # what the steps above may have put together
     out, prev = [], ""
     for line in t.split("\n"):
         f = _FENCE_RE.match(line)
@@ -790,6 +909,7 @@ def _sanitize_chunk(t):
             line = line[:f.start(1)] + "\\" + line[f.start(1):]
         if re.match(r"^ {0,3}(?:=+|-+)[ \t]*$", line) and prev.strip():   # no setext heading ('text' over '---')
             out.append("")
+        line = _DV_LINE.sub("\\1\u200b\\2", line)                  # ... nor one in a code block
         out.append(line)
         prev = line
     return "\n".join(out)
@@ -801,9 +921,10 @@ def sanitize_note(md):
     callout or list item too); outside them no HTML comment or Obsidian %% comment, no raw HTML (script, iframe, img,
     a, style ... any tag), no image (inline, reference or shortcut '![name]') or embedded note, no link or reference
     definition (at any container depth) other than to PubMed, doi.org, Europe PMC, NCBI and Cellosaurus (links keep
-    their text; a bare URL to another site is not made a link), and no setext heading."""
+    their text; a bare URL, '//host' or e-mail address is not made a link), no Dataview inline query (a code span or
+    code block whose text starts with '=' or '$=': the first line of a fence's code too) and no setext heading."""
     lines = sval(md).replace("\r\n", "\n").replace("\r", "\n").split("\n")
-    out, chunk, fence = [], [], None
+    out, chunk, fence, code = [], [], None, False
     for line in lines:
         m = _FENCE_RE.match(line)
         if fence is None:
@@ -813,7 +934,7 @@ def sanitize_note(md):
                     if out[-1].split("\n")[-1].strip():       # a blank line first: no definition, link label or
                         out.append("")                          # title of the text above runs into the fence
                 chunk = []
-                fence = m.group(1)
+                fence, code = m.group(1), False
                 out.append(fence + _fence_info(m.group(2)))
             else:
                 chunk.append(line)
@@ -821,6 +942,9 @@ def sanitize_note(md):
             out.append(fence)
             fence = None
         else:
+            if not code and not re.fullmatch(rf"{_JS_WS}*", line):    # the code's first text: Dataview reads it
+                code = True                                           # trimmed, so its first '=' after spaces
+                line = re.sub(rf"^({_JS_WS}*+)(\$?=)", "\\1\u200b\\2", line)
             out.append(line)
     if chunk:
         out.append(_sanitize_chunk("\n".join(chunk)))
@@ -1227,12 +1351,14 @@ class Vault:
                 if not text:
                     continue
                 old = self.lit.get((kind, key))
-                if old and str(old["meta"].get("reviewed", "")) > str(meta.get("reviewed", "")):
+                if old and review_rank(old["meta"]) > review_rank(meta):
                     continue                                    # two files for one entity: the latest review
                 ftr = js.get("note_footer")
                 self.lit[(kind, key)] = {
                     "kind": kind, "stem": stem, "text": text, "meta": meta,
                     "verification": js.get("verification") or {}, "summary": str(js.get("summary") or ""),
+                    "items": {sec: [it for it in js.get(sec) or [] if isinstance(it, dict)] for sec in ITEM_SECTIONS}
+                    if js else None,
                     "footer": ftr.strip() if isinstance(ftr, str) and ftr.strip() else GENERIC_FOOTER,
                     "review_rel": f"review/reviews/{kind}/{stem}.json" if js else None,
                     "note_rel": f"review/notes/{kind}/{stem}.md" if os.path.exists(np_) else None}
@@ -1380,10 +1506,14 @@ class Vault:
         return self.glink(key) if kind == "gene" else self.dlink(key) if kind == "drug" else self.llink(key)
 
     @staticmethod
-    def _verification_text(ver, meta):
+    def _verification_text(ver, meta, items=None):
         """The callout's verification sentence, from the review JSON's "verification" (the id look-ups: checked,
         removed, could not be checked, retracted; the citation check: done / not run / failed and its counts), for
-        reviews stored before that form too."""
+        reviews stored before that form too. items: the review's items by section (connection_verdicts,
+        established ...), when known: the claims shown as "unverified" are counted from them by the rule of the
+        verdict labels (lit_status: not supported, every cited paper not found, or every cited paper retracted), and
+        of the claims citing an id that was not looked up, those marked "ids not checked" are told from those the
+        citation checker graded all the same (its verdict is shown: verify._item_status)."""
         cnt, ids, llm = ver.get("counts") or {}, ver.get("ids") or {}, ver.get("llm") or {}
         mode = ver.get("mode")
 
@@ -1396,6 +1526,22 @@ class Vault:
         def why(x):
             t = md_text(x)
             return t if len(t) <= 120 else t[:117] + "..."
+        every = [(sec, it) for sec, its in (items or {}).items() for it in its or []]
+
+        def ids_not_checked(all_citing):
+            """What the claims citing an id not looked up show: all claims that cite (all_citing: no id was looked
+            up), else those listing one in unchecked_citations."""
+            its = [it for _sec, it in every if _cid_list(it.get("citations"))
+                   and (all_citing or _cid_list(it.get("unchecked_citations")))]
+            k = sum(1 for it in its if lit_status(it)[0] == "unchecked")
+            g = sum(1 for it in its if lit_status(it)[0] != "unchecked" and sval(
+                it["check"].get("verdict") if isinstance(it.get("check"), dict) else it.get("check")))
+            if items is None or not g:
+                return "the claims citing them are marked \"ids not checked\""
+            gr = f"{'was' if g == 1 else 'were'} graded by the citation checker all the same (its verdict is shown)"
+            if not k:
+                return f"the {'claim' if g == 1 else 'claims'} citing them {gr}"
+            return f"{pl(k, 'claim')} citing them {'is' if k == 1 else 'are'} marked \"ids not checked\", {g} {gr}"
         n_cited = num(cnt.get("n_citations")) if "n_citations" in cnt else num(ids.get("n_cited"))
         unchecked = num(ids.get("unchecked"))
         if mode not in ("ids", "llm"):
@@ -1417,22 +1563,33 @@ class Vault:
             else:
                 s += (f"; {checked} of the {pl(n_cited, 'cited id')} looked up in PubMed / Crossref ({found} found, "
                       f"{removed} removed as not found), {unchecked} could not be looked up (the service did not "
-                      "answer): the claims citing them are marked \"ids not checked\"")
+                      f"answer): {ids_not_checked(False)}")
             if num(ids.get("retracted")):
                 s += f", {num(ids.get('retracted'))} retracted (still cited)"
             nr = num(ids.get("note_removed")) if "note_removed" in ids else num(cnt.get("note_removed"))
             if nr:
                 s += f"; {pl(nr, 'paper')} cited only in the text removed"
         elif ist == "not_run":
-            s += (f"; the cited ids were not looked up ({why(idet or 'not run')}): the claims citing them are marked "
-                  "\"ids not checked\"")
+            s += f"; the cited ids were not looked up ({why(idet or 'not run')}): {ids_not_checked(True)}"
         else:
-            s += (f"; the id check failed ({why(idet or 'failed')}): no cited id was verified, and the claims citing "
-                  "them are marked \"ids not checked\"")
-        nrs = num(ids.get("not_retrieved_in_session")) or num(meta.get("not_retrieved"))
+            s += (f"; the id check failed ({why(idet or 'failed')}): no cited id was verified, and "
+                  f"{ids_not_checked(True)}")
+        if "not_retrieved_in_session" in ids:                # the id check ran: what it left cited
+            nrs = num(ids["not_retrieved_in_session"])
+        else:                                                # else the session's list, less the ids removed
+            gone = {_cid_key(c) for c in _cid_list(ids.get("missing"))}
+            nrs = len([c for c in _cid_list(meta.get("not_retrieved")) if _cid_key(c) not in gone])
         if nrs:
             s += f"; {pl(nrs, 'paper')} cited without having been read in the session (flagged)"
-        if "status_not_supported" in cnt or "status_citations_removed" in cnt:
+        if items is not None:
+            kv = sum(1 for sec, it in every if sec == "connection_verdicts" and lit_status(it)[1] == "unverified")
+            ko = sum(1 for sec, it in every if sec != "connection_verdicts" and lit_status(it)[1] == "unverified")
+            what = " and ".join(([pl(kv, "connection verdict")] if kv else [])
+                                + ([pl(ko, "other claim")] if ko else []))
+            if what:
+                s += (f"; {what} shown as \"unverified\" (no cited paper found, the cited abstracts do not support "
+                      "it, or every paper it cites is retracted)")
+        elif "status_not_supported" in cnt or "status_citations_removed" in cnt:
             k = num(cnt.get("status_not_supported")) + num(cnt.get("status_citations_removed"))
             if k:
                 s += (f"; {k} shown as \"unverified\" (no cited paper found, or the cited abstracts do not "
@@ -1494,7 +1651,7 @@ class Vault:
             C.append(f"> No review record (`review/reviews/{kind}/{rec['stem']}.json`) was found for this note: its "
                      "model, date and verification are unknown.")
         else:
-            C.append(self._verification_text(ver, meta))
+            C.append(self._verification_text(ver, meta, rec.get("items")))
         links = []
         hist = sval(meta.get("history"))
         if hist and os.path.exists(os.path.join(self.out, hist)):

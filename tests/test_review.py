@@ -41,7 +41,11 @@ HTML, script, iframe, javascript: / data: / vbscript: links, a remote image, com
 PMID, a verdict the checker does not support, two verdicts on one partner) spliced into the vault and the map: the
 note sanitised, unverified verdicts shown as such, one verdict per partner chosen alike in both, the callout's
 verification from the counts, the generated footer, a stale connections.parquet; in a browser (Playwright, when
-installed) the badges, a slow double-click that pins and a small simulation that animates the sign switch.
+installed) the badges, a slow double-click that pins and a small simulation that animates the sign switch. Round 5:
+what a removal puts back together (a tag, an autolink, a definition), '^' labels that are no footnote's, Dataview
+inline queries, linear time on unclosed '<!--' / '<?' / '<script>', e-mail / mailto / '//host' autolinks; two
+reviews of one gene (the latest's verdicts in the vault and the map alike), the callout's unverified count
+(retracted-only verdicts too), unread papers the id check removed, and ids not looked up but graded by the checker.
 Prints PASS / FAIL per check; exit code 1 if anything fails. Takes well under a minute.
 """
 
@@ -978,9 +982,10 @@ def sanitize_gaps(c, VT):
           and "]\\(javascript" in lk[1] and "[^1]: \u200bjavascript" in lk[3]
           and lk[4] == "[ok [deep [er]]](https://pubmed.ncbi.nlm.nih.gov/1/)", lk)
     made = [sn("<script>alert(1)</script>```dataviewjs\n<img src=x onerror=alert(2)>"), sn("%<b></b>% hidden?"),
-            sn("> [```dataviewjs](javascript:x)\n> dv.paragraph(1)"), sn("<!-- c -->~~~\n<script>alert(3)</script>")]
+            sn("> [```dataviewjs](javascript:x)\n> dv.paragraph(1)"), sn("<!-- c -->~~~\n<script>alert(3)</script>"),
+            sn("<[img](x) src=x onerror=alert(4)>")]
     check(c, "ui#2: what a removal makes is neutralised: a fence at the start of a line (it would hide all that "
-             "follows) is text, no %% comment, no nested plugin fence",
+             "follows) is text, no %% comment, no nested plugin fence, no tag a removed link puts together",
           all(outside_fences(x)[1] is None and "<script" not in x and "<img" not in x for x in made)
           and made[0].startswith("\\```") and "%%" not in made[1] and "dataviewjs" not in made[2]
           and made[3].startswith("\\~~~"), made)
@@ -1737,6 +1742,261 @@ def retractions_shown(work, src, ents):
         VT.LIT_RENDER += 1
     check(c, "the render version is part of the vault and map stamps: outputs drawn before this change are out of "
              "date", fp and fp_before and fp["sha"] != fp_before["sha"] and VT.LIT_RENDER >= 3, (fp, fp_before))
+    bad = scan_for_keys(os.path.join(sv, "review"))
+    check(c, "no API key in any file written", not bad, bad[:5])
+    shutil.rmtree(sv, ignore_errors=True)
+
+
+def dataview_queries(md):
+    """Where md could hold a Dataview inline query: an '=' or '$=' reached from a backtick or from the start of a line
+    through nothing but whitespace (JavaScript's trim: Unicode spaces, line breaks, BOM) and container markers - a
+    superset of the code spans and code blocks whose trimmed text starts with '=' (Dataview's own test)."""
+    return re.findall(r"(?:`|^)(?:[\s\ufeff>]|[-+*](?=[ \t])|\d{1,9}[.)](?=[ \t]))*\$?=.{0,20}", md, re.M)
+
+
+R5_NOTE = """## What the literature says
+
+**In short.** [[{g}]] moves with [[{p}]] ([PMID:31000003](https://pubmed.ncbi.nlm.nih.gov/31000003/)).
+<[img](x) src=x onerror=alert('r5')> <\\url autofocus onfocus=alert('r5u') tabindex=0> <[style](x)>body{{display:none}}
+Click [here][r5] and [there][^r5 x]; write to attacker@evil.example or <mailto:a@evil.example>, see //evil.example/x.
+
+[[r5](x)]: javascript:alert('r5ref')
+[^r5 x]: javascript:alert('r5fn')
+
+Inline `
+= this.file.name` and a block:
+
+```text
+$= dv.paragraph("r5")
+```
+"""
+
+
+def sanitize_round5(c, VT):
+    """Round 5 (display checkers): what a removal or an un-escape puts back together is neutralised too (a tag, an
+    autolink, a definition: '<[img](x) src=x onerror=...>', '<\\url ...>', '[[r](x)]: javascript:...'); a '^' label
+    that is no footnote's is a definition like any other; no Dataview inline query (a space, line break, NBSP or other
+    Unicode space before the '=', a fenced or indented code block); no linear-time-breaking run of unclosed '<!--',
+    '<?' or '<script>'; no e-mail address, 'mailto:' or '//host' an autolinker would link. (Checked while fixing with
+    commonmark.js 0.31, marked 18 (GFM) and markdown-it 15 (linkify, footnotes) over 6,558 generated cases: no tag, no
+    event handler, no link but to the allowed sites, no Dataview query, no generated section swallowed.)"""
+    sn = VT.sanitize_note
+    made = {x: sn(x) for x in (
+        "<[img](x) src=x onerror=alert(1)>", "![<](x)img src=x onerror=alert(1)>",
+        "<\\url autofocus onfocus=alert(1) tabindex=0>", "<[img](x) src=https&#58;//evil.example/pixel.png>",
+        "<[style](x)>body{display:none}", "<[javascript:alert(1)](x)>", "<\\\\url onfocus=alert(1)>",
+        "<[1](x)@evil.example>", "Click [here][r]\n\n[[r](x)]: javascript:alert(1)")}
+    check(c, "round 5: a tag, an autolink or a definition that a removed link / image or an un-escaped '\\url' puts "
+             "together is text ('<' escaped at the end, links removed before definitions)",
+          made["<[img](x) src=x onerror=alert(1)>"] == "&lt;img src=x onerror=alert(1)>"
+          and not any(re.search(r"<[A-Za-z/!?]|\]: *javascript|\[r\]:|[^\u200b]@evil", v) for v in made.values()),
+          made)
+    caret = {x: sn(x) for x in ("Click [x][^r x]\n\n[^r x]: javascript:alert(1)",
+                                "Click [x][^a\\]b]\n\n[^a\\]b]: javascript:alert(1)", "[^r x]: https://evil.example/",
+                                "Click [x][r]\n\n[r]: \u00a0javascript:alert(1)", "t[^1]\n\n[^1]: javascript:alert(1)")}
+    vals = list(caret.values())
+    check(c, "round 5: a '^' label that is no footnote's ('[^r x]:', '[^a\\]b]:') and a destination after a NBSP are "
+             "definitions, removed; a footnote's first word still defanged",
+          not any("javascript" in v or "evil" in v for v in vals[:4]) and "[^1]: \u200bjavascript" in vals[4], caret)
+    dv = {x: sn(x) for x in ("x ``\t\n$= dv.el(1)``", "`\u3000$= dv.paragraph(1)`", "```text\n$= dv.paragraph(1)\n```",
+                             "text `\n= this.file.name`", "`\u00a0= this.file.name`", "`\u2003= this.file.name`",
+                             "```\n= elink(\"https://evil.example/\", \"PubMed record\")\n```",
+                             "Para.\n\n    = this.file.name", "> text `\n> = this.file.name`", "\\``= x`",
+                             "~~~\n\u00a0\n\n  $= dv.el(1)\n~~~", "- a\n\n      = this.file.name")}
+    check(c, "round 5: no Dataview inline query: a zero-width space before the '=' of a code span (after any space "
+             "or line break), of a code block's first line (fenced or indented, in a container too)",
+          not any(dataview_queries(v) for v in dv.values())
+          and dv["```text\n$= dv.paragraph(1)\n```"] == "```text\n\u200b$= dv.paragraph(1)\n```",
+          {k: v for k, v in dv.items() if dataview_queries(v)} or dv)
+    t0 = time.time()
+    for x in ("<!--" * 40000, "<?" * 80000, "<script>" * 20000, "<script " * 20000 + ">", "<style>" * 20000 + "x",
+              "`" * 50000 + " " * 50000, " " * 100000 + "x", "> " * 50000 + "x"):
+        sn(x)
+    check(c, "round 5: linear time on runs of unclosed '<!--', '<?', '<script>' (each was quadratic: ~35-65 s)",
+          time.time() - t0 < 3, f"{time.time() - t0:.2f} s")
+    em = {x: sn(x) for x in ("<mailto:a@evil.example>", "write to attacker@evil.example now", "see //evil.example/x",
+                             "https\uff1a//evil.example", "/\\/evil.example", "a&#64;evil.example",
+                             "https:&#47;&#47;evil.example/x", "https://evil.example/u@evil.example",
+                             "https://pubmed.ncbi.nlm.nih.gov/1/")}
+    check(c, "round 5: no e-mail address (a zero-width space before its '@', also after an entity or escape), no "
+             "'mailto:', no '//host' (linkify-it) can be autolinked; an allowed bare URL stays whole",
+          not any(re.search(r"(?<!\u200b)@|mailto:|(?<!\u200b)//", v) for v in list(em.values())[:-1])
+          and em["https://pubmed.ncbi.nlm.nih.gov/1/"] == "https://pubmed.ncbi.nlm.nih.gov/1/", em)
+
+
+@case
+def vault_round5(work, src, ents):
+    """Round 5 (display and e2e checkers) through a run: a crafted note (sanitize_round5's attacks) and verdicts -
+    one citing only a retracted paper, one the checker grades not supported, one citing an unread, made-up PMID -
+    reviewed through the fake API (--verify llm); an older review JSON of the same gene with another verdict on a
+    partner, and a gene whose latest review gave no verdict; a gene reviewed while the PubMed id look-up was down
+    (the checker graded its claims all the same). Then the vault and the map: the note sanitised; the vault and the
+    map show the latest review's verdicts alike; the callout counts every verdict shown 'unverified' (the retracted
+    one too), does not flag papers the id check removed as unread, and does not call claims 'ids not checked' that
+    show the checker's verdict."""
+    from tahoemap import html_map, vault as VT
+    from tahoemap.review import tools as TL
+    c = "vault_round5"
+    sanitize_round5(c, VT)
+    # -- the callout, without a run
+    vt = VT.Vault._verification_text
+    base = {"mode": "llm", "counts": {"n_citations": 3, "status_not_supported": 1, "status_citations_removed": 0},
+            "llm": {"status": "done", "detail": "", "supported": 1, "partly": 0, "not_supported": 1,
+                    "not_checkable": 0}}
+    items = {"connection_verdicts": [
+        {"verdict": "established", "citations": ["PMID:5"], "retracted_citations": ["PMID:5"],
+         "unchecked_citations": [], "check_status": "supported", "shown_verdict": "established"},
+        {"verdict": "indirect", "citations": ["PMID:7"], "unchecked_citations": ["PMID:7"],
+         "check_status": "unchecked", "shown_verdict": "indirect"}],
+        "established": [{"citations": ["PMID:2"], "unchecked_citations": ["PMID:2"], "check_status": "not_supported",
+                         "check": {"verdict": "not supported"}, "shown_verdict": "unverified"}]}
+    ids = {"status": "done", "checked": 1, "removed": 0, "unchecked": 2, "retracted": 1, "found": 1,
+           "not_retrieved_in_session": []}
+    t_items = vt(dict(base, ids=ids), {"not_retrieved": ["PMID:9"]}, items)
+    t_old = vt(dict(base, ids={k: v for k, v in ids.items() if k != "not_retrieved_in_session"} | {"missing":
+                                                                                                    ["PMID:9"]}),
+               {"not_retrieved": ["PMID:9", "PMID:8"]})
+    check(c, "the callout counts what is shown 'unverified' by the labels' rule (a retracted-only verdict too), tells "
+             "claims marked 'ids not checked' from those the checker graded, and flags as unread only what the id "
+             "check left cited",
+          '1 connection verdict and 1 other claim shown as "unverified"' in t_items
+          and '1 claim citing them is marked "ids not checked", 1 was graded by the citation checker all the same'
+          in t_items and "without having been read" not in t_items
+          and "1 paper cited without having been read" in t_old and '1 shown as "unverified"' in t_old,
+          [t_items, t_old])
+    # -- run 1: the crafted review
+    sv = own_view(work, src, "r5_view")
+    G = ents["genes"]
+    g, g2, g3 = G[3], G[4], G[5]
+    rel = pd.read_parquet(os.path.join(src, "relations", "gene_relations.parquet"), columns=["col_a", "col_b", "rank"])
+    genes = pd.read_parquet(os.path.join(src, "tables", "genes.parquet"), columns=["col", "label"]).set_index("col")
+    pcols = [int(x) for x in rel[rel["col_a"] == g["col"]].sort_values("rank")["col_b"].head(5)]
+    P = [str(genes.at[x, "label"]) for x in pcols]
+    cv = [{"partner": P[0], "verdict": "established", "citations": ["PMID:31000005"]},     # only retracted
+          {"partner": P[1], "verdict": "established", "citations": ["PMID:31000002"]},     # checker: not supported
+          {"partner": P[2], "verdict": "established", "citations": ["PMID:39999999"]},     # unread, made up: removed
+          {"partner": P[3], "verdict": "plausible", "citations": ["PMID:31000003"]}]       # supported
+    rv = F.sample_review(P[3], ("31000003",), note=R5_NOTE.format(g=g["name"], p=P[3]))
+    rv["connection_verdicts"] = [dict({"relation": "both NRF2 targets", "data_evidence": "moves with: cos +0.60"}, **v)
+                                 for v in cv]
+    steps = [{"tool_use": [{"name": "pubmed_abstracts", "input": {"pmids": ["31000002", "31000003", "31000005"]}}]},
+             {"submit_review": rv}, {"submit_review": rv}]          # the first is refused: 39999999 was never read
+    chk = {"summary": "s", "verdicts": [
+        {"claim_id": x, "verdict": "not supported" if x == "V2" else "supported", "direction": "same as the data",
+         "reason": "r"} for x in ("E1", "M1", "V1", "V2", "V4")]}
+    res, _fk = run(sv, {"entities": {g["entity_id"]: steps}, "checker": [{"submit_check": chk}]},
+                   only=g["entity_id"], verify="llm")
+    rd = os.path.join(sv, "review", "reviews", "gene")
+    rj = os.path.join(rd, os.listdir(rd)[0])
+    js = json.load(open(rj, encoding="utf-8"))
+    vids = (js.get("verification") or {}).get("ids") or {}
+    # -- run 2: the PubMed id look-up down; the checker reads the abstracts and grades every claim all the same
+    orig = TL.esummary_records
+
+    def down(ctx, pmids):
+        raise TL.ToolError("ncbi: no answer after 5 attempts (HTTP 503)")
+    rv3 = F.sample_review(P[0], ("31000001",))
+    chk3 = {"summary": "s", "verdicts": [{"claim_id": x, "verdict": "supported", "direction": "same as the data",
+                                          "reason": "r"} for x in ("E1", "M1", "V1")]}
+    TL.esummary_records = down
+    try:
+        res3, _fk = run(sv, {"entities": {g3["entity_id"]: [
+            {"tool_use": [{"name": "pubmed_abstracts", "input": {"pmids": ["31000001"]}}]}, {"submit_review": rv3}]},
+            "checker": [{"submit_check": chk3}]}, only=g3["entity_id"], verify="llm")
+    finally:
+        TL.esummary_records = orig
+    js3 = next((json.load(open(os.path.join(rd, f), encoding="utf-8")) for f in os.listdir(rd)
+                if f != os.path.basename(rj)), {})
+    check(c, "the runs: retracted-only, not supported and removed verdicts stored; the unread made-up PMID removed "
+             "(so not left 'not retrieved'); with the id look-up down the checker still graded the claims",
+          res.counts == {"done": 1} and res3.counts == {"done": 1}
+          and [v.get("check_status") for v in js["connection_verdicts"]] == ["supported", "not_supported",
+                                                                             "citations_removed", "supported"]
+          and "PMID:39999999" in (js["meta"].get("not_retrieved") or []) and vids.get("not_retrieved_in_session") == []
+          and ((js3.get("verification") or {}).get("ids") or {}).get("unchecked") == 1
+          and [v.get("check_status") for v in js3.get("connection_verdicts") or []][:1] == ["supported"],
+          {"g": [(v["partner"], v.get("check_status")) for v in js["connection_verdicts"]], "ids": vids,
+           "meta_nr": js["meta"].get("not_retrieved"), "g3": (js3.get("verification") or {}).get("ids")})
+    # -- an older review of g (another verdict on P3, one on P4), and g2: an older review with verdicts, the latest
+    # with none
+    old = json.loads(json.dumps(js))
+    old["meta"].update(run_id="20250101-000000-old", reviewed="2025-01-01T00:00:00Z")
+    old["connection_verdicts"][3].update(verdict="established", citations=["PMID:31000001"], check_status="supported",
+                                         shown_verdict="established", check={"verdict": "supported"})
+    old["connection_verdicts"].append(dict(old["connection_verdicts"][3], partner=P[4]))
+    two = [json.loads(json.dumps(old)), json.loads(json.dumps(js))]
+    for x, (run_id, when) in zip(two, (("20250101-000000-old", "2025-01-01T00:00:00Z"),
+                                       ("20260101-000000-new", "2026-01-01T00:00:00Z"))):
+        x["meta"].update(entity_id=g2["entity_id"], name=g2["name"], run_id=run_id, reviewed=when)
+    two[1]["connection_verdicts"] = []
+    p2 = [str(genes.at[int(x), "label"]) for x in rel[rel["col_a"] == g2["col"]].sort_values("rank")["col_b"].head(4)]
+    for v, p in zip(two[0]["connection_verdicts"], p2):        # on g2's own partners: pairs the map's panel lists
+        v["partner"] = p
+    for name, x in (("AAA_older_copy.json", old), ("AAB_g2_old.json", two[0]), ("AAC_g2_new.json", two[1])):
+        with open(os.path.join(rd, name), "w", encoding="utf-8") as fh:
+            json.dump(x, fh)
+    R.build_tables(sv)
+    conn = pd.read_parquet(os.path.join(sv, "review", "connections.parquet"))
+    by_table = sorted((r["entity_id"], r["partner"], r["shown_verdict"]) for r in VT.review_connections(sv))
+    os.replace(os.path.join(sv, "review", "connections.parquet"), os.path.join(sv, "review", "c.parquet"))
+    by_json = sorted((r["entity_id"], r["partner"], r["shown_verdict"]) for r in VT.review_connections(sv))
+    os.replace(os.path.join(sv, "review", "c.parquet"), os.path.join(sv, "review", "connections.parquet"))
+    mine = {p: v for e, p, v in by_table if e == g["entity_id"]}
+    check(c, "review_connections: only each entity's latest review (from the table and from the JSONs alike): P3's "
+             "current verdict, nothing of the older review's P4, nothing of g2's older review",
+          len(conn[conn["entity_id"] == g["entity_id"]]) == 9 and by_table == by_json
+          and mine.get(P[3]) == "plausible" and P[4] not in mine
+          and not any(e == g2["entity_id"] for e, _p, _v in by_table), by_table)
+    with contextlib.redirect_stdout(io.StringIO()):
+        VT.run(sv)
+        html_map.run(sv)
+
+    def note(gene):
+        return open(next(os.path.join(dp, f) for dp, _d, fns in os.walk(os.path.join(sv, "vault")) for f in fns
+                         if f == gene["name"] + ".md"), encoding="utf-8").read()
+    gt, gt2, gt3 = note(g), note(g2), note(g3)
+    sec, sec3 = lit_section(gt), lit_section(gt3)
+    rows = {}
+    for head in ("## Genes that move with it", "## Genes that move opposite"):
+        tab = gt.split(head, 1)[1].split("\n## ", 1)[0] if head in gt else ""
+        for line in tab.splitlines() if "| Literature |" in tab else []:
+            m = re.match(r"^\| \[\[([^\]|]+)\]\] \|.*\| ([^|]*) \|$", line)
+            if m:
+                rows[m.group(1)] = m.group(2).strip()
+    vline = next((x for x in sec.splitlines() if x.startswith("**Connection verdicts**")), "")
+    callout = next((x for x in sec.splitlines() if x.startswith("> Verification:")), "")
+    trip, ent, n = map_lit(sv)
+    a = ent.get(int(g["col"]))
+    mp = {P[i]: trip.get((a, ent.get(pcols[i]))) for i in range(5) if ent.get(pcols[i], n) < n}
+    check(c, "two reviews of one gene: the vault's table and verdict list and the map's badge show the latest "
+             "review's verdict on P3 (not the older 'established'), and nothing of the older one's P4",
+          rows.get(P[3], "").startswith("plausible (supported) · [PMID:31000003]") and f"[[{P[3]}]] plausible" in vline
+          and f"[[{P[4]}]]" not in vline and rows.get(P[4], "") in ("", "\u2014")
+          and (mp.get(P[3]) or [""])[0] == "plausible (supported)"
+          and mp.get(P[4]) is None,
+          {"rows": {p: rows.get(p) for p in P}, "map": {p: (v or [""])[0] for p, v in mp.items()}})
+    a2 = ent.get(int(g2["col"]))
+    check(c, "a gene whose latest review gave no verdict shows none (vault and map), not its older review's",
+          "## What the literature says" in gt2 and "**Connection verdicts**" not in lit_section(gt2)
+          and not any(k[0] == a2 for k in trip), lit_section(gt2)[:300])
+    check(c, "the callout counts the three verdicts shown 'unverified' (the retracted-only one too), and does not flag "
+             "the made-up PMID the id check removed as cited unread",
+          '3 connection verdicts shown as "unverified"' in callout and "without having been read" not in callout
+          and vline.count("unverified") == 3, callout)
+    co3 = next((x for x in sec3.splitlines() if x.startswith("> Verification:")), "")
+    vline3 = next((x for x in sec3.splitlines() if x.startswith("**Connection verdicts**")), "")
+    check(c, "an id the look-up could not reach, but the checker graded: the callout says the claims show the "
+             "checker's verdict (not 'ids not checked'), as the verdict does",
+          "1 could not be looked up" in co3 and "graded by the citation checker all the same" in co3
+          and "ids not checked" not in co3 and "established (supported)" in vline3, [co3, vline3[:200]])
+    plain, open_fence = outside_fences(sec)
+    check(c, "the crafted note in the vault: nothing put back together (no tag, definition or javascript: link), no "
+             "e-mail / mailto / '//host' link, no Dataview query, and the generated lines after it are intact",
+          not re.search(r"<[A-Za-z/!?]", plain) and "javascript" not in sec
+          and "attacker\u200b@evil.example" in sec and "mailto:" not in sec and "\u200b//evil.example/x" in sec
+          and not dataview_queries(sec) and "\u200b$= dv.paragraph" in sec and open_fence is None
+          and vline and js.get("note_footer", "")[:40] in sec,
+          re.findall(r"<[A-Za-z/!?].{0,30}", plain) or dataview_queries(sec) or sec[:600])
     bad = scan_for_keys(os.path.join(sv, "review"))
     check(c, "no API key in any file written", not bad, bad[:5])
     shutil.rmtree(sv, ignore_errors=True)
@@ -3111,6 +3371,7 @@ def main():
     doi_parentheses(work)
     retractions(work)
     retractions_shown(work, src, ents)
+    vault_round5(work, src, ents)
     drug_dossier_trustworthy_dose(view, ents)
     cellosaurus_url_in_dossier(view, ents, work)
     note_provenance(work)

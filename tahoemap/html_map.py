@@ -98,8 +98,9 @@ Scaled integers: cos x100, fdr x100 (-1 = none), lfc x100 (log2), z x10.
     k_edges                        graph/info.json k_edges (partners per gene in the kNN graph), or null
     lit, lit_v                     only when OUT/review holds literature reviews (tahoemap/review): flat [entry a,
                                    entry b, kind, citations] x the connection verdicts of gene a's review on gene b
-                                   (review/connections.parquet, one per review and partner by vault.pick_verdict, the
-                                   vault's rule) where a and b are partners in `rel` (one way or the other); lit_v[kind]
+                                   (review/connections.parquet, of each gene's latest review, one per partner by
+                                   vault.pick_verdict: the vault's rules, vault.review_connections) where a and b are
+                                   partners in `rel` (one way or the other); lit_v[kind]
                                    = [label, explanation, shown verdict, check_status] (vault.verdict_label: e.g.
                                    "established (supported)", "indirect (ids not checked)", "unverified" when the
                                    citation check found it not supported, every citation was removed as not found,
@@ -608,8 +609,9 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
 def _literature(out, tg, ent, gK, n, shown_pairs):
     """The gene-gene connection verdicts of the literature reviews (OUT/review) on the side panel's partner pairs
     (shown_pairs: sorted min(a, b) * n + max(a, b) of the embedded top-partner lists), as the {"lit": [...],
-    "lit_v": [...]} entries of the page data; {} without reviews (the page is then as before). One verdict per
-    (review, partner), chosen by vault.pick_verdict (the vault's rule); each is shown as vault.verdict_label says:
+    "lit_v": [...]} entries of the page data; {} without reviews (the page is then as before). The verdicts of each
+    gene's latest review (vault.review_rank: a gene reviewed twice shows what its vault note shows), one per partner,
+    chosen by vault.pick_verdict (the vault's rule); each is shown as vault.verdict_label says:
     the shown verdict (shown_verdict: 'unverified' when the citation check found it not supported, every citation
     was removed as not found, or every paper it cites is retracted) and its check_status, then ' (cites a retracted
     paper)' when a paper it cites is retracted (the badge and its tooltip)."""

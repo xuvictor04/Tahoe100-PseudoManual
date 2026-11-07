@@ -405,8 +405,10 @@ review run, `tahoe` (status) shows the vault and map out of date ("the literatur
 `review/connections.parquet`, rebuilt at the end of every review run; when that table is older than a review JSON
 (a run killed before its end), or was written by an older version without its `retracted` column, it is ignored and
 the verdicts are read from the JSONs (`tahoe review tables` rebuilds it), and the vault and map show out of date
-until they are rebuilt. A change in how reviews are drawn (such as the retraction marker) also makes the vault and
-the map out of date, so `tahoe run` redraws them.
+until they are rebuilt. An entity with two review JSONs (a copy kept by hand, say) is shown from its latest review
+only (the later `reviewed` time, then the later run id): its note, its verdicts in the partner tables and its badges
+in the map alike, even when the latest review gave no verdict. A change in how reviews are drawn (such as the
+retraction marker) also makes the vault and the map out of date, so `tahoe run` redraws them.
 
 - A reviewed gene, drug or line note gets the tag `#literature-review`, a `literature_review` date in its
   frontmatter, and a section **What the literature says** (in a gene note after "Where it sits"; in a drug or line
@@ -416,15 +418,26 @@ the map out of date, so `tahoe run` redraws them.
   verdicts, then the provenance line generated from the verification (`note_footer`). The callout's verification
   sentence is built from the review's `verification` counts: how many cited ids were looked up, removed as not
   found, or could not be looked up (a service down: "every cited id looked up" is said only when none was left
-  unchecked), retracted papers, papers cited without having been read, how many verdicts are shown as unverified,
-  and whether the citation checker ran (its counts), was not run or failed (`review run --recheck` completes it).
+  unchecked; the claims citing such an id are marked "ids not checked", unless the citation checker read their
+  abstracts and graded them all the same, which the sentence then says, as their labels show the checker's verdict),
+  retracted papers, papers cited without having been read (those the id check left cited: a made-up id it removed
+  is not counted again), how many connection verdicts and other claims are shown as unverified (by the rule of the
+  labels below: not supported, no cited paper found, or every cited paper retracted), and whether the citation
+  checker ran (its counts), was not run or failed (`review run --recheck` completes it).
 - The agent's text is cleaned before it goes into the note: no raw HTML (script, iframe, img, a, style ... any tag
   is removed), no HTML or Obsidian (`%%`) comment, no image (inline, reference or shortcut `![name]`) or embedded
   note, no link other than markdown links to PubMed, doi.org, Europe PMC, NCBI and Cellosaurus (any other link keeps
   only its text; a reference definition to another site is removed wherever it is, in a blockquote, callout or list
-  item too; a bare URL to another site is not made a link), code fences closed and shown as plain code (no
-  `dataviewjs`, `mermaid` ..., in a blockquote, callout or list item too), no setext heading, its own headings
-  demoted below the note's. A sentence in which the agent only vouches for its own verification
+  item too, and so is one whose label starts with `^` but is no footnote's, such as `[^a b]:`; a bare URL to
+  another site, a `//host` or an e-mail address is not made a link: a zero-width space goes where an autolinker
+  would start one, also when `/` or `@` is written as an escape or an entity), code fences closed and shown as plain
+  code (no `dataviewjs`, `mermaid` ..., in a blockquote, callout or list item too), no Dataview inline query (a code
+  span or a fenced or indented code block whose text starts with `=` or `$=`, after any space or line break, gets a
+  zero-width space before it), no setext heading, its own headings demoted below the note's. What a removal puts
+  back together is cleaned too: links and images become text before reference definitions are removed, and `<` is
+  escaped again at the end, so `<[img](x) src=x onerror=...>` or `<\url ...>` is text, not a tag. The cleaning
+  takes linear time, also on long runs of unclosed `<!--`, `<?` or `<script>`. A sentence in which the agent only
+  vouches for its own verification
   ("Citations were checked against PubMed and their abstracts.", its own "AI-generated ..." footer), and the
   disclaimers in its paragraph, are dropped by the rule the runner applies to the notes it stores: the generated
   line replaces them. A sentence that says anything more is kept whole ("Citations were checked, but none links
