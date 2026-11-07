@@ -12,7 +12,9 @@
                       true after the end event: it arrived after the attempt was closed)
             tool      name, input, result (cut at 20,000 characters, with a note), is_error, seconds
             error     typed class, status, error type / code, request id, scrubbed message, what the runner did
-                      (and for a lost response: estimated_cost_usd, the estimate charged for it)
+                      (and for a lost response: estimated_cost_usd, the estimate charged for it; class
+                      InFlightAtStop: a request in flight when the stopping run closed the attempt, charged an
+                      estimate; "late": true after the end event: lost after the attempt was closed)
             end       status, totals
         The citation checker's events go to the same file, "agent": "citation-checker", after a start event of
         its own ("phase": "citation check": its system prompt, tools, claim ids, key id, sha256 of its prompt).
@@ -22,10 +24,12 @@
     Ledger(out)
         OUT/review/ledger.jsonl: one line per finished attempt (append-only; the latest line of an entity is its
         state). latest() / states() / frame() read it back. Bookkeeping lines have status "note" and a "note"
-        text: the cost of a response that arrived after its attempt was closed ("late": true), a failure the run
-        put down to a systematic error ("uncount_failed": true, with the error's "signature"), or a --recheck that
-        was stopped before it finished ("recheck": true; the stored review is unchanged); they change the spend or
-        the failure count, never the state.
+        text: the cost of a response that arrived after its attempt was closed ("late": true; when an estimate was
+        charged for that request at the close, the difference - possibly negative - with "replaces_estimate_usd"
+        and minus the estimate as "estimated_usd"), an estimate for a response lost after its attempt was closed
+        ("late": true, "estimated_usd"), a failure the run put down to a systematic error ("uncount_failed": true,
+        with the error's "signature"), or a --recheck that was stopped before it finished ("recheck": true; the
+        stored review is unchanged); they change the spend or the failure count, never the state.
 
 Every line is written whole (one write, then flush) under a lock, and passes through keys.scrub() first, so an API
 key can never reach these files. Lines are never rewritten. A file that ends in a cut line (a crash, a full disk)
@@ -48,7 +52,7 @@ TOOL_RESULT_CHARS = 20_000
 DOSSIER_REF = "{{dossier}}"                 # in the first request event: the dossier text of the start event
 PLACEHOLDER_SOURCE = {DOSSIER_REF: "start.dossier"}
 STATUSES = ("done", "refused", "no_review", "over_budget", "failed", "paused", "key_rotated")
-NOTE = "note"                               # a bookkeeping ledger line (a late response's cost, an uncounted failure)
+NOTE = "note"                               # a bookkeeping ledger line (a late cost, an uncounted failure ...)
 LEDGER_FIELDS = ("entity_id", "kind", "name", "run_id", "agent", "model", "status", "cost_usd", "input_tokens",
                  "output_tokens", "cache_creation_input_tokens", "cache_read_input_tokens", "web_searches",
                  "web_fetches", "n_requests", "n_tool_calls", "key_id", "started", "finished", "error")
@@ -165,8 +169,8 @@ class History:
         self._lock = threading.Lock()
 
     def event(self, kind, late=False, **data):
-        """Append one event; after the end event only `late` ones (a response that arrived after the attempt was
-        closed, so its cost is on record)."""
+        """Append one event; after the end event only `late` ones (a response that arrived, or was lost, after the
+        attempt was closed, so its cost is on record)."""
         with self._lock:
             if self.closed and not late:
                 return

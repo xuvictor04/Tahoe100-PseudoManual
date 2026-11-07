@@ -116,17 +116,24 @@ charged a conservative **estimate** (the whole context at the full input price, 
 twice the attempt's longest answer so far, at least 16,000 tokens; about $0.5 with the default agents, twice that
 when the SDK had re-sent it) to the attempt and to the run's total, so the caps stay safe; it is marked as estimated
 (`estimated_usd` in the ledger, `estimated_cost_usd` on the history's error event, and in `tahoe review status`). A
-request that never reached the API (the connection could not be made) is not charged. An attempt that reaches its
-cap only through these estimates is recorded as `failed` (a network problem: a later run retries it), not
-`over_budget`.
+request that never reached the API (the connection could not be made, or the request could not even be written on
+this machine — a malformed key, say) is not charged. An attempt that reaches its cap only through these estimates is
+recorded as `failed` (a network problem: a later run retries it), not `over_budget`. A request still **in flight
+when a stopping run closes its attempt** (after the 15-second grace, or at a second Ctrl-C) may be billed too: it
+gets the same estimate, on the attempt's ledger line and on a history error event (`InFlightAtStop`). If its answer
+still arrives before the program ends, that answer's real cost replaces the estimate (its `note` line carries the
+difference, which can be negative, and minus the estimate as `estimated_usd`, so the totals hold the real cost); if
+it is lost then, a `note` line adds whatever that loss is charged beyond the estimate already counted.
 
 **Per-entity estimate**: before any review of a kind exists, the runner estimates from the size of the agent's
 system prompt and tool definitions and of a few dossiers: ~14 requests whose context grows by ~2,500 tokens each
 (read from the cache), the output per request at the agent's effort (low 800 ... high 2,500 ... max 6,000 tokens), 3
-web searches and the citation check. Once 3 entities of a kind are reviewed, the mean of their **real** cost replaces
-the estimate. `tahoe review plan` prints the projection per kind and in total; `tahoe review status` projects the
-rest. On the synthetic test data the estimate is ~$1.17 per gene and ~$1.16 per drug or line (Opus 5.5, effort
-high, `--verify llm`); `--model claude-sonnet-5-5 --verify ids` roughly halves it.
+web searches and the citation check. Once 3 entities of a kind are reviewed with the reviewer model, effort and
+`--verify` mode the plan or run asks for now, the mean of their **real** cost (every attempt but `--recheck` ones)
+replaces the estimate; reviews made with other settings are not counted (the projection says how many there are).
+`tahoe review plan` prints the projection per kind and in total; `tahoe review status` projects the rest. On the
+synthetic test data the estimate is ~$1.17 per gene and ~$1.16 per drug or line (Opus 5.5, effort high, `--verify
+llm`); `--model claude-sonnet-5-5 --verify ids` roughly halves it.
 
 **How many**: the queue holds every gene with a response or a place in the vector space — about **15,000 genes** on
 the full data — plus ~379 drugs and 50 lines. At ~$1.2 an entity, **a full gene pass costs on the order of $18,000**;
@@ -161,14 +168,16 @@ The runner looks for keys in this order and uses them in that order:
    sk-ant-api03-BBBB...
    ```
    Make it readable only by you (`chmod 600 FILE`); the runner warns when other users can read it. A key given
-   to `--keys-file` by mistake (instead of a file's path) is refused without being printed or logged — clear it
-   from your shell history.
+   to `--keys-file` (or to `--fake`) by mistake, instead of a file's path, is refused without being printed or
+   logged — clear it from your shell history.
 2. `ANTHROPIC_API_KEYS` (comma-separated), then `ANTHROPIC_API_KEY`.
 3. With none of these, the SDK's own credentials (`ANTHROPIC_AUTH_TOKEN`, or a profile of the `ant` CLI) if found.
 
 Prefer the file or the environment over typing a key on a command line (shell history, process lists);
 `read -rs ANTHROPIC_API_KEY && export ANTHROPIC_API_KEY` sets it without echoing it or keeping it in the
-history.
+history. A malformed key — one with a line break, a space or another character a key cannot hold, say two keys in
+`ANTHROPIC_API_KEY` from `export ANTHROPIC_API_KEY="$(cat keys.txt)"` — is never sent: it counts as dead from the
+start (`tahoe review status` lists it with the reason), so the run uses the next key or pauses for one.
 
 **Keys are never written anywhere**: they live in the runner's memory only. Histories, the ledger, logs and
 `review/keys_state.json` name a key by its **id** — its last 4 characters and a short hash, e.g. `KEY1-f2e60909` —
@@ -188,21 +197,31 @@ rate-limited or overloaded (`stop_details.recommended_model` is set): that is te
 as `failed` (with `transient_refusal`, the category and `recommended_model` in the ledger, and a log line naming the
 model) and the entity is retried by a later run.
 
-**The same error on every entity** — say the model is not available to your organisation (404), or a beta is not
-enabled for it (400) — does not sweep the whole queue: when **5 entities in a row** fail with the same error before
-any entity of the run got its answer from the API, the run stops with exit code **4** and says which error. Those
-failures are not counted against the entities (a ledger `note` line each); fix the cause and run the same command
-again. Once an entity of the run has got its answer, the API works, and failures are the entities' own: counted,
-and the run goes on. If the error that stopped a run was the entities' own after all (say a request too large for
-each of 5 neighbours in the queue), run the same command again as it is: an entity that already stopped a run with
-that error no longer counts toward a stop, so the next run goes on past them, and their failures count from then on
-(left alone after 3 like any other).
+**The same error on every entity** does not sweep the whole queue: when **5 entities in a row** fail with the same
+error, the run stops with exit code **4** and says which error. Those failures are not counted against the entities
+(a ledger `note` line each); fix the cause and run the same command again. Which errors count:
+
+- the **network** — timeouts, connections dropped or refused, streams cut short (all one error here, since a
+  failing network alternates between them) — and rate limits, overload or server errors that outlast the 12
+  back-offs: these are never one entity's own, so 5 in a row stop the run **at any point**, also after reviews of the
+  run have succeeded;
+- any other error — say the model is not available to your organisation (404), a beta not enabled for it (400), a
+  request too large (413) — only **before the API has answered a request of the run**. Once a response has come
+  back, the API, the key, the model and the network work, so such failures are the entities' own: counted, and the
+  run goes on. If an error of this kind that stopped a run was the entities' own after all (say a request too large
+  for each of 5 neighbours in the queue), run the same command again as it is: an entity that already stopped a run
+  with that error no longer counts toward a stop, so the next run goes on past them, and their failures count from
+  then on (left alone after 3 like any other).
+
+When the fifth failure comes while other entities are still being reviewed, the run first waits for them (no new
+entity starts): if one of them gets an answer from the API, the run goes on (and counts the failures); if none is
+left running without one, it stops. So a stop never throws away the work of a review that was going well.
 
 When **every** key is dead:
 
 - in the foreground (a terminal), the run asks: *Paste a new Anthropic API key (it is not saved anywhere), or press
   Enter to stop*. A pasted key is used at once (and only for this run). Ctrl-C at that prompt works like Enter: the
-  prompt ends at once, the terminal is left as it was (echo on), and the run stops cleanly;
+  prompt ends at once, the terminal is left as it was (echo on), and the run pauses as below (exit code 3);
 - in the background, or when you press Enter, the run **pauses**: the entities not finished stay pending, the exit
   code is 3, and the message says to add a key. Add credit or a key (`ANTHROPIC_API_KEY`, `ANTHROPIC_API_KEYS`, the
   keys file) and run **the same command again**: it continues with the entities still pending.
@@ -214,8 +233,10 @@ When **every** key is dead:
 then marked `paused` — except one whose review was already submitted (it was being verified): that review is
 **stored as done**, with its verification as far as it got and the rest marked not run (`review run --recheck`
 completes it) — and the ledger and the tables are written (a second Ctrl-C stops at once). Closing the terminal
-(SIGHUP) and `tahoe stop` (SIGTERM) stop it the same way (exit codes 129, 143; Ctrl-C 130). A response that arrives
-after its attempt was closed is still counted: a `note` line in the ledger and a `late` event in the history.
+(SIGHUP) and `tahoe stop` (SIGTERM) stop it the same way (exit codes 129, 143; Ctrl-C 130): `tahoe stop` (with the
+same `--out`) finds a run in the foreground of another terminal through `review/.run.lock`. A request still in
+flight when its attempt is closed is charged an estimate ([Costs](#costs)); a response that arrives after its attempt
+was closed is still counted: a `note` line in the ledger and a `late` event in the history.
 
 `tahoe review run --background ...` runs it as a job like `tahoe run` (safe to log out): `tahoe` shows that it runs
 and its last lines, `tahoe log` follows it, `tahoe stop` stops it as Ctrl-C does. A job cannot ask for a key, so it
@@ -252,9 +273,10 @@ and you now want the claims checked — is `done`, and `tahoe review status` cou
 --max-usd 5` (with `--verify llm`, the default, or `--verify ids`) runs only what it lacks — the id look-ups and / or
 the citation checker — on the stored review, rewrites its JSON and note, and adds a `done` ledger line (`recheck`)
 with the checker's cost (projected ~$0.10 each with the default checker); the reviewer is not run again. A
-`--recheck` that is itself stopped (Ctrl-C, SIGTERM, SIGHUP, the `--max-usd` cap, no key left) leaves the stored
-review as it was, with a ledger `note` line for its cost: the review still counts as lacking its verification, and
-the next `--recheck` completes it.
+`--recheck` that is itself stopped (Ctrl-C, SIGTERM, SIGHUP, the `--max-usd` cap, no key left) before its citation
+check has finished — whether the check was cut off or never started — leaves the stored review and note as they
+were (no `done` line), with a ledger `note` line (`recheck: paused`) for its cost: the review still counts as lacking
+its verification, and the next `--recheck` completes it.
 
 ## Histories and the ledger
 
@@ -262,7 +284,7 @@ Everything is under `<output>/review/`:
 
 | Path | What |
 |---|---|
-| `queue.parquet` | the entities in priority order with their state (`tahoe review plan`) |
+| `queue.parquet` | the entities the last `tahoe review plan` selected (all, or its `--kinds` / `--only`), in priority order with their state; `tahoe review status` always counts every entity, whatever the last plan selected |
 | `ledger.jsonl` | one line per finished attempt (append-only) |
 | `history/<kind>/<name>/<run_id>.jsonl` | every event of one attempt |
 | `reviews/<kind>/<name>.json` | the submitted review + its verification + metadata (model, date, cost, history path ...) |
@@ -273,12 +295,14 @@ Everything is under `<output>/review/`:
 A **ledger** line: entity_id, kind, name, run_id, agent, model, status (`done`, `refused`, `no_review`,
 `over_budget`, `failed`, `paused`, `key_rotated`), cost_usd (with `estimated_usd`, the part estimated for lost
 responses), input / output / cache-write / cache-read tokens, web searches, number of requests and tool calls, key
-id, start and end time, the error (scrubbed), and the path of its history file; a done line also has the
-verification's state (`ids_status`, `llm_status`). Lines with status `note` are bookkeeping, not attempts: the cost
-of a response that arrived after its attempt was closed (`late`), a failure the run put down to a systematic
-error (`uncount_failed`, with the error's `signature`), or a `--recheck` stopped before it finished (`recheck`);
-they never change an entity's state. A line cut short by a crash or a full disk is
-skipped, and the next line is still read.
+id, start and end time, the error (scrubbed), the path of its history file, and the reviewer's `effort` and the
+`--verify` mode (what its cost depends on, for the projection); a done line also has the verification's state
+(`ids_status`, `llm_status`). Lines with status `note` are bookkeeping, not attempts: the cost of a response that
+arrived after its attempt was closed (`late`; when an estimate was charged for it at the close, the difference,
+with `replaces_estimate_usd`), an estimate for a response lost after its attempt was closed (`late`,
+`estimated_usd`), a failure the run put down to a systematic error (`uncount_failed`, with the error's
+`signature`), or a `--recheck` stopped before it finished (`recheck`); they never change an entity's state. A line
+cut short by a crash or a full disk is skipped, and the next line is still read.
 
 A **history** file holds one JSON object a line, in order: `start` (agent, model, effort, key id, the full system
 prompt and its sha256, the tool definitions, the full dossier and its sha256, the code version, the request
@@ -321,18 +345,29 @@ print(led.groupby(["kind", "status"])["cost_usd"].agg(["count", "sum"]))
    the item is marked `unverified`, and in the note the link becomes "PMID:n (citation removed: not found in
    PubMed)". The note may cite only papers that an item of the review cites (only those are checked against a
    claim): any other PMID or DOI in it becomes "PMID:n (citation removed: cited only in this text ...)" and is
-   counted (the agent is warned once at submission). Every way a note can name a paper is read: PubMed, NCBI
-   (`ncbi.nlm.nih.gov/pubmed/...`) and Europe PMC (`europepmc.org/article/MED/...`) links, bare URLs, "PMID 123",
-   "PMIDs 1, 2 and 3", "PubMed ID 123", doi.org links and "DOI:..."; a link or bare URL to a removed paper goes
-   whole. PMC ids (PMC links, "PMCID PMC123") and Europe PMC links to other records (a preprint's PPR id ...) are
-   always removed, since the review cites papers by PMID or DOI only.
-   A percent-encoded DOI stays as written when its escapes do not decode to a DOI (a quote, a space, a tag), so the
-   check never writes markup into the note. **Retractions**: a PMID whose PubMed type is *Retracted
-   Publication*, or a DOI that Europe PMC types so or whose Crossref record carries a retraction (Crossref's update
-   notices, which include the Retraction Watch data), stays cited but is marked on its item
-   (`retracted_citations`), marked "(retracted paper)" where the note cites it, and counted; a retraction *notice*
-   is not itself counted as retracted (items list notices in `retraction_notices`). Ids that could not be looked up
-   (a service down) are kept and marked
+   counted (the agent is warned once at submission). Every common way a note can name a paper is read: PubMed, NCBI
+   (`ncbi.nlm.nih.gov/pubmed/...`, also the search form `ncbi.nlm.nih.gov/pubmed?term=123`) and Europe PMC
+   (`europepmc.org/article/MED/...`) links, bare URLs, "PMID 123", "PMIDs 1, 2 and 3" and "PMIDs 1, 2, and 3",
+   "PubMed ID 123", doi.org links (`10.x%2Fy` included), "DOI:10.x/y" and "DOI 10.x/y" (as the search tools print
+   DOIs), and a DOI inside a publisher's or preprint URL (in its path or an `id=` parameter:
+   `biorxiv.org/content/10.1101/...v1`, `journals.plos.org/...?id=10.1371/...`; a bioRxiv version and a trailing
+   `/full` or `.pdf` are dropped). A link or bare URL to a removed paper goes whole, whatever its form: link text
+   over several lines, a title in "...", '...' or (...), an image; a reference-style link (`[text][1]`, `[1][]`,
+   `[1]` with `[1]: url` elsewhere) is replaced by the marker and its definition deleted. PMC ids (PMC links,
+   "PMCID PMC123") and Europe PMC links to other records (a preprint's PPR id ...) are always removed, since the
+   review cites papers by PMID or DOI only. A paper cited under both its ids is one paper: when an item cites its
+   PMID and the note links its DOI (or the reverse), and PubMed's or Europe PMC's record of it gives both, the note
+   keeps the link and the paper is counted once.
+   A percent-encoded DOI stays as written when its escapes do not decode to a DOI (a quote, a space, a tag, a `%`),
+   and an id is written so that it forms no tag and no Obsidian comment (`%%`), so the check never writes markup
+   into the note. **Retractions**: a PMID whose PubMed type is *Retracted Publication*, or a DOI that Europe PMC
+   types so or whose Crossref record carries a retraction (Crossref's update notices, which include the Retraction
+   Watch data), stays cited but is marked on its item (`retracted_citations`), marked "(retracted paper)" where the
+   note cites it (after the link's closing parenthesis, or after each reference-style link to it; never inside a
+   link destination, where it would be read as a hidden title, nor in a definition, which shows nothing), and
+   counted among the papers an item cites (a retracted paper cited only in the note is removed like any other, and
+   not counted); a retraction *notice* is not itself counted as retracted (items list notices in
+   `retraction_notices`). Ids that could not be looked up (a service down) are kept and marked
    (`unchecked_citations`). A paper cited without having been retrieved in the session is flagged (and the agent was
    asked to read it before submitting).
 2. **Claims**: the citation checker gets each claim (established, missing, contradicted, connection verdicts) with
@@ -354,8 +389,13 @@ unverified (see below). The top level has `verification` (`ids`: checked, remove
 status done / not_run / failed and the counts per verdict; `counts`) and `note_footer`, a provenance line generated
 from those counts and shown under the note (the agents are told never to write their own; a sentence of the stored
 note that only vouches for its own verification, such as "citations were checked against PubMed and their
-abstracts" or the old "AI-generated ..." footer, is dropped, while a sentence that says anything more, such as what
-a search found, is kept whole). "Supported" means *the abstract says so*, not that the claim is true.
+abstracts" or the old "AI-generated ..." footer ("This review is" or "was AI-generated ..."), is dropped, while a
+sentence that says anything more, such as what a search found, is kept whole; what surrounds a dropped sentence
+keeps its form: a list item left empty goes with its marker, an item that goes on keeps its marker and a nested
+item its indentation, and an emphasis opened or closed in the dropped sentence is closed or opened in the kept
+text it covered, so no stray `**` or `_` is left). The counts are of papers: a paper cited under its PMID and its
+DOI counts once (`verification.ids.same_paper` maps the other id to the one that stands for it). "Supported" means
+*the abstract says so*, not that the claim is true.
 
 ## In the vault and the map
 

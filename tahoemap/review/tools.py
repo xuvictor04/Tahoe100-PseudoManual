@@ -260,7 +260,7 @@ def http_get(ctx, service, url, params, max_age_days=None, cache=True):
 # ----------------------------------------------------------------------------- ids
 _PMID = re.compile(r"^(?:pmid\s*[:#]?\s*|https?://(?:www\.)?(?:pubmed\.ncbi\.nlm\.nih\.gov|ncbi\.nlm\.nih\.gov/pubmed)/)"
                    r"?(\d{1,9})/?$", re.I)
-_DOI = re.compile(r"^(?:doi\s*:?\s*|https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}/\S+)$", re.I)
+_DOI = re.compile(r"^(?:doi\s*:?\s*|https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}(?:/|%2F)\S+)$", re.I)
 # A DOI inside running text or a URL: Crossref's recommended character set (- . _ ; : / letters digits), plus the
 # < > # + of old SICI DOIs and the % of URL-encoded ones, with parentheses only in balanced pairs - so
 # 'DOI:10.1016/S0092-8674(00)81096-3' is read whole, and the ')' that closes a markdown link or a remark is not
@@ -268,6 +268,8 @@ _DOI = re.compile(r"^(?:doi\s*:?\s*|https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}/\S
 _DOI_CH = r"[-._;:/A-Za-z0-9<>#+%]"
 DOI_BODY = r"10\.\d{4,9}/(?:" + _DOI_CH + r"|\(" + _DOI_CH + r"*\))+"
 _DOI_WHOLE = re.compile(DOI_BODY)
+# the same in a URL, whose '/' after the prefix may be percent-encoded ('doi.org/10.1000%2Fx')
+DOI_URL_BODY = r"10\.\d{4,9}(?:/|%2[Ff])(?:" + _DOI_CH + r"|\(" + _DOI_CH + r"*\))+"
 
 
 def trim_doi(d):
@@ -282,10 +284,11 @@ def trim_doi(d):
 
 
 def _decoded_doi(d):
-    """d with its percent-escapes decoded when the result is still a DOI (DOI_BODY's characters only), else None:
-    an escape that decodes to a quote, a space, '=' ... belongs to no DOI a paper carries."""
+    """d with its percent-escapes decoded when the result is still a DOI (DOI_BODY's characters only) and holds no
+    '%', else None: an escape that decodes to a quote, a space, '=' ... belongs to no DOI a paper carries, and one
+    that decodes to '%' ('%25') could make '%%', which Obsidian reads as the start of a comment."""
     dec = urllib.parse.unquote(d)
-    return dec if _DOI_WHOLE.fullmatch(dec) else None
+    return dec if "%" not in dec and _DOI_WHOLE.fullmatch(dec) else None
 
 
 def clean_doi(raw):
@@ -321,8 +324,9 @@ def citation_url(cid):
 
 def cid_text(cid):
     """A citation id as text written into a note (a link's text, a removal marker): the '<' and '>' an old SICI
-    DOI may carry are percent-encoded, so no text verification writes can form an HTML tag."""
-    return cid.replace("<", "%3c").replace(">", "%3e")
+    DOI may carry are percent-encoded, so no text verification writes can form an HTML tag, and so is a '%' that
+    another '%' follows, so none forms an Obsidian comment ('%%')."""
+    return re.sub(r"%(?=%)", "%25", cid.replace("<", "%3c").replace(">", "%3e"))
 
 
 def link(cid):
@@ -905,29 +909,61 @@ def schema_errors(payload, tool):
 
 
 _LINK = re.compile(r"\[[^\]]*\]\((?:[^()]|\([^()]*\))*\)")          # a markdown link; one level of ( ) in the URL
-_BARE = re.compile(r"\b(?:PMID\s*[:#]?\s*(\d{4,9})(?!\d)|DOI\s*:\s*(" + DOI_BODY + "))", re.I)
+_BARE = re.compile(r"\b(?:PMID\s*[:#]?\s*(\d{4,9})(?!\d)|DOI\s*:?\s*(" + DOI_BODY + "))", re.I)
 _REMOVED = " (citation removed"                                       # verify's marker after a removed id
-# The ways a note can name a paper (note_matches): PMIDs as PubMed / NCBI / Europe PMC links and as 'PMID 123',
-# 'PMIDs 1, 2 and 3', 'PubMed ID 123'; DOIs as doi.org links and 'DOI:10.x/y'; PMC ids as PMC / Europe PMC links and
-# 'PMCID PMC123' / 'PMC123', and Europe PMC links to records of other sources (preprints PPR ..., as 'EPMC:PPR/x'):
-# no item may cite those ids, so verification removes them from the note. A further number of a 'PMIDs' list needs
-# 7 digits or more, so a year or a count ('PMID 31000004, 2020') is not read as one.
+# The ways a note can name a paper (note_matches): PMIDs as PubMed / NCBI / Europe PMC links (also NCBI's search form
+# 'ncbi.nlm.nih.gov/pubmed?term=123') and as 'PMID 123', 'PMIDs 1, 2 and 3' / 'PMIDs 1, 2, and 3', 'PubMed ID 123';
+# DOIs as doi.org links ('/' percent-encoded or not), 'DOI:10.x/y' and 'DOI 10.x/y' (as the tools print them), and
+# in any other URL that carries one in its path or its id= / doi= parameter (publishers, bioRxiv: _url_doi); PMC
+# ids as PMC / Europe PMC links and 'PMCID PMC123' / 'PMC123', and Europe PMC links to records of other sources
+# (preprints PPR ..., as 'EPMC:PPR/x'): no item may cite those ids, so verification removes them from the note. A
+# further number of a 'PMIDs' list needs 7 digits or more, so a year or a count ('PMID 31000004, 2020') is not read
+# as one.
 _PMID_LIST = re.compile(r"\b(?:PMIDs?|PubMed\s+IDs?)\s*[:#]?\s*(\d{4,9})(?!\d)"
-                        r"((?:\s*(?:,|;|&|\band\b|\bor\b)\s*\d{7,9}(?!\d))*)", re.I)
+                        r"((?:\s*(?:,\s*(?:(?:and|or)\b|&)|,|;|&|\band\b|\bor\b)\s*\d{7,9}(?!\d))*)", re.I)
 _LIST_ITEM = re.compile(r"\d{7,9}")
-_PMID_URL = re.compile(r"(?:pubmed\.ncbi\.nlm\.nih\.gov/|ncbi\.nlm\.nih\.gov/pubmed/|\bpubmed\.gov/"
-                       r"|europepmc\.org/(?:article|abstract)s?/MED/)(?:\?term=)?(\d{1,9})(?!\d)", re.I)
+_PMID_URL = re.compile(r"(?:pubmed\.ncbi\.nlm\.nih\.gov/|ncbi\.nlm\.nih\.gov/pubmed(?:/|(?=\?))|\bpubmed\.gov/"
+                       r"|europepmc\.org/(?:article|abstract)s?/MED/)(?:\?(?:[^\s#()<>\[\]]*&)?term=)?(\d{1,9})(?!\d)",
+                       re.I)
 _PMC_URL = re.compile(r"(?:ncbi\.nlm\.nih\.gov/pmc/articles/|pmc\.ncbi\.nlm\.nih\.gov/articles/"
                       r"|europepmc\.org/(?:(?:article|abstract)s?/PMC/|articles?/))(PMC\d{1,9})(?!\d)", re.I)
 _PMC_WORD = re.compile(r"(?:\bPMCID\s*[:#]?\s*)?\b(PMC\d{4,9})(?!\d)", re.I)
 _EPMC_OTHER = re.compile(r"europepmc\.org/(?:article|abstract)s?/(PPR|PAT|AGR|CBA|CTX|ETH|HIR|NBK)/([A-Za-z0-9]{1,20})"
                          r"(?![A-Za-z0-9])", re.I)
-_NOTE_DOI = re.compile(r"doi\.org/(" + DOI_BODY + r")|\bDOI\s*:\s*(" + DOI_BODY + ")", re.I)
+_NOTE_DOI = re.compile(r"doi\.org/(" + DOI_URL_BODY + r")|\bDOI\s*:?\s*(" + DOI_BODY + ")", re.I)
+# a DOI in another URL: after a '/' of its path or in an id= / doi= parameter; _url_doi checks that a host starts the
+# URL it is in, and drops what such URLs add after the DOI (a bioRxiv version 'v2', '/full', '.pdf' ...)
+_URL_DOI = re.compile(r"(?:/|[?&;](?:id|doi)=)(" + DOI_URL_BODY + ")", re.I)
+_URL_STOP = re.compile(r"[\s()<>\[\]\"'`]")             # what ends a URL token read backwards from a DOI in it
+_URL_HOST = re.compile(r"(?:https?://)?((?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,})(?::\d+)?/", re.I)
+_URL_DOI_TAIL = re.compile(r"(?:[./](?:full|abstract|abs|pdf|epdf|fulltext|full-text|summary|meta|references|figures|"
+                           r"html|full\.pdf|fulltext\.html|supplementary-material))+$", re.I)
+_PREPRINT_HOSTS = ("biorxiv.org", "medrxiv.org")    # their URLs add the version to the DOI: 10.1101/2020.01.01.1v2
+
+
+def _url_doi(md, m):
+    """(doi, start of the URL's host, end of the DOI in md) for a _URL_DOI match inside a URL (not a doi.org one:
+    _NOTE_DOI reads those), else None."""
+    head = md[max(0, m.start() - 300):m.start()]
+    tok = _URL_STOP.split(head)[-1]
+    h = _URL_HOST.match(tok)
+    host = h.group(1).lower() if h else ""
+    if not h or host == "doi.org" or host.endswith(".doi.org"):
+        return None
+    raw = m.group(1).split("#")[0]                    # a URL's fragment is no part of its DOI
+    doi, rest = clean_doi(raw)
+    shown = len(raw) - len(rest)
+    cut = _URL_DOI_TAIL.sub("", doi)
+    if host.endswith(_PREPRINT_HOSTS):
+        cut = re.sub(r"v\d{1,3}$", "", cut)
+    if cut != doi and _DOI_WHOLE.fullmatch(cut):
+        doi = cut
+    return doi, m.start() - len(tok) + h.start(1), m.start(1) + shown
 
 
 def link_citations(md):
-    """Bare 'PMID:123' / 'PMID 123' / 'PMIDs 1, 2 and 3' / 'PubMed ID 123' / 'DOI:10.x/y' in markdown become links;
-    existing links are left alone."""
+    """Bare 'PMID:123' / 'PMID 123' / 'PMIDs 1, 2 and 3' / 'PubMed ID 123' / 'DOI:10.x/y' / 'DOI 10.x/y' in markdown
+    become links; existing links are left alone."""
     out, pos = [], 0
     for m in _LINK.finditer(md):
         out.append(_link_bare(md[pos:m.start()]))
@@ -976,8 +1012,13 @@ def note_matches(md):
         found.append((f"EPMC:{m.group(1).upper()}/{m.group(2).upper()}", m.start(), m.end(), "url"))
     for m in _NOTE_DOI.finditer(md):
         g = 1 if m.group(1) else 2
-        doi, rest = clean_doi(m.group(g))
-        found.append(("DOI:" + doi, m.start(), m.end(g) - len(rest), "url" if g == 1 else "word"))
+        raw = m.group(g).split("#")[0] if g == 1 else m.group(g)
+        doi, rest = clean_doi(raw)
+        found.append(("DOI:" + doi, m.start(), m.start(g) + len(raw) - len(rest), "url" if g == 1 else "word"))
+    for m in _URL_DOI.finditer(md):
+        u = _url_doi(md, m)
+        if u:
+            found.append(("DOI:" + u[0], u[1], u[2], "url"))
     out, last = [], -1
     for c, a, b, kind in sorted(found, key=lambda x: (x[1], -x[2])):
         if a < last:
@@ -1020,6 +1061,15 @@ def _is_review(ctx, cid):
         return False
     rec = (cache_get(ctx, "ncbi_record", cid.split(":", 1)[1]) or {}).get("record") or {}
     return any("Review" in p for p in rec.get("pubtypes") or [])
+
+
+def _record_doi(ctx, cid):
+    """'DOI:x' of a PMID whose PubMed record is in the cache (the agent read its abstract), else ''."""
+    if ctx is None or not cid.startswith("PMID:"):
+        return ""
+    rec = (cache_get(ctx, "ncbi_record", cid.split(":", 1)[1]) or {}).get("record") or {}
+    doi = str(rec.get("doi") or "").strip()
+    return (norm_citation("DOI:" + doi) or "") if doi else ""
 
 
 def normalize_review(payload, ctx=None):
@@ -1082,7 +1132,11 @@ def submit_review(ctx, payload):
     unread = [c for c in ids if c.startswith("PMID:") and c not in ctx.read_ids]
     unseen = [c for c in ids if c.startswith("DOI:") and c not in ctx.seen_ids]
     in_items = set(item_ids(r))
-    note_only = [c for c in dict.fromkeys(x for x, _a, _b in note_ids(r["note_markdown"])) if c not in in_items]
+    in_note = list(dict.fromkeys(x for x, _a, _b in note_ids(r["note_markdown"])))
+    # one paper under its PMID and its DOI (the DOI of a PubMed record the agent read): cited by the item
+    doi_of = {c: _record_doi(ctx, c) for c in in_items | set(in_note) if c.startswith("PMID:")}
+    same = {d for c, d in doi_of.items() if c in in_items and d} | {c for c, d in doi_of.items() if d in in_items}
+    note_only = [c for c in in_note if c not in in_items and c not in same]
     if (unread or unseen or note_only) and not ctx.notes.get("retrieval_warned"):
         ctx.notes["retrieval_warned"] = True
         msg = ["The review was not accepted yet:"]
@@ -1093,9 +1147,10 @@ def submit_review(ctx, payload):
             msg.append(f"- DOIs no search returned (find them with europepmc_search 'DOI:\"...\"', or remove the "
                        f"citations): {', '.join(cid_text(c) for c in unseen[:30])}")
         if note_only:
-            msg.append("- papers cited in note_markdown but in no item's citations, so no claim of the review is "
-                       "checked against them; they are removed from the note unless an item cites them (add them "
-                       "to the item whose claim they support, or take them out of the note"
+            msg.append("- papers cited in note_markdown (in any form: a link, a bare URL such as a publisher's or "
+                       "bioRxiv page, 'PMIDs 1, 2, and 3', 'DOI 10.x/y') but in no item's citations, so no claim of "
+                       "the review is checked against them; they are removed from the note unless an item cites "
+                       "them (add them to the item whose claim they support, or take them out of the note"
                        + ("; a PMC or Europe PMC id is always removed: cite the paper's PMID or DOI" if any(
                            c.startswith(("PMCID:", "EPMC:")) for c in note_only) else "")
                        + f"): {', '.join(cid_text(c) for c in note_only[:30])}")

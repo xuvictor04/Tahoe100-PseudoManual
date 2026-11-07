@@ -30,7 +30,13 @@ while a submitted review is verified (stored done, the late response recorded, c
 --recheck that is itself stopped (still --recheck-able); SIGHUP; Ctrl-C at the key prompt; a cut ledger line; the
 run lock (stale, live, reused pid, another computer); a key given to --keys-file; the same error on 5 entities in a
 row before any entity of the run got its answer (an error of the entities' own stops one run, not every later one)
-and --retry-failed. And a crafted malicious review (raw
+and --retry-failed. Then the fixes of the fourth review: a --recheck stopped by --max-usd, by its last key or by a
+signal between checker turns leaves the stored review as it was; network failures (one signature) and waits that run
+out stop the run also after an answer; the run waits for a slow healthy review before a stop; a request in flight
+at the close is charged an estimate and a response lost after it is recorded; a malformed key and local errors are
+never charged; status counts every entity after a filtered plan; the projection uses only reviews made with the
+same model, effort and --verify; `tahoe stop` stops a foreground review; --fake given a key. And a crafted
+malicious review (raw
 HTML, script, iframe, javascript: / data: / vbscript: links, a remote image, comments, an unclosed fence, a fabricated
 PMID, a verdict the checker does not support, two verdicts on one partner) spliced into the vault and the map: the
 note sanitised, unverified verdicts shown as such, one verdict per partner chosen alike in both, the callout's
@@ -1948,6 +1954,169 @@ def note_citation_forms(work):
 
 
 @case
+def note_links_and_structure(work, view, ents):
+    """Round 4 (the citation layer's checkers): every common way of naming a paper is read - 'DOI 10.x/y' as the tools
+    print it, NCBI's 'pubmed?term=' links, 'PMIDs a, b, and c', a DOI in a publisher's or bioRxiv URL or in
+    doi.org/10.x%2Fy - so a paper cited only in the note is removed, counted and warned about; a link whose text
+    runs over two lines, with a '...' or (...) title, or by reference ([x][1] + '[1]: url') is removed whole (its
+    definition too), and a link to a retracted paper is marked after its closing ')' or after each reference link,
+    never in a destination or a definition; verification writes no '%%'; a paper an item cites by PMID and the note
+    links by DOI (or the reverse) is one paper - kept, marked if retracted, counted once - and a retracted paper
+    cited only in the note is not counted; dropping a self-check sentence keeps the lists and emphasis around it."""
+    from tahoemap import vault as VA
+    from tahoemap.review import tools as TL, verify as V
+    c = "note_links_and_structure"
+    ids = lambda t: [x for x, _a, _b in TL.note_ids(t)]                                   # noqa: E731
+    # -- the forms, one by one
+    single = {"(DOI 10.1000/fake.31000004)": "DOI:10.1000/fake.31000004",
+              "[a](https://www.ncbi.nlm.nih.gov/pubmed?term=31000009)": "PMID:31000009",
+              "https://www.ncbi.nlm.nih.gov/pubmed/?db=pubmed&term=31000009%5Buid%5D": "PMID:31000009",
+              "https://www.biorxiv.org/content/10.1101/2020.01.01.123456v2.full.pdf": "DOI:10.1101/2020.01.01.123456",
+              "[p](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0123456&type=printable)":
+                  "DOI:10.1371/journal.pone.0123456",
+              "https://www.frontiersin.org/articles/10.3389/fimmu.2020.01234/full": "DOI:10.3389/fimmu.2020.01234",
+              "<https://doi.org/10.1000%2Ffake.31000003>": "DOI:10.1000/fake.31000003"}
+    got = {x: ids(x) for x in single}
+    lists = ids("(PMIDs 31000001, 31000002, and 31000003; PMIDs 31000004, 31000006, or 31000007)")
+    check(c, "each form names its paper: 'DOI 10.x', pubmed?term=, a DOI in a publisher's / bioRxiv URL (version and "
+             "'/full' dropped), doi.org with %2F, 'PMIDs a, b, and c' / 'a, b, or c'; a ratio or a year is no id",
+          all(got[x] == [w] for x, w in single.items())
+          and lists == [f"PMID:3100000{n}" for n in (1, 2, 3, 4, 6, 7)]
+          and ids("ratio 3/10.5, PMID 31000004, 2020, and/10.1000/x") == ["PMID:31000004"]
+          and TL.link_citations("(DOI 10.1000/fake.31000004)") == "([DOI:10.1000/fake.31000004](https://doi.org/"
+                                                                    "10.1000/fake.31000004))",
+          {x: g for x, g in got.items() if g != [single[x]]} or lists)
+    # -- a fake review through the runner: the forms in its note, then the note as the vault shows it
+    note = ("NQO1 is an NRF2 target ([PMID:31000001](https://pubmed.ncbi.nlm.nih.gov/31000001/)) (PMIDs 31000001, "
+            "31000002, and 31000003) (DOI 10.1000/fake.31000004) [PubMed](https://www.ncbi.nlm.nih.gov/pubmed?term="
+            "31000009). Preprint https://www.biorxiv.org/content/10.1000/fake.31000010v1.full and [PLOS](https://"
+            "journals.plos.org/x/article?id=10.1000/fake.31000008&type=printable), <https://doi.org/10.1000%2Ffake."
+            "31000007>.\n\nRetracted, cited by the item: [Doe et\nal.](https://pubmed.ncbi.nlm.nih.gov/31000005/ "
+            "'Doe') and [Lee][]; only here: [Smith][s].\n\n[s]: https://pubmed.ncbi.nlm.nih.gov/31000006/\n"
+            "[Lee]: https://pubmed.ncbi.nlm.nih.gov/31000005/\n")
+    only_here = ["PMID:31000002", "PMID:31000003", "DOI:10.1000/fake.31000004", "PMID:31000009",
+                 "DOI:10.1000/fake.31000010", "DOI:10.1000/fake.31000008", "DOI:10.1000/fake.31000007",
+                 "PMID:31000006"]
+    g = ents["genes"][min(6, len(ents["genes"]) - 1)]
+    rv = F.sample_review("NQO1", ("31000001", "31000005"), note=note)
+    steps = [{"tool_use": [{"name": "pubmed_abstracts", "input": {"pmids": [str(p) for p in range(31000001,
+                                                                                                    31000011)]}}]},
+             {"submit_review": rv}, {"submit_review": rv}]
+    res, _fk = run(view, {"entities": {g["entity_id"]: steps}}, only=g["entity_id"], verify="ids")
+    rec = ledger(view)[-1] if ledger(view) else {}
+    st = json.load(open(os.path.join(view, rec["review"]))) if rec.get("review") else {}
+    nt = st.get("note_markdown") or ""
+    shown = VA.sanitize_note(VA.drop_self_check(nt))
+    warned = " ".join(x for x in map(json.dumps, events(view, rec) if rec else []) if "not accepted yet" in x)
+    ver = (st.get("verification") or {}).get("ids") or {}
+    check(c, "the run: every paper the note names but no item cites is removed (marker in place), counted, and was "
+             "named in the reviewer's one warning",
+          res.counts == {"done": 1} and sorted(ver.get("note_removed_ids") or []) == sorted(only_here)
+          and ver.get("note_removed") == 8 and "8 papers cited only in the text removed" in st.get("note_footer", "")
+          and all(f"{x} (citation removed: cited only in this text" in nt for x in only_here)
+          and all(x in warned for x in only_here), {"removed": ver.get("note_removed_ids"), "note": nt[:400],
+                                                   "warned": warned[:300]})
+    check(c, "the vault's note links no paper but the items' (no term= link, no preprint or publisher URL, no "
+             "'%2F' DOI, no third id of a list, no reference link to a removed paper), and shows each removal",
+          not re.search(r"term=3100000|biorxiv|plos\.org|10\.1000%2F|and 31000003\)|\[Smith\]|\[s\]:|31000006/",
+                        shown)
+          and shown.count("(citation removed: cited only in this text") == 8, shown[:600])
+    check(c, "a retracted paper's two-line link is marked after its ')' (not as a title), a reference link after "
+             "its use (not in the definition, which the vault keeps); counted once",
+          "[Doe et\nal.](https://pubmed.ncbi.nlm.nih.gov/31000005/ 'Doe') (retracted paper)" in shown
+          and "[Lee][] (retracted paper)" in shown and "[Lee]: https://pubmed.ncbi.nlm.nih.gov/31000005/" in shown
+          and "/ (retracted paper)" not in nt and ver.get("retracted") == 1
+          and "1 retracted paper (cited, not support)" in st.get("note_footer", ""), shown[-400:])
+    reset(view, c)
+    # -- the link forms, removed or marked
+    why = {"PMID:31000002": "citation removed: x"}
+    u2, u5 = "https://pubmed.ncbi.nlm.nih.gov/31000002/", "https://pubmed.ncbi.nlm.nih.gov/31000005/"
+    strip = {f"A ([Smith et\nal.]({u2})).": "A (PMID:31000002 (citation removed: x)).",
+             f"A ([S]({u2} 'T')), ([J]({u2} (T))).": "A (PMID:31000002 (citation removed: x)), (PMID:31000002 "
+                                                     "(citation removed: x)).",
+             f"A [S][1], [s][], [S] and [ok].\n\n[1]: {u2}\n[S]:\n  <{u2}>\n  \"T\"\n[ok]: {u5}\n":
+                 "A PMID:31000002 (citation removed: x), PMID:31000002 (citation removed: x), PMID:31000002 "
+                 f"(citation removed: x) and [ok].\n\n[ok]: {u5}\n",
+             f"> A [S][q]\n>\n> [q]: {u2}\n": "> A PMID:31000002 (citation removed: x)\n>\n>\n",
+             f"Deep [a [b [c]] d]({u2}) end.": "Deep PMID:31000002 (citation removed: x) end."}
+    out = {x: V._strip_from_note(x, why) for x in strip}
+    check(c, "a link over two lines, with a '...' or (...) title, by reference (full, collapsed, shortcut; its "
+             "definition, in a blockquote too) or with deeper brackets is removed whole",
+          all(out[x] == w for x, w in strip.items()), {x[:30]: o for x, o in out.items() if o != strip[x]})
+    mark = {f"A ([Doe et\nal.]({u5} 'x')).": f"A ([Doe et\nal.]({u5} 'x') (retracted paper)).",
+            f"A ([Doe]({u5} (retracted paper))).": f"A ([Doe]({u5}) (retracted paper)).",     # as stored before
+            f"A [Doe][1].\n\n[1]: {u5} (retracted paper)": f"A [Doe][1] (retracted paper).\n\n[1]: {u5}",
+            f"A [Doe][1], [1] and [x [y [z]]]({u5}).\n\n[1]: {u5}":
+                f"A [Doe][1] (retracted paper), [1] (retracted paper) and [x [y [z]]]({u5}) (retracted paper)."
+                f"\n\n[1]: {u5}"}
+    out = {x: V._mark_retracted(x, ["PMID:31000005"]) for x in mark}
+    check(c, "the retraction mark goes after the whole link or each reference link, once; a mark an earlier version "
+             "left in a destination or definition is moved there",
+          all(out[x] == w and V._mark_retracted(w, ["PMID:31000005"]) == w for x, w in mark.items()),
+          {x[:30]: o for x, o in out.items() if o != mark[x]})
+    # -- no '%%' from verification; one paper under two ids
+    ctx, lib = lit_ctx(work, read=[str(p) for p in range(31000001, 31000011)])
+    try:
+        pct = TL.normalize_review(F.sample_review("NQO1", ("31000001",), note=(
+            "NQO1 is induced ([a](https://doi.org/10.1000/a%25%25b)). KEY FINDING: HMOX1 rises 4.5x in A549. Also "
+            "([c](https://doi.org/10.1000/c%25%25d)) and DOI:10.1000/e%%f.\n")), ctx)[0]
+        r_pct, _rep = V.check_ids(pct, ctx)
+        TL.pubmed_abstracts(ctx, ["31000001", "31000005"])                  # the agent read them (records cached)
+        ctx.seen_ids.add("DOI:10.1000/fake.31000001")
+        alias = F.sample_review("NQO1", ("31000005",), note="NQO1 ([Doe 2020](https://doi.org/10.1000/fake.31000005)"
+                                ") and ([x](https://pubmed.ncbi.nlm.nih.gov/31000005/)).\n")
+        TL.submit_review(ctx, alias)
+        r_al, rep_al = V.check_ids(ctx.submitted, ctx)
+        rev = F.sample_review("NQO1", (), note="NQO1 ([Smith](https://pubmed.ncbi.nlm.nih.gov/31000001/)).\n")
+        for it in rev["established"] + rev["connection_verdicts"][:1]:
+            it["citations"] = ["DOI:10.1000/fake.31000001"]
+        r_rev, rep_rev = V.check_ids(TL.normalize_review(rev, ctx)[0], ctx)
+        lone = F.sample_review("NQO1", ("31000001",), note="NQO1 [x](https://pubmed.ncbi.nlm.nih.gov/31000001/) and "
+                               "[y](https://pubmed.ncbi.nlm.nih.gov/31000005/).\n")
+        r_lone, rep_lone = V.check_ids(TL.normalize_review(lone, ctx)[0], ctx)
+    finally:
+        lib.uninstall()
+    fin_al, fin_lone = V.finalize(r_al, "ids", rep_al), V.finalize(r_lone, "ids", rep_lone)
+    check(c, "verification writes no '%%' (a link's text, a removal marker), so the vault's comment filter hides "
+             "no finding",
+          "%%" not in r_pct["note_markdown"] and "KEY FINDING: HMOX1 rises 4.5x" in VA.sanitize_note(
+              r_pct["note_markdown"]) and "%%" not in TL.link_citations("DOI:10.1000/a%25%25b DOI:10.1000/e%%f")
+          and TL.cid_text("DOI:10.1000/e%%f") == "DOI:10.1000/e%25%f", r_pct["note_markdown"])
+    check(c, "one paper cited by PMID in the item and by DOI (and PMID) in the note: no warning, kept, marked as "
+             "retracted after each link, counted once",
+          ctx.submit_attempts == 1 and rep_al["note_removed"] == 0 and rep_al["n_cited"] == 1
+          and V.counts(fin_al)["n_citations"] == 1 and rep_al["retracted"] == 1
+          and rep_al["same_paper"] == {"DOI:10.1000/fake.31000005": "PMID:31000005"}
+          and r_al["note_markdown"].count("(retracted paper)") == 2
+          and "fake.31000005) (retracted paper)" in r_al["note_markdown"], r_al["note_markdown"])
+    check(c, "the reverse (the item cites the DOI, the note links the PMID): kept, counted once",
+          rep_rev["note_removed"] == 0 and rep_rev["n_cited"] == 1 and "(citation removed" not in r_rev["note_markdown"],
+          r_rev["note_markdown"])
+    check(c, "a retracted paper cited only in the note is removed and not counted as a cited retracted paper",
+          rep_lone["retracted"] == 0 and rep_lone["retracted_ids"] == [] and rep_lone["note_removed"] == 1
+          and "retracted" not in fin_lone["note_footer"]
+          and "1 paper cited only in the text removed" in fin_lone["note_footer"], fin_lone["note_footer"])
+    # -- dropping a self-check sentence keeps the structure around it
+    drop = {"1. A is up.\n2. Citations were checked against PubMed.\n3. B is down.\n": "1. A is up.\n3. B is down.\n",
+            "- A is up.\n- Citations were checked against PubMed.\n  NQO1 is up 4.5x.\n- B is down.":
+                "- A is up.\n- NQO1 is up 4.5x.\n- B is down.\n",
+            "- A is up.\n  - Citations were checked against PubMed.\n  - NQO1 is up 4.5x.":
+                "- A is up.\n  - NQO1 is up 4.5x.\n",
+            "_NQO1 is up. Citations were checked against PubMed._ HMOX1 is down.":
+                "_NQO1 is up._ HMOX1 is down.\n",
+            "SYNTH0303 moves with SYNTH0347. **Caveat: one partner is unexplained. All citations were verified against "
+            "PubMed.**": "SYNTH0303 moves with SYNTH0347. **Caveat: one partner is unexplained.**\n",
+            "**Citations were checked against PubMed. Caveat: X is up 4x.**": "**Caveat: X is up 4x.**\n",
+            "Intro. _This review was AI-generated and not checked by a person. Citations were verified against their "
+            "abstracts._": "Intro.\n",
+            "> - Citations were checked against PubMed. NQO1 up.\n> - B": "> - NQO1 up.\n> - B\n"}
+    out = {x: V.drop_self_check(x) for x in drop}
+    check(c, "a dropped self-check leaves no empty list item, moves no line into another item, keeps a nested list "
+             "nested and its emphasis closed; 'This review was AI-generated ...' is a disclaimer",
+          all(out[x] == w for x, w in drop.items()), {x[:40]: o for x, o in out.items() if o != drop[x]})
+
+
+@case
 def check_status_contract(work):
     """The shared contract: check_status and shown_verdict on every connection verdict and every citing item,
     'verification' {ids, llm} counts, for each way an item can end up."""
@@ -2223,9 +2392,18 @@ def stop_after_submit(view, ents):
           {"exit": res.exit_code, "ledger": [(r["status"], r.get("note")) for r in L], "llm": ver.get("llm")})
     ev = events(view, main[-1]) if main else []
     kinds = [e["event"] for e in ev]
-    check(c, "the late response: a ledger note line with its cost, a late event after the history's end",
-          len(late) == 1 and late[0]["cost_usd"] > 0 and "end" in kinds and kinds.index("end") < len(kinds) - 1
-          and ev[-1].get("late") and ev[-1]["event"] == "response", {"late": late[:1], "events": kinds[-3:]})
+    est = float(main[-1].get("estimated_usd") or 0) if main else 0.0
+    inflight = [e for e in ev if e["event"] == "error" and e.get("class") == "InFlightAtStop"]
+    real = float(ev[-1].get("cost_usd") or 0) if ev else 0.0
+    check(c, "the checker's request in flight at the close: charged an estimate (done line, history error event)",
+          est > 0 and len(inflight) == 1 and abs(inflight[0]["estimated_cost_usd"] - est) < 1e-6
+          and kinds.index("error") < kinds.index("end"), {"estimated_usd": est, "events": kinds[-4:]})
+    check(c, "the late response: a ledger note line whose real cost replaces that estimate, a late event after the "
+          "history's end", len(late) == 1 and real > 0 and abs(late[0].get("replaces_estimate_usd", 0) - est) < 1e-6
+          and abs(late[0]["cost_usd"] - (real - est)) < 1e-5 and abs(late[0].get("estimated_usd", 0) + est) < 1e-6
+          and abs(sum(float(r["cost_usd"]) for r in L) - float(main[-1]["cost_usd"]) + est - real) < 1e-5
+          and "end" in kinds and kinds.index("end") < len(kinds) - 1 and ev[-1].get("late")
+          and ev[-1]["event"] == "response", {"late": late[:1], "events": kinds[-3:]})
     st = Ledger(view).states()[g["entity_id"]]
     out = []
     R.status(view, say=out.append)
@@ -2325,11 +2503,13 @@ def key_prompt_ctrl_c(view, ents):
                  only=g["entity_id"], interactive=True, prompt=prompt, verify="ids")
     took = time.time() - t0
     ks = json.load(open(os.path.join(view, "review", "keys_state.json")))
-    check(c, "asked in the main thread; Ctrl-C interrupts the prompt at once (no hang), the run stops cleanly",
+    check(c, "asked in the main thread; Ctrl-C interrupts the prompt at once (no hang) and works like Enter there: "
+          "the run pauses for a key (exit code 3, the add-a-key message)",
           seen.get("main") and seen.get("restored") and not seen.get("timed_out") and took < 4
-          and res.exit_code in (3, 130) and [k["dead"] for k in ks["keys"]] == [True]
+          and res.exit_code == 3 and res.paused and "add a key" in res.message
+          and [k["dead"] for k in ks["keys"]] == [True]
           and [r["status"] for r in ledger(view)] == ["key_rotated"],
-          {"seen": seen, "took": round(took, 1), "exit": res.exit_code})
+          {"seen": seen, "took": round(took, 1), "exit": res.exit_code, "message": res.message[:120]})
     pool = K.KeyPool(env=False, interactive=True, default_chain=False, prompt=lambda t: (pool.describe(), "")[1])
     try:
         pool.current()
@@ -2445,6 +2625,30 @@ def keys_file_is_a_key(view, ents):
     check(c, "the tahoe wrapper refuses it before anything runs (also --background), without echoing it",
           all(rc == 1 and KEY5 not in o and KEY5[8:30] not in o and "looks like an API key" in o for rc, o in outs)
           and not os.path.exists(os.path.join(view, "console.log")), [(rc, K.scrub(o)[:90]) for rc, o in outs])
+    # the same key given to --fake: refused, in neither the output nor review.log (no traceback through the run log)
+    r = subprocess.run([sys.executable, "-m", "tahoemap", "review", "run", "--out", view, "--limit", "1", "--fake",
+                        KEY5], cwd=REPO, env=env, capture_output=True, text=True, timeout=120)
+    SCANNED["bytes"] += len(r.stdout) + len(r.stderr)
+    logs = "".join(open(f, encoding="utf-8", errors="replace").read() for f in glob.glob(
+        os.path.join(view, "review", "*.log")))
+    res2 = R.run(view, fake=KEY5, only=g["entity_id"], limit=1, env_keys=False, interactive=False, quiet=True)
+    res3 = R.run(view, fake=os.path.join(view, "no-such-script.json"), only=g["entity_id"], limit=1, env_keys=False,
+                 interactive=False, quiet=True)
+    check(c, "--fake KEY (CLI): exit 2, refused as a key, the key in neither the output nor review.log; a missing "
+          "script: exit 2 with its path", r.returncode == 2 and KEY5 not in r.stdout + r.stderr + logs
+          and KEY5[8:30] not in r.stdout + r.stderr + logs and "looks like an API key" in r.stdout
+          and "Traceback" not in r.stdout + r.stderr + logs and res2.exit_code == 2 and KEY5 not in res2.message
+          and res3.exit_code == 2 and "no-such-script.json" in res3.message,
+          {"exit": r.returncode, "out": K.scrub(r.stdout[-160:] + r.stderr[-160:]), "missing": res3.message[:120]})
+    outs = []
+    for kf in (["--fake", KEY5], ["--fake=" + KEY5]):
+        w = subprocess.run(["bash", os.path.join(REPO, "tahoe"), "review", "run", "--out", view, "--limit", "1"] + kf,
+                           cwd=view, env=env, capture_output=True, text=True, timeout=120)
+        SCANNED["bytes"] += len(w.stdout) + len(w.stderr)
+        outs.append((w.returncode, w.stdout + w.stderr))
+    check(c, "the tahoe wrapper refuses a key given to --fake too, without echoing it",
+          all(rc == 1 and KEY5 not in o and KEY5[8:30] not in o and "--fake expects" in o for rc, o in outs),
+          [(rc, K.scrub(o)[:90]) for rc, o in outs])
     reset(view, c)
 
 
@@ -2536,6 +2740,326 @@ def systematic_failures(view, ents):
     reset(view, c)
 
 
+def _sha(path):
+    return hashlib.sha256(open(path, "rb").read()).hexdigest() if os.path.exists(path) else None
+
+
+@case
+def recheck_stopped(view, ents):
+    """core#1: a --recheck stopped before its citation check finished - by --max-usd, by its last key dying, by a
+    signal between two checker turns - leaves the stored review and note as they were: no done line, a 'recheck:
+    paused' ledger note with its cost, the entity still --recheck-able; an unstopped --recheck then completes it."""
+    c = "recheck_stopped"
+    g = ents["genes"][3]
+    run(view, {"entities": {g["entity_id"]: good()}}, only=g["entity_id"], verify="ids")
+    rp = R.review_paths(view, "gene", g["name"])
+    grace = R.STOP_GRACE
+    R.STOP_GRACE = 0.5
+    try:
+        for label, script, kw, code in [
+                ("--max-usd reached after the checker's first turn",
+                 {"checker": {g["name"]: [{"end_turn": "checking"}, {"submit_check": "auto"}]}}, {"max_usd": 0.001}, 0),
+                ("no key left (the only key dies at the checker)",
+                 {"keys": [KEY1], "dead_keys": {KEY1[-4:]: 402}, "checker": "auto"}, {}, 3),
+                ("SIGINT between two checker turns (the answer within the grace)",
+                 {"checker": {g["name"]: [{"end_turn": "checking", "signal": "SIGINT"}, {"submit_check": "auto"}]}},
+                 {}, 130)]:
+            n0 = len(ledger(view))
+            before = (_sha(rp["review"]), _sha(rp["note"]))
+            res, fk = run(view, script, only=g["entity_id"], verify="llm", recheck=True, **kw)
+            new = ledger(view)[n0:]
+            st = Ledger(view).states()[g["entity_id"]]
+            meta = json.load(open(rp["review"])).get("meta") or {}
+            check(c, f"{label}: exit {code}; the review and note unchanged; only a 'recheck: paused' note; still "
+                  "--recheck-able", res.exit_code == code and (_sha(rp["review"]), _sha(rp["note"])) == before
+                  and [(r["status"], r.get("note"), r.get("recheck")) for r in new] == [("note", "recheck: paused",
+                                                                                        True)]
+                  and st["status"] == "done" and R.recheck_pending(view, st, "llm") and not meta.get("rechecked")
+                  and {x["role"] for x in fk.calls} == {"checker"},
+                  {"exit": res.exit_code, "new lines": [(r["status"], r.get("note"), r.get("cost_usd")) for r in new],
+                   "unchanged": (_sha(rp["review"]), _sha(rp["note"])) == before, "rechecked": meta.get("rechecked")})
+    finally:
+        R.STOP_GRACE = grace
+    res, fk = run(view, {"checker": "auto"}, only=g["entity_id"], verify="llm", recheck=True)
+    rv = json.load(open(rp["review"]))
+    check(c, "then a --recheck that is not stopped completes the check (a done line)", res.exit_code == 0
+          and rv["verification"]["llm"]["status"] == "done" and rv["meta"].get("rechecked")
+          and ledger(view)[-1]["status"] == "done", {"exit": res.exit_code, "llm": rv["verification"]["llm"]})
+    reset(view, c)
+
+
+@case
+def breaker_network(view, ents):
+    """core#2: network failures (one signature, whichever class: connection errors, timeouts ...) and back-offs that
+    run out are the run's, never one entity's: 5 entities in a row stop the run (exit 4, uncounted) also after an
+    entity of the run got its answer, and the next run with the network still down stops after 5 again."""
+    c = "breaker_network"
+    pool = ents["genes"][:8] + ents["drugs"][:6]
+    ids = [e["entity_id"] for e in pool]
+    cases = [("connection errors after an answer", lambda i: good() if i == 0 else [{"error": "connection"}] * 3, 1),
+             ("timeouts after an answer", lambda i: good() if i == 0 else [{"error": "timeout"}] * 3, 1),
+             ("connection errors and timeouts in turn, before any answer",
+              lambda i: [{"error": "connection" if i % 2 else "timeout"}] * 3, 0)]
+    for label, steps, n_done in cases:
+        sc = {"entities": {e: steps(i) for i, e in enumerate(ids)}}
+        res, fk = run(view, sc, only=ids, concurrency=1, verify="ids")
+        L = ledger(view)
+        st = Ledger(view).states()
+        failed = [r["entity_id"] for r in L if r["status"] == "failed"]
+        notes = [r["entity_id"] for r in L if r.get("uncount_failed")]
+        est = [r["entity_id"] for r in L if r.get("estimated_usd")]
+        check(c, f"{label}: the run stops after 5 failures (exit 4), not counted, the rest not started",
+              res.exit_code == 4 and len(failed) == 5 and sorted(notes) == sorted(failed)
+              and all(st[e]["n_failed"] == 0 for e in failed) and len(st) == 5 + n_done
+              and res.counts == ({"done": 1, "failed": 5} if n_done else {"failed": 5})
+              and len(fk.calls) == 3 * n_done + 15 and set(est) <= set(failed)
+              and "(network)" in res.message and "not counted" in res.message,
+              {"exit": res.exit_code, "counts": res.counts, "calls": len(fk.calls), "message": res.message[:110]})
+        if n_done == 0:
+            res2, fk2 = run(view, sc, only=ids, concurrency=1, verify="ids")
+            st2 = Ledger(view).states()
+            check(c, "the network still down: the next run stops after 5 again (network failures always count "
+                  "toward a stop), none counted", res2.exit_code == 4 and len(fk2.calls) == 15
+                  and all(s["n_failed"] == 0 for s in st2.values()),
+                  {"exit": res2.exit_code, "calls": len(fk2.calls)})
+        reset(view, c)
+    waits = R.MAX_WAITS
+    R.MAX_WAITS = 1
+    try:
+        sc = {"entities": {e: (good() if i == 0 else [{"error": 529}] * 2) for i, e in enumerate(ids)}}
+        res, fk = run(view, sc, only=ids, concurrency=1, verify="ids")
+    finally:
+        R.MAX_WAITS = waits
+    st = Ledger(view).states()
+    check(c, "overload that outlasts the back-offs on 5 entities after an answer: the run stops too (exit 4)",
+          res.exit_code == 4 and res.counts == {"done": 1, "failed": 5} and len(st) == 6
+          and all(s["n_failed"] == 0 for s in st.values()) and "back-offs" in res.message,
+          {"exit": res.exit_code, "counts": res.counts, "message": res.message[:110]})
+    reset(view, c)
+
+
+@case
+def breaker_waits_for_running(view, ents):
+    """core#3: 5 fast failures of the entities' own (413) while a slow healthy review is running: no new entity
+    starts, the run waits for it, and its answer shows that the API works - the run goes on, the review is done (not
+    paused), the 5 failures count; when the running one fails too without an answer, the run stops (exit 4)."""
+    c = "breaker_waits_for_running"
+    six = ents["genes"][:6]
+    ids = [e["entity_id"] for e in six]
+    grace = R.STOP_GRACE
+    R.STOP_GRACE = 1.0
+    try:
+        slow = [dict(good()[0], sleep=1.5)] + good()[1:]
+        sc = {"entities": {ids[0]: slow, **{e: [{"error": 413}] for e in ids[1:]}}}
+        res, fk = run(view, sc, only=ids, concurrency=2, verify="ids")
+    finally:
+        R.STOP_GRACE = grace
+    st = Ledger(view).states()
+    t413 = [x.get("t1", 0) for x in fk.calls if x["step"] == "error:413"]
+    t_ok = min((x.get("t1", 0) for x in fk.calls if x["entity"] == ids[0]), default=0)
+    check(c, "the healthy review's answer comes after the 5th failure: the run goes on, the review done, the 5 "
+          "failures counted", res.exit_code == 0 and res.counts == {"done": 1, "failed": 5}
+          and st[ids[0]]["status"] == "done" and all(st[e]["n_failed"] == 1 for e in ids[1:])
+          and not any(r.get("uncount_failed") for r in ledger(view)) and len(t413) == 5 and max(t413) < t_ok,
+          {"exit": res.exit_code, "counts": res.counts, "413s done before the answer": bool(t413)
+           and max(t413) < t_ok})
+    reset(view, c)
+    eight = ents["genes"][:8]
+    ids = [e["entity_id"] for e in eight]
+    sc = {"entities": {ids[0]: [{"error": 404, "sleep": 1.5}], **{e: [{"error": 404}] for e in ids[1:]}}}
+    res, fk = run(view, sc, only=ids, concurrency=2, verify="ids")
+    L = ledger(view)
+    failed = [r["entity_id"] for r in L if r["status"] == "failed"]
+    notes = [r["entity_id"] for r in L if r.get("uncount_failed")]
+    check(c, "the running one fails too, without an answer: the run stops (exit 4), none started meanwhile, none "
+          "counted", res.exit_code == 4 and len(failed) == 6 and ids[0] in failed and sorted(notes) == sorted(failed)
+          and len(fk.calls) == 6 and "before the API had answered" in res.message,
+          {"exit": res.exit_code, "failed": len(failed), "calls": len(fk.calls), "message": res.message[:100]})
+    reset(view, c)
+
+
+@case
+def stopped_in_flight(view, ents):
+    """core#4, e2e#10: a request in flight when a stopping run closes its attempt is charged an estimate (it may be
+    billed); a response lost after the close is still recorded (a late error event, and a ledger note for what it
+    costs beyond the estimate already charged)."""
+    c = "stopped_in_flight"
+    g = ents["genes"][4]
+    grace = R.STOP_GRACE
+    R.STOP_GRACE = 0.5
+    try:
+        first = dict(good()[0], signal="SIGINT", sleep_after=1.5, drop=True)
+        res, fk = run(view, {"entities": {g["entity_id"]: [first] + good()[1:]}}, only=g["entity_id"], verify="ids")
+        time.sleep(2.0)                                 # the stream breaks after the run has ended
+    finally:
+        R.STOP_GRACE = grace
+    L = ledger(view)
+    ev = events(view, L[0]) if L else []
+    kinds = [e["event"] for e in ev]
+    infl = [i for i, e in enumerate(ev) if e["event"] == "error" and e.get("class") == "InFlightAtStop"]
+    est = float(L[0].get("estimated_usd") or 0) if L else 0.0
+    check(c, "in flight at the close: the paused line is charged an estimate (estimated_usd), the history has an "
+          "InFlightAtStop error event before its end", res.exit_code == 130 and [r["status"] for r in L] == ["paused"]
+          and est > 0 and abs(L[0]["cost_usd"] - est) < 1e-6 and len(infl) == 1 and infl[0] < kinds.index("end")
+          and abs(ev[infl[0]]["estimated_cost_usd"] - est) < 1e-6,
+          {"exit": res.exit_code, "ledger": [(r["status"], r.get("cost_usd"), r.get("estimated_usd")) for r in L],
+           "events": kinds})
+    check(c, "the response lost after the close: a late error event after the end, not charged twice",
+          kinds and kinds[-1] == "error" and ev[-1].get("late") and ev[-1].get("estimated_cost_usd") == 0
+          and abs(ev[-1].get("estimated_at_close_usd", 0) - est) < 1e-6 and len(L) == 1, ev[-1] if ev else None)
+    reset(view, c)
+
+    class Retrying(F.FakeAPI):                          # an SDK that re-sends once itself (as the real client does)
+        def client(self, secret):
+            return super().client(secret).with_options(max_retries=1)
+    R.STOP_GRACE = 0.5
+    try:
+        sc = Retrying({"entities": {g["entity_id"]: [{"error": "timeout", "signal": "SIGINT", "sleep_after": 1.0},
+                                                     {"error": "timeout"}] + good()}})
+        res, fk = run(view, sc, only=g["entity_id"], verify="ids")
+        time.sleep(3.0)                                 # the SDK's re-send times out after the run has ended
+    finally:
+        R.STOP_GRACE = grace
+    L = ledger(view)
+    ev = events(view, L[0]) if L else []
+    est0 = float(L[0].get("estimated_usd") or 0) if L else 0.0
+    notes = [r for r in L if r.get("status") == "note"]
+    check(c, "lost after the close, re-sent by the SDK (2 sends): a late ledger note for the estimate beyond the one "
+          "charged at the close, and a late error event", [r["status"] for r in L] == ["paused", "note"]
+          and est0 > 0 and notes[0].get("late") and abs(notes[0]["estimated_usd"] - est0) < 1e-6
+          and abs(notes[0]["cost_usd"] - est0) < 1e-6 and len(fk.calls) == 2 and ev and ev[-1]["event"] == "error"
+          and ev[-1].get("late") and ev[-1].get("estimated_sends") == 2,
+          {"ledger": [(r["status"], r.get("cost_usd"), r.get("estimated_usd"), r.get("late")) for r in L],
+           "calls": len(fk.calls), "last event": (ev[-1]["event"], ev[-1].get("late")) if ev else None})
+    out = []
+    R.status(view, say=out.append)
+    check(c, "review status counts both estimates", any(R._fmt_usd(2 * est0) + " of it estimated" in x for x in out),
+          [x for x in out if "Spent" in x])
+    reset(view, c)
+
+
+@case
+def malformed_key(view, ents):
+    """core#6: a request that could not even be written on this machine (an illegal header value, an unusable URL,
+    the proxy refused it) never reached the API and is not charged; a malformed key (two keys in one variable) is
+    dead from the start: nothing is sent, the run pauses for a key."""
+    c = "malformed_key"
+    import anthropic
+    import httpx2
+    req = httpx2.Request("POST", F.FAKE_BASE_URL + "/v1/messages")
+    want = {"LocalProtocolError": False, "UnsupportedProtocol": False, "ProxyError": False, "ConnectError": False,
+            "ConnectTimeout": False, "ReadError": True, "RemoteProtocolError": True, "ReadTimeout": True}
+    got = {}
+    for name in want:
+        e = anthropic.APIConnectionError(request=req)
+        e.__cause__ = getattr(httpx2, name)("fake: Illegal header value", request=req)
+        cat, info = K.classify(e)
+        got[name] = (cat == K.WAIT and info.get("network")) and info.get("sent")
+    check(c, "local errors (illegal header, unsupported protocol, proxy) are 'never sent', unlike lost responses",
+          got == want, got)
+    g = ents["genes"][0]
+    os.environ["ANTHROPIC_API_KEY"] = KEY3 + "\n" + KEY4
+    try:
+        res, fk = run(view, {"entities": {g["entity_id"]: good()}}, only=g["entity_id"], verify="ids", env_keys=True)
+    finally:
+        os.environ.pop("ANTHROPIC_API_KEY", None)
+    ks = json.load(open(os.path.join(view, "review", "keys_state.json")))
+    check(c, "two keys in ANTHROPIC_API_KEY: the key is dead from the start (malformed), nothing sent, paused "
+          "(exit 3)", res.exit_code == 3 and not fk.calls and "malformed" in res.message
+          and [(k["dead"], "malformed" in k["reason"]) for k in ks["keys"]] == [(True, True)]
+          and KEY3 not in res.message and KEY4 not in res.message,
+          {"exit": res.exit_code, "calls": len(fk.calls), "message": K.scrub(res.message)[:120]})
+    reset(view, c)
+
+
+@case
+def status_whole_queue(view, ents):
+    """e2e#7: `review status` counts every entity, whatever the last `review plan --kinds/--only` wrote to
+    queue.parquet."""
+    c = "status_whole_queue"
+    two = [e["entity_id"] for e in ents["genes"][:2]]
+    run(view, {"entities": {e: good() for e in two}}, only=two, verify="ids")
+    full = []
+    R.status(view, say=full.append)
+    outs = []
+    for kw in ({"kinds": "line"}, {"only": ents["lines"][0]["entity_id"]}):
+        R.plan(view, say=lambda *a: None, **kw)
+        o = []
+        R.status(view, say=o.append)
+        outs.append(o)
+    q = pd.read_parquet(os.path.join(view, "review", "queue.parquet"))
+    check(c, "after a plan of one line, status is the same as before: every kind counted, nothing 'not in the "
+          "queue', the projection over all the rest", len(q) == 1 and all(o == full for o in outs)
+          and not any("not in the queue" in x for x in full)
+          and any(ln.split()[:2] == ["gene", "2"] for x in full for ln in x.splitlines())
+          and any(f"rest ({ents['n'] - 2:,} entities)" in x for x in full),
+          {"queue rows": len(q), "same": [o == full for o in outs], "status": [x for x in full if "rest" in x]})
+    reset(view, c)
+
+
+@case
+def projection_settings(view, ents):
+    """e2e#8: the mean real cost replaces the estimate only for the model, effort and --verify mode the reviews ran
+    with; the ledger lines record effort and verify."""
+    c = "projection_settings"
+    ids = [e["entity_id"] for e in ents["genes"][:3]]
+    run(view, {"entities": {e: good() for e in ids}}, only=ids, verify="ids")
+    mean = sum(float(r["cost_usd"]) for r in ledger(view)) / 3
+
+    def gene_line(**kw):
+        out = []
+        R.plan(view, kinds="gene", say=out.append, **kw)
+        return next((x for x in out if x.strip().startswith("gene:")), "")
+    same = gene_line(verify="ids")
+    others = [gene_line(verify="ids", model="claude-fable-5-1"), gene_line(), gene_line(verify="ids", effort="low")]
+    check(c, "same settings: the mean real cost of the 3 reviews; another model, --verify or effort: the estimate "
+          "(and how many reviews were left out)", "mean real cost of 3 genes reviewed with these settings" in same
+          and f"~{R._fmt_usd(mean)} " in same
+          and all("estimate from the dossier size" in x and "3 genes were reviewed with another" in x for x in others),
+          [same] + others)
+    check(c, "every attempt's ledger line records the reviewer's effort and the --verify mode",
+          all(r.get("effort") == "high" and r.get("verify") == "ids" for r in ledger(view)),
+          [(r.get("effort"), r.get("verify")) for r in ledger(view)])
+    reset(view, c)
+
+
+@case
+def stop_foreground(view, ents):
+    """e2e#9: `tahoe stop` also stops a `tahoe review run` in the foreground of another terminal (found through
+    review/.run.lock), as SIGTERM: exit code 143, the running entity paused."""
+    c = "stop_foreground"
+    import threading
+    g = ents["genes"][5]
+    env = {k: v for k, v in os.environ.items() if not k.startswith("ANTHROPIC")}
+    sp = os.path.join(view, "script.json")
+    with open(sp, "w") as fh:
+        json.dump({"entities": {g["entity_id"]: [dict(good()[0], sleep=4)] + good()[1:]}}, fh)
+    p = subprocess.Popen([sys.executable, "-m", "tahoemap", "review", "run", "--out", view, "--only", g["entity_id"],
+                          "--limit", "1", "--fake", sp, "--verify", "ids"], cwd=REPO, env=env,
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    got = {}
+    t = threading.Thread(target=lambda: got.update(out=p.communicate()[0]), daemon=True)   # (reaped at once)
+    t.start()
+    t0 = time.time()
+    while not glob.glob(os.path.join(view, "review", "history", "gene", "*", "*.jsonl")) and time.time() - t0 < 60:
+        time.sleep(0.1)
+    time.sleep(0.3)
+    w = subprocess.run(["bash", os.path.join(REPO, "tahoe"), "stop", "--out", view], env=env, capture_output=True,
+                       text=True, timeout=200)
+    t.join(60)
+    w2 = subprocess.run(["bash", os.path.join(REPO, "tahoe"), "stop", "--out", view], env=env, capture_output=True,
+                        text=True, timeout=60)
+    os.remove(sp)
+    SCANNED["bytes"] += len(w.stdout) + len(w.stderr) + len(got.get("out") or "")
+    check(c, "tahoe stop: the foreground review found and stopped (exit 143, the entity paused); then 'Nothing is "
+          "running.'", w.returncode == 0 and "foreground" in w.stdout and "Stopped." in w.stdout
+          and p.returncode == 143 and [r["status"] for r in ledger(view)] == ["paused"]
+          and w2.returncode == 0 and "Nothing is running." in w2.stdout,
+          {"stop": (w.returncode, w.stdout[:90]), "review exit": p.returncode,
+           "ledger": [r["status"] for r in ledger(view)], "again": w2.stdout.strip()})
+    reset(view, c)
+
+
 # ----------------------------------------------------------------------------- main
 def pick_entities(view):
     e = D.entities(view)
@@ -2591,6 +3115,7 @@ def main():
     cellosaurus_url_in_dossier(view, ents, work)
     note_provenance(work)
     note_citation_forms(work)
+    note_links_and_structure(work, view, ents)
     check_status_contract(work)
     contract_end_to_end(view, ents)
     streaming_and_max_tokens(view, ents)
@@ -2605,6 +3130,14 @@ def main():
     run_lock(work)
     keys_file_is_a_key(view, ents)
     systematic_failures(view, ents)
+    recheck_stopped(view, ents)
+    breaker_network(view, ents)
+    breaker_waits_for_running(view, ents)
+    stopped_in_flight(view, ents)
+    malformed_key(view, ents)
+    status_whole_queue(view, ents)
+    projection_settings(view, ents)
+    stop_foreground(view, ents)
     for d in ("lit_ctx", "lit_ctx_down"):
         shutil.rmtree(os.path.join(work, d), ignore_errors=True)
     sys.stdout = tee.real

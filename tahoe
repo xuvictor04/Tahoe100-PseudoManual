@@ -173,9 +173,26 @@ cmd_log() {
   exec tail -n 30 -F "$f"
 }
 
+review_lock_pid() {              # a review run in the foreground on $OUT: the live pid its review/.run.lock names
+  local f="$OUT/review/.run.lock" p h
+  [ -f "$f" ] || return 1
+  p="$(sed -n 's/.*"pid": *\([0-9][0-9]*\).*/\1/p' "$f" 2>/dev/null | head -n 1)"
+  h="$(sed -n 's/.*"host": *"\([^"]*\)".*/\1/p' "$f" 2>/dev/null | head -n 1)"
+  case "$p" in ''|*[!0-9]*) return 1 ;; esac
+  [ -z "$h" ] || [ "$h" = "$(uname -n)" ] || return 1     # another computer's run: not ours to stop
+  kill -0 "$p" 2>/dev/null || return 1
+  job_is_review "$p" || return 1                           # (a pid reused by another program)
+  echo "$p"
+}
+
 cmd_stop() {
-  local p g kind=job log="$OUT/run.log" wait=15
-  p="$(job_pid)" || { rm -f "$PIDF"; say "Nothing is running."; return 0; }
+  local p g kind=job log="$OUT/run.log" wait=15 where=""
+  if ! p="$(job_pid)"; then
+    rm -f "$PIDF"
+    # no job: a `tahoe review run` in the foreground of another terminal stops the same way (SIGTERM)
+    p="$(review_lock_pid)" || { say "Nothing is running."; return 0; }
+    where=" running in the foreground of another terminal"
+  fi
   # a review gives its entities in progress 15 s to stop, then writes the ledger and its tables: wait longer for it
   case "$(job_cmd "$p")" in
     *"hf download"*) kind=download; log="$OUT/download.log" ;;
@@ -185,7 +202,7 @@ cmd_stop() {
   local target=("$p")
   [ "$g" = "$p" ] && target=(-- "-$p")        # it leads its own process group: its workers and downloads too
   alive() { kill -0 "${target[@]}" 2>/dev/null; }
-  say "Stopping the $kind (pid $p) ..."
+  say "Stopping the $kind$where (pid $p) ..."
   kill -TERM "${target[@]}" 2>/dev/null
   for _ in $(seq 1 "$wait"); do alive || break; sleep 1; done
   if alive; then
@@ -252,11 +269,12 @@ cmd_test() {
 }
 
 ABS=()
-not_a_key() {                    # a key given to --keys-file by mistake: refused, never echoed (it is no path)
-  case "$1" in *sk-ant-*)
-    die "--keys-file expects the path of a FILE with one key a line; the value given looks like an API key itself" \
-        "(not shown). Put the key in a file (chmod 600) or in ANTHROPIC_API_KEY, and clear it from your shell" \
-        "history." ;;
+not_a_key() {                    # a key given to --keys-file / --fake by mistake: refused, never echoed (no path)
+  local what="the path of a FILE with one key a line"
+  [ "$1" = --fake ] && what="the path of a fake script (a JSON file)"
+  case "$2" in *sk-ant-*)
+    die "$1 expects $what; the value given looks like an API key itself (not shown). Put the key in a file" \
+        "(chmod 600) or in ANTHROPIC_API_KEY, and clear it from your shell history." ;;
   esac
 }
 abs_paths() {                    # path options made absolute (tm runs in the repository folder): ABS=(...)
@@ -265,10 +283,10 @@ abs_paths() {                    # path options made absolute (tm runs in the re
     case "$1" in
       --keys-file|--fake|--repo)
         [ $# -ge 2 ] || die "$1 needs a path"
-        [ "$1" = --keys-file ] && not_a_key "$2"
+        [ "$1" = --repo ] || not_a_key "$1" "$2"
         ABS+=("$1" "$(absolute "$2")"); shift 2 ;;
       --keys-file=*|--fake=*|--repo=*)
-        case "$1" in --keys-file=*) not_a_key "${1#*=}" ;; esac
+        case "$1" in --keys-file=*|--fake=*) not_a_key "${1%%=*}" "${1#*=}" ;; esac
         ABS+=("${1%%=*}=$(absolute "${1#*=}")"); shift ;;
       --only)
         [ $# -ge 2 ] || die "--only needs names (or @FILE)"

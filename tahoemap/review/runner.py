@@ -36,17 +36,22 @@ times) and retry the same request; a response lost to a timeout or a dropped con
 MAX_NET_RETRIES times, and when it may have reached the API it is charged an estimate (lost_cost: the context at the
 full input price plus the output of a long answer) to the attempt and the run, marked as estimated in the history
 and the ledger; an attempt that reaches its cap only through such estimates is 'failed' (retried later), not
-over_budget. Other errors fail the entity; the same error on SYSTEMATIC_N entities in a row before any entity of the run
-got its answer stops the run (exit code 4) and those failures are not counted against the entities (an entity that
-already stopped a run with that error does not count toward a stop again, so an error of the entities' own stops one
-run, not every one). With every key dead the run pauses: on a terminal the main thread asks for a new key (getpass;
-Enter or Ctrl-C there pauses, the terminal restored), else it stops with exit code 3 and the unfinished entities stay
-pending.
+over_budget. Other errors fail the entity. The same error on SYSTEMATIC_N entities in a row stops the run (exit code
+4) and those failures are not counted against the entities (Run.outcome): an error of the run's own - the network
+(timeouts, dropped / refused connections, cut streams: one signature), or waits that ran out - at any point; any
+other error only before the API answered a request of this run (after that it is the entities' own; an entity that
+already stopped a run with it does not count toward a stop again, so such an error stops one run, not every one).
+While other entities are still running at that point, no new one starts until one of them gets an answer (the run
+goes on) or none is left (it stops). With every key dead the run pauses: on a terminal the main thread asks for a
+new key (getpass; Enter or Ctrl-C there pauses, the terminal restored), else it stops with exit code 3 and the
+unfinished entities stay pending.
 
 Stopping (Ctrl-C, SIGTERM, SIGHUP, `tahoe stop`, the --max-usd cap): no new entity starts; after STOP_GRACE seconds
 the running attempts are closed - a review already submitted is stored as done with its verification as far as it
-got (the rest marked not run), the others are paused. A response that arrives after its attempt was closed is still
-recorded (a late event in the history, a note line in the ledger).
+got (the rest marked not run), the others are paused; a request still in flight is charged an estimate (lost_cost).
+A response that arrives after its attempt was closed is still recorded (a late event in the history, a note line in
+the ledger; its real cost replaces the estimate), and so is one lost then (a late error event, a note line for any
+estimate beyond the one already charged).
 
 Resume: the latest ledger line of an entity is its state (bookkeeping 'note' lines aside). done and refused are
 final (unless --redo); failed and no_review are retried up to 2 more times (--retry-failed: again); over_budget only
@@ -407,20 +412,51 @@ def load_agents(opts):
     return ag
 
 
-def projection(out, sel, states, agents, opts, sample=3):
-    """kind -> (USD per entity, basis): the mean real cost of the kind's finished entities once MIN_REAL exist,
-    else heuristic_cost from the mean size of a few dossiers."""
-    real = {}
-    kinds = {}
+def _same_settings(line, agent, opts):
+    """True when a ledger line's attempt ran with the reviewer model, effort and --verify mode asked for now (a
+    line of an older version without effort / verify counts as the same on those)."""
+    if line.get("model") != agent.model:
+        return False
+    return all(line.get(k) is None or line.get(k) == want for k, want in (("effort", agent.effort),
+                                                                         ("verify", opts.verify)))
+
+
+def real_costs(out, states, agents, opts):
+    """kind -> ([real USD of each finished entity reviewed with the settings asked for now], number of finished
+    entities reviewed with other settings). An entity's real cost: all its ledger lines but --recheck ones (failed
+    attempts and late responses included); its settings: those of its latest attempt that was not a --recheck."""
+    by_ent = {}
+    for r in Ledger(out).read():
+        if r.get("entity_id") and not r.get("recheck"):
+            by_ent.setdefault(r["entity_id"], []).append(r)
+    real, other = {}, Counter()
     for e, s in states.items():
-        if s["status"] in ("done", "no_review", "over_budget", "refused"):
-            k = e.split(":", 1)[0]
-            real.setdefault(k, []).append(s["cost_usd"])
+        if s["status"] not in ("done", "no_review", "over_budget", "refused"):
+            continue
+        k = e.split(":", 1)[0]
+        lines = by_ent.get(e) or []
+        last = next((r for r in reversed(lines) if not r.get("note")), None)
+        if k not in agents or last is None:
+            continue
+        if _same_settings(last, agents[k], opts):
+            real.setdefault(k, []).append(sum(float(r.get("cost_usd") or 0.0) for r in lines))
+        else:
+            other[k] += 1
+    return real, other
+
+
+def projection(out, sel, states, agents, opts, sample=3):
+    """kind -> (USD per entity, basis): the mean real cost of the kind's finished entities once MIN_REAL of them
+    were reviewed with the model, effort and --verify mode asked for now (real_costs), else heuristic_cost from the
+    mean size of a few dossiers."""
+    kinds = {}
+    real, other = real_costs(out, states, agents, opts)
     for k in KINDS:
         if not len(sel) or k not in set(sel["kind"]):
             continue
         if len(real.get(k, [])) >= MIN_REAL:
-            kinds[k] = (float(np.mean(real[k])), f"mean real cost of {len(real[k])} reviewed {k}s")
+            kinds[k] = (float(np.mean(real[k])), f"mean real cost of {len(real[k])} {k}s reviewed with these "
+                        "settings")
             continue
         sizes = []
         for eid in sel.loc[sel["kind"] == k, "entity_id"].head(sample):
@@ -430,8 +466,11 @@ def projection(out, sel, states, agents, opts, sample=3):
                 continue
         chars = float(np.mean(sizes)) if sizes else float(D.MAX_CHARS)
         a = agents[k]
+        n_real, n_other = len(real.get(k, [])), other.get(k, 0)
         kinds[k] = (heuristic_cost(a, a.model, a.effort, chars, opts.web, opts.verify, agents["checker"]),
-                    f"estimate from the dossier size (~{chars:,.0f} characters) and ~{EST_TURNS} requests")
+                    f"estimate from the dossier size (~{chars:,.0f} characters) and ~{EST_TURNS} requests"
+                    + (f"; {n_other} {k}s were reviewed with another model, effort or --verify, not counted"
+                       if n_other and n_real < MIN_REAL else ""))
     return kinds
 
 
@@ -458,36 +497,77 @@ class Run:
         self.keys_paused = False
         self.code = code_version()
         self.streak = []                # the failed attempts in a row with the same error: (sig, entity_id, rec)
-        self.systematic = None          # (signature, error) once SYSTEMATIC_N in a row stopped the run
-        self.answered = False           # an attempt of this run got its answer from the API (no systematic stop)
+        self.systematic = None          # (signature, error, wide) once SYSTEMATIC_N in a row stopped the run
+        self.held = None                # (signature, error, wide): SYSTEMATIC_N in a row while other entities were
+                                        # still running: no new entity starts until one of them gets an answer
+        self.busy = 0                   # entities being worked on (taken from the queue, not finished)
+        self.answered = False           # the API answered a request of this run (entity errors are then their own)
         self.stopped_runs = {}          # entity_id -> the errors with which it already stopped an earlier run
         pool.stopping = self.stop.is_set
 
+    def got_answer(self):
+        """A response came back (Attempt.record_response): the API, the key, the model and the network work for this
+        run, so an error on several entities in a row from here on is theirs (unless it is run-wide: see outcome)."""
+        with self.lock:
+            if self.systematic is None:
+                if self.held is not None:
+                    log("  an entity still running got its answer from the API: the run goes on")
+                self.answered, self.streak, self.held = True, [], None
+
     def outcome(self, att, status, rec):
-        """Called once per finished attempt (keys_state#1): the same error on SYSTEMATIC_N entities in a row, before
-        any attempt of this run got its answer (done, refused, no_review, over_budget, a refusal to retry), stops the
-        run. An entity that already stopped an earlier run with this same error joins the streak (its failure is
-        then not counted either) but does not count toward the stop: an error that is the entities' own (a request
-        too large for each of them, ...) stops one run, and the next goes on past them and counts their failures."""
+        """Called once per finished attempt (keys_state#1): the same error on SYSTEMATIC_N entities in a row stops
+        the run. An error of the run's own - the network (timeouts, dropped or refused connections, cut streams:
+        all one signature), or rate limits / overload / 5xx that outlast MAX_WAITS back-offs - counts at any point;
+        any other error (400, 404, 413 ...) only before the API answered a request of this run (got_answer), since
+        after that the failures are the entities' own. While other entities are still running when the streak is
+        reached, no new entity starts and the run waits for them: an answer to any of them means the API works (the
+        run goes on, the failures counted), none left running without one means the run stops. An entity that
+        already stopped an earlier run with this same error joins the streak (its failure is then not counted
+        either) but does not count toward a stop by an error of the second kind: an error that is the entities' own
+        (a request too large for each of them, ...) stops one run, and the next goes on past them and counts their
+        failures."""
         with self.lock:
             sig = att.fail_sig if status == "failed" else None
+            wide = sig is not None and att.fail_wide
             if self.systematic is not None:            # stopped: only the same error joins (to be uncounted)
                 if sig is not None and sig == self.systematic[0]:
                     self.streak.append((sig, att.entity_id, rec))
                 return
             if status in ("done", "refused", "no_review", "over_budget") or rec.get("transient_refusal"):
-                self.answered = True                   # the API works for this run: failures are the entities' own
-                self.streak = []
+                self.answered, self.streak, self.held = True, [], None   # the API works for this run
                 return
-            if sig is None or self.answered:
+            if self.held is not None:                  # waiting for the entities still running (settle_hold)
+                if sig is not None and sig == self.held[0]:
+                    self.streak.append((sig, att.entity_id, rec))
+                return
+            if sig is None or (self.answered and not wide):
                 return
             if self.streak and self.streak[-1][0] != sig:
                 self.streak = []
             self.streak.append((sig, att.entity_id, rec))
-            new = [e for g, e, _r in self.streak if not ({g, "*"} & self.stopped_runs.get(e, set()))]
-            if len(new) >= SYSTEMATIC_N:
-                self.systematic = (sig, rec.get("error") or "")
+            new = [e for g, e, _r in self.streak if wide or not ({g, "*"} & self.stopped_runs.get(e, set()))]
+            if len(new) < SYSTEMATIC_N:
+                return
+            if self.busy > 1:                          # others still running (this one is finishing): wait for them
+                self.held = (sig, rec.get("error") or "", wide)
+                log(f"HOLDING: the same error on {SYSTEMATIC_N} entities in a row ({' '.join(map(str, sig))}): no new "
+                    "entity starts until one still running gets an answer from the API (then the run goes on) or none "
+                    "is left (then it stops)")
+                return
+            self.systematic = (sig, rec.get("error") or "", wide)
+        self._stop_systematic()
+
+    def settle_hold(self):
+        """The run holds (outcome) and no entity is running any more: none got an answer, so the run stops."""
+        with self.lock:
+            if self.held is None or self.busy > 0 or self.stop.is_set():
+                return
+            self.systematic, self.held = self.held, None
+        self._stop_systematic()
+
+    def _stop_systematic(self):
         if self.systematic is not None and not self.stop.is_set():
+            sig = self.systematic[0]
             self.request_stop(f"the same error on {SYSTEMATIC_N} entities in a row ({' '.join(map(str, sig))})")
             log(f"STOPPING: the same error on {SYSTEMATIC_N} entities in a row: {K.scrub(self.systematic[1])[:300]}")
 
@@ -618,7 +698,9 @@ class Attempt:
         self.extra = {}
         self.recheck = recheck
         self.fail_sig = None            # the error of a failed attempt (the systematic-failure check)
+        self.fail_wide = False          # ... and whether it is the run's (network, waits run out), not the entity's
         self.pending = None             # once the review is submitted: pending(reason) stores it as done
+        self.inflight = None            # the request being sent / streamed now: {"agent", "kw", "charged"} (call)
 
     # -------------------------------------------------------------- bookkeeping
     def add(self, usd, summ, model):
@@ -631,31 +713,79 @@ class Attempt:
                 self.models.append(model)
         self.run.add_spend(usd)
 
-    def add_estimate(self, usd):
-        """Charge the estimated cost of a lost response (it may have been billed) to the attempt and the run."""
+    def _note(self, agent, usd, note, **extra):
+        """A bookkeeping ledger line for cost that came after the attempt's own line (a late response, an estimate)."""
+        self.run.ledger.append({
+            "entity_id": self.entity_id, "kind": self.kind, "name": self.name, "run_id": self.run_id,
+            "agent": agent, "status": "note", "cost_usd": round(usd, 6), "note": note, "late": True,
+            "key_id": self.key.key_id, "finished": now(), "history": self.hist.rel,
+            **({"recheck": True} if self.recheck else {}), **extra})
+
+    def add_estimate(self, usd, agent=None):
+        """Charge the estimated cost of a lost response (it may have been billed) to the attempt and the run; after
+        the attempt was closed, with a ledger note line of its own."""
         with self.lock:
+            late = self.finalized
             self.cost += usd
             self.estimated += usd
         self.run.add_spend(usd)
+        if late:
+            self._note(agent or self.agent.name, usd, "an estimate for a response lost after its attempt had been "
+                       "closed (the run was stopping)", estimated_usd=round(usd, 6))
 
-    def record_response(self, agent, n, d, usd, summ):
+    def charge_inflight(self):
+        """The attempt is being closed (the run stops) while one of its requests is in flight: that request may be
+        processed and billed, so it is charged an estimate now (lost_cost, one send; marked estimated in the ledger
+        line and on a history error event). If its answer still comes, its real cost replaces the estimate
+        (record_response); if it is lost, only what a loss costs beyond this estimate is added (call)."""
+        with self.lock:
+            fl = self.inflight
+            if fl is None or self.finalized or fl["charged"]:
+                return 0.0
+            est = lost_cost(fl["kw"], 1, self.max_out)
+            fl["charged"] = est
+            self.cost += est
+            self.estimated += est
+        self.run.add_spend(est)
+        self.hist.event("error", agent=fl["agent"], category="stopped", action="the attempt was closed while this "
+                        "request was in flight: charged an estimate", **{
+                            "class": "InFlightAtStop", "status": None, "sent": True,
+                            "message": "the run stopped while this request was in flight (it may be billed)",
+                            "estimated_cost_usd": round(est, 6), "estimated_sends": 1})
+        log(f"  {self.entity_id}: a request was in flight when the attempt was closed; charged an estimated "
+            f"{_fmt_usd(est)} (it may be billed)")
+        return est
+
+    def record_response(self, agent, n, d, usd, summ, replaces=0.0):
         """Count one response and put it in the history. A response that arrives after the attempt was closed (the
-        run stopped and marked it) still counts: a late event after the history's end, and a ledger note line."""
+        run stopped and marked it) still counts: a late event after the history's end, and a ledger note line.
+        `replaces`: the estimate charged for this request when the attempt was closed (charge_inflight), which its
+        real cost now replaces (the note line then carries the difference, and minus the estimate as estimated_usd).
+        A response in time tells the run that the API works (Run.got_answer)."""
         with self.lock:                                 # (finish() takes the same lock: counted once, in order)
             late = self.finalized
             self.add(usd, summ, d.get("model"))
+            if replaces:
+                self.cost -= replaces
+                self.estimated -= replaces
+                self.run.add_spend(-replaces)
             if not late:
                 self.hist.event("response", agent=agent.name, n=n, response=d, usage=d.get("usage"),
-                                cost_usd=round(usd, 6), attempt_cost_usd=round(self.cost, 6))
-                return
-            self.hist.event("response", late=True, agent=agent.name, n=n, response=d, usage=d.get("usage"),
-                            cost_usd=round(usd, 6))
-        self.run.ledger.append({
-            "entity_id": self.entity_id, "kind": self.kind, "name": self.name, "run_id": self.run_id,
-            "agent": agent.name, "model": d.get("model"), "status": "note", "cost_usd": round(usd, 6),
-            "note": "a response that arrived after its attempt had been closed (the run was stopping)",
-            "late": True, "key_id": self.key.key_id, "finished": now(), "history": self.hist.rel,
-            **{k: int(v) for k, v in summ.items()}})
+                                cost_usd=round(usd, 6), attempt_cost_usd=round(self.cost, 6),
+                                **({"replaces_estimate_usd": round(replaces, 6)} if replaces else {}))
+            else:
+                self.hist.event("response", late=True, agent=agent.name, n=n, response=d, usage=d.get("usage"),
+                                cost_usd=round(usd, 6),
+                                **({"replaces_estimate_usd": round(replaces, 6)} if replaces else {}))
+        if not late:
+            self.run.got_answer()
+            return
+        self._note(agent.name, usd - replaces, "a response that arrived after its attempt had been closed (the run "
+                   "was stopping)" + ("; its real cost replaces the estimate charged when the attempt was closed"
+                                      if replaces else ""),
+                   model=d.get("model"), **({"estimated_usd": -round(replaces, 6),
+                                             "replaces_estimate_usd": round(replaces, 6)} if replaces else {}),
+                   **{k: int(v) for k, v in summ.items()})
 
     def finish(self, status, error=None, store=None, **extra):
         """Write the ledger line and the history's end event, once (the first caller wins). `store` runs first,
@@ -680,6 +810,8 @@ class Attempt:
                    "history": self.hist.rel, **{k: int(self.tok.get(k, 0)) for k in (
                        "input_tokens", "output_tokens", "cache_creation_input_tokens", "cache_read_input_tokens",
                        "web_searches", "web_fetches")}}
+            if not self.recheck:                        # the settings its cost depends on (projection)
+                rec.update(effort=self.agent.effort, verify=self.run.opts.verify)
             if self.estimated:
                 rec["estimated_usd"] = round(self.estimated, 6)
             rec.update(self.extra)
@@ -702,7 +834,9 @@ class Attempt:
     def finish_pending(self, reason):
         """The run is stopping and this attempt is still running: a submitted review is stored as done (with the
         verification as far as it got; the rest is marked not run), a recheck leaves the stored review as it is,
-        anything else is paused (and starts again next run)."""
+        anything else is paused (and starts again next run). A request still in flight is charged an estimate
+        first (charge_inflight)."""
+        self.charge_inflight()
         if self.pending is not None:
             return self.pending(reason)
         return self.finish("paused", error=reason)
@@ -740,7 +874,7 @@ class Attempt:
             return self.finish("failed", error=_info_text(info), refusal_category=info.get("category"),
                                recommended_model=info.get("recommended_model"), transient_refusal=True)
         if status == "failed":
-            self.fail_sig = _signature(info)
+            self.fail_sig, self.fail_wide = _signature(info), _run_wide(info)
         return self.finish(status, error=_info_text(info))
 
     def complete(self, dos, ctx):
@@ -799,7 +933,10 @@ class Attempt:
         """`review run --recheck`: the verification a stored review lacks - the id look-ups when they did not run
         or could not reach PubMed / Crossref, and (with --verify llm) the citation check when it did not finish -
         without running the reviewer again. The review JSON and note are rewritten; the ledger gets a done line
-        with the cost of the check."""
+        with the cost of the check. A recheck whose citation check the run's stop kept from running or finishing
+        (Ctrl-C, SIGTERM, SIGHUP, the --max-usd cap, no key left) changes nothing but the ledger: a note line with
+        its cost (pending), so the review stays as it was and still --recheck-able. (The id look-ups do not stop
+        part-way: they finish, or report what they could not reach.)"""
         r = self.run
         paths = review_paths(r.out, self.kind, self.name)
         stored = read_json_safe(paths["review"])
@@ -836,6 +973,9 @@ class Attempt:
             checked, llm = self.citation_check(checked, ctx)
         elif need_llm:
             llm = {"status": "not run: " + (r.stop_reason or "the run was stopping")}
+        st = str((llm or {}).get("status") or "")
+        if need_llm and st.startswith("not run") and (r.stop.is_set() or r.cap_reached() or r.keys_paused):
+            return self.pending(st[len("not run:"):].strip() or r.stop_reason or "the run was stopping")
         final = V.finalize(checked, eff, report, llm)
         final["meta"] = dict(meta0, rechecked=now(), recheck_run_id=self.run_id, recheck_history=self.hist.rel,
                              recheck_cost_usd=round(self.cost, 6),
@@ -896,9 +1036,26 @@ class Attempt:
         return checked, {"status": status, "error": _info_text(info)}
 
 
+NETWORK_SIG = ("network",)
+
+
+def _is_network(info):
+    return bool(info.get("network")) or info.get("class") in ("StreamCut", "LostResponses")
+
+
 def _signature(info):
-    """What makes two failures 'the same error' (the systematic-failure check)."""
+    """What makes two failures 'the same error' (the systematic-failure check). Every network failure - a timeout,
+    a connection reset or refused, a stream cut short, a cap reached through lost-response estimates - is one
+    error, ('network',): a degraded network alternates between them."""
+    if _is_network(info):
+        return NETWORK_SIG
     return (str(info.get("class") or "?"), info.get("status"), str(info.get("type") or info.get("error_code") or ""))
+
+
+def _run_wide(info):
+    """True for a failure that is the run's, never one entity's: the network, or rate limits / overload / 5xx that
+    outlasted MAX_WAITS back-offs (call marks those waited_out)."""
+    return _is_network(info) or bool(info.get("waited_out"))
 
 
 def ver_status(ver, what):
@@ -987,10 +1144,18 @@ def call(att, agent, client, kw, conv):
     SDK's own retry): rate limits / overload / 5xx up to MAX_WAITS times, timeouts and dropped connections (a
     'lost response') only MAX_NET_RETRIES times. A lost response that may have reached the API is charged an
     estimate (lost_cost) to the attempt and the run, logged as estimated, and counted in conv["spent"] (and
-    conv["estimated"]) against the conversation's cap. Raises _KeyDead, _Failed, _OverBudget or _Stopped."""
+    conv["estimated"]) against the conversation's cap. While a request is sent or streamed, att.inflight names it
+    (Attempt.charge_inflight charges it an estimate if the attempt is closed meanwhile; conv["replaces"] then
+    carries that estimate to record_response, and a loss adds only what it costs beyond it); an error that comes
+    after the attempt was closed is a late history event. Raises _KeyDead, _Failed, _OverBudget or _Stopped."""
     waits = nets = 0
     while True:
         opened = False
+        fl = {"agent": agent.name, "kw": kw, "charged": 0.0}
+        with att.lock:
+            if att.finalized:                           # closed by the stopping run: no new request
+                raise _Stopped(att.run.stop_reason or "stopped")
+            att.inflight = fl
         try:
             with client.beta.messages.stream(**kw) as stream:      # (the request is sent here)
                 opened = True
@@ -1000,8 +1165,15 @@ def call(att, agent, client, kw, conv):
                     raise _StreamCut(f"the response stream broke off ({type(e).__name__})") from None
             if resp is None or resp.stop_reason is None:
                 raise _StreamCut("the response stream ended before the message was complete")
+            with att.lock:
+                att.inflight = None
+                conv["replaces"] = fl["charged"]
             return resp
         except Exception as e:  # noqa: BLE001  (classified below)
+            with att.lock:
+                if att.inflight is fl:
+                    att.inflight = None
+                charged = fl["charged"]                 # an estimate charged when the attempt was closed
             if isinstance(e, _StreamCut):
                 cat, info = K.WAIT, {"class": "StreamCut", "status": None, "type": None, "message": str(e),
                                      "network": True, "sent": True}
@@ -1015,11 +1187,14 @@ def call(att, agent, client, kw, conv):
                 sends = 1 + int(getattr(client, "max_retries", K.SDK_MAX_RETRIES) or 0)
             est = 0.0
             if sends:
-                est = lost_cost(kw, sends, att.max_out)
-                att.add_estimate(est)
+                est = max(0.0, lost_cost(kw, sends, att.max_out) - charged)
+                if est:
+                    att.add_estimate(est, agent.name)
                 conv["spent"] += est
                 conv["estimated"] += est
                 info["estimated_cost_usd"], info["estimated_sends"] = round(est, 6), sends
+                if charged:
+                    info["estimated_at_close_usd"] = round(charged, 6)
             net = bool(info.get("network"))
             used, limit = (nets, MAX_NET_RETRIES) if net else (waits, MAX_WAITS)
             act = {K.DEAD_KEY: "rotate the key and restart the entity", K.ENTITY: "fail the entity",
@@ -1029,7 +1204,7 @@ def call(att, agent, client, kw, conv):
                 act = f"fail the entity (still failing after {used} {'re-sends' if net else 'waits'})"
             elif cat == K.WAIT and over:
                 act = "fail the attempt: with the estimated cost of lost responses it reached its cap"
-            att.hist.event("error", agent=agent.name, category=cat, action=act, **info)
+            att.hist.event("error", late=att.finalized, agent=agent.name, category=cat, action=act, **info)
             if est:
                 log(f"  {att.entity_id}: a response was lost ({info['class']}); charged an estimated "
                     f"{_fmt_usd(est)} (it may have been billed)")
@@ -1041,6 +1216,7 @@ def call(att, agent, client, kw, conv):
                                                                                    limit=4)))[-3000:]
                 raise _Failed(info) from None
             if used >= limit:
+                info["waited_out"] = True               # the run's trouble, not the entity's (_run_wide)
                 raise _Failed(info) from None
             if over:
                 raise _OverBudget() from None
@@ -1175,7 +1351,7 @@ def converse(att, agent, client, kw, messages, ctx, cap, elide=None):
         usd, summ = usage_cost(d.get("usage") or {}, kw["model"], d.get("model"))
         conv["spent"] += usd
         last_usd = usd
-        att.record_response(agent, turns, d, usd, summ)
+        att.record_response(agent, turns, d, usd, summ, replaces=conv.pop("replaces", 0.0))
         if resp.content:                               # never an empty assistant turn (the API rejects it)
             messages.append({"role": "assistant", "content": resp.content})
         sr = resp.stop_reason
@@ -1370,7 +1546,8 @@ def _alive(pid):
 
 def _install_signals(run):
     """Ctrl-C (SIGINT), SIGTERM and, where it exists, SIGHUP (the terminal closed) stop the run cleanly. Ctrl-C at
-    the key prompt interrupts it (getpass restores the terminal) and the run pauses."""
+    the key prompt interrupts it (getpass restores the terminal) and the run pauses for a key, like Enter there
+    (exit code 3); SIGTERM or SIGHUP there end the prompt too, with their own exit codes."""
     if threading.current_thread() is not threading.main_thread():
         return {}
     old = {}
@@ -1379,9 +1556,14 @@ def _install_signals(run):
         name = signal.Signals(signum).name
         if run.stop.is_set() and signum == signal.SIGINT:
             raise KeyboardInterrupt                     # a second Ctrl-C: stop waiting
-        run.request_stop(f"stopped by {name}", signum)
+        prompting = run.pool.prompting_here()
+        if prompting and signum == signal.SIGINT:       # Ctrl-C at the key prompt works like Enter there: the run
+            run.keys_paused = True                      # pauses for a key (exit code 3, the add-a-key message)
+            run.request_stop("no working API key (Ctrl-C at the key prompt)", signum)
+        else:
+            run.request_stop(f"stopped by {name}", signum)
         log(f"{name}: no new entities start; the running ones are paused (Ctrl-C again to stop at once)")
-        if run.pool.prompting_here():
+        if prompting:
             raise KeyboardInterrupt                     # out of getpass (it restores the terminal): the prompt stops
     sigs = [signal.SIGINT, signal.SIGTERM] + ([signal.SIGHUP] if hasattr(signal, "SIGHUP") else [])
     for s in sigs:
@@ -1401,10 +1583,15 @@ def _restore_signals(old):
 
 
 def _load_fake(fake):
+    """--fake: the FakeAPI of a script file (or one given by a test). A value that looks like an API key is refused
+    without being shown (keys.refuse_key_value)."""
     if fake is None:
         return None
     from . import fake as F
-    return F.load(fake) if isinstance(fake, str) else fake
+    if not isinstance(fake, str):
+        return fake
+    K.refuse_key_value(fake, "--fake", "the path of a fake script (a JSON file)")
+    return F.load(os.path.expanduser(fake))
 
 
 def _say(*a):
@@ -1490,7 +1677,12 @@ def run(out, **kw):
     if opts.max_usd is not None:
         per = ", ".join(f"{k} {_fmt_usd(entity_cap(opts, agents[k]))}" for k in by_kind)
         say(f"Cap: {_fmt_usd(float(opts.max_usd))} for this run; per entity {per}")
-    fake = _load_fake(opts.fake)
+    try:
+        fake = _load_fake(opts.fake)
+    except (OSError, ValueError) as e:                  # missing, unreadable, not JSON, or a key itself
+        msg = f"--fake: {K.scrub(e)}"
+        say(f"review run: {msg}")
+        return RunResult(EXIT_REFUSED, message=msg)
     lit = fake.literature.install() if fake is not None and fake.literature is not None else None
     lock = _RunLock(out)
     ok, why = lock.acquire()
@@ -1568,10 +1760,21 @@ def _run_threads(rn, todo, states, say, recheck=False):
             with rn.lock:
                 if rn.stop.is_set() or rn.cap_hit or not q:
                     return
-                ent = q.popleft()
-                rn.started += 1
-            prior = (states.get(ent["entity_id"]) or {}).get("attempts", 0)
-            _process(rn, ent, prior, recheck)
+                held = rn.held is not None
+                if not held:
+                    ent = q.popleft()
+                    rn.started += 1
+                    rn.busy += 1
+            if held:                                    # the same error on SYSTEMATIC_N in a row: wait (outcome)
+                rn.settle_hold()
+                rn.stop.wait(0.05)
+                continue
+            try:
+                prior = (states.get(ent["entity_id"]) or {}).get("attempts", 0)
+                _process(rn, ent, prior, recheck)
+            finally:
+                with rn.lock:
+                    rn.busy -= 1
 
     n = max(1, min(int(rn.opts.concurrency), len(todo)))
     log(f"{'Checking again' if recheck else 'Reviewing'} {len(todo):,} entities with {n} thread(s); keys: "
@@ -1596,6 +1799,7 @@ def _run_threads(rn, todo, states, say, recheck=False):
     finally:
         rn.pool.main_prompts = False
         _restore_signals(old)
+    rn.settle_hold()                                    # the queue ran out while the run held: no answer came
     with rn.lock:
         running = list(rn.active.values())
     for att in running:                                 # still running: submitted reviews stored, the rest paused
@@ -1623,17 +1827,26 @@ def _run_threads(rn, todo, states, say, recheck=False):
     log(summary)
     res = RunResult(EXIT_OK, counts=c, spent_usd=rn.spent, started=rn.started, message=summary)
     if rn.systematic is not None:
-        sig, err = rn.systematic
+        sig, err, wide = rn.systematic
         res.exit_code, res.paused = EXIT_SYSTEMATIC, True
         again = sum(1 for g, e, _r in streak if {g, "*"} & rn.stopped_runs.get(e, set()))
-        res.message = (f"STOPPED: the same error on {len(streak)} entities in a row, before any entity of this run got "
-                       f"its answer ({' '.join(map(str, sig))}): {K.scrub(err)[:400].rstrip('. ')}. Most likely it "
-                       "is not about these entities: fix the cause (the model's availability to your organisation, "
-                       "a beta, the network ...) and run the same command again; these failures are not counted "
-                       "against the entities. If it is about them after all, run the same command again as it is: "
-                       "an entity that already stopped a run with this error no longer counts toward a stop, so the "
-                       "next run goes on past them and counts their failures"
-                       + (f" ({again} of these had stopped an earlier run with it)." if again else "."))
+        if wide:
+            res.message = (f"STOPPED: the same error on {len(streak)} entities in a row ({' '.join(map(str, sig))}):"
+                           f" {K.scrub(err)[:400].rstrip('. ')}. It is not about these entities but the run's: "
+                           + ("the network (timeouts, dropped or refused connections, cut streams)" if sig ==
+                              NETWORK_SIG else f"the API kept refusing for {MAX_WAITS} back-offs (rate limits, "
+                              "overload, server errors)")
+                           + ". Fix the cause (or wait) and run the same command again; these failures are not "
+                           "counted against the entities.")
+        else:
+            res.message = (f"STOPPED: the same error on {len(streak)} entities in a row, before the API had answered "
+                           f"a request of this run ({' '.join(map(str, sig))}): {K.scrub(err)[:400].rstrip('. ')}. "
+                           "Most likely it is not about these entities: fix the cause (the model's availability to "
+                           "your organisation, a beta ...) and run the same command again; these failures are not "
+                           "counted against the entities. If it is about them after all, run the same command again "
+                           "as it is: an entity that already stopped a run with this error no longer counts toward a "
+                           "stop, so the next run goes on past them and counts their failures"
+                           + (f" ({again} of these had stopped an earlier run with it)." if again else "."))
         log(res.message)
     elif rn.keys_paused:
         res.exit_code, res.paused = EXIT_PAUSED, True
@@ -1732,12 +1945,7 @@ def status(out, tables=False, say=print, **kw):
     agents = load_agents(opts)
     led = Ledger(out)
     states = led.states()
-    qp = os.path.join(out, "review", "queue.parquet")
-    try:
-        sel = pd.read_parquet(qp)[["kind", "name", "entity_id", "label", "priority"]] if os.path.exists(qp) \
-            else select(out, KINDS)
-    except Exception:  # noqa: BLE001
-        sel = select(out, KINDS)
+    sel = select(out, KINDS)            # every entity: queue.parquet holds only what the last plan selected
     q = queue_frame(out, sel, states, agents, opts)
     extra = sorted(set(states) - set(q["entity_id"]))
     say(f"Literature review of {out}")

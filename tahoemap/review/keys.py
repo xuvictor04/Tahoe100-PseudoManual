@@ -4,7 +4,8 @@ what an API error means for the run.
     KeyPool(keys_file=None, env=True, interactive=None, client_factory=None)
         the keys, in this order: --keys-file PATH (one key per line, '#' comments; a warning when the file is readable
         by others), ANTHROPIC_API_KEYS (comma-separated), ANTHROPIC_API_KEY; with none of those, the SDK's default
-        credential chain (`anthropic.Anthropic()` resolves ANTHROPIC_AUTH_TOKEN or an `ant auth` profile).
+        credential chain (`anthropic.Anthropic()` resolves ANTHROPIC_AUTH_TOKEN or an `ant auth` profile). A malformed
+        key (a line break, a space or another character an HTTP header cannot carry) is dead from the start.
         current() -> Key        the key to start (or restart) an entity with; when every key is dead it asks for a
                                 new one with getpass on a terminal ("press Enter to stop"), else (and on Enter or
                                 Ctrl-C) it raises AllKeysDead: the run pauses. The pool lock is never held while it
@@ -18,7 +19,9 @@ what an API error means for the run.
         rotation); ENTITY: the entity fails (recorded; the run moves on). `info` is JSON-ready and scrubbed;
         info["network"] is True for timeouts and connection errors (also a stream cut mid-response), which the
         runner retries on a small budget of their own, and info["sent"] says whether the request may have reached
-        the API (False only when the connection was never made), i.e. whether the lost response may be billed.
+        the API (False only when the connection was never made or the request could not be written on this
+        machine), i.e. whether the lost response may be billed.
+    refuse_key_value(value, option, expects)    ValueError, not showing the value, when a path option got a key
     key_id(secret)              last 4 characters + a short hash: what the ledger, histories and status show
     scrub(text)                 the text with every known key (and anything shaped like one) replaced by its id
 
@@ -47,6 +50,9 @@ _SECRETS_LOCK = threading.Lock()
 _KEY_SHAPE = re.compile(r"sk-ant-[A-Za-z0-9_\-]{6,}")
 _KEY_LIKE = re.compile(r"^(sk-ant-\S+|[A-Za-z0-9_\-]{40,})$")     # a bare key, not a path
 _BEARER = re.compile(r"(?i)(bearer\s+|x-api-key['\"]?\s*[:=]\s*['\"]?)([A-Za-z0-9_\-\.]{16,})")
+_HEADER_SAFE = re.compile(r"^[\x21-\x7e]+$")      # what a key in an HTTP header can be: visible ASCII
+MALFORMED = ("the key is malformed: it holds a line break, a space or a character a key cannot have (several keys "
+             "in one variable? ANTHROPIC_API_KEYS takes them comma-separated, a keys file one a line)")
 
 
 class AllKeysDead(Exception):
@@ -107,18 +113,25 @@ def _default_chain_works():
     return any(getattr(c, a, None) for a in ("api_key", "auth_token", "credentials", "_token_cache"))
 
 
+def refuse_key_value(value, option, expects):
+    """Raise ValueError (without showing the value) when the value given for a path option (--keys-file, --fake)
+    is not a file and looks like an API key itself: it would end up in messages, tracebacks and logs."""
+    raw = str(value).strip()
+    base = os.path.basename(raw.rstrip("/\\"))
+    if not os.path.isfile(os.path.expanduser(raw)) and (_KEY_SHAPE.search(raw) or _KEY_LIKE.match(base)):
+        register_secret(base)
+        register_secret(raw)
+        raise ValueError(f"{option} expects {expects}; the value given looks like an API key itself (not shown). "
+                         "Put the key in a file (chmod 600) or in ANTHROPIC_API_KEY, and clear it from your shell "
+                         "history.")
+
+
 def read_keys_file(path):
     """The keys of a keys file (one per line; blank lines and '#' comments ignored). Warns when others can read it.
     A value that looks like a key itself (not a path) is refused without being shown: it would end up in messages
     and logs."""
     raw = str(path).strip()
-    base = os.path.basename(raw.rstrip("/\\"))
-    if not os.path.isfile(os.path.expanduser(raw)) and (_KEY_SHAPE.search(raw) or _KEY_LIKE.match(base)):
-        register_secret(base)
-        register_secret(raw)
-        raise ValueError("--keys-file expects the path of a FILE with one key a line; the value given looks like an "
-                         "API key itself (not shown). Put the key in a file (chmod 600) or in ANTHROPIC_API_KEY, and "
-                         "clear it from your shell history.")
+    refuse_key_value(raw, "--keys-file", "the path of a FILE with one key a line")
     path = os.path.abspath(os.path.expanduser(raw))
     if not os.path.exists(path):
         raise FileNotFoundError(f"--keys-file {path} does not exist")
@@ -167,14 +180,21 @@ class KeyPool:
         return len(self.keys)
 
     def add(self, secret, source):
-        """Add a key (ignored if already known); returns its Key."""
+        """Add a key (ignored if already known); returns its Key. A malformed key - one an HTTP header cannot carry
+        (a line break, a space, a control or non-ASCII character), say two keys in one variable - is dead from the
+        start (never sent: the request would fail on this machine, not at the API)."""
         secret = secret.strip()
         register_secret(secret)
+        for part in secret.split():
+            register_secret(part)
         with self._lock:
             for k in self.keys:
                 if k.secret == secret:
                     return k
             k = Key(secret=secret, key_id=key_id(secret), source=source)
+            if not _HEADER_SAFE.match(secret):
+                k.dead, k.reason = True, MALFORMED
+                log(f"API key {k.key_id} ({source}) is malformed: {MALFORMED}")
             self.keys.append(k)
             return k
 
@@ -244,8 +264,9 @@ class KeyPool:
                 self._want_key = False
                 if (new or "").strip():
                     k = self.add(new.strip(), "typed in")
-                    k.dead, k.reason = False, ""
-                    log(f"Using the new key {k.key_id}")
+                    if k.reason != MALFORMED:            # (a malformed one stays dead: asked again)
+                        k.dead, k.reason = False, ""
+                        log(f"Using the new key {k.key_id}")
                 else:
                     self.paused = True
                 self._cond.notify_all()
@@ -307,12 +328,17 @@ def _is_transport_error(exc):
 
 
 def _never_connected(exc):
-    """True when the request certainly never reached the API (the connection itself failed)."""
+    """True when the request certainly never reached the API: the connection itself failed (refused, timed out,
+    no free connection, the proxy refused it), or the request could not even be written on this machine (an illegal
+    header value - a malformed key -, a URL or protocol httpx cannot use)."""
     try:
         import httpx2
     except ImportError:
         return False
-    return any(isinstance(e, (httpx2.ConnectError, httpx2.ConnectTimeout, httpx2.PoolTimeout)) for e in _chain(exc))
+    local = tuple(c for c in (getattr(httpx2, n, None) for n in (
+        "ConnectError", "ConnectTimeout", "PoolTimeout", "ProxyError", "LocalProtocolError", "UnsupportedProtocol",
+        "InvalidURL")) if isinstance(c, type))
+    return any(isinstance(e, local) for e in _chain(exc))
 
 
 def classify(exc):

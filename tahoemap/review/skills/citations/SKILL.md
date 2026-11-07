@@ -48,8 +48,11 @@ and usual for `plausible`.
 Depending on the run's settings, every cited PMID is looked up in PubMed and every DOI in Europe PMC and Crossref
 (also for retraction); an id that does not exist is removed, its item is marked unverified and the note shows the
 removal. A PMID or DOI that the note cites but no item cites is removed from the note, in whatever form it is
-written (any link, bare URL or "PMIDs 1, 2" list), and so is any PMC id or Europe PMC preprint id. A retracted paper
-stays cited, but its item records the retraction and the note marks it "(retracted paper)". Then a citation checker
+written (a link or bare URL to PubMed, an NCBI search, Europe PMC, doi.org, or a publisher's or bioRxiv page with
+the DOI in it; a reference-style link; "PMIDs 1, 2, and 3"; "DOI 10.xxxx/yyyy"), and so is any PMC id or Europe PMC
+preprint id. Cite a paper in the note by the id its item uses (a link by its other id, the DOI of a PMID the item
+cites, counts as the same paper only when PubMed or Europe PMC records both). A retracted paper stays cited, but its
+item records the retraction and the note marks it "(retracted paper)" after each link to it. Then a citation checker
 reads each claim - with the relation and direction in the data (`data_evidence`) - next to the abstracts it cites,
 and records supported, partly, not supported or not checkable; a connection verdict whose citations do not carry it
 is shown as "unverified". The vault adds a generated line saying what was checked: never write one yourself.
