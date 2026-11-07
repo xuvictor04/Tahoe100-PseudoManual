@@ -5,13 +5,19 @@
         does not exist is removed from its item, and the item gets "unverified": true and "removed_citations":
         [...]; mentions of it in note_markdown become 'PMID:n (citation removed: not found in PubMed)'. The note
         may cite only papers that an item cites (only those are checked against a claim): any other PMID / DOI in
-        it becomes 'PMID:n (citation removed: cited only in this text ...)' and is counted (report
-        "note_removed"). Retractions: a PMID whose PubMed publication types include 'Retracted Publication', or a
-        DOI that Europe PMC types as one or whose Crossref record carries a retraction / withdrawal / removal
-        update, is retracted; it stays cited, and the item lists it in "retracted_citations" (a retraction NOTICE,
-        'Retraction of Publication', is not itself retracted: items list notices in "retraction_notices"). Ids
-        that could not be checked (a service down) are kept, and listed per item in "unchecked_citations" (every
-        item that cites gets this list, [] when all its ids were checked). Ids cited without having been
+        it becomes 'PMID:n (citation removed: cited only in this text ...)', and any PMC or other Europe PMC id
+        (a preprint's PPR ...) 'PMCID:PMCn (citation removed: a PMC or Europe PMC id ...)', and is counted (report
+        "note_removed"). The note is read for every form that names a paper (tools.note_matches: PubMed / NCBI /
+        Europe PMC / PMC / doi.org links and bare URLs, 'PMID n', 'PMIDs a, b and c', 'DOI:x'); a link or bare URL
+        to a removed paper is replaced whole, and the marker's id is written so that it forms no tag
+        (tools.cid_text; a DOI whose escapes do not decode to one stays encoded: tools.clean_doi). Retractions: a
+        PMID whose PubMed publication types include 'Retracted Publication', or a DOI that Europe PMC types as one
+        or whose Crossref record carries a retraction / withdrawal / removal update, is retracted; it stays cited,
+        the item lists it in "retracted_citations", and the note gets ' (retracted paper)' after each link to /
+        mention of it (a retraction NOTICE, 'Retraction of Publication', is not itself retracted: items list
+        notices in "retraction_notices"). Ids that could not be checked (a service down) are kept, and listed
+        per item in "unchecked_citations" (every item that cites gets this list, [] when all its ids were
+        checked). Ids cited without having been
         retrieved in the session (ctx.read_ids / ctx.seen_ids) are flagged per item ("not_retrieved"). The input
         is not modified. report = {"status": "done", "checked", "removed", "unchecked", "retracted" (counts), and
         "found", "n_cited", "pmids_checked", "dois_checked", "note_removed", "items_unverified" (counts),
@@ -59,8 +65,8 @@
         "checked", "removed", "unchecked", "retracted", ... (the check_ids report)}, "llm": {"status": done |
         not_run | failed, "detail", "supported", "partly", "not_supported", "not_checkable", "summary", ...},
         "counts": counts(review)}, and "note_footer" = note_footer(verification): a provenance line generated
-        from those counts (never written by the agent; a paragraph of the note in which the agent vouches for its
-        own verification is dropped). A review whose llm status is not 'done' can be checked
+        from those counts (never written by the agent; a sentence of the note that only vouches for its own
+        verification is dropped: drop_self_check). A review whose llm status is not 'done' can be checked
         again later (claims -> fetch_abstracts -> build_check_prompt -> the checker -> apply_check -> finalize).
     note_footer(verification) -> str
     counts(review) -> dict
@@ -99,6 +105,7 @@ VERDICT_MEANING = {
 }
 NOT_FOUND = {"PMID": "not found in PubMed", "DOI": "not found in Crossref or Europe PMC"}
 NOTE_ONLY = "cited only in this text, by no claim of the review, so not checked"
+NOTE_OTHER = "a PMC or Europe PMC id, not a PMID or DOI, so not checked"
 
 CHECK_TOOL = {
     "name": "submit_check",
@@ -207,7 +214,7 @@ def check_ids(review, ctx):
         (retracted if st == "retracted" else notices if st == "notice" else []).append(c)
     gone = set(missing)
     have = set(ctx.read_ids) | {x for x in ctx.seen_ids if x.startswith("DOI:")}
-    not_retrieved = [c for c in ids if c not in have and c not in gone]
+    not_retrieved = [c for c in ids if c.startswith(("PMID:", "DOI:")) and c not in have and c not in gone]
     n_unverified = 0
     for sec in SECTION_PREFIX:
         for it in r.get(sec) or []:
@@ -233,9 +240,12 @@ def check_ids(review, ctx):
     in_items = set(TL.item_ids(r))
     note_only = [c for c in dict.fromkeys(x for x, _a, _b in TL.note_ids(r.get("note_markdown") or ""))
                  if c not in in_items and c not in gone]
-    why.update({c: "citation removed: " + NOTE_ONLY for c in note_only})
+    why.update({c: "citation removed: " + (NOTE_OTHER if c.startswith(("PMCID:", "EPMC:")) else NOTE_ONLY)
+                for c in note_only})
     if why and r.get("note_markdown"):
         r["note_markdown"] = _strip_from_note(r["note_markdown"], why)
+    if retracted and r.get("note_markdown"):
+        r["note_markdown"] = _mark_retracted(r["note_markdown"], retracted)
     nf, no = _removed_ids(r)
     report = {"status": "done", "checked": len(found) + len(missing), "removed": len(nf),
               "unchecked": len(unchecked), "retracted": len(retracted), "found": len(found),
@@ -249,40 +259,81 @@ def check_ids(review, ctx):
     return r, report
 
 
-_PM_LINK = re.compile(r"\[[^\]]*\]\(\s*<?https?://(?:www\.)?pubmed\.ncbi\.nlm\.nih\.gov/(\d{1,9})/?>?\s*\)", re.I)
-_DOI_LINK = re.compile(r"\[[^\]]*\]\(\s*<?https?://(?:dx\.)?doi\.org/((?:[^()\s<>]|\([^()\s]*\)|<[^()\s>]*>)+)>?"
-                       r"\s*\)", re.I)
-_URL_HEAD = re.compile(r"<?https?://(?:www\.|dx\.)?$", re.I)
-_MARKED = re.compile(r"\b(PMID:\d{1,9}|DOI:" + TL.DOI_BODY + r") \(citation removed: ([^)]*)\)")
+# a markdown link (or image) with its destination: one level of ( ) in a URL, or <...>, and an optional title
+_MD_LINK = re.compile(r"!?\[(?:[^\[\]\n]|\[[^\[\]\n]*\])*\]\(\s*(<[^<>\n]*>|(?:[^\s()]|\([^\s()]*\))*)"
+                      r"(?:\s+\"[^\"\n]*\")?\s*\)")
+# a bare URL, with or without its scheme (balanced ( ) allowed): a note id inside one takes the whole URL with it
+_BARE_URL = re.compile(r"<?(?:https?://)?(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,}/(?:[^\s<>()\[\]]|\([^\s<>()\[\]]*\))*>?")
+_MARKED = re.compile(r"\b(PMID:\d{1,9}|PMCID:PMC\d{1,9}|EPMC:[A-Z]{3}/[A-Z0-9]{1,20}|DOI:" + TL.DOI_BODY
+                     + r") \(citation removed: ([^)]*)\)")
+_RETRACTED_MARK = " (retracted paper)"
+
+
+def _url_span(md, a, b):
+    """The span of the bare URL around md[a:b] (its trailing sentence punctuation left out), or None."""
+    for m in _BARE_URL.finditer(md, max(0, a - 300), min(len(md), b + 300)):
+        if m.start() <= a and b <= m.end():
+            e = m.end()
+            while e > b and md[e - 1] in ".,;:!?'\"":
+                e -= 1
+            s = m.start()
+            if md[s] == "<" and md[e - 1:e] != ">":
+                s += 1
+            if md[e - 1] == ">" and md[s] != "<":
+                e -= 1
+            return s, e
+        if m.start() > a:
+            break
+    return None
+
+
+def _marker(c, why):
+    return f"{TL.cid_text(c)} ({why[c]})"
 
 
 def _strip_from_note(md, why):
     """md with every link to / mention of an id in why ({id: 'citation removed: ...'}) replaced by
-    'id (citation removed: ...)'. Links are matched by the id they point to (any letter case or percent-encoding),
-    so the whole link goes; mentions already marked are left alone."""
-    def pm_link(m):
-        c = f"PMID:{int(m.group(1))}"
-        return f"{c} ({why[c]})" if c in why else m.group(0)
-
-    def doi_link(m):
-        c = "DOI:" + TL.clean_doi(m.group(1))[0]
-        return f"{c} ({why[c]})" if c in why else m.group(0)
-    md = _DOI_LINK.sub(doi_link, _PM_LINK.sub(pm_link, md))
+    'id (citation removed: ...)' (the id as text that forms no tag: tools.cid_text). A markdown link whose
+    destination names such an id goes whole (any URL form tools.note_matches reads: PubMed, NCBI, Europe PMC, PMC,
+    doi.org; any letter case or percent-encoding), and so does a bare URL; mentions already marked are left alone."""
+    def link(m):
+        dest = m.group(1).strip("<>")
+        gone = list(dict.fromkeys(c for c, _a, _b in TL.note_ids(dest) if c in why))
+        return "; ".join(_marker(c, why) for c in gone) if gone else m.group(0)
+    md = _MD_LINK.sub(link, md)
     spans, last = [], -1
-    for c, a, b in sorted(TL.note_ids(md), key=lambda x: x[1]):
+    for c, a, b, _kind in TL.note_matches(md):
         if c not in why or a < last:
             continue
-        h = _URL_HEAD.search(md, 0, a)                      # a bare URL: take its scheme too
-        if h and md[a:b].lower().startswith(("pubmed", "doi.org")):
-            a = h.start()
-            if md.startswith("/", b) and c.startswith("PMID:"):
-                b += 1
-            if md[a] == "<" and md.startswith(">", b):
-                b += 1
+        a, b = _url_span(md, a, b) or (a, b)
+        if a < last:
+            continue
         spans.append((a, b, c))
         last = b
     for a, b, c in reversed(spans):
-        md = md[:a] + f"{c} ({why[c]})" + md[b:]
+        md = md[:a] + _marker(c, why) + md[b:]
+    return md
+
+
+def _mark_retracted(md, retracted):
+    """md with ' (retracted paper)' after each link to / mention of a retracted paper (once: a mark already there is
+    kept), so that the note's reader sees it where the paper is cited."""
+    retracted = set(retracted)
+    if not retracted or not md:
+        return md
+    ends = set()
+    links = [(m.start(), m.end()) for m in _MD_LINK.finditer(md)]
+    for c, a, b, _kind in TL.note_matches(md):
+        if c not in retracted:
+            continue
+        lk = next(((s, e) for s, e in links if s <= a < e), None)
+        if lk:
+            ends.add(lk[1])
+        else:
+            ends.add((_url_span(md, a, b) or (a, b))[1])
+    for e in sorted(ends, reverse=True):
+        if not md.startswith(_RETRACTED_MARK, e):
+            md = md[:e] + _RETRACTED_MARK + md[e:]
     return md
 
 
@@ -294,7 +345,7 @@ def _removed_ids(review):
         for it in review.get(sec) or []:
             nf |= {TL.norm_citation(c) or c for c in it.get("removed_citations") or []}
     for m in _MARKED.finditer(review.get("note_markdown") or ""):
-        c = m.group(1) if m.group(1).startswith("PMID:") else "DOI:" + TL.clean_doi(m.group(1)[4:])[0]
+        c = "DOI:" + TL.clean_doi(m.group(1)[4:])[0] if m.group(1).startswith("DOI:") else m.group(1)
         (nf if m.group(2).startswith("not found") else no).add(c)
     return nf, no
 
@@ -576,27 +627,105 @@ def _ids_block(report, mode, review):
     return out
 
 
-_SELF_CHECK = re.compile(r"\b(?:citations?|references|claims)\s+(?:were|have been|was|are)\s+(?:checked|verified)",
-                         re.I)
-_CHECK_CONTEXT = re.compile(r"PubMed|abstracts|Crossref|Europe PMC|AI-generated|citation checker|before relying", re.I)
+# drop_self_check: a sentence the agent writes to vouch for its own verification. A clause is a self-check when it is
+# only 'citations / references / claims ... were checked / verified ...' followed by words naming what against
+# (PubMed, abstracts ...: _CHECKED_AGAINST) and names such a source; a disclaimer when it is only 'AI-generated
+# literature review ...', 'verify before relying on it' or 'not checked by a person'. Any other word (a gene, 'pair',
+# 'none', a number, a citation) makes the clause content, and a sentence with content is kept whole.
+_SELF_HEAD = re.compile(
+    r"(?:(?:all|the|its|every|each|these|this|my|our|cited)\s+)*(?:citations?|references?|claims?|PMIDs?|DOIs?|"
+    r"papers?|sources?|ids)\s+(?:(?:in|of|cited\s+in)\s+(?:this|the)\s+(?:note|review|text|summary)\s+)?"
+    r"(?:were|have\s+been|has\s+been|had\s+been|are|was|is)\s+(?:all\s+|each\s+|also\s+)?"
+    r"(?:checked|verified|confirmed|validated|cross-checked|looked\s+up)\b(?P<tail>.*)", re.I | re.S)
+_DISCLAIMER = re.compile(
+    r"(?:(?:this|the)\s+(?:note|review|text|summary)\s+is\s+)?(?:an?\s+)?AI-generated\b(?P<tail>.*)"
+    r"|verify\s+(?:it\s+|this\s+|them\s+)?before\s+relying\s+on\s+(?:it|this|them)"
+    r"|not\s+(?:checked|reviewed)\s+by\s+a\s+(?:person|human)", re.I | re.S)
+_CHECK_SOURCE = re.compile(r"PubMed|abstracts?\b|Crossref|Europe\s*PMC|citation\s+checker|NCBI", re.I)
+_CHECKED_AGAINST = frozenset(
+    "against in with by using via on and or the their its each every all cited original pubmed europe pmc crossref "
+    "ncbi abstract abstracts full text texts record records database databases paper papers citation citations "
+    "checker tool tools metadata retraction retractions status automatically literature review of this run run's "
+    "data note summary agent model a an for it them not person human".split())
+_SENT_END = re.compile(r"(?<=[.!?])[_*]*[ \t]*\n?[ \t]*(?=\S)|\n(?=[ \t]*(?:[-*+>]|\d+[.)])\s)")
+_LEAD = re.compile(r"^[\s>]*(?:[-*+]\s+|\d+[.)]\s+)?[_*]*\s*")
+
+
+def _only_source_words(tail):
+    """True when tail (what follows 'were checked' / 'AI-generated') has no word outside _CHECKED_AGAINST."""
+    return all(w.lower() in _CHECKED_AGAINST for w in re.findall(r"[^\W_][\w'-]*", tail or ""))
+
+
+def _clause_kind(t):
+    """'self' (a self-check clause), 'disclaimer', 'content' or 'empty' (see _SELF_HEAD above)."""
+    t = _LEAD.sub("", t).strip().rstrip("_*").strip().rstrip(".!").strip()
+    if not t:
+        return "empty"
+    m = _SELF_HEAD.fullmatch(t)
+    if m and _CHECK_SOURCE.search(t) and _only_source_words(m.group("tail")):
+        return "self"
+    m = _DISCLAIMER.fullmatch(t)
+    if m and _only_source_words(m.groupdict().get("tail")):
+        return "disclaimer"
+    return "content"
+
+
+def _drop_in_paragraph(p):
+    """p without its self-check sentences (and, when it had one, its disclaimer sentences); p if it has none."""
+    if "```" in p or "~~~" in p:
+        return p
+    cuts = [0] + [m.end() for m in _SENT_END.finditer(p)] + [len(p)]
+    sents = [p[cuts[i]:cuts[i + 1]] for i in range(len(cuts) - 1) if cuts[i] < cuts[i + 1]]
+    kinds = []
+    for x in sents:
+        k = {_clause_kind(c) for c in re.split(r";|\s[-\u2013\u2014]\s", x)} - {"empty"}
+        kinds.append("empty" if not k else "self" if k <= {"self", "disclaimer"} and "self" in k else
+                     "disclaimer" if k == {"disclaimer"} else "content")
+    if "self" not in kinds:
+        return p
+    keep = []
+    for x, k in zip(sents, kinds):
+        ends_line = re.search(r"\n[ \t]*$", x)
+        bullet = re.match(r"[ \t>]*(?:[-*+]|\d+[.)])[ \t]+", x) if not keep or keep[-1].endswith("\n") else None
+        if k == "content":
+            keep.append(x)
+        elif keep and not keep[-1].endswith("\n") and ends_line:
+            keep.append("\n")                    # a dropped sentence that ended a line: the next line stays one
+        elif bullet and not ends_line:
+            keep.append(bullet.group(0))         # it opened a list item that goes on: the item keeps its marker
+    out = re.sub(r"[ \t]+\n", "\n", "".join(keep)).rstrip()
+    w = re.match(r"^\s*([_*]+)(?=[^\s_*])", p)
+    if out and w and re.search(r"[^\s_*]" + re.escape(w.group(1)) + r"\s*$", p):   # emphasis around the paragraph
+        out = (w.group(1) if not out.lstrip().startswith(w.group(1)) else "") + out.strip()
+        out += "" if out.endswith(w.group(1)) else w.group(1)
+    return out
 
 
 def drop_self_check(md):
-    """note_markdown without a short paragraph in which the agent vouches for its own verification (the footer an
-    earlier writing-the-note template asked for: '_AI-generated ...; citations were checked against PubMed ..._'):
-    a paragraph under 400 characters that says its citations / claims were checked or verified and names what
-    against (PubMed, abstracts ...) or is a disclaimer ('AI-generated', 'before relying')."""
-    paras = re.split(r"\n[ \t]*\n", md or "")
-    keep = [p for p in paras if not (len(p) < 400 and _SELF_CHECK.search(p) and _CHECK_CONTEXT.search(p))]
-    if len(keep) == len(paras):
+    """note_markdown without the sentences in which the agent vouches for its own verification (the footer an earlier
+    writing-the-note template asked for: '_AI-generated ...; citations were checked against PubMed and their
+    abstracts. Verify before relying on it._'): a sentence made only of such a claim - citations / references /
+    claims were checked or verified, against PubMed, abstracts ... and nothing else - and, in the same paragraph,
+    disclaimer sentences ('AI-generated ...', 'Verify before relying on it'). A sentence that says anything more (a
+    finding, a gene, a number) is kept whole, and so is the rest of its paragraph; a paragraph left empty goes."""
+    if not md:
         return md
-    out = "\n\n".join(keep).rstrip()
-    return out + "\n" if out else out
+    paras = re.split(r"(\n[ \t]*\n)", md)
+    out, changed = [], False
+    for i in range(0, len(paras), 2):
+        q = _drop_in_paragraph(paras[i])
+        changed |= q != paras[i]
+        if q.strip():
+            out += [q, paras[i + 1] if i + 1 < len(paras) else ""]
+    if not changed:
+        return md
+    res = "".join(out).rstrip()
+    return res + "\n" if res else res
 
 
 def finalize(review, mode, ids_report=None, llm=None):
     """The review to store (a copy): annotate(), "verification" and "note_footer" (see the module docstring); a
-    paragraph of the note in which the agent says its citations were checked is dropped (drop_self_check)."""
+    sentence of the note in which the agent only says its citations were checked is dropped (drop_self_check)."""
     r = copy.deepcopy(review)
     if r.get("note_markdown"):
         r["note_markdown"] = drop_self_check(r["note_markdown"])

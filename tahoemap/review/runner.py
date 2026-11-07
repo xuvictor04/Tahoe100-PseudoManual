@@ -35,10 +35,12 @@ times) and retry the same request; a response lost to a timeout or a dropped con
 MAX_NET_RETRIES times, and when it may have reached the API it is charged an estimate (lost_cost: the context at the
 full input price plus the output of a long answer) to the attempt and the run, marked as estimated in the history
 and the ledger; an attempt that reaches its cap only through such estimates is 'failed' (retried later), not
-over_budget. Other errors fail the entity; the same error on SYSTEMATIC_N entities in a row stops the run (exit code 4)
-and those failures are not counted against the entities. With every key dead the run pauses: on a terminal the main
-thread asks for a new key (getpass; Enter or Ctrl-C there pauses, the terminal restored), else it stops with exit
-code 3 and the unfinished entities stay pending.
+over_budget. Other errors fail the entity; the same error on SYSTEMATIC_N entities in a row before any entity of the run
+got its answer stops the run (exit code 4) and those failures are not counted against the entities (an entity that
+already stopped a run with that error does not count toward a stop again, so an error of the entities' own stops one
+run, not every one). With every key dead the run pauses: on a terminal the main thread asks for a new key (getpass;
+Enter or Ctrl-C there pauses, the terminal restored), else it stops with exit code 3 and the unfinished entities stay
+pending.
 
 Stopping (Ctrl-C, SIGTERM, SIGHUP, `tahoe stop`, the --max-usd cap): no new entity starts; after STOP_GRACE seconds
 the running attempts are closed - a review already submitted is stored as done with its verification as far as it
@@ -48,7 +50,8 @@ recorded (a late event in the history, a note line in the ledger).
 Resume: the latest ledger line of an entity is its state (bookkeeping 'note' lines aside). done and refused are
 final (unless --redo); failed and no_review are retried up to 2 more times (--retry-failed: again); over_budget only
 with a higher per-entity cap; paused and key_rotated entities start again from the beginning. --recheck runs only
-the verification a stored review lacks (ids that could not be looked up, a citation check that did not run).
+the verification a stored review lacks (ids that could not be looked up, a citation check that did not run); a
+--recheck that is stopped leaves the review and its done line as they were (a ledger note), still to be checked.
 
 Models and effort: the agent files' (reviewers claude-opus-5-5 / high, checker claude-opus-5-5 / medium); --model and
 --effort set the reviewers, or per agent with AGENT=VALUE,... (gene, drug, line, checker, reviewers, all).
@@ -455,25 +458,35 @@ class Run:
         self.code = code_version()
         self.streak = []                # the failed attempts in a row with the same error: (sig, entity_id, rec)
         self.systematic = None          # (signature, error) once SYSTEMATIC_N in a row stopped the run
+        self.answered = False           # an attempt of this run got its answer from the API (no systematic stop)
+        self.stopped_runs = {}          # entity_id -> the errors with which it already stopped an earlier run
         pool.stopping = self.stop.is_set
 
     def outcome(self, att, status, rec):
-        """Called once per finished attempt: tracks the same error on entity after entity (keys_state#1)."""
+        """Called once per finished attempt (keys_state#1): the same error on SYSTEMATIC_N entities in a row, before
+        any attempt of this run got its answer (done, refused, no_review, over_budget, a refusal to retry), stops the
+        run. An entity that already stopped an earlier run with this same error joins the streak (its failure is
+        then not counted either) but does not count toward the stop: an error that is the entities' own (a request
+        too large for each of them, ...) stops one run, and the next goes on past them and counts their failures."""
         with self.lock:
             sig = att.fail_sig if status == "failed" else None
             if self.systematic is not None:            # stopped: only the same error joins (to be uncounted)
                 if sig is not None and sig == self.systematic[0]:
                     self.streak.append((sig, att.entity_id, rec))
                 return
-            if sig is not None:
-                if self.streak and self.streak[-1][0] != sig:
-                    self.streak = []
-                self.streak.append((sig, att.entity_id, rec))
-                if len(self.streak) >= SYSTEMATIC_N and self.systematic is None:
-                    self.systematic = (sig, rec.get("error") or "")
-            elif status in ("done", "refused", "no_review", "over_budget"):
+            if status in ("done", "refused", "no_review", "over_budget") or rec.get("transient_refusal"):
+                self.answered = True                   # the API works for this run: failures are the entities' own
                 self.streak = []
-        if self.systematic is not None and sig is not None and not self.stop.is_set():
+                return
+            if sig is None or self.answered:
+                return
+            if self.streak and self.streak[-1][0] != sig:
+                self.streak = []
+            self.streak.append((sig, att.entity_id, rec))
+            new = [e for g, e, _r in self.streak if not ({g, "*"} & self.stopped_runs.get(e, set()))]
+            if len(new) >= SYSTEMATIC_N:
+                self.systematic = (sig, rec.get("error") or "")
+        if self.systematic is not None and not self.stop.is_set():
             self.request_stop(f"the same error on {SYSTEMATIC_N} entities in a row ({' '.join(map(str, sig))})")
             log(f"STOPPING: the same error on {SYSTEMATIC_N} entities in a row: {K.scrub(self.systematic[1])[:300]}")
 
@@ -791,8 +804,10 @@ class Attempt:
         stored = read_json_safe(paths["review"])
         if not isinstance(stored, dict):
             return self.finish("failed", error="--recheck: the stored review is missing or unreadable")
-        self.pending = lambda why: self.finish("done", error=f"recheck stopped: {why}; the stored review is "
-                                               "unchanged", recheck=True, review_unchanged=True)
+        # stopped before it finished: a ledger note (finish() writes one for a recheck that is not done), so the
+        # entity's state stays its earlier done line, which says what the stored review lacks: still --recheck-able
+        self.pending = lambda why: self.finish("paused", error=f"recheck stopped: {why}; the stored review is "
+                                               "unchanged", review_unchanged=True)
         mode = r.opts.verify
         ver0, meta0 = stored.get("verification") or {}, stored.get("meta") or {}
         need_ids, need_llm = needs_recheck(stored, mode)
@@ -916,14 +931,21 @@ def needs_recheck(review, mode):
 
 def recheck_pending(out, state, mode):
     """True when a done entity's stored review lacks verification `--recheck --verify MODE` would run: from its
-    ledger line (ids_status / llm_status) when it has them, else from the review JSON."""
+    ledger line (ids_status / llm_status) when it has them, else from the review JSON (the line's review path, else
+    the entity's own: a line of an older version, or of a recheck stopped before it finished)."""
     last = (state or {}).get("last") or {}
     if (state or {}).get("status") != "done" or mode not in ("ids", "llm"):
         return False
     if "ids_status" in last and "llm_status" in last:
         return last["ids_status"] != "done" or (mode == "llm" and last["llm_status"] != "done")
     rel = last.get("review")
-    js = read_json_safe(os.path.join(out, rel)) if rel else None
+    if rel:
+        path = os.path.join(out, rel)
+    elif last.get("kind") and last.get("name"):
+        path = review_paths(out, last["kind"], last["name"])["review"]
+    else:
+        return False
+    js = read_json_safe(path)
     return isinstance(js, dict) and any(needs_recheck(js, mode))
 
 
@@ -1538,6 +1560,8 @@ def _run_threads(rn, todo, states, say, recheck=False):
     q = deque(todo)
     t0 = time.time()
 
+    rn.stopped_runs = {e: set(s.get("stopped_runs") or ()) for e, s in states.items() if s.get("stopped_runs")}
+
     def worker():
         while True:
             with rn.lock:
@@ -1578,11 +1602,11 @@ def _run_threads(rn, todo, states, say, recheck=False):
     if rn.systematic is not None:                       # those failures are the run's, not the entities': uncounted
         with rn.lock:
             streak = list(rn.streak)
-        for _sig, eid, rec in streak:
+        for sig, eid, rec in streak:
             rn.ledger.append({"entity_id": eid, "kind": rec.get("kind"), "name": rec.get("name"),
                               "run_id": rec.get("run_id"), "status": "note", "cost_usd": 0.0,
                               "note": "systematic error: the run stopped; this failure is not counted against the "
-                                      "entity", "uncount_failed": True, "finished": now(),
+                                      "entity", "uncount_failed": True, "signature": list(sig), "finished": now(),
                               "error": rec.get("error")})
     rn.save_keys()
     try:
@@ -1600,10 +1624,15 @@ def _run_threads(rn, todo, states, say, recheck=False):
     if rn.systematic is not None:
         sig, err = rn.systematic
         res.exit_code, res.paused = EXIT_SYSTEMATIC, True
-        res.message = (f"STOPPED: the same error on {len(rn.streak)} entities in a row ({' '.join(map(str, sig))}): "
-                       f"{K.scrub(err)[:400]}. It is not about these entities: fix the cause (the model's "
-                       "availability to your organisation, a beta, the network ...) and run the same command again; "
-                       "these failures are not counted against the entities.")
+        again = sum(1 for g, e, _r in streak if {g, "*"} & rn.stopped_runs.get(e, set()))
+        res.message = (f"STOPPED: the same error on {len(streak)} entities in a row, before any entity of this run got "
+                       f"its answer ({' '.join(map(str, sig))}): {K.scrub(err)[:400].rstrip('. ')}. Most likely it "
+                       "is not about these entities: fix the cause (the model's availability to your organisation, "
+                       "a beta, the network ...) and run the same command again; these failures are not counted "
+                       "against the entities. If it is about them after all, run the same command again as it is: "
+                       "an entity that already stopped a run with this error no longer counts toward a stop, so the "
+                       "next run goes on past them and counts their failures"
+                       + (f" ({again} of these had stopped an earlier run with it)." if again else "."))
         log(res.message)
     elif rn.keys_paused:
         res.exit_code, res.paused = EXIT_PAUSED, True

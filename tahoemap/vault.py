@@ -627,18 +627,67 @@ _RAW_ELEMENTS = re.compile(r"<(script|style|iframe|object|embed|template|textare
                            r"frameset|noframes|applet|canvas|audio|video)\b[^>]*>.*?</\1\s*>", re.I | re.S)
 _TAG = re.compile(r"</?[A-Za-z][A-Za-z0-9:-]*(?:\s[^<>]*)?/?>|<![A-Za-z][^<>]*>|<\?.*?\?>", re.S)
 _BR = r"(?:[^\[\]\\]|\\.)"
-_LINK_TEXT = rf"\[((?:{_BR}|\[{_BR}*\])*)\]"
+# link text: escapes and one level of nested brackets, at most 300 items, never backtracked (possessive: no item can
+# end on ']', so giving one back cannot find another match) and not started at an escaped '\[' - so a long run of
+# '[' / '\[' costs linear time; longer or deeper link text is left to the catch-all in _sanitize_chunk
+_LINK_TEXT = rf"(?<!\\)\[((?:{_BR}|\[{_BR}{{0,300}}+\]){{0,300}}+)\]"
 _LINK_DEST = (r"\(\s*(<[^<>\n]*>|(?:[^\s()\\]|\\.|\((?:[^\s()\\]|\\.)*\))*)"          # destination
               r"(?:\s+(?:\"[^\"]*\"|'[^']*'|\([^()]*\)))?\s*\)")                     # optional title
-_IMAGE = re.compile(r"!" + _LINK_TEXT + rf"(?:{_LINK_DEST}|\[[^\]]*\])", re.S)
+_IMAGE = re.compile(r"!(?=\[(?!\^))" + _LINK_TEXT + rf"(?:{_LINK_DEST}|\[[^\]]*\])?", re.S)   # ![a](u), ![a][r], ![a]
 _LINK = re.compile(_LINK_TEXT + _LINK_DEST, re.S)
-_REFDEF = re.compile(r"^ {0,3}\[(?!\^)((?:[^\[\]\\]|\\.)+)\]:[ \t]*\n?[ \t]*(<[^<>\n]*>|\S+)[^\n]*$", re.M)
-_LINK_OR_URL = re.compile(rf"({_LINK_TEXT}{_LINK_DEST})|(?:https?://|(?<![\w.])www\.)[^\s<>]*", re.S | re.I)
+# a line's container prefix: blockquote / callout markers ('>'), list markers, footnote labels ('[^1]:') and
+# indentation, in any mix
+_MARK = r"(?:>|(?:[-+*]|\d{1,9}[.)])(?=[ \t])|\[\^[^\[\]\s]+\]:)"
+_CONTAINER = rf"(?:[ \t]*{_MARK})*[ \t]*"
+# a reference definition '[label]: destination' at any container depth (top level, in a blockquote, callout or list
+# item); its destination may be on the next line (after that line's own container prefix)
+_REFDEF = re.compile(rf"^({_CONTAINER})\[(?!\^)((?:[^\[\]\\]|\\.)++)\]:[ \t]*(?:\n[ \t>]*)?(<[^<>\n]*>|\S+)[^\n]*$",
+                     re.M)
+# a fence opened inside a container ('> ```lang', '- ```lang', '1. ~~~lang'): sanitize_note handles top-level fences
+_NESTED_FENCE = re.compile(rf"^((?:[ \t]*{_MARK})+[ \t]*)(`{{3,}}|~{{3,}})(.*)$", re.M)
+# a footnote: a renderer without footnotes reads '[^1]: text' as a reference definition to its first word (entities
+# decoded: 'javascript&colon;...'), so that word gets a zero-width space in front unless it is an allowed link
+_FOOTNOTE_URL = re.compile(rf"^({_CONTAINER}\[\^[^\[\]\s]+\]:[ \t]*(?:\n[ \t>]*)?)(?=\S)(\S*)", re.M)
+_LINK_OR_URL = re.compile(rf"({_LINK_TEXT}{_LINK_DEST})|(?:(?:https?|ftp)://|www\.)[^\s<>\[\]]*", re.S | re.I)
+# where a renderer's autolinker starts a URL (some start one inside a word: 'xhttps://...'): defanged with a zero-width
+# space, so no bare URL to another site becomes a link
+_URL_START = re.compile(r"(?i)((?:https?|ftp):)(//)|(www)(\.)")
+
+
+def _fence_info(info):
+    """A fence's info string kept only when it names a plain code language (SAFE_FENCE_INFO), else ''."""
+    w = info.strip().split()
+    return w[0].lower() if w and w[0].lower() in SAFE_FENCE_INFO else ""
+
+
+def _refdef(m):
+    """A reference definition (_REFDEF): to an allowed site, kept as '[label]: url' and closed by a blank line (no
+    title, which some renderers let run over the lines after it, a fence included); else removed (a blockquote keeps
+    its '>')."""
+    quote = re.sub(r"[^>]", "", m.group(1))
+    if not _lit_link_ok(m.group(3)):
+        return quote
+    return f"{m.group(1)}[{m.group(2)}]: {m.group(3)}\n{quote}"
+
+
+def _plain_nested_fences(t):
+    """t with the fences opened inside a container (_NESTED_FENCE) keeping only a plain code language."""
+    return _NESTED_FENCE.sub(lambda m: m.group(0) if m.group(2)[0] == "`" and "`" in m.group(3) else
+                             m.group(1) + m.group(2) + _fence_info(m.group(3)), t)
 
 
 def _lit_link_ok(url):
     u = url.strip().strip("<>").strip()
     return u.startswith(LIT_LINK_PREFIXES) and not re.search(r"[\s\\<>\"']", u)
+
+
+_DEST_AT = re.compile(_LINK_DEST)
+
+
+def _inline_dest_ok(t, i):
+    """True when t[i:] starts with an inline link destination '(url "title")' to an allowed site."""
+    d = _DEST_AT.match(t, i)
+    return bool(d) and _lit_link_ok(d.group(1))
 
 
 def _sanitize_chunk(t):
@@ -653,24 +702,37 @@ def _sanitize_chunk(t):
     t = re.sub(r"<(?=[A-Za-z/!?%])", "&lt;", t)                    # whatever could still start a tag
     t = t.replace("![[", "[[")                                     # no embedded notes
     t = _IMAGE.sub(lambda m: m.group(1), t)                        # no images (remote or not): their alt text
-    t = _REFDEF.sub(lambda m: m.group(0) if _lit_link_ok(m.group(2)) else "", t)
+    t = _REFDEF.sub(_refdef, t)
+    t = _plain_nested_fences(t)
     t = _LINK.sub(lambda m: m.group(0) if _lit_link_ok(m.group(2)) else m.group(1), t)
+    # what the patterns above cannot parse (link text with a code span, deeper brackets ...) is still no image or link:
+    # '![' never starts an image, '](' never starts a destination other than an allowed one
+    t = t.replace("![", "!\\[")
+    t = re.sub(r"\]\(", lambda m: m.group(0) if _inline_dest_ok(t, m.end() - 1) else "]\\(", t)
+    t = _FOOTNOTE_URL.sub(lambda m: m.group(0) if _lit_link_ok(m.group(2)) else m.group(1) + "\u200b" + m.group(2), t)
 
     def bare(m):                                                   # a bare URL elsewhere is not made a link
-        if m.group(1) is not None or _lit_link_ok(m.group(0)):
+        if m.group(1) is not None:
             return m.group(0)
         u = m.group(0)
-        return re.sub(r"(?i)^(https?:)(//)|^(www)(\.)", lambda k: (k.group(1) or k.group(3)) + "\u200b"
-                      + (k.group(2) or k.group(4)), u)
+        keep = next((len(x) for x in LIT_LINK_PREFIXES if u.startswith(x)), 0) if _lit_link_ok(u) else 0
+        return u[:keep] + _URL_START.sub(lambda k: (k.group(1) or k.group(3)) + "\u200b" + (k.group(2) or k.group(4)),
+                                         u[keep:])                 # (an allowed one: a URL inside it is defanged)
     t = _LINK_OR_URL.sub(bare, t)
     t = re.sub(r"(`+)([ \t]*)(\$?=)", "\\1\u200b\\2\\3", t)  # no Dataview inline query (`= ...`, `$= ...`)
     t = re.sub(r"\\(href|url)\b", r"\1", t)                    # no link from a LaTeX formula
     if t.count("$$") % 2:                                        # an unclosed display formula
         i = t.rfind("$$")
         t = t[:i] + "\\$\\$" + t[i + 2:]
+    # what a removal above may have made: an Obsidian comment ('%<b></b>%'), a nested fence with a plugin language
+    # ('> [```dataviewjs](x)'), a fence at the start of a line ('<b></b>```' - it would hide all that follows: text)
+    t = _plain_nested_fences(re.sub(r"%{2,}", "%", t))
     out, prev = [], ""
-    for line in t.split("\n"):                                     # no setext heading ('text' over '---' / '===')
-        if re.match(r"^ {0,3}(?:=+|-+)[ \t]*$", line) and prev.strip():
+    for line in t.split("\n"):
+        f = _FENCE_RE.match(line)
+        if f and not (f.group(1)[0] == "`" and "`" in f.group(2)):
+            line = line[:f.start(1)] + "\\" + line[f.start(1):]
+        if re.match(r"^ {0,3}(?:=+|-+)[ \t]*$", line) and prev.strip():   # no setext heading ('text' over '---')
             out.append("")
         out.append(line)
         prev = line
@@ -679,10 +741,11 @@ def _sanitize_chunk(t):
 
 def sanitize_note(md):
     """An agent's note made safe to splice into a vault note: code fences closed (an unclosed one closed at the
-    end) and written plainly (no plugin languages such as dataviewjs or mermaid); outside them no HTML comment or
-    Obsidian %% comment, no raw HTML (script, iframe, img, a, style ... any tag), no image or embedded note, no link
-    other than markdown links to PubMed, doi.org, Europe PMC, NCBI and Cellosaurus (others keep their text; a bare
-    URL to another site is not made a link), and no setext heading."""
+    end) and written plainly (no plugin languages such as dataviewjs or mermaid, nested fences in a blockquote,
+    callout or list item too); outside them no HTML comment or Obsidian %% comment, no raw HTML (script, iframe, img,
+    a, style ... any tag), no image (inline, reference or shortcut '![name]') or embedded note, no link or reference
+    definition (at any container depth) other than to PubMed, doi.org, Europe PMC, NCBI and Cellosaurus (links keep
+    their text; a bare URL to another site is not made a link), and no setext heading."""
     lines = sval(md).replace("\r\n", "\n").replace("\r", "\n").split("\n")
     out, chunk, fence = [], [], None
     for line in lines:
@@ -691,10 +754,11 @@ def sanitize_note(md):
             if m and not (m.group(1)[0] == "`" and "`" in m.group(2)):
                 if chunk:
                     out.append(_sanitize_chunk("\n".join(chunk)))
+                    if out[-1].split("\n")[-1].strip():       # a blank line first: no definition, link label or
+                        out.append("")                          # title of the text above runs into the fence
                 chunk = []
-                info = m.group(2).strip().split(" ")[0].lower() if m.group(2).strip() else ""
                 fence = m.group(1)
-                out.append(fence + (info if info in SAFE_FENCE_INFO else ""))
+                out.append(fence + _fence_info(m.group(2)))
             else:
                 chunk.append(line)
         elif m and m.group(1)[0] == fence[0] and len(m.group(1)) >= len(fence) and not m.group(2).strip():
@@ -709,10 +773,11 @@ def sanitize_note(md):
     return "\n".join(out)
 
 
-_SELF_CHECK_LINE = re.compile(r"(?i)\b(?:citations?|references|claims|sources|ids)\s+(?:were|have been|was|are|had "
-                              r"been)\s+(?:checked|verified|validated)")
+# (?<![A-Za-z]) rather than \b: an italic line starts with '_', a word character ('_Citations were checked ..._')
+_SELF_CHECK_LINE = re.compile(r"(?i)(?<![A-Za-z])(?:citations?|references|claims|sources|ids)\s+(?:were|have been|was|"
+                              r"are|had been)\s+(?:checked|verified|validated)(?![A-Za-z])")
 _AGENT_FOOTER = re.compile(r"(?i)^[\s_*>]*(?:AI-generated literature review|verify before relying)"
-                           r"|\bcitations?\s+(?:were|have been|had been)\s+(?:checked|verified)\b")
+                           r"|(?<![A-Za-z])citations?\s+(?:were|have been|had been)\s+(?:checked|verified)(?![A-Za-z])")
 
 
 def drop_self_check(md):

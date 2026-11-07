@@ -26,9 +26,11 @@ link, no other note changed) and the map (the side panel's verdicts); `duplicate
 transient refusal (stop_details.recommended_model); an empty response; lost responses (timeouts, streams cut or
 ended early or closed before message_start, an error event mid-stream: their own retry budget and an estimated
 cost; a cap reached through estimates alone is 'failed', retried); the budget line; Ctrl-C
-while a submitted review is verified (stored done, the late response recorded, completed by --recheck); SIGHUP;
-Ctrl-C at the key prompt; a cut ledger line; the run lock (stale, live, reused pid, another computer); a key given
-to --keys-file; the same error on 5 entities in a row and --retry-failed. And a crafted malicious review (raw
+while a submitted review is verified (stored done, the late response recorded, completed by --recheck), and a
+--recheck that is itself stopped (still --recheck-able); SIGHUP; Ctrl-C at the key prompt; a cut ledger line; the
+run lock (stale, live, reused pid, another computer); a key given to --keys-file; the same error on 5 entities in a
+row before any entity of the run got its answer (an error of the entities' own stops one run, not every later one)
+and --retry-failed. And a crafted malicious review (raw
 HTML, script, iframe, javascript: / data: / vbscript: links, a remote image, comments, an unclosed fence, a fabricated
 PMID, a verdict the checker does not support, two verdicts on one partner) spliced into the vault and the map: the
 note sanitised, unverified verdicts shown as such, one verdict per partner chosen alike in both, the callout's
@@ -907,6 +909,17 @@ see https://evil.example/bare and <https://evil.example/auto>; [ok](https://www.
 ```dataviewjs
 dv.paragraph("runs in Obsidian with Dataview")
 ```
+Click [x][r] and ![tracker]
+
+> [r]: javascript:alert('ref')
+> [tracker]: https:/evil.example/track.png
+
+> [!note]
+> ```dataviewjs
+> dv.paragraph("nested in a callout")
+> ```
+
+_References were verified against PubMed._
 _AI-generated literature review of this run's data; citations were checked against PubMed and their abstracts._
 
 Some setext text
@@ -915,6 +928,86 @@ Some setext text
 ```
 an unclosed fence
 """
+
+
+def sanitize_gaps(c, VT):
+    """ui#2 / ui#3 (round 2): what the sanitiser must also stop - a reference definition to javascript: / data: /
+    vbscript: or another site inside a blockquote, callout or list item (its destination on the same or the next
+    line), a shortcut reference image '![name]', a fence opened inside a blockquote, callout or list item with a
+    plugin language, link text the patterns cannot parse (a code span with ']', deeper brackets), a footnote whose
+    text is a URL (a reference definition to a renderer without footnotes), what a removal makes (a fence at the
+    start of a line, '%%'), a definition / label / title running into a fence, a bare URL inside a word or after an
+    allowed one, quadratic time on long bracket runs; and the agent's own provenance in an underscore-italic line
+    ('_Citations were checked ..._'). (Checked against commonmark.js 0.31 and marked 18 while fixing; here without
+    a JavaScript renderer.)"""
+    sn = VT.sanitize_note
+    ref = {x: sn(x) for x in ("Click [x][r]\n\n> [r]: javascript:alert(1)", "Click [x][r]\n\n> [r]:\n> javascript:alert(2)",
+                              "Click [x][r]\n\n> [r]: data:text/html;base64,PHM+", "Click [x][r]\n\n- [r]: vbscript:msgbox(1)",
+                              "Click [x][r]\n\n> > - [r]: javascript:alert(4) \"t\"", "Click [x][r]\n\n- [r]:\njavascript:alert(5)",
+                              "Click [x][r]\n\n1) [r\n   x]: https://evil.example/a",
+                              "Click [x][r]\n\n> [r]: https://www.ncbi.nlm.nih.gov/gene/1017")}
+    vals = list(ref.values())
+    check(c, "ui#3: a reference definition is removed at any container depth unless it points to an allowed site",
+          not any(re.search(r"javascript|data:|vbscript|evil", v) for v in vals[:-1])
+          and all(v.startswith("Click [x][r]") for v in vals)
+          and vals[-1].endswith("> [r]: https://www.ncbi.nlm.nih.gov/gene/1017\n>"), ref)
+    img = [sn("![pixel]\n\n> [pixel]: https:/evil.example/track.png"),
+           sn("![pixel]\n\n[pixel]: https://www.ncbi.nlm.nih.gov/track.png"), sn("![pixel][]\n\n[pixel]: https://doi.org/x"),
+           sn("![a [b [c]] d](https://evil.example/x.png)"), sn("![a `]` b](https://evil.example/x.png)")]
+    check(c, "ui#2: no image: a shortcut reference image ('![name]') or one the patterns cannot parse is text",
+          not any("![" in x for x in img) and "evil.example/track" not in img[0] and img[1].startswith("pixel\n"), img)
+    nf = [sn("> [!note]\n> ```dataviewjs\n> dv.paragraph(1)\n> ```"), sn("- ```dataviewjs\n  dv.paragraph(1)\n  ```"),
+          sn("> - ~~~ mermaid\n>   graph TD\n>   ~~~"), sn("1. ```dataviewjs\n   x\n   ```"),
+          sn("[^1]: ```dataviewjs\n    x\n    ```"), sn("> ```python\n> x = 1\n> ```")]
+    check(c, "ui#2: a fence inside a blockquote, callout, list item or footnote keeps only a plain code language",
+          not any(re.search(r"dataviewjs|mermaid", x) for x in nf) and nf[0] == "> [!note]\n> ```\n> dv.paragraph(1)\n> ```"
+          and nf[-1] == "> ```python\n> x = 1\n> ```", nf)
+    lk = [sn("[a `]` b](javascript:alert(1))"), sn("[a [b [c]] d](javascript:alert(1))"),
+          sn("[a <b>]</b> c](vbscript:x)"), sn("text[^1]\n\n[^1]: javascript:alert(1)"),
+          sn("[ok [deep [er]]](https://pubmed.ncbi.nlm.nih.gov/1/)")]
+    dests = [d for x in lk for d in re.findall(r"(?<!\\)\]\(\s*<?([^\s)>]*)", x)]
+    check(c, "ui#3: link text the patterns cannot parse never makes a link elsewhere ('](' escaped), a footnote's "
+             "URL is no destination; an allowed link with deep brackets stays",
+          all(d.startswith(VT.LIT_LINK_PREFIXES) for d in dests) and "]\\(javascript" in lk[0]
+          and "]\\(javascript" in lk[1] and "[^1]: \u200bjavascript" in lk[3]
+          and lk[4] == "[ok [deep [er]]](https://pubmed.ncbi.nlm.nih.gov/1/)", lk)
+    made = [sn("<script>alert(1)</script>```dataviewjs\n<img src=x onerror=alert(2)>"), sn("%<b></b>% hidden?"),
+            sn("> [```dataviewjs](javascript:x)\n> dv.paragraph(1)"), sn("<!-- c -->~~~\n<script>alert(3)</script>")]
+    check(c, "ui#2: what a removal makes is neutralised: a fence at the start of a line (it would hide all that "
+             "follows) is text, no %% comment, no nested plugin fence",
+          all(outside_fences(x)[1] is None and "<script" not in x and "<img" not in x for x in made)
+          and made[0].startswith("\\```") and "%%" not in made[1] and "dataviewjs" not in made[2]
+          and made[3].startswith("\\~~~"), made)
+    edge = [sn("[r]:\n```\n<script>alert(1)</script>\n```\n\n[x][r]"),
+            sn('[r]: https://pubmed.ncbi.nlm.nih.gov/1/ "a\n```\n<script>alert(1)</script>\n"\n```'),
+            sn("[a\n```\nb]: javascript:alert(1)\n```")]
+    check(c, "ui#2: a definition, link label or title above a fence cannot run into it (a blank line before the "
+             "fence; a kept definition has no title and a blank line after it), so the fence starts where the "
+             "renderer starts it",
+          edge[0].startswith("[r]:\n\n```\n") and edge[1].startswith("[r]: https://pubmed.ncbi.nlm.nih.gov/1/\n\n```")
+          and edge[2].startswith("[a\n\n```\n"), edge)
+    urls = [sn("xhttps://evil.example/a and www.evil.example, xwww.evil.example and ftp://evil.example/f"),
+            sn("https://pubmed.ncbi.nlm.nih.gov/1/https://evil.example/b"),
+            sn("https://evil.example/x)<https://pubmed.ncbi.nlm.nih.gov/2/>"),
+            sn("t[^1]\n\n[^1]: javascript&colon;alert(1)")]
+    check(c, "ui#3: no bare URL to another site can start a link (in a word, after an allowed URL, ftp://), an "
+             "allowed link next to one stays whole, a footnote's first word is no destination (entities too)",
+          not re.search(r"(?:https?|ftp)://(?!pubmed)|www\.evil", "".join(urls[:3]))
+          and urls[1].startswith("https://pubmed.ncbi.nlm.nih.gov/1/https:\u200b//")
+          and "[https://pubmed.ncbi.nlm.nih.gov/2/](https://pubmed.ncbi.nlm.nih.gov/2/)" in urls[2]
+          and "[^1]: \u200bjavascript&colon;" in urls[3], urls)
+    t0 = time.time()
+    for x in ("![" * 20000, "[" + "\\[" * 40000, "[a\n" * 20000, ("[" + "a" * 299) * 300):
+        sn(x)
+    check(c, "ui#2: the sanitiser takes linear time on long runs of brackets (no backtracking blow-up)",
+          time.time() - t0 < 3, f"{time.time() - t0:.2f} s")
+    own = ["_Citations were checked against PubMed and their abstracts._", "_References were verified against PubMed._",
+           "*Citations were checked against PubMed.*", "_Citations were checked_"]
+    kept = ["Two cohorts agree: these claims were verified in independent patient samples.",
+            "_The references verified it in mice._"]
+    dropped = VT.drop_self_check("Text.\n" + "\n".join(own + kept) + "\n")
+    check(c, "ui#2: the vault drops the agent's own provenance in an underscore-italic line; other lines stay",
+          dropped == "Text.\n" + "\n".join(kept) + "\n", dropped)
 
 
 @case
@@ -951,6 +1044,7 @@ def vault_map_literature(work, src, ents):
     check(c, "science#1: rows without check_status (older reviews) and an inconsistent shown_verdict",
           old == [("citations_removed", "unverified"), ("not_supported", "unverified"), ("unchecked", "indirect"),
                   ("not_supported", "unverified")], old)
+    sanitize_gaps(c, VT)
     inj = VT.citation_link('DOI:10.1234/x"><img/src=x/onerror=alert(1)>')
     par = VT.citation_link("DOI:10.1016/S0092-8674(00)81096-3")
     check(c, "ui#3: a DOI with markup is not linked and is escaped; a DOI with parentheses is linked whole",
@@ -1044,8 +1138,8 @@ def vault_map_literature(work, src, ents):
           {p: rows.get(p) for p in P[2:4]})
     plain, open_fence = outside_fences(sec)
     bad = [x for x in ("<script", "<img", "<iframe", "<a ", "<style", "javascript:", "vbscript:", "data:text",
-                       "](https://evil", "![", "<!--", "dataviewjs", "%%", "alert('script')", "display:none")
-           if x in sec]
+                       "](https://evil", "![", "<!--", "dataviewjs", "%%", "alert('script')", "display:none",
+                       "alert('ref')", "https:/evil", "[tracker]:") if x in sec]
     check(c, "ui#2 / ui#3: no raw HTML, comment, image, script or non-allowlisted link survives in the section; "
              "fences closed; links only to the allowed sites",
           not bad and open_fence is None and not re.search(r"<[A-Za-z/!?]", plain)
@@ -1053,7 +1147,9 @@ def vault_map_literature(work, src, ents):
                                                                  "https://www.ncbi.nlm.nih.gov"}
           and "[ok](https://www.ncbi.nlm.nih.gov/gene/1017)" in sec and "https:​//evil.example/bare" in sec
           and "&lt;!-- an unclosed comment" in sec and "Some setext text\n\n---" in sec
-          and "pixel" in sec and "click me" in sec, bad or re.findall(r"<[A-Za-z/!?].{0,30}", plain))
+          and "pixel" in sec and "click me" in sec and "Click [x][r] and tracker" in sec
+          and '> ```\n> dv.paragraph("nested in a callout")' in sec,
+          bad or re.findall(r"<[A-Za-z/!?].{0,30}", plain))
     heads = re.findall(r"^## (.+)$", gt.split("## What the literature says", 1)[1], re.M)
     check(c, "ui#2: the generated sections after it are still headings (not hidden in a comment or code block)",
           heads[:1] and heads[0] in ("What is on record", "Data") and "Sources" in heads, heads)
@@ -1061,6 +1157,7 @@ def vault_map_literature(work, src, ents):
           "&lt;img src\\=x onerror\\=alert('P')&gt; plausible" in vline and evil not in gt, vline[-160:])
     check(c, "ui#2: the generated note_footer is appended; the agent's own 'citations were checked' line is gone",
           js.get("note_footer") and js["note_footer"] in sec and "were checked against PubMed" not in sec
+          and "were verified against PubMed" not in sec
           and "every cited id looked up in PubMed / Crossref" in sec, sec[-400:])
     # -- the map: the same verdicts, chosen by the same rule
     trip, ent, n = map_lit(sv)
@@ -1108,7 +1205,8 @@ def browser_checks(c, sv, gname, P):
     """The map in a headless browser (skipped when Playwright or its Chromium is missing): the side panel's badges
     of the malicious review, no script of the review run; ui#7: a small simulation animates the sign switch for
     > 1.5 s; ui#6: a double-click with a 300 ms or a 450 ms gap pins the gene clicked first (user pin) and the
-    second click selects nothing."""
+    second click selects nothing; a double-click with a micro-drag in one click pins the gene double-clicked, not
+    that of an earlier click."""
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
@@ -1182,6 +1280,45 @@ def browser_checks(c, sv, gname, P):
                          "second click selects no other gene (300 ms: normally the selection is unchanged)",
                       all(isinstance(v, tuple) and v[1] == 1 and v[2] in (gname, v[0]) for v in res.values())
                       and not errs, {"gaps": res, "errors": errs})
+                jit = {}
+                for which in ("first", "second"):          # a micro-drag (5 px) in one click of the double-click
+                    pg.evaluate(f"TAHOE_MAP.select({gi})")
+                    pg.wait_for_timeout(100)
+                    pg.wait_for_function(settled.replace("{t}", "nbr"), timeout=60000)
+                    s = pg.evaluate("TAHOE_MAP.sim('nbr')")
+                    box = pg.evaluate("(() => { const r = document.querySelector('#pane-nbr canvas')"
+                                      ".getBoundingClientRect(); return [r.left, r.top]; })()")
+                    cand = []
+                    for i, f in zip(s["ids"], s["fixed"]):
+                        sc = pg.evaluate(f"TAHOE_MAP.screen('nbr', {i})") if i != gi and not f else None
+                        if sc and 60 < sc["x"] < sc["w"] - 60 and 60 < sc["y"] < sc["h"] - 60:
+                            cand.append((i, box[0] + sc["x"], box[1] + sc["y"]))
+                    A = cand[0] if cand else None
+                    B = next((q for q in cand[1:] if abs(q[1] - A[1]) + abs(q[2] - A[2]) > 40), None) if A else None
+                    if B is None:
+                        jit[which] = "no targets"
+                        continue
+                    pg.mouse.move(A[1], A[2])                  # click gene A ...
+                    pg.mouse.down()
+                    pg.mouse.up()
+                    pg.wait_for_timeout(250)                   # ... then double-click gene B, one click a micro-drag
+                    pg.mouse.move(B[1], B[2])
+                    pg.mouse.down()
+                    if which == "first":
+                        pg.mouse.move(B[1] + 5, B[2])
+                    pg.mouse.up()
+                    pg.mouse.down(click_count=2)
+                    if which == "second":
+                        pg.mouse.move(B[1] + 5, B[2])
+                    pg.mouse.up(click_count=2)
+                    pg.wait_for_timeout(700)
+                    s = pg.evaluate("TAHOE_MAP.sim('nbr')")
+                    fx = dict(zip(s["ids"], s["fixed"]))
+                    jit[which] = (sym[A[0]], fx.get(A[0]), sym[B[0]], fx.get(B[0]))
+                check(c, "ui#6: a double-click with a micro-drag (5 px) in its first or second click pins the gene "
+                         "double-clicked, not the gene of an earlier click",
+                      all(isinstance(v, tuple) and v[3] == 1 and not v[1] for v in jit.values()) and not errs,
+                      {"micro-drag": jit, "errors": errs})
             finally:
                 b.close()
     except Exception as e:  # noqa: BLE001  (no browser binary, sandbox ...)
@@ -1536,6 +1673,95 @@ def note_provenance(work):
 
 
 @case
+def note_citation_forms(work):
+    """science#2 (round 3): every paper the note names - PubMed, NCBI and Europe PMC links, bare URLs, 'PMIDs a, b'
+    lists, PMC links and ids, Europe PMC preprint links - is one of the review's checked citations, or is removed and
+    counted; a
+    percent-encoded DOI never turns into markup in the stored note; a sentence about the literature search with a
+    finding in it is kept (only a sentence that just vouches for the verification goes); science#8: the note marks
+    a retracted paper where it is cited."""
+    from tahoemap import vault as VA
+    from tahoemap.review import tools as TL, verify as V
+    c = "note_citation_forms"
+    made_up = ["99999999", "99999998", "99999997", "99999996", "99999995"]
+    note = (f"Known [PMID:31000001](https://pubmed.ncbi.nlm.nih.gov/31000001/) (Smith, PMID 31000001, 2020). Made up "
+            f"[Smith et al. 2020](https://www.ncbi.nlm.nih.gov/pubmed/{made_up[0]}), [Jones](https://europepmc.org/"
+            f"article/MED/{made_up[1]}), [Lee](https://europepmc.org/abstract/MED/{made_up[2]}/), "
+            f"<https://www.ncbi.nlm.nih.gov/pubmed/?term={made_up[3]}> and https://europepmc.org/article/MED/"
+            f"{made_up[4]}?x=1. Real, cited only here: PMIDs 31000003, 31000004 and 31000002. PMC: "
+            "[Kim](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9999999/), PMCID: PMC1234567 and "
+            "![fig](https://europepmc.org/article/PMC/PMC7654321); a preprint [Wu](https://europepmc.org/article/PPR/"
+            "PPR123456). Retracted, cited by the item: "
+            "[PMID:31000005](https://www.ncbi.nlm.nih.gov/pubmed/31000005).\n\n"
+            "Encoded: [this paper](https://doi.org/10.1000/x%22%3E%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E) and "
+            "DOI:10.1002/x%3Cscript%3E.\n\n"
+            "References were checked in PubMed and Europe PMC full text for the pair; none links PIR to HMOX1, so the "
+            "pair is a novel candidate.\n\n"
+            "NQO1 is a classic NRF2 target. All citations were verified against PubMed abstracts.\n\n"
+            "_AI-generated literature review of this run's data; citations were checked against PubMed and their "
+            "abstracts.\nVerify before relying on it._\n")
+    ctx, lib = lit_ctx(work, read=("31000001", "31000002", "31000003", "31000004", "31000005"))
+    try:
+        rv = F.sample_review("NQO1", ("31000001", "31000005"), note=note)
+        try:
+            TL.submit_review(ctx, rv)
+            warned = ""
+        except TL.ToolError as e:
+            warned = str(e)
+        TL.submit_review(ctx, rv)
+        r, rep = V.check_ids(ctx.submitted, ctx)
+        r_again, rep_again = V.check_ids(r, ctx)
+    finally:
+        lib.uninstall()
+    fin = V.finalize(r, "ids", rep)
+    nt, shown = fin["note_markdown"], VA.sanitize_note(fin["note_markdown"])
+    gone = {"PMID:" + p for p in made_up} | {"PMID:31000002", "PMID:31000003", "PMID:31000004",
+                                             "PMCID:PMC9999999", "PMCID:PMC1234567", "PMCID:PMC7654321",
+                                             "EPMC:PPR/PPR123456"}
+    check(c, "submit_review's one warning names the papers the note cites in other link forms, PMC ids included",
+          all(x in warned for x in ("PMID:99999999", "PMID:99999998", "PMID:31000002", "PMCID:PMC9999999",
+                                    "a PMC or Europe PMC id is always removed")), warned[:300])
+    check(c, "every link form and list is read: the made-up PMIDs removed as not found, the note-only papers and "
+             "PMC ids removed as cited only here, all counted",
+          {"PMID:" + p for p in made_up} <= set(rep["missing"])
+          and set(rep["note_removed_ids"]) == gone - {"PMID:" + p for p in made_up}
+          and rep["note_removed"] == 7 and V.counts(fin)["note_removed"] == 7
+          and "7 papers cited only in the text removed" in fin["note_footer"]
+          and "PMID:2020" not in nt and all(f"{x} (citation removed: " in nt for x in gone), rep["note_removed_ids"])
+    dests = re.findall(r"\]\(\s*<?([^)\s>]+)", shown) + re.findall(r"https?://[^\s)\]>]+", shown)
+    named = {x for d in dests for x, _a, _b in TL.note_ids(d)}
+    check(c, "the note shown in the vault links no paper but the review's checked citations",
+          named <= set(TL.item_ids(fin)) and not any(p in shown for p in ("ncbi.nlm.nih.gov/pubmed/9999",
+                                                                          "europepmc.org/article/MED/9999",
+                                                                          "PMC9999999/")), sorted(named))
+    check(c, "a percent-encoded DOI stays encoded: no tag or quote in the stored note or in the agent's warning",
+          not re.search(r"<(?:img|script)|\"", nt) and "<img" not in warned and "<script" not in warned
+          and "DOI:10.1000/x%22%3e%3cimg%20src%3dx%20onerror%3dalert(1)%3e (citation removed: not found" in nt
+          and "DOI:10.1002/x%3cscript%3e (citation removed: not found" in nt
+          and TL.norm_citation("DOI:10.1000/x%22%3E%3Cimg%3E") is None
+          and TL.link("DOI:10.1002/(sici)1-2(3)4:5<6::aid-x7>8.0.co;2-y").startswith(
+              "[DOI:10.1002/(sici)1-2(3)4:5%3c6"),
+          nt[nt.find("Encoded"):][:300])
+    check(c, "a sentence about the literature search with its finding is kept whole; a sentence (or footer) that only "
+             "vouches for the verification is dropped",
+          "References were checked in PubMed and Europe PMC full text for the pair; none links PIR to HMOX1, so the "
+          "pair is a novel candidate." in nt and "NQO1 is a classic NRF2 target." in nt
+          and "verified against PubMed abstracts" not in nt and "citations were checked" not in nt
+          and "Verify before relying" not in nt, nt[-400:])
+    lst = ("- NQO1 and HMOX1 are NRF2 targets [PMID:31000001](https://pubmed.ncbi.nlm.nih.gov/31000001/). The claims "
+           "were checked by the citation checker.\n- Citations were checked against PubMed.\n- HMOX1 up 3x\n"
+           "* Citations were verified in PubMed. NQO1 up 4.5x\n")
+    want = ("- NQO1 and HMOX1 are NRF2 targets [PMID:31000001](https://pubmed.ncbi.nlm.nih.gov/31000001/).\n"
+            "- HMOX1 up 3x\n* NQO1 up 4.5x\n")
+    check(c, "in a list, only those sentences go: the other items, their lines and their markers stay",
+          V.drop_self_check(lst) == want, repr(V.drop_self_check(lst)))
+    check(c, "science#8: a retracted paper is marked where the note cites it, once (a second check adds nothing)",
+          "[PMID:31000005](https://www.ncbi.nlm.nih.gov/pubmed/31000005) (retracted paper)" in nt
+          and nt.count("(retracted paper)") == 1 and r_again["note_markdown"] == r["note_markdown"]
+          and rep_again["note_removed"] == 7, nt[:200])
+
+
+@case
 def check_status_contract(work):
     """The shared contract: check_status and shown_verdict on every connection verdict and every citing item,
     'verification' {ids, llm} counts, for each way an item can end up."""
@@ -1819,6 +2045,33 @@ def stop_after_submit(view, ents):
     R.status(view, say=out.append)
     check(c, "its state stays done; status points at --recheck", st["status"] == "done"
           and any("--recheck" in x for x in out), [x for x in out if "recheck" in x])
+    grace = R.STOP_GRACE
+    R.STOP_GRACE = 0.5
+    try:                                                # a --recheck that is itself stopped while the checker runs
+        sc = F.FakeAPI({"checker": {g["name"]: [{"submit_check": "auto", "signal": "SIGINT", "sleep_after": 1.5}]}})
+        res1, fk1 = run(view, sc, only=g["entity_id"], verify="llm", recheck=True)
+        time.sleep(2.0)
+    finally:
+        R.STOP_GRACE = grace
+    L1 = ledger(view)
+    st1 = Ledger(view).states()[g["entity_id"]]
+    rv1 = json.load(open(rp)) if rp else {}
+    out1 = []
+    R.status(view, say=out1.append)
+    check(c, "a --recheck stopped while the checker runs: a ledger note, the review unchanged, still --recheck-able",
+          res1.exit_code == 130 and [x["role"] for x in fk1.calls] == ["checker"]
+          and [r.get("note") for r in L1[len(L):] if not r.get("late")] == ["recheck: paused"]
+          and st1["last"] == main[-1] and st1["status"] == "done" and R.recheck_pending(view, st1, "llm")
+          and rv1.get("verification", {}).get("llm", {}).get("status") == "not_run"
+          and any("--recheck" in x for x in out1),
+          {"exit": res1.exit_code, "new lines": [(r["status"], r.get("note")) for r in L1[len(L):]],
+           "pending": R.recheck_pending(view, st1, "llm")})
+    old_line = {"entity_id": g["entity_id"], "kind": "gene", "name": g["name"], "status": "done", "recheck": True,
+                "review_unchanged": True, "error": "recheck stopped: stopped by SIGINT; the stored review is unchanged"}
+    st_old = dict(st1, last=old_line)                   # the line an earlier version wrote for a stopped recheck
+    check(c, "a done line of an earlier version without the review's path or statuses: read from the review JSON",
+          R.recheck_pending(view, st_old, "llm") and not R.recheck_pending(view, st_old, "ids"),
+          {"llm": R.recheck_pending(view, st_old, "llm"), "ids": R.recheck_pending(view, st_old, "ids")})
     n_files = len(glob.glob(os.path.join(view, "review", "history", "gene", "*", "*.jsonl")))
     res2, fk2 = run(view, F.FakeAPI({"checker": "auto"}), only=g["entity_id"], verify="llm", recheck=True)
     rv2 = json.load(open(rp)) if rp else {}
@@ -2031,6 +2284,56 @@ def systematic_failures(view, ents):
                   concurrency=2, verify="ids")
     check(c, "fixed: the next run reviews all 6", res2.counts == {"done": 6}, res2.counts)
     reset(view, c)
+    # not fixed: the next run stops again; the 5 that stopped the first one do not count toward it (5 others do)
+    many = ents["genes"][:8] + ents["drugs"][:4]
+    ids = [e["entity_id"] for e in many]
+    sc = {"entities": {e: [{"error": 404}] for e in ids}}
+    res, fk = run(view, sc, only=ids, concurrency=1, verify="ids")
+    first = {r["entity_id"] for r in ledger(view) if r["status"] == "failed"}
+    res2, fk2 = run(view, sc, only=ids, concurrency=1, verify="ids")
+    st = Ledger(view).states()
+    failed2 = [r["entity_id"] for r in ledger(view)[len(first) * 2:] if r["status"] == "failed"]
+    check(c, "the cause not fixed: the next run stops too, after 5 entities that had not stopped a run; none counted",
+          res.exit_code == res2.exit_code == 4 and len(fk.calls) == 5 and len(fk2.calls) == 10
+          and set(failed2) >= first and all(st[e]["n_failed"] == 0 for e in failed2)
+          and "5 of these had stopped an earlier run" in res2.message,
+          {"exit": (res.exit_code, res2.exit_code), "calls": (len(fk.calls), len(fk2.calls)),
+           "n_failed": sorted({st[e]["n_failed"] for e in failed2}), "message": res2.message[-140:]})
+    reset(view, c)
+    # an error that is the entities' own (413 on 5 entities at the head of the queue): one run stops, the next goes
+    # on past them and counts their failures; after 3 they are left alone
+    five, healthy = ents["genes"][:5], ents["genes"][5:8]
+    ids = [e["entity_id"] for e in five + healthy]
+    sc = {"entities": {**{e["entity_id"]: [{"error": 413}] for e in five},
+                       **{e["entity_id"]: good() for e in healthy}}}
+    codes, nf = [], []
+    for _i in range(4):
+        res, fk = run(view, sc, only=ids, concurrency=1, verify="ids")
+        st = Ledger(view).states()
+        codes.append(res.exit_code)
+        nf.append([st[e["entity_id"]]["n_failed"] for e in five])
+    res5, fk5 = run(view, sc, only=ids, concurrency=1, verify="ids")
+    check(c, "the same 413 on 5 entities of their own: the first run stops, the next reviews the others and counts "
+          "the 5 failures; they are left alone after 3",
+          codes == [4, 0, 0, 0] and nf == [[0] * 5, [1] * 5, [2] * 5, [3] * 5]
+          and all(st[e["entity_id"]]["status"] == "done" for e in healthy) and not fk5.calls
+          and res5.exit_code == 0 and res5.message == "nothing to do",
+          {"exit codes": codes, "n_failed": [x[0] for x in nf], "5th run calls": len(fk5.calls)})
+    res, fk = run(view, sc, only=ids, concurrency=1, verify="ids", retry_failed=True)
+    check(c, "--retry-failed then tries the 5 again without stopping the run", res.exit_code == 0
+          and res.counts == {"failed": 5} and len(fk.calls) == 5, {"exit": res.exit_code, "counts": res.counts})
+    reset(view, c)
+    # after an answer in this run, the same error on 5 entities in a row is theirs: counted, the run goes on
+    six = ents["genes"][:7]
+    sc = {"entities": {six[0]["entity_id"]: good(), six[6]["entity_id"]: good(),
+                       **{e["entity_id"]: [{"error": 413}] for e in six[1:6]}}}
+    res, fk = run(view, sc, only=[e["entity_id"] for e in six], concurrency=1, verify="ids")
+    st = Ledger(view).states()
+    check(c, "after an entity of this run got its answer: 5 failures in a row do not stop the run, and count",
+          res.exit_code == 0 and res.counts == {"done": 2, "failed": 5}
+          and all(st[e["entity_id"]]["n_failed"] == 1 for e in six[1:6]),
+          {"exit": res.exit_code, "counts": res.counts})
+    reset(view, c)
     g = six[0]
     for err in (400, 413, 400):
         run(view, {"entities": {g["entity_id"]: [{"error": err}]}}, only=g["entity_id"], verify="ids")
@@ -2100,6 +2403,7 @@ def main():
     drug_dossier_trustworthy_dose(view, ents)
     cellosaurus_url_in_dossier(view, ents, work)
     note_provenance(work)
+    note_citation_forms(work)
     check_status_contract(work)
     contract_end_to_end(view, ents)
     streaming_and_max_tokens(view, ents)

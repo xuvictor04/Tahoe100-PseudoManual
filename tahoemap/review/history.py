@@ -22,9 +22,10 @@
     Ledger(out)
         OUT/review/ledger.jsonl: one line per finished attempt (append-only; the latest line of an entity is its
         state). latest() / states() / frame() read it back. Bookkeeping lines have status "note" and a "note"
-        text: the cost of a response that arrived after its attempt was closed ("late": true), or a failure the
-        run put down to a systematic error ("uncount_failed": true); they change the spend or the failure count,
-        never the state.
+        text: the cost of a response that arrived after its attempt was closed ("late": true), a failure the run
+        put down to a systematic error ("uncount_failed": true, with the error's "signature"), or a --recheck that
+        was stopped before it finished ("recheck": true; the stored review is unchanged); they change the spend or
+        the failure count, never the state.
 
 Every line is written whole (one write, then flush) under a lock, and passes through keys.scrub() first, so an API
 key can never reach these files. Lines are never rewritten. A file that ends in a cut line (a crash, a full disk)
@@ -230,25 +231,31 @@ class Ledger:
 
     def states(self):
         """entity_id -> {status, n_failed (failed / no_review attempts since the last other outcome), cost_usd (all
-        attempts), attempts, last (the latest line)}. Bookkeeping lines ("note": the cost of a response that came
-        after its attempt ended; "uncount_failed": a failure the run put down to a systematic error) change the
-        cost or the failure count, not the state."""
+        attempts), attempts, last (the latest line), stopped_runs (the errors - signatures, "*" when the line has
+        none - of the failures the run put down to a systematic error since the last other outcome)}. Bookkeeping
+        lines ("note": the cost of a response that came after its attempt ended; "uncount_failed": a failure the run
+        put down to a systematic error; a recheck that did not finish) change the cost, the failure count or
+        stopped_runs, not the state."""
         st = {}
         for r in self.read():
             e = r.get("entity_id")
             if not e:
                 continue
-            s = st.setdefault(e, {"status": None, "n_failed": 0, "cost_usd": 0.0, "attempts": 0, "last": None})
+            s = st.setdefault(e, {"status": None, "n_failed": 0, "cost_usd": 0.0, "attempts": 0, "last": None,
+                                  "stopped_runs": []})
             s["cost_usd"] += float(r.get("cost_usd") or 0.0)
             if r.get("note"):
                 if r.get("uncount_failed"):
                     s["n_failed"] = max(0, s["n_failed"] - 1)
+                    sig = r.get("signature")
+                    s["stopped_runs"].append(tuple(sig) if isinstance(sig, (list, tuple)) else "*")
                 continue
             s["attempts"] += 1
             if r.get("status") in ("failed", "no_review"):
                 s["n_failed"] += 1
             elif r.get("status") in ("done", "refused", "over_budget"):
                 s["n_failed"] = 0
+                s["stopped_runs"] = []
             s["status"] = r.get("status")
             s["last"] = r
         return st

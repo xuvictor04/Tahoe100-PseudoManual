@@ -1549,8 +1549,9 @@ function PhysPane(kind) {
     skip: 0, centreSel: false, lastStatus: 0, src: "", lastRun: 0, debt: 0};
   const loc = new Int32Array(NA).fill(-1), nloc = new Int32Array(NA).fill(-1);
   let W = 1, H = 1, DPR = 1, fitK = 1, sized = false, clickTimer = 0, dragged = false, downAt = null, pinch = null, lastFit = null;
-  // a click on a gene selects it after DBL_MS without a second click; the last two clicks are kept so that a
-  // double-click - even a slow one, after the first click's selection re-centred the view - pins the gene clicked first
+  // a click on a gene selects it after DBL_MS without a second click; the last two press-releases (a micro-drag too)
+  // are kept so that a double-click - even a slow one, after the first click's selection re-centred the view - pins
+  // the gene clicked first
   const DBL_MS = 400;
   let prevClick = null, lastClick = null;
   const V = {k: 1, tx: 0, ty: 0}, T = {k: 1, tx: 0, ty: 0}, ptrs = new Map();
@@ -2055,9 +2056,12 @@ function PhysPane(kind) {
     const wasDrag = dragged, u = st.drag;
     endP(e);
     if (u >= 0) { S.fixed[u] &= ~2; S.alphaTarget = 0; st.drag = -1; req(); }
-    if (!wasDrag && e.button === 0) {
-      const i = u >= 0 ? st.ids[u] : -1, c = {id: i, t: performance.now(), pinned: u >= 0 && (S.fixed[u] & 5) !== 0};
-      prevClick = lastClick; lastClick = c;
+    if (e.button !== 0) return;
+    // every press-release is kept, a micro-drag too (the browser may count it as one click of a double-click): the
+    // double-click then pins the gene of its own first click, not that of an earlier click
+    const i = u >= 0 ? st.ids[u] : -1;
+    prevClick = lastClick; lastClick = {id: i, t: performance.now(), pinned: u >= 0 && (S.fixed[u] & 5) !== 0};
+    if (!wasDrag) {
       if (i >= 0 && i !== sel) {
         clearTimeout(clickTimer);
         const g0 = selGen;                                       // wait: a double-click pins instead; any other

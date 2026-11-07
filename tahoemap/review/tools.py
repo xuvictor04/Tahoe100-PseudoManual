@@ -281,25 +281,35 @@ def trim_doi(d):
         d = e
 
 
+def _decoded_doi(d):
+    """d with its percent-escapes decoded when the result is still a DOI (DOI_BODY's characters only), else None:
+    an escape that decodes to a quote, a space, '=' ... belongs to no DOI a paper carries."""
+    dec = urllib.parse.unquote(d)
+    return dec if _DOI_WHOLE.fullmatch(dec) else None
+
+
 def clean_doi(raw):
-    """(doi, rest): a DOI matched in text -> unquoted, lower-cased, trimmed; rest = the trimmed-off characters."""
+    """(doi, rest): a DOI matched in text -> trimmed, unquoted (only when the decoded text is still a DOI: else it
+    is kept as written, so a URL-encoded quote or tag never becomes one), lower-cased; rest = the trimmed-off
+    characters."""
     d = trim_doi(raw)
-    return urllib.parse.unquote(d).lower(), raw[len(d):]
+    return (_decoded_doi(d) or d).lower(), raw[len(d):]
 
 
 def norm_citation(s):
     """'PMID:123' / 'DOI:10.x/y' for a PMID or DOI in any common spelling (bare digits = PMID; doi.org URLs, also
     percent-encoded); None otherwise - also for a DOI with characters outside DOI_BODY's set (quotes, spaces,
-    brackets, '=' ...), which is no DOI a paper carries and could break the link it becomes."""
+    brackets, '=' ..., written or percent-encoded), which is no DOI a paper carries and could break the link it
+    becomes."""
     t = str(s or "").strip().rstrip(".,;")
     m = _PMID.match(t)
     if m:
         return f"PMID:{int(m.group(1))}"
     m = _DOI.match(t)
     if m:
-        d = clean_doi(m.group(1))[0]
-        if _DOI_WHOLE.fullmatch(d):
-            return "DOI:" + d
+        d = _decoded_doi(trim_doi(m.group(1)))
+        if d:
+            return "DOI:" + d.lower()
     return None
 
 
@@ -309,9 +319,15 @@ def citation_url(cid):
     return PUBMED_URL.format(v) if kind == "PMID" else DOI_URL.format(urllib.parse.quote(v, safe="/"))
 
 
+def cid_text(cid):
+    """A citation id as text written into a note (a link's text, a removal marker): the '<' and '>' an old SICI
+    DOI may carry are percent-encoded, so no text verification writes can form an HTML tag."""
+    return cid.replace("<", "%3c").replace(">", "%3e")
+
+
 def link(cid):
     """The markdown link of a citation id: [PMID:123](https://pubmed.ncbi.nlm.nih.gov/123/)."""
-    return f"[{cid}]({citation_url(cid)})"
+    return f"[{cid_text(cid)}]({citation_url(cid)})"
 
 
 # ----------------------------------------------------------------------------- PubMed
@@ -889,14 +905,29 @@ def schema_errors(payload, tool):
 
 
 _LINK = re.compile(r"\[[^\]]*\]\((?:[^()]|\([^()]*\))*\)")          # a markdown link; one level of ( ) in the URL
-_BARE = re.compile(r"\b(?:PMID\s*:?\s*(\d{4,9})(?!\d)|DOI\s*:\s*(" + DOI_BODY + "))", re.I)
+_BARE = re.compile(r"\b(?:PMID\s*[:#]?\s*(\d{4,9})(?!\d)|DOI\s*:\s*(" + DOI_BODY + "))", re.I)
 _REMOVED = " (citation removed"                                       # verify's marker after a removed id
-_NOTE_PMID = re.compile(r"pubmed\.ncbi\.nlm\.nih\.gov/(\d{1,9})|\bPMID\s*:?\s*(\d{4,9})(?!\d)", re.I)
+# The ways a note can name a paper (note_matches): PMIDs as PubMed / NCBI / Europe PMC links and as 'PMID 123',
+# 'PMIDs 1, 2 and 3', 'PubMed ID 123'; DOIs as doi.org links and 'DOI:10.x/y'; PMC ids as PMC / Europe PMC links and
+# 'PMCID PMC123' / 'PMC123', and Europe PMC links to records of other sources (preprints PPR ..., as 'EPMC:PPR/x'):
+# no item may cite those ids, so verification removes them from the note. A further number of a 'PMIDs' list needs
+# 7 digits or more, so a year or a count ('PMID 31000004, 2020') is not read as one.
+_PMID_LIST = re.compile(r"\b(?:PMIDs?|PubMed\s+IDs?)\s*[:#]?\s*(\d{4,9})(?!\d)"
+                        r"((?:\s*(?:,|;|&|\band\b|\bor\b)\s*\d{7,9}(?!\d))*)", re.I)
+_LIST_ITEM = re.compile(r"\d{7,9}")
+_PMID_URL = re.compile(r"(?:pubmed\.ncbi\.nlm\.nih\.gov/|ncbi\.nlm\.nih\.gov/pubmed/|\bpubmed\.gov/"
+                       r"|europepmc\.org/(?:article|abstract)s?/MED/)(?:\?term=)?(\d{1,9})(?!\d)", re.I)
+_PMC_URL = re.compile(r"(?:ncbi\.nlm\.nih\.gov/pmc/articles/|pmc\.ncbi\.nlm\.nih\.gov/articles/"
+                      r"|europepmc\.org/(?:(?:article|abstract)s?/PMC/|articles?/))(PMC\d{1,9})(?!\d)", re.I)
+_PMC_WORD = re.compile(r"(?:\bPMCID\s*[:#]?\s*)?\b(PMC\d{4,9})(?!\d)", re.I)
+_EPMC_OTHER = re.compile(r"europepmc\.org/(?:article|abstract)s?/(PPR|PAT|AGR|CBA|CTX|ETH|HIR|NBK)/([A-Za-z0-9]{1,20})"
+                         r"(?![A-Za-z0-9])", re.I)
 _NOTE_DOI = re.compile(r"doi\.org/(" + DOI_BODY + r")|\bDOI\s*:\s*(" + DOI_BODY + ")", re.I)
 
 
 def link_citations(md):
-    """Bare 'PMID:123' / 'PMID 123' / 'DOI:10.x/y' in markdown become links; existing links are left alone."""
+    """Bare 'PMID:123' / 'PMID 123' / 'PMIDs 1, 2 and 3' / 'PubMed ID 123' / 'DOI:10.x/y' in markdown become links;
+    existing links are left alone."""
     out, pos = [], 0
     for m in _LINK.finditer(md):
         out.append(_link_bare(md[pos:m.start()]))
@@ -904,6 +935,13 @@ def link_citations(md):
         pos = m.end()
     out.append(_link_bare(md[pos:]))
     return "".join(out)
+
+
+def _one_pmid_each(m):
+    """'PMIDs 1, 2 and 3' / 'PubMed ID 1' -> 'PMID 1, PMID 2 and PMID 3' / 'PMID 1' (each is then linked)."""
+    if not m.group(2) and m.group(0)[:4].upper() == "PMID" and m.group(0)[4:5].upper() != "S":
+        return m.group(0)
+    return "PMID " + m.group(1) + _LIST_ITEM.sub(lambda x: "PMID " + x.group(0), m.group(2))
 
 
 def _link_bare(s):
@@ -916,23 +954,44 @@ def _link_bare(s):
         if m.string.startswith(_REMOVED, m.end() - len(rest)):
             return m.group(0)                        # an id verification removed: plain text, as it put it
         return link(cid) + rest
-    return _BARE.sub(rep, s)
+    return _BARE.sub(rep, _PMID_LIST.sub(_one_pmid_each, s))
 
 
-def note_ids(md):
-    """[(citation id, start, end)] of every PMID / DOI linked or named in a note, except those already marked
-    '(citation removed ...)' by verification."""
-    out = []
-    for m in _NOTE_PMID.finditer(md):
-        if not md.startswith(_REMOVED, m.end()):
-            out.append((f"PMID:{int(m.group(1) or m.group(2))}", m.start(), m.end()))
+def note_matches(md):
+    """[(citation id, start, end, 'url' | 'word')] of every paper a note names - linked, as a bare URL or in words
+    (see _PMID_LIST ... above): 'PMID:n', 'DOI:x', 'PMCID:PMCn' or 'EPMC:SRC/id'; 'url' when the span is the id's
+    part of a URL (from its host on). Ids already marked '(citation removed ...)' by verification, and a match
+    inside another (the 'PMC123' of a PMC link), are left out."""
+    found = []
+    for m in _PMID_URL.finditer(md):
+        found.append((f"PMID:{int(m.group(1))}", m.start(), m.end(), "url"))
+    for m in _PMID_LIST.finditer(md):
+        found.append((f"PMID:{int(m.group(1))}", m.start(), m.end(1), "word"))
+        for x in _LIST_ITEM.finditer(m.group(2)):
+            found.append((f"PMID:{int(x.group(0))}", m.start(2) + x.start(), m.start(2) + x.end(), "word"))
+    for rx, kind in ((_PMC_URL, "url"), (_PMC_WORD, "word")):
+        for m in rx.finditer(md):
+            found.append(("PMCID:" + m.group(1).upper(), m.start(), m.end(), kind))
+    for m in _EPMC_OTHER.finditer(md):
+        found.append((f"EPMC:{m.group(1).upper()}/{m.group(2).upper()}", m.start(), m.end(), "url"))
     for m in _NOTE_DOI.finditer(md):
         g = 1 if m.group(1) else 2
         doi, rest = clean_doi(m.group(g))
-        end = m.end(g) - len(rest)
-        if not md.startswith(_REMOVED, end):
-            out.append(("DOI:" + doi, m.start(), end))
+        found.append(("DOI:" + doi, m.start(), m.end(g) - len(rest), "url" if g == 1 else "word"))
+    out, last = [], -1
+    for c, a, b, kind in sorted(found, key=lambda x: (x[1], -x[2])):
+        if a < last:
+            continue                                  # inside an earlier match (the PMC id of a PMC link)
+        last = b
+        if not md.startswith(_REMOVED, b):
+            out.append((c, a, b, kind))
     return out
+
+
+def note_ids(md):
+    """[(citation id, start, end)] of every PMID / DOI / PMC id linked or named in a note (note_matches), except
+    those already marked '(citation removed ...)' by verification."""
+    return [(c, a, b) for c, a, b, _k in note_matches(md)]
 
 
 def item_ids(review):
@@ -1032,12 +1091,14 @@ def submit_review(ctx, payload):
                        f"citations): {', '.join(unread[:30])}")
         if unseen:
             msg.append(f"- DOIs no search returned (find them with europepmc_search 'DOI:\"...\"', or remove the "
-                       f"citations): {', '.join(unseen[:30])}")
+                       f"citations): {', '.join(cid_text(c) for c in unseen[:30])}")
         if note_only:
-            msg.append(f"- papers cited in note_markdown but in no item's citations, so no claim of the review is "
-                       f"checked against them; they are removed from the note unless an item cites them (add them "
-                       f"to the item whose claim they support, or take them out of the note): "
-                       f"{', '.join(note_only[:30])}")
+            msg.append("- papers cited in note_markdown but in no item's citations, so no claim of the review is "
+                       "checked against them; they are removed from the note unless an item cites them (add them "
+                       "to the item whose claim they support, or take them out of the note"
+                       + ("; a PMC or Europe PMC id is always removed: cite the paper's PMID or DOI" if any(
+                           c.startswith(("PMCID:", "EPMC:")) for c in note_only) else "")
+                       + f"): {', '.join(cid_text(c) for c in note_only[:30])}")
         msg.append("Then call submit_review again.")
         raise ToolError("\n".join(msg))
     ctx.notes["not_retrieved"] = unread + unseen

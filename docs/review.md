@@ -189,9 +189,14 @@ as `failed` (with `transient_refusal`, the category and `recommended_model` in t
 model) and the entity is retried by a later run.
 
 **The same error on every entity** — say the model is not available to your organisation (404), or a beta is not
-enabled for it (400) — does not sweep the whole queue: after **5 entities in a row** fail with the same error the run
-stops with exit code **4** and says which error. Those 5 failures are not counted against the entities (a ledger
-`note` line each); fix the cause and run the same command again.
+enabled for it (400) — does not sweep the whole queue: when **5 entities in a row** fail with the same error before
+any entity of the run got its answer from the API, the run stops with exit code **4** and says which error. Those
+failures are not counted against the entities (a ledger `note` line each); fix the cause and run the same command
+again. Once an entity of the run has got its answer, the API works, and failures are the entities' own: counted,
+and the run goes on. If the error that stopped a run was the entities' own after all (say a request too large for
+each of 5 neighbours in the queue), run the same command again as it is: an entity that already stopped a run with
+that error no longer counts toward a stop, so the next run goes on past them, and their failures count from then on
+(left alone after 3 like any other).
 
 When **every** key is dead:
 
@@ -246,7 +251,10 @@ the citation check, every key ran out there, PubMed / Crossref could not be reac
 and you now want the claims checked — is `done`, and `tahoe review status` counts it. `tahoe review run --recheck
 --max-usd 5` (with `--verify llm`, the default, or `--verify ids`) runs only what it lacks — the id look-ups and / or
 the citation checker — on the stored review, rewrites its JSON and note, and adds a `done` ledger line (`recheck`)
-with the checker's cost (projected ~$0.10 each with the default checker); the reviewer is not run again.
+with the checker's cost (projected ~$0.10 each with the default checker); the reviewer is not run again. A
+`--recheck` that is itself stopped (Ctrl-C, SIGTERM, SIGHUP, the `--max-usd` cap, no key left) leaves the stored
+review as it was, with a ledger `note` line for its cost: the review still counts as lacking its verification, and
+the next `--recheck` completes it.
 
 ## Histories and the ledger
 
@@ -267,8 +275,9 @@ A **ledger** line: entity_id, kind, name, run_id, agent, model, status (`done`, 
 responses), input / output / cache-write / cache-read tokens, web searches, number of requests and tool calls, key
 id, start and end time, the error (scrubbed), and the path of its history file; a done line also has the
 verification's state (`ids_status`, `llm_status`). Lines with status `note` are bookkeeping, not attempts: the cost
-of a response that arrived after its attempt was closed (`late`), or a failure the run put down to a systematic
-error (`uncount_failed`); they never change an entity's state. A line cut short by a crash or a full disk is
+of a response that arrived after its attempt was closed (`late`), a failure the run put down to a systematic
+error (`uncount_failed`, with the error's `signature`), or a `--recheck` stopped before it finished (`recheck`);
+they never change an entity's state. A line cut short by a crash or a full disk is
 skipped, and the next line is still read.
 
 A **history** file holds one JSON object a line, in order: `start` (agent, model, effort, key id, the full system
@@ -312,11 +321,18 @@ print(led.groupby(["kind", "status"])["cost_usd"].agg(["count", "sum"]))
    the item is marked `unverified`, and in the note the link becomes "PMID:n (citation removed: not found in
    PubMed)". The note may cite only papers that an item of the review cites (only those are checked against a
    claim): any other PMID or DOI in it becomes "PMID:n (citation removed: cited only in this text ...)" and is
-   counted (the agent is warned once at submission). **Retractions**: a PMID whose PubMed type is *Retracted
+   counted (the agent is warned once at submission). Every way a note can name a paper is read: PubMed, NCBI
+   (`ncbi.nlm.nih.gov/pubmed/...`) and Europe PMC (`europepmc.org/article/MED/...`) links, bare URLs, "PMID 123",
+   "PMIDs 1, 2 and 3", "PubMed ID 123", doi.org links and "DOI:..."; a link or bare URL to a removed paper goes
+   whole. PMC ids (PMC links, "PMCID PMC123") and Europe PMC links to other records (a preprint's PPR id ...) are
+   always removed, since the review cites papers by PMID or DOI only.
+   A percent-encoded DOI stays as written when its escapes do not decode to a DOI (a quote, a space, a tag), so the
+   check never writes markup into the note. **Retractions**: a PMID whose PubMed type is *Retracted
    Publication*, or a DOI that Europe PMC types so or whose Crossref record carries a retraction (Crossref's update
    notices, which include the Retraction Watch data), stays cited but is marked on its item
-   (`retracted_citations`) and counted; a retraction *notice* is not itself counted as retracted (items list notices
-   in `retraction_notices`). Ids that could not be looked up (a service down) are kept and marked
+   (`retracted_citations`), marked "(retracted paper)" where the note cites it, and counted; a retraction *notice*
+   is not itself counted as retracted (items list notices in `retraction_notices`). Ids that could not be looked up
+   (a service down) are kept and marked
    (`unchecked_citations`). A paper cited without having been retrieved in the session is flagged (and the agent was
    asked to read it before submitting).
 2. **Claims**: the citation checker gets each claim (established, missing, contradicted, connection verdicts) with
@@ -334,8 +350,10 @@ no claim check), `unchecked` (an id not verified) or `citations_removed` (every 
 `shown_verdict`, the verdict to display: the agent's, or `unverified` when the status is `not_supported` or
 `citations_removed`. The top level has `verification` (`ids`: checked, removed, unchecked, retracted ...; `llm`:
 status done / not_run / failed and the counts per verdict; `counts`) and `note_footer`, a provenance line generated
-from those counts and shown under the note (the agents are told never to write their own). "Supported" means *the
-abstract says so*, not that the claim is true.
+from those counts and shown under the note (the agents are told never to write their own; a sentence of the stored
+note that only vouches for its own verification, such as "citations were checked against PubMed and their
+abstracts" or the old "AI-generated ..." footer, is dropped, while a sentence that says anything more, such as what
+a search found, is kept whole). "Supported" means *the abstract says so*, not that the claim is true.
 
 ## In the vault and the map
 
@@ -357,10 +375,12 @@ rebuilds it), and the vault and map show out of date until they are rebuilt.
   unchecked), retracted papers, papers cited without having been read, how many verdicts are shown as unverified,
   and whether the citation checker ran (its counts), was not run or failed (`review run --recheck` completes it).
 - The agent's text is cleaned before it goes into the note: no raw HTML (script, iframe, img, a, style ... any tag
-  is removed), no HTML or Obsidian (`%%`) comment, no image or embedded note, no link other than markdown links to
-  PubMed, doi.org, Europe PMC, NCBI and Cellosaurus (any other link keeps only its text; a bare URL to another site
-  is not made a link), code fences closed and shown as plain code (no `dataviewjs`, `mermaid` ...), no setext
-  heading, its own headings demoted below the note's. A line in which the agent vouches for its own verification
+  is removed), no HTML or Obsidian (`%%`) comment, no image (inline, reference or shortcut `![name]`) or embedded
+  note, no link other than markdown links to PubMed, doi.org, Europe PMC, NCBI and Cellosaurus (any other link keeps
+  only its text; a reference definition to another site is removed wherever it is, in a blockquote, callout or list
+  item too; a bare URL to another site is not made a link), code fences closed and shown as plain code (no
+  `dataviewjs`, `mermaid` ..., in a blockquote, callout or list item too), no setext heading, its own headings
+  demoted below the note's. A line in which the agent vouches for its own verification
   ("citations were checked ...", its own "AI-generated ..." footer) is dropped: the generated line replaces it.
   Wikilinks the agent wrote are kept only where the vault has that note. Partner names and citation ids in the
   generated lines and tables are escaped.

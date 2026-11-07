@@ -57,4 +57,6 @@ written before anything is checked, and the vault adds the generated line that s
 - Citations inline, right after the claim: `... ([PMID:24390086](https://pubmed.ncbi.nlm.nih.gov/24390086/))`.
   Cite in the note only papers that are also in the citations of the review's items (established, missing,
   contradicted, connection_verdicts): only those are checked against a claim, and any other PMID or DOI is removed
-  from the note after submission ("citation removed: cited only in this text").
+  from the note after submission ("citation removed: cited only in this text"), however it is written (a PubMed,
+  NCBI or Europe PMC link, a bare URL, "PMIDs 1, 2"). Link a paper only as a PubMed or doi.org link as above; a PMC
+  id, a PMC link or a Europe PMC preprint link is always removed (cite the paper's PMID or DOI).
