@@ -184,13 +184,28 @@ def cache_get(ctx, service, key, max_age_days=None):
 
 
 def cache_put(ctx, service, key, rec):
+    """Best effort: the cache only saves look-ups. A write that fails (on Windows: another thread or process reading
+    that entry at that moment, which forbids replacing it; a full disk) is tried again briefly, then skipped - never
+    an error of the look-up, which has its answer."""
     p = _cache_path(ctx, service, key)
-    os.makedirs(os.path.dirname(p), exist_ok=True)
     rec = dict(rec, fetched=time.time())
     tmp = f"{p}.{os.getpid()}.{threading.get_ident()}.tmp"
-    with open(tmp, "w", encoding="utf-8") as fh:
-        json.dump(rec, fh)
-    os.replace(tmp, p)
+    for wait in (0.05, 0.2, 0.5, None):
+        try:
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            with open(tmp, "w", encoding="utf-8") as fh:
+                json.dump(rec, fh)
+            os.replace(tmp, p)
+            return True
+        except OSError:
+            if wait is None:
+                break
+            time.sleep(wait)
+    try:
+        os.remove(tmp)
+    except OSError:
+        pass
+    return False
 
 
 def _scrub(text, ctx):

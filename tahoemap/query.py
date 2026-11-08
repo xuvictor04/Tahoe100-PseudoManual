@@ -34,6 +34,7 @@ called opposite only when graph/modules.parquet says so (arms_opposite); pooled 
 """
 
 import difflib
+import errno
 import glob
 import json
 import os
@@ -691,8 +692,9 @@ def _where(o, P, tb):
     _title(P, "FULL TABLES", f"under {o.out}")
     rows = []
     for what, path, key in tb:
+        path, extra = path if isinstance(path, tuple) else (path, "")    # (path, text after it: not a path part)
         rel = os.path.relpath(path, o.out) if os.path.isabs(path) and path.startswith(o.out) else path
-        rows.append([what, rel, key])
+        rows.append([what, rel + extra, key])
     P += _table(["", "file", "rows"], rows, "lll", flex=(1, 2), mins={1: 24, 2: 10})
 
 
@@ -944,7 +946,7 @@ def gene_report(o, c, top, how=""):
     if o.ran("relations"):
         tb.append(["partners", o.p("relations", "gene_relations.parquet"), f"col_a == {c}"])
     if o.ran("tensor"):
-        tb.append(["every drug-dose x line", o.p("tensor", "DDL_lfc.npy") + " / DDL_z.npy", f"[{c}] (dd x line)"])
+        tb.append(["every drug-dose x line", (o.p("tensor", "DDL_lfc.npy"), " / DDL_z.npy"), f"[{c}] (dd x line)"])
     vn = _vault_note(o, "Genes", lab)
     if vn:
         tb.append(["vault note", vn, ""])
@@ -1673,7 +1675,9 @@ def _emit(lines):
     text = "\n".join(_fit(lines))
     try:
         print(text, flush=True)
-    except BrokenPipeError:                      # e.g. piped into head
+    except OSError as e:                         # the reader went away: piped into head, or `| more` and q
+        if not (isinstance(e, BrokenPipeError) or e.errno in (errno.EPIPE, errno.EINVAL)):
+            raise                                # (Windows: a pipe closed by its reader is EINVAL, not EPIPE)
         try:
             sys.stdout = open(os.devnull, "w")
         except OSError:

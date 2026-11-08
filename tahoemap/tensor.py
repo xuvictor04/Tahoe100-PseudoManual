@@ -51,7 +51,7 @@ import time
 import numpy as np
 
 from . import atlas_core as A
-from .common import log, open_memmap, read_effects_index, save_npy, stamp_stage
+from .common import log, open_memmap, read_effects_index, remove_file, replace_file, save_npy, stamp_stage
 
 VERSION = 2
 
@@ -238,9 +238,9 @@ def run(out, dtype="float32", keep_well=True, chunk=384, check=True):
             os.remove(tmp)
             final = os.path.join(td, "R.npy")
             if os.path.exists(final):          # an earlier run's R.npy would not match this run's DDL_*
-                os.remove(final)
+                remove_file(final)             # (Windows: a file in use cannot be removed - common.FileInUse)
             continue
-        os.replace(tmp, os.path.join(td, f"{name}.npy"))
+        replace_file(tmp, os.path.join(td, f"{name}.npy"))
     for name, arr in [("line_measured", measured), ("line_center", centre), ("line_scale", scale),
                       ("plate_base", plate_base),
                       ("well_counts", well_counts), ("well_umi", well_umi.astype(np.float64)),

@@ -77,7 +77,7 @@ import scipy.sparse as sp
 
 from . import atlas_core as A
 from . import tlib as T
-from .common import log, read_effects_index, stamp_stage, write_json, write_parquet
+from .common import log, read_effects_index, replace_file, stamp_stage, write_json, write_parquet
 from .tensor import AMB_FRAC, measured_mask
 
 VERSION = 2
@@ -316,7 +316,7 @@ def _write_text(path, text):
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
         fh.write(text)
-    os.replace(tmp, path)
+    replace_file(tmp, path)
 
 
 def _file_index(atl):
@@ -639,7 +639,7 @@ def _run(out, chunk, mem_gb, t0):
                 log(f"    genes {g0:,}-{g1:,} of {gK:,} ({(time.time() - t0) / 60:.1f} min; drug_effects rows {n_fx:,})")
     finally:
         writer.close()
-    os.replace(fx_path + ".tmp", fx_path)
+    replace_file(fx_path + ".tmp", fx_path)
     if mismatch:
         raise SystemExit(f"tables: {mismatch} drug_effects rows whose 'clean' differs between the flag strings and "
                          "the clean matrix (tables.py and atlas_core disagree on the artifact rules)")

@@ -2,12 +2,14 @@
 what an API error means for the run.
 
     KeyPool(keys_file=None, env=True, interactive=None, client_factory=None)
-        the keys, in this order: --keys-file PATH (one key per line, '#' comments; a warning when the file is readable
-        by others), ANTHROPIC_API_KEYS (comma-separated), ANTHROPIC_API_KEY; with none of those, the SDK's default
-        credential chain (`anthropic.Anthropic()` resolves ANTHROPIC_AUTH_TOKEN or an `ant auth` profile). A malformed
-        key (a line break, a space or another character an HTTP header cannot carry) is dead from the start.
+        the keys, in this order: --keys-file PATH (one key per line, '#' comments; UTF-8, with or without a BOM, or
+        UTF-16; a warning when the file is readable by others), ANTHROPIC_API_KEYS (comma-separated),
+        ANTHROPIC_API_KEY; with none of those, the SDK's default credential chain (`anthropic.Anthropic()`
+        resolves ANTHROPIC_AUTH_TOKEN or an `ant auth` profile). A malformed key (a line break, a space or another
+        character an HTTP header cannot carry) is dead from the start.
         current() -> Key        the key to start (or restart) an entity with; when every key is dead it asks for a
-                                new one with getpass on a terminal ("press Enter to stop"), else (and on Enter or
+                                new one with getpass on a terminal ("press Enter to stop"; terminal(): on Windows
+                                stdin, stdout and stderr must all be the console), else (and on Enter or
                                 Ctrl-C) it raises AllKeysDead: the run pauses. The pool lock is never held while it
                                 asks (describe() and the other threads go on); with main_prompts set (the runner's
                                 main loop calls serve_prompt()), a worker thread's request is asked by the main
@@ -38,7 +40,7 @@ import sys
 import threading
 from dataclasses import dataclass, field
 
-from ..common import log
+from ..common import log, read_text_file
 
 DEAD_KEY, WAIT, ENTITY = "dead_key", "wait", "entity"
 SDK_MAX_RETRIES = 1                  # the SDK's own retries (429, 5xx, connection) before an error reaches us; the
@@ -140,12 +142,33 @@ def read_keys_file(path):
         if mode & (stat.S_IRGRP | stat.S_IROTH):
             log(f"WARNING: the keys file {path} can be read by other users; protect it with: chmod 600 {path}")
     out = []
-    with open(path, encoding="utf-8") as fh:
-        for line in fh:
-            t = line.split("#", 1)[0].strip()
-            if t:
-                out.append(t)
+    for line in read_text_file(path).splitlines():          # (UTF-8, UTF-8 with a BOM, or UTF-16: PowerShell 5.1)
+        t = line.split("#", 1)[0].replace("\ufeff", "").strip()
+        if t:
+            out.append(t)
     return out
+
+
+def _win_console(stream):
+    """Windows: stream's handle is a console (GetConsoleMode succeeds). The C runtime's isatty() is also true for
+    NUL, and stdin is the console of the window a run was started from even when nobody can answer there."""
+    import ctypes
+    import msvcrt
+    h = msvcrt.get_osfhandle(stream.fileno())
+    mode = ctypes.c_uint32()
+    return bool(ctypes.windll.kernel32.GetConsoleMode(ctypes.c_void_p(h), ctypes.byref(mode)))
+
+
+def terminal():
+    """Can this run ask for a key (getpass)? POSIX: stdin is a terminal. Windows: stdin, stdout and stderr are all
+    the console: a run started with Start-Process and its output redirected to files, or with input from NUL (a
+    scheduled task, another program), would wait at a prompt nobody sees - it pauses instead (exit code 3)."""
+    if os.name != "nt":
+        return sys.stdin is not None and sys.stdin.isatty()
+    try:
+        return all(s is not None and s.isatty() and _win_console(s) for s in (sys.stdin, sys.stdout, sys.stderr))
+    except (AttributeError, OSError, ValueError, ImportError):
+        return False
 
 
 class KeyPool:
@@ -156,7 +179,7 @@ class KeyPool:
         self._clients = {}
         self._factory = client_factory or _default_factory
         self._prompt = prompt or (lambda text: getpass.getpass(text))
-        self.interactive = (sys.stdin is not None and sys.stdin.isatty()) if interactive is None else interactive
+        self.interactive = terminal() if interactive is None else interactive
         self.paused = False
         self.on_dead = on_dead
         self._cond = threading.Condition(self._lock)
@@ -194,7 +217,10 @@ class KeyPool:
             k = Key(secret=secret, key_id=key_id(secret), source=source)
             if not _HEADER_SAFE.match(secret):
                 k.dead, k.reason = True, MALFORMED
-                log(f"API key {k.key_id} ({source}) is malformed: {MALFORMED}")
+                odd = sorted({f"U+{ord(ch):04X}" for ch in secret if ord(ch) > 0x7e})
+                log(f"API key {k.key_id} ({source}) is malformed: {MALFORMED}"
+                    + (f" - it holds the invisible or non-ASCII character(s) {', '.join(odd)} (U+FEFF is a byte-order "
+                       "mark: save the file as plain UTF-8 or ASCII)" if odd else ""))
             self.keys.append(k)
             return k
 

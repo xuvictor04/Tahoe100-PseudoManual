@@ -4,8 +4,8 @@
                                           0 finished (or stopped at --limit / --max-usd), 2 refused to start
                                           (no cap, bad option), 3 paused: no working API key (add one and run
                                           again), 4 stopped: the same error on SYSTEMATIC_N entities in a row (fix
-                                          the cause and run again), 129 / 130 / 143 stopped by SIGHUP / Ctrl-C /
-                                          SIGTERM (run again to resume)
+                                          the cause and run again), 129 / 130 / 143 / 149 stopped by SIGHUP /
+                                          Ctrl-C / SIGTERM or `review stop` / Ctrl-Break (run again to resume)
     plan(out, kinds, only)                OUT/review/queue.parquet (entities in priority order, with their state)
                                           + counts and the projected cost
     status(out, tables=False)             counts by status and kind, spend, projected cost of the rest, dead keys,
@@ -46,9 +46,10 @@ goes on) or none is left (it stops). With every key dead the run pauses: on a te
 new key (getpass; Enter or Ctrl-C there pauses, the terminal restored), else it stops with exit code 3 and the
 unfinished entities stay pending.
 
-Stopping (Ctrl-C, SIGTERM, SIGHUP, `tahoe stop`, the --max-usd cap): no new entity starts; after STOP_GRACE seconds
-the running attempts are closed - a review already submitted is stored as done with its verification as far as it
-got (the rest marked not run), the others are paused; a request still in flight is charged an estimate (lost_cost).
+Stopping (Ctrl-C, SIGTERM, SIGHUP, Ctrl-Break, `tahoe stop`, `review stop`, the --max-usd cap): no new entity
+starts; after STOP_GRACE seconds the running attempts are closed - a review already submitted is stored as done with
+its verification as far as it got (the rest marked not run), the others are paused; a request still in flight is
+charged an estimate (lost_cost). Closing a Windows console window closes them at once (_console_close).
 A response that arrives after its attempt was closed is still recorded (a late event in the history, a note line in
 the ledger; its real cost replaces the estimate), and so is one lost then (a late error event, a note line for any
 estimate beyond the one already charged).
@@ -75,14 +76,13 @@ network; tests/test_review.py drives every path above with it.
 """
 
 import glob
+import contextlib
 import hashlib
 import json
 import os
 import random
 import signal
 import socket
-import subprocess
-import sys
 import threading
 import time
 import traceback
@@ -100,7 +100,8 @@ from . import tools as TL
 from . import verify as V
 from .history import DOSSIER_REF, PLACEHOLDER_SOURCE, History, Ledger, now, read_jsonl, to_jsonable
 from .. import __version__
-from ..common import log, safe_filename, write_json, write_parquet
+from ..common import (PIPELINE_LOCK, find_git, git_out, lock_state, log, pid_alive, proc_start as _proc_start,
+                      read_text_file, retry_io, safe_filename, write_json, write_parquet)
 
 AGENTS = {"gene": "gene-reviewer", "drug": "drug-reviewer", "line": "line-reviewer"}
 CHECKER = "citation-checker"
@@ -116,10 +117,12 @@ MAX_NET_RETRIES = 2                 # re-sends of a request lost to a timeout / 
 LOST_OUT_MIN = 16_000               # output tokens a lost response is charged at least (see lost_cost)
 BACKOFF_BASE, BACKOFF_MAX = 5.0, 600.0
 STOP_GRACE = 15.0                   # seconds the running entities get to notice Ctrl-C before they are marked paused
+LEDGER_WAITS = (1.0, 2.0, 4.0)      # the end of a run: seconds between the last tries at ledger lines that wait
 SYSTEMATIC_N = 5                    # the same error on this many entities in a row stops the run
 BUDGET_WARN, TURNS_WARN = 0.75, 3   # the agent is told to wrap up past 75% of its cap or 3 requests before max_turns
 EXIT_OK, EXIT_REFUSED, EXIT_PAUSED, EXIT_SYSTEMATIC = 0, 2, 3, 4
 EXIT_SIGHUP, EXIT_SIGINT, EXIT_SIGTERM = 129, 130, 143
+EXIT_SIGBREAK = 149                  # Windows: Ctrl-Break (128 + SIGBREAK 21)
 CHECK_STATUS = {"supported": "supported", "partly": "partly", "not supported": "not_supported",
                 "not checkable": "not_checkable"}
 
@@ -291,11 +294,11 @@ def parse_only(only):
         items = list(only)
     else:
         s = str(only).strip()
-        if s.startswith("@"):
-            with open(os.path.expanduser(s[1:]), encoding="utf-8") as fh:
-                items = [ln.split("#", 1)[0] for ln in fh]
+        if s.startswith("@"):                         # (UTF-8, UTF-8 with a BOM or UTF-16: read_text_file)
+            items = [ln.split("#", 1)[0] for ln in read_text_file(os.path.expanduser(s[1:])).splitlines()]
         else:
             items = s.split(",")
+    items = [x.replace("\ufeff", "") for x in items]       # (a BOM is invisible, and strip() keeps it)
     return list(dict.fromkeys(x.strip() for x in items if x and x.strip()))
 
 
@@ -484,6 +487,7 @@ class Run:
     def __init__(self, out, opts, pool, agents, fake=None):
         self.out, self.opts, self.pool, self.agents, self.fake = out, opts, pool, agents, fake
         self.ledger = Ledger(out)
+        self.ledger.recover()           # (lines an earlier run could not write: ledger.unwritten.jsonl)
         self.stop = threading.Event()
         self.stop_reason = ""
         self.stop_signal = None
@@ -595,22 +599,25 @@ class Run:
     def save_keys(self, *_):
         """OUT/review/keys_state.json: the key ids and which are dead (never a key itself)."""
         with self._keys_lock:                       # several threads can see a key die at once
-            write_json({"updated": now(), "keys": self.pool.describe()},
-                       os.path.join(review_dir(self.out), "keys_state.json"))
+            try:
+                write_json({"updated": now(), "keys": self.pool.describe()},
+                           os.path.join(review_dir(self.out), "keys_state.json"))
+            except OSError as e:                    # (only a record for `review status`: never stops the run)
+                log(f"  could not write review/keys_state.json ({type(e).__name__}: {e})")
 
 
 def code_version():
+    """The package version and, when git can be found (common.find_git: PATH or TAHOE_GIT), the commit of the code
+    that runs (a clone made by `duplicate --repo` has its own)."""
     v = f"tahoemap {__version__}, review format {VERSION}"
-    try:
-        here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        r = subprocess.run(["git", "-C", here, "rev-parse", "--short", "HEAD"], capture_output=True, text=True,
-                           timeout=10)
-        if r.returncode == 0 and r.stdout.strip():
-            d = subprocess.run(["git", "-C", here, "status", "--porcelain", "--", "tahoemap"], capture_output=True,
-                               text=True, timeout=10)
-            v += f", commit {r.stdout.strip()}" + (" + local changes" if d.stdout.strip() else "")
-    except (OSError, subprocess.SubprocessError):
-        pass
+    here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    git = find_git()
+    head = git_out(git, here, "rev-parse", "--short", "HEAD", timeout=10)
+    if head:
+        d = git_out(git, here, "status", "--porcelain", "--", "tahoemap", timeout=10)
+        v += f", commit {head}" + (" + local changes" if d else "")
+    elif git is None:
+        v += " (commit unknown: git not found)"
     return v
 
 
@@ -787,16 +794,30 @@ class Attempt:
                                              "replaces_estimate_usd": round(replaces, 6)} if replaces else {}),
                    **{k: int(v) for k, v in summ.items()})
 
-    def finish(self, status, error=None, store=None, **extra):
+    def finish(self, status, error=None, store=None, keep=None, **extra):
         """Write the ledger line and the history's end event, once (the first caller wins). `store` runs first,
-        under the same lock (the review files of a done attempt). Returns the status written, or None. A recheck
-        attempt writes 'done' or, for any other outcome, a ledger note (the entity stays done)."""
+        under the same lock (the review files of a done attempt), tried again for a few seconds when it fails (on
+        Windows a file another program has open cannot be replaced); if it still fails, the attempt is 'failed'
+        (stored nothing; retried next run) and `keep` - the review it could not store - goes into the history's end
+        event, so a review that was paid for is never lost. Returns the status written, or None. A recheck attempt
+        writes 'done' or, for any other outcome, a ledger note (the entity stays done). The ledger line itself is
+        never lost either (history.Ledger: a line that cannot be written now waits and is written later)."""
+        lost = None
         with self.lock:
             if self.finalized:
                 return None
             self.finalized = True
             if store is not None:
-                store()
+                try:
+                    retry_io(store)
+                except Exception as e:  # noqa: BLE001  (a file in use on Windows, a full disk, no permission ...)
+                    why = K.scrub(f"{type(e).__name__}: {e}")[:600]
+                    status, error, lost = "failed", f"could not store the review: {why}", keep
+                    self.fail_sig, self.fail_wide = ("store", type(e).__name__), True
+                    extra = {"store_failed": True}
+                    log(f"  {self.entity_id} ({self.name}): COULD NOT STORE its review ({why}). The attempt is "
+                        f"recorded as failed (reviewed again next run); the review is kept in its history, "
+                        f"{self.hist.rel} (end event, 'unstored_review')")
             err = K.scrub(error)[:2000] if error else None
             written = status
             if self.recheck and status != "done":
@@ -816,11 +837,16 @@ class Attempt:
                 rec["estimated_usd"] = round(self.estimated, 6)
             rec.update(self.extra)
             rec.update(extra)
-            self.run.ledger.append(rec)
-            self.hist.event("end", status=status, error=err, totals={
-                "cost_usd": round(self.cost, 6), "estimated_usd": round(self.estimated, 6),
-                "n_requests": self.n_requests, "n_tool_calls": self.n_tool_calls,
-                **{k: int(v) for k, v in self.tok.items()}}, **{k: v for k, v in extra.items()})
+            self.run.ledger.append(rec)                 # (never raises: a line it cannot write now waits)
+            try:
+                self.hist.event("end", status=status, error=err, totals={
+                    "cost_usd": round(self.cost, 6), "estimated_usd": round(self.estimated, 6),
+                    "n_requests": self.n_requests, "n_tool_calls": self.n_tool_calls,
+                    **{k: int(v) for k, v in self.tok.items()}}, **{k: v for k, v in extra.items()},
+                    **({"unstored_review": lost} if lost is not None else {}))
+            except OSError as e:                        # (the ledger line is written: the attempt is on record)
+                log(f"  {self.entity_id}: could not write the end of its history {self.hist.rel} "
+                    f"({type(e).__name__}: {e})")
         with self.run.lock:
             self.run.counts[status if not self.recheck else f"recheck {status}"] += 1
             self.run.active.pop(self.entity_id, None)
@@ -923,7 +949,8 @@ class Attempt:
             write_json(final, paths["review"])
             D.write_text(paths["note"], final.get("note_markdown") or "")
         ver = final["verification"]
-        return self.finish("done", store=store, verify=mode, check_status=ver["llm"]["status"] if mode == "llm"
+        return self.finish("done", store=store, keep=final, verify=mode,
+                           check_status=ver["llm"]["status"] if mode == "llm"
                            else ver["ids"]["status"] if mode == "ids" else "off",
                            ids_status=ver_status(ver, "ids"), llm_status=ver_status(ver, "llm"),
                            review=os.path.relpath(paths["review"], r.out).replace(os.sep, "/"),
@@ -986,8 +1013,9 @@ class Attempt:
             write_json(final, paths["review"])
             D.write_text(paths["note"], final.get("note_markdown") or "")
         ver = final["verification"]
-        return self.finish("done", store=store, verify=eff, recheck=True, check_status=ver["llm"]["status"]
-                           if eff == "llm" else ver["ids"]["status"], ids_status=ver_status(ver, "ids"),
+        return self.finish("done", store=store, keep=final, verify=eff, recheck=True,
+                           check_status=ver["llm"]["status"] if eff == "llm" else ver["ids"]["status"],
+                           ids_status=ver_status(ver, "ids"),
                            llm_status=ver_status(ver, "llm"),
                            review=os.path.relpath(paths["review"], r.out).replace(os.sep, "/"))
 
@@ -1447,116 +1475,24 @@ class _RunLock:
             self.held = False
 
 
-def lock_state(path):
-    """(alive, description) of a review/.run.lock: alive unless its process is certainly gone."""
-    try:
-        with open(path, encoding="utf-8") as fh:
-            rec = json.load(fh)
-        pid = int(rec.get("pid"))
-    except (OSError, ValueError, TypeError, AttributeError):
-        return False, "unreadable lock"
-    host = rec.get("host")
-    who = f"pid {pid}" + (f" on {host}" if host else "") + (f", started {rec['started']}" if rec.get("started") else "")
-    if host and host != socket.gethostname():
-        return True, who + " (another computer: its process cannot be checked from here)"
-    if pid == os.getpid() or not _alive(pid):
-        return False, who
-    t0, t1 = rec.get("process_start"), _proc_start(pid)
-    if isinstance(t0, (int, float)) and t1 is not None and abs(t1 - t0) > 2.0:
-        return False, who + " (that pid is now another process)"
-    return True, who
-
-
-def _proc_start(pid):
-    """The start time (epoch seconds) of process pid, where it can be told (psutil, Linux /proc, Windows); else
-    None."""
-    try:
-        import psutil
-        return float(psutil.Process(pid).create_time())
-    except Exception:  # noqa: BLE001  (not installed, no such process, no access)
-        pass
-    if sys.platform.startswith("linux"):
-        try:
-            with open(f"/proc/{pid}/stat", encoding="utf-8") as fh:
-                ticks = int(fh.read().rsplit(")", 1)[1].split()[19])
-            with open("/proc/stat", encoding="utf-8") as fh:
-                btime = next(int(x.split()[1]) for x in fh if x.startswith("btime"))
-            return round(btime + ticks / os.sysconf("SC_CLK_TCK"), 2)
-        except (OSError, ValueError, IndexError, StopIteration):
-            return None
-    if os.name == "nt":
-        try:
-            import ctypes
-            from ctypes import wintypes
-            k32 = ctypes.WinDLL("kernel32", use_last_error=True)
-            k32.OpenProcess.restype = wintypes.HANDLE
-            k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
-            h = k32.OpenProcess(0x1000, False, pid)                     # PROCESS_QUERY_LIMITED_INFORMATION
-            if not h:
-                return None
-            try:
-                ft = [wintypes.FILETIME() for _ in range(4)]
-                if not k32.GetProcessTimes(h, *(ctypes.byref(f) for f in ft)):
-                    return None
-                t = (ft[0].dwHighDateTime << 32) | ft[0].dwLowDateTime    # 100-ns ticks since 1601
-                return round(t / 1e7 - 11644473600.0, 2)
-            finally:
-                k32.CloseHandle(h)
-        except Exception:  # noqa: BLE001
-            return None
-    return None
-
-
-def _alive(pid):
-    """False when process pid is certainly gone (POSIX: kill 0; Windows: OpenProcess / GetExitCodeProcess, or
-    psutil when installed); True when it runs or cannot be told."""
-    if pid <= 0:
-        return False
-    if os.name == "posix":
-        try:
-            os.kill(pid, 0)
-            return True
-        except ProcessLookupError:
-            return False
-        except OSError:                                 # PermissionError: it exists (another user's)
-            return True
-    try:
-        import psutil
-        return bool(psutil.pid_exists(pid))
-    except ImportError:
-        pass
-    try:
-        import ctypes
-        from ctypes import wintypes
-        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
-        k32.OpenProcess.restype = wintypes.HANDLE
-        k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
-        h = k32.OpenProcess(0x1000, False, pid)                         # PROCESS_QUERY_LIMITED_INFORMATION
-        if not h:
-            return ctypes.get_last_error() == 5                         # ERROR_ACCESS_DENIED: it exists
-        try:
-            code = wintypes.DWORD()
-            if not k32.GetExitCodeProcess(h, ctypes.byref(code)):
-                return True
-            return code.value == 259                                    # STILL_ACTIVE
-        finally:
-            k32.CloseHandle(h)
-    except Exception:  # noqa: BLE001  (cannot tell: assume it runs; the message names the lock file)
-        return True
+_alive = pid_alive                  # (lock_state, pid_alive and proc_start live in common: the pipeline lock uses them)
+STOP_FILE = ".stop"                 # OUT/review/.stop: `review stop` asks the run holding .run.lock to stop (SIGTERM)
 
 
 def _install_signals(run):
-    """Ctrl-C (SIGINT), SIGTERM and, where it exists, SIGHUP (the terminal closed) stop the run cleanly. Ctrl-C at
-    the key prompt interrupts it (getpass restores the terminal) and the run pauses for a key, like Enter there
-    (exit code 3); SIGTERM or SIGHUP there end the prompt too, with their own exit codes."""
+    """Ctrl-C (SIGINT), SIGTERM and, where they exist, SIGHUP (the terminal closed) and SIGBREAK (Windows:
+    Ctrl-Break) stop the run cleanly. Ctrl-C at the key prompt interrupts it (getpass restores the terminal) and the
+    run pauses for a key, like Enter there (exit code 3); SIGTERM, SIGHUP or SIGBREAK there end the prompt too, with
+    their own exit codes. (Closing a Windows console window is no signal Python can wait on: _console_close.)"""
     if threading.current_thread() is not threading.main_thread():
         return {}
     old = {}
+    again = (signal.SIGINT, getattr(signal, "SIGBREAK", signal.SIGINT))
 
     def handler(signum, frame):
         name = signal.Signals(signum).name
-        if run.stop.is_set() and signum == signal.SIGINT:
-            raise KeyboardInterrupt                     # a second Ctrl-C: stop waiting
+        if run.stop.is_set() and signum in again:
+            raise KeyboardInterrupt                     # a second Ctrl-C (or Ctrl-Break): stop waiting
         prompting = run.pool.prompting_here()
         if prompting and signum == signal.SIGINT:       # Ctrl-C at the key prompt works like Enter there: the run
             run.keys_paused = True                      # pauses for a key (exit code 3, the add-a-key message)
@@ -1566,7 +1502,7 @@ def _install_signals(run):
         log(f"{name}: no new entities start; the running ones are paused (Ctrl-C again to stop at once)")
         if prompting:
             raise KeyboardInterrupt                     # out of getpass (it restores the terminal): the prompt stops
-    sigs = [signal.SIGINT, signal.SIGTERM] + ([signal.SIGHUP] if hasattr(signal, "SIGHUP") else [])
+    sigs = [signal.SIGINT, signal.SIGTERM] + [getattr(signal, n) for n in ("SIGHUP", "SIGBREAK") if hasattr(signal, n)]
     for s in sigs:
         try:
             old[s] = signal.signal(s, handler)
@@ -1581,6 +1517,117 @@ def _restore_signals(old):
             signal.signal(s, h)
         except (ValueError, OSError):
             pass
+
+
+def _close_running(rn, reason, safe=False):
+    """The run is stopping: close the attempts still running (a submitted review stored as done, the rest paused).
+    safe: one that fails does not keep the others from being closed (the console-close handler)."""
+    with rn.lock:
+        running = list(rn.active.values())
+    for att in running:
+        try:
+            att.finish_pending(reason)
+        except Exception:  # noqa: BLE001
+            if not safe:
+                raise
+
+
+def _console_close(rn):
+    """Windows: closing the console window (or logging off) sends CTRL_CLOSE_EVENT, and the process is ended ~5 s
+    after the console handlers return - Python's signal handlers (they only set a flag) never run. This handler
+    closes the running attempts at once instead (no grace: a submitted review is stored as done, the rest paused, a
+    request in flight charged its estimate) and writes the ledger lines. Returns what _console_close_off needs, or
+    None (elsewhere, or when it cannot be installed)."""
+    if os.name != "nt":
+        return None
+    try:
+        import ctypes
+        from ctypes import wintypes
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        proto = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.DWORD)
+        k32.SetConsoleCtrlHandler.argtypes = [proto, wintypes.BOOL]
+
+        def on_event(ev):
+            if ev not in (2, 5, 6):         # CTRL_CLOSE / LOGOFF / SHUTDOWN_EVENT; Ctrl-C, Ctrl-Break: the signals
+                return False
+            try:
+                why = "the console window was closed"
+                rn.request_stop(why, getattr(signal, "SIGBREAK", None))
+                _close_running(rn, why, safe=True)
+                rn.ledger.flush()
+                log("The console window was closed: the running entities were closed (paused, or stored when "
+                    "submitted); run the same command again to resume.")
+            except BaseException:  # noqa: BLE001  (the process ends next; nothing to report to)
+                pass
+            return True
+        cb = proto(on_event)
+        if k32.SetConsoleCtrlHandler(cb, True):
+            return k32, cb                  # (cb must stay referenced while installed)
+    except Exception:  # noqa: BLE001
+        pass
+    return None
+
+
+def _console_close_off(h):
+    if h:
+        try:
+            h[0].SetConsoleCtrlHandler(h[1], False)
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def stop_run(out, say=None, wait=120.0):
+    """`review stop`: ask the review run working on OUT (the one holding review/.run.lock, in any window or on any
+    computer that sees the folder) to stop as Ctrl-C does - no new entity, the running ones paused after the
+    15-second grace, a submitted review stored, the ledger and tables written - and wait for it to end. The way to
+    stop a run from outside on Windows (Stop-Process and taskkill end it at once, without any of that)."""
+    say = say or _say
+    lp = os.path.join(out, "review", ".run.lock")
+    if not os.path.exists(lp):
+        say(f"No review run is working on {out} (no review/.run.lock).")
+        return EXIT_OK
+    try:
+        with open(lp, encoding="utf-8") as fh:
+            pid = json.load(fh).get("pid")
+    except (OSError, ValueError, AttributeError):
+        pid = None
+
+    def live():                                         # (a run in this very process: the tests)
+        return os.path.exists(lp) and (pid == os.getpid() or lock_state(lp)[0])
+    _state, who = lock_state(lp)
+    if not live():
+        say(f"No review run is working on {out}: its lock ({who}) is stale and the next run removes it.")
+        return EXIT_OK
+    write_json({"pid": pid, "requested": now(), "by": os.getpid()}, os.path.join(review_dir(out), STOP_FILE))
+    say(f"Asked the review run ({who}) to stop: no new entity starts; the ones in progress get {STOP_GRACE:.0f} s, "
+        "then they are paused (a review already submitted is stored), and the ledger and tables are written. "
+        "Waiting for it to end ...")
+    t0 = time.time()
+    while time.time() - t0 < wait:
+        if not live():
+            say("Stopped. The same `review run ...` command resumes it (`review status` says where it stands).")
+            return EXIT_OK
+        time.sleep(0.5)
+    say(f"It has not ended after {wait:.0f} s (it may be waiting at a key prompt, or storing a review); it stops as "
+        "soon as it can. `review status` says whether its lock is still live.")
+    return EXIT_OK
+
+
+def _stop_requested(path):
+    """`review stop` wrote OUT/review/.stop for this process: True (the file is removed). A stop file of another
+    process (a run that has ended since) is stale: removed, False."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            pid = (json.load(fh) or {}).get("pid")
+    except FileNotFoundError:
+        return False
+    except (OSError, ValueError, AttributeError):
+        pid = None
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+    return pid == os.getpid()
 
 
 def _load_fake(fake):
@@ -1684,6 +1731,13 @@ def run(out, **kw):
         msg = f"--fake: {K.scrub(e)}"
         say(f"review run: {msg}")
         return RunResult(EXIT_REFUSED, message=msg)
+    busy, who = lock_state(os.path.join(out, PIPELINE_LOCK)) if os.path.exists(os.path.join(out, PIPELINE_LOCK)) \
+        else (False, "")
+    if busy:                                            # (the `tahoe` wrapper checks its jobs; this, every command)
+        msg = (f"a pipeline command ({who}) is computing on this output (lock file "
+               f"{os.path.join(out, PIPELINE_LOCK)}): wait for it to finish first")
+        say(f"review run: {msg}")
+        return RunResult(EXIT_REFUSED, message=msg)
     lit = fake.literature.install() if fake is not None and fake.literature is not None else None
     lock = _RunLock(out)
     ok, why = lock.acquire()
@@ -1744,6 +1798,9 @@ def _process(rn, ent, prior, recheck=False):
             att.hist.event("error", agent=att.agent.name, **{"class": type(e).__name__, "message": tb[-3000:]})
             att.fail_sig = ("bug", type(e).__name__)
             status = att.finish("failed", error=f"{type(e).__name__}: {e}")
+            if status is None:                          # it was closed already: this error came after its line
+                log(f"  {ent['entity_id']}: an error after its attempt was recorded ({type(e).__name__}: "
+                    f"{K.scrub(e)[:300]}); see {att.hist.rel}")
         if status == "key_rotated":
             rn.pool.mark_dead(key, att.extra.get("dead_reason") or "dead key")
             continue
@@ -1781,7 +1838,9 @@ def _run_threads(rn, todo, states, say, recheck=False):
     log(f"{'Checking again' if recheck else 'Reviewing'} {len(todo):,} entities with {n} thread(s); keys: "
         + ", ".join(f"{k['key_id']} ({k['source']})" for k in rn.pool.describe()))
     old = _install_signals(rn)
+    closing = _console_close(rn)                        # Windows: the console window closed (no signal for that)
     rn.pool.main_prompts = bool(old)                    # this (main) thread asks for a key when a worker needs one
+    stop_file = os.path.join(review_dir(rn.out), STOP_FILE)
     threads = [threading.Thread(target=worker, name=f"review-{i}", daemon=True) for i in range(n)]
     try:
         for t in threads:
@@ -1791,6 +1850,9 @@ def _run_threads(rn, todo, states, say, recheck=False):
             rn.pool.serve_prompt()
             for t in threads:
                 t.join(0.2 / len(threads))
+            if os.path.exists(stop_file) and _stop_requested(stop_file) and not rn.stop.is_set():
+                rn.request_stop("stopped by `review stop`", signal.SIGTERM)    # (as `tahoe stop`: exit code 143)
+                log("review stop: no new entities start; the running ones are paused")
             if rn.stop.is_set():
                 deadline = deadline or time.time() + STOP_GRACE
                 if time.time() >= deadline:
@@ -1801,10 +1863,7 @@ def _run_threads(rn, todo, states, say, recheck=False):
         rn.pool.main_prompts = False
         _restore_signals(old)
     rn.settle_hold()                                    # the queue ran out while the run held: no answer came
-    with rn.lock:
-        running = list(rn.active.values())
-    for att in running:                                 # still running: submitted reviews stored, the rest paused
-        att.finish_pending(rn.stop_reason or "stopped")
+    _close_running(rn, rn.stop_reason or "stopped")     # still running: submitted reviews stored, the rest paused
     if rn.systematic is not None:                       # those failures are the run's, not the entities': uncounted
         with rn.lock:
             streak = list(rn.streak)
@@ -1815,6 +1874,12 @@ def _run_threads(rn, todo, states, say, recheck=False):
                                       "entity", "uncount_failed": True, "signature": list(sig), "finished": now(),
                               "error": rec.get("error")})
     rn.save_keys()
+    if not rn.ledger.flush(waits=LEDGER_WAITS):        # lines that could not be written yet (ledger.jsonl held)
+        n_left, err, spill = len(rn.ledger.backlog), rn.ledger.error, rn.ledger.spill()
+        log(f"WARNING: {n_left} ledger line(s) could not be written to {rn.ledger.path} ({err}; is it open in "
+            f"another program, such as Excel?). They are in {spill}, which counts as part of the ledger; the next "
+            "review run moves them into ledger.jsonl.")
+    _console_close_off(closing)
     try:
         n_conn, n_find = build_tables(rn.out)
     except Exception as e:  # noqa: BLE001
@@ -1835,8 +1900,10 @@ def _run_threads(rn, todo, states, say, recheck=False):
             res.message = (f"STOPPED: the same error on {len(streak)} entities in a row ({' '.join(map(str, sig))}):"
                            f" {K.scrub(err)[:400].rstrip('. ')}. It is not about these entities but the run's: "
                            + ("the network (timeouts, dropped or refused connections, cut streams)" if sig ==
-                              NETWORK_SIG else f"the API kept refusing for {MAX_WAITS} back-offs (rate limits, "
-                              "overload, server errors)")
+                              NETWORK_SIG else "the review files could not be written (a full disk, or files held "
+                              "by another program; the reviews are kept in their histories)" if sig[0] == "store"
+                              else f"the API kept refusing for {MAX_WAITS} back-offs (rate limits, overload, server "
+                              "errors)")
                            + ". Fix the cause (or wait) and run the same command again; these failures are not "
                            "counted against the entities.")
         else:
@@ -1855,8 +1922,8 @@ def _run_threads(rn, todo, states, say, recheck=False):
                        "(ANTHROPIC_API_KEY, ANTHROPIC_API_KEYS or --keys-file) and run the same command again.")
         log(res.message)
     elif rn.stop_signal is not None:
-        res.exit_code = {signal.SIGTERM: EXIT_SIGTERM, getattr(signal, "SIGHUP", -1): EXIT_SIGHUP}.get(
-            rn.stop_signal, EXIT_SIGINT)
+        res.exit_code = {signal.SIGTERM: EXIT_SIGTERM, getattr(signal, "SIGHUP", -1): EXIT_SIGHUP,
+                         getattr(signal, "SIGBREAK", -2): EXIT_SIGBREAK}.get(rn.stop_signal, EXIT_SIGINT)
         res.paused = True
         res.message = f"Stopped ({rn.stop_reason}); run the same command again to resume."
         log(res.message)
@@ -2146,8 +2213,8 @@ def cli(a):
     names = list(getattr(a, "names", None) or [])
     action = names[0] if names else "status"
     out = a.out
-    if action not in ("plan", "run", "status", "tables"):
-        _say(f"review: unknown action '{action}'; use plan, run, status or tables")
+    if action not in ("plan", "run", "status", "tables", "stop"):
+        _say(f"review: unknown action '{action}'; use plan, run, status, tables or stop")
         return EXIT_REFUSED
     if not os.path.isdir(os.path.join(out, "tables")):
         _say(f"review: {out} holds no finished run (no tables/ folder); give --out with a tahoemap output folder")
@@ -2166,15 +2233,22 @@ def cli(a):
             print(f"{n_c:,} connection verdicts -> {os.path.join(out, 'review', 'connections.parquet')}\n"
                   f"{n_f:,} findings -> {os.path.join(out, 'review', 'findings.parquet')}")
             return EXIT_OK
+        if action == "stop":
+            return stop_run(out)
     except (ValueError, FileNotFoundError) as e:
         _say(f"review {action}: {e}")
         return EXIT_REFUSED
-    from ..tlib import start_run_log
+    from ..tlib import keep_awake, start_run_log
     start_run_log(os.path.join(review_dir(out), "review.log"), "tahoemap review run")
+    # Windows sleeps after its idle time (no input), however busy the network: a review left running would stop
+    # mid-request. (A laptop still sleeps when its lid is closed.)
+    awake = keep_awake("the review run") if os.name == "nt" and not a.dry_run else contextlib.nullcontext()
     try:
-        res = run(out, kinds=a.kinds, only=a.only, limit=a.limit, max_usd=a.max_usd, concurrency=a.concurrency,
-                  keys_file=a.keys_file, redo=a.redo, dry_run=a.dry_run, fake=a.fake, no_cap=a.no_cap,
-                  retry_failed=getattr(a, "retry_failed", False), recheck=getattr(a, "recheck", False), **common)
+        with awake:
+            res = run(out, kinds=a.kinds, only=a.only, limit=a.limit, max_usd=a.max_usd, concurrency=a.concurrency,
+                      keys_file=a.keys_file, redo=a.redo, dry_run=a.dry_run, fake=a.fake, no_cap=a.no_cap,
+                      retry_failed=getattr(a, "retry_failed", False), recheck=getattr(a, "recheck", False),
+                      interactive=False if getattr(a, "no_prompt", False) else None, **common)
     except KeyboardInterrupt:                  # a second Ctrl-C: stopped at once (the ledger has what finished)
         _say("review run: stopped at once (second Ctrl-C). Finished reviews are kept; run the same command again to "
              "resume.")

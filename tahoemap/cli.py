@@ -4,7 +4,7 @@
     build ... map   one stage (and nothing else)
     status      what is done, what is out of date (and why), what runs next
     gene SYMBOL | drug NAME | line NAME | pair A B | module N     look-ups on a finished run
-    review plan|run|status|tables   the literature-review agents (tahoemap/review; docs/DESIGN-review-and-physics.md)
+    review plan|run|status|tables|stop   the literature-review agents (tahoemap/review; docs/review.md)
     duplicate DEST [--repo DIR]     copy a finished output folder for review work (big arrays hard-linked)
 
 A stage is out of date when it never finished, its method changed, it ran with other values of the options that
@@ -29,7 +29,8 @@ from . import __version__
 from . import atlas_core as A
 from . import stream
 from . import tlib as T
-from .common import STAGES, clear_stamps_from, log, mark_output, read_stamp, stamp_stage, write_json
+from .common import (GIT_MISSING, STAGES, PipelineLock, clear_stamps_from, find_git, git_out, in_use_text, is_link,
+                     log, mark_output, read_stamp, stamp_stage, write_json)
 
 STAGE_MODULE = {"tensor": "tensor", "tables": "tables", "embed": "embed", "reference": "reference",
                 "relations": "relations", "graph": "graph", "validate": "validate", "vault": "vault",
@@ -58,7 +59,7 @@ def make_parser():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("command", choices=["run", "status"] + STAGES + list(LOOKUPS) + list(EXTRA_COMMANDS))
     ap.add_argument("names", nargs="*", help="look-ups: the gene / drug / line / module (pair: two genes); review: "
-                                             "plan, run, status or tables; duplicate: the destination folder")
+                                             "plan, run, status, tables or stop; duplicate: the destination folder")
     ap.add_argument("--data", default=None, help="Tahoe-100M folder (default $TAHOE_DATA or ~/Tahoe-100M)")
     ap.add_argument("--out", default=None, help="output folder (default <data>/tahoemap)")
     ap.add_argument("--stream", action="store_true",
@@ -118,6 +119,9 @@ def make_parser():
     g.add_argument("--web-max-uses", type=int, default=5, help="review run: web searches (and fetches) per request")
     g.add_argument("--keys-file", default=None,
                    help="review run: Anthropic API keys, one a line (else ANTHROPIC_API_KEYS / ANTHROPIC_API_KEY)")
+    g.add_argument("--no-prompt", action="store_true",
+                   help="review run: never ask for a new key when every key is used up; pause (exit code 3) instead "
+                        "(a run nobody watches, e.g. started with Start-Process)")
     g.add_argument("--dry-run", action="store_true",
                    help="review run: write the dossiers and first requests to OUT/review/dry_run/; send nothing")
     g.add_argument("--fake", default=None, metavar="SCRIPT",
@@ -306,7 +310,7 @@ def reuse_atlas(src, out):
     os.makedirs(atl, exist_ok=True)
     pb, target = os.path.join(atl, "pseudobulk"), os.path.join(src, "pseudobulk")
     rec = read_json(os.path.join(atl, REUSED)) or {}
-    if os.path.isdir(pb) and not os.path.islink(pb) and not os.listdir(pb):
+    if os.path.isdir(pb) and not is_link(pb) and not os.listdir(pb):
         os.rmdir(pb)                                          # an empty folder left by a build that never started
     if os.path.lexists(pb):
         if not (os.path.realpath(pb) == os.path.realpath(target) or rec.get("source") == src):
@@ -366,11 +370,25 @@ def record_options(a, stage):
 
 
 def run_stage(stage, a):
+    """Run one stage. On Windows a file of the output that another program has open cannot be replaced
+    (common.FileInUse, or a PermissionError from the ported atlas code's own writes): the stage stops with a message
+    naming the file and the likely holders, not a traceback."""
+    if os.name != "nt":
+        return _run_stage(stage, a)
+    try:
+        return _run_stage(stage, a)
+    except PermissionError as e:
+        msg = str(e) if getattr(e, "path", None) else in_use_text(getattr(e, "filename", None) or "a file of the "
+                                                                  "output", f"{type(e).__name__}: {e}", "write")
+        sys.exit(f"{stage}: {msg}")
+
+
+def _run_stage(stage, a):
     t0 = time.time()
     atl = os.path.join(a.out, "atlas")
     if stage == "build":
         rec = read_json(os.path.join(atl, REUSED)) or {}
-        if rec.get("how") in ("symlink", "junction") or os.path.islink(os.path.join(atl, "pseudobulk")):
+        if rec.get("how") in ("symlink", "junction") or is_link(os.path.join(atl, "pseudobulk")):
             sys.exit(f"build: this output's build is linked from {rec.get('source', 'an old atlas')} (--reuse-atlas) "
                      "and is not rebuilt here, so that folder stays as it is. Run from effects (--from effects), or "
                      "use a new --out to build from the data.")
@@ -429,18 +447,42 @@ def cmd_status(a):
 
 
 # duplicate: in these folders the arrays and tables are written once (to a .tmp file, then swapped in), so a hard link
-# shares them safely: a stage that runs again in either copy replaces the file instead of writing into it.
+# shares them safely: a stage that runs again in either copy replaces the file instead of writing into it. (On Windows
+# a file in use cannot be replaced, and the two names are one file: not while the other copy has it open.)
 HARDLINK_DIRS = ("atlas", "tensor", "tables", "embed", "relations", "graph")
 HARDLINK_EXT = (".npy", ".npz", ".parquet")
 DUPLICATED = "duplicated_from.json"
 
 
 def _git(repo, *args):
-    try:
-        r = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True, timeout=60)
-        return r.stdout.strip() if r.returncode == 0 else None
-    except (OSError, subprocess.SubprocessError):
-        return None
+    """stdout of `git -C repo ARGS`, or None (git not found - common.find_git -, or it failed)."""
+    return git_out(find_git(), repo, *args)
+
+
+def _inside(a, b, P=os.path):
+    """a is b or lies inside b, compared as the file system does (case-insensitive on Windows; links and junctions
+    resolved). P: the path module (ntpath in the tests)."""
+    for f in (P.abspath, P.realpath):
+        x, y = P.normcase(f(a)), P.normcase(f(b))
+        if x == y or x.startswith(y.rstrip(P.sep) + P.sep):
+            return True
+    return False
+
+
+def _keep_dir_link(sp, dp):
+    """A link to a folder found by duplicate: a symbolic link is made again with its own target (relative ones
+    stay relative); a junction (Windows: os.path.islink is False for one), or a symlink this account may not make,
+    with _link_dir - a symlink, else a junction, else (the last resort) a copy. Returns how."""
+    tgt = os.readlink(sp)
+    if os.path.islink(sp):
+        try:
+            os.symlink(tgt, dp, target_is_directory=True)
+            return "symlink"
+        except OSError:
+            pass
+    if tgt.startswith("\\\\?\\") and not tgt.startswith("\\\\?\\UNC\\"):
+        tgt = tgt[4:]                                   # (a junction's target as os.readlink gives it: \\?\C:\...)
+    return _link_dir(os.path.join(os.path.dirname(sp), tgt), dp)
 
 
 def duplicate(src, dest, repo=None):
@@ -453,15 +495,18 @@ def duplicate(src, dest, repo=None):
         sys.exit(f"duplicate: {src} is not a tahoemap output folder (no stages/); give --out with one")
     if os.path.exists(dest) and (not os.path.isdir(dest) or os.listdir(dest)):
         sys.exit(f"duplicate: {dest} exists and is not empty; give a new folder")
-    if dest == src or dest.startswith(src + os.sep) or src.startswith(dest + os.sep):
+    if _inside(dest, src) or _inside(src, dest):
         sys.exit("duplicate: the destination must lie outside the output folder (and not contain it)")
     code_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    git = find_git()
     if repo:
         repo = os.path.abspath(os.path.expanduser(repo))
         if os.path.exists(repo) and os.listdir(repo):
             sys.exit(f"duplicate --repo: {repo} exists and is not empty; give a new folder")
-        if _git(code_root, "rev-parse", "--show-toplevel") is None:
-            sys.exit(f"duplicate --repo: {code_root} is not a git repository")
+        if git is None:
+            sys.exit(f"duplicate --repo: {GIT_MISSING}")
+        if git_out(git, code_root, "rev-parse", "--show-toplevel") is None:
+            sys.exit(f"duplicate --repo: {code_root} is not a git repository (or {git} could not be run)")
     os.makedirs(dest, exist_ok=True)
     n = {"hard_linked": 0, "copied": 0, "symlinks": 0, "skipped": 0}
     size = {"hard_linked": 0, "copied": 0}
@@ -474,13 +519,14 @@ def duplicate(src, dest, repo=None):
         os.makedirs(droot, exist_ok=True)
         for d in list(dirs):
             sp = os.path.join(root, d)
-            if os.path.islink(sp):                 # e.g. atlas/pseudobulk of a --reuse-atlas output: keep the link
-                os.symlink(os.readlink(sp), os.path.join(droot, d), target_is_directory=True)
-                n["symlinks"] += 1
+            if is_link(sp):                        # e.g. atlas/pseudobulk of a --reuse-atlas output: keep the link
+                if _keep_dir_link(sp, os.path.join(droot, d)) != "copy":     # (a symlink or a junction)
+                    n["symlinks"] += 1
                 dirs.remove(d)
         for f in files:
             sp, dp = os.path.join(root, f), os.path.join(droot, f)
-            if f.endswith((".tmp", ".part")) or f in (JOB_PID, ".run.lock") or (rel == "." and f == DUPLICATED):
+            if f.endswith((".tmp", ".part")) or f in (JOB_PID, ".run.lock", ".pipeline.lock", ".stop") \
+                    or (rel == "." and f == DUPLICATED):
                 n["skipped"] += 1
                 continue
             if os.path.islink(sp):
@@ -499,25 +545,33 @@ def duplicate(src, dest, repo=None):
             n["copied"] += 1
             size["copied"] += os.path.getsize(sp)
     stamps = {s: read_stamp(src, s) for s in STAGES}
+    status = git_out(git, code_root, "status", "--porcelain")
     rec = {"source": src, "destination": dest, "date": time.strftime("%Y-%m-%d %H:%M:%S"),
            "code": {"version": __version__, "repository": code_root,
-                    "commit": _git(code_root, "rev-parse", "HEAD"),
-                    "branch": _git(code_root, "rev-parse", "--abbrev-ref", "HEAD"),
-                    "uncommitted_changes": bool(_git(code_root, "status", "--porcelain")),
-                    "remote": _git(code_root, "remote", "get-url", "origin")},
+                    "commit": git_out(git, code_root, "rev-parse", "HEAD"),
+                    "branch": git_out(git, code_root, "rev-parse", "--abbrev-ref", "HEAD"),
+                    "uncommitted_changes": None if status is None else bool(status),     # None: unknown (no git)
+                    "remote": git_out(git, code_root, "remote", "get-url", "origin")},
            "stages": {s: v for s, v in stamps.items() if v}, "files": n,
            "bytes": size, "hard_linked": f"*{', *'.join(HARDLINK_EXT)} under {', '.join(HARDLINK_DIRS)} "
                                          "(when on the same file system)", "repo_clone": None}
     if repo:
         if rec["code"]["uncommitted_changes"]:
             log("  note: the code repository has uncommitted changes; the clone gets only what is committed")
-        r = subprocess.run(["git", "clone", "--quiet", code_root, repo], capture_output=True, text=True)
-        if r.returncode != 0:
-            log(f"  git clone failed: {r.stderr.strip()[:500]}")
+        try:
+            r = subprocess.run([git, "clone", "--quiet", code_root, repo], capture_output=True, encoding="utf-8",
+                               errors="replace")
+            err = r.stderr.strip()[:500] if r.returncode != 0 else ""
+        except OSError as e:
+            err = f"{git} could not be run: {e}"
+        if err:
+            log(f"  git clone failed: {err}")
         else:
-            rec["repo_clone"] = {"path": repo, "commit": _git(repo, "rev-parse", "HEAD"),
-                                 "branch": _git(repo, "rev-parse", "--abbrev-ref", "HEAD")}
+            rec["repo_clone"] = {"path": repo, "commit": git_out(git, repo, "rev-parse", "HEAD"),
+                                 "branch": git_out(git, repo, "rev-parse", "--abbrev-ref", "HEAD")}
             log(f"  code cloned to {repo} (branch {rec['repo_clone']['branch']}, its origin is {code_root})")
+    if git is None:
+        log(f"  note: {GIT_MISSING}; {DUPLICATED} records no commit")
     write_json(rec, os.path.join(dest, DUPLICATED))
     log(f"Duplicated in {time.time() - t0:.0f} s: {n['hard_linked']:,} files hard-linked "
         f"({size['hard_linked'] / 1e9:.2f} GB shared), {n['copied']:,} copied ({size['copied'] / 1e9:.2f} GB), "
@@ -611,6 +665,11 @@ def main(argv=None):
     if a.command == "duplicate":
         return cmd_duplicate(a)
     mark_output(a.out)
+    lock = PipelineLock(a.out, "tahoemap " + " ".join(sys.argv[1:] if argv is None else argv))
+    ok, who = lock.acquire()
+    if not ok:                                  # two commands computing on one output would overwrite each other
+        sys.exit(f"Another tahoemap command is working on {a.out} ({who}; lock file {lock.path}). Wait for it to "
+                 "finish, or stop it first. If you are sure that nothing runs there, delete that file.")
     job_setup(a.out)
     T.start_run_log(os.path.join(a.out, "run.log"), "tahoemap " + " ".join(sys.argv[1:] if argv is None else argv))
     try:
@@ -643,6 +702,8 @@ def main(argv=None):
     except SystemExit as e:
         T.log_exit(e)
         raise
+    finally:
+        lock.release()
 
 
 if __name__ == "__main__":

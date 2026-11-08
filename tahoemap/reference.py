@@ -57,7 +57,7 @@ import zipfile
 import numpy as np
 import pandas as pd
 
-from .common import folder, log, read_effects_index, stamp_stage, write_json, write_parquet
+from .common import folder, log, read_effects_index, replace_file, stamp_stage, write_json, write_parquet
 
 VERSION = 1
 
@@ -263,7 +263,7 @@ def fetch(src, cache_dir, offline=False, refresh=False, tries=4, timeout=120, si
         rec.update(status="failed", error=err)
         return None, rec
     n, lm = res
-    os.replace(tmp, dest)
+    replace_file(tmp, dest)
     meta = {"url": used, "downloaded": _now(), "last_modified": lm or last_modified, "bytes": n}
     with open(dest + ".meta.json", "w", encoding="utf-8") as fh:
         json.dump(meta, fh, indent=1)

@@ -17,12 +17,15 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import time
 import traceback
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
+# the default work folder: /tmp/tahoemap_test, or on Windows the system temp folder (not C:\tmp)
+DEFAULT_WORKDIR = "/tmp/tahoemap_test" if os.name != "nt" else os.path.join(tempfile.gettempdir(), "tahoemap_test")
 sys.path.insert(0, REPO)
 
 RESULTS = []
@@ -71,7 +74,7 @@ def run_pipeline(data, out, extra=()):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--workdir", default=os.environ.get("TAHOE_TEST_DIR", "/tmp/tahoemap_test"))
+    ap.add_argument("--workdir", default=os.environ.get("TAHOE_TEST_DIR", DEFAULT_WORKDIR))
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--regen", action="store_true")
     ap.add_argument("--reuse", action="store_true", help="do not rerun the pipeline if its output exists")

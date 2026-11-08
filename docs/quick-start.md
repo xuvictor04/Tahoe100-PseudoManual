@@ -101,7 +101,11 @@ C:\tahoe\.venv\Scripts\python.exe -m tahoemap run --stream --out C:\tahoe\out
 ```
 
 The run works in this window (keep it open; the computer is kept awake): Ctrl-C stops it, and the same command
-continues from the finished stages. Then, from `C:\tahoe\repo`, with the same `--out`:
+continues from the finished stages. A run started with `Start-Process -PassThru` (say with its output redirected to
+files) is stopped with `Stop-Process -Id <its Id>`: the build's worker processes and their downloads end with it.
+One computing command at a time per output folder: a second `run` (or stage) on the same `--out` refuses while the
+first, or a worker process it left running, is alive (`C:\tahoe\out\.pipeline.lock`; the message says how to end
+a leftover worker: `taskkill /T /F /PID <pid>`). Then, from `C:\tahoe\repo`, with the same `--out`:
 
 ```powershell
 C:\tahoe\.venv\Scripts\python.exe -m tahoemap status --out C:\tahoe\out
@@ -113,15 +117,23 @@ To check the install first (about 5 minutes, synthetic data, no download), from 
 ```powershell
 C:\tahoe\.venv\Scripts\python.exe tests\run_tests.py --workdir C:\tahoe\test
 C:\tahoe\.venv\Scripts\python.exe tests\test_port.py
+C:\tahoe\.venv\Scripts\python.exe tests\test_windows.py
+C:\tahoe\.venv\Scripts\python.exe tests\test_review.py --out C:\tahoe\test\out_seed0   # the review agents, fake API
 ```
 
-- `run_tests.py` should end with "31 passed, 0 warnings, 0 failed".
+- `run_tests.py` should end with "31 passed, 0 warnings, 0 failed"; `test_review.py` (about a minute, offline, no
+  key) with "0 failed". It works in a folder of its own in the temp folder and only reads `--out`.
 - The one warning you may see is "browser check skipped": that check opens the map in a headless browser and
   needs Playwright. It is optional. To include it, run
   `C:\tahoe\.venv\Scripts\python.exe -m pip install playwright`, then
   `C:\tahoe\.venv\Scripts\python.exe -m playwright install chromium`.
-- `test_port.py` needs git. If git is not on PATH (for example a portable MinGit), set
+- `test_port.py` (and `duplicate --repo`, and the code commit recorded with each literature review) needs git. If
+  git is not on PATH (for example a portable MinGit), put its `cmd` folder on PATH or set
   `$env:TAHOE_GIT = "C:\path\to\git.exe"` first.
+- Windows cannot replace a file that another program has open. Before running a stage again on an output, close
+  what reads it: a look-up or a notebook, Excel with one of its CSV files, a literature review run on it (or on a
+  duplicate of it, whose big arrays are the same files). Otherwise the stage stops with "Cannot replace (or write)
+  ...: another program has it open"; nothing is lost, and the same command runs it again.
 - With Windows Smart App Control on, Windows may block a library file the first time Python loads it ("An
   Application Control policy has blocked this file"). Running the same command again usually works. A stopped
   run continues from its finished stages.

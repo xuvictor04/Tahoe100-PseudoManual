@@ -12,12 +12,18 @@ well and line and summed across groups by the effects step, as in the atlas).
 A stopped build keeps its finished plates and continues where it stopped (a streamed one keeps streaming: cli
 switches to --stream when <out>/hf/file_plates.json is there). A build never deletes finished plates because fewer
 files are found, and a local build stops when the download is incomplete (unless --allow-partial).
+
+Windows: a process that is ended from outside (Stop-Process, taskkill without /T, Task Manager) does not take its
+child processes with it, so the build puts itself in a job object that ends every process of the build - the
+workers and their curl downloads - with it (_tie_children_to_this_process). Each streamed build sums its files in a
+folder of its own (<out>/hf/in_flight/<pid>), and what an earlier build left there is removed as far as it can be.
 """
 
 import glob
 import json
 import os
 import re
+import shutil
 import subprocess
 import threading
 import time
@@ -31,7 +37,7 @@ import pyarrow.parquet as _pq
 
 from . import atlas_core as A
 from . import tlib as T
-from .common import log, mark_output
+from .common import log, mark_output, note_children
 
 REPO = "https://huggingface.co/datasets/tahoebio/Tahoe-100M/resolve/main/"
 API = "https://huggingface.co/api/datasets/tahoebio/Tahoe-100M/tree/main/data"
@@ -221,15 +227,40 @@ def fetch_metadata(meta_dir):
             fetch(f"{REPO}metadata/{t}.parquet", p)
 
 
+def clear_in_flight(root):
+    """Remove what earlier builds left in <out>/hf/in_flight (their own subfolders, or loose files of older
+    versions). A file still in use - on Windows, a process of an earlier build that is still running - stays; it is
+    named, never an error. Returns the number of entries left."""
+    left = []
+    for e in sorted(os.listdir(root)) if os.path.isdir(root) else []:
+        p = os.path.join(root, e)
+        if e == ".not_tahoe_input":
+            continue
+        if os.path.isdir(p) and not os.path.islink(p):
+            shutil.rmtree(p, ignore_errors=True)
+            if os.path.exists(p):
+                left.append(p)
+        else:
+            try:
+                os.remove(p)
+            except OSError:
+                left.append(p)
+    if left:
+        log(f"  {len(left)} file(s) or folder(s) of an earlier build in {root} are still in use and stay there (is a "
+            "process of that build still running?): " + ", ".join(os.path.basename(x) for x in left[:5]))
+    return len(left)
+
+
 def build(args, hf_dir):
     """args as for atlas_core.cmd_build (out = <OUT>/atlas). hf_dir holds metadata/ and the plate map cache."""
     D = A.dirs(args.out)
     fetch_metadata(os.path.join(hf_dir, "metadata"))
-    tmp = os.path.join(hf_dir, IN_FLIGHT)
-    os.makedirs(tmp, exist_ok=True)
-    for f in glob.glob(os.path.join(tmp, "*")):
-        os.remove(f)
-    mark_output(tmp)                                         # the files in flight are never indexed as the data
+    root = os.path.join(hf_dir, IN_FLIGHT)
+    os.makedirs(root, exist_ok=True)
+    mark_output(root)                                        # the files in flight are never indexed as the data
+    clear_in_flight(root)
+    tmp = os.path.join(root, str(os.getpid()))              # this build's own: a file an earlier build still holds
+    os.makedirs(tmp, exist_ok=True)                          # never blocks it or collides with it
     idx = T.discover(hf_dir, args.out, refresh=True)
     gm = T.read_tables(idx["gene"], ["token_id", "gene_symbol", "ensembl_id"])
     G = int(gm["token_id"].max()) + 1
@@ -272,6 +303,11 @@ def build(args, hf_dir):
             left.append(f)
     if left:
         log(f"  {len(left)} finished file(s) could not be deleted from {tmp}; delete them by hand")
+    else:
+        try:
+            os.rmdir(tmp)
+        except OSError:
+            pass
     finish_build(args, idx, len(jobs), "streamed from Hugging Face", n_files=len(rels), expected=len(names))
 
 
@@ -300,21 +336,79 @@ def expected_files(exprs):
     return total, total - len(seen[total])
 
 
+_JOB = []                       # Windows: the job object of this process (its handle is never closed)
+
+
+def _tie_children_to_this_process():
+    """Windows: put this process in a job object with JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE. Its handle closes only
+    when this process ends - however it ends - and then every process of the job ends too: the build's workers
+    (multiprocessing starts them with no job of their own, and a worker notices a vanished parent only between
+    plates) and their curl downloads. Elsewhere, or when it cannot be done, nothing (False): Ctrl-C reaches every
+    process of the console, `tahoe stop` the process group."""
+    if os.name != "nt":
+        return False
+    if _JOB:
+        return True
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        class Basic(ctypes.Structure):
+            _fields_ = [("PerProcessUserTimeLimit", ctypes.c_int64), ("PerJobUserTimeLimit", ctypes.c_int64),
+                        ("LimitFlags", wintypes.DWORD), ("MinimumWorkingSetSize", ctypes.c_size_t),
+                        ("MaximumWorkingSetSize", ctypes.c_size_t), ("ActiveProcessLimit", wintypes.DWORD),
+                        ("Affinity", ctypes.c_size_t), ("PriorityClass", wintypes.DWORD),
+                        ("SchedulingClass", wintypes.DWORD)]
+
+        class Extended(ctypes.Structure):
+            _fields_ = [("BasicLimitInformation", Basic), ("IoInfo", ctypes.c_uint64 * 6),
+                        ("ProcessMemoryLimit", ctypes.c_size_t), ("JobMemoryLimit", ctypes.c_size_t),
+                        ("PeakProcessMemoryUsed", ctypes.c_size_t), ("PeakJobMemoryUsed", ctypes.c_size_t)]
+
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        k32.CreateJobObjectW.restype = wintypes.HANDLE
+        k32.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
+        k32.SetInformationJobObject.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+        k32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+        k32.GetCurrentProcess.restype = wintypes.HANDLE
+        k32.CloseHandle.argtypes = [wintypes.HANDLE]
+        job = k32.CreateJobObjectW(None, None)
+        if not job:
+            raise OSError(ctypes.get_last_error(), "CreateJobObject failed")
+        info = Extended()
+        info.BasicLimitInformation.LimitFlags = 0x2000                    # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+        if not (k32.SetInformationJobObject(job, 9, ctypes.byref(info), ctypes.sizeof(info))   # ExtendedLimit
+                and k32.AssignProcessToJobObject(job, k32.GetCurrentProcess())):
+            err = ctypes.get_last_error()
+            k32.CloseHandle(job)
+            raise OSError(err, "the job object could not be set up")
+        _JOB.append(job)               # never closed by us: closing it would end this process too
+        return True
+    except Exception as e:  # noqa: BLE001
+        log(f"  note: the worker processes could not be tied to this one ({e}): if you end this run with "
+            "Stop-Process or Task Manager, end its python.exe workers too (taskkill /T /F /PID <pid> ends a process "
+            "and the ones it started)")
+        return False
+
+
 def run_groups(jobs, workers, initializer=None, initargs=(), streamed=False):
     """Run atlas_core._build_group (verbatim) for every plate group, biggest first, `workers` at a time.
 
     A process pool that loses a worker (most often: killed for lack of memory) makes multiprocessing.Pool wait
     forever; this executor raises instead. A plate that fails is logged at once and the build stops; finished plates
-    are kept for the next run (the plates still being summed are redone)."""
+    are kept for the next run (the plates still being summed are redone). The workers' pids go into the pipeline lock
+    (common.note_children), so a later command on this output waits while one of them still runs."""
     from concurrent.futures import ProcessPoolExecutor, as_completed
     from concurrent.futures.process import BrokenProcessPool
     again = "run again" + (" (it continues streaming; or with --stream)" if streamed else "")
     order = sorted(jobs, key=lambda j: -len(j[2]))            # biggest plates first: a shorter tail
     t0, done = time.time(), 0
+    _tie_children_to_this_process()
     ex = ProcessPoolExecutor(workers, mp_context=mp.get_context("spawn"), initializer=initializer,
                              initargs=initargs)
     try:
         futs = {ex.submit(A._build_group, j): j[1] for j in order}
+        note_children([p.pid for p in list((getattr(ex, "_processes", None) or {}).values()) if p.pid])
         for fu in as_completed(futs):
             try:
                 _gid, name, _nc, reused = fu.result()
@@ -341,10 +435,13 @@ def run_groups(jobs, workers, initializer=None, initargs=(), streamed=False):
 
 
 def _stop_pool(ex):
-    """Cancel the queued plates and end the ones running (their partial sums are never written)."""
+    """Cancel the queued plates and end the ones running (their partial sums are never written). On Windows each
+    worker is ended with the processes it started (taskkill /T: its curl download), which terminate() leaves."""
     ex.shutdown(wait=False, cancel_futures=True)
     for p in list((getattr(ex, "_processes", None) or {}).values()):
         try:
+            if os.name == "nt" and p.pid:
+                subprocess.run(["taskkill", "/T", "/F", "/PID", str(p.pid)], capture_output=True, timeout=60)
             p.terminate()
         except Exception:  # noqa: BLE001
             pass

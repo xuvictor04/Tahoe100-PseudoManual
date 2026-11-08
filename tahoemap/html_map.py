@@ -123,7 +123,7 @@ import pandas as pd
 
 from . import atlas_core as A
 from . import vault as V
-from .common import folder, log, stamp_stage
+from .common import folder, log, replace_file, stamp_stage
 
 VERSION = 4                    # 3: tabs, the physics simulations, graph/edges.parquet embedded; 4: a slow
                                # double-click pins, at most 120 steps a second, literature badges with their check
@@ -686,7 +686,7 @@ def run(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=FN_CHAR
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
         fh.write(page)
-    os.replace(tmp, path)
+    replace_file(tmp, path)
     n_rel = sum(1 for r in data["rel"] if r)
     info = {"version": VERSION, "file": path, "bytes": size, "mb": round(size / 1e6, 2),
             "genes_on_map": data["n"], "genes_searchable": len(data["sym"]), "genes_with_partners": n_rel,

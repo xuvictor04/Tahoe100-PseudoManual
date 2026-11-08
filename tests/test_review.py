@@ -4,8 +4,10 @@
     python3 tests/test_review.py [--out FINISHED_OUTPUT] [--workdir DIR] [--keep]
 
 Needs a finished tahoemap output folder (tables, relations, graph ...): --out, else the one tests/run_tests.py leaves
-in --workdir (default $TAHOE_TEST_DIR or /tmp/tahoemap_test)/out_seed0. That folder is only read: every case works
-in DIR/review_view, whose entries are symbolic links to the output's own entries next to a fresh review/ folder.
+in --workdir/out_seed0 (default $TAHOE_TEST_DIR, else /tmp/tahoemap_test; on Windows tahoemap_test in the temp
+folder). That folder is only read: every case works in DIR/review_view, whose entries are symbolic links to the
+output's own entries (hard links or copies where this account may not make symbolic links: Windows without Developer
+Mode) next to a fresh review/ folder.
 
 Every request goes through the real Anthropic SDK (client.beta.messages.stream, answered with server-sent events)
 to tahoemap/review/fake.py, an httpx2 mock transport that answers from a script and checks each request as the API
@@ -35,7 +37,8 @@ signal between checker turns leaves the stored review as it was; network failure
 out stop the run also after an answer; the run waits for a slow healthy review before a stop; a request in flight
 at the close is charged an estimate and a response lost after it is recorded; a malformed key and local errors are
 never charged; status counts every entity after a filtered plan; the projection uses only reviews made with the
-same model, effort and --verify; `tahoe stop` stops a foreground review; --fake given a key. And a crafted
+same model, effort and --verify; `tahoe stop` stops a foreground review; --fake given a key. Windows fixes: a review
+that cannot be stored, ledger lines that cannot be written, `review stop`, the pipeline lock. And a crafted
 malicious review (raw
 HTML, script, iframe, javascript: / data: / vbscript: links, a remote image, comments, an unclosed fence, a fabricated
 PMID, a verdict the checker does not support, two verdicts on one partner) spliced into the vault and the map: the
@@ -62,6 +65,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import traceback
 import urllib.parse
@@ -69,6 +73,8 @@ import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
+# the default work folder: /tmp/tahoemap_test, or on Windows the system temp folder (not C:\tmp)
+DEFAULT_WORKDIR = "/tmp/tahoemap_test" if os.name != "nt" else os.path.join(tempfile.gettempdir(), "tahoemap_test")
 sys.path.insert(0, REPO)
 
 import pandas as pd  # noqa: E402
@@ -144,6 +150,26 @@ def fake_sleep(seconds, stop_event):
     return stop_event.is_set()
 
 
+def _link_or_copy(a, b):
+    try:
+        os.link(a, b)
+    except OSError:
+        shutil.copy2(a, b)
+
+
+def link_entry(src, dst):
+    """An entry of a view: a symbolic link to src; where this account may not make one (Windows without Developer
+    Mode: WinError 1314), a copy whose files are hard links (else copies). The output is only read either way: every
+    stage writes a new file and swaps it in."""
+    try:
+        os.symlink(src, dst, target_is_directory=os.path.isdir(src))
+    except OSError:
+        if os.path.isdir(src):
+            shutil.copytree(src, dst, copy_function=_link_or_copy)
+        else:
+            _link_or_copy(src, dst)
+
+
 def make_view(src, work):
     view = os.path.join(work, "review_view")
     if os.path.lexists(view):
@@ -151,7 +177,7 @@ def make_view(src, work):
     os.makedirs(view)
     for e in sorted(os.listdir(src)):
         if e != "review":
-            os.symlink(os.path.join(src, e), os.path.join(view, e))
+            link_entry(os.path.join(src, e), os.path.join(view, e))
     return view
 
 
@@ -702,13 +728,18 @@ def duplicate(view, work, out):
     with open(os.path.join(src, "vault", "genes", "NQO1.md"), "w", encoding="utf-8") as fh:
         fh.write("# NQO1\n")
     os.makedirs(os.path.join(work, "elsewhere"), exist_ok=True)
-    os.symlink(os.path.join(work, "elsewhere"), os.path.join(src, "atlas", "pseudobulk"))
+    try:
+        os.symlink(os.path.join(work, "elsewhere"), os.path.join(src, "atlas", "pseudobulk"))
+        has_link = True
+    except OSError:                                   # Windows without symlink rights (junctions: test_windows.py)
+        has_link = False
     with contextlib.redirect_stdout(io.StringIO()):
         rec3 = cli.duplicate(src, dest)
-    check(c, "temporary files left out, symbolic links kept as links",
+    check(c, "temporary files left out, symbolic links kept as links" + ("" if has_link else
+                                                                          " (no symlink rights: links not tested)"),
           not os.path.exists(os.path.join(dest, "tensor", "R.npy.tmp")) and rec3["files"]["skipped"] == 1
-          and os.path.islink(os.path.join(dest, "atlas", "pseudobulk")) and rec3["files"]["symlinks"] == 1,
-          rec3["files"])
+          and (not has_link or (os.path.islink(os.path.join(dest, "atlas", "pseudobulk"))
+                                and rec3["files"]["symlinks"] == 1)), rec3["files"])
     try:
         with contextlib.redirect_stdout(io.StringIO()):
             cli.duplicate(src, dest)
@@ -735,7 +766,7 @@ def vault_splice(work, src, ents):
         if e == "stages":
             shutil.copytree(os.path.join(src, e), os.path.join(sv, e))
         elif e not in ("review", "vault", "map"):
-            os.symlink(os.path.join(src, e), os.path.join(sv, e))
+            link_entry(os.path.join(src, e), os.path.join(sv, e))
     vt = os.path.join(sv, "vault")
 
     def notes():
@@ -877,7 +908,7 @@ def own_view(work, src, name):
         if e == "stages":
             shutil.copytree(os.path.join(src, e), os.path.join(sv, e))
         elif e not in ("review", "vault", "map"):
-            os.symlink(os.path.join(src, e), os.path.join(sv, e))
+            link_entry(os.path.join(src, e), os.path.join(sv, e))
     return sv
 
 
@@ -2878,7 +2909,8 @@ def keys_file_is_a_key(view, ents):
           and KEY5 not in r.stdout + r.stderr + logs and "looks like an API key" in r.stdout,
           f"exit {r.returncode}: {K.scrub(r.stdout[-200:])}")
     outs = []
-    for kf in (["--keys-file", KEY5], ["--keys-file=" + KEY5], ["--background", "--keys-file", KEY5]):
+    for kf in ([] if os.name == "nt" else (["--keys-file", KEY5], ["--keys-file=" + KEY5],
+                                           ["--background", "--keys-file", KEY5])):    # (the bash wrapper)
         w = subprocess.run(["bash", os.path.join(REPO, "tahoe"), "review", "run", "--out", view, "--limit", "1"] + kf,
                            cwd=view, env=env, capture_output=True, text=True, timeout=120)
         SCANNED["bytes"] += len(w.stdout) + len(w.stderr)
@@ -2902,7 +2934,7 @@ def keys_file_is_a_key(view, ents):
           and res3.exit_code == 2 and "no-such-script.json" in res3.message,
           {"exit": r.returncode, "out": K.scrub(r.stdout[-160:] + r.stderr[-160:]), "missing": res3.message[:120]})
     outs = []
-    for kf in (["--fake", KEY5], ["--fake=" + KEY5]):
+    for kf in ([] if os.name == "nt" else (["--fake", KEY5], ["--fake=" + KEY5])):     # (the bash wrapper)
         w = subprocess.run(["bash", os.path.join(REPO, "tahoe"), "review", "run", "--out", view, "--limit", "1"] + kf,
                            cwd=view, env=env, capture_output=True, text=True, timeout=120)
         SCANNED["bytes"] += len(w.stdout) + len(w.stderr)
@@ -3290,6 +3322,9 @@ def stop_foreground(view, ents):
     review/.run.lock), as SIGTERM: exit code 143, the running entity paused."""
     c = "stop_foreground"
     import threading
+    if os.name == "nt":
+        check(c, "the tahoe wrapper (bash) is not used on Windows: `review stop` is (windows_file_locks)", True)
+        return
     g = ents["genes"][5]
     env = {k: v for k, v in os.environ.items() if not k.startswith("ANTHROPIC")}
     sp = os.path.join(view, "script.json")
@@ -3321,6 +3356,126 @@ def stop_foreground(view, ents):
     reset(view, c)
 
 
+# ----------------------------------------------------------------------------- Windows fixes (file locks, stop)
+@case
+def windows_file_locks(view, ents):
+    """W-REV-1 / W-REV-4 (Windows, where a file another program has open cannot be replaced and Excel can hold the
+    ledger; simulated with PermissionError): a review that cannot be stored is a 'failed' ledger line with the review
+    kept in its history's end event - never an attempt that vanishes; a store refused once is tried again; ledger
+    lines that cannot be written wait (in order) and are written later, or - when the ledger stays held - go to
+    ledger.unwritten.jsonl, read as part of the ledger and moved into it by the next run; `review stop` stops a
+    running review through review/.stop (exit 143, the entity paused); a review run refuses while a pipeline command
+    holds OUT/.pipeline.lock."""
+    import threading
+    c = "windows_file_locks"
+    g, g2, g3 = ents["genes"][0], ents["genes"][1], ents["genes"][2]
+    real_write, real_retry, real_append, waits = R.write_json, R.retry_io, H.append_line, R.LEDGER_WAITS
+    R.retry_io = lambda fn: real_retry(fn, waits=(0.0, 0.0))
+    R.LEDGER_WAITS = (0.0,)
+    refused = {"n": 0, "max": 0}
+
+    def write_json(obj, path):
+        if os.sep + "reviews" + os.sep in path and refused["n"] < refused["max"]:
+            refused["n"] += 1
+            raise PermissionError(13, "Access is denied", path)
+        return real_write(obj, path)
+    try:
+        R.write_json = write_json
+        refused.update(n=0, max=99)
+        res, _ = run(view, {"entities": {g["entity_id"]: good()}}, only=g["entity_id"], verify="ids")
+        L = ledger(view)
+        end = next((e for e in reversed(events(view, L[-1])) if e.get("event") == "end"), {}) if L else {}
+        kept = (end.get("unstored_review") or {}).get("meta") or {}
+        check(c, "a review that cannot be stored: a 'failed' line saying so (retried next run), the review kept in "
+              "the history's end event; nothing on disk", res.exit_code == 0 and [r["status"] for r in L] == ["failed"]
+              and "could not store the review" in (L[-1].get("error") or "") and L[-1].get("store_failed")
+              and kept.get("entity_id") == g["entity_id"] and (end.get("unstored_review") or {}).get("summary")
+              and not os.path.exists(R.review_paths(view, "gene", g["name"])["review"])
+              and Ledger(view).states()[g["entity_id"]]["status"] == "failed",
+              {"exit": res.exit_code, "ledger": [(r["status"], (r.get("error") or "")[:70]) for r in L]})
+        reset(view, c)
+        refused.update(n=0, max=1)
+        res, _ = run(view, {"entities": {g["entity_id"]: good()}}, only=g["entity_id"], verify="ids")
+        check(c, "a store refused once (an antivirus or sync tool holding the file) is tried again: done",
+              [r["status"] for r in ledger(view)] == ["done"] and refused["n"] == 1
+              and os.path.exists(R.review_paths(view, "gene", g["name"])["review"]), refused)
+        reset(view, c)
+    finally:
+        R.write_json = real_write
+    lp = os.path.join(view, "review", "ledger.jsonl")
+    held = {"n": 0, "max": 0}
+
+    def append_line(path, rec):
+        if path == lp and held["n"] < held["max"]:
+            held["n"] += 1
+            raise PermissionError(13, "The process cannot access the file because it is being used by another "
+                                      "process", path)
+        return real_append(path, rec)
+    try:
+        H.append_line = append_line
+        held.update(n=0, max=1)
+        res, _ = run(view, {"entities": {g["entity_id"]: good(), g2["entity_id"]: good()}},
+                     only=f"{g['entity_id']},{g2['entity_id']}", verify="ids", concurrency=1)
+        L = ledger(view)
+        check(c, "a ledger line that cannot be written for a moment waits and is written with the next, in order",
+              [(r["entity_id"], r["status"]) for r in L] == [(g["entity_id"], "done"), (g2["entity_id"], "done")]
+              and held["n"] == 1, [(r["entity_id"], r["status"]) for r in L])
+        reset(view, c)
+        held.update(n=0, max=10 ** 6)
+        res, _ = run(view, {"entities": {g["entity_id"]: good()}}, only=g["entity_id"], verify="ids")
+        un = os.path.join(view, "review", "ledger.unwritten.jsonl")
+        spilled = read_jsonl(un)
+        st = Ledger(view).states().get(g["entity_id"]) or {}
+        held.update(max=0)
+        res2, _ = run(view, {"entities": {g3["entity_id"]: good()}}, only=g3["entity_id"], verify="ids")
+        L = read_jsonl(lp)
+        check(c, "a ledger held for the whole run (Excel): its lines go to ledger.unwritten.jsonl, counted as the "
+              "ledger (status done); the next run moves them into ledger.jsonl",
+              [r["status"] for r in spilled] == ["done"] and st.get("status") == "done" and not os.path.exists(un)
+              and [(r["entity_id"], r["status"]) for r in L] == [(g["entity_id"], "done"), (g3["entity_id"], "done")],
+              {"spilled": len(spilled), "state": st.get("status"), "after": [r["entity_id"] for r in L]})
+        reset(view, c)
+    finally:
+        H.append_line = real_append
+        R.retry_io, R.LEDGER_WAITS = real_retry, waits
+    # review stop: from another thread (another window, on Windows), through review/.stop
+    got = {}
+    t = threading.Thread(target=lambda: got.update(res=run(view, {"entities": {g2["entity_id"]: [
+        dict(good()[0], sleep=3)] + good()[1:]}}, only=g2["entity_id"], verify="ids")[0]), daemon=True)
+    t.start()
+    t0 = time.time()
+    while not glob.glob(os.path.join(view, "review", "history", "gene", "*", "*.jsonl")) and time.time() - t0 < 60:
+        time.sleep(0.1)
+    said = []
+    code = R.stop_run(view, say=said.append, wait=90)
+    t.join(60)
+    res = got.get("res")
+    check(c, "review stop: the running review stops as with Ctrl-C (exit 143, the entity paused), the stop file "
+          "is gone, and it says so", code == 0 and res is not None and res.exit_code == 143
+          and [r["status"] for r in ledger(view)] == ["paused"] and any("Stopped." in x for x in said)
+          and not os.path.exists(os.path.join(view, "review", R.STOP_FILE)),
+          {"exit": getattr(res, "exit_code", None), "ledger": [r["status"] for r in ledger(view)], "said": said[-1:]})
+    reset(view, c)
+    said = []
+    R.stop_run(view, say=said.append, wait=1)
+    check(c, "review stop with no run going on says so", said and "No review run" in said[0], said)
+    live = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+    pl = os.path.join(view, ".pipeline.lock")
+    try:
+        time.sleep(0.2)
+        with open(pl, "w", encoding="utf-8") as fh:
+            json.dump({"pid": live.pid, "host": socket.gethostname(), "started": "x",
+                       "process_start": R._proc_start(live.pid)}, fh)
+        res, fk = run(view, {"entities": {g["entity_id"]: good()}}, only=g["entity_id"], verify="ids")
+    finally:
+        live.kill()
+        live.wait()
+        os.remove(pl)
+    check(c, "a review run refuses (exit 2, nothing sent) while a pipeline command holds OUT/.pipeline.lock",
+          res.exit_code == 2 and "pipeline command" in res.message and not fk.calls, res.message[:120])
+    reset(view, c)
+
+
 # ----------------------------------------------------------------------------- main
 def pick_entities(view):
     e = D.entities(view)
@@ -3331,7 +3486,7 @@ def pick_entities(view):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--workdir", default=os.environ.get("TAHOE_TEST_DIR", "/tmp/tahoemap_test"))
+    ap.add_argument("--workdir", default=os.environ.get("TAHOE_TEST_DIR", DEFAULT_WORKDIR))
     ap.add_argument("--out", default=None, help="a finished tahoemap output (default WORKDIR/out_seed0)")
     ap.add_argument("--keep", action="store_true", help="keep WORKDIR/review_view after the test")
     a = ap.parse_args()
@@ -3400,6 +3555,7 @@ def main():
     status_whole_queue(view, ents)
     projection_settings(view, ents)
     stop_foreground(view, ents)
+    windows_file_locks(view, ents)
     for d in ("lit_ctx", "lit_ctx_down"):
         shutil.rmtree(os.path.join(work, d), ignore_errors=True)
     sys.stdout = tee.real

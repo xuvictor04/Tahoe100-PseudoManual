@@ -219,10 +219,11 @@ left running without one, it stops. So a stop never throws away the work of a re
 
 When **every** key is dead:
 
-- in the foreground (a terminal), the run asks: *Paste a new Anthropic API key (it is not saved anywhere), or press
-  Enter to stop*. A pasted key is used at once (and only for this run). Ctrl-C at that prompt works like Enter: the
+- in the foreground (a terminal; on Windows stdin, stdout and stderr must all be the console window, so a run
+  started with `Start-Process` and its output redirected to files does not ask), the run asks: *Paste a new Anthropic
+  API key (it is not saved anywhere), or press Enter to stop*. A pasted key is used at once (and only for this run). Ctrl-C at that prompt works like Enter: the
   prompt ends at once, the terminal is left as it was (echo on), and the run pauses as below (exit code 3);
-- in the background, or when you press Enter, the run **pauses**: the entities not finished stay pending, the exit
+- in the background, with `--no-prompt`, or when you press Enter, the run **pauses**: the entities not finished stay pending, the exit
   code is 3, and the message says to add a key. Add credit or a key (`ANTHROPIC_API_KEY`, `ANTHROPIC_API_KEYS`, the
   keys file) and run **the same command again**: it continues with the entities still pending.
 
@@ -233,8 +234,10 @@ When **every** key is dead:
 then marked `paused` — except one whose review was already submitted (it was being verified): that review is
 **stored as done**, with its verification as far as it got and the rest marked not run (`review run --recheck`
 completes it) — and the ledger and the tables are written (a second Ctrl-C stops at once). Closing the terminal
-(SIGHUP) and `tahoe stop` (SIGTERM) stop it the same way (exit codes 129, 143; Ctrl-C 130): `tahoe stop` (with the
-same `--out`) finds a run in the foreground of another terminal through `review/.run.lock`. A request still in
+(SIGHUP), `tahoe stop` (SIGTERM) and `tahoe review stop` stop it the same way (exit codes 129, 143, 143; Ctrl-C 130;
+Ctrl-Break on Windows 149): `tahoe stop` (with the same `--out`) finds a run in the foreground of another terminal
+through `review/.run.lock`; `tahoe review stop` (`python -m tahoemap review stop --out ...`, on every system) asks
+the run named there to stop through a file, `review/.stop`, and waits until it has ended. A request still in
 flight when its attempt is closed is charged an estimate ([Costs](#costs)); a response that arrives after its attempt
 was closed is still counted: a `note` line in the ledger and a `late` event in the history.
 
@@ -243,8 +246,8 @@ and its last lines, `tahoe log` follows it, `tahoe stop` stops it as Ctrl-C does
 needs `--keys-file` or `ANTHROPIC_API_KEY(S)`, and it pauses (exit code 3) when they are all used up. One review run
 at a time per output folder (`review/.run.lock`, which holds the run's process id, computer and start time); a lock
 whose process is gone — also on Windows, after a closed window or a reboot — is removed by the next run, and
-`tahoe review status` says whether the lock is live or stale. `tahoe review run` refuses while a pipeline job runs on
-the folder.
+`tahoe review status` says whether the lock is live or stale. `tahoe review run` refuses while a pipeline command
+computes on the folder (a `tahoe` job, or any `run` or stage command: it holds `OUT/.pipeline.lock`).
 
 | Option | |
 |---|---|
@@ -260,6 +263,7 @@ the folder.
 | `--retry-failed` | also retry the entities left alone after 3 failed attempts (not the done ones) |
 | `--recheck` | only complete the verification of stored reviews that lack it (see below); no reviewer runs |
 | `--dry-run` | write the dossiers and first requests to `review/dry_run/`; send nothing |
+| `--no-prompt` | never ask for a key when every key is used up: pause (exit code 3) instead (a run nobody watches) |
 
 **Resuming** needs nothing special: the latest ledger line of each entity is its state, and a run starts only what
 is not final. `done` and `refused` (the model declined; `stop_details.category` is recorded) are final unless
@@ -286,6 +290,7 @@ Everything is under `<output>/review/`:
 |---|---|
 | `queue.parquet` | the entities the last `tahoe review plan` selected (all, or its `--kinds` / `--only`), in priority order with their state; `tahoe review status` always counts every entity, whatever the last plan selected |
 | `ledger.jsonl` | one line per finished attempt (append-only) |
+| `ledger.unwritten.jsonl` | only when `ledger.jsonl` could not be written for a whole run (on Windows: open in Excel): the lines that waited; read as part of the ledger, and moved into it by the next run |
 | `history/<kind>/<name>/<run_id>.jsonl` | every event of one attempt |
 | `reviews/<kind>/<name>.json` | the submitted review + its verification + metadata (model, date, cost, history path ...) |
 | `notes/<kind>/<name>.md` | the vault section the agent wrote |
@@ -485,7 +490,8 @@ tahoe duplicate ~/tm/review1 --out ~/tm/main --repo ~/tahoemap-review
 `tahoe duplicate DEST` copies the output folder (`--out`, or the default one): the large arrays and tables (`atlas`,
 `tensor`, `tables`, `embed`, `relations`, `graph`) are **hard-linked** when DEST is on the same file system — they
 take no extra space, and because every stage writes a new file and swaps it in, a stage that runs again in either
-copy replaces its file there without touching the other — and everything else (vault, map, validation, reference)
+copy replaces its file there without touching the other (on Windows only while no program has that file open in
+either copy: a hard-linked file is one file under two names, and a file in use cannot be replaced there) — and everything else (vault, map, validation, reference)
 is copied (on the full data mostly the vault, ~0.6 GB, and the build's CSV tables). It writes `DEST/duplicated_from.json`: the source, the date, the code commit
 (and whether the code had uncommitted changes), and the stage stamps. `--repo DIR` also `git clone`s this code
 repository into DIR, so the copy's code (and its agent and skill files) can change on their own; edit and commit
@@ -497,16 +503,39 @@ command at it); both use the same Python environment.
 - **macOS**: `tahoe review` works as on Linux. A long foreground run on a laptop: keep it awake with
   `caffeinate -i tahoe review run ...` (the pipeline keeps itself awake; the review does not). `--background` jobs
   get their own process group, so `tahoe stop` reaches them.
-- **Windows** (no `tahoe` wrapper; PowerShell, from the repository folder, with the venv's Python):
+- **Windows** (no `tahoe` wrapper; PowerShell, with the venv's Python, from the folder of the code to run:
+  `python -m tahoemap` uses the `tahoemap` folder of the current folder, so for the duplicate workflow
+  `Set-Location C:\tahoe\review-repo` first, or the original's code and agent files run, without a message):
   ```powershell
   $env:ANTHROPIC_API_KEY = "sk-ant-..."      # for this window only; or --keys-file C:\Users\me\keys.txt
   C:\tahoe\.venv\Scripts\python.exe -m tahoemap review plan --out C:\tahoe\out
   C:\tahoe\.venv\Scripts\python.exe -m tahoemap review run --out C:\tahoe\out --limit 20
   C:\tahoe\.venv\Scripts\python.exe -m tahoemap review status --out C:\tahoe\out
+  C:\tahoe\.venv\Scripts\python.exe -m tahoemap review stop --out C:\tahoe\out     # from another window
   C:\tahoe\.venv\Scripts\python.exe -m tahoemap vault --out C:\tahoe\out
   C:\tahoe\.venv\Scripts\python.exe -m tahoemap map --out C:\tahoe\out
   C:\tahoe\.venv\Scripts\python.exe -m tahoemap duplicate D:\tm\review1 --out C:\tahoe\out --repo C:\tahoe\review-repo
   ```
-  The run works in that window (keep it open; it asks there for a new key when all have run out); Ctrl-C pauses it
-  and the same command resumes it. There is no background mode. The keys-file permission check is POSIX only: keep
-  the file in your own profile folder. Hard links need the copy on the same NTFS volume (else the files are copied).
+  - The run works in its window (keep it open; it asks there for a new key when all have run out); Ctrl-C or
+    Ctrl-Break pauses it and the same command resumes it. From another window, `review stop` (above) stops it the
+    same way and waits for it to end. `Stop-Process`, `taskkill /F` and Task Manager end it at once: the entities in
+    progress are neither paused nor stored, and are paid for again next run. Closing its window closes them at once
+    (no 15-second grace: a review already submitted is stored, the others are paused). The computer is kept awake
+    while it runs (a laptop still sleeps when its lid is closed). There is no background mode.
+  - A run started with `Start-Process` (its output redirected to files, or a hidden window) cannot ask for a key:
+    give it `--keys-file` (or the key in the environment) and `--no-prompt`; it pauses with exit code 3 when every
+    key is used up.
+  - git (for `duplicate --repo`, and the commit recorded with every review): put the folder of `git.exe` on PATH
+    (for a portable MinGit its `cmd` folder) or set `$env:TAHOE_GIT = "C:\path\to\git.exe"`. Without it,
+    `duplicate --repo` says that git was not found, and the reviews record the commit as unknown.
+  - The keys file and `--only @FILE` may be UTF-8 (with or without a BOM) or UTF-16 (what Windows PowerShell's `>`
+    and `Out-File` write). Quote the `@` in PowerShell: `--only '@genes.txt'` (unquoted it is splatting). The
+    keys-file permission check is POSIX only: keep the file in your own profile folder.
+  - Hard links need the copy on the same NTFS volume (else the files are copied). A file in use cannot be replaced
+    on Windows, and a hard-linked file is the same file in both copies: do not run a stage again in either copy (say
+    `embed` or `graph`) while a review or a look-up runs on the other; the stage would stop with "Cannot replace ...
+    another program has it open" (nothing is lost; run it again afterwards).
+  - A review file that another program holds when the run writes it (a sync or antivirus tool, an editor) is tried
+    again for a few seconds; if it still cannot be written, the attempt is recorded as `failed` with the review kept
+    in its history (the end event's `unstored_review`), and the entity is reviewed again next run. A `ledger.jsonl`
+    open in Excel cannot be appended to: its lines wait (`ledger.unwritten.jsonl`) and are moved in later.

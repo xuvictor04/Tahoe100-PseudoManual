@@ -189,8 +189,12 @@ class FakeAPI:
         import httpx2
         if step.get("sleep"):
             time.sleep(float(step["sleep"]))
-        if step.get("signal"):
-            os.kill(os.getpid(), getattr(signal, step["signal"]))
+        sig = getattr(signal, step["signal"], None) if step.get("signal") else None
+        if sig is not None:                          # (a signal this system lacks, SIGHUP on Windows: no step)
+            if os.name == "nt":
+                signal.raise_signal(sig)             # (os.kill there would end the process: TerminateProcess)
+            else:
+                os.kill(os.getpid(), sig)
             time.sleep(0.2)                          # let the main thread run its handler
         if step.get("sleep_after"):
             time.sleep(float(step["sleep_after"]))

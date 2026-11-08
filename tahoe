@@ -298,14 +298,14 @@ abs_paths() {                    # path options made absolute (tm runs in the re
   done
 }
 
-cmd_review() {                   # tahoe review [plan|run|status|tables] [--background] [options]
+cmd_review() {                   # tahoe review [plan|run|status|tables|stop] [--background] [options]
   need_packages
   local bg=0 action=status a p args=()
   for a in "$@"; do
     if [ "$a" = --background ]; then bg=1; else args+=("$a"); fi
   done
-  case "${args[0]:-}" in plan|run|status|tables) action="${args[0]}" ;; -*|'') ;;
-    *) die "review: unknown action '${args[0]}' (plan, run, status or tables; tahoe help)" ;; esac
+  case "${args[0]:-}" in plan|run|status|tables|stop) action="${args[0]}" ;; -*|'') ;;
+    *) die "review: unknown action '${args[0]}' (plan, run, status, tables or stop; tahoe help)" ;; esac
   abs_paths ${args[@]+"${args[@]}"}
   if [ "$action" = run ]; then          # plan / status / tables (and the dossiers) need no SDK
     "$PY" -c "import anthropic" 2>/dev/null || die "the Anthropic SDK is missing: $PY -m pip install anthropic"

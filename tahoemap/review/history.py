@@ -46,7 +46,7 @@ import pandas as pd
 
 from . import review_dir
 from .keys import scrub
-from ..common import safe_filename
+from ..common import log, safe_filename
 
 TOOL_RESULT_CHARS = 20_000
 DOSSIER_REF = "{{dossier}}"                 # in the first request event: the dossier text of the start event
@@ -212,18 +212,90 @@ def conversation(events, agent=None):
 
 
 class Ledger:
+    """append() never raises: a line that cannot be written now (on Windows: ledger.jsonl open in a program that
+    denies writing, such as Excel; a full disk) waits in `backlog` and goes first with the next append or flush().
+    What a run could not write at all goes to ledger.unwritten.jsonl (spill), which read() counts as the ledger's
+    end and recover() - the next run - moves into ledger.jsonl."""
+
     def __init__(self, out):
         self.out = out
         self.path = os.path.join(review_dir(out), "ledger.jsonl")
+        self.unwritten = os.path.join(review_dir(out), "ledger.unwritten.jsonl")
+        self.backlog = []
+        self.error = None
+        self._lock = threading.Lock()
 
     def append(self, rec):
         r = {k: rec.get(k) for k in LEDGER_FIELDS}
         r.update({k: v for k, v in rec.items() if k not in r})
-        append_line(self.path, r)
+        with self._lock:
+            self.backlog.append(r)
+            self._write_backlog()
         return r
 
+    def _write_backlog(self):
+        while self.backlog:
+            try:
+                append_line(self.path, self.backlog[0])
+            except OSError as e:
+                if self.error is None:
+                    log(f"WARNING: cannot write to {self.path} ({type(e).__name__}: {e}; open in another program?): "
+                        "the ledger lines wait and are written as soon as it can be written again")
+                self.error = e
+                return False
+            self.backlog.pop(0)
+        if self.error is not None:
+            log(f"  the ledger {self.path} can be written again: the lines that waited are in it")
+            self.error = None
+        return True
+
+    def flush(self, waits=()):
+        """Write the lines that wait; tried again after each wait. True when none is left."""
+        for w in (0.0,) + tuple(waits):
+            if w:
+                time.sleep(w)
+            with self._lock:
+                if self._write_backlog():
+                    return True
+        return False
+
+    def spill(self):
+        """The lines still waiting go to ledger.unwritten.jsonl (read() includes it). Returns its path."""
+        with self._lock:
+            while self.backlog:
+                try:
+                    append_line(self.unwritten, self.backlog[0])
+                except OSError:
+                    break
+                self.backlog.pop(0)
+        return self.unwritten
+
+    def recover(self):
+        """Move the lines of ledger.unwritten.jsonl (an earlier run could not write them) into ledger.jsonl."""
+        rows = read_jsonl(self.unwritten)
+        if not rows:
+            return 0
+        with self._lock:
+            for i, r in enumerate(rows):
+                try:
+                    append_line(self.path, r)
+                except OSError:                     # still held: the rest stay there for the next run
+                    try:
+                        with open(self.unwritten, "w", encoding="utf-8") as fh:
+                            fh.writelines(json.dumps(x, default=_default, ensure_ascii=False) + "\n"
+                                          for x in rows[i:])
+                    except OSError:
+                        pass
+                    return i
+            try:
+                os.remove(self.unwritten)
+            except OSError:
+                pass
+        log(f"  {len(rows)} ledger line(s) an earlier run could not write were added to {self.path}")
+        return len(rows)
+
     def read(self):
-        return read_jsonl(self.path)
+        return read_jsonl(self.path) + read_jsonl(self.unwritten)
 
     def latest(self):
         """entity_id -> its latest ledger line (bookkeeping "note" lines left out)."""

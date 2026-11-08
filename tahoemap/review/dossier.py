@@ -41,6 +41,7 @@ import pandas as pd
 from .. import atlas_core as A
 from .. import tlib as T
 from .. import query as Q
+from ..common import replace_file
 from ..relations import REPRO_FDR
 
 MAX_CHARS = 24_000             # ~7,000-8,000 tokens of markdown tables with numbers (~3-3.5 characters a token)
@@ -1652,7 +1653,7 @@ def write_text(path, text):
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
         fh.write(text)
-    os.replace(tmp, path)
+    replace_file(tmp, path)
 
 
 def to_json(d):

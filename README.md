@@ -112,6 +112,7 @@ in `tahoemap/vault_seed/`). Checks:
 tahoe test                      # or: python3 tests/run_tests.py --workdir /tmp/tahoemap_test
 python3 tests/test_port.py      # the port is verbatim
 python3 tests/test_review.py --workdir /tmp/tahoemap_test   # the review agents against a scripted fake API
+python3 tests/test_windows.py   # Windows-only behaviour, simulated on Linux / macOS (seconds)
 ```
 
 `tests/test_review.py` (after `run_tests.py`, offline, no key, under a minute) drives the review runner through the

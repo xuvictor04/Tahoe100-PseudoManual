@@ -12,34 +12,17 @@ text). Any hand edit of a ported function makes this fail.
 
 import argparse
 import os
-import shutil
 import subprocess
 import sys
 import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
+sys.path.insert(0, REPO)
+from tahoemap.common import find_git  # noqa: E402  ($TAHOE_GIT, PATH, the usual Git for Windows / MinGit places)
+
 OLD_COMMIT = "28cd834"
 FILES = ("tahoe_atlas.py", "tahoe_mtap_gankyrin.py")
-
-
-def find_git():
-    """git: $TAHOE_GIT, then PATH, then the usual Git for Windows places; None when there is none."""
-    env = os.environ.get("TAHOE_GIT")
-    if env:
-        return env
-    g = shutil.which("git")
-    if g:
-        return g
-    if os.name == "nt":
-        roots = [os.environ.get(v) for v in ("ProgramFiles", "ProgramFiles(x86)", "LOCALAPPDATA")]
-        cands = [os.path.join(r, *p) for r in roots if r for p in (("Git", "cmd", "git.exe"),
-                                                                  ("Programs", "Git", "cmd", "git.exe"))]
-        cands.append(os.path.join(os.path.dirname(REPO), "mingit", "cmd", "git.exe"))   # a MinGit next to the repo
-        for c in cands:
-            if os.path.isfile(c):
-                return c
-    return None
 
 
 def same_text(a, b):

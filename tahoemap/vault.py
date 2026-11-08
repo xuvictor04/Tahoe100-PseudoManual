@@ -73,7 +73,7 @@ from . import graph as GR
 from . import relations as REL
 from . import tensor as TN
 from . import tlib as T
-from .common import folder, log, read_effects_index, safe_filename, stamp_stage
+from .common import folder, log, read_effects_index, replace_file, safe_filename, stamp_stage
 # the sentence-level rule the runner applies to the notes it stores (verify imports only the standard library)
 from .review.verify import ITEM_SECTIONS, drop_self_check as _verify_drop_self_check
 
@@ -301,7 +301,7 @@ class Writer:
         tmp = path + ".tmp"
         with open(tmp, "wb") as fh:
             fh.write(data)
-        os.replace(tmp, path)
+        replace_file(tmp, path)
         self.n_written += 1
 
 
@@ -3159,7 +3159,7 @@ class Vault:
                 tmp = p + ".tmp"
                 with open(tmp, "w", encoding="utf-8") as fh:
                     json.dump(new, fh, indent=2, ensure_ascii=False)
-                os.replace(tmp, p)
+                replace_file(tmp, p)
         app = {"useMarkdownLinks": False, "newLinkFormat": "shortest", "attachmentFolderPath": "attachments",
                "alwaysUpdateLinks": True, "showUnsupportedFiles": True, "defaultViewMode": "preview",
                "strictLineBreaks": False, "readableLineLength": True, "userIgnoreFilters": [ignore]}
@@ -3244,7 +3244,7 @@ class Vault:
         tmp = mp + ".tmp"
         with open(tmp, "w", encoding="utf-8") as fh:
             json.dump({"generated_by": GEN, "version": VERSION, "files": files}, fh, indent=0)
-        os.replace(tmp, mp)
+        replace_file(tmp, mp)
         gs = np.array(self.gene_sizes)
         ps = np.array(self.plates_sizes)
         info = {"version": VERSION, "notes": len(files), "gene_notes": self.R.gK, "drug_notes": len(self.drug_name),

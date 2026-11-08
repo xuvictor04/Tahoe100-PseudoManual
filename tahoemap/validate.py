@@ -49,7 +49,8 @@ import pandas as pd
 
 from . import atlas_core as A
 from . import tlib as T
-from .common import folder, log, read_effects_index, stable_seed, stamp_stage, write_csv, write_json
+from .common import (folder, log, read_effects_index, replace_file, stable_seed, stamp_stage, write_csv,
+                     write_json)
 
 VERSION = 2
 N_RANDOM = 20_000           # random gene pairs: the background of every AUROC
@@ -957,7 +958,7 @@ def _report(path, ctx):
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
         fh.write("\n".join(L))
-    os.replace(tmp, path)
+    replace_file(tmp, path)
 
 
 README = """# validation/ - does the vector space recover known biology, and what in it is new?
@@ -1179,7 +1180,7 @@ def run(out, truth=None, n_random=N_RANDOM, n_null=N_NULL):
     tmp = os.path.join(vd, "README.md.tmp")
     with open(tmp, "w", encoding="utf-8") as fh:
         fh.write(README)
-    os.replace(tmp, os.path.join(vd, "README.md"))
+    replace_file(tmp, os.path.join(vd, "README.md"))
 
     info = {"version": VERSION, "genes": int(sp.n), "sets": n_sets, "modules": int(sp.n_modules),
             "modules_labelled": metrics["module_labels"]["labelled"],
