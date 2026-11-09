@@ -34,6 +34,13 @@ std handles that are not the console - and checks what tahoemap does then:
              keeps its ' / DDL_z.npy' out of the path (ntpath.relpath)
   https      downloads are verified by Windows itself (truststore), a certificate failure is tried once against
              certifi's roots and is not retried by the reference stage, and its message says what to do
+  explorer   long base paths: every file the explorer export writes goes through the extended-length path helper,
+             and the record and PUBLISH.md say when paths pass 260 characters; odd drug and line names stay one
+             path segment of a hash route, also in a file:// address of a Windows path, and the explorer's own file
+             names never hold a name; the folder swap (explorer.tmp -> explorer) with a file held open stops with a
+             message naming the folder, and nothing is lost; publish.ps1 pushes only HEAD:refs/heads/main to the data
+             repository and HEAD:refs/heads/site to the code repository, checks git's exit code after every call,
+             and quotes a path with an apostrophe
 
 Prints PASS / FAIL per check; exit code 1 if anything fails.
 """
@@ -45,6 +52,7 @@ import io
 import json
 import ntpath
 import os
+import pathlib
 import shutil
 import signal
 import socket
@@ -645,6 +653,168 @@ def query(work):
           row.strip())
 
 
+# ----------------------------------------------------------------------------- explorer (the PC publishes it)
+def _fake_export(root):
+    """A small explorer output for the export: OUT/stages, OUT/explorer/{web,data} with MANIFEST.tsv files, a stamp
+    that is current (run id, assets_sha), and atlas/effects with one array."""
+    from tahoemap import explorer as XP
+    out = os.path.join(root, "out")
+    os.makedirs(os.path.join(out, "stages"))
+    with open(os.path.join(out, "stages", "tables.json"), "w", encoding="utf-8") as fh:
+        json.dump({"stage": "tables", "version": 1, "finished": "2026-01-01 00:00:00", "info": {}}, fh)
+    vols = {"web": {"index.html": "<!DOCTYPE html>\n", ".nojekyll": "", "README.md": "web\n",
+                    ".gitattributes": "* -text\n", "d/core.js": "TAHOE_SHARD(\"core\",\"\");\n",
+                    "d/hosts.js": "TAHOE_HOSTS({\"data\":[],\"data_dd\":[],\"release\":[],\"run\":\"r\"});\n"},
+            "data": {"README.md": "data\n", ".gitattributes": "* -text\n", "probe.js": "TAHOE_PROBE({});\n",
+                     **{f"x/00/{c:05d}.js": f"TAHOE_SHARD(\"x/00/{c:05d}\",\"\");\n" for c in range(5)}}}
+    import hashlib
+    for v, files in vols.items():
+        rows = []
+        for rel, text in sorted(files.items()):
+            pth = os.path.join(out, "explorer", v, *rel.split("/"))
+            os.makedirs(os.path.dirname(pth), exist_ok=True)
+            with open(pth, "w", encoding="utf-8", newline="\n") as fh:
+                fh.write(text)
+            rows.append(f"{rel}\t{len(text.encode())}\t{hashlib.sha256(text.encode()).hexdigest()}\n")
+        with open(os.path.join(out, "explorer", v, "MANIFEST.tsv"), "w", encoding="utf-8", newline="\n") as fh:
+            fh.write("path\tbytes\tsha256\n" + "".join(rows))
+    with open(os.path.join(out, "explorer", "manifest.json"), "w", encoding="utf-8") as fh:
+        fh.write("{}")
+    os.makedirs(os.path.join(out, "atlas", "effects"))
+    with open(os.path.join(out, "atlas", "effects", "DD_lfc.npy"), "wb") as fh:
+        fh.write(b"\x93NUMPY")
+    info = {"run": XP.run_id(out), "assets_sha": XP.assets_sha(), "complete_ok": True,
+            "checks": {"self_check": {"n_problems": 0}}, "site_url": None, "data_url": None}
+    with open(os.path.join(out, "stages", "explorer.json"), "w", encoding="utf-8") as fh:
+        json.dump({"stage": "explorer", "version": XP.VERSION, "finished": "2026-01-02 00:00:00", "info": info}, fh)
+    return out
+
+
+@case
+def explorer(work):
+    c = "explorer"
+    from tahoemap import export as X, explorer as XP, links as LK
+    import urllib.parse
+    # long base paths
+    long_p = "C:\\tahoe\\" + "x" * 240 + "\\site\\d\\g\\00\\0001.js"
+    with patched(os, name="nt", path=ntpath):
+        got = X._lp(long_p)
+        short = X._lp("C:\\tahoe\\pub\\site\\index.html")
+    check(c, "long base paths: a path of 240 characters or more gets the extended-length form (\\\\?\\) on Windows; "
+          "a short one stays as it is", got == "\\\\?\\" + long_p and short == "C:\\tahoe\\pub\\site\\index.html",
+          got[:20])
+    out = _fake_export(work)
+    dest = os.path.join(work, "p" * 200, "pub")
+    seen = set()
+
+    def rec_lp(pth, always=False):         # records the path; the real one would give it the \\?\ form here
+        seen.add(os.path.abspath(pth))
+        return pth
+    with windows(), patched(X, _lp=rec_lp), contextlib.redirect_stdout(io.StringIO()):
+        rec = X.explorer_export(out, dest, github="tahoe-test/Tahoe100-PseudoManual")
+    written = [os.path.join(r_, f) for r_, _d, fs in os.walk(dest) for f in fs]
+    missed = [w for w in written if os.path.abspath(w) not in seen]
+    with open(os.path.join(dest, "PUBLISH.md"), encoding="utf-8") as fh:
+        md = fh.read()
+    with open(os.path.join(dest, "publish.ps1"), encoding="utf-8") as fh:
+        ps1 = fh.read()
+    check(c, "an explorer export into a long folder: every file it writes goes through the extended-length path "
+          "helper; the record and PUBLISH.md say the paths pass 260 characters; git gets core.longpaths true",
+          not missed and rec["long_paths"] and "Long paths" in md and "core.longpaths true" in ps1,
+          f"{len(written)} files, {len(missed)} not through _lp: {missed[:2]}")
+    # odd names in hash routes
+    site = "https://tahoe-test.github.io/Tahoe100-PseudoManual/"
+    names = ["Idarubicin (hydrochloride)", "HepG2/C3A", "Doxorubicin #2", "50% inhibitor?", "β-Lapachone",
+             "N,N'-Dimethyl", "CON", "a&b=c", "100 µM", "back\\slash", "tab\tname"]
+    win_page = pathlib.PureWindowsPath("C:/tahoe/out/explorer/web/index.html").as_uri()
+    bad = []
+    for n in names:
+        for u in (LK.drug(site, n), LK.line(site, n), LK.gene(site, "TRIM72", sub=("line", n))):
+            seg = u.rsplit("/", 1)[1]
+            frag = urllib.parse.urlsplit(win_page + "#" + u.split("#", 1)[1]).fragment
+            if (urllib.parse.unquote(seg) != n or not all(ch.isalnum() and ch.isascii() or ch in "-._~%" for ch in seg)
+                    or frag != u.split("#", 1)[1] or frag.count("#")):
+                bad.append((n, u))
+    ids = [XP.g_id(b) for b in (0, 99, 100, 1040)] + [XP.x_id(c_) for c_ in (0, 16642)] + \
+        [XP.p_id(d) for d in (0, 1131)] + [XP.dr_id(i) for i in (0, 378)] + [XP.l_id(49), XP.m_id(234), XP.dg_id(184)]
+    odd_ids = [i for i in ids if not all(ch in "abcdefghijklmnopqrstuvwxyz0123456789/" for ch in i)]
+    check(c, "odd drug and line names (parentheses, '/', '#', '%', '?', spaces, non-ASCII, a reserved name) stay one "
+          "segment of a hash route and decode back, also after a file:// address of a Windows path; the explorer's "
+          "file names are numbers only (no name, no case clash on Windows)", not bad and not odd_ids,
+          f"bad {bad[:2]}; odd ids {odd_ids[:3]}; e.g. {LK.drug(site, names[0])}")
+    # the folder swap with a file held open
+    sw = os.path.join(work, "swap")
+    os.makedirs(os.path.join(sw, "explorer", "web"))
+    os.makedirs(os.path.join(sw, "explorer.tmp", "web"))
+    for d_, t in (("explorer", "old"), ("explorer.tmp", "new")):
+        with open(os.path.join(sw, d_, "web", "index.html"), "w") as fh:
+            fh.write(t)
+    real_replace = os.replace
+    held = {"src": os.path.join(sw, "explorer"), "n": 0}
+
+    def blocked(a, b):
+        if os.path.abspath(a) == held["src"]:
+            held["n"] += 1
+            raise denied(a)
+        return real_replace(a, b)
+
+    def state():
+        return {d_: (open(os.path.join(sw, d_, "web", "index.html")).read()
+                     if os.path.exists(os.path.join(sw, d_, "web", "index.html")) else None)
+                for d_ in ("explorer", "explorer.tmp", "explorer.old")}
+    err1 = None
+    with windows(), patched(C, REPLACE_WAITS=(0.0, 0.0)), patched(os, replace=blocked):
+        try:
+            XP.swap(sw, os.path.join(sw, "explorer.tmp"))
+        except C.FileInUse as e:
+            err1 = str(e)
+    s1 = state()
+    held["src"] = os.path.join(sw, "explorer.tmp")
+    err2 = None
+    with windows(), patched(C, REPLACE_WAITS=(0.0, 0.0)), patched(os, replace=blocked):
+        try:
+            XP.swap(sw, os.path.join(sw, "explorer.tmp"))
+        except C.FileInUse as e:
+            err2 = str(e)
+    s2 = state()
+    check(c, "the folder swap with a file held open (Windows): the old explorer held -> it stops with a message "
+          "naming the folder, both folders unchanged; the new one held -> it stops, the old explorer moved back in "
+          "place and the new one kept in explorer.tmp (nothing lost; OUT/explorer never missing; the stage builds "
+          "it again)",
+          bool(err1) and os.path.join(sw, "explorer") in err1 and "explorer.old" in err1 and "open" in err1
+          and s1 == {"explorer": "old", "explorer.tmp": "new", "explorer.old": None}
+          and bool(err2) and s2 == {"explorer": "old", "explorer.tmp": "new", "explorer.old": None},
+          f"{s1} / {s2}; {(err1 or '')[:80]}")
+    held["src"], held["n"] = os.path.join(sw, "nothing"), 0
+    with windows(), patched(C, REPLACE_WAITS=(0.0, 0.0)):
+        if s2["explorer"] is None and s2["explorer.old"] == "old":
+            real_replace(os.path.join(sw, "explorer.old"), os.path.join(sw, "explorer"))
+        XP.swap(sw, os.path.join(sw, "explorer.tmp"))
+    check(c, "... and once nothing holds it, the swap completes: the new explorer in place, no explorer.old or "
+          "explorer.tmp left", state() == {"explorer": "new", "explorer.tmp": None, "explorer.old": None}, state())
+    # publish.ps1: fixed refspecs, exit codes, quoting
+    sys.path.insert(0, HERE)
+    import test_export as TE
+    rec2 = dict(rec, repo_dir="C:\\Users\\O'Brien\\tahoe\\repo", python="C:\\tahoe\\.venv\\Scripts\\python.exe",
+                git="C:\\tahoe\\mingit\\cmd\\git.exe")
+    ps1 = X.publish_ps1(rec2)
+    sh_ = X.publish_sh(rec2)
+    ok1, d1 = TE.refspecs_ok(ps1, "Tahoe100-PseudoManual")
+    ok2, d2 = TE.refspecs_ok(sh_, "Tahoe100-PseudoManual")
+    lines = ps1.splitlines()
+    body = [i for i, ln in enumerate(lines) if "& $Git" in ln and "@args" not in ln]
+    unchecked = [lines[i] for i in body if not any("$LASTEXITCODE" in x for x in lines[i:i + 2])
+                 and "config user.email" not in lines[i]]          # (empty = not set: the next line says so)
+    check(c, "publish.ps1 (and publish.sh) push only HEAD:refs/heads/main to the data repository and "
+          "HEAD:refs/heads/site to the code repository; never results, finalized or master",
+          ok1 and ok2, f"ps1: {d1}; sh: {d2}")
+    check(c, "publish.ps1 checks git's exit code after every call (PowerShell does not stop on it), finds a MinGit "
+          "that is not on PATH, uses the venv's python.exe, and quotes a path with an apostrophe",
+          not unchecked and "Git-Do" in ps1 and "'C:\\tahoe\\mingit\\cmd\\git.exe'" in ps1
+          and "'C:\\tahoe\\.venv\\Scripts\\python.exe'" in ps1 and "'C:\\Users\\O''Brien\\tahoe\\repo'" in ps1
+          and "$PSScriptRoot" in ps1 and "core.autocrlf false" in ps1, f"unchecked git calls: {unchecked[:2]}")
+
+
 # ----------------------------------------------------------------------------- https (the PC's Ensembl / NCBI failure)
 @case
 def https(work):
@@ -713,10 +883,13 @@ def main():
         print("test_windows.py simulates Windows on Linux or macOS; on Windows run tests\\run_tests.py and "
               "tests\\test_review.py instead")
         return 0
+    if a.workdir:
+        os.makedirs(a.workdir, exist_ok=True)
     work = tempfile.mkdtemp(prefix="tahoemap_win_", dir=a.workdir)
     t0 = time.time()
     try:
-        for fn in (files, stream_build, pipeline_lock, git, links, keys, signals, review_bits, query, https):
+        for fn in (files, stream_build, pipeline_lock, git, links, keys, signals, review_bits, query, https,
+                   explorer):
             d = os.path.join(work, fn.__name__)
             os.makedirs(d)
             fn(d)

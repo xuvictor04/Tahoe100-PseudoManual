@@ -10,8 +10,9 @@ One command (`tahoe run`) turns Tahoe-100M (50 cell lines × 379 drugs × 3 dose
 into, for every gene: which drugs raise or lower it, in which cell lines, which other genes move with it or opposite
 to it, and which genes probably act on it or are acted on by it (probable direction, from the cell lines); vectors
 for genes, drugs, drug-doses and cell lines in one space; a 2D nodal map; an Obsidian vault with a note per gene,
-drug, cell line, plate and module; an interactive HTML map; and a validation report that separates known from
-previously unreported gene relations.
+drug, cell line, plate and module; an interactive HTML map; a validation report that separates known from
+previously unreported gene relations; and the explorer, searchable web pages over every result of the run with every
+value exact (nothing capped, nothing left out for a flag), publishable on GitHub Pages.
 
 ## Stages (in order; each writes `OUT/stages/<stage>.json` when it finishes)
 
@@ -29,6 +30,7 @@ previously unreported gene relations.
 | validate | `validate.run` | everything above | `OUT/validation/` |
 | vault | `vault.run` | everything above | `OUT/vault/` |
 | map | `html_map.run` | tables, embed, relations, graph, direction | `OUT/map/gene_map.html` |
+| explorer | `explorer.run` | everything above (atlas/effects, tensor and every table; the map; `vault/.tahoemap-paths.json`) | `OUT/explorer/{web,data[,data_dd]}`, `OUT/explorer/manifest.json` |
 
 Every `run(out, **opts)` function: takes the output root, logs with `common.log`, writes atomically
 (`common.write_parquet/write_csv/write_json/save_npy` write a `.tmp` then `os.replace`), ends with
@@ -267,7 +269,8 @@ ribosome biogenesis, G2/M, immediate-early), plus Hallmark/Reactome when referen
 signed cosine, AUROC (within-set pairs vs random pairs of included genes) on cos and on |cos|, share of members in
 the set's top module. Opposite-arm test (p53 up vs DREAM down): mean cross-arm cosine (expect < 0) and the share of
 cross-arm pairs in the same module (expect high). Module enrichment (hypergeometric, BH) → module labels. Drug
-check: AUROC of drug-vector cosine for same-moa_fine pairs. Novel candidates: (a) top `novel_candidate` edges;
+check: AUROC of drug-vector cosine for same-moa_fine pairs (`drug_moa.csv` names every drug of a class; validate
+version 5). Novel candidates: (a) top `novel_candidate` edges;
 (b) guilt by association: genes in a module enriched for a set (q < 0.01) that are not annotated to it, ranked by
 cosine to the module's annotated members. Direction (report.md section 8, metrics.json `direction`): the positive
 controls with their ranks, per kind the edges written against the false edges the controls expect (⚠ when about half
@@ -286,10 +289,11 @@ Notes: `Genes/<chrom>/<SYMBOL>.md` (every gene col; symbol repeats → label), `
 `.obsidian/app.json`, `graph.json` (filtered), `types.json`. Written fragments `vault_seed/genes/<SYMBOL>.md` are
 spliced under the title. Direction (direction_view): every gene note has a section `## Direction (probable)` with the
 tables *Upstream of this gene* and *Downstream of this gene* (gene and cells targets together; 12 per table by the cap
-rule), a sentence in At a glance when it has arrows, and frontmatter `direction_upstream`, `direction_downstream`
+rule; columns for the short labels of the alerts, notes and support), a sentence in At a glance when it has arrows, and frontmatter `direction_upstream`, `direction_downstream`
 (null without the stage); drug notes list the sensitivity rows at the drug's doses and its drug-target rows; line
 notes list the genotype groups and natural-knockout line sets that include the line (`groups.parquet`); the generated
-`Concepts/Probable direction.md` (kinds with this run's counts, grades, sign, alert labels, controls, caveats) is
+`Concepts/Probable direction.md` (kinds with this run's counts, grades, sign, alert, note and support labels,
+controls, caveats) is
 linked from Home, How to read this vault and every direction section.
 
 ## map (OUT/map/gene_map.html)
@@ -297,29 +301,78 @@ linked from Home, How to read this vault and every direction section.
 One self-contained HTML (no network): tabs nodal map / signed vector map (each with a Spread slider from the t-SNE
 layout to the modules-apart layout), a k-D tour of the genes' unit vectors (a grand tour, or axis i against axis j),
 three physics simulations (neighbourhood to depth 1-4, a module, all genes) and the help; colour by module, search,
-click a gene → its top partners (green = same direction, red = opposite), its drug-doses up/down, lines. Every list
-keeps flagged items in their ranked place with '⚠' + the reason and says how many carry an alert; a list capped at N
-adds any of the N strongest without an alert that fall below the cut. Probable direction (direction_view): the side
-panel's Upstream, Downstream and Cells lists (8 each, cap rule, show all); arrows between the genes shown on the
-neighbourhood tab (Direction: off / arrows / + its genes) and the selected gene's arrows on the two maps; the `dir`
-block holds every display row that touches a gene of the page. A page that would pass 20 MB is shortened in order:
-the grade C rows' readings, all readings, the function snippets, the line lists, the full alert texts (short labels
-stay), the cells rows beyond a gene's capped list (counted); no gene-target row is left out. Data embedded as JSON
-(details: `docs/DESIGN-review-and-physics.md`).
+click a gene → its top partners (green = same direction, red = opposite), its drug-doses up/down, lines (each line
+row names the strongest drug-dose up and the strongest down). Every list keeps flagged items in their ranked place
+with '⚠' + the reason and says how many carry an alert; a list capped at N adds any of the N strongest without an
+alert that fall below the cut. Every preview list says "k of N shown · all N in the explorer ↗" and links into the
+explorer (the JSON key `explorer_base`: the site URL; the explorer's own copy of the map rewrites it to `../`).
+Probable direction (direction_view): the side panel's Upstream, Downstream and Cells lists (8 each, cap rule, show
+all; the kind caveats stated once per list, notes counted); arrows between the genes shown on the neighbourhood tab
+(Direction: off / arrows / + its genes) and the selected gene's arrows on the two maps; the `dir` block holds every
+display row that touches a gene of the page. Nothing is dropped to fit a size (html_map VERSION 7): the stage logs
+the page's size and warns above 25 MB (about 26 MB on the real data). Function snippets are 110 characters and end
+in '…' when cut, with a link to the full text. Data embedded as JSON (details: `docs/DESIGN-review-and-physics.md`).
+
+## explorer (OUT/explorer/) — searchable pages with every value
+
+`explorer.run(out, site_url, data_url, line_dd=False, pages_max_mb=950, pooled_r=False)` writes three volumes of
+static files (format and catalogue: `docs/explorer-data.md`; front end: `tahoemap/explorer_app/`):
+
+- `web/`: the pages (`index.html`, `app.js` joined from `explorer_app/js/*.js`, `app.css`) and their data `d/`
+  (core, flags, hosts, search, the gene buckets `g/`, lines `l/`, modules `m/`, direction groups `dg/`, drugs
+  `dr/`, ...) and a copy of the map. Published as the branch `site` (GitHub Pages). About 0.67 GB on the real data.
+- `data/`: `x/` one file per gene (per-line lfc and z, per-well values and raw counts, plate baselines) and `p/` one
+  per drug-dose (every gene's pooled values). Published as the repository `<repo>-data`. About 5.2 GB.
+- `data_dd/` (optional, `--with-line-dd`): `y/` per drug-dose, every gene's per-line values. About 4.3 GB.
+
+Every data file is one line `TAHOE_SHARD("<id>","<base64 of zlib(TSF1)>");`, read by `<script>` from the same site
+or the sibling folder, or by `fetch` of the text from raw.githubusercontent.com. Values are the stored bytes
+(float32 pooled, float16 per line); flags are the tables stage's own strings (`tables.flag_strings`). The stage
+stops, leaving the previous explorer in place, unless every `tables/drug_effects` row is reproduced exactly, every
+source table's rows are all in each of its views (counts in the stamp), the self-check decodes and matches, and
+every file is at most 95 MiB, every folder at most 1,000 entries and every path at most 80 characters. Above
+`--pages-max-mb` the size guard moves parts from `web` to `data` (`w/`), never drops them; if moving is not enough
+the stage stops. It writes `OUT/explorer.tmp` and swaps it in through `common.replace_file` (on Windows a folder
+that cannot be moved is named in the message; nothing is lost). The stamp records the run id (sha256 of the other
+stamps), `assets_sha` (sha256 of `tahoemap/explorer_app/**`), bytes and files per volume, the row counts, the
+checks, the moves, step times and peak memory. When only `explorer_app` changed, `run` copies only the page files
+(`explorer.refresh_assets`, seconds). `explorer.INVENTORY` maps every OUT file pattern to where the explorer shows
+it (or why not).
+
+Links: `tahoemap/links.py` builds the explorer's addresses for every surface (`#/gene/<label>[/<tab>]`, `#/drug/…`,
+`#/dd/…`, `#/line/…`, `#/module/…`, `#/group/…`, `#/pair/A/B`); segments are percent-encoded (`links.q`). The site
+URL defaults to `https://<owner>.github.io/<repo>/` of the code's `origin` remote, the data URL to
+`https://raw.githubusercontent.com/<owner>/<repo>-data/main/`; `--site-url none` means no site (links name the
+local files).
 
 ## CLI
 
 `python -m tahoemap <command>`; the `tahoe` shell wrapper calls it. Commands: run, status, the stage names (build,
-effects, tensor, tables, embed, reference, relations, graph, direction, validate, vault, map), the look-ups gene, drug,
-line, pair, module, and review, duplicate, export (they read a finished output). `run` executes every stage that is
-missing or out of date: a stage is out of date when its code VERSION changed, an earlier stage was redone, a
-result-changing option differs from the one stamped (options given once are remembered in `OUT/run_options.json`), or
-(reference) a source failed to load on a run with network. A stage that is new to an output (direction, on an output
-finished before it existed) is missing, so `run` does it and the stages after it (validate, vault, map), nothing
-earlier. `--from` / `--to` / `--redo` override the plan; `--allow-partial`, `--refresh-reference`, `--well-tensor` /
-`--no-well-tensor`, `--reuse-atlas DIR` (an old tahoe_atlas.py build; recorded in `atlas/reused_from.json`).
-`duplicate` hard-links the arrays and tables of atlas, tensor, tables, embed, relations, graph and direction;
-`export` copies vault, map, tables, validation, direction, graph, relations, embed and stages.
+effects, tensor, tables, embed, reference, relations, graph, direction, validate, vault, map, explorer), the look-ups
+gene, drug, line, pair, module, and review, duplicate, export (they read a finished output). `run` executes every
+stage that is missing or out of date: a stage is out of date when its code VERSION changed, an earlier stage was
+redone, a result-changing option differs from the one stamped (options given once are remembered in
+`OUT/run_options.json`), or (reference) a source failed to load on a run with network. A stage that is new to an
+output (direction or explorer, on an output finished before it existed) is missing, so `run` does it and the stages
+after it, nothing earlier. `--from` / `--to` / `--redo` override the plan; `--allow-partial`, `--refresh-reference`,
+`--well-tensor` / `--no-well-tensor`, `--reuse-atlas DIR` (an old tahoe_atlas.py build; recorded in
+`atlas/reused_from.json`). `--redo` also removes the finished plates of `atlas/pseudobulk` before the build (the
+verbatim build keeps a plate whose file list is unchanged, which is how a stopped build resumes; data files replaced
+under the same names would otherwise keep the old sums). Explorer options: `--site-url` (vault, map and explorer:
+they link to it; a result option of the three), `--data-url`, `--with-line-dd` / `--no-line-dd`, `--with-pooled-r` /
+`--no-pooled-r` (result options of the explorer), `--pages-max-mb` (recorded; it only moves parts between the
+volumes). `status` prints the explorer's bytes per volume, its row-count checks, its self-check and the size guard's
+moves. `--top all` (or 0) gives every row of a look-up. `duplicate` hard-links the arrays and tables of atlas,
+tensor, tables, embed, relations, graph and direction; `export` copies vault, map, tables, validation, direction,
+graph, relations, embed and stages (its README names the explorer's address and data repository). `export DEST
+--explorer` makes the explorer ready to publish: `DEST/site` (the web volume, as copies), `DEST/data` (hard links when on the
+same disk, else copies checked against the stage's sha256), `DEST/batches/data_N.txt` (upload lists of at most 1.5
+GB: one commit and one push each), `publish.ps1` / `publish.sh` (fixed refspecs: `HEAD:refs/heads/main` to
+`<repo>-data`, then `export DEST --pin-data <commit>` rewrites `site/d/hosts.js` and its MANIFEST line, then
+`HEAD:refs/heads/site` to the code repository; never `results`, `finalized` or the default branch), `PUBLISH.md` (the
+one-time GitHub steps), `RELEASE_ASSETS.txt` and `EXPLORER_EXPORT.json`. Before writing it checks that the explorer
+is current (run id, assets_sha), the pages are at most 950 MiB, every file at most 95 MiB and the free space; it
+never runs git push.
 
 The look-ups read the direction through `direction_view` too: `gene X` has a PROBABLE DIRECTION section (upstream,
 downstream, cells under drugs), `line X` its recorded alterations and natural knockouts, `drug X` its sensitivity and

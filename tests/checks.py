@@ -1,4 +1,9 @@
-"""Per-stage checks of a finished synthetic run against the generator's planted truth (used by run_tests.py)."""
+"""Per-stage checks of a finished synthetic run against the generator's planted truth (used by run_tests.py).
+
+run_all also calls the checks of the newer packages on the same output (design I5): tests/test_direction.py check(out)
+(the reasons in tiers and the edge rules), tests/test_surfaces.py check(out, data) (links, map, vault and look-ups
+that point into the explorer) and tests/test_explorer.py check(out, data) (the explorer stage: exact values, flags,
+records, completeness, planted answers, determinism, sizes)."""
 
 import json
 import os
@@ -514,38 +519,8 @@ def run_all(out, data, truth, check):
                     f"{sorted(seen_toxic)} of {sorted(tox)}; mismatches: {bad[:3]}")
         check("map", "flagged drug-doses stay in the side panel's lists, with an alert", map_alerts_not_removed)
 
-        def map_line_rows():
-            """the side panel's cell-line rows: when a line's strongest drug-dose carries an alert, the row also names
-            the line's strongest drug-dose without one (tables/line_effects best_* clean columns, the stronger of up
-            and down), when that one reaches the per-line cut; no row names one otherwise"""
-            _, D = map_data()
-            W = int(D.get("lnw") or 9)
-            if W < 12 or not D.get("ln_all"):
-                return False, f"the page has no clean drug-dose per line row (lnw {W}, ln_all {D.get('ln_all')})"
-            le = pd.read_parquet(os.path.join(out, "tables", "line_effects.parquet"),
-                                 columns=["col", "line", "best_up_dd", "best_up_z", "best_down_dd", "best_down_z"])
-            by = {(int(c), int(ln_)): r for c, ln_, r in zip(le["col"], le["line"], le.to_dict("records"))}
-            fl, lz = D["fl"], float(D["line_z"])
-            n_rows = n_flag = n_named = 0
-            bad = []
-            for e, a in enumerate(D["ln"]):
-                for t in range(0, len(a) - W + 1, W):
-                    n_rows += 1
-                    r = by[(int(D["col"][e]), int(a[t]))]
-                    alert = a[t + 5] >= 0 and a[t + 8] > 0 and fl[a[t + 8] - 1][1] == 1
-                    u = r["best_up_z"] if np.isfinite(r["best_up_z"]) else -np.inf
-                    d = r["best_down_z"] if np.isfinite(r["best_down_z"]) else np.inf
-                    dd_, z_ = (r["best_up_dd"], u) if u >= -d else (r["best_down_dd"], d)
-                    want = int(dd_) if alert and np.isfinite(z_) and abs(z_) >= lz and np.isfinite(dd_) else -1
-                    n_flag += alert
-                    n_named += a[t + 9] >= 0
-                    if a[t + 9] != want or (want >= 0 and abs(a[t + 11] / 10 - z_) > 0.051):
-                        bad.append((D["sym"][e], int(a[t]), a[t + 9], want))
-            return (not bad and n_named > 0,
-                    f"{n_rows:,} line rows, {n_flag:,} with a strongest drug-dose that carries an alert, "
-                    f"{n_named:,} of these also name the strongest without one; mismatches: {bad[:3]}")
-        check("map", "a line row whose strongest drug-dose is flagged also names the strongest without an alert",
-              map_line_rows)
+        # the line rows (the strongest drug-dose up and down, and each way the strongest without an alert) are
+        # checked by tests/test_surfaces.py (map_line_checks), run below with the other surface checks
 
         def map_views():
             """in a headless browser: the Spread slider moves the genes and parts the modules on the page; the tour
@@ -658,6 +633,44 @@ def run_all(out, data, truth, check):
         check("query", "tahoe gene HMOX1 answers the question", lookup_gene)
         check("query", "probable direction in gene / drug / line / pair: direction_view's rows, order, cap rule and "
                        "words; a cp1252 console; an output without the stage", lambda: lookup_direction(out, data))
+
+    check("run", "--redo removes the finished plates before the build (a run without it resumes from them)",
+          redo_removes_plates)
+
+    # ---------------------------------------------------------------- the newer packages' checks (design I5)
+    package_checks(out, data, check)
+
+
+def _report(check, stage, results):
+    """Each (name, ok, detail) of a package's check(...) as one run_tests check (ok True, False or 'warn')."""
+    for name, ok, detail in results:
+        check(stage, name, lambda ok=ok, detail=detail: ("warn" if ok == "warn" else ok is True, detail))
+
+
+def package_checks(out, data, check):
+    """tests/test_direction.py, tests/test_surfaces.py and tests/test_explorer.py on this output."""
+    sys.path.insert(0, os.path.join(REPO, "tests"))
+    if os.path.exists(os.path.join(out, "direction", "edges.parquet")):
+        try:
+            import test_direction as TD
+            _report(check, "direction", TD.check(out, data))
+        except Exception as e:  # noqa: BLE001
+            check("direction", "tests/test_direction.py check(out)", lambda e=e: (False, f"{type(e).__name__}: {e}"))
+    if os.path.exists(os.path.join(out, "map", "gene_map.html")):
+        try:
+            import test_surfaces as TS
+            _report(check, "surfaces", TS.check(out, data))
+        except Exception as e:  # noqa: BLE001
+            check("surfaces", "tests/test_surfaces.py check(out, data)",
+                  lambda e=e: (False, f"{type(e).__name__}: {e}"))
+    if os.path.exists(os.path.join(out, "stages", "explorer.json")):
+        import test_explorer as TX
+        TX.check(out, data, report=check)
+        check("explorer", "registered after map: when only its page files (tahoemap/explorer_app) change, run copies "
+              "only them (the data files are not touched); status shows its volumes, row counts and checks",
+              lambda: explorer_pipeline(out))
+    else:
+        check("explorer", "the explorer stage ran (stages/explorer.json)", lambda: (False, f"{out} has no explorer"))
 
 
 # ---------------------------------------------------------------- look-ups: probable direction (tahoemap/query.py)
@@ -851,7 +864,10 @@ def lookup_direction(out, data):
     wide += [ln for ln in txt.splitlines() if len(ln) > 120]
     td = dv.downstream("TP53")
     td = td[td["target"] == "CDKN1A"]
-    if not (code == 0 and len(td) and f"TP53 -> CDKN1A  [{td['grade'].iloc[0]}]" in sec and "! within organs" in sec
+    # since direction VERSION 3 'within organs' (when most lines are compared) is a note: edge_line prints it as
+    # '- notes: within organs, ...' in ASCII, wrapped across lines
+    if not (code == 0 and len(td) and f"TP53 -> CDKN1A  [{td['grade'].iloc[0]}]" in sec
+            and "- notes: within organs" in " ".join(sec.split())
             and "→" not in txt and "⚠" not in txt and "SOURCE -> TARGET" in sec):
         bad.append("cp1252 console")
     # an output without the stage (Out.ran patched in memory: the run's files are not touched)
@@ -1180,9 +1196,12 @@ def direction_checks(out, truth, check, col):
         # an unplanted level edge (the shuffled-level control expects a few false ones) called 'direction clear':
         # the direction test allows for an edge having been selected because it is strong, so none should be
         other = e[(e["kind"] == "level") & ~((e["source"] == p["source"]) & e["target"].isin(tg)) & clr]
-        unclear_ok = bool(lv.loc[~lv["direction_clear"].fillna(False).astype(bool), "alerts"].str.contains(
+        unclear_ok = bool(lv.loc[~lv["direction_clear"].fillna(False).astype(bool),
+                                 "alerts_all" if "alerts_all" in lv else "alerts"].fillna("").str.contains(
             "allowed for that this arrow was written because it is strong|could not be tested").all())
-        alert_ok = bool(lv["alerts"].str.contains("a stronger correlation one way").all()) and \
+        # the precision reason is a kind caveat since direction VERSION 3 (caveats; alerts_all keeps every reason)
+        reasons = lv["alerts_all"] if "alerts_all" in lv else lv["alerts"]
+        alert_ok = bool(reasons.fillna("").str.contains("a stronger correlation one way").all()) and \
             bool((lv["grade"] == "C").all()) and unclear_ok
         return (len(right) >= NFE2L2_MIN and len(right) == len(lv) and len(rev) == 0 and len(other) == 0
                 and alert_ok,
@@ -1277,9 +1296,11 @@ def direction_checks(out, truth, check, col):
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
         nxt = [ln for ln in r.stdout.splitlines() if ln.startswith("next:")]
-        return (r.returncode == 0 and bool(nxt) and nxt[0].startswith("next: direction -> validate -> vault -> map "),
+        return (r.returncode == 0 and bool(nxt)
+                and nxt[0].startswith("next: direction -> validate -> vault -> map -> explorer "),
                 f"an output whose stages are all done but direction: {nxt[0] if nxt else r.stdout[-300:]}")
-    check("direction", "registered after graph: a finished older output runs direction, validate, vault, map",
+    check("direction", "registered after graph: a finished older output runs direction, validate, vault, map, "
+          "explorer",
           registered)
 
     def report():
@@ -1419,3 +1440,101 @@ def vault_direction(out, col, gK, null_src="SYNTH0881"):
     return not bad, (f"{len(genes):,} gene notes with the section; {len(dv.rows):,} arrows; TP53 downstream "
                      f"{len(dn)} ({len(rows)} shown); Dexamethasone drug-target arrows {n_dex}; problems: "
                      f"{bad or 'none'}")
+
+
+def explorer_pipeline(out):
+    """cli on a copy of OUT (the data volume hard-linked, the pages copied: the page files are rewritten in place):
+    the plan with a changed explorer_app (a stand-in folder) is 'explorer' alone, for that reason; running it copies
+    the page files only (app.js = the scripts joined in name order; data files keep their inode and bytes); the plan
+    is then empty; status prints the explorer's lines."""
+    import shutil
+    import tempfile
+    from tahoemap import cli
+    from tahoemap import explorer as XP
+    work = tempfile.mkdtemp(prefix="tahoe_explorer_assets_", dir=os.path.dirname(os.path.abspath(out)))
+    try:
+        xo = os.path.join(work, "out")
+
+        def ign(d, names):
+            return [n for n in names if os.path.abspath(d) == os.path.abspath(out) and n in ("explorer.tmp",
+                                                                                               "explorer.old")]
+
+        def cp(s_, d_):
+            if f"{os.sep}explorer{os.sep}data{os.sep}" in s_ or f"{os.sep}tensor{os.sep}" in s_ \
+                    or f"{os.sep}atlas{os.sep}" in s_:
+                try:
+                    return os.link(s_, d_)
+                except OSError:
+                    pass
+            return shutil.copy2(s_, d_)
+        shutil.copytree(out, xo, ignore=ign, copy_function=cp)
+        app = os.path.join(work, "app")
+        os.makedirs(os.path.join(app, "js"))
+        for rel, text in (("index.html", "<!DOCTYPE html><title>stand-in page</title>\n"), ("app.css", "b{}\n"),
+                          ("js/10_b.js", "var B = 2;\n"), ("js/00_a.js", "var A = 1;\n")):
+            with open(os.path.join(app, *rel.split("/")), "w", encoding="utf-8", newline="\n") as fh:
+                fh.write(text)
+        orig_sha, orig_dir = XP.assets_sha, XP.APP_DIR
+        XP.APP_DIR = app
+        XP.assets_sha = lambda app_dir=app: orig_sha(app_dir)
+        try:
+            ap = cli.make_parser()
+            a = ap.parse_args(["run", "--out", xo, "--offline"])
+            a.defaults = {k: ap.get_default(k) for k in cli.REMEMBERED}
+            a.data_in = a.data = xo
+            cli.remember_options(a, set(), save=False)
+            todo, why = cli.plan(a)
+            data = os.path.join(xo, "explorer", "data")
+            probe = sorted(os.listdir(os.path.join(data, "x", "00")))[:3]
+            before = {f: os.stat(os.path.join(data, "x", "00", f)).st_ino for f in probe}
+            cli._run_stage("explorer", a)
+            after = {f: os.stat(os.path.join(data, "x", "00", f)).st_ino for f in probe}
+            web = os.path.join(xo, "explorer", "web")
+            appjs = open(os.path.join(web, "app.js"), encoding="utf-8").read()
+            idx = open(os.path.join(web, "index.html"), encoding="utf-8").read()
+            st = json.load(open(os.path.join(xo, "stages", "explorer.json"), encoding="utf-8"))
+            todo2, _w = cli.plan(a)
+            lines = cli.explorer_status(xo)
+        finally:
+            XP.assets_sha, XP.APP_DIR = orig_sha, orig_dir
+        joined = appjs == "// ---- 00_a.js\nvar A = 1;\n// ---- 10_b.js\nvar B = 2;\n"
+        ok = (todo == ["explorer"] and why == f"explorer: {cli.EXPLORER_ASSETS}" and before == after and joined
+              and "stand-in page" in idx and st["info"]["assets_sha"] == orig_sha(app) and todo2 == []
+              and len(lines) >= 5 and "rows:" in lines[1] and "every row" in lines[1])
+        return ok, (f"plan {todo} ({why}); data files untouched {before == after}; app.js joined in name order "
+                    f"{joined}; stamp assets_sha updated {st['info']['assets_sha'] == orig_sha(app)}; then plan "
+                    f"{todo2}; status: {' | '.join(lines[:3])}")
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def redo_removes_plates():
+    """cli._run_stage('build') on a folder with two finished plates (stand-in files; the build itself replaced by a
+    recorder): without --redo the build finds them (that is how a stopped build resumes), with --redo it finds none."""
+    import shutil
+    import tempfile
+    import types
+    from tahoemap import cli, stream
+    tmp = tempfile.mkdtemp(prefix="tahoe_redo_")
+    seen = []
+    orig = stream.build_local
+    try:
+        pb = os.path.join(tmp, "atlas", "pseudobulk")
+        os.makedirs(pb)
+        for g in ("group000", "group001"):
+            for suf in (".npy", "_profiles.csv", "_barcodes.csv", "_samples.csv", "_files.txt"):
+                with open(os.path.join(pb, g + suf), "w") as fh:
+                    fh.write("x")
+        stream.build_local = lambda args: seen.append(sorted(os.listdir(pb)))
+        a = types.SimpleNamespace(out=tmp, redo=False, stream=False, data_in=tmp, reindex=False, limit_files=0,
+                                  workers=0, batch_size=1, layout=None, unreliable_plates=None, min_cells=10,
+                                  allow_partial=False, start=None)
+        cli._run_stage("build", a)
+        a.redo = True
+        cli._run_stage("build", a)
+    finally:
+        stream.build_local = orig
+        shutil.rmtree(tmp, ignore_errors=True)
+    return (len(seen) == 2 and len(seen[0]) == 10 and seen[1] == [],
+            f"files the build found: without --redo {len(seen[0]) if seen else '?'}, with --redo "
+            f"{len(seen[1]) if len(seen) > 1 else '?'}")

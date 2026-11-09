@@ -355,6 +355,111 @@ def _cc_summary(genes, fxd, gK, cc_dd, cc_only, share, cleared, lfc, sig, bS, bG
     return info
 
 
+def cc_pct(share, cleared):
+    """flag_strings' cc_pct for (drug-dose, gene) items: round(100 x share) where the drug-dose's cell-cycle shift is
+    not the explanation of the gene's change (cleared, from cell_cycle_share), else -1. share, cleared: the items'
+    values (cell_cycle_share's share and cleared at those items)."""
+    return np.where(cleared, np.rint(100.0 * np.nan_to_num(share)), -1).astype(np.int64)
+
+
+def line_counts(Lz, Ll, t, measured=None, masks=False):
+    """The per-line counts of drug_effects and line_effects, from per-line z and log2 fold change Lz, Ll (genes x
+    drug-doses x lines, float32, NaN = no value: the tensor's DDL_z / DDL_lfc). measured (lines x genes bool,
+    tensor/line_measured): lines that do not truly express a gene are set to NaN first (as _run does; the tensor holds
+    NaN there already). Returns (measured, up2, dn2, upT, dnT):
+        measured  the line has a value (drug_effects n_lines_measured)
+        up2, dn2  per-line z >= LINE_Z and lfc >= LFC_MIN, or z <= -LINE_Z and lfc <= -LFC_MIN (drug_effects
+                  n_lines_up / n_lines_down: descriptive)
+        upT, dnT  per-line z >= t and lfc >= STRONG_LFC, or -z >= t and -lfc >= STRONG_LFC (the line_effects rule,
+                  t = the calibrated cut tables/info.json line_z_threshold; line_effects n_dd_*_all count them over
+                  the drug-doses)
+    as counts over the lines (int16, genes x drug-doses), or with masks=True the boolean masks themselves."""
+    if measured is not None:
+        meas = np.asarray(measured, dtype=bool).T[:, None, :]
+        Lz = np.where(meas, Lz, np.nan)
+        Ll = np.where(meas, Ll, np.nan)
+    out = (np.isfinite(Lz), (Lz >= LINE_Z) & (Ll >= LFC_MIN), (Lz <= -LINE_Z) & (Ll <= -LFC_MIN),
+           (Lz >= t) & (Ll >= STRONG_LFC), (-Lz >= t) & (-Ll >= STRONG_LFC))
+    if masks:
+        return out
+    return tuple(m.sum(axis=2).astype(np.int16) for m in out)
+
+
+def drug_grid(dd_drug, dd_conc):
+    """The drugs of drugdose.csv in first-seen order, the drug of each drug-dose (index into them), each drug's
+    drug-dose rows by ascending conc, and the grid drugs x doses (ascending conc; -1 = none) that dose patterns use."""
+    drugs = list(dict.fromkeys(dd_drug))                       # first-seen order of drugdose.csv (sorted by drug)
+    drug_ix = {d: i for i, d in enumerate(drugs)}
+    drug_of_dd = np.array([drug_ix[d] for d in dd_drug], dtype=np.int64)
+    rows_of_drug = [np.flatnonzero(drug_of_dd == i) for i in range(len(drugs))]
+    rows_of_drug = [r[np.argsort(dd_conc[r], kind="stable")] for r in rows_of_drug]
+    m_dose = max(len(r) for r in rows_of_drug)
+    grid = np.full((len(drugs), m_dose), -1, dtype=np.int64)  # drugs x doses (ascending conc), -1 = none
+    for i, r in enumerate(rows_of_drug):
+        grid[i, :len(r)] = r
+    return drugs, drug_of_dd, rows_of_drug, grid
+
+
+def dose_patterns(z, grid, chunk=2048):
+    """Dose pattern codes (into PATTERNS) per (drug, gene), both signs: dose_shape_codes over each drug's pooled z by
+    ascending dose (grid from drug_grid; z = DD_z, drug-doses x genes). Returns (P_up, P_dn), int8 drugs x genes."""
+    nd, m_dose = grid.shape
+    gK = z.shape[1]
+    P_up = np.zeros((nd, gK), dtype=np.int8)
+    P_dn = np.zeros((nd, gK), dtype=np.int8)
+    gsafe = np.maximum(grid, 0)
+    for g0 in range(0, gK, chunk):
+        g1 = min(gK, g0 + chunk)
+        V = z[:, g0:g1][gsafe].astype(np.float64)                 # drugs x doses x genes
+        V[grid < 0] = np.nan
+        V = V.transpose(0, 2, 1).reshape(-1, m_dose)
+        P_up[:, g0:g1] = dose_shape_codes(V).reshape(nd, g1 - g0)
+        P_dn[:, g0:g1] = dose_shape_codes(-V).reshape(nd, g1 - g0)
+    return P_up, P_dn
+
+
+def _load_pooled(fxd, name, gK, dtype=np.float32):
+    """atlas/effects/<name>.npy, gene columns only (drug-doses x genes), in memory."""
+    return np.array(np.load(os.path.join(fxd, f"{name}.npy"), mmap_mode="r")[:, :gK], dtype=dtype)
+
+
+def _flag_parts(fxd, wells, dd, gK, lfc, dd_flags):
+    """The per-(drug-dose, gene) inputs of the gene-level flags, as _run uses them: poseff (DD_poseff), posunc
+    (DD_posunc), pscale (_dd_gene_scale) and the cell-cycle rule (cell_cycle_share's tuple)."""
+    Dn = len(dd)
+    pe = _load_pooled(fxd, "DD_poseff", gK) if os.path.exists(os.path.join(fxd, "DD_poseff.npy")) \
+        else np.zeros((Dn, gK), np.float32)
+    pu = _load_pooled(fxd, "DD_posunc", gK, bool) if os.path.exists(os.path.join(fxd, "DD_posunc.npy")) \
+        else np.zeros((Dn, gK), dtype=bool)
+    ps = _dd_gene_scale(wells, fxd, Dn, gK)
+    s_col, g_col = (f"{m}_lfc" for m in CC_MODULES)
+    nanv = np.full(Dn, np.nan)
+    cc = cell_cycle_share(lfc, dd[s_col].to_numpy(dtype=np.float64) if s_col in dd else nanv,
+                          dd[g_col].to_numpy(dtype=np.float64) if g_col in dd else nanv, dd_flags, pu)
+    return pe, pu, ps, cc
+
+
+def gene_flag_inputs(out, lfc=None):
+    """The inputs of flag_strings for every (drug-dose, gene) of a finished run, computed as the tables stage computes
+    them (same functions, same order): a dict with dd_flags (the drug-doses' flags, object array), posunc (bool,
+    drug-doses x genes), poseff and pscale (float32), cc_share (float32; NaN outside the cell-cycle-flagged
+    drug-doses) and cc_cleared (bool), plus cc_dd (bool per drug-dose: flagged 'cell-cycle shift') and gK.
+    flag_strings(dd_flags, d, posunc[d, g], poseff[d, g], pscale[d, g], cc_pct(cc_share[d, g], cc_cleared[d, g]))
+    is then the 'flags' of drug_effects at (d, g) (and its clean). lfc: DD_lfc[:, :gK] when the caller holds it."""
+    fxd = os.path.join(out, "atlas", "effects")
+    ix = read_effects_index(fxd)
+    genes, wells, dd = ix["genes"], ix["wells"], ix["drugdose"]
+    gK = int((genes["kind"] == "gene").sum())
+    dd_flags = dd["flags"].fillna("").astype(str).to_numpy(dtype=object)
+    if lfc is None:
+        lfc = _load_pooled(fxd, "DD_lfc", gK)
+    with warnings.catch_warnings(), np.errstate(invalid="ignore", divide="ignore", over="ignore"):
+        warnings.simplefilter("ignore", RuntimeWarning)
+        pe, pu, ps, (cc_dd, share, cleared, _bS, _bG, _nf) = _flag_parts(fxd, wells, dd, gK, lfc, dd_flags)
+    return {"dd_flags": dd_flags, "posunc": pu, "poseff": pe, "pscale": ps, "cc_share": share, "cc_cleared": cleared,
+            "cc_dd": cc_dd, "gK": gK}
+
+
 # ----------------------------------------------------------------------------- helpers
 def _nanmedian_last(V):
     """Median over the last axis ignoring NaN (sort-based; NaN sorts last); all-NaN -> NaN. Also the counts."""
@@ -636,44 +741,26 @@ def _run(out, chunk, mem_gb, t0):
     dd_conc = dd["conc"].to_numpy(dtype=np.float64)
     dd_flags = dd["flags"].fillna("").astype(str).to_numpy(dtype=object)
     art_dd = np.array([A.has_artifact(f) for f in dd_flags], dtype=bool)
-    drugs = list(dict.fromkeys(dd_drug))                       # first-seen order of drugdose.csv (sorted by drug)
+    drugs, drug_of_dd, rows_of_drug, grid = drug_grid(dd_drug, dd_conc)
     drug_ix = {d: i for i, d in enumerate(drugs)}
-    drug_of_dd = np.array([drug_ix[d] for d in dd_drug], dtype=np.int64)
-    rows_of_drug = [np.flatnonzero(drug_of_dd == i) for i in range(len(drugs))]
-    rows_of_drug = [r[np.argsort(dd_conc[r], kind="stable")] for r in rows_of_drug]
-    m_dose = max(len(r) for r in rows_of_drug)
-    grid = np.full((len(drugs), m_dose), -1, dtype=np.int64)  # drugs x doses (ascending conc), -1 = none
-    for i, r in enumerate(rows_of_drug):
-        grid[i, :len(r)] = r
     salt = np.array([T.salt_base(d) for d in dd_drug], dtype=object)
     comp_ix = {c: i for i, c in enumerate(dict.fromkeys(salt))}
     comp_of_dd = np.array([comp_ix[c] for c in salt], dtype=np.int64)
 
     # ---- pooled drug-dose x gene matrices (gene columns only)
-    def load(name, dtype=np.float32):
-        return np.array(np.load(os.path.join(fxd, f"{name}.npy"), mmap_mode="r")[:, :gK], dtype=dtype)
-
-    lfc, z, qu, qd = load("DD_lfc"), load("DD_z"), load("DD_qup"), load("DD_qdn")
-    pe = load("DD_poseff") if os.path.exists(os.path.join(fxd, "DD_poseff.npy")) else np.zeros((Dn, gK), np.float32)
-    pu = load("DD_posunc", bool) if os.path.exists(os.path.join(fxd, "DD_posunc.npy")) \
-        else np.zeros((Dn, gK), dtype=bool)
-    ps = _dd_gene_scale(wells, fxd, Dn, gK)
+    lfc, z, qu, qd = (_load_pooled(fxd, n, gK) for n in ("DD_lfc", "DD_z", "DD_qup", "DD_qdn"))
+    pe, pu, ps, (cc_dd, cc_share, cc_clear, cc_bS, cc_bG, cc_fit) = _flag_parts(fxd, wells, dd, gK, lfc, dd_flags)
     sig_up = (qu < Q_CUT) & (lfc >= LFC_MIN)
     sig_dn = (qd < Q_CUT) & (lfc <= -LFC_MIN)
-    s_col, g_col = (f"{m}_lfc" for m in CC_MODULES)
-    nanv = np.full(Dn, np.nan)
-    cc_dd, cc_share, cc_clear, cc_bS, cc_bG, cc_fit = cell_cycle_share(
-        lfc, dd[s_col].to_numpy(dtype=np.float64) if s_col in dd else nanv,
-        dd[g_col].to_numpy(dtype=np.float64) if g_col in dd else nanv, dd_flags, pu)
     cc_only = np.array([set(f.split("; ")) & set(A.ARTIFACT_FLAGS) == {CC_FLAG} for f in dd_flags], dtype=bool)
     # clean = no artifact flag for this gene: the drug-dose's flags (its cell-cycle shift only where the shift is the
     # explanation of this gene's change) + this gene's position flag
     clean = (~art_dd[:, None] | (cc_only[:, None] & cc_clear)) & ~pu
     finz = np.isfinite(z)
 
-    def cc_pct(d, g):
-        """flag_strings' cc_pct for (drug-dose, gene) items: round(100 x share) where cleared, else -1."""
-        return np.where(cc_clear[d, g], np.rint(100.0 * np.nan_to_num(cc_share[d, g])), -1).astype(np.int64)
+    def cc_pct_at(d, g):
+        """flag_strings' cc_pct for (drug-dose, gene) items (cc_pct)."""
+        return cc_pct(cc_share[d, g], cc_clear[d, g])
 
     cc_info = _cc_summary(ix["genes"], fxd, gK, cc_dd, cc_only, cc_share, cc_clear, lfc, sig_up | sig_dn, cc_bS,
                           cc_bG, cc_fit)
@@ -689,17 +776,7 @@ def _run(out, chunk, mem_gb, t0):
             f"cell-cycle-flagged drug-doses, {v['cleared']:,} of them cleared")
 
     # ---- dose patterns per (drug, gene), both signs
-    P_up = np.zeros((len(drugs), gK), dtype=np.int8)
-    P_dn = np.zeros((len(drugs), gK), dtype=np.int8)
-    gsafe = np.maximum(grid, 0)
-    for g0 in range(0, gK, 2048):
-        g1 = min(gK, g0 + 2048)
-        V = z[:, g0:g1][gsafe].astype(np.float64)                 # drugs x doses x genes
-        V[grid < 0] = np.nan
-        V = V.transpose(0, 2, 1).reshape(-1, m_dose)
-        P_up[:, g0:g1] = dose_shape_codes(V).reshape(len(drugs), g1 - g0)
-        P_dn[:, g0:g1] = dose_shape_codes(-V).reshape(len(drugs), g1 - g0)
-    del V
+    P_up, P_dn = dose_patterns(z, grid)
 
     # ---- per-gene pooled summary (genes.parquet, without the per-line counts)
     cols = np.arange(gK)
@@ -754,7 +831,7 @@ def _run(out, chunk, mem_gb, t0):
              f"{prefix}_q": np.where(ok, q[bb, cols], np.nan).astype(np.float32)}
         fl = np.full(gK, None, dtype=object)
         fl[ok] = flag_strings(dd_flags, b[ok], pu[b[ok], cols[ok]], pe[b[ok], cols[ok]], ps[b[ok], cols[ok]],
-                              cc_pct(b[ok], cols[ok]))[0]
+                              cc_pct_at(b[ok], cols[ok]))[0]
         v[f"{prefix}_flags"] = fl
         return v
 
@@ -795,11 +872,11 @@ def _run(out, chunk, mem_gb, t0):
             meas = measured[:, g0:g1].T[:, None, :]                 # genes x 1 x lines (the tensor's NaN already)
             Z = np.where(meas, Z, np.nan)
             X = np.where(meas, X, np.nan)
-            upl = (Z >= LINE_Z) & (X >= LFC_MIN)
-            dnl = (Z <= -LINE_Z) & (X <= -LFC_MIN)
-            n_meas = np.isfinite(Z).sum(axis=2).astype(np.int16)
+            fin, upl, dnl, hit_up, hit_dn = line_counts(Z, X, t_line, masks=True)
+            n_meas = fin.sum(axis=2).astype(np.int16)
             n_up = upl.sum(axis=2).astype(np.int16)
             n_dn = dnl.sum(axis=2).astype(np.int16)
+            del fin
             for b, dst, nn in ((bcu, bcu_nl, n_up), (bcd, bcd_nl, n_dn)):
                 bb = b[g0:g1]
                 ok = bb >= 0
@@ -809,7 +886,7 @@ def _run(out, chunk, mem_gb, t0):
             gi, di = np.nonzero(keep[:, g0:g1].T)
             if gi.size:
                 g = g0 + gi
-                fl, cl_s = flag_strings(dd_flags, di, pu[di, g], pe[di, g], ps[di, g], cc_pct(di, g))
+                fl, cl_s = flag_strings(dd_flags, di, pu[di, g], pe[di, g], ps[di, g], cc_pct_at(di, g))
                 mismatch += int((cl_s != clean[di, g]).sum())
                 Zs = Z[gi, di]
                 order = np.lexsort((-z[di, g], g))
@@ -841,7 +918,7 @@ def _run(out, chunk, mem_gb, t0):
             for sign in (1, -1):
                 sZ = sign * Z
                 passz = sZ >= t_line                                 # per-line z beyond the calibrated cut
-                hit = passz & (sign * X >= STRONG_LFC)               # ... and fold >= 1.5 that way
+                hit = hit_up if sign > 0 else hit_dn                 # ... and fold >= 1.5 that way (line_counts)
                 for scope, M in (("all", hit), ("clean", hit & cl)):
                     d_ = PL[(scope, sign)]
                     d_["n"][g0:g1] = M.sum(axis=1)
@@ -872,7 +949,7 @@ def _run(out, chunk, mem_gb, t0):
                     tops.append((g0 + rows_g, np.full(rows_g.size, sign, np.int8), np.r_[k_ + 1, rk[rr, kk]],
                                  flat // L, flat % L, X.reshape(c, -1)[rows_g, flat], Z.reshape(c, -1)[rows_g, flat]))
                 del F, passz, sZ, idc, vlc, new
-            del Z, X, meas
+            del Z, X, meas, hit_up, hit_dn
             if (g0 // chunk) % 10 == 0 or g1 == gK:
                 log(f"    genes {g0:,}-{g1:,} of {gK:,} ({(time.time() - t0) / 60:.1f} min; drug_effects rows "
                     f"{n_fx:,})")
@@ -918,7 +995,7 @@ def _run(out, chunk, mem_gb, t0):
         fl = np.full(b.size, None, dtype=object)
         cl_a = np.zeros(b.size, dtype=bool)
         bo, go = b[ok], gg[ok]
-        fl[ok], cl_a[ok] = flag_strings(dd_flags, bo, pu[bo, go], pe[bo, go], ps[bo, go], cc_pct(bo, go))
+        fl[ok], cl_a[ok] = flag_strings(dd_flags, bo, pu[bo, go], pe[bo, go], ps[bo, go], cc_pct_at(bo, go))
         mismatch += int((cl_a[ok] != clean[bo, go]).sum())
         le[f"{prefix}_dd_all"] = b
         le[f"{prefix}_drug_all"] = _pick(dd_drug, b)
@@ -941,7 +1018,7 @@ def _run(out, chunk, mem_gb, t0):
         tx = tz = np.zeros(0, dtype=np.float32)
     o = np.lexsort((tr, -ts, tg))
     tg, ts, tr, td, tl, tx, tz = (a[o] for a in (tg, ts, tr, td, tl, tx, tz))
-    tf, tc = flag_strings(dd_flags, td, pu[td, tg], pe[td, tg], ps[td, tg], cc_pct(td, tg))
+    tf, tc = flag_strings(dd_flags, td, pu[td, tg], pe[td, tg], ps[td, tg], cc_pct_at(td, tg))
     mismatch += int((tc != clean[td, tg]).sum())
     dlt = pd.DataFrame({"col": tg.astype(np.int32), "symbol": symbol[tg],
                         "direction": np.where(ts > 0, "up", "down").astype(object), "rank": tr.astype(np.int32),

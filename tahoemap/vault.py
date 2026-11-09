@@ -51,11 +51,22 @@ flagged items never push unflagged ones out of view. Where an estimate of an ear
 data out, the note says so beside it. Tables of an older tables stage (no cc_share, line_effects counts over clean
 drug-doses only, drug_line_top without flags) are read as they are, and the notes say what they lack.
 
+Links into the explorer (version 5; tahoemap/links.py). The explorer (pipeline stage `explorer`) is the searchable
+site of the run and holds every list in full. Every gene, drug, cell-line and module note starts with 'Explorer:
+<url> · Map: <url>'; every list a note caps ends with '(k of N shown; all N in the explorer: <url>)'; a registry
+text cut at MAX_TEXT characters ends in ' …' with the address of the full text; the Data sections name the explorer
+pages, the explorer's data-repository file of the gene or drug-dose, and the files that stay on the computer that
+made the run (atlas/effects, tensor: not exported to GitHub). The site URL is run(site_url=...) (None: the GitHub
+Pages address of the code's repository, links.site_url_default); without one the notes name the run folder's
+explorer/web/index.html. vault/.tahoemap-paths.json maps every gene (col), plates note (col), drug (name), cell
+line (line index), module and plate to its note's path (relative to the vault folder), for the explorer.
+
 Probable direction (the direction stage, OUT/direction; read through direction_view, which collapses, orders, caps
 and words the arrows the same way for every surface): a gene note's "Direction (probable)" section lists the arrows
 whose target is the gene (upstream: [[source]], its grade, what the source's activity does, the evidence with the
-lines on each side, the size of the effect, q and the alerts' short labels) and those whose source it is
-(downstream: [[target]], or the cells under [[drug]] at a dose), each list capped by the cap rule with its counts;
+lines on each side, the size of the effect, q, the short labels of its alerts, notes and support) and those whose
+source it is (downstream: [[target]], or the cells under [[drug]] at a dose), each list capped by the cap rule with its
+counts and the caveats every arrow of its kinds carries (stated once above the list: direction_view.caveat_header);
 At a glance names the strongest of each in one sentence; the frontmatter counts them (direction_upstream /
 direction_downstream; null when the stage has not run). A drug note lists the genes that set how the cells fare under
 it (sensitivity arrows at its doses) and the drug-target arrows of its compound classes (whether it moves the gene
@@ -102,6 +113,7 @@ import pandas as pd
 from . import atlas_core as A
 from . import direction_view as DV
 from . import graph as GR
+from . import links as LK
 from . import relations as REL
 from . import tensor as TN
 from . import tlib as T
@@ -109,11 +121,16 @@ from .common import cap_keep as _cap_keep, folder, log, read_effects_index, repl
 # the sentence-level rule the runner applies to the notes it stores (verify imports only the standard library)
 from .review.verify import ITEM_SECTIONS, drop_self_check as _verify_drop_self_check
 
-VERSION = 4                          # 3: nothing is left out for a flag; flagged items carry an alert (ALERT);
+VERSION = 5                          # 3: nothing is left out for a flag; flagged items carry an alert (ALERT);
 #                                      4: the direction stage's arrows (gene, drug and line notes, Probable direction)
+#                                      5: links into the explorer; every capped list says 'k of N shown' with a link
+#                                         to all N; .tahoemap-paths.json; direction notes and kind caveats
 GEN = "tahoemap"
 SEED_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vault_seed")
 MANIFEST = ".tahoemap-manifest.json"
+PATHS = ".tahoemap-paths.json"        # every note's path by entity (gene col, drug, line, module, plate): the explorer
+LOCAL_EXPLORER = "explorer/web/index.html"   # the explorer of the run folder, when there is no site URL
+LOCAL_MAP = "map/gene_map.html"
 
 LFC_MIN = A.LFC_MIN                  # log2(1.2): the atlas's smallest counted change
 Q_CUT = A.Q_CUT                      # 0.10
@@ -1375,10 +1392,11 @@ class Run:
 
 # ----------------------------------------------------------------------------- direction (OUT/direction)
 DIR_STR = ("source", "target", "target_type", "kind", "grade", "mechanism", "alerts", "top_drugdoses", "compounds",
-           "compounds_supporting", "drug_effect", "target_drug", "target_dose", "group")   # dv.rows, read as text
+           "compounds_supporting", "drug_effect", "target_drug", "target_dose", "group", "notes", "caveats",
+           "support")                                                                   # dv.rows, read as text
 DIR_NUM = ("source_col", "target_col", "target_dd", "sign", "n_altered", "n_intact", "n_lines", "contrast",
            "retained_fraction", "rise_share", "baseline_log2_diff", "r", "r_reverse", "n_compounds", "n_supporting",
-           "background_rate", "p", "q", "q_group", "n_sources", "order")                  # ... and as numbers
+           "background_rate", "p", "q", "q_group", "n_sources", "order", "n_notes")       # ... and as numbers
 _NO_ROWS = np.zeros(0, dtype=np.int64)
 
 
@@ -1408,8 +1426,10 @@ def direction_positions(dv):
 
 # ----------------------------------------------------------------------------- the vault
 class Vault:
-    def __init__(self, out):
+    def __init__(self, out, site_url=None):
         self.out = out
+        self.site = LK.site_url(site_url)        # the explorer's site URL (None: no site; links name the local files)
+        self.data_url = LK.data_url_default() if self.site else None
         self.root = os.path.join(out, "vault")
         self.R = Run(out)
         self.names = Names()
@@ -1485,6 +1505,53 @@ class Vault:
     def mlink(self, m):
         n = self.module_name.get(int(m))
         return f"[[{n}]]" if n else f"module {int(m)}"
+
+    # ------------------------------------------------------------------ links into the explorer (tahoemap/links.py)
+    def xu(self, fn, *a, **k):
+        """An explorer address: fn is a links builder (links.gene, links.drug, ...); without a site URL the same route
+        in the run folder's own explorer (explorer/web/index.html#/...)."""
+        return fn(self.site or LOCAL_EXPLORER, *a, **k)
+
+    def xl(self, url):
+        """An address as the note writes it: <url> (a link in Obsidian), or the local file in code when there is no
+        site URL."""
+        if self.site:
+            return f"<{url}>"
+        return f"`{url}` (in the run folder, once the explorer stage has run)"
+
+    def xgene(self, c, tab=None, sub=None):
+        return self.xu(LK.gene, self.R.label[int(c)], tab, sub)
+
+    def xdrug(self, d, tab=None):
+        return self.xu(LK.drug, d, tab)
+
+    def xdd(self, dd, tab=None):
+        return self.xu(LK.dd, int(dd), tab)
+
+    def xline(self, line, tab=None):
+        return self.xu(LK.line, self.R.cell[int(line)], tab)
+
+    def xmodule(self, m):
+        return self.xu(LK.module, int(m))
+
+    def kofn(self, k, n, url, what=""):
+        """'(15 of 41 shown; all 41 in the explorer: <url>)' after a capped list."""
+        w = f" {what}" if what else ""
+        return f"({k:,} of {n:,}{w} shown; all {n:,} in the explorer: {self.xl(url)})"
+
+    def clip_full(self, text, c):
+        """A registry text cut at MAX_TEXT characters (clip_text: it then ends in ' …'), followed by where the full
+        text is when it was cut."""
+        t = clip_text(text)
+        if t.endswith(" …") and len(t) < len(re.sub(r"\s+", " ", str(text)).strip()):
+            t += f" (cut at {MAX_TEXT} characters; the full text: {self.xl(self.xgene(c, 'annotation'))})"
+        return t
+
+    def top_line(self, xurl, map_label=None):
+        """The first line of a gene, drug, line or module note: where its complete data are, and the map."""
+        m = LK.map_gene(self.site, map_label) if self.site else (
+            LOCAL_MAP + (f"#{LK.q(map_label)}" if map_label else ""))
+        return f"Explorer: {self.xl(xurl)} · Map: {self.xl(m) if self.site else f'`{m}` (in the run folder)'}"
 
     def mod_label_text(self, m):
         """The validation stage's enrichment label of a module ('' when it only names the module's top genes)."""
@@ -1998,7 +2065,7 @@ class Vault:
             fm["aliases"] = [sym]
         fm["tags"] = tags
         self.lit_frontmatter("gene", c, fm)
-        L = [frontmatter(fm), f"# {R.label[c]}", ""]
+        L = [frontmatter(fm), f"# {R.label[c]}", "", self.top_line(self.xgene(c), R.label[c]), ""]
         sub = []
         if gname and gname != sym:
             sub.append(f"*{gname}*")
@@ -2120,11 +2187,12 @@ class Vault:
             rr = np.arange(R.rel_s[c], R.rel_s[c + 1])
             rep = self._replicated(rr)
             why = self._partner_alerts(c, rr, rep)
-            parts = []
+            parts, n_named = [], 0
             for sign, what in ((1, "moves with "), (-1, "moves opposite to ")):
                 m_ = np.sign(R.rel["cos"][rr]) == sign
                 ii, wy = rr[m_], why[m_]
                 keep = cap_keep(wy != "", N_GLANCE)
+                n_named += len(keep)
                 if len(keep):
                     parts.append(what + ", ".join(
                         f"{self.glink(R.rel['col_b'][ii[k]])} ({fcos(R.rel['cos'][ii[k]])}, fdr "
@@ -2135,7 +2203,8 @@ class Vault:
                          f"replicated: the same sign with fdr ≤ {REPRO_FDR:.2f} in two random halves of the "
                          f"compounds; {int((why != '').sum())} carry an alert, {ALERT} + the reason: not replicated, "
                          "same locus, or the partner in the vector space only through flagged drug-doses): it "
-                         + "; ".join(parts) + ".")
+                         + "; ".join(parts) + " " + self.kofn(n_named, len(rr), self.xgene(c, "partners"), "partners")
+                         + ".")
             else:
                 S.append("It has no partner among its nearest genes (see the tables below).")
             m = int(R.module[c])
@@ -2173,7 +2242,7 @@ class Vault:
         for k in keep:
             dd, lst = top[k]
             cells = ", ".join(f"{R.cell[int(t['line'][r])]} {flfc_fold(t['lfc'][r])}" for r in lst[:4]) + \
-                (", …" if len(lst) > 4 else "")
+                (f", … ({len(lst) - 4} more lines)" if len(lst) > 4 else "")
             parts.append(f"{self.ddlink(dd)} in {len(lst)} line{'s' if len(lst) != 1 else ''} ({cells}"
                          + (f"; {al[k]}" if al[k] else "") + ")")
         verb = "raise" if d == "up" else "lower"
@@ -2185,7 +2254,8 @@ class Vault:
         else:
             which = "clean drug-doses only: this run's table, from an older tables stage, holds no flagged ones"
         return (f"In single lines ({cut}, {which}; `tables/drug_line_top.parquet`), these {verb} it: "
-                + "; ".join(parts) + ".")
+                + "; ".join(parts) + " " + self.kofn(len(keep), len(top), self.xgene(c, "lines"), "drug-doses")
+                + ". The explorer shows every line at every drug-dose.")
 
     def _why_out(self, c):
         """Why a gene is not in the vector space: the embed stage's rule, with its counts (embed/info.json)."""
@@ -2240,7 +2310,8 @@ class Vault:
                 L += [f"No drug-dose {'raises' if d == 'up' else 'lowers'} it in the pooled data (pooled over the "
                       f"cell lines, median: none with |z| ≥ 3 or q < {Q_CUT:.2f}). A response seen in fewer than "
                       "about half of the measured lines does not reach the pooled data; see "
-                      "[[#In which cell lines]].", ""]
+                      f"[[#In which cell lines]]. Its value at every one of the {self.R.Dn:,} drug-doses: "
+                      f"{self.xl(self.xgene(c, 'drugs'))}.", ""]
                 L += [one, ""] if one else []
                 continue
             keep = cap_keep(al, N_DRUGS)
@@ -2265,8 +2336,9 @@ class Vault:
                 nl = de["n_lines_up" if d == "up" else "n_lines_down"][r]
                 names = [x for x in de["lines_up" if d == "up" else "lines_down"][r].split(", ") if x]
                 ln = f"{int(nl)}/{int(de['n_lines_measured'][r])}"
-                if names:
-                    ln += " (" + ", ".join(names[:2]) + (", …" if len(names) > 2 else "") + ")"
+                if names:                          # every name the table holds (it names at most 12)
+                    ln += " (" + ", ".join(names) + (f"; {int(nl) - len(names)} more" if int(nl) > len(names)
+                                                     else "") + ")"
                 fl = de["flags"][r] or ""
                 if CC_FLAG in fl:
                     cc_rows.append(r)
@@ -2275,6 +2347,9 @@ class Vault:
                              de["pattern_up" if d == "up" else "pattern_down"][r] or "—", caveat_text(fl)])
             L += table(["Drug-dose", "Alert", "Fold", "z", "q", "Lines " + d + " / measured", "Dose pattern",
                         "Caveats"], body) + [""]
+            L += [self.kofn(len(keep), len(sel), self.xgene(c, "drugs"), "drug-doses") + " The explorer's Drugs tab "
+                  f"lists every one of the {self.R.Dn:,} drug-doses with its exact fold, z and q, flagged or not, and "
+                  f"each one's {self.R.L} cell lines.", ""]
         if cc_rows:
             L += [self._cc_text(c), ""]
         return L
@@ -2385,7 +2460,9 @@ class Vault:
                          g3(le["baseline_cpm"][r]) + ("" if ex else " n.m."),
                          cu if ex else "—", cd if ex else "—",
                          best("up") if ex else "—", best("down") if ex else "—"])
-        return L + table(["Line", "TP53", "CPM", "Up", "Down", "Strongest up", "Strongest down"], body) + [""]
+        return L + table(["Line", "TP53", "CPM", "Up", "Down", "Strongest up", "Strongest down"], body) + [
+            "", f"Every line ({len(rows)}) is listed above, with its strongest drug-dose each way. Every drug-dose in "
+            f"every line, with the exact per-line fold and z: {self.xl(self.xgene(c, 'lines'))}.", ""]
 
     def _locus_note(self, c, b, r):
         R, rel = self.R, self.R.rel
@@ -2474,7 +2551,8 @@ class Vault:
                    f"them with an alert ({ALERT}; {n_nrep:,} not replicated)"
                    + (f"; shown: the {N_PARTNERS} strongest" + (f" and the {extra} next strongest without an alert"
                                                                 if extra else "") if len(sel) < n_side else "")
-                   + ".*")
+                   + ".* " + self.kofn(len(sel), n_side, self.xgene(c, "partners"))
+                   + " The explorer also gives its correlation with every other gene.")
             if sign > 0:
                 L += ["## Genes that move with it", "",
                       f"*Strongest of its {len(rows)} nearest partners by |cos| (`relations/gene_relations.parquet` "
@@ -2664,9 +2742,17 @@ class Vault:
         a = self._dir_memo.get(al)
         if a is None:
             a = self._dir_memo[al] = DV.alert_short(al) or "—"
+        nt = str(r.get("notes", "") or "")
+        n = self._dir_memo.get(("notes", nt))
+        if n is None:
+            n = self._dir_memo[("notes", nt)] = DV.notes_short(nt) or "—"
+        sp = str(r.get("support", "") or "")
+        su = self._dir_memo.get(("support", sp))
+        if su is None:
+            su = self._dir_memo[("support", sp)] = DV.support_short(sp) or "—"
         return {"rec": r, "grade": str(r["grade"]), "sign": DV.sign_text(r), "kind": DV.kind_text(r),
-                "effect": self._dir_effect(r), "q": q[2:] if q.startswith("q ") else q, "alerts": a,
-                "source": self._dir_sources(r), "target": self._dir_target(r)}
+                "effect": self._dir_effect(r), "q": q[2:] if q.startswith("q ") else q, "alerts": a, "notes": n,
+                "support": su, "source": self._dir_sources(r), "target": self._dir_target(r)}
 
     def _dir_table(self, pos, first, skip=None, extra=None, first_head=None):
         """A table of arrows (display rows at positions pos, in ORDER). first: 'source' (the sources linked) or
@@ -2674,7 +2760,7 @@ class Vault:
         [(header, fn(row dict) -> text)] columns after the first."""
         extra = extra or []
         head = [first_head or ("Source" if first == "source" else "Target")] + [h for h, _ in extra] + [
-            "Grade", "Direction (probable)", "Evidence", "Effect", "q", "Alerts"]
+            "Grade", "Direction (probable)", "Evidence", "Effect", "q", "Alerts", "Notes", "Support"]
         body = []
         for i in pos:
             w = self._dir_words(int(i))
@@ -2683,28 +2769,43 @@ class Vault:
             if first == "target" and int(r.get("n_sources", 1) or 1) > 1:
                 st = st.replace(DV.source_text(r), self._dir_sources(r, skip), 1)
             body.append([w[first]] + [fn(r) for _, fn in extra]
-                        + [w["grade"], st, w["kind"], w["effect"], w["q"], w["alerts"]])
+                        + [w["grade"], st, w["kind"], w["effect"], w["q"], w["alerts"], w["notes"], w["support"]])
         return table(head, body)
 
-    def _dir_list(self, pos, n, what="arrows"):
+    def _dir_list(self, pos, n, what="arrows", url=None):
         """(shown positions, the counts sentence) of a list capped by the cap rule (cap_keep, as DV.cap: the n
         strongest, and any of the n strongest without an alert beyond them; DV.counts_text and DV.more_text: how
-        many there are, how many more, how many of them with an alert)."""
+        many there are, how many carry an alert or notes, how many more, how many of them with an alert), then 'k of
+        N shown' with the explorer address of the complete list (url) and the caveats every arrow of a kind in the
+        list carries (DV.caveat_header: stated once here, not on every row)."""
         al = self.dir_col["has_alert"][pos]
         keep = cap_keep(al, n)
         n_more = len(pos) - len(keep)
         n_more_al = int(al.sum()) - int(al[keep].sum())
         gr = self.dir_col["grade"][pos]
-        key = (len(pos), int(al.sum()), what) + tuple(int((gr == g_).sum()) for g_ in DV.GRADES)
+        nn = np.nan_to_num(self.dir_col["n_notes"][pos], nan=0.0)
+        kinds = tuple(sorted(set(self.dir_col["kind"][pos].tolist())))
+        key = (len(pos), int(al.sum()), int((nn > 0).sum()), what, kinds) + tuple(int((gr == g_).sum())
+                                                                               for g_ in DV.GRADES)
         s = self._dir_cnt_memo.get(key)
         if s is None:
-            s = self._dir_cnt_memo[key] = DV.counts_text(pd.DataFrame({"has_alert": al, "grade": gr}), what)
+            s = self._dir_cnt_memo[key] = DV.counts_text(pd.DataFrame({"has_alert": al, "grade": gr, "n_notes": nn,
+                                                                       "kind": self.dir_col["kind"][pos]}), what)
         if n_more:
             extra = len(keep) - min(n, len(pos))
             s += (f". Shown: the {min(n, len(pos)):,} strongest" + (
                 f" and the {extra:,} next strongest without an alert" if extra else "")
                   + f"; {DV.more_text(n_more, n_more_al, what)} not shown")
-        return pos[keep], s + "."
+        s += "."
+        if url:
+            s += " " + self.kofn(len(keep), len(pos), url, what) + (". There every alert, note and support reason "
+                                                                    "is in full.")
+        cav = DV.caveat_header(list(kinds))
+        if cav:
+            s += " " + cav
+        s += (f" Alerts ({ALERT}): reasons for doubt, as short labels; notes: reasons kept below their thresholds, "
+              "and context; support: evidence for the arrow (for example the compounds that agree).")
+        return pos[keep], s
 
     def _dir_gene_rows(self, c):
         """(upstream positions, downstream positions: gene targets and cells together), in ORDER, of gene c."""
@@ -2760,7 +2861,7 @@ class Vault:
             if not len(pos):
                 L += [none, ""]
                 continue
-            shown, cnt = self._dir_list(pos, N_DIRECTION)
+            shown, cnt = self._dir_list(pos, N_DIRECTION, url=self.xgene(c, "direction"))
             L += [f"*{cnt}*", ""] + self._dir_table(shown, first, skip=c) + [""]
         return L
 
@@ -2783,7 +2884,7 @@ class Vault:
         L += [self._dir_intro(), ""]
         L += ["### Genes that set how the cells fare under it", ""]
         if len(cells):
-            shown, cnt = self._dir_list(cells, N_DIR_DRUG)
+            shown, cnt = self._dir_list(cells, N_DIR_DRUG, url=self.xdrug(d, "direction"))
             L += ["*Arrows gene → cells under this drug at one of its doses (the cells' numbers relative to the "
                   f"other lines in the same wells). {cnt}*", ""]
             L += self._dir_table(shown, "source", extra=[("Dose", lambda r: fdose(r.get("target_dose")) or "—")],
@@ -2799,7 +2900,7 @@ class Vault:
                        if y]
                 ok = any(k in keys for x in sup for k in (x.lower(), str(T.salt_base(x)).lower()))
                 return "moves it that way too" if ok else "does not move it that way (the class's other compounds do)"
-            shown, cnt = self._dir_list(tg, N_DIR_DRUG)
+            shown, cnt = self._dir_list(tg, N_DIR_DRUG, url=self.xdrug(d, "direction"))
             L += [f"*Drug-target arrows of the compound classes it belongs to (compounds sharing a listed target and "
                   f"mechanism; one molecule counts once, under all its names): the target → a gene whose level those "
                   f"compounds move. A row that names several targets is one test: the compounds share them all, and "
@@ -2840,7 +2941,11 @@ class Vault:
                 out.append(f"[[{n_}]]" if n_ else cell(nm))
             else:
                 out.append(self._dir_gene(col, nm))
-        return ", ".join(out) + (f" (+{len(names) - N_DIR_NAMES} more)" if len(names) > N_DIR_NAMES else "")
+        more = ""
+        if len(names) > N_DIR_NAMES:
+            gid = sval(rec.get("group_id")) or sval(rec.get("description"))
+            more = " " + self.kofn(N_DIR_NAMES, len(names), self.xu(LK.group, gid), "genes")
+        return ", ".join(out) + more
 
     @staticmethod
     def _dir_hidden(al, keep, what):
@@ -2869,6 +2974,7 @@ class Vault:
             keep = cap_keep(al, N_DIR_LINE)
             cnt = shown_text(len(geno), int(al.sum()), len(keep), N_DIR_LINE, max(0, len(keep) - N_DIR_LINE))
             cnt += self._dir_hidden(al, keep, "groups")
+            cnt += " " + self.kofn(len(keep), len(geno), self.xline(line), "groups")
             L += [f"*The comparison groups that count this line as altered (Tahoe's cell-line genetics; "
                   f"`direction/groups.parquet`): {cnt}. "
                   "Each group is its gene's recorded loss of function, gain of function, or any record (some records "
@@ -2880,8 +2986,10 @@ class Vault:
                 x = geno[k_]
                 arrows, grades = self._dir_group_cells(x)
                 body.append([self._dir_gene(x.get("gene_col", -1), x.get("gene", "")), cell(x.get("description", "")),
-                             arrows, grades, DV.alert_short(str(x.get("alerts", "") or "")) or "—"])
-            L += table(["Gene", "Group", "Arrows (response / level / cells)", "Grades", "Alerts"], body) + [""]
+                             arrows, grades, DV.alert_short(str(x.get("alerts", "") or "")) or "—",
+                             DV.notes_short(str(x.get("notes", "") or "")) or "—"])
+            L += table(["Gene", "Group", "Arrows (response / level / cells)", "Grades", "Alerts", "Notes"],
+                       body) + [""]
         else:
             L += [f"None: no recorded alteration of this line forms a group (a group needs at least 3 altered lines "
                   f"and 3 without a record). In {n_other:,} groups it is on the 'not recorded' side.", ""]
@@ -2894,6 +3002,7 @@ class Vault:
             n_with = sum(1 for x in null if self.dir_by_group.get(str(x.get("description", "")), {}).get("n"))
             cnt = shown_text(len(null), int(al.sum()), len(keep), N_DIR_LINE, max(0, len(keep) - N_DIR_LINE))
             cnt += self._dir_hidden(al, keep, "line sets")
+            cnt += " " + self.kofn(len(keep), len(null), self.xline(line), "line sets")
             L += [f"*Genes this line does not express (it reads only the ambient RNA of the well) while at least 3 "
                   f"other lines do: the stage compared the lines lacking each gene with the lines expressing it "
                   f"(genes absent from exactly the same lines share one test). Line sets that include this line: "
@@ -2907,9 +3016,10 @@ class Vault:
                 note = sval(x.get("note"))
                 body.append([self._dir_group_genes(x), f"{fint(x.get('n_altered'))} vs {fint(x.get('n_intact'))}",
                              arrows, grades, how + (f"; {note}" if note else ""),
-                             DV.alert_short(str(x.get("alerts", "") or "")) or "—"])
+                             DV.alert_short(str(x.get("alerts", "") or "")) or "—",
+                             DV.notes_short(str(x.get("notes", "") or "")) or "—"])
             L += table(["Gene(s)", "Lines without vs expressing", "Arrows (response / level / cells)", "Grades",
-                        "Compared", "Alerts"], body) + [""]
+                        "Compared", "Alerts", "Notes"], body) + [""]
         else:
             L += ["None: no gene that this line lacks was tested as a natural knockout (a gene needs at least 3 lines "
                   "without it and 3 expressing it).", ""]
@@ -3032,29 +3142,38 @@ class Vault:
               "drug-dose; *lowers* = it makes them more sensitive. For a natural level: the lines with more of the "
               "source respond more strongly (strengthens) or less (weakens), or have more (raises) or fewer "
               "(lowers) cells.", ""]
-        L += ["## Alerts", "",
-              f"An arrow with a reason for doubt keeps its place, marked {ALERT} with the reason; the doubts lower "
-              "its grade where the grade rules say so. The tables show each reason by a short label; every reason "
-              "in full is in `direction/edges.parquet` (column alerts).", ""]
+        L += ["## Alerts, notes, caveats and support", "",
+              f"An arrow with a reason for doubt keeps its place, marked {ALERT} with the reason (an alert); the "
+              "doubts lower its grade where the grade rules say so. Notes are reasons kept below their thresholds, "
+              "and context: they are shown with the arrow but are not a doubt by themselves. Caveats are what every "
+              "arrow of a kind carries; each list states them once above it. Support is evidence for the arrow (for "
+              "example the compounds that agree). The tables show each reason by a short label; every reason in "
+              "full is in `direction/edges.parquet` (columns alerts, notes, caveats and support; alerts_all holds "
+              "every reason in the stage's order) and in the explorer.", ""]
         if dv is not None and len(dv.rows):
-            fam, ex, cache = {}, {}, {}
-            for al in dv.rows["alerts"].fillna("").astype(str):
-                seen = set()
-                for rsn in DV.alert_reasons(al):
-                    f_ = cache.get(rsn)
-                    if f_ is None:
-                        f_ = cache[rsn] = self._dir_label_family(DV.alert_short(rsn)[len(ALERT) + 1:])
-                    if f_ in seen:
-                        continue
-                    seen.add(f_)
-                    fam[f_] = fam.get(f_, 0) + 1
-                    ex.setdefault(f_, rsn)
-            if fam:
-                L += ["The labels in this run, with the number of arrows that carry each, and one reason in full (from "
-                      "the strongest arrow that carries it):", ""]
-                L += table(["Label", "Arrows", "In full (an example)"],
-                           [[f_, f"{n_:,}", clip_text(ex[f_], 400)] for f_, n_ in
-                            sorted(fam.items(), key=lambda t: (-t[1], t[0]))]) + [""]
+            tiers = (("alerts", f"alert ({ALERT})", DV.alert_reasons), ("notes", "note", DV.note_reasons),
+                     ("support", "support", DV.support_reasons))
+            for col, what, reasons_of in tiers:
+                if col not in dv.rows:
+                    continue
+                fam, ex, cache = {}, {}, {}
+                for txt in dv.rows[col].fillna("").astype(str):
+                    seen = set()
+                    for rsn in reasons_of(txt):
+                        f_ = cache.get(rsn)
+                        if f_ is None:
+                            f_ = cache[rsn] = self._dir_label_family(DV._labels([rsn]))
+                        if f_ in seen:
+                            continue
+                        seen.add(f_)
+                        fam[f_] = fam.get(f_, 0) + 1
+                        ex.setdefault(f_, rsn)
+                if fam:
+                    L += [f"The {what} labels in this run, with the number of arrows that carry each, and one reason "
+                          "in full (from the strongest arrow that carries it):", ""]
+                    L += table(["Label", "Arrows", "In full (an example)"],
+                               [[f_, f"{n_:,}", clip_text(ex[f_], 400)] for f_, n_ in
+                                sorted(fam.items(), key=lambda t: (-t[1], t[0]))]) + [""]
         L += ["## This run, and how much to trust it", ""]
         if dv is None:
             L += [DIR_NOT_RUN, ""]
@@ -3149,7 +3268,8 @@ class Vault:
             L.append("- **Candidate new member** (not annotated, but close to the annotated members of its arm; "
                      "`validation/novel_members.csv`): " + "; ".join(
                          f"*{cell(r.set_label)}* ({r.source}, mean cos {fcos(r.mean_cos)} to "
-                         f"{int(r.n_annotated_in_arm)})" for r in nm[:3]) + ".")
+                         f"{int(r.n_annotated_in_arm)})" for r in nm[:3]) + "."
+                     + (" " + self.kofn(3, len(nm), self.xgene(c, "partners"), "sets") if len(nm) > 3 else ""))
         L.append("")
         if hasattr(R, "pred_up") and R.pred_up[c, 0] >= 0:
             L += ["**Predicted by the vector space**: the drug-doses whose vectors predict the largest rise and fall "
@@ -3173,6 +3293,8 @@ class Vault:
                     body.append([d if j == 0 else "", self.ddlink(dd), self.dd_alert(c, dd, drows),
                                  fz(cand[dd]), fz(obs)])
             L += table(["", "Drug-dose", "Alert", "Predicted z", "Observed z"], body) + [""]
+            L += [self.kofn(len(body), R.Dn, self.xgene(c, "drugs"), "drug-doses") + " The explorer gives the "
+                  "predicted and the observed z at every drug-dose.", ""]
         return L
 
     def sec_record(self, c, an):
@@ -3202,17 +3324,19 @@ class Vault:
             rows.append(["Ensembl biotype", bt])
         al = [x for x in sval(an["aliases"]).split("|") if x]
         pv = [x for x in sval(an["prev_symbols"]).split("|") if x]
-        if al or pv:
-            rows.append(["Also known as", ", ".join(al[:8]) + (f"; previously {', '.join(pv[:5])}" if pv else "")])
+        if al or pv:                                   # every alias and previous symbol
+            rows.append(["Also known as", ", ".join(al) + (f"; previously {', '.join(pv)}" if pv else "")])
         gg = [x for x in sval(an["gene_groups"]).split("|") if x]
         if gg:
-            rows.append(["Gene groups (HGNC)", "; ".join(gg[:6])])
+            rows.append(["Gene groups (HGNC)", "; ".join(gg)])
         hm = R.hallmark[c]
         if hm:
             rows.append(["Hallmark sets", ", ".join(h.replace("HALLMARK_", "") for h in hm)])
         rc = R.reactome[c]
         if rc:
-            rows.append(["Reactome", f"{len(rc)} pathways, smallest: " + "; ".join(rc[:3])])
+            rows.append(["Reactome", f"{len(rc)} pathways, smallest: " + "; ".join(rc[:3])
+                         + (" " + self.kofn(min(3, len(rc)), len(rc), self.xgene(c, "annotation"), "pathways named")
+                            if len(rc) > 3 else "")])
         mb = sval(an["matched_by"])
         if mb:
             rows.append(["Matched by", mb + (" (alias only: tentative)" if mb == "alias_symbol" else "")])
@@ -3222,7 +3346,7 @@ class Vault:
         pn = sval(an.get("protein_name"))
         if fn:
             L += [f"**Function**, from UniProt [{up}](https://www.uniprot.org/uniprotkb/{up})"
-                  + (f" ({pn})" if pn else "") + ":", "", "> " + clip_text(fn), ""]
+                  + (f" ({pn})" if pn else "") + ":", "", "> " + self.clip_full(fn, c), ""]
         elif up:
             L += [f"UniProt [{up}](https://www.uniprot.org/uniprotkb/{up}) carries no function annotation.", ""]
         ez = an["entrez_id"]
@@ -3230,7 +3354,7 @@ class Vault:
         if ns:
             src = f"[{int(ez)}](https://www.ncbi.nlm.nih.gov/gene/{int(ez)})" if _finite(ez) else ""
             L += [f"**Summary**, from NCBI Gene {src}:", "",
-                  "> " + clip_text(ns), ""]
+                  "> " + self.clip_full(ns, c), ""]
         else:
             L += ["NCBI Gene carries no summary paragraph for it.", ""]
         acc = []
@@ -3248,17 +3372,31 @@ class Vault:
             L += ["**Accessions** — " + " · ".join(acc), ""]
         return L
 
+    def data_repo(self, path):
+        """Where a file of the explorer's data repository is: '`x/16/16642.js` in <https://raw...-data/main/>'."""
+        if self.data_url:
+            return f"`{path}` of the data repository {self.xl(self.data_url + path)}"
+        return f"`explorer/data/{path}` in the run folder"
+
     def sec_data(self, c, n_de):
         R = self.R
         nrel = R.rel_s[c + 1] - R.rel_s[c]
         return ["## Data", "",
-                f"Gene col {c}: `tables/genes.parquet`, `tables/line_effects.parquet` ({R.L} rows) and "
-                f"`tables/drug_line_top.parquet` (col == {c}); `tables/drug_effects.parquet` ({n_de} rows, flagged "
-                f"included); `relations/gene_relations.parquet` (col_a == {c}, {nrel} rows); "
-                f"`atlas/effects/DD_lfc|DD_z|DD_qup|DD_qdn.npy` [:, {c}]; `tensor/DDL_lfc|DDL_z.npy` [{c}]; "
-                f"`embed/gene_vectors.npy` [{c}]; `graph/nodes.parquet`"
+                f"- **Explorer** (every value as stored, sortable, with CSV downloads): the pooled fold, z and q at "
+                f"all {R.Dn:,} drug-doses {self.xl(self.xgene(c, 'drugs'))}; the {R.L} cell lines × {R.Dn:,} "
+                f"drug-doses {self.xl(self.xgene(c, 'lines'))}; every well (corrected and raw) and the baseline "
+                f"{self.xl(self.xgene(c, 'baseline'))}.",
+                f"- **Its per-line and per-well values as a file**: {self.data_repo(LK.data_gene_path(c))} (the "
+                "explorer reads it; `tsf_reader.py` on the explorer site reads it too).",
+                f"- **Tables of this run** (gene col {c}): `tables/genes.parquet`, `tables/line_effects.parquet` "
+                f"({R.L} rows) and `tables/drug_line_top.parquet` (col == {c}); `tables/drug_effects.parquet` "
+                f"({n_de} rows, flagged included: the rows with |z| ≥ 3 or q < {Q_CUT:.2f}); "
+                f"`relations/gene_relations.parquet` (col_a == {c}, {nrel} rows); `embed/gene_vectors.npy` [{c}]; "
+                "`graph/nodes.parquet`"
                 + (f"; `direction/edges.parquet` (source_col == {c} or target_col == {c})" if self.dv is not None
                    else "") + f". Every well: [[{self.plates_note[c]}]].",
+                f"- **On the computer that made the run** (not exported to GitHub; their values are in the explorer): "
+                f"`atlas/effects/DD_lfc|DD_z|DD_qup|DD_qdn.npy` [:, {c}]; `tensor/DDL_lfc|DDL_z.npy` [{c}].",
                 ""]
 
     # ------------------------------------------------------------------ plates notes (per gene)
@@ -3448,7 +3586,7 @@ class Vault:
               "tags": ["drug"] + ([f"moa/{safe_filename(g('moa_broad')).replace(' ', '-').lower()}"]
                                   if g("moa_broad") else [])}
         self.lit_frontmatter("drug", d, fm)
-        L = [frontmatter(fm), f"# {d}", ""]
+        L = [frontmatter(fm), f"# {d}", "", self.top_line(self.xdrug(d)), ""]
         sub = [x for x in (" ".join(y for y in (g("moa_fine"), g("moa_broad") and f"({g('moa_broad')})") if y),)
                if x]
         if g("targets"):
@@ -3538,11 +3676,14 @@ class Vault:
                                  + "".join(f"; {x}" for x in [why] + cc_[:1] if x) + ")")
                 n_all, n_al = len(rr), sum(1 for a in als if a)
                 head = (f"**{fdose(R.dd_dose[i])}** ({n_all} gene{'s' if n_all != 1 else ''}, {n_alerts(n_al)}"
-                        + (f"; the drug-dose carries {dose_al}" if dose_al else "")
-                        + (f"; {len(keep)} shown" if len(keep) < n_all else "") + "): ")
-                L += [head + ", ".join(items), ""]
+                        + (f"; the drug-dose carries {dose_al}" if dose_al else "") + "): ")
+                L += [head + ", ".join(items) + " " + self.kofn(len(keep), n_all, self.xdd(i), "genes"), ""]
             if not anyrow:
                 L += [f"No gene is significantly {'raised' if sgn > 0 else 'lowered'} at any dose.", ""]
+            if sgn < 0:
+                L += [f"*Every one of the {R.gK:,} genes at each dose, with its exact pooled fold, z, q and flags, "
+                      "and its value in each cell line: the dose's page in the explorer, "
+                      + "; ".join(f"{fdose(R.dd_dose[i])} {self.xl(self.xdd(i))}" for i in rows) + ".*", ""]
         # modules
         if R.mod_z is not None and len(self.module_name):
             body = []
@@ -3552,14 +3693,20 @@ class Vault:
                 if not np.isfinite(z).any():
                     continue
                 oo = np.argsort(-np.nan_to_num(z, nan=0.0))
+                n_up, n_dn = int((np.nan_to_num(z) >= 2).sum()), int((np.nan_to_num(z) <= -2).sum())
                 up = [f"{self.mlink(mods[j])} ({fz(z[j])})" for j in oo[:3] if z[j] >= 2]
                 dn = [f"{self.mlink(mods[j])} ({fz(z[j])})" for j in oo[::-1][:3] if z[j] <= -2]
-                body.append([fdose(R.dd_dose[i]), ", ".join(up) or "—", ", ".join(dn) or "—"])
+                body.append([fdose(R.dd_dose[i]),
+                             (", ".join(up) + (f" ({len(up)} of {n_up})" if n_up > len(up) else "")) or "—",
+                             (", ".join(dn) + (f" ({len(dn)} of {n_dn})" if n_dn > len(dn) else "")) or "—"])
             L += ["## Modules it moves", "",
                   "*Mean pooled z of a module's + arm minus its − arm, or of its genes in a single-armed module "
                   "(`graph/module_pooled_z.npy`); shown when |z| ≥ 2. Raising a module = its + arm up and its − arm "
                   "down (its genes up, in a single-armed module).*", ""]
             L += table(["Dose", "Raises", "Lowers"], body) + [""]
+            L += ["*The 3 strongest each way per dose; (k of N) = N modules reach |z| ≥ 2. Every module's score at "
+                  "each dose: " + "; ".join(f"{fdose(R.dd_dose[i])} {self.xl(self.xdd(i))}" for i in rows) + ".*",
+                  ""]
         # lines
         if Az is not None or beta is not None:
             body = []
@@ -3567,8 +3714,11 @@ class Vault:
                 dep = resp = "—"
                 if Az is not None:
                     a = Az[i]
-                    oo = [j for j in np.argsort(np.nan_to_num(a, nan=0.0)) if _finite(a[j]) and a[j] <= -3][:5]
+                    dep_all = [j for j in np.argsort(np.nan_to_num(a, nan=0.0)) if _finite(a[j]) and a[j] <= -3]
+                    oo = dep_all[:5]
                     dep = ", ".join(f"{self.llink(j)} ({fz(a[j])})" for j in oo) or "—"
+                    if len(dep_all) > len(oo):
+                        dep += f" ({len(oo)} of {len(dep_all)})"
                 if beta is not None and R.dd_nsig[i] >= 20:
                     b = beta[i]
                     fin = [j for j in np.argsort(-np.nan_to_num(b, nan=-np.inf), kind="stable") if _finite(b[j])]
@@ -3577,6 +3727,8 @@ class Vault:
                     resp = ", ".join(f"{self.llink(j)} ({g3(b[j])})" for j in oo) or "—"
                     if lo:
                         resp += " · weakest: " + ", ".join(f"{self.llink(j)} ({g3(b[j])})" for j in lo)
+                    if len(fin) > len(oo) + len(lo):
+                        resp += f" ({len(oo) + len(lo)} of {len(fin)} lines)"
                 body.append([fdose(R.dd_dose[i]), dep, resp])
             L += ["## In which cell lines", "",
                   "*Depleted = the line's relative abundance z ≤ −3 (`atlas/effects/DD_Az.npy`: the drug kills or "
@@ -3584,6 +3736,10 @@ class Vault:
                   "drug-dose's consensus over its significant genes (`DD_beta.npy`; 1 = typical line, 0 = no "
                   "response; drug-doses with ≥ 20 significant genes).*", ""]
             L += table(["Dose", "Most depleted lines (Az)", "Strongest responders (β)"], body) + [""]
+            L += ["*(k of N) = k lines named of the N that qualify. Every line at each dose (abundance A, its z, β, "
+                  "the cell-cycle and proteasome modules): " + "; ".join(f"{fdose(R.dd_dose[i])} "
+                                                                         f"{self.xl(self.xdd(i))}" for i in rows)
+                  + ".*", ""]
         near = self.drug_near.get(d)
         if near and near[0]:
             lst, n_all, n_al, own = near
@@ -3597,8 +3753,8 @@ class Vault:
             if own:
                 L += [f"{ALERT} This drug's own vector: {own}. Read its neighbours with that in mind.", ""]
             L += [f"*{n_all:,} other drugs have a vector, {n_alerts(n_al)}; shown: the {min(N_NEAR_DRUGS, n_all)} "
-                  "most similar" + (f" and the {extra} next most similar without an alert" if extra else "") + ".*",
-                  ""]
+                  "most similar" + (f" and the {extra} next most similar without an alert" if extra else "") + ".* "
+                  + self.kofn(len(lst), n_all, self.xdrug(d), "drugs"), ""]
             moa = R.tdrugs.set_index(R.tdrugs["drug"].astype(str))["moa_fine"] if "moa_fine" in R.tdrugs else None
             L += ["- " + "; ".join(f"{self.dlink(n)} ({fcos(v)}"
                                    + (f", {cell(sval(moa.get(n)))}" if moa is not None and sval(moa.get(n)) else "")
@@ -3606,10 +3762,17 @@ class Vault:
         L += self.sec_direction_drug(d, rows)
         L += self.sec_literature("drug", d, f"Drugs/{self.drug_name[d]}.md")
         L += ["## Data", "",
+              "- **Explorer** (every gene at every dose, exact, sortable, with CSV downloads): "
+              + self.xl(self.xdrug(d))
+              + "".join(f"; {fdose(R.dd_dose[i])}: {self.xl(self.xdd(i))}" for i in rows),
+              "- **Every gene at each dose as a file**: " + "; ".join(
+                  f"{fdose(R.dd_dose[i])} {self.data_repo(LK.data_dd_path(i))}" for i in rows),
               "- `tables/drugs.parquet` — drug == " + json.dumps(d),
               "- `tables/drugdoses.parquet` — dd in " + ", ".join(str(i) for i in rows),
-              "- `tables/drug_effects.parquet` — rows with dd in those rows; `atlas/effects/DD_*.npy` — those rows",
-              "- `embed/drugdose_vectors.npy` — those rows"]
+              "- `tables/drug_effects.parquet` — rows with dd in those rows (|z| ≥ 3 or q < 0.10 only); "
+              "`embed/drugdose_vectors.npy` — those rows",
+              "- On the computer that made the run (not exported to GitHub; their values are in the explorer): "
+              "`atlas/effects/DD_*.npy` — those rows"]
         if self.dv is not None:
             L += ["- `direction/edges.parquet` — target_dd in those rows; drug_target rows whose compounds include "
                   "it"]
@@ -3676,7 +3839,7 @@ class Vault:
               "tags": ["cell-line"] + ([f"organ/{safe_filename(sval(t.get('Organ'))).replace(' ', '-').lower()}"]
                                        if sval(t.get("Organ")) else [])}
         self.lit_frontmatter("line", line, fm)
-        L = [frontmatter(fm), f"# {R.cell[line]}", "",
+        L = [frontmatter(fm), f"# {R.cell[line]}", "", self.top_line(self.xline(line)), "",
              f"*{cell(sval(t.get('Organ')) or 'organ unknown')} · TP53 {R.tp53[line]} · "
              f"{cell(sval(t.get('cell_line_id')))} · {cell(sval(t.get('Cell_ID_DepMap')))}*", ""]
         rows = [["Organ", sval(t.get("Organ")) or "—"], ["TP53 status", R.tp53[line]],
@@ -3704,6 +3867,8 @@ class Vault:
                 L += table(["Drug-dose", "Alert", "Abundance z", "log2 relative abundance"],
                            [[self.ddlink(i), alert_text(R.dd_flags[i]), fz(a[i]),
                              flog(A_[i, line]) if A_ is not None else "—"] for i in keep]) + [""]
+                L += [self.kofn(len(keep), len(oo), self.xline(line), "drug-doses") + f" The explorer lists all "
+                      f"{R.Dn:,} drug-doses for this line, with abundance, its z and β.", ""]
             else:
                 L += ["None.", ""]
         if beta is not None:
@@ -3730,6 +3895,7 @@ class Vault:
             if len(hi):
                 L += ["- Strongest: " + "; ".join(item(i) for i in hi)]
                 L += (["- Weakest: " + "; ".join(item(i) for i in lo)] if len(lo) else []) + [""]
+                L += [self.kofn(len(hi) + len(lo), len(fin), self.xline(line), "drug-doses"), ""]
             else:
                 L += ["No drug-dose qualifies.", ""]
         # genes it moves most
@@ -3749,9 +3915,11 @@ class Vault:
             st = set(top)
             more = [i for i in np.argsort(-vc, kind="stable")[:N_LINE_LIST] if vc[i] > 0 and i not in st]
             oo = sorted(top + more, key=lambda i: (-va[i], -vc[i], i))
+            n_all = int((va > 0).sum())
             L += [f"- {nm}: " + (", ".join(f"{self.glink(i)} ({int(va[i])}"
                                            + (f", {int(va[i] - vc[i])} {ALERT}" if va[i] > vc[i] else "") + ")"
-                                           for i in oo) or "none")]
+                                           for i in oo) or "none")
+                  + (" " + self.kofn(len(oo), n_all, self.xline(line), "genes") if n_all else "")]
         L += [""]
         # line-specific levels
         with warnings.catch_warnings():
@@ -3777,7 +3945,7 @@ class Vault:
                                                                  + (" and the next strongest without an alert"
                                                                     if len(keep) > N_OWN_LEVEL else "")
                                                                  if len(keep) < len(lst) else "") + ")") if lst else ""
-            return items + cnt
+            return items + cnt + (" " + self.kofn(len(keep), len(lst), self.xline(line), "genes") if lst else "")
         L += ["## Its own level", "",
               "*Baseline CPM in this line vs the median line (`tables/line_effects.parquet` baseline_cpm; log2 "
               "ratio). Highest = at least 2× the median line and ≥ 10 CPM here. Lacks = expressed at ≥ 20 CPM in "
@@ -3792,20 +3960,26 @@ class Vault:
 
             def comp_text(j):
                 cr = comp.iloc[j]
+                pos, neg = ([x for x in sval(cr[k]).split(", ") if x] for k in ("top_pos_genes", "top_neg_genes"))
                 return (f"component {int(cr['component'])} ({g3(s[j])}; genes "
-                        f"{cell(', '.join(sval(cr['top_pos_genes']).split(', ')[:4]))} / "
-                        f"{cell(', '.join(sval(cr['top_neg_genes']).split(', ')[:4]))})")
+                        f"{cell(', '.join(pos[:4]))}{f' (4 of {len(pos)})' if len(pos) > 4 else ''} / "
+                        f"{cell(', '.join(neg[:4]))}{f' (4 of {len(neg)})' if len(neg) > 4 else ''})")
             ok = [j for j in range(min(len(s), len(comp))) if _finite(s[j])]
-            low = sorted([j for j in ok if s[j] < 0.7], key=lambda j: s[j])[:4]
-            high = sorted([j for j in ok if s[j] > 1.5], key=lambda j: -s[j])[:4]
+            low_all = sorted([j for j in ok if s[j] < 0.7], key=lambda j: s[j])
+            high_all = sorted([j for j in ok if s[j] > 1.5], key=lambda j: -s[j])
+            low, high = low_all[:4], high_all[:4]
             L += ["## In the vector space", "",
                   "*Response sensitivity per component of the space (`embed/line_response_vectors.npy` row "
                   f"{line}): 1 = the programme responds as in a typical line, 0 = it does not respond here. Genes = "
                   "the component's top + / − genes.*", ""]
             if low:
-                L += ["- Weak here (< 0.7): " + "; ".join(comp_text(j) for j in low)]
+                L += ["- Weak here (< 0.7): " + "; ".join(comp_text(j) for j in low)
+                      + (" " + self.kofn(len(low), len(low_all), self.xline(line), "components")
+                         if len(low_all) > len(low) else "")]
             if high:
-                L += ["- Strong here (> 1.5): " + "; ".join(comp_text(j) for j in high)]
+                L += ["- Strong here (> 1.5): " + "; ".join(comp_text(j) for j in high)
+                      + (" " + self.kofn(len(high), len(high_all), self.xline(line), "components")
+                         if len(high_all) > len(high) else "")]
             if not low and not high:
                 L += [f"- Every component responds within 0.7–1.5 of a typical line (range {g3(np.nanmin(s))} to "
                       f"{g3(np.nanmax(s))})."]
@@ -3813,8 +3987,12 @@ class Vault:
         L += self.sec_direction_line(line)
         L += self.sec_literature("line", line, f"Cell lines/{self.line_name[line]}.md")
         L += ["## Data", "",
+              f"- **Explorer** (every drug-dose and every gene for this line, exact, sortable, with CSV downloads): "
+              f"{self.xl(self.xline(line))}. One gene in this line at every drug-dose: the gene's page, "
+              "Cell lines tab.",
               f"- `tables/lines.parquet` — line == {line}; `tables/line_effects.parquet` — line == {line}",
-              f"- `atlas/effects/DD_A.npy`, `DD_Az.npy`, `DD_beta.npy`, `line_cpm.npy` — column / row {line}; "
+              f"- On the computer that made the run (not exported to GitHub; their values are in the explorer): "
+              f"`atlas/effects/DD_A.npy`, `DD_Az.npy`, `DD_beta.npy`, `line_cpm.npy` — column / row {line}; "
               f"`tensor/DDL_lfc.npy`, `DDL_z.npy` — [:, :, {line}]"]
         if self.dv is not None:
             L += ["- `direction/groups.parquet` — the genotype and natural-knockout groups whose altered_lines "
@@ -3935,7 +4113,7 @@ class Vault:
               "label": lt, "label_source": lab[1] if lt else "", "tags": ["module"]}
         name = self.module_name[m]
         armline = (f"{len(plus)} in the + arm, {len(minus)} in the − arm" if opp else "single-armed")
-        L = [frontmatter(fm), f"# {name}", "",
+        L = [frontmatter(fm), f"# {name}", "", self.top_line(self.xmodule(m)), "",
              f"*{cell(lt) + ' · ' if lt else ''}{len(mem)} genes ({armline}) · [[{name}.canvas|open the canvas]]*", "",
              "A module is a community of the gene graph that links each gene to its 15 strongest partners by |cos| "
              f"that are replicated (`both halves`: same sign, fdr ≤ {REPRO_FDR:.2f}, in two random halves of the "
@@ -3948,13 +4126,17 @@ class Vault:
         elif R.have_validation:
             L += ["No gene set is enriched enough to label it (`validation/module_labels.csv`).", ""]
         if R.mod_enrich is not None:
-            e = R.mod_enrich[(R.mod_enrich["module"] == m) & (R.mod_enrich["q"] < 0.05)].sort_values("q").head(8)
+            e_all = R.mod_enrich[(R.mod_enrich["module"] == m) & (R.mod_enrich["q"] < 0.05)].sort_values("q")
+            e = e_all.head(8)
             if len(e):
                 L += ["## Enriched for", "",
-                      "*Hypergeometric test per arm, BH q (`validation/module_enrichment.csv`).*", ""]
+                      "*Hypergeometric test per arm, BH q (`validation/module_enrichment.csv`): the 8 with the "
+                      f"smallest q of the {len(e_all):,} sets with q < 0.05.*", ""]
                 L += table(["Arm", "Set", "Source", "Overlap", "Fold", "q"],
                            [[r.arm, r.set_label, r.source, f"{int(r.overlap)}/{int(r.n_unit)}", g3(r.fold), fq(r.q)]
                             for r in e.itertuples(index=False)]) + [""]
+                L += [self.kofn(len(e), len(e_all), self.xmodule(m), "sets") + " The explorer lists every "
+                      "enrichment row of the module.", ""]
         if R.mod_z is not None:
             z = R.mod_z[k]
             oo = np.argsort(-np.nan_to_num(z, nan=0.0), kind="stable")
@@ -3967,7 +4149,8 @@ class Vault:
                                                                    if R.dd_artifact[i] else "") + ")" for i in kk)
                 cnt = shown_text(len(ii), int(R.dd_artifact[ii].sum()), len(kk), N_MOD_DRUGS,
                                  max(0, len(kk) - N_MOD_DRUGS))
-                return (f"{txt} ({cnt})" if txt else "none")
+                return (f"{txt} ({cnt}) " + self.kofn(len(kk), len(ii), self.xmodule(m), "drug-doses")
+                        if txt else "none")
             L += ["## Drugs that move it", "",
                   ("*Mean pooled z of the + arm minus the − arm" if opp else "*Mean pooled z of its genes") +
                   f" (`graph/module_pooled_z.npy`, row {k}), drug-doses with |z| ≥ 1: the {N_MOD_DRUGS} strongest, "
@@ -3981,8 +4164,10 @@ class Vault:
             idx = {n: i for i, n in enumerate(R.cell)}
             L += ["## Cell lines where it responds most", "",
                   "*The lines with the largest mean |module score| over the module's 8 strongest drug-doses "
-                  "(`graph/modules.parquet` responsive_lines), strongest first.*", "",
-                  "- " + ", ".join(self.llink(idx[n]) if n in idx else cell(n) for n in rl), ""]
+                  "(`graph/modules.parquet` responsive_lines, the graph stage's list), strongest first.*", "",
+                  "- " + ", ".join(self.llink(idx[n]) if n in idx else cell(n) for n in rl)
+                  + " " + self.kofn(len(rl), R.L, self.xmodule(m), "lines")
+                  + " The explorer shows the module's score in every line at every drug-dose.", ""]
         if R.novel_members is not None:
             nm = R.novel_members[R.novel_members["module"] == m].sort_values("mean_cos", ascending=False,
                                                                               kind="stable")
@@ -4007,7 +4192,8 @@ class Vault:
                       f"{len(recs):,} candidates, {n_alerts(n_al)}"
                       + (f"; shown: the {N_CANDIDATES} strongest" + (f" and the {extra} next strongest without an "
                                                                     "alert" if extra else "")
-                         if len(keep) < len(recs) else "") + ".*", ""]
+                         if len(keep) < len(recs) else "") + ".* "
+                      + self.kofn(len(keep), len(recs), self.xmodule(m), "candidates"), ""]
                 L += table(["#", "Gene", "Set", "Mean cos"] + (["Alert"] if n_al else []),
                            [[str(k + 1), self.glink(recs[k].col) + (f" {ALERT}" if why[k] else ""),
                              recs[k].set_label, fcos(recs[k].mean_cos)]
@@ -4028,7 +4214,10 @@ class Vault:
                 body.append([self.glink(c), g3(R.axis_proj[c]), nmx or "—"]
                             + ([f"{ALERT} only flagged evidence" if R.flagged_only[c] else ""] if n_fo else []))
             L += table(["Gene", "Projection", "Name"] + (["Alert"] if n_fo else []), body) + [""]
-        L += ["## Data", "", f"- `graph/nodes.parquet` — module == {m}; `graph/modules.parquet` — module == {m}; "
+        L += ["## Data", "",
+              f"- **Explorer** (every member, every enrichment row, the module's score at every drug-dose and in every "
+              f"line): {self.xl(self.xmodule(m))}",
+              f"- `graph/nodes.parquet` — module == {m}; `graph/modules.parquet` — module == {m}; "
               f"`graph/edges.parquet` — both ends in the module; `graph/module_scores.npy` — [{k}] (drug-dose × line)",
               ""]
         return "\n".join(L)
@@ -4204,6 +4393,22 @@ class Vault:
                                     f"{len(lst):,} genes. Back to [[Genes below the detection limit]].", "",
                                     ", ".join(cell(x) for x in lst), ""]))
 
+    def paths_index(self):
+        """vault/.tahoemap-paths.json: the path of every gene, plates, drug, cell-line, module and plate note, relative
+        to the vault folder with '/' (note names come from the Names registry, with its collision fallbacks, so they
+        cannot be worked out elsewhere): {"gene": {col: path}, "plates": {col: path}, "drug": {name: path}, "line":
+        {line: path}, "module": {m: path}, "plate": {plate: path}}. The explorer links each page to its note with it.
+        Sorted, so an unchanged run rewrites nothing."""
+        R = self.R
+        idx = {"generated_by": GEN, "version": VERSION, "root": "vault", "site_url": self.site or "",
+               "gene": {str(c): self.gene_path[c] for c in range(R.gK)},
+               "plates": {str(c): f"Genes/{R.bucket[c]}/{self.plates_note[c]}.md" for c in range(R.gK)},
+               "drug": {d: f"Drugs/{n}.md" for d, n in self.drug_name.items()},
+               "line": {str(i): f"Cell lines/{n}.md" for i, n in enumerate(self.line_name)},
+               "module": {str(m): f"Modules/{n}.md" for m, n in self.module_name.items()},
+               "plate": {str(p): f"Plates/{n}.md" for p, n in self.plate_name.items()}}
+        self.W.write(PATHS, json.dumps(idx, ensure_ascii=False, sort_keys=True, indent=0))
+
     # ------------------------------------------------------------------ Home, How to read, .obsidian
     def home(self):
         R = self.R
@@ -4224,6 +4429,10 @@ class Vault:
              "The reading room of a **tahoemap** run on [[Tahoe-100M]]: for every gene, which drugs raise or lower it "
              "and in which cell lines, which genes move with it or opposite to it, and where it sits in the vector "
              "space and the nodal map.", "",
+             self.top_line(self.site or LOCAL_EXPLORER), "",
+             "The explorer is the searchable site of this run: every gene at every drug-dose and in every cell line, "
+             "every partner and arrow, every value as stored, nothing left out. A note shows the strongest items of "
+             "each list and says how many there are ('k of N shown'), with a link to all of them there.", "",
              f"Run folder: `{self.out}`. Every path quoted in a note is relative to it.", "",
              "| | |", "|---|---|",
              f"| Genes with a note | {R.gK:,} ({n_written} with a written section) |",
@@ -4433,6 +4642,7 @@ class Vault:
         self.index_notes()
         self.home()
         self.how_to_read()
+        self.paths_index()
         # every basename unique, case-insensitively (Obsidian resolves links by basename)
         seen = {}
         for p in self.W.paths:
@@ -4455,7 +4665,7 @@ class Vault:
                 "fragments_available": len(self.fragments), "written": self.W.n_written,
                 "literature_notes": self.n_lit_notes, "literature_partner_cells": self.n_lit_cells,
                 "direction_arrows": len(self.dv.rows) if self.dv is not None else None,
-                "review": self.lit_fp,
+                "review": self.lit_fp, "site_url": self.site or "", "paths_index": PATHS,
                 "unchanged": self.W.n_same, "stale_removed": removed, "mb": round(self.W.bytes / 1e6, 1),
                 "gene_note_kb_median": round(float(np.median(gs)) / 1e3, 1) if len(gs) else None,
                 "gene_note_kb_max": round(float(gs.max()) / 1e3, 1) if len(gs) else None,
@@ -4476,6 +4686,14 @@ speaks of a score, a rank, a regulon, an association or "this batch", it means t
 (transcription-factor activity inferred from target sets, with MG53 as the exposure), which tahoemap does **not**
 compute; such sections carry a "Written for the earlier MG53/p53 study" callout ({n_old} in this vault). This run's
 own numbers are always in the generated sections.
+
+## The explorer: every list in full
+
+A note shows the strongest items of each list. Every note of a gene, drug, cell line or module starts with a line
+"Explorer: ... · Map: ...": the explorer is the searchable site of this run, and it shows everything - every gene at
+every drug-dose (the exact corrected fold, z and q, flagged or not), every cell line at every drug-dose, every
+partner, every arrow with every reason in full, the wells. Every list a note cuts ends with "(k of N shown; all N in
+the explorer: ...)". Nothing is left out because of a flag: a flagged item keeps its place with an alert (⚠).
 
 ## The baseline of every fold change
 
@@ -4683,14 +4901,16 @@ vault` (or `tahoe run`).
 """
 
 
-def run(out, **_):
-    """Build OUT/vault/ from the run's tables (see the module docstring)."""
+def run(out, site_url=None, **_):
+    """Build OUT/vault/ from the run's tables (see the module docstring). site_url: the explorer's site URL the notes
+    link to (None: links.site_url_default of the code checkout; '' or 'none': no site, the notes then name the run
+    folder's explorer/web/index.html)."""
     t0 = time.time()
     warnings.filterwarnings("ignore", category=RuntimeWarning)
     folder(out, "vault")
     log("Vault: building the Obsidian vault")
     with np.errstate(all="ignore"):
-        info = Vault(out).build()
+        info = Vault(out, site_url=site_url).build()
     info["minutes"] = round((time.time() - t0) / 60, 2)
     stamp_stage(out, "vault", VERSION, info)
     log(f"Vault done: {info['notes']:,} notes ({info['mb']} MB; gene notes median {info['gene_note_kb_median']} KB, "

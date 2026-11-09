@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tahoe-100M explorer</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the page content</a>
+<header id="tm-top">
+  <div class="top-row">
+    <a class="brand" href="#/">Tahoe-100M explorer</a>
+    <div class="top-search"></div>
+    <nav class="top-nav" aria-label="main">
+      <a href="#/browse/genes">Browse</a>
+      <a href="map/gene_map.html">Map</a>
+      <a href="#/files">What is where</a>
+      <a href="#/downloads">Downloads</a>
+      <a href="#/about">About</a>
+      <label class="short-toggle" title="Numbers are shown exactly as stored. Tick this to round them to 3
+        significant digits for reading; the row drawer and every CSV keep the exact values.">
+        <input type="checkbox" data-act="short"> short numbers</label>
+    </nav>
+  </div>
+</header>
+<div id="tm-errbanner" class="errbanner" role="alert" hidden>
+  <strong>Something on this page did not work.</strong> What failed:
+  <ul></ul>
+  <button type="button" data-act="copy">copy diagnostics</button>
+  <button type="button" data-act="close">hide</button>
+</div>
+<main id="main" tabindex="-1">
+  <p>Loading the explorer&hellip;</p>
+  <noscript><p><strong>This page needs JavaScript.</strong> The data files are in the folder d/ (one line each,
+  TAHOE_SHARD(...)); tsf_reader.py reads them in Python.</p></noscript>
+</main>
+<footer id="tm-foot"></footer>
+<script src="app.js"></script>
+<script>
+if (window.TM && TM.boot) { TM.boot(); }
+else {
+  document.getElementById('main').innerHTML = '<p><strong>The page script app.js did not load.</strong> ' +
+    'It should be in this folder next to index.html. Run the explorer stage again (python -m tahoemap explorer), ' +
+    'or open the published site. The data files are complete in d/.</p>';
+}
+</script>
+</body>
+</html>

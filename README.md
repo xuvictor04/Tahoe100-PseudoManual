@@ -12,10 +12,16 @@ gene you can:
    downstream, and on the cells' growth under a drug), from the cell lines' recorded mutations and, without any known
    mutation, from lines that do not express a gene, from drugs that target a gene and from genes' natural levels.
 
+All of it can be searched in **the explorer**: web pages with one page per gene, drug, drug-dose and cell line, every
+value exact and every list complete (nothing is capped, and nothing is left out because of a flag). Online at
+https://xuvictor04.github.io/Tahoe100-PseudoManual/ once published, or on your computer by opening
+`<output>/explorer/web/index.html`.
+
 ```bash
 ~/tahoemap-repo/tahoe setup     # once
 tahoe run --stream              # everything; reads the data straight from Hugging Face (or: tahoe download; tahoe run)
-tahoe gene MDM2                 # then ask
+tahoe open                      # the explorer in a browser: search any gene, drug or cell line
+tahoe gene MDM2                 # or ask in the terminal
 ```
 
 Start with [docs/quick-start.md](docs/quick-start.md). `tahoe test` runs the whole pipeline on synthetic data with
@@ -31,6 +37,7 @@ incomplete download unless `--allow-partial`; reference downloads that failed ar
 
 | Output (under `<data>/tahoemap/`) | What it is |
 |---|---|
+| `explorer/` | **The explorer**: searchable web pages over every result. A gene's page lists every drug-dose with its exact corrected fold change, z, q and flags (flagged rows stay in their ranked place), the gene in each of the 50 cell lines, its correlations with every other gene, its partners, module and probable direction, its baseline and every well. A drug-dose's page holds its raw corrected values for every gene. `web/` is published as GitHub Pages and `data/` as a data repository (`tahoe export DEST --explorer`; [docs/quick-start.md](docs/quick-start.md#the-explorer-search-any-gene)) |
 | `vault/` | **An Obsidian vault**: a note per gene (16k+), drug, cell line, plate and module, linked; each gene note has the drugs that raise / lower it, the cell lines, the genes that move with / opposite it, its probable direction (the genes upstream and downstream of it), its place in the map, registry facts (HGNC, UniProt, NCBI) and a companion note with the raw and corrected per-well values laid out plate by plate |
 | `map/gene_map.html` | **The interactive map**: every gene on the nodal map or the signed vector map (a Spread slider pulls the modules apart), a k-D tour of the vectors themselves, and physics views (a gene's neighbourhood to depth 1-4, a module, all genes) with the probable-direction arrows; searchable; click a gene for its partners, drugs, lines and probable up- and downstream genes |
 | `validation/report.md` | How well the space recovers known biology, the opposite-arm test, module labels, **novel candidate relations**, and the direction stage's controls |
@@ -43,9 +50,11 @@ incomplete download unless `--allow-partial`; reference downloads that failed ar
 | `atlas/` | The build (counts per well × line × gene) and the corrected effects (method v3) |
 | `review/` | *Optional, from `tahoe review` (below)*: AI-agent literature reviews of genes, drugs and cell lines — each review with its verification, the full history of every agent run, a ledger of attempts and costs, and every connection verdict and finding as tables; the vault and the map show them |
 
-`tahoe gene / drug / line / pair / module` answer from these files in the terminal. `tahoe export DEST` copies the
-shareable results (vault, map, tables, validation, direction, graph, relations, embed ...) into a folder ready to push
-to GitHub ([docs/quick-start.md](docs/quick-start.md#put-the-results-on-github)).
+`tahoe gene / drug / line / pair / module` answer from these files in the terminal (`--top all` prints every row).
+`tahoe export DEST` copies the shareable results (vault, map, tables, validation, direction, graph, relations, embed
+...) into a folder ready to push to GitHub ([docs/quick-start.md](docs/quick-start.md#put-the-results-on-github)).
+`tahoe export DEST --explorer` makes the explorer ready to publish: the pages, the data repository, and a script
+that uploads them (it pushes only to the branch `site` and to the data repository).
 
 **Flags are alerts, never removals.** A drug-dose can carry an artifact flag (toxic, transcription drop, cell-cycle
 shift, unreliable plate only, position not correctable or correction uncertain, wells disagree); a relation can be
@@ -76,13 +85,14 @@ artifact for that gene and the value counts as clean
 | validate | control programmes, opposite-arm test, module labels, novel candidates | ~2 min |
 | vault | the Obsidian vault | ~2 min |
 | map | the interactive HTML map | ~1 min |
+| explorer | the explorer: searchable pages with every value, checked against the tables it comes from (every row of each, every value bit for bit) | ~15–25 min (estimated) |
 
 Times were measured on the full data on a 4-core, 15 GB machine (a scale test of this code; its outputs were not
-kept), except the direction stage's, which is estimated from generated outputs of the full size (it has not yet run on
-the real data); see [docs/quick-start.md](docs/quick-start.md#resources) for disk and memory. An output that finished
-before the direction stage existed runs direction, validate, vault and map after the update, plus any earlier stage
-whose method changed since it was made (`tahoe` shows the plan; from older code typically tables to graph as well:
-about 15–25 minutes). [docs/method.md](docs/method.md) explains every step and every flag.
+kept), except the direction and explorer stages', which are estimated from generated outputs of the full size (they
+have not yet run on the real data); see [docs/quick-start.md](docs/quick-start.md#resources) for disk and memory. An
+output that finished before the explorer stage existed runs direction, validate, vault, map and explorer after the
+update (their methods changed too), plus any earlier stage whose method changed since it was made (`tahoe` shows the
+plan): about 30–45 minutes. [docs/method.md](docs/method.md) explains every step and every flag.
 
 ## The vector space and the nodal map
 
@@ -115,6 +125,38 @@ explains it, with examples.
 The look-ups show the same arrows: `tahoe gene X` (upstream, downstream, the cells under drugs), `tahoe line X` (its
 recorded alterations and natural knockouts), `tahoe drug X` (the cells under its doses, its drug-target arrows) and
 `tahoe pair A B` (any arrow between the two); the literature reviewers' dossiers include a gene's arrows.
+
+## The explorer: search a gene and see everything about it
+
+The explorer answers "what happens to this gene?" in one place. Type a symbol (TRIM72), an alias (MG53), an Ensembl
+id, a drug, a target, a cell line or an organ; two words ("TRIM72 A549", "TRIM72 idarubicin") go straight to that
+gene in that line or under that drug. A gene's page has:
+
+- **Drugs**: every one of the 1,132 drug-doses, sorted by z, with the corrected fold change, z, q, the call, the
+  flags in full, and how many cell lines rose or fell. A flagged row keeps its ranked place: TRIM72's strongest
+  raisers, Idarubicin 5 µM and Homoharringtonine, carry artifact flags and are listed with them, not removed.
+- **Cell lines**: the gene in each of the 50 lines at every drug-dose (per-line values, exact), with the reason for
+  every missing value.
+- **Correlations, partners, direction, baseline and wells**: its correlation with every other gene, its 100
+  strongest partners and the genes that list it, its module, what probably acts on it and what it acts on (every
+  arrow, with its alerts, notes and caveats), its baseline in every line, and every well's raw and corrected value.
+
+A drug-dose's page holds the drug's raw corrected information: every gene's exact pooled value (also as a CSV), its
+quality checks, the cells left in each line, and its wells. A cell line's page has its genetics, how each drug-dose
+changed its cell numbers, and every gene's line effect.
+
+The rules: nothing is capped, nothing is filtered by a flag (filters are opt-in and say how many rows they hide),
+text is never cut, every missing value says why, and the values are the bytes the pipeline stored. The explorer
+stage stops rather than publish pages that differ from the tables: it rebuilds every row of `tables/drug_effects`
+from its own files, bit for bit, and counts every source table's rows in each place they appear. The map, the vault
+notes and the look-ups link into it ("15 of 41 shown; all 41 in the explorer").
+
+**Locally**: open `<output>/explorer/web/index.html` (`tahoe open`); it reads the data folder next to it, with no
+network. **Online**: `tahoe export DEST --explorer`, then `DEST/publish.sh` (Windows: `publish.ps1`), after two
+one-time settings on github.com (a public repository `Tahoe100-PseudoManual-data`, and Pages from the branch `site`);
+[docs/quick-start.md](docs/quick-start.md#the-explorer-search-any-gene) has the steps.
+[docs/explorer.md](docs/explorer.md) explains the pages, and [docs/explorer-data.md](docs/explorer-data.md) their
+file format.
 
 ## Literature review agents
 
@@ -157,9 +199,12 @@ tahoe test                      # or: python3 tests/run_tests.py --workdir /tmp/
 python3 tests/test_port.py      # the port is verbatim
 python3 tests/test_review.py --workdir /tmp/tahoemap_test   # the review agents against a scripted fake API
 python3 tests/test_windows.py   # Windows-only behaviour, simulated on Linux / macOS (seconds)
-python3 tests/test_export.py --out /tmp/tahoemap_test/out_seed0   # `tahoe export` (seconds)
+python3 tests/test_export.py --out /tmp/tahoemap_test/out_seed0   # `tahoe export`, also --explorer (seconds)
 python3 tests/test_direction.py --no-scale   # the direction stage against its planted answers (a few minutes;
                                              # without --no-scale also at 4,000 and 8,000 genes, ~15 min)
+python3 tests/test_explorer.py --out /tmp/tahoemap_test/out_seed0 --data /tmp/tahoemap_test/data_seed0
+python3 tests/test_surfaces.py --out /tmp/tahoemap_test/out_seed0   # links, map, vault and look-ups into it
+python3 tests/test_explorer_browser.py --out /tmp/tahoemap_test/out_seed0   # the pages in headless Chromium
 ```
 
 `tests/test_review.py` (after `run_tests.py`, offline, no key, about 3 minutes) drives the review runner through the
@@ -170,15 +215,20 @@ map, and `duplicate`; it also checks that no key reaches any file or any printed
 
 The synthetic data plant drug effects (some only in TP53-wild-type lines), co-regulated modules, pairs of modules
 moved in opposite directions, un-moved genes, and every artifact the method corrects. The tests check each stage
-against them (49 checks): the tensor reproduces the atlas exactly, ambient-only lines and uncountable profiles are
-masked, per-line effects appear only where planted (e.g. p53 targets in TP53-wild-type lines only), the per-line cut
-is calibrated, planted modules are tight in the space, opposite modules point opposite ways and share a nodal-map
-island on opposite arms, un-moved genes rarely form strong relations, the FDR is monotone and calibrated, the vault
-has a note per gene and no broken links, the map's spread layouts move the modules apart, flagged drug-doses stay in
-the map's lists with their alert, the map's spread slider, tour and neighbourhood depth work in a browser, the
-look-ups answer, and the direction stage recovers its planted answers (TP53 → the p53 targets and the cells under
-DNA-damaging drugs, a natural knockout's partners, a gene's level → its partners' response) while random groups give
-no more arrows than expected, and the vault and the map show the same arrows as the stage wrote.
+against them (98 checks with Playwright installed; without it the 20 browser checks are 5 warnings): the tensor
+reproduces the atlas exactly, ambient-only lines and uncountable profiles are masked, per-line effects appear only
+where planted (e.g. p53 targets in TP53-wild-type lines only), the per-line cut is calibrated, planted modules are
+tight in the space, opposite modules point opposite ways and share a nodal-map island on opposite arms, un-moved
+genes rarely form strong relations, the FDR is monotone and calibrated, the vault has a note per gene and no broken
+links, the map's spread layouts move the modules apart, flagged drug-doses stay in the map's lists with their alert,
+the map's spread slider, tour and neighbourhood depth work in a browser, the look-ups answer, and the direction
+stage recovers its planted answers (TP53 → the p53 targets and the cells under DNA-damaging drugs, a natural
+knockout's partners, a gene's level → its partners' response) while random groups give no more arrows than expected,
+and the vault and the map show the same arrows as the stage wrote. The explorer's checks compare every value it
+holds with the arrays and tables, bit for bit (every `drug_effects` row, every per-line and per-well value), check
+that every source row is in it, find the planted answers in it (a gene whose strongest raiser carries an artifact
+flag keeps that row first), and check that two runs give identical files and that a size limit moves data without
+losing any.
 
 ## Read the results with these in mind
 
@@ -201,9 +251,10 @@ no more arrows than expected, and the vault and the map show the same arrows as 
 |---|---|
 | `tahoe` | the command (Linux / macOS); Windows: `python -m tahoemap …` (see the quick start) |
 | `tahoemap/review/` | the literature-review agents: agent and skill files (Claude Code format), dossiers, tools, verification, key pool, histories, the runner |
-| `tahoemap/` | the package: `atlas_core.py` + `tlib.py` (ported method), `stream.py`, `tensor.py`, `tables.py`, `embed.py`, `reference.py`, `relations.py`, `graph.py`, `direction.py`, `direction_view.py`, `validate.py`, `vault.py`, `html_map.py`, `query.py`, `export.py`, `cli.py` |
+| `tahoemap/` | the package: `atlas_core.py` + `tlib.py` (ported method), `stream.py`, `tensor.py`, `tables.py`, `embed.py`, `reference.py`, `relations.py`, `graph.py`, `direction.py`, `direction_view.py`, `validate.py`, `vault.py`, `html_map.py`, `explorer.py` (+ `tsf_reader.py`, `links.py`), `query.py`, `export.py`, `cli.py` |
+| `tahoemap/explorer_app/` | the explorer's pages (index.html, app.css, js/*.js; the stage joins the scripts into app.js) |
 | `tahoemap/data/control_sets.json` | curated control programmes for validation (from the literature, not Tahoe) |
 | `tahoemap/vault_seed/` | the written layer of the vault (add `genes/SYMBOL.md` to add knowledge; it survives rebuilds) |
 | `docs/` | quick start, method, the two maps, the literature review ([review.md](docs/review.md)), design contracts |
-| `tests/` | synthetic data generator, end-to-end tests, port test, review, Windows, export and direction tests |
+| `tests/` | synthetic data generator, end-to-end tests, port test, review, Windows, export, direction, explorer and surface tests |
 | `tools/port_from_old.py` | how the method was carried over |

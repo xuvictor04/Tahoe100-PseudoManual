@@ -66,7 +66,8 @@ from .common import (folder, log, marked_names, read_effects_index, replace_file
                      write_csv, write_json)
 from .embed import capped
 
-VERSION = 4                 # 3: flagged items stay in their ranked place, with an alert; 4: the direction section
+VERSION = 5                 # 3: flagged items stay in their ranked place, with an alert; 4: the direction section;
+#                             5: drug_moa.csv lists every drug of a class (was the first 12)
 N_RANDOM = 20_000           # random gene pairs: the background of every AUROC
 N_NULL = 200                # random gene sets per set size for the empirical p of a set's AUROC
 NULL_SOURCES = ("control", "hallmark", "synthetic")
@@ -850,7 +851,7 @@ def _drug_check(out):
             ks = (si[w][:, None] != si[w][None, :])[iu]
             within = sub[iu][ks]
             between = C[np.ix_(w, o)].ravel()
-            rows.append({"moa_fine": cl, "n_drugs": len(w), "drugs": ", ".join(names[idx[w]][:12]),
+            rows.append({"moa_fine": cl, "n_drugs": len(w), "drugs": ", ".join(names[idx[w]]),
                          "n_drugs_flagged_dose": int(flagged[idx[w]].sum()),
                          "n_drugs_no_trustworthy_dose": int(untr[idx[w]].sum()),
                          "n_pairs": int(len(within)), "mean_cos_within": float(within.mean()) if len(within)
@@ -1129,7 +1130,8 @@ def _report(path, ctx):
                          "AUROC"], rows), ""]
         if len(drug_tab):
             t = drug_tab.head(12)
-            L += ["Mechanism classes with >= 2 drugs (best first; full table in drug_moa.csv):", "",
+            L += [f"Mechanism classes with >= 2 drugs (best first; {len(t)} of {len(drug_tab)} shown; all "
+                  f"{len(drug_tab)} in drug_moa.csv):", "",
                   _md_table(["moa_fine", "drugs", "mean cos within", "mean cos to others", "AUROC"],
                             [[r["moa_fine"], r["drugs"], _f(r["mean_cos_within"], "{:+.2f}"),
                               _f(r["mean_cos_to_other_classes"], "{:+.2f}"), _f(r["auroc_within_vs_other"])]
@@ -1300,6 +1302,9 @@ one follow in their ranked place too |
 | `share_opposite_arms_in_same_module` | among cross pairs in one module, the share on opposite arms |
 | `nodal_centroid_dist`, `signed_centroid_dist` | distance between the two sets' centroids on the nodal map (x, y) / \
 signed map (xs, ys), divided by the map's spread sqrt(var x + var y) |
+| `nodal_mixing`, `signed_mixing` | how mixed the two sets are on the nodal / signed map: for each gene, the share \
+of its nearest map neighbours (among the genes of both sets) that belong to the other set, divided by that share \
+under random labels, averaged; 1 = as mixed as chance, 0 = no gene has a neighbour from the other set |
 | `reading` | the plain-language reading |
 
 ## module_enrichment.csv - modules and arms vs gene sets
@@ -1330,7 +1335,7 @@ vector space only through drug-doses that carry an alert reads 'SYMBOL ⚠') |
 ## drug_moa.csv - mechanism classes (moa_fine) with >= 2 drugs
 | column | meaning |
 |---|---|
-| `moa_fine`, `n_drugs`, `drugs` | the class and its drugs (the first 12; ⚠ = the drug's vector is of a dose with \
+| `moa_fine`, `n_drugs`, `drugs` | the class and every one of its drugs (⚠ = the drug's vector is of a dose with \
 an artifact flag, embed/drugs.parquet alert; it is tested like the others) |
 | `n_drugs_flagged_dose`, `n_drugs_no_trustworthy_dose` | the class's drugs marked ⚠; those of them with no \
 trustworthy dose (every dose flagged unreliable plate only, position not correctable or wells disagree) |

@@ -13,7 +13,13 @@
    Ixazomib and ACSL4's -> Artesunate; MTAP-null -> Pemetrexed; the drug-target classes (glucocorticoids, MTOR,
    statins); that random pseudo-groups give ~no edges; that no edge lacks p / q / grade, that the written-edge and
    grade rules hold and every alert starts with the warning sign; that the TP53-deleted lines are seen as not
-   expressing TP53; that a small gene chunk gives identical edges.
+   expressing TP53; that a small gene chunk gives identical edges. Reasons in tiers (direction VERSION 3): (a) the
+   edges' (source_col, target_col, target_dd, kind, grade, sign, q) equal tests/fixtures/direction_v2_seed0.tsv (made
+   from VERSION 2's seed-0 edges: the tiers change no edge, grade, sign or q); (b) the reasons of alerts_all are
+   exactly those of the four tiers, in order; (c) each graded reason is in the tier its threshold gives (read apart
+   from direction.reason_tier) and art_share agrees with drugdoses_all; (d) some edges carry no alert; (e) an output
+   of VERSION 2 (no tier columns) still reads through direction_view. Unit: reason_tier at and around each threshold.
+   check(out) runs these on any finished output (tests/checks.py).
 2. Variants of the synthetic output: without metadata, relations, drug targets and cell numbers (the empty edges
    table keeps its column types), and with lines.csv lacking its Organ column (organs come from the metadata).
 3. A 50-line fixture (3,000 genes x 300 drug-doses): (a) a genotype-dependent programme P that dominates the
@@ -58,7 +64,7 @@ MINUTES_LIMIT = 10.0
 WARN = "⚠"
 
 
-def check(name, fn):
+def report(name, fn):
     try:
         ok, detail = fn()
         status = "PASS" if ok else "FAIL"
@@ -151,6 +157,356 @@ def integrity(e):
     return bad, len(a)
 
 
+# ----------------------------------------------------------------------------- reasons in tiers (direction VERSION 3)
+FIXTURE = os.path.join(HERE, "fixtures", "direction_v2_seed0.tsv")
+FIX_COLS = ["source_col", "target_col", "target_dd", "kind", "grade", "sign", "q"]
+TIER_TEXT = ("alerts", "notes", "caveats", "support")
+SEED0_DIMS = {"genes": 1198, "drugdoses": 282, "lines": 18}      # the seed-0 synthetic run of run_tests.py
+
+
+def fixture_lines(e):
+    """The edges as the fixture holds them: one tab-separated line per edge (q with repr precision), sorted."""
+    return sorted("\t".join(str(x) for x in (int(r[0]), int(r[1]), int(r[2]), str(r[3]), str(r[4]), int(r[5]),
+                                               repr(float(r[6]))))
+                  for r in e[FIX_COLS].itertuples(index=False, name=None))
+
+
+def read_fixture(path=FIXTURE):
+    with open(path, encoding="utf-8") as fh:
+        rows = fh.read().splitlines()
+    return rows[0].split("\t"), sorted(x for x in rows[1:] if x)
+
+
+def _split(t):
+    t = str(t or "").strip()
+    if t.startswith(WARN):
+        t = t[len(WARN):].strip()
+    return [x.strip() for x in t.split("; ") if x.strip()]
+
+
+def _subsequence(part, whole):
+    it = iter(whole)
+    return all(any(x == y for y in it) for x in part)
+
+
+def expected_tier(reason, kind, art_share, first_flagged):
+    """The tier a reason should be in, written apart from direction.reason_tier (the test's oracle): (tier,
+    category). first_flagged: the first of the edge's top_drugdoses carries an artifact flag (None: unknown)."""
+    import re
+    from tahoemap import direction as Dm
+    cav = {x.replace("; ", ", ") for x in (Dm.DRUG_ALERT, Dm.TISSUE_ALERT, Dm.PRECISION_ALERT)}
+    if reason in cav:
+        return "caveats", "caveat"
+    if re.match(r"^consistent across \d+ compounds \(", reason) or (
+            reason.startswith("the lines lacking ") and reason.endswith(": genotype evidence too")):
+        return "support", "support"
+    m = re.match(r"^\S+ measured in (\d+) of the (\d+) and (\d+) of the (\d+) lines$", reason)
+    if m:
+        a, na, i, ni = map(int, m.groups())
+        low = min(a, i) < Dm.FULL_SIDE or a / na < Dm.NOTE_MEASURED_FRAC or i / ni < Dm.NOTE_MEASURED_FRAC
+        return ("alerts" if low else "notes"), "measured"
+    if reason.startswith("supporting drug-doses with artifact flags ("):
+        strongest = ", the strongest among them):" in reason
+        if kind in ("genotype_response", "null_response") and first_flagged is not None and \
+                strongest != bool(first_flagged):
+            return "mismatch", "artifact flags: 'the strongest among them' does not match top_drugdoses"
+        m = re.search(r"\((\d+) of the (\d+) supporting compounds", reason)
+        if m:
+            share = int(m.group(1)) / int(m.group(2))
+        else:
+            share = float(art_share) if art_share is not None else float("nan")
+        alert = strongest or not np.isfinite(share) or share >= Dm.NOTE_ART_SHARE
+        return ("alerts" if alert else "notes"), "artifact flags"
+    m = re.match(r"^compared within organs: (\d+) of the (\d+) .+? and (\d+) of the (\d+) others share an organ",
+                 reason)
+    if m:
+        a, na, i, ni = map(int, m.groups())
+        low = a / na < Dm.NOTE_WITHIN_ORGAN_FRAC or i / ni < Dm.NOTE_WITHIN_ORGAN_FRAC
+        return ("alerts" if low else "notes"), "within organs"
+    if reason.startswith("other genes are absent from most of these lines too: "):
+        m = re.search(r"\(and (\d+) more line sets\): any of them", reason)
+        total = reason.count(" (overlap ") + (int(m.group(1)) if m else 0)
+        return ("alerts" if total <= Dm.NOTE_COABSENT_SETS else "notes"), "co-absent sets"
+    m = re.match(r"^\S+ itself is not expressed in (\d+) of the (\d+) altered lines", reason)
+    if m:
+        k, n = map(int, m.groups())
+        return ("alerts" if k / n > Dm.NOTE_NOT_EXPRESSED_FRAC else "notes"), "not expressed"
+    return "alerts", "other"
+
+
+def _first_flagged(out):
+    """{drug-dose label: carries an artifact flag} from atlas/effects/drugdose.csv (as the stage labels and flags)."""
+    from tahoemap import atlas_core as A
+    from tahoemap import direction as Dm
+    dd = pd.read_csv(os.path.join(out, "atlas", "effects", "drugdose.csv"), dtype={"dose": str},
+                     keep_default_na=False)
+    fl = dd["flags"].astype(str) if "flags" in dd else pd.Series([""] * len(dd))
+    return {Dm._dd_label(a, b): bool(A.has_artifact(f)) for a, b, f in zip(dd["drug"], dd["dose"], fl)}
+
+
+def tier_checks(out, fixture=None):
+    """The reasons in tiers on a finished output: [(name, fn)], fn() -> (ok, detail). fixture: compare the edges'
+    (source_col, target_col, target_dd, kind, grade, sign, q) with tests/fixtures/direction_v2_seed0.tsv (None:
+    when the output has the seed-0 synthetic run's dimensions)."""
+    import collections
+    from tahoemap import direction_view as DV
+    d = os.path.join(out, "direction")
+    e = pd.read_parquet(os.path.join(d, "edges.parquet"))
+    g = pd.read_parquet(os.path.join(d, "groups.parquet"))
+    info = json.load(open(os.path.join(d, "info.json"), encoding="utf-8"))
+    if fixture is None:
+        fixture = all(info.get(k) == v for k, v in SEED0_DIMS.items())
+    checks = []
+
+    def fix():
+        if not fixture:
+            return "warn", f"not the seed-0 synthetic run ({ {k: info.get(k) for k in SEED0_DIMS} }): not compared"
+        head, want = read_fixture()
+        got = fixture_lines(e)
+        a, b = collections.Counter(got), collections.Counter(want)
+        return head == FIX_COLS and got == want, (
+            f"{len(got)} edges vs {len(want)} in the fixture; only here: {list((a - b).elements())[:3]}; only in the "
+            f"fixture: {list((b - a).elements())[:3]}")
+    checks.append(("(a) the edges, grades, signs and q equal the direction VERSION 2 fixture (seed 0)", fix))
+
+    def union():
+        bad = []
+        for i in range(len(e)):
+            every = _split(e["alerts_all"].iat[i])
+            parts = [_split(e[t].iat[i]) for t in TIER_TEXT]
+            if collections.Counter(every) != collections.Counter(x for p in parts for x in p):
+                bad.append((i, "multiset"))
+            elif not all(_subsequence(p, every) for p in parts):
+                bad.append((i, "order"))
+            if [len(p) for p in parts] != [int(e[f"n_{t}"].iat[i]) for t in TIER_TEXT]:
+                bad.append((i, "counts"))
+            al = str(e["alerts"].iat[i] or "")
+            if (al != "" and not al.startswith(WARN + " ")) or any(
+                    WARN in str(e[t].iat[i] or "") for t in ("notes", "caveats", "support", "alerts_all")):
+                bad.append((i, "warning sign outside alerts"))
+        for i in range(len(g)):
+            every = _split(g["alerts_all"].iat[i])
+            parts = _split(g["alerts"].iat[i]) + _split(g["notes"].iat[i])
+            if collections.Counter(every) != collections.Counter(parts):
+                bad.append((f"group {i}", "multiset"))
+        dt = {c: str(e[c].dtype) for c in ("n_alerts", "n_notes", "n_caveats", "n_support", "art_share")}
+        types = all(v == "int16" for k, v in dt.items() if k != "art_share") and dt["art_share"] == "float32"
+        return not bad and types, (f"{len(e)} edges, {len(g)} groups: alerts_all = alerts + notes + caveats + support "
+                                   f"(same reasons, each tier in alerts_all's order, counts); problems {bad[:5]}; "
+                                   f"types {dt}")
+    checks.append(("(b) every reason of alerts_all is in exactly one tier (the multiset of the four tiers), in order",
+                   union))
+
+    def graded():
+        ff = _first_flagged(out)
+        cnt, bad = collections.Counter(), []
+        for i in range(len(e)):
+            kind = str(e["kind"].iat[i])
+            top = str(e["top_drugdoses"].iat[i] or "")
+            first = top.split("; ")[0].rsplit(": ", 1)[0] if top else ""
+            fflag = ff.get(first) if first else None
+            where = {r: t for t in TIER_TEXT for r in _split(e[t].iat[i])}
+            for r in _split(e["alerts_all"].iat[i]):
+                want, cat = expected_tier(r, kind, e["art_share"].iat[i], fflag)
+                cnt[(cat, where.get(r))] += 1
+                if want != where.get(r):
+                    bad.append((i, cat, want, where.get(r), r[:90]))
+        for i in range(len(g)):
+            where = {r: t for t in ("alerts", "notes") for r in _split(g[t].iat[i])}
+            for r in _split(g["alerts_all"].iat[i]):
+                want, cat = expected_tier(r, "", np.nan, None)
+                if want != where.get(r):
+                    bad.append((f"group {i}", cat, want, where.get(r), r[:90]))
+        tally = "; ".join(f"{c}: {n} in {t}" for (c, t), n in sorted(cnt.items(), key=lambda x: (x[0][0],
+                                                                                                    str(x[0][1]))))
+        return not bad, f"{tally}; misplaced {len(bad)}: {bad[:4]}"
+    checks.append(("(c) each graded reason is in the tier its threshold gives (an independent reading of the "
+                   "numbers), every other reason in its fixed tier", graded))
+
+    def art():
+        """art_share of the response edges agrees with drugdoses_all (contrasts rounded to 0.1) and the artifact
+        reason lists exactly the flagged drug-doses with a value."""
+        import re
+        resp = e["kind"].isin(["genotype_response", "null_response"])
+        bad, n = [], 0
+        for i in np.flatnonzero(resp.to_numpy()):
+            items = [x for x in str(e["drugdoses_all"].iat[i]).split("; ") if x]
+            vals = []
+            for x in items:
+                m = re.search(r"\(z diff ([-+]?[0-9.]+)\)", x)
+                if m:
+                    vals.append((abs(float(m.group(1))), "[artifact flags:" in x, x.split(": ", 1)[0]))
+            tot = sum(v for v, _, _ in vals)
+            sh = float(e["art_share"].iat[i])
+            if tot >= 5 and np.isfinite(sh) and abs(sum(v for v, f, _ in vals if f) / tot - sh) > 0.1:
+                bad.append((i, "share", round(sh, 3)))
+            flagged = [lab for _, f, lab in vals if f]
+            rs = [r for r in _split(e["alerts_all"].iat[i]) if r.startswith("supporting drug-doses with artifact")]
+            if bool(flagged) != bool(rs) or (rs and not all(f"{lab} (" in rs[0] for lab in flagged)):
+                bad.append((i, "reason", flagged[:2], rs[:1]))
+            n += 1
+        notresp = e.loc[~resp, "art_share"]
+        return not bad and bool(notresp.isna().all()), (
+            f"{n} response edges (art_share from drugdoses_all within 0.1; the artifact reason names every flagged "
+            f"drug-dose with a value); other kinds NaN: {bool(notresp.isna().all())}; problems {bad[:4]}")
+    checks.append(("art_share and drugdoses_all of the response edges agree with the artifact-flag reason", art))
+
+    def unalerted():
+        n0 = int((e["n_alerts"] == 0).sum())
+        dv = DV.load(out, cache=False)
+        rows = dv.rows
+        k = int((~rows["has_alert"]).sum())
+        shown, n_more, _ = DV.cap(rows, 5)
+        by = e[e["n_alerts"] == 0].groupby("kind").size().to_dict()
+        return n0 > 0 and k > 0 and len(shown) > 5 and dv.tiered, (
+            f"{n0} of {len(e)} edges without an alert ({by}); {k} of {len(rows)} display rows; the cap rule at 5 "
+            f"now adds the strongest rows without an alert: {len(shown)} shown, {n_more} more")
+    checks.append(("(d) some edges carry no alert, so the warning sign tells rows apart (and the cap rule can add "
+                   "unalerted rows)", unalerted))
+
+    def old_output():
+        return old_output_check(out)
+    checks.append(("(e) an output of direction VERSION 2 (no tier columns) still reads through direction_view: "
+                   "alerts = every reason, the other tiers empty", old_output))
+    return checks
+
+
+def old_output_check(out):
+    """Rebuild this output's direction folder as VERSION 2 wrote it (alerts = every reason with the sign, no tier,
+    art_share or drugdoses_all columns; groups without notes / alerts_all) in a temporary folder, read it through
+    direction_view, and compare with the VERSION 3 reading: the same rows in the same order; every reason an alert;
+    the texts, counts, cap rule, look-ups and merged rows work."""
+    from tahoemap import direction as Dm
+    from tahoemap import direction_view as DV
+    tmp = tempfile.mkdtemp(prefix="tahoe_dir_v2_")
+    try:
+        os.makedirs(os.path.join(tmp, "direction"))
+        os.makedirs(os.path.join(tmp, "atlas"))
+        src = os.path.join(out, "atlas", "effects")
+        if os.path.isdir(src):
+            shutil.copytree(src, os.path.join(tmp, "atlas", "effects"),
+                            ignore=lambda d_, names: [x for x in names if x.endswith(".npy")])
+        d = os.path.join(out, "direction")
+        for f in ("controls.json", "info.json"):
+            shutil.copy(os.path.join(d, f), os.path.join(tmp, "direction", f))
+        e = pd.read_parquet(os.path.join(d, "edges.parquet"))
+        g = pd.read_parquet(os.path.join(d, "groups.parquet"))
+        v2 = e.drop(columns=[c for c in Dm.TIER_COLS + ("art_share", "drugdoses_all") if c in e])
+        v2["alerts"] = [Dm._join(_split(t)) for t in e["alerts_all"]]
+        v2["n_alerts"] = np.array([len(_split(t)) for t in e["alerts_all"]], dtype=np.int16)
+        v2.to_parquet(os.path.join(tmp, "direction", "edges.parquet"), index=False)
+        g2 = g.drop(columns=["notes", "alerts_all"])
+        g2["alerts"] = [Dm._join(_split(t)) for t in g["alerts_all"]]
+        g2.to_parquet(os.path.join(tmp, "direction", "groups.parquet"), index=False)
+        new = DV.load(out, cache=False)
+        old = DV.load(tmp, cache=False)
+        bad = []
+        if old.tiered or not new.tiered:
+            bad.append("tiered flags")
+        if list(old.rows["members"]) != list(new.rows["members"]):
+            bad.append("display rows differ")
+        if not all(DV.alert_reasons(r) == DV.all_reasons(r) for _, r in old.rows.iterrows()):
+            bad.append("an old row's alerts are not every reason")
+        if not all(DV.alert_reasons(o) == DV.all_reasons(o) and sorted(DV.all_reasons(o)) == sorted(
+                DV.all_reasons(n)) for (_, o), (_, n) in zip(old.rows.iterrows(), new.rows.iterrows())):
+            bad.append("old rows: reasons differ from the new rows' alerts_all")
+        if (old.rows[["n_notes", "n_caveats", "n_support"]].to_numpy() != 0).any() or (
+                old.rows[["notes", "caveats", "support"]] != "").to_numpy().any():
+            bad.append("old rows: tiers other than alerts are not empty")
+        if not bool((old.rows["has_alert"] == (old.rows["n_alerts"] > 0)).all()):
+            bad.append("has_alert")
+        r0 = old.rows.iloc[0]
+        line = DV.edge_line(r0)
+        t = DV.texts(r0)
+        if not (line and t["notes_short"] == "" and t["n_alerts"] == len(DV.all_reasons(r0))
+                and "notes:" not in line):
+            bad.append("edge_line / texts")
+        tp = old.downstream("TP53")
+        ct = DV.counts_text(tp, "arrows")
+        shown, n_more, n_al = DV.cap(old.rows, 5)
+        if len(shown) + n_more != len(old.rows) or not ct:
+            bad.append("cap / counts_text")
+        if len(old.groups) and not (old.groups["alerts_all"].astype(str).str.len() > 0).any():
+            bad.append("old groups: alerts_all")
+        return not bad, (f"{len(old.rows)} display rows read from the rebuilt VERSION 2 folder, "
+                         f"{int(old.rows['has_alert'].sum())} with an alert (VERSION 3: "
+                         f"{int(new.rows['has_alert'].sum())}); '{DV.ascii_signs(line)[:100]}'; counts '{ct}'; "
+                         f"problems {bad or 'none'}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def check(out, data=None, fixture=None):
+    """The direction checks of a finished output, for tests/checks.py (design I5): the reasons in tiers (tier_checks)
+    and the edge rules (integrity). Returns [(name, ok, detail)], ok True, False or 'warn'. data is not needed (kept
+    for the common signature)."""
+    res = []
+    e = pd.read_parquet(os.path.join(out, "direction", "edges.parquet"))
+    bad, na = integrity(e)
+    res.append(("edges: p, q, grade, kind, sign; the written-edge, grade and alert rules", not bad,
+                "; ".join(bad) if bad else f"ok ({len(e)} edges, {na} grade A)"))
+    for name, fn in tier_checks(out, fixture):
+        try:
+            ok, detail = fn()
+        except Exception as ex:  # noqa: BLE001
+            ok, detail = False, f"{type(ex).__name__}: {ex}"
+        res.append((name, ok, str(detail)))
+    return res
+
+
+def tier_unit_checks():
+    """direction.reason_tier on constructed reasons at and around each threshold (no output needed)."""
+    from tahoemap import direction as Dm
+    F, M, W, C, N = (Dm.FULL_SIDE, Dm.NOTE_MEASURED_FRAC, Dm.NOTE_WITHIN_ORGAN_FRAC, Dm.NOTE_COABSENT_SETS,
+                     Dm.NOTE_NOT_EXPRESSED_FRAC)
+    cases = [
+        ("Y measured in 6 of the 8 and 10 of the 10 lines", np.nan, "notes" if 6 >= M * 8 and 6 >= F else "alerts"),
+        ("Y measured in 5 of the 8 and 10 of the 10 lines", np.nan, "alerts" if 5 < M * 8 else "notes"),
+        ("Y measured in 4 of the 4 and 10 of the 10 lines", np.nan, "alerts" if 4 < F else "notes"),
+        ("Y measured in 30 of the 33 and 16 of the 17 lines", np.nan, "notes"),
+        ("supporting drug-doses with artifact flags (49% of the evidence): A 5 µM (toxic)", 0.4999, "notes"),
+        ("supporting drug-doses with artifact flags (50% of the evidence): A 5 µM (toxic)", 0.5, "alerts"),
+        ("supporting drug-doses with artifact flags (10% of the evidence, the strongest among them): A 5 µM (toxic)",
+         0.1, "alerts"),
+        ("supporting drug-doses with artifact flags (share of the evidence not measurable): A 5 µM (toxic)",
+         np.nan, "alerts"),
+        ("supporting drug-doses with artifact flags (1 of the 3 supporting compounds): A 5 µM (toxic)", np.nan,
+         "notes"),
+        ("supporting drug-doses with artifact flags (2 of the 4 supporting compounds): A 5 µM (toxic)", np.nan,
+         "alerts"),
+        ("supporting drug-doses with artifact flags: A 5 µM (toxic)", np.nan, "alerts"),       # VERSION 2 words
+        ("compared within organs: 10 of the 20 TP53-altered lines and 15 of the 30 others share an organ with lines "
+         "of the other side (the comparison rests on those)", np.nan, "notes" if 10 >= W * 20 else "alerts"),
+        ("compared within organs: 9 of the 20 TP53-altered lines and 30 of the 30 others share an organ with lines of "
+         "the other side (the comparison rests on those)", np.nan, "alerts"),
+        ("other genes are absent from most of these lines too: A (overlap 0.80), B (overlap 0.70), C (overlap 0.60) "
+         f"(and {C - 3} more line sets): any of them could be the cause", np.nan, "alerts"),
+        ("other genes are absent from most of these lines too: A (overlap 0.80), B (overlap 0.70), C (overlap 0.60) "
+         f"(and {C - 2} more line sets): any of them could be the cause", np.nan, "notes"),
+        ("other genes are absent from most of these lines too: MTAP (+2 absent from the same lines) (overlap 0.62): "
+         "any of them could be the cause", np.nan, "alerts"),
+        ("TP53 itself is not expressed in 8 of the 33 altered lines (deletion or silencing)", np.nan,
+         "alerts" if 8 > N * 33 else "notes"),
+        ("TP53 itself is not expressed in 9 of the 33 altered lines (deletion or silencing)", np.nan,
+         "alerts" if 9 > N * 33 else "notes"),
+        (Dm.DRUG_ALERT, np.nan, "caveats"), (Dm.TISSUE_ALERT.replace("; ", ", "), np.nan, "caveats"),
+        (Dm.PRECISION_ALERT, np.nan, "caveats"),
+        ("consistent across 3 compounds (A, B, C)", np.nan, "support"),
+        ("the lines lacking MTAP carry a recorded loss of MTAP (overlap 0.80): genotype evidence too", np.nan,
+         "support"),
+        ("few lines (4 vs 13)", np.nan, "alerts"), ("a reason this code does not know", np.nan, "alerts")]
+    bad = []
+    for r, a, want in cases:
+        got = Dm.reason_tier(r, a)
+        # the test's own reading too (it does not know VERSION 2's words, which stay an alert)
+        oracle = want if r.startswith("supporting drug-doses with artifact flags: ") else \
+            expected_tier(r, "genotype_response", a, None)[0]
+        if got != want or oracle != want:
+            bad.append((r[:60], got, oracle, want))
+    return not bad, f"{len(cases)} reasons at and around the thresholds; wrong (reason, tier, oracle, want): " \
+                    f"{bad or 'none'}"
+
+
 # ----------------------------------------------------------------------------- 0. unit checks (no output needed)
 def unit_checks():
     """(a) drug_target counts one molecule once: the real Tahoe names of one molecule in two forms ('Ixazomib' /
@@ -201,7 +557,7 @@ def unit_checks():
                 f"genes with a drug_target edge: {tg} (expected only YCDK, moved by 2 different molecules); "
                 f"6 names -> {len(keys)} molecules; " + "; ".join(f"{r['source']} -> {r['target']}: {r['reading']}"
                                                                     for r in rows[:2]))
-    check("drug_target: one molecule under two names counts once (the real Tahoe pairs)", molecules)
+    report("drug_target: one molecule under two names counts once (the real Tahoe pairs)", molecules)
 
     def level_selection():
         rng = np.random.default_rng(5)
@@ -239,7 +595,7 @@ def unit_checks():
         return (we >= 50 and ce <= max(2, 0.05 * we) and wo >= 30 and co >= 0.2 * wo and ro == 0,
                 f"equally strong directions: {ce} of {we} written edges called clear (<= 5%); one real direction: "
                 f"{co} of {wo} clear, reverse edges called clear {ro}")
-    check("level: 'direction clear' allows for the edge's selection (simulated pairs)", level_selection)
+    report("level: 'direction clear' allows for the edge's selection (simulated pairs)", level_selection)
 
 
 # ----------------------------------------------------------------------------- 1. the synthetic run
@@ -253,7 +609,7 @@ def synthetic_checks(out, data, info, console):
     genes = set(pd.read_csv(os.path.join(out, "atlas", "effects", "genes.csv"))["symbol"].astype(str))
     p53 = [x for x in MS.P53_ACTIVITY if x in genes]
 
-    check("outputs written (edges, groups, controls, info, README)", lambda: (
+    report("outputs written (edges, groups, controls, info, README)", lambda: (
         all(os.path.exists(os.path.join(dd_, f)) for f in ("edges.parquet", "groups.parquet", "controls.json",
                                                             "info.json", "README.md"))
         and os.path.exists(os.path.join(out, "stages", "direction.json")),
@@ -265,7 +621,7 @@ def synthetic_checks(out, data, info, console):
                          f"level_sensitivity), a grade, kind and sign; {na} grade-A edges, all within the rule; "
                          "group-only edges are grade C; alerts start with the warning sign" if not bad
                          else "; ".join(bad))
-    check("no edge lacks p / q / grade; written-edge, grade and alert rules hold", integ)
+    report("no edge lacks p / q / grade; written-edge, grade and alert rules hold", integ)
 
     def tp53():
         r = e[(e["kind"] == "genotype_response") & (e["source"] == "TP53")]
@@ -287,7 +643,7 @@ def synthetic_checks(out, data, info, console):
                     f"whole table, the rest within the TP53 group only: grade C); {len(hit)} of the {len(r)} TP53 "
                     f"response edges are P53_ACTIVITY genes ({prec:.0%}); {top} of {len(p53)} ranked in the top 5% of "
                     f"all genes (ranks {ranks[:12]}...)")
-    check("TP53 -> most P53_ACTIVITY genes (sign +1, graded A, or B with another alteration on a side)", tp53)
+    report("TP53 -> most P53_ACTIVITY genes (sign +1, graded A, or B with another alteration on a side)", tp53)
 
     def tp53_sens():
         s = e[(e["kind"] == "genotype_sensitivity") & (e["source"] == "TP53")]
@@ -298,15 +654,15 @@ def synthetic_checks(out, data, info, console):
             f"{len(got)} of 3 DNA-damaging drugs at 5 µM over the whole table ({', '.join(got)}), sign -1 (TP53 "
             f"activity sensitises), none of the table-wide ones with sign +1; all TP53 sensitivity edges: "
             f"{s[['target', 'grade', 'sign', 'q', 'q_group']].round(4).to_dict('records')}")
-    check("TP53 -> cells under the DNA-damaging drugs (sign -1)", tp53_sens)
+    report("TP53 -> cells under the DNA-damaging drugs (sign -1)", tp53_sens)
 
     def level(gene, drug):
         s = e[(e["kind"] == "level_sensitivity") & (e["source"] == gene) & e["target"].str.contains(drug, regex=False)]
         ok = len(s) >= 1 and (s["sign"] == -1).all() and (s["grade"] == "C").all()
         return ok, (f"{gene} -> {s['target'].tolist()} r {s['r'].round(2).tolist()} q {s['q'].round(4).tolist()} "
                     f"q within the drug-dose {s['q_group'].round(4).tolist()} grade {s['grade'].tolist()}")
-    check("PSMD10 level -> cells under Ixazomib (sign -1)", lambda: level("PSMD10", "Ixazomib"))
-    check("ACSL4 level -> cells under Artesunate (sign -1)", lambda: level("ACSL4", "Artesunate"))
+    report("PSMD10 level -> cells under Ixazomib (sign -1)", lambda: level("PSMD10", "Ixazomib"))
+    report("ACSL4 level -> cells under Artesunate (sign -1)", lambda: level("ACSL4", "Artesunate"))
 
     def mtap():
         s = e[(e["kind"] == "null_sensitivity") & (e["source"] == "MTAP") & e["target"].str.contains("Pemetrexed")]
@@ -314,7 +670,7 @@ def synthetic_checks(out, data, info, console):
         al = s["alerts"].iloc[0] if len(s) else ""
         return ok, (f"MTAP-null -> {s['target'].tolist()} (sign +1: MTAP protects), grade {s['grade'].tolist()}, "
                     f"q {s['q'].round(4).tolist()}; alerts: {al[:160]}")
-    check("MTAP-null lines -> depleted by Pemetrexed (null_sensitivity)", mtap)
+    report("MTAP-null lines -> depleted by Pemetrexed (null_sensitivity)", mtap)
 
     def drug_targets():
         sets = truth["extra_not_in_panel_spec"]["synthetic gene sets"]
@@ -327,7 +683,7 @@ def synthetic_checks(out, data, info, console):
             ok &= len(x) >= 0.4 * len(members) and wrong == 0
             out.append(f"{src} -> {name}: {len(x)} of {len(members)} (wrong sign {wrong})")
         return ok, "; ".join(out)
-    check("drug_target: glucocorticoid / MTOR / statin classes, sign relative to the target's activity", drug_targets)
+    report("drug_target: glucocorticoid / MTOR / statin classes, sign relative to the target's activity", drug_targets)
 
     def negatives():
         s = ctl["negative"]["summary"]
@@ -340,23 +696,33 @@ def synthetic_checks(out, data, info, console):
                              f"{v['real_within_group_edges_mean_per_group']}; expected false edges "
                              f"{v['expected_false_edges']} table-wide, {v['expected_false_edges_within_group']} "
                              f"within groups)" for k, v in s.items()) + f"; {pse['response']['groups']} pseudo-groups"
-    check("random pseudo-groups give ~no edges (empirical false-positive rate)", negatives)
+    report("random pseudo-groups give ~no edges (empirical false-positive rate)", negatives)
 
     def deleted():
         r = g[(g["gene"] == "TP53") & (g["kind"] == "genotype")]
         n = int(r["x_not_expressed_in_altered"].max()) if len(r) else -1
         ok = n == len(truth["groups"]["tp53_deleted"])
         a = r["alerts"].iloc[0] if len(r) else ""
+        no = r["notes"].iloc[0] if len(r) and "notes" in r else ""
         return ok, f"TP53 not expressed in {n} of its altered lines (planted deletions: " \
-                   f"{truth['groups']['tp53_deleted']}); alert: {'itself is not expressed' in a}"
-    check("TP53-deleted lines seen as not expressing TP53", deleted)
+                   f"{truth['groups']['tp53_deleted']}); the reason is an alert: {'itself is not expressed' in a}, " \
+                   f"a note: {'itself is not expressed' in no}"
+    report("TP53-deleted lines seen as not expressing TP53", deleted)
 
     def readme():
         txt = open(os.path.join(dd_, "README.md"), encoding="utf-8").read()
         miss = [c for c in list(e.columns) + list(g.columns) if f"`{c}`" not in txt]
         return not miss and "columns without a description" not in console, f"undocumented: {miss}"
-    check("README.md documents every column", readme)
+    report("README.md documents every column", readme)
+    for name, fn in tier_checks(out, fixture=bool(a_fixture(out))):
+        report(name, fn)
     return e
+
+
+def a_fixture(out):
+    """The output is the seed-0 synthetic run (its dimensions): the direction VERSION 2 fixture applies."""
+    info = json.load(open(os.path.join(out, "direction", "info.json"), encoding="utf-8"))
+    return all(info.get(k) == v for k, v in SEED0_DIMS.items())
 
 
 def chunk_check(src_out, data, work, e_ref):
@@ -375,7 +741,7 @@ def chunk_check(src_out, data, work, e_ref):
             b) else np.inf
         return a.equals(b) and qd < 1e-9, f"{len(a)} vs {len(b)} edges, chunk {info.get('chunk')} genes, " \
                                           f"max q difference {qd:.1e}"
-    check("identical edges with a small gene chunk (97 genes)", same)
+    report("identical edges with a small gene chunk (97 genes)", same)
     shutil.rmtree(out2, ignore_errors=True)
 
 
@@ -407,7 +773,7 @@ def variant_checks(src_out, data, work):
         nulls = [f.name for f in sch if str(f.type) == "null"]
         n = pq.read_metadata(os.path.join(out, "direction", "edges.parquet")).num_rows
         return not nulls, f"{n} edges; columns of Arrow type null: {nulls or 'none'} ({len(sch)} columns)"
-    check("variant without metadata / relations / targets / cell numbers: runs, typed columns", bare)
+    report("variant without metadata / relations / targets / cell numbers: runs, typed columns", bare)
     shutil.rmtree(out, ignore_errors=True)
     # (b) lines.csv without Organ: the metadata's Organ is used
     out = os.path.join(work, "out_noorgan")
@@ -425,7 +791,7 @@ def variant_checks(src_out, data, work):
         return unk == 0 and info.get("lines_with_organ") == len(lines), (
             f"organs from {info.get('organs_from')!r}, {info.get('lines_with_organ')} of {len(lines)} lines with an "
             f"organ; groups mentioning 'unknown:' organs {int(unk)}")
-    check("variant with lines.csv lacking Organ: organs come from the metadata", noorgan)
+    report("variant with lines.csv lacking Organ: organs come from the metadata", noorgan)
     shutil.rmtree(out, ignore_errors=True)
 
 
@@ -554,7 +920,7 @@ def small_fixture_checks(work):
     root = os.path.join(work, "fixture50")
     out, data, plant = make_small_fixture(root)
     rc, dt, info, _ = run_stage(out, data, ("--pseudo", "20"))
-    check("50-line fixture: stage finishes", lambda: (rc == 0, f"exit code {rc} in {dt:.0f} s; correction "
+    report("50-line fixture: stage finishes", lambda: (rc == 0, f"exit code {rc} in {dt:.0f} s; correction "
                                                               f"{info.get('global_sensitivity_correction')}"))
     if rc != 0:
         return
@@ -577,7 +943,7 @@ def small_fixture_checks(work):
                     f"response in every line): {len(q)} edges, grades {q['grade'].value_counts().to_dict()}, "
                     f"{q_al} of them alerted as resting on the correction (raw_share median "
                     f"{q['raw_share'].median() if len(q) else float('nan'):.2f}), {q_c} other (grade C leads)")
-    check("50-line fixture: a dominant genotype-dependent programme does not create grade-A edges elsewhere", dom)
+    report("50-line fixture: a dominant genotype-dependent programme does not create grade-A edges elsewhere", dom)
 
     def damp():
         d = e[e["source"] == "DAMP"]
@@ -587,12 +953,12 @@ def small_fixture_checks(work):
             f"DAMP (0.3x of every planted response in its 25 lines, narrow, near-threshold and broad drug-doses) "
             f"-> {n} of the {len(planted)} planted responsive genes ({len(d)} DAMP edges in all, grades "
             f"{d['grade'].value_counts().to_dict()}); the line-wide responsiveness absorbs it")
-    check("50-line fixture: a line-wide damping is not called gene-specific", damp)
+    report("50-line fixture: a line-wide damping is not called gene-specific", damp)
 
     def nullg():
         d = e[e["source"] == "NULLG"]
         return len(d) <= 3, f"random group NULLG (20 lines): {len(d)} edges {d[['kind', 'grade']].values.tolist()}"
-    check("50-line fixture: a random group gives ~no edges", nullg)
+    report("50-line fixture: a random group gives ~no edges", nullg)
     shutil.rmtree(os.path.join(out, "tensor"), ignore_errors=True)
 
 
@@ -783,7 +1149,7 @@ def scale_checks(work, sizes):
         if rc != 0:
             break
     ok_runs = [p for p in pts if p[1] == 0]
-    check("scale runs finish", lambda: (len(ok_runs) == len(sizes), "; ".join(
+    report("scale runs finish", lambda: (len(ok_runs) == len(sizes), "; ".join(
         f"{p[0]:,} genes: exit {p[1]}, {p[2] / 60:.2f} min, peak {p[3].get('peak_rss_mb')} MB" for p in pts)))
     if not ok_runs:
         return
@@ -802,7 +1168,7 @@ def scale_checks(work, sizes):
         return len(hit) >= 0.8 * len(tg) and prec >= 0.8 and (hit["grade"] == "A").mean() >= 0.8, (
             f"FAKEDEP -> {len(hit)} of {len(tg)} programme genes (sign +1), {len(r)} FAKEDEP response edges "
             f"({prec:.0%} in the programme); grades {hit['grade'].value_counts().to_dict()}")
-    check(f"scale ({gK:,} genes): a genotype-dependent programme is found (grade A)", programme)
+    report(f"scale ({gK:,} genes): a genotype-dependent programme is found (grade A)", programme)
 
     def global_res():
         r = e[(e["kind"] == "genotype_response") & (e["source"] == "FAKERES")]
@@ -810,7 +1176,7 @@ def scale_checks(work, sizes):
         n = int(r["target"].isin(tg).sum())
         return n <= 0.05 * len(tg), (f"FAKERES (0.3x response in its lines at 4 broad drug-doses) -> {n} of the "
                                      f"{len(tg)} genes that respond there")
-    check(f"scale ({gK:,} genes): a line-wide global resistance is not called gene-specific", global_res)
+    report(f"scale ({gK:,} genes): a line-wide global resistance is not called gene-specific", global_res)
 
     def planted_cells():
         s = e[(e["kind"] == "genotype_sensitivity") & (e["source"] == "FAKEDEP") & (e["target_dd"] == 10) & tw]
@@ -826,7 +1192,7 @@ def scale_checks(work, sizes):
                     f"{t['group'].tolist()}); FG00600 level -> cells (sign {lv['sign'].tolist()}, q "
                     f"{lv['q'].round(6).tolist()}); MTAP-null -> cells, a lone effect among {n_null:,} tests (sign "
                     f"{mt['sign'].tolist()}, q {mt['q'].round(6).tolist()}, grade {mt['grade'].tolist()})")
-    check(f"scale ({gK:,} genes): planted effects on cell numbers (genotype, level, lone natural knockout)",
+    report(f"scale ({gK:,} genes): planted effects on cell numbers (genotype, level, lone natural knockout)",
           planted_cells)
 
     def keap1():
@@ -837,7 +1203,7 @@ def scale_checks(work, sizes):
             f"KEAP1 (6 Lung lines; targets 5x) -> {len(h)} of 7 NRF2 targets at baseline, signs {h['sign'].tolist()}, "
             "grades "
             f"{h['grade'].value_counts().to_dict()}")
-    check(f"scale ({gK:,} genes): KEAP1 -> NRF2 targets (baseline, sign -1)", keap1)
+    report(f"scale ({gK:,} genes): KEAP1 -> NRF2 targets (baseline, sign -1)", keap1)
 
     def nullx():
         rr = e[(e["kind"] == "null_response") & (e["source"] == "NULLX") & e["target"].isin(names(plant["nprog"]))]
@@ -847,7 +1213,7 @@ def scale_checks(work, sizes):
                 f"NULLX-null (12 lines) -> {len(rr)} of {len(plant['nprog'])} partners' responses, {len(bb)} of "
                 f"{len(plant['nbase'])} partners' baseline levels (4x lower; sign +1), grades "
                 f"{pd.concat([rr, bb])['grade'].value_counts().to_dict()}")
-    check(f"scale ({gK:,} genes): a natural knockout's partner effects (null_response, null_baseline)", nullx)
+    report(f"scale ({gK:,} genes): a natural knockout's partner effects (null_response, null_baseline)", nullx)
 
     def levx():
         lv = e[(e["kind"] == "level") & (e["source"] == "LEVX") & e["target"].isin(names(plant["lprog"]))]
@@ -857,7 +1223,7 @@ def scale_checks(work, sizes):
             f"LEVX's level -> {len(lv)} of {len(plant['lprog'])} partners' responses (q max "
             f"{lv['q'].max() if len(lv) else float('nan'):.2g}), {clear} with the direction clear; reverse edges "
             f"called clear: {len(rev)}; among {info['tests']['level_pairs']:,} directed pairs")
-    check(f"scale ({gK:,} genes): a level modulator -> its partners (level, direction clear)", levx)
+    report(f"scale ({gK:,} genes): a level modulator -> its partners (level, direction clear)", levx)
 
     def negatives():
         s = ctl["negative"]["summary"]
@@ -872,7 +1238,7 @@ def scale_checks(work, sizes):
                     + f"; random driver groups (DRV / HYP, {n_rnd} groups, no planted effect): {len(rnd_tw)} "
                       f"table-wide edges (the pseudo rate predicts {rate * n_rnd:.1f}), {len(rnd) - len(rnd_tw)} "
                       "within their group only (grade C)")
-    check(f"scale ({gK:,} genes): pseudo-groups and random driver groups give ~no edges", negatives)
+    report(f"scale ({gK:,} genes): pseudo-groups and random driver groups give ~no edges", negatives)
 
     def tissue():
         ps = g[g["kind"] == "pseudo"]
@@ -883,7 +1249,7 @@ def scale_checks(work, sizes):
             f"tissue-confounded: {a:.0%} of {len(ps)} pseudo-groups, {b:.0%} of {len(rd)} random driver groups (16 "
             f"organs, Lung 14 of 50 lines); expression-null sets compared across organs (tested, separate BH "
             f"family): {nul['expression_null_line_sets_across_organs']:,} of {nul['expression_null_line_sets']:,}")
-    check(f"scale ({gK:,} genes): the tissue alert fires only on organ-concentrated comparisons", tissue)
+    report(f"scale ({gK:,} genes): the tissue alert fires only on organ-concentrated comparisons", tissue)
 
     def controls():
         ef = info["expected_false_edges"]
@@ -894,7 +1260,7 @@ def scale_checks(work, sizes):
                     + f"; level calibration {lv['level'].get('calibration')}; level_sensitivity calibration "
                       f"{lv['level_sensitivity'].get('calibration')}, {info['variable_drugdoses']} variable "
                       "drug-doses")
-    check(f"scale ({gK:,} genes): permuted-level controls give no more level edges than the 10% FDR allows",
+    report(f"scale ({gK:,} genes): permuted-level controls give no more level edges than the 10% FDR allows",
           controls)
 
     def extrapolate():
@@ -913,7 +1279,7 @@ def scale_checks(work, sizes):
             f"{mem:.2f} GB (limit {MEM_LIMIT_GB}), {mins:.1f} min (limit {MINUTES_LIMIT}; this machine: "
             f"{os.cpu_count()} CPUs); largest run: {inf.get('groups_tested')}, {inf.get('variable_drugdoses')} "
             f"variable drug-doses, chunk {inf.get('chunk')} genes")
-    check("scale: bounded memory and time", extrapolate)
+    report("scale: bounded memory and time", extrapolate)
 
 
 def main():
@@ -936,14 +1302,16 @@ def main():
     os.makedirs(work, exist_ok=True)
     print(f"Synthetic output {src}; work folder {work}", flush=True)
     unit_checks()
+    report("reasons in tiers: each threshold sends a reason to the right tier (constructed reasons)",
+           tier_unit_checks)
     out = os.path.join(work, "out")
     copy_output(src, out)
     rc, dt, info, console = run_stage(out, data)
-    check("stage finishes on the synthetic output", lambda: (
+    report("stage finishes on the synthetic output", lambda: (
         rc == 0, f"exit code {rc} in {dt:.0f} s, peak memory {info.get('peak_rss_mb')} MB, "
                  f"{info.get('edges')} edges"))
     if rc == 0:
-        check("synthetic run within bounded memory (< 1.5 GB)", lambda: (
+        report("synthetic run within bounded memory (< 1.5 GB)", lambda: (
             (info.get("peak_rss_mb") or 0) < 1536, f"peak RSS {info.get('peak_rss_mb')} MB, chunk {info.get('chunk')}"))
         e = synthetic_checks(out, data, info, console)
         chunk_check(src, data, work, e)

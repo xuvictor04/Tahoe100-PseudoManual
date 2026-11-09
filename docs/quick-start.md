@@ -30,11 +30,63 @@ tahoe drug Bortezomib  # what a drug does, at each dose, and which drugs act ali
 tahoe line A549        # what is special about a cell line
 tahoe pair MDM2 CDKN1A # how two genes relate, and under which drugs
 tahoe module 12        # one module of the nodal map
-tahoe open             # where the HTML map, the Obsidian vault and the validation report are
+tahoe open             # the explorer in a browser; also where the map, the vault and the report are
 ```
 
-Open the vault in Obsidian with *Open folder as vault* on `<output>/vault`, and the map by opening
-`<output>/map/gene_map.html` in a browser.
+Open the explorer by opening `<output>/explorer/web/index.html` in a browser (next section). Open the vault in
+Obsidian with *Open folder as vault* on `<output>/vault`, and the map by opening `<output>/map/gene_map.html` in a
+browser.
+
+## The explorer: search any gene
+
+The explorer is a set of web pages over every result of the run. Type a gene (a symbol such as TRIM72, an alias
+such as MG53, or an Ensembl id), a drug, a cell line or an organ in the search box. Every gene, drug, drug-dose and
+cell line has a page:
+
+- **A gene**: every one of the 1,132 drug-doses with its corrected fold change, z and q, sorted by z. A flagged row
+  keeps its place and shows its flag in full (for TRIM72, its strongest raisers, Idarubicin 5 µM and
+  Homoharringtonine, are listed with their alerts). Then the gene in each of the 50 cell lines, its correlations
+  with every other gene, its partners and module, what probably acts on it and what it acts on, its baseline and
+  every well.
+- **A drug-dose**: the drug's raw corrected values for every gene (exact, as a CSV too), its quality checks, the
+  cells left per line, and its wells.
+- **A cell line**: its genetics, how each drug-dose affected its cell numbers, and every gene's line effect.
+
+Nothing is capped and nothing is left out for a flag. Each value is the number the pipeline stored (fold change =
+2 to the power of the stored log2 value, and labelled as computed). A short preview always says "k of N shown" and
+links to all N. The vault notes, the map and the look-ups link to the same pages. [explorer.md](explorer.md)
+explains the pages.
+
+**Open it on the computer that made the run.** Double-click `<output>/explorer/web/index.html` (or `tahoe open`). It
+reads the data folder next to it (`<output>/explorer/data`), so it needs no network. It needs a current Chrome,
+Edge, Firefox or Safari.
+
+**Publish it on GitHub** (optional; the pages become public). The pages go to GitHub Pages (the branch `site` of
+the code repository); the large data files go to a second public repository, `Tahoe100-PseudoManual-data`. Then
+anyone can open https://xuvictor04.github.io/Tahoe100-PseudoManual/.
+
+```bash
+tahoe export ~/tahoe-pub --explorer      # site/, data/ (hard links: no extra disk), publish.sh, PUBLISH.md
+bash ~/tahoe-pub/publish.sh              # uploads the data, then the pages (it asks for the GitHub sign-in)
+```
+
+`export --explorer` never uploads anything; `publish.sh` (Windows: `publish.ps1`) does. It pushes only to the branch
+`main` of the data repository and to the branch `site` of the code repository: never to `results`, `finalized` or
+the default branch. Two settings on github.com are needed once (`PUBLISH.md` in the export folder says the same):
+
+1. **Create the data repository.** On github.com, click **New repository**. Name it `Tahoe100-PseudoManual-data`.
+   Choose **Public**. Do not add a README, a license or a .gitignore. Click **Create repository**.
+2. Run the upload (above). The first upload creates the branch `site`.
+3. **Turn on GitHub Pages.** Open https://github.com/xuvictor04/Tahoe100-PseudoManual, click the **Settings** tab,
+   then **Pages** in the left sidebar (under "Code and automation"). Under "Build and deployment", set **Source** to
+   **Deploy from a branch**, choose the branch **site** and the folder **/ (root)**, and click **Save**.
+4. Wait up to 10 minutes. The **Actions** tab shows "pages-build-deployment"; then Settings, Pages says "Your site is
+   live at https://xuvictor04.github.io/Tahoe100-PseudoManual/".
+
+After every later run: `tahoe run`, then `tahoe export ~/tahoe-pub --explorer --force` (only what changed is
+replaced), then `bash ~/tahoe-pub/publish.sh`. The upload is about 5 GB of data (in parts of at most 1.5 GB, one
+push each; a part that fails is resumed with `--from-part K`) and about 0.7 GB of pages. The pages are pinned to the
+exact data commit, so they never mix data from two runs.
 
 Nothing is left out of these answers because of a flag. A drug-dose with an artifact flag (toxic, transcription
 drop, cell-cycle shift, ...), a partner not replicated in both halves of the compounds, or a gene in the vector space
@@ -84,7 +136,10 @@ tahoe run --reuse-atlas ~/Tahoe-100M/atlas
 
 `tahoe update` (Windows: `git -C C:\tahoe\repo pull`) fetches the newest code; then `tahoe run` (Windows: the same
 `python -m tahoemap run --out ...` as before) redoes only the stages whose method changed, and the stages after them.
-`tahoe` alone shows the plan first. An output that finished before the **direction** stage existed runs `direction`,
+`tahoe` alone shows the plan first. An output that finished before the **explorer** stage existed runs it (and any
+stage whose method changed before it: after this update, direction, validate, vault and map too). The explorer takes
+about 15–25 minutes on the full data. When only the explorer's page files changed in an update, `tahoe run` copies
+just those (seconds). An output that finished before the **direction** stage existed runs `direction`,
 `validate`, `vault` and `map`, and also any earlier stage whose method changed since the output was made (the plan says
 which and why: an output made with older code, for example, may also redo `tables`, `embed`, `reference`,
 `relations` and `graph`: about 15–25 minutes in all on the full data, with embed's ~6.8 GB of memory). The build, the effects and the tensor are kept unless the plan names them. The vault keeps your Obsidian
@@ -104,12 +159,17 @@ settings; in its graph view the new note *Probable direction*, which every gene 
 the environment variables set them once for the session.
 
 Options go through `tahoe run` to `python -m tahoemap run` (all of them: `python -m tahoemap --help`):
-`--offline` (no annotation downloads), `--dims 64` (vector space size), `--from STAGE` / `--to STAGE`, `--redo`,
-`--tensor-dtype float16` (halves the 4.4 GB per-well tensor), `--no-well-tensor`, `--workers N`,
-`--unreliable-plates plate13|none`, `--min-cells 30`.
+`--offline` (no annotation downloads), `--dims 64` (vector space size), `--from STAGE` / `--to STAGE`, `--redo`
+(every stage again; the build then sums every plate again), `--tensor-dtype float16` (halves the 4.4 GB per-well
+tensor), `--no-well-tensor`, `--workers N`, `--unreliable-plates plate13|none`, `--min-cells 30`. For the explorer:
+`--site-url URL` (where it is published; the vault, the map and the look-ups link there; default
+`https://<owner>.github.io/<repo>/` of this code's GitHub repository; `none` for no site), `--data-url URL`,
+`--with-line-dd` (also every gene's per-line values per drug-dose, about 4.3 GB more), `--pages-max-mb 950` (above
+it, parts of the pages move to the data folder; nothing is dropped). Look-ups take `--top N` or `--top all`.
 
 The options that change results (`--dims`, `--min-active`, `--min-responsive`, `--min-cells`,
-`--unreliable-plates`, `--layout`, `--tensor-dtype`, `--no-well-tensor`) are remembered for the output folder: a
+`--unreliable-plates`, `--layout`, `--tensor-dtype`, `--no-well-tensor`, `--site-url`, `--data-url`,
+`--with-line-dd`, `--with-pooled-r`) are remembered for the output folder: a
 later `tahoe run` without them keeps them, and giving one with another value redoes the stage it belongs to and every
 stage after it (`tahoe` says which stage is out of date and why). The public annotations are downloaded once and
 cached; a source that failed to download is retried by the next `tahoe run` with network (`--offline` keeps the run
@@ -139,6 +199,7 @@ a leftover worker: `taskkill /T /F /PID <pid>`). Then, from `C:\tahoe\repo`, wit
 ```powershell
 C:\tahoe\.venv\Scripts\python.exe -m tahoemap status --out C:\tahoe\out
 C:\tahoe\.venv\Scripts\python.exe -m tahoemap gene MDM2 --out C:\tahoe\out
+Start-Process C:\tahoe\out\explorer\web\index.html     # the explorer, in the default browser
 ```
 
 To check the install first (about 5 minutes, synthetic data, no download), from `C:\tahoe\repo`:
@@ -150,10 +211,11 @@ C:\tahoe\.venv\Scripts\python.exe tests\test_windows.py
 C:\tahoe\.venv\Scripts\python.exe tests\test_review.py --out C:\tahoe\test\out_seed0   # the review agents, fake API
 ```
 
-- `run_tests.py` should end with "49 passed, 0 warnings, 0 failed"; `test_review.py` (a few minutes, offline, no
-  key) with "0 failed". It works in a folder of its own in the temp folder and only reads `--out`.
-- The one warning you may see is "browser check skipped": that check opens the map in a headless browser and
-  needs Playwright. It is optional. To include it, run
+- `run_tests.py` (about 6 minutes) should end with "78 passed, 5 warnings, 0 failed" when Playwright is not
+  installed, or "98 passed, 0 warnings, 0 failed" with it; `test_review.py` (a few minutes, offline, no key) with
+  "0 failed". It works in a folder of its own in the temp folder and only reads `--out`.
+- The warnings say the browser checks were skipped: those checks open the map and the explorer in a headless
+  browser and need Playwright. They are optional. To include them, run
   `C:\tahoe\.venv\Scripts\python.exe -m pip install playwright`, then
   `C:\tahoe\.venv\Scripts\python.exe -m playwright install chromium`.
 - `test_port.py` (and `duplicate --repo`, and the code commit recorded with each literature review) needs git. If
@@ -174,7 +236,8 @@ C:\tahoe\.venv\Scripts\python.exe tests\test_review.py --out C:\tahoe\test\out_s
   `C:\tahoe\.venv\Scripts\python.exe -m tahoemap run --out C:\tahoe\out` retries the failed sources. On a
   network that inspects HTTPS, the inspecting certificate must be trusted by the computer.
 
-The vault is `C:\tahoe\out\vault` and the map `C:\tahoe\out\map\gene_map.html`. `--stream` reads Tahoe-100M from
+The explorer is `C:\tahoe\out\explorer\web\index.html` (double-click it), the vault `C:\tahoe\out\vault` and the map
+`C:\tahoe\out\map\gene_map.html`. `--stream` reads Tahoe-100M from
 Hugging Face with `curl`, which ships with Windows 10 and later. To work from a local copy instead (~340 GB):
 
 ```powershell
@@ -240,6 +303,30 @@ To update the branch after a new run: `export` again into the same folder with `
 its earlier export wrote, and copies only what changed), then `git add -A`, `git commit -m "..."` and `git push`.
 The command itself prints these next steps with your folder in them.
 
+### The explorer on Windows
+
+The explorer is published separately (the pages and a data repository; see "The explorer: search any gene" above for
+the two one-time settings on github.com). From `C:\tahoe\repo`, with python.exe from the venv and a portable MinGit
+that is not on PATH:
+
+```powershell
+C:\tahoe\.venv\Scripts\python.exe -m tahoemap export C:\tahoe\pub --explorer --out C:\tahoe\out
+$env:TAHOE_GIT = "C:\tahoe\mingit\cmd\git.exe"      # only when git is not on PATH (the export also finds this one)
+powershell -ExecutionPolicy Bypass -File C:\tahoe\pub\publish.ps1
+```
+
+`export --explorer` writes `C:\tahoe\pub\site` (the pages), `C:\tahoe\pub\data` (hard links to the output's files:
+no extra disk space), the upload lists, `publish.ps1` and `PUBLISH.md`. It checks first that the explorer is up to
+date and that every file and every upload fits GitHub's limits; it never uploads. `publish.ps1` uploads the data
+(about 5 GB, in parts of at most 1.5 GB), pins the pages to that data commit, then uploads the pages (about 0.7 GB).
+If a part fails (network, sign-in), run it again with `-FromPart K`. After every later run:
+
+```powershell
+C:\tahoe\.venv\Scripts\python.exe -m tahoemap run --out C:\tahoe\out
+C:\tahoe\.venv\Scripts\python.exe -m tahoemap export C:\tahoe\pub --explorer --force --out C:\tahoe\out
+powershell -ExecutionPolicy Bypass -File C:\tahoe\pub\publish.ps1
+```
+
 ## Resources
 
 Measured on the full data (95.6M cells) on a 4-core machine with 15 GB of memory (the direction stage, and what it
@@ -256,13 +343,14 @@ stage has not yet run on the real data):
 | reference | ~3 min the first time (downloads ~200 MB), seconds after | 0.2 GB | ~1 GB |
 | relations, graph, validate | 1 + 2 + 1 min | 0.15 GB | ~3 GB |
 | direction | ~6–7 min (estimated) | < 0.1 GB | 1.3–1.8 GB (estimated) |
-| vault, map | 2 min + seconds | 0.6 GB (35,000 notes; the direction sections add ~0.06 GB), 10 MB (~17–19 MB with the direction arrows; a page that would pass 20 MB first leaves out the grade C readings) | ~1.5 GB, plus up to ~1 GB to read the direction arrows (estimated) |
+| vault, map | 2 min + seconds | 0.6 GB (35,000 notes; the direction sections add ~0.06 GB), about 26 MB for the map (nothing is left out to make it smaller; the stage warns above 25 MB) | ~1.5 GB, plus up to ~1 GB to read the direction arrows (estimated) |
+| explorer | ~15–25 min (estimated) | ~5.9 GB: pages 0.67 GB, data 5.2 GB (+4.3 GB with `--with-line-dd`); the stage checks for 1.3 times its estimate of free space first | ~2.5–3 GB (estimated) |
 
-So: about 30 GB of disk in all and ~40 minutes after the build. Build workers are sized from free memory; if one
+So: about 36 GB of disk in all and ~1 hour after the build. Build workers are sized from free memory; if one
 is killed for lack of memory the build stops and says so (finished plates are kept): rerun with fewer `--workers`.
 
 ## Test it first (3–5 minutes, no download)
 
 ```bash
-tahoe test             # synthetic Tahoe-100M with planted answers, the whole pipeline, and 49 checks
+tahoe test             # synthetic Tahoe-100M with planted answers, the whole pipeline, and 98 checks
 ```

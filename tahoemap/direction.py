@@ -176,6 +176,20 @@ flags of the supporting drug-doses, mechanism not recorded, significant only wit
 the genes absent from overlapping line sets (Jaccard >= 0.5: co-deleted neighbours), and per kind the caveats in its
 section.
 
+Alerts in tiers (VERSION 3). Every reason is kept and written in full, in one of four tiers (reason_tier, applied to
+the finished table; alerts_all keeps all of them in the original order): alerts (⚠: a doubt about this arrow),
+notes (a graded reason below its threshold), caveats (KIND_CAVEATS: the same on every arrow of a kind) and support
+(evidence for it: 'consistent across N compounds', a recorded loss of a gene missing from the same lines). Graded:
+'Y measured in a of the A and i of the I lines' is an alert when a or i < FULL_SIDE or a < NOTE_MEASURED_FRAC = 0.75
+x A or i < 0.75 x I; the artifact flags of the supporting drug-doses when they carry >= NOTE_ART_SHARE = 0.5 of the
+evidence (art_share: sum |contrast| over the target's K drug-doses; drug_target: of the supporting compounds) or the
+strongest supporting drug-dose is flagged - the reason lists every flagged drug-dose among the K; 'compared within
+organs: a of A ... i of I' when a < NOTE_WITHIN_ORGAN_FRAC = 0.5 x A or i < 0.5 x I; 'other genes are absent from
+most of these lines too' when <= NOTE_COABSENT_SETS = 10 line sets overlap (a candidate co-deletion; more is a tissue
+programme); 'X itself is not expressed in k of the n altered lines' when k > NOTE_NOT_EXPRESSED_FRAC = 0.25 x n.
+Otherwise each is a note. Every other reason is an alert. The tiers change no edge, grade, sign or number (the grade
+rules read the groups and tests, not the texts). drugdoses_all lists every drug-dose behind an edge with its flags.
+
 Controls (controls.json). Positive: TP53 groups -> p53 target genes (recovered with the right sign, their ranks),
 TP53 -> cells under DNA-damaging drugs, KEAP1 -> NRF2 target genes (baseline) when KEAP1 is recorded in enough lines.
 Negative: N_PSEUDO = 60 random pseudo-genotype groups with sizes spread over the real groups' size distribution
@@ -205,6 +219,7 @@ import glob
 import json
 import math
 import os
+import re
 import sys
 import time
 import warnings
@@ -219,7 +234,7 @@ from . import tlib as T
 from .common import folder, log, replace_file, stable_seed, stamp_stage, write_json, write_parquet
 from .tensor import AMB_FRAC
 
-VERSION = 2
+VERSION = 3
 
 K_DD = 10                      # drug-doses per gene (its strongest by pooled |z|)
 Z_CLIP = 10.0                  # per-line z clipped at +-this before any mean
@@ -279,6 +294,26 @@ KINDS = ("genotype_response", "genotype_baseline", "genotype_sensitivity", "null
          "null_sensitivity", "drug_target", "level", "level_sensitivity")
 TISSUE_ALERT = "from natural expression differences between lines; tissue and other differences can mimic it"
 DRUG_ALERT = "drugs can act on other proteins too"
+PRECISION_ALERT = ("a stronger correlation one way can reflect how precisely, or how closely to a shared cause, each "
+                   "gene's level is measured, rather than which gene acts first")
+# Every reason an edge carries is kept, in one of four tiers (module docstring, 'Alerts in tiers'; README):
+#   alerts  (⚠)  a doubt about this arrow, or a graded reason at or past its threshold;
+#   notes        a graded reason below its threshold (shown muted, in full);
+#   caveats      the same text on every arrow of a kind (stated once per list);
+#   support      evidence for the arrow.
+TIERS = ("alerts", "notes", "caveats", "support")
+KIND_CAVEATS = {"drug_target": (DRUG_ALERT,), "level": (TISSUE_ALERT, PRECISION_ALERT),
+                "level_sensitivity": (TISSUE_ALERT,)}
+NOTE_MEASURED_FRAC = 0.75      # 'Y measured in a of the A and i of the I lines': an alert when a or i < FULL_SIDE, or
+                               # a < this x A, or i < this x I; else a note
+NOTE_ART_SHARE = 0.5           # supporting drug-doses with artifact flags: an alert when they carry >= this share of
+                               # the evidence (art_share; drug_target: of the supporting compounds) or the strongest
+                               # supporting drug-dose is one of them; else a note
+NOTE_WITHIN_ORGAN_FRAC = 0.5   # 'compared within organs: a of the A ... and i of the I others': an alert when a < this
+                               # x A or i < this x I; else a note (a within-organ comparison costs lines, not validity)
+NOTE_COABSENT_SETS = 10        # 'other genes are absent from most of these lines too': an alert when <= this many line
+                               # sets overlap (a candidate co-deletion); else a note (a tissue programme)
+NOTE_NOT_EXPRESSED_FRAC = 0.25  # 'X itself is not expressed in k of the n altered lines': an alert when k > this x n
 P53_TARGETS = ("CDKN1A MDM2 FDXR ZMAT3 SESN1 SESN2 BBC3 BAX TP53I3 RRM2B AEN DDB2 XPC TNFRSF10B PHLDA3 SPATA18 "
                "TRIAP1 RPS27L ACER2 TP53INP1 PLK3 POLH EDA2R GADD45A TIGAR BTG2 CCNG1 GDF15 FAS APAF1 PPM1D DRAM1 "
                "SUSD6 TNFRSF10D ASCC3 ZNF79 KITLG SERPINB5 PMAIP1").split()
@@ -560,6 +595,109 @@ def _join(alerts):
 
 def _n_alerts(s):
     return 0 if not s else str(s).count("; ") + 1
+
+
+def _plain(reasons):
+    """Reasons as one text without the warning sign: '' or every reason, '; '-joined (as _join, without '⚠ ')."""
+    return "; ".join(str(a).replace("; ", ", ") for a in reasons if a)
+
+
+def split_reasons(text):
+    """The reasons of an alerts text ('' or '⚠ ' + '; '-joined reasons, or the same without the sign)."""
+    t = str(text or "").strip()
+    if t.startswith(ALERT):
+        t = t[len(ALERT):].strip()
+    return [x.strip() for x in t.split("; ") if x.strip()]
+
+
+# the texts of the reasons as the edges hold them (a '; ' inside one reason is written ', ': _join)
+_CAVEAT_TEXTS = {x.replace("; ", ", ") for v in KIND_CAVEATS.values() for x in v}
+_RX_SUPPORT = (re.compile(r"^consistent across \d+ compounds \("),
+               re.compile(r"^the lines lacking \S+ carry a recorded loss of \S+ \(overlap [0-9.]+\): genotype evidence "
+                          r"too$"))
+_RX_MEASURED = re.compile(r"^\S+ measured in (\d+) of the (\d+) and (\d+) of the (\d+) lines$")
+_RX_WITHIN = re.compile(r"^compared within organs: (\d+) of the (\d+) .+? and (\d+) of the (\d+) others share an organ")
+_RX_COABSENT = re.compile(r"^other genes are absent from most of these lines too: (.*): any of them could be the "
+                          r"cause$")
+_RX_MORE_SETS = re.compile(r" \(and (\d+) more line sets\)$")
+_RX_NOT_EXPR = re.compile(r"^\S+ itself is not expressed in (\d+) of the (\d+) altered lines")
+_RX_ART = re.compile(r"^supporting drug-doses with artifact flags \((?:\d+% of the evidence|share of the evidence not "
+                     r"measurable|(\d+) of the (\d+) supporting compounds)(, the strongest among them)?\): ")
+
+
+def reason_tier(reason, art_share=np.nan):
+    """The tier of one reason (TIERS): 'caveats' (KIND_CAVEATS: the same on every arrow of a kind), 'support'
+    (evidence for the arrow), 'notes' (a graded reason below its threshold: the NOTE_* constants) or 'alerts' (every
+    other reason, and a graded one at or past its threshold). Graded reasons are read from their own words (their
+    counts are whole numbers in the text); the artifact-flag reason of a response edge from art_share (the stored
+    float32), of a drug_target edge from its share of the supporting compounds. A reason this code does not know stays
+    an alert."""
+    r = str(reason)
+    if r in _CAVEAT_TEXTS:
+        return "caveats"
+    if any(rx.search(r) for rx in _RX_SUPPORT):
+        return "support"
+    m = _RX_MEASURED.search(r)
+    if m:
+        a, na, i, ni = (int(x) for x in m.groups())
+        low = (a < FULL_SIDE or i < FULL_SIDE or a < NOTE_MEASURED_FRAC * na or i < NOTE_MEASURED_FRAC * ni)
+        return "alerts" if low else "notes"
+    m = _RX_ART.search(r)
+    if m:
+        if m.group(3):                                        # the strongest supporting drug-dose is flagged
+            return "alerts"
+        if m.group(1):                                        # drug_target: k of the n supporting compounds
+            return "alerts" if int(m.group(1)) >= NOTE_ART_SHARE * int(m.group(2)) else "notes"
+        a = float(art_share) if art_share is not None else np.nan
+        return "alerts" if not np.isfinite(a) or a >= NOTE_ART_SHARE else "notes"
+    m = _RX_WITHIN.search(r)
+    if m:
+        a, na, i, ni = (int(x) for x in m.groups())
+        return "alerts" if (a < NOTE_WITHIN_ORGAN_FRAC * na or i < NOTE_WITHIN_ORGAN_FRAC * ni) else "notes"
+    m = _RX_COABSENT.search(r)
+    if m:
+        names = m.group(1)
+        more = _RX_MORE_SETS.search(names)
+        total = names.count(" (overlap ") + (int(more.group(1)) if more else 0)
+        return "alerts" if total <= NOTE_COABSENT_SETS else "notes"
+    m = _RX_NOT_EXPR.search(r)
+    if m:
+        k, n = int(m.group(1)), int(m.group(2))
+        return "alerts" if k > NOTE_NOT_EXPRESSED_FRAC * n else "notes"
+    return "alerts"
+
+
+def tiers(reasons, art_share=np.nan):
+    """{tier: its reasons, in their original order} (TIERS) of a list of reasons."""
+    out = {t: [] for t in TIERS}
+    for r in reasons:
+        out[reason_tier(r, art_share)].append(r)
+    return out
+
+
+def tier_columns(texts, art_share=None):
+    """The tier columns of a table from its full reason texts (one per row: '' or '⚠ ' + '; '-joined, every reason;
+    art_share: per row, NaN or the edge's float32 artifact share): alerts ('' or '⚠ ' + its reasons, as _join),
+    notes, caveats, support, alerts_all (every reason in the original order; '; '-joined, no sign) and the counts
+    n_alerts, n_notes, n_caveats, n_support (int16). Rows with the same text and share are classified once."""
+    texts = [str(t or "") for t in texts]
+    arts = np.full(len(texts), np.nan) if art_share is None else np.asarray(art_share, dtype=np.float64)
+    cols = {k: [] for k in ("alerts", "notes", "caveats", "support", "alerts_all")}
+    cnt = {f"n_{k}": np.zeros(len(texts), dtype=np.int16) for k in TIERS}
+    memo = {}
+    for i, (t, a) in enumerate(zip(texts, arts)):
+        key = (t, float(a) if np.isfinite(a) else None)
+        if key not in memo:
+            rs = split_reasons(t)
+            tr = tiers(rs, a)
+            memo[key] = (_join(tr["alerts"]), _plain(tr["notes"]), _plain(tr["caveats"]), _plain(tr["support"]),
+                         _plain(rs), tuple(len(tr[k]) for k in TIERS))
+        al, no, ca, su, every, ns = memo[key]
+        for k, v in zip(("alerts", "notes", "caveats", "support", "alerts_all"), (al, no, ca, su, every)):
+            cols[k].append(v)
+        for k, v in zip(TIERS, ns):
+            cnt[f"n_{k}"][i] = v
+    return {**cols, **cnt}
 
 
 def _write_text(path, text):
@@ -1596,18 +1734,16 @@ def _mixed(rise):
     return bool(np.isfinite(rise) and MIXED <= rise <= 1.0 - MIXED)
 
 
-def _top_dd_response(c, g, y, sign_d, rise=np.nan):
-    """The supporting drug-doses of a response edge: per drug-dose the contrast of the adjusted response (intact -
-    altered, z units) and the folds on each side (2 ** mean lfc over the side's measured lines), the TOP_DD strongest.
-    rise: the share of the evidence from drug-doses where the target rises. Mixed (_mixed): the list holds the
-    strongest of each direction (the last place goes to the other direction's strongest when the top ones all go one
-    way). Else the target's main direction comes first (stable), so that the reading's headline drug-dose is not a
-    minority one going the other way."""
+def _response_dd(c, g, y, sign_d):
+    """Per drug-dose k of Y's K (c.sel[y]) of a response edge: the contrast of the adjusted response (intact - altered,
+    z units), the folds on each side (2 ** mean lfc over the side's measured lines, in Y's own direction), the score
+    in the edge's direction (contrast x its sign, NaN last) and the order strongest first. None when a side has no
+    measured line."""
     m = c.M[y]
     ii = g["inn"] & m
     aa = g["alt"] & m
     if not ii.any() or not aa.any():
-        return []
+        return None
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
         ra = c.Ra[y]
@@ -1617,6 +1753,63 @@ def _top_dd_response(c, g, y, sign_d, rise=np.nan):
         fa = 2.0 ** (c.sgn[y] * np.nanmean(lf[:, aa], axis=1))
     sc = np.nan_to_num(con * (1 if sign_d >= 0 else -1), nan=-np.inf)
     o = np.argsort(-sc, kind="stable")
+    return con, fi, fa, sc, o
+
+
+def _flags_text(c, d):
+    """A drug-dose's flags for a drug-dose list: ' [artifact flags: a, b]' (one of atlas_core.ARTIFACT_FLAGS among
+    them), ' [flags: a, b]' (other flags), '' (none)."""
+    f = str(c.dd_flags[d] or "").replace("; ", ", ")
+    if not f:
+        return ""
+    return f" [{'artifact flags' if c.dd_art[d] else 'flags'}: {f}]"
+
+
+def _response_all(c, g, y, sign_d, items):
+    """A response edge's drugdoses_all (every one of Y's K drug-doses: contrast, folds and flags; strongest in the
+    edge's direction first, those without a value on a side last), its art_share (the share of sum |contrast| over the
+    K drug-doses carried by artifact-flagged ones; NaN without any contrast) and its artifact-flag reason ('' when none
+    of the K drug-doses with a value is flagged): '(N% of the evidence[, the strongest among them]): every flagged
+    one' - the strongest = the first of top_drugdoses (items), the one the reading names."""
+    pd_ = _response_dd(c, g, y, sign_d)
+    if pd_ is None:
+        return "", np.nan, ""
+    con, fi, fa, sc, o = pd_
+    parts, flagged = [], []
+    for k in o:
+        d = int(c.sel[y, k])
+        if np.isfinite(con[k]):
+            parts.append(f"{c.dd_label[d]}: {_fmt_fold(fa[k])} vs {_fmt_fold(fi[k])} (z diff {con[k]:+.1f})"
+                         + _flags_text(c, d))
+            if c.dd_art[d]:
+                flagged.append(d)
+        else:
+            parts.append(f"{c.dd_label[d]}: no value on one side" + _flags_text(c, d))
+    fin = np.isfinite(con)
+    tot = float(np.abs(con[fin]).sum())
+    art = np.array([c.dd_art[int(c.sel[y, k])] for k in range(con.size)], dtype=bool)
+    share = np.float32(np.abs(con[fin & art]).sum() / tot) if tot > 0 else np.float32(np.nan)
+    reason = ""
+    if flagged:
+        head = (f"{int(math.floor(float(share) * 100))}% of the evidence" if np.isfinite(share) else
+                "share of the evidence not measurable")
+        strong = bool(items) and bool(c.dd_art[items[0][0]])
+        reason = (f"supporting drug-doses with artifact flags ({head}{', the strongest among them' if strong else ''}"
+                  "): " + "; ".join(f"{c.dd_label[d]} ({c.dd_flags[d]})" for d in flagged))
+    return "; ".join(parts), share, reason
+
+
+def _top_dd_response(c, g, y, sign_d, rise=np.nan):
+    """The supporting drug-doses of a response edge: per drug-dose the contrast of the adjusted response (intact -
+    altered, z units) and the folds on each side (2 ** mean lfc over the side's measured lines), the TOP_DD strongest.
+    rise: the share of the evidence from drug-doses where the target rises. Mixed (_mixed): the list holds the
+    strongest of each direction (the last place goes to the other direction's strongest when the top ones all go one
+    way). Else the target's main direction comes first (stable), so that the reading's headline drug-dose is not a
+    minority one going the other way."""
+    pd_ = _response_dd(c, g, y, sign_d)
+    if pd_ is None:
+        return []
+    con, fi, fa, sc, o = pd_
     top = [int(k) for k in o[:TOP_DD]]
     if _mixed(rise):
         if top and len({float(c.sgn[y][k]) for k in top}) == 1:
@@ -1730,7 +1923,8 @@ def _base_row():
             "raw_share": np.nan, "rise_share": np.nan, "baseline_log2_diff": np.nan, "r": np.nan, "r_reverse": np.nan,
             "direction_clear": None, "p_direction": np.nan, "n_compounds": -1, "n_supporting": -1,
             "background_rate": np.nan, "compounds": "", "compounds_supporting": "", "drug_effect": "", "T": np.nan,
-            "p": np.nan, "q": np.nan, "q_group": np.nan, "alerts": "", "top_drugdoses": ""}
+            "p": np.nan, "q": np.nan, "q_group": np.nan, "alerts": "", "top_drugdoses": "", "art_share": np.nan,
+            "drugdoses_all": ""}
 
 
 def _empty_edges():
@@ -1811,9 +2005,9 @@ def _response_rows(c, g, r, kind, base_res, x_for_alerts, extra_alerts_fn=None):
         if r.get("own") is not None and bool(r["own"][i]):
             al.append(f"{c.sym[y]}'s own shuffles of the labels spread differently from the other genes': its own "
                       "permutation p is used")
-        fl = [(c.dd_label[d], c.dd_flags[d]) for d, *_ in items if c.dd_art[d]]
-        if fl:
-            al.append("supporting drug-doses with artifact flags: " + "; ".join(f"{a} ({b})" for a, b in fl))
+        dd_all, art_share, art_reason = _response_all(c, g, y, sgn_z, items)
+        if art_reason:
+            al.append(art_reason)
         if tal:
             al.insert(0, tal)
         row = _base_row()
@@ -1845,7 +2039,8 @@ def _response_rows(c, g, r, kind, base_res, x_for_alerts, extra_alerts_fn=None):
                     "retained_fraction": float(r["ret"][i]), "raw_share": float(r["raw_share"][i]),
                     "rise_share": rise,
                     "baseline_log2_diff": bd, "T": float(r["T"][i]), "p": float(r["p"][i]), "q": float(r["q"][i]),
-                    "q_group": qg, "alerts": _join(al), "top_drugdoses": top})
+                    "q_group": qg, "alerts": _join(al), "top_drugdoses": top, "art_share": art_share,
+                    "drugdoses_all": dd_all})
         rows.append(row)
     return rows
 
@@ -1925,9 +2120,20 @@ def _sens_rows(c, g, r, kind, x_for_alerts, extra_alerts_fn=None):
                     "mechanism": MECH_WORDS[g["mech"]], "n_altered": na, "n_intact": ni, "contrast": D,
                     "T": float(r["T"][i]), "p": float(r["p"][i]), "q": float(r["q"][i]), "q_group": qg,
                     "alerts": _join(al),
-                    "top_drugdoses": c.dd_label[d]})
+                    "top_drugdoses": c.dd_label[d], "drugdoses_all": c.dd_label[d] + _flags_text(c, d)})
         rows.append(row)
     return rows
+
+
+def _level_dd(c, y):
+    """A level edge's drugdoses_all: the target's K drug-doses (the response the correlation uses), each with its pooled
+    fold and z and its flags, strongest first."""
+    out = []
+    for d in c.sel[y]:
+        d = int(d)
+        out.append(f"{c.dd_label[d]}: {_fmt_fold(2 ** float(c.lfc_p[d, y]))} (z {float(c.Zp[d, y]):+.1f})"
+                   + _flags_text(c, d))
+    return "; ".join(out)
 
 
 def _nanmean_side(v, side):
@@ -2400,19 +2606,27 @@ def _drug_target(c):
                           f"{'it' if len(share) == 1 else 'any of them'} could be the cause instead")
             if cls == "unclear":
                 al.append("the compounds' mechanism (inhibitor or activator) is not recorded: sign not inferred")
-            # the strongest drug-dose of each supporting compound
-            tops, flagged = [], []
+            # the strongest drug-dose of each supporting compound; every significant one (drugdoses_all)
+            tops, flagged, every, best = [], [], [], (-1.0, -1)
             M_ = c.sig_up if direction == "up" else c.sig_dn
             for k in sup:
                 ds = np.flatnonzero((comp_of == k) & M_[:, y])
                 if not ds.size:
                     continue
-                d = ds[np.argmax(np.abs(c.Zp[ds, y]))]
+                az = np.abs(c.Zp[ds, y])
+                d = ds[np.argmax(az)]
                 tops.append(f"{c.dd_label[d]} {_fmt_fold(2 ** float(c.lfc_p[d, y]))}")
+                if float(np.max(az)) > best[0]:
+                    best = (float(np.max(az)), int(d))
                 if c.dd_art[d]:
                     flagged.append(f"{c.dd_label[d]} ({c.dd_flags[d]})")
+                for d2 in ds[np.argsort(-az, kind="stable")]:
+                    every.append(f"{c.dd_label[d2]} {_fmt_fold(2 ** float(c.lfc_p[d2, y]))} (z "
+                                 f"{float(c.Zp[d2, y]):+.1f})" + _flags_text(c, int(d2)))
             if flagged:
-                al.append("supporting drug-doses with artifact flags: " + "; ".join(flagged))
+                strong = best[1] >= 0 and bool(c.dd_art[best[1]])
+                al.append(f"supporting drug-doses with artifact flags ({len(flagged)} of the {len(tops)} supporting "
+                          f"compounds{', the strongest among them' if strong else ''}): " + "; ".join(flagged))
             verb = {"inhibitor": "inhibiting", "activator": "activating"}.get(cls, "drugs targeting")
             rd = f"{verb} {t} {'raises' if direction == 'up' else 'lowers'} {c.sym[y]} ({int(kk[y])} of {len(ks)} " \
                  f"compounds; {K_[y] / nC:.0%} of all compounds)"
@@ -2424,7 +2638,7 @@ def _drug_target(c):
                         "compounds": "; ".join(names), "compounds_supporting": "; ".join(comps[k] for k in sup),
                         "drug_effect": "raises" if direction == "up" else "lowers",
                         "contrast": float(kk[y] / len(ks)), "p": float(p[y]), "q": float(q[y]),
-                        "alerts": _join(al), "top_drugdoses": "; ".join(tops)})
+                        "alerts": _join(al), "top_drugdoses": "; ".join(tops), "drugdoses_all": "; ".join(every)})
             rows.append(row)
     return rows, int(np.isfinite(allp).sum())
 
@@ -2502,8 +2716,6 @@ EXPECTED_FALSE_HOW = (
 def _poisson_upper(k, conf=0.95):
     """One-sided upper confidence bound of a Poisson mean after observing k events (k = 0: about 3.0)."""
     return float(stats.chi2.ppf(conf, 2 * (int(k) + 1)) / 2.0)
-PRECISION_ALERT = ("a stronger correlation one way can reflect how precisely, or how closely to a shared cause, each "
-                   "gene's level is measured, rather than which gene acts first")
 
 
 def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
@@ -2699,7 +2911,7 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
                         "mechanism": "level", "n_lines": int(t.n), "contrast": float(t.r), "r": float(t.r),
                         "r_reverse": rr, "rise_share": rise, "direction_clear": clear, "p_direction": pdir,
                         "T": float(t.T),
-                        "p": float(t.p), "q": float(t.q), "alerts": _join(al)})
+                        "p": float(t.p), "q": float(t.q), "alerts": _join(al), "drugdoses_all": _level_dd(c, y)})
             rows.append(row)
     log(f"  level: {level_info.get('tests', 0):,} directed related pairs, {level_info.get('edges', 0)} edges "
         f"({(time.time() - t0) / 60:.1f} min so far)")
@@ -2729,7 +2941,8 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
                         "group": f"{c.sym[x]} level across {int(t.n)} lines (lineage-adjusted)",
                         "mechanism": "level", "n_lines": int(t.n), "contrast": float(t.r), "r": float(t.r),
                         "T": float(t.T), "p": float(t.p), "q": float(t.q), "q_group": float(t.q_group),
-                        "alerts": _join(al), "top_drugdoses": c.dd_label[d]})
+                        "alerts": _join(al), "top_drugdoses": c.dd_label[d],
+                        "drugdoses_all": c.dd_label[d] + _flags_text(c, d)})
             rows.append(row)
 
     # ---- 4. drug targets
@@ -2739,7 +2952,6 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
     # ---- tables
     if rows:
         edges = pd.DataFrame(rows, columns=list(_base_row()))
-        edges["n_alerts"] = edges["alerts"].map(_n_alerts).astype(np.int16)
         ko = {kk: i for i, kk in enumerate(KINDS)}
         edges["_k"] = edges["kind"].map(ko)
         edges = edges.sort_values(["_k", "grade", "q", "p", "source", "target"], kind="stable").drop(columns="_k")
@@ -2750,11 +2962,12 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
         edges["direction_clear"] = edges["direction_clear"].astype(object)
     else:
         edges = _empty_edges()
-        edges["n_alerts"] = pd.Series(dtype=np.int16)
+    edges = _add_tiers(edges)
     write_parquet(edges, os.path.join(od, "edges.parquet"))
 
     group_rows = [_group_row(c, g) for g in geno + ngroups + pseudo]
     groups_df = pd.DataFrame(group_rows) if group_rows else pd.DataFrame(columns=list(GROUP_DOCS))
+    groups_df = _add_group_tiers(groups_df)
     write_parquet(groups_df, os.path.join(od, "groups.parquet"))
 
     controls = _controls(c, geno, real_counts, pseudo_counts, edges, cuts, fam, level_info, ls_info)
@@ -2788,6 +3001,17 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
             "relations": c.rel is not None and len(c.rel) > 0, "edges": int(len(edges)),
             "edges_by_kind_and_grade": counts,
             "edges_by_kind": {kk: int((edges["kind"] == kk).sum()) for kk in KINDS},
+            "reason_tiers": {"edges_with_alert": int((edges["n_alerts"] > 0).sum()),
+                             "edges_with_note": int((edges["n_notes"] > 0).sum()),
+                             "edges_with_caveat": int((edges["n_caveats"] > 0).sum()),
+                             "edges_with_support": int((edges["n_support"] > 0).sum()),
+                             "edges_without_alert_by_kind": {
+                                 kk: int(((edges["kind"] == kk) & (edges["n_alerts"] == 0)).sum()) for kk in KINDS},
+                             "thresholds": {"NOTE_MEASURED_FRAC": NOTE_MEASURED_FRAC, "NOTE_ART_SHARE": NOTE_ART_SHARE,
+                                            "NOTE_WITHIN_ORGAN_FRAC": NOTE_WITHIN_ORGAN_FRAC,
+                                            "NOTE_COABSENT_SETS": NOTE_COABSENT_SETS,
+                                            "NOTE_NOT_EXPRESSED_FRAC": NOTE_NOT_EXPRESSED_FRAC,
+                                            "FULL_SIDE": FULL_SIDE}},
             "false_positive_rate": controls["negative"]["summary"],
             "expected_false_edges": controls["expected_false_edges"],
             "minutes": round((time.time() - t0) / 60, 2)}
@@ -2799,6 +3023,47 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
     if undocumented:
         log(f"  WARNING: columns without a description in README.md: {', '.join(undocumented)}")
     return info
+
+
+TIER_COLS = ("n_alerts", "notes", "caveats", "support", "alerts_all", "n_notes", "n_caveats", "n_support")
+
+
+def _add_tiers(edges):
+    """The edges with every reason in its tier (tier_columns): 'alerts' keeps only the reasons that carry the warning
+    sign, the others move to notes / caveats / support, and alerts_all keeps every reason in the original order.
+    art_share is stored as float32 (reason_tier reads that value). Nothing else changes."""
+    e = edges.copy()
+    e["art_share"] = pd.to_numeric(e["art_share"], errors="coerce").astype(np.float32)
+    e["drugdoses_all"] = e["drugdoses_all"].fillna("").astype(str) if len(e) else e["drugdoses_all"].astype("string")
+    t = tier_columns(e["alerts"].fillna("").astype(str).tolist(), e["art_share"].to_numpy())
+    for k in ("alerts", "notes", "caveats", "support", "alerts_all"):
+        e[k] = pd.array(t[k], dtype="string") if not len(e) else t[k]
+    for k in TIERS:
+        e[f"n_{k}"] = np.asarray(t[f"n_{k}"], dtype=np.int16)
+    return e[[x for x in e.columns if x not in TIER_COLS] + list(TIER_COLS)]
+
+
+def _add_group_tiers(groups):
+    """groups.parquet with its reasons in tiers: alerts (the warning sign), notes (graded reasons below their
+    thresholds) and alerts_all (every reason, in order). A group has no caveats or support of its own."""
+    gdf = groups.copy()
+    if "alerts" not in gdf:
+        gdf["alerts"] = ""
+    al, no, every = [], [], []
+    for txt in gdf["alerts"].fillna("").astype(str):
+        rs = split_reasons(txt)
+        tr = [reason_tier(r) for r in rs]
+        al.append(_join([r for r, t in zip(rs, tr) if t != "notes"]))     # (a group has no caveat or support)
+        no.append(_plain([r for r, t in zip(rs, tr) if t == "notes"]))
+        every.append(_plain(rs))
+    gdf["alerts"] = al if len(gdf) else pd.Series(dtype="string")
+    pos = list(gdf.columns).index("alerts") + 1
+    for k, v in (("notes", no), ("alerts_all", every)):
+        if k in gdf:
+            gdf = gdf.drop(columns=k)
+        gdf.insert(pos, k, v if len(gdf) else pd.Series(dtype="string"))
+        pos += 1
+    return gdf
 
 
 def _group_row(c, g):
@@ -3028,13 +3293,34 @@ EDGE_DOCS = {
                "the drug-dose (the genes tested for it). These edges are written when q_group < 0.10 (significant in "
                "their own family); grade A / B also need q < 0.10 over the whole table; with q >= 0.10 the edge is "
                "grade C (a lead) and its alert says so, with the expected number of such false edges",
-    "alerts": "every doubt, in plain words: '' or '⚠ ' + the reasons, '; '-joined",
-    "n_alerts": "number of alerts (reasons)",
+    "alerts": "the reasons to doubt this arrow (they carry the warning sign), in plain words: '' or '⚠ ' + the "
+              "reasons, '; '-joined. Every reason of the edge is in exactly one of alerts, notes, caveats and "
+              "support (see 'Alerts, notes, caveats and support')",
     "top_drugdoses": "response: the drug-doses carrying the difference, each as 'fold in the altered lines vs fold in "
                      "the other lines (z diff: corrected contrast)', the strongest first within the target's main "
                      "direction (rise_share), then the other direction; when mixed, the strongest of each; "
                      "drug_target: each supporting compound's "
                      "strongest drug-dose",
+    "art_share": "response kinds (genotype_response, null_response): the share of the evidence (sum of |contrast| over "
+                 "the target's 10 drug-doses) carried by drug-doses with an artifact flag (toxic, transcription drop, "
+                 "cell-cycle shift, ...); float32; empty for the other kinds",
+    "drugdoses_all": "every drug-dose behind the edge, each with its flags ('[artifact flags: ...]' or '[flags: "
+                     "...]'): response kinds - all 10 of the target's drug-doses, as in top_drugdoses (fold in the "
+                     "altered lines vs the other lines, z diff), strongest in the edge's direction first; drug_target "
+                     "- every significant drug-dose of each supporting compound (pooled fold and z); sensitivity kinds "
+                     "- the drug-dose of the cells; level - the target's 10 drug-doses (pooled fold and z); '' for the "
+                     "baseline kinds. top_drugdoses keeps the first few",
+    "n_alerts": "number of reasons in alerts (int16; an edge with 0 carries no warning sign)",
+    "notes": "reasons kept below their thresholds (see 'Alerts, notes, caveats and support'), '; '-joined, no sign: "
+             "read them, they are context rather than doubt about this arrow",
+    "caveats": "the reasons every edge of its kind carries (drug_target: drugs can act on other proteins too; level: "
+               "tissue can mimic it, and the precision caveat; level_sensitivity: tissue can mimic it), '; '-joined",
+    "support": "reasons that support the edge (drug_target: the supporting compounds; expression-null: a recorded loss "
+               "of the gene in the same lines), '; '-joined",
+    "alerts_all": "every reason of the edge (alerts, notes, caveats and support together) in the order the stage wrote "
+                  "them, '; '-joined, no sign",
+    "n_notes": "number of notes (int16)", "n_caveats": "number of caveats (int16)",
+    "n_support": "number of support reasons (int16)",
 }
 GROUP_DOCS = {
     "group_id": "kind:gene:mechanism", "kind": "genotype, null (expression-null line set) or pseudo (control)",
@@ -3059,7 +3345,12 @@ GROUP_DOCS = {
     "genes_same_lines": "null: every gene absent from exactly these lines", "max_phi_to_real":
         "pseudo: largest |phi| to a recorded group (drawn below 0.3)",
     "max_phi_to_null_sets": "pseudo: largest |phi| to an expression-null line set with >= 5 lines each side (drawn "
-                            "below 0.5)", "alerts": "the group's alerts",
+                            "below 0.5)",
+    "alerts": "the group's reasons to doubt its comparison (warning sign; '' or '⚠ ' + '; '-joined); every edge of "
+              "the group carries them too",
+    "notes": "the group's reasons kept below their thresholds (within organs on most lines; the gene itself not "
+             "expressed in a few altered lines), '; '-joined",
+    "alerts_all": "every reason of the group, alerts and notes, in the original order, '; '-joined",
     "inflation": "per test, the genomic-control factor its statistics were divided by (>= 1; how much wider than the "
                  "permutation null the bulk of all targets' statistics spread for this grouping)",
     "note": "null: how its partners' baseline and response were compared (across organs: a separate BH family), or "
@@ -3067,6 +3358,57 @@ GROUP_DOCS = {
     "n_edges_response": "edges written (pseudo: tests at or below the real family's BH cut, counted, not written)",
     "n_edges_baseline": "same", "n_edges_sensitivity": "same",
 }
+
+
+def tier_rules_lines():
+    """The README section on the four tiers of reasons and the thresholds of the graded ones (from the code
+    constants)."""
+    return [
+        "## Alerts, notes, caveats and support", "",
+        "Every reason an edge carries is kept and written out in full, in exactly one of four columns. `alerts_all` "
+        "holds all of them in the original order. Which reasons go where is fixed by code (direction.py: "
+        "reason_tier); nothing is removed.", "",
+        "- **alerts** (⚠): a doubt about this arrow, or a graded reason at or past its threshold. An arrow with no "
+        "alert carries no warning sign.",
+        "- **notes**: a graded reason below its threshold, and context. Shown muted, in full: read them.",
+        "- **caveats**: the same text on every arrow of a kind (drug_target: drugs can act on other proteins too; "
+        "level: tissue and other differences between lines can mimic it, and a stronger correlation one way can "
+        "reflect how precisely each level is measured; level_sensitivity: tissue can mimic it). Stated once above "
+        "each list.",
+        "- **support**: evidence for the arrow ('consistent across N compounds'; for a gene missing from some lines: "
+        "'the lines lacking X carry a recorded loss of X: genotype evidence too').",
+        "", "The graded reasons, and when each is an alert rather than a note:",
+        f"- 'Y measured in a of the A and i of the I lines': an alert when a or i is below {FULL_SIDE}, or a is below "
+        f"{NOTE_MEASURED_FRAC:g} x A, or i is below {NOTE_MEASURED_FRAC:g} x I (NOTE_MEASURED_FRAC); else a note.",
+        f"- 'supporting drug-doses with artifact flags (N% of the evidence)': an alert when the flagged drug-doses "
+        f"carry at least {NOTE_ART_SHARE:.0%} of the evidence (art_share, NOTE_ART_SHARE), or the strongest "
+        "supporting drug-dose (the first of top_drugdoses) is one of them ('the strongest among them'); else a note. "
+        "It lists every flagged drug-dose among the target's 10. For drug_target: the share of the supporting "
+        "compounds whose strongest drug-dose is flagged, or the strongest of all is.",
+        f"- 'compared within organs: a of the A ... and i of the I others share an organ': an alert when a is below "
+        f"{NOTE_WITHIN_ORGAN_FRAC:g} x A or i is below {NOTE_WITHIN_ORGAN_FRAC:g} x I (NOTE_WITHIN_ORGAN_FRAC); else a "
+        "note (a within-organ comparison costs lines, not validity).",
+        f"- 'other genes are absent from most of these lines too ... (and N more line sets)': an alert when "
+        f"{NOTE_COABSENT_SETS} or fewer line sets overlap in all (NOTE_COABSENT_SETS: a candidate co-deletion); else "
+        "a note (many genes share the pattern: a tissue programme rather than one deletion).",
+        f"- 'X itself is not expressed in k of the n altered lines': an alert when k is above "
+        f"{NOTE_NOT_EXPRESSED_FRAC:g} x n (NOTE_NOT_EXPRESSED_FRAC); else a note.",
+        "- Every other reason is an alert, among them: tissue-confounded; co-occurs or another gene's alterations on "
+        "the other side; compared across organs; few lines; organs not known; significant within its group or "
+        "drug-dose only (a lead); direction unclear; both ways; rises at some drug-doses and falls at others; lower "
+        "baseline; the correction alerts; its own permutation p; 'any of them could be the cause'; maybe low rather "
+        "than absent; cell counts less trustworthy."]
+
+
+def _tier_run_line(info):
+    """README 'This run': how many edges carry an alert, a note, a caveat, support."""
+    t = info.get("reason_tiers") or {}
+    if not t:
+        return "- reasons in tiers: not recorded"
+    return (f"- reasons: {t['edges_with_alert']:,} of {info['edges']:,} edges carry an alert (⚠), "
+            f"{t['edges_with_note']:,} a note, {t['edges_with_caveat']:,} their kind's caveat and "
+            f"{t['edges_with_support']:,} support; without an alert, by kind: " + ", ".join(
+                f"{k} {v:,}" for k, v in t["edges_without_alert_by_kind"].items() if info["edges_by_kind"].get(k)))
 
 
 def readme(edges, groups, info):
@@ -3079,9 +3421,11 @@ def readme(edges, groups, info):
     lines = [
         "# direction/ - probable direction between genes", "",
         "Directed edges SOURCE -> TARGET, each from a statistical test (p, BH q < 0.10), with an evidence grade and "
-        "its alerts. Nothing that passes is dropped because of doubt: it keeps its place with its alerts (the "
-        "`alerts` text starts with ⚠) and a lower grade. A pair without such a test result is not an edge. Method: "
-        "tahoemap/direction.py (module docstring); a user-facing explanation: docs/direction.md.", "",
+        "its reasons for doubt. Nothing that passes is dropped because of doubt: it keeps its place with its alerts "
+        "(the `alerts` text starts with ⚠) and a lower grade. A pair without such a test result is not an edge. "
+        "Every reason is kept, in one of four tiers (next section). Method: tahoemap/direction.py (module "
+        "docstring); a user-facing explanation: docs/direction.md.", "",
+        *tier_rules_lines(), "",
         "## What direction means here - and what it does not", "",
         "- The source is what the test conditions on: a recorded mutation of the source gene (fixed before the "
         "experiment, so not a consequence of the target), its absence from some lines, its natural level, or "
@@ -3125,6 +3469,7 @@ def readme(edges, groups, info):
          "within-organ comparison across organs, as a separate BH family; sets whose lines are concentrated in organs "
          "would have been left out, and groups.parquet's note would say so)"),
         "- by kind and grade: " + "; ".join(f"{k} " + "/".join(f"{g}{v[g]}" for g in "ABC") for k, v in cnt.items()),
+        _tier_run_line(info),
         f"- global-sensitivity correction of the (gene, drug-dose) responses: {adj['drug_specific']:,} against the "
         f"drug-dose's other responsive genes, {adj['line_wide']:,} line-wide only, {adj['none']:,} without; the "
         f"lines' overall responsiveness was {'used' if adj['line_wide_check']['used'] else 'not used'} "

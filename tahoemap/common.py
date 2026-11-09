@@ -24,9 +24,11 @@ log = T.log
 # <out>/embed      gene / drug / line vectors;  <out>/relations  gene-gene relations;  <out>/graph  nodal map;
 # <out>/direction  probable direction between genes (which acts on which; from the cell lines);
 # <out>/reference  public annotations;  <out>/validation;  <out>/vault  Obsidian;  <out>/map  interactive map;
+# <out>/explorer   the explorer: searchable web pages over every result, with complete and exact data (web/ for
+#                  GitHub Pages, data/ for its data repository; tahoemap/explorer.py);
 # <out>/stages     one stamp per finished stage.
 STAGES = ["build", "effects", "tensor", "tables", "embed", "reference", "relations", "graph", "direction",
-          "validate", "vault", "map"]
+          "validate", "vault", "map", "explorer"]
 
 
 def folder(out, name):
@@ -82,14 +84,20 @@ REPLACE_WAITS = (0.1, 0.2, 0.4, 0.8, 1.5)        # seconds between the tries on 
 
 class FileInUse(PermissionError):
     """Windows: a file of the output could not be replaced or removed (another program has it open, or it is
-    read-only). str() says which file, the likely holders and what to do."""
+    read-only), or a folder could not be moved (a program has a file in it open). str() says which file or folder,
+    the likely holders and what to do."""
 
-    def __init__(self, path, cause=None):
-        super().__init__(in_use_text(path, cause))
+    def __init__(self, path, cause=None, verb="replace"):
+        super().__init__(in_use_text(path, cause, verb))
         self.path = path
 
 
 def in_use_text(path, cause=None, verb="replace"):
+    if verb == "move":
+        return (f"Cannot move the folder {path}" + (f" ({cause})" if cause else "") + ": a program has a file in it "
+                "open (a browser or a file window showing it, a copy, a sync or antivirus tool), and on Windows a "
+                "folder with a file in use cannot be moved. Close it and run the same command again (the files "
+                "written before are kept; the stage is redone).")
     return (f"Cannot {verb} {path}" + (f" ({cause})" if cause else "") + ": another program has it open, and on "
             "Windows a file in use (or memory-mapped) cannot be replaced or deleted. Likely holders: a review run, a "
             "look-up or a Python / Jupyter session reading this output - or the other copy of a duplicate, whose "
@@ -100,7 +108,8 @@ def in_use_text(path, cause=None, verb="replace"):
 
 def replace_file(tmp, dst):
     """os.replace(tmp, dst). On Windows a file in use cannot be replaced: tried again for ~3 s, then tmp is removed
-    and FileInUse (a PermissionError) raised, naming the file. Elsewhere exactly os.replace."""
+    and FileInUse (a PermissionError) raised, naming the file. A folder (the explorer's swap) is never removed: the
+    message names the folder that could not be moved. Elsewhere exactly os.replace."""
     if os.name != "nt":
         return os.replace(tmp, dst)
     for w in REPLACE_WAITS + (None,):
@@ -108,6 +117,8 @@ def replace_file(tmp, dst):
             return os.replace(tmp, dst)
         except PermissionError as e:
             if w is None:
+                if os.path.isdir(tmp):
+                    raise FileInUse(tmp, f"to {dst}; {type(e).__name__}: {e}", "move") from e
                 try:
                     os.remove(tmp)
                 except OSError:

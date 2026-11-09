@@ -26,8 +26,10 @@ A gene dossier ends with its probable direction (the direction stage, read throu
 the map and the look-ups use too, so all of them show the same arrows in the same order and words): what probably
 acts on the gene (upstream), the genes it probably acts on (downstream) and how it probably acts on the cells under
 drug-doses, each capped by the cap rule (LIMITS['direction'], plus any of that many strongest without an alert beyond
-them) with grade, sign words, evidence, the stage's numbers, q and the alerts' short labels, then each label's reason
-in full once; data['direction'] holds the same rows with every alert in full and their edge ids. The reviewing agent
+them) with grade, sign words, evidence, the stage's numbers, q, the alerts' and the notes' short labels (notes:
+reasons kept below their thresholds, no warning sign), then each label's reason in full once, and the caveats of the
+kinds listed stated once above them; data['direction'] holds the same rows with every alert, note, caveat and support
+in full and their edge ids. The reviewing agent
 judges each arrow against the literature (agents/gene-reviewer.md, skills reading-tahoe-data and connection-audit);
 its verdict is an ordinary connection verdict, so the review format is unchanged. An output without the stage gets
 one sentence.
@@ -1209,7 +1211,9 @@ def _dir_rec(r, rank):
             "sign": t["sign"], "sign_text": t["sign_text"], "kind_text": t["kind_text"],
             "reading": Q._dir_reading(r), "group": _text(r.get("group")), "q": _num(r.get("q")),
             "q_group": _num(r.get("q_group")), "p": _num(r.get("p")), "q_text": t["q_text"],
-            "alerts": t["alerts_long"], "alerts_short": t["alerts_short"],
+            "alerts": t["alerts_long"], "alerts_short": t["alerts_short"], "notes": t["notes_long"],
+            "notes_short": t["notes_short"], "caveats": t["caveats_long"], "support": t["support_long"],
+            "support_short": t["support_short"],
             "target_drug": _text(r.get("target_drug")), "target_dose": _text(r.get("target_dose")),
             "drugdoses": _text(r.get("top_drugdoses")) if r.get("kind") in DV.RESPONSE else "",
             "rise_share": _num(r.get("rise_share")), "edge_ids": [int(x) for x in r["members"]]}
@@ -1238,11 +1242,20 @@ def _gene_direction(C, c, lim, short, P, D):
     n = lim.get("direction", 0) or 1
     D["direction"].update({f"n_{k}": int(len(v)) for k, v in lists.items()})
     D["direction"].update({f"n_{k}_alert": int(v["has_alert"].sum()) if len(v) else 0 for k, v in lists.items()})
+    D["direction"].update({f"n_{k}_note": int(v["has_note"].sum()) if len(v) and "has_note" in v else 0
+                           for k, v in lists.items()})
     D["direction"]["caveat"] = DV.CAVEAT
+    kinds = [k_ for v in lists.values() if len(v) for k_ in v["kind"].astype(str).unique()]
+    kcav = DV.caveat_header(kinds)
+    D["direction"]["kind_caveats"] = kcav
     if short:
         if not any(len(v) for v in lists.values()):
             P.append(f"- Probable direction: no arrow involves {lab} in this run.")
             return
+        if kcav:
+            P.append(f"- Probable direction, the caveat of every arrow of a kind (stated once): "
+                     f"{DV.caveat_header(kinds, short=True)}")
+        resp = any(k_ in DV.RESPONSE for k_ in kinds)
         for key, _h, word in DIR_LISTS:
             rows = lists[key]
             if not len(rows):
@@ -1252,10 +1265,10 @@ def _gene_direction(C, c, lim, short, P, D):
             P.append(f"- Probable direction, {word} ({DV.counts_text(rows, 'arrows')}): "
                      + "; ".join(DV.edge_line(r, alerts="short", max_names=4) for _, r in shown.iterrows())
                      + (f" ... {more}" if more else ""))
-        P.append(f"- ({DV.CAVEAT_SHORT}; the sign is what the source's activity probably does to the target: "
-                 "strengthens / weakens a drug response in the target's own direction at each drug-dose - a higher "
-                 "rise or a deeper fall -, which says nothing of induction or repression where it rises at some "
-                 "drug-doses and falls at others)")
+        P.append(f"- ({DV.CAVEAT_SHORT}; the sign is what the source's activity probably does to the target"
+                 + (": strengthens / weakens a drug response in the target's own direction at each drug-dose - a "
+                    "higher rise or a deeper fall -, which says nothing of induction or repression where it rises at "
+                    "some drug-doses and falls at others)" if resp else ")"))
         return
     P += ["", "## Probable direction (which genes probably act on it, and what it probably acts on)",
           f"Arrows SOURCE {DV.ARROW} TARGET of the direction stage. The source is what a test conditions on: a "
@@ -1268,11 +1281,15 @@ def _gene_direction(C, c, lim, short, P, D):
           f"is not recorded. {DV.SIGN_RESPONSE_NOTE} Grades: " + "; ".join(DV.grade_legend("long"))
           + ". q = Benjamini-Hochberg over the "
           f"kind's whole table of tests. {Q.ALERT} = a reason to doubt the arrow, kept in its ranked place (short "
-          "labels in the table, each reason in full below). " + DV.CAVEAT]
+          "labels in the table, each reason in full below). Notes (no warning sign) = reasons kept below their "
+          "thresholds, and context: read them too (each in full below). " + DV.CAVEAT]
     if not any(len(v) for v in lists.values()):
         P.append(f"- No arrow involves {lab} in this run (each arrow needs a test result at q < 0.10).")
         return
+    if kcav:
+        P.append(f"- Caveats, stated once for the lists below: {kcav}")
     reasons = {}                                   # short label -> [its first reason in full, rows with it]
+    notes = {}                                     # the same for the notes
     for key, head, _w in DIR_LISTS:
         rows = lists[key]
         recs = []
@@ -1285,6 +1302,8 @@ def _gene_direction(C, c, lim, short, P, D):
                 for rs in DV.alert_reasons(x["alerts"]):
                     lb = DV.alert_short(rs)[len(Q.ALERT) + 1:]
                     reasons.setdefault(lb, [rs, 0])[1] += 1
+                for rs in DV.note_reasons(x["notes"]):
+                    notes.setdefault(DV.notes_short(rs), [rs, 0])[1] += 1
             more = DV.more_text(int(rest.size), int(al[rest].sum()), "arrows")
         D["direction"][key] = recs
         P += ["", f"### {head.format(g=lab)} ({DV.counts_text(rows, 'arrows')}"
@@ -1302,11 +1321,13 @@ def _gene_direction(C, c, lim, short, P, D):
             dds = f"also at {'; '.join(more_dd)}" if more_dd else ""
             if np.isfinite(x["rise_share"]):
                 dds += ("; " if dds else "") + f"{x['rise_share']:.0%} of the evidence from drug-doses where it rises"
+            sup = f"support: {x['support_short']}" if x["support_short"] else ""
             body.append([x["rank"], x["arrow"], x["grade"], x["sign_text"], x["evidence"],
-                         "; ".join(t for t in (cmp_, x["reading"], dds) if t),
-                         x["q_text"][2:] if x["q_text"].startswith("q ") else x["q_text"], x["alerts_short"] or "-"])
-        P += _md(["#", "arrow", "grade", "probable direction", "evidence", "comparison and numbers", "q", "alerts"],
-                 body)
+                         "; ".join(t for t in (cmp_, x["reading"], dds, sup) if t),
+                         x["q_text"][2:] if x["q_text"].startswith("q ") else x["q_text"], x["alerts_short"] or "-",
+                         x["notes_short"] or "-"])
+        P += _md(["#", "arrow", "grade", "probable direction", "evidence", "comparison and numbers", "q", "alerts",
+                  "notes"], body)
         if more:
             P.append(f"({more}, later in the order)")
     if reasons:
@@ -1316,6 +1337,13 @@ def _gene_direction(C, c, lim, short, P, D):
         P += [f"- {lb}: {rs}" + (f" ({n_} rows)" if n_ > 1 else "") for lb, (rs, n_) in list(reasons.items())[:k]]
         if len(reasons) > k:
             P.append(f"- ({len(reasons) - k} more labels; each keeps its place in the tables above)")
+    if notes:
+        k = lim.get("dir_reasons", 0) or len(notes)
+        P += ["", "Notes in full (no warning sign: each is below the threshold at which it would be an alert; the "
+                  "thresholds are in direction/README.md): each note label of the tables above with its first reason:"]
+        P += [f"- {lb}: {rs}" + (f" ({n_} rows)" if n_ > 1 else "") for lb, (rs, n_) in list(notes.items())[:k]]
+        if len(notes) > k:
+            P.append(f"- ({len(notes) - k} more note labels; each keeps its place in the tables above)")
 
 
 # ----------------------------------------------------------------------------- drug
@@ -1870,6 +1898,9 @@ def _unmeasured_source(C, name):
          "probable-direction arrows: a gene that compounds of the screen target, or a driver gene recorded in Tahoe's "
          "cell-line genetics, whose own mRNA is not among the genes measured here. Its arrows (pair look-up "
          f"'{lab}|GENE' gives the arrows to one gene with every alert in full):"]
+    kcav = DV.caveat_header([k_ for v in (down, cells) if len(v) for k_ in v["kind"].astype(str).unique()])
+    if kcav:
+        P.append(f"- Caveats, stated once for the lists below: {kcav}")
     for word, rows in (("downstream (genes it probably acts on)", down),
                        ("on the cells under drug-doses", cells)):
         if not len(rows):
@@ -1882,6 +1913,25 @@ def _unmeasured_source(C, name):
     P.append(f"- ({DV.CAVEAT_SHORT}; the sign is what the source's activity probably does to the target. "
              f"{DV.SIGN_RESPONSE_NOTE})")
     return "\n".join(P) + "\n"
+
+
+def _dir_pair_tail(d):
+    """Below a pair's arrows (edge_line: alerts in full, notes as short labels): each note and support reason in full,
+    and the caveats of their kinds - nothing of a row is left out."""
+    if d is None or not len(d):
+        return []
+    out = []
+    nr = list(dict.fromkeys(x for _, r in d.iterrows() for x in DV.note_reasons(r)))
+    sr = list(dict.fromkeys(x for _, r in d.iterrows() for x in DV.support_reasons(r)))
+    if nr:
+        out.append("- notes of these arrows in full (no warning sign: below the threshold at which each would be an "
+                   "alert): " + "; ".join(nr))
+    if sr:
+        out.append("- support of these arrows: " + "; ".join(sr))
+    kc = DV.caveat_header(d)
+    if kc:
+        out.append(f"- caveats: {kc}")
+    return out
 
 
 def _pair_unmeasured(C, src, cb):
@@ -1903,7 +1953,7 @@ def _pair_unmeasured(C, src, cb):
          f"- probable direction {DV.arrow(key, lb)}: " + (
              "; ".join(DV.edge_line(r, alerts="long", max_names=4) for _, r in d.iterrows()) or "none"),
          f"- probable direction {DV.arrow(lb, key)}: none can exist (an arrow's target is a measured gene or the "
-         "cells)",
+         "cells)"] + _dir_pair_tail(d) + [
          f"- ({DV.CAVEAT_SHORT}; the sign is what the source's activity probably does to the target. "
          f"{DV.SIGN_RESPONSE_NOTE})"]
     return "\n".join(P) + "\n"
@@ -2004,11 +2054,14 @@ def _pair(C, name):
         P.append("- probable direction: " + ("the direction stage has not run for this output" if not why else
                                              f"the direction stage's files cannot be read ({why})"))
     else:
+        both = []
         for x, y, lx, ly in ((ca, cb, la, lb), (cb, ca, lb, la)):
             d = dv.downstream(int(x))
             d = d[d["target_col"].to_numpy() == int(y)]
+            both.append(d)
             P.append(f"- probable direction {DV.arrow(lx, ly)}: " + (
                 "; ".join(DV.edge_line(r, alerts="long", max_names=4) for _, r in d.iterrows()) or "none"))
+        P += _dir_pair_tail(pd.concat(both) if any(len(d) for d in both) else both[0])
         P.append(f"- ({DV.CAVEAT_SHORT}; the sign is what the source's activity probably does to the target. "
                  f"{DV.SIGN_RESPONSE_NOTE})")
     return "\n".join(P) + "\n"

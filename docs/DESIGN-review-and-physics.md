@@ -72,11 +72,9 @@ probable direction) and the search box are shared by all tabs, and selecting a g
   - search: a source that is no gene of the page (a drug target the screen does not measure) is found by name and
     opens a panel with its rows (the cap rule, *show all*);
   - data: the `dir` block (`html_map.DirBlock`) holds every display row that touches a gene of the page, 10 integers
-    a row, its texts interned; rows touching no gene of the page are counted and named in the help. Estimated at full
-    scale: ~7 MB at ~54,000 edges, ~13.6 MB at ~115,000 with every text. A page that would pass 20 MB
-    (`MAX_BYTES`) is shortened in order: grade C readings, all readings, function snippets, line lists, the full
-    alert texts (short labels stay), cells rows beyond a gene's capped list (counted per gene); no gene-target row is
-    left out; the stamp, the panel and the help say what was shortened;
+    a row, its texts interned; rows touching no gene of the page are counted and named in the help. The rows of
+    each gene's capped list also carry their reading; the full reasons are in the explorer. Nothing is dropped to
+    fit a size (html_map VERSION 7): the stage logs the size and warns above 25 MB (about 26 MB on the real data);
   - without the stage the block is `{ok: false, why}`: the panel and the help say why, and the toggles are disabled.
 
 ---

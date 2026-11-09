@@ -7,8 +7,10 @@ tables and the cell lines' recorded genetics; nothing is edited by hand. Every a
 
 - comes from a statistical test, with a p-value and a Benjamini–Hochberg q. A pair without such a result (q < 0.10
   in its family of tests) is not an arrow;
-- carries a **grade** (A, B or C) and its **alerts**, each doubt in plain words. Nothing that passes is dropped
-  because of doubt: a doubtful arrow keeps its place, with '⚠' and the reason, and a lower grade;
+- carries a **grade** (A, B or C) and every reason for doubt in plain words. Nothing that passes is dropped
+  because of doubt: a doubtful arrow keeps its place, with '⚠' and the reason, and a lower grade. Every reason is
+  kept, in one of four tiers: **alerts** (⚠), **notes** (below a threshold), **caveats** (the same on every arrow of
+  a kind) and **support** ([how to read them](#alerts-notes-caveats-and-support));
 - is a **probable** direction, from 50 cancer cell lines at one time point. It is not proof that the source regulates
   the target directly ([what an arrow does not say](#what-an-arrow-does-not-say)).
 
@@ -20,7 +22,8 @@ at all (natural knockouts), compounds that target a gene's protein, and a gene's
 Contents: [Running it](#running-it) · [Where you see the arrows](#where-you-see-the-arrows) ·
 [How to read an arrow](#how-to-read-an-arrow) · [What an arrow does not say](#what-an-arrow-does-not-say) ·
 [The kinds of evidence](#the-kinds-of-evidence-from-strongest-to-weakest) · [Grades](#how-to-read-a-grade) ·
-[Alerts](#alerts) · [How many tests, and which q](#how-many-tests-and-which-q) ·
+[Alerts, notes, caveats and support](#alerts-notes-caveats-and-support) ·
+[How many tests, and which q](#how-many-tests-and-which-q) ·
 [Controls](#controls-how-much-to-trust-it) · [Files](#the-files)
 
 ## Running it
@@ -66,8 +69,9 @@ it says how many more rows there are and how many of those carry an alert.
   - Every gene note has a section **Direction (probable)** (after the partners), with two tables. *Upstream of this
     gene* lists the arrows that point to it. *Downstream of this gene* lists the arrows that go from it, to other genes
     and to the cells under a drug-dose. Each table has the source or target, the grade, the direction in words, the
-    evidence (with the lines on each side), the effect, q and the alerts. It is capped at 12 rows. When the gene has
-    arrows, its *At a glance* names the strongest one each way, and the frontmatter counts them
+    evidence (with the lines on each side), the effect, q, and the short labels of its alerts, notes and support. It is
+    capped at 12 rows, says "k of N shown" and links to the explorer for every row. When the gene has arrows, its
+    *At a glance* names the strongest one each way, and the frontmatter counts them
     (`direction_upstream`, `direction_downstream`).
   - A drug note lists *the genes that set how the cells fare under it* (the arrows to the cells under its doses) and
     *its targets: what acting on them probably does* (the drug-target arrows of the compound classes it belongs to,
@@ -97,19 +101,21 @@ it says how many more rows there are and how many of those carry an alert.
   - A source that is not a measured gene (a drug target such as NR3C1) has no place on the map: the search finds it,
     and its panel lists its arrows. A hover over a gene shows the rows between it and the selected gene (3, by the
     cap rule); the neighbourhood view draws at most 3,000 pairs by the cap rule and says how many more there are.
-  - To stay under its size limit, a very large page first leaves out the readings of the grade C rows, then other
-    long texts; an arrow between two genes is never left out, and the page says what it shortened.
+  - Nothing is left out to make the page smaller (map version 7). Every arrow that touches a gene of the page is
+    on it with its edge line. The rows of each gene's capped list also carry their reading. Every preview says
+    "k of N shown" and links to the explorer, which has every reason in full. The stage logs the page's size and
+    warns above 25 MB.
 - **The validation report** (`validation/report.md`, section 8; `metrics.json`, key `direction`): the positive
   controls with their ranks, and per kind the arrows written against the false arrows the controls expect.
 
 - **The look-ups.** `tahoe gene X` has a section PROBABLE DIRECTION: upstream, downstream, and the cells under drugs
   (10 rows per list by the same cap rule; `--top N` shows N, and a capped list names the `--top` that lists it all),
-  each row with its evidence, its numbers and its alerts as short labels. A drug target that the screen does not measure
-  (such as NR3C1) has its own arrows: `tahoe gene NR3C1` lists them, and `tahoe pair NR3C1 GENE` gives the arrows
-  between them with every alert in full. `tahoe line X` lists the line's recorded alterations and its natural knockouts,
-  with the arrows that came out of each. `tahoe drug X` lists the arrows to the cells under its doses and its
-  drug-target arrows. `tahoe pair A B` shows any arrow between the two genes, either way, with every alert in full, and
-  the genes with an arrow to both. On a console that cannot show '→' or '⚠' (a Windows code page), they print as '->'
+  each row with its evidence, its numbers, its alerts and notes as short labels, and its support. A drug target that
+  the screen does not measure (such as NR3C1) has its own arrows: `tahoe gene NR3C1` lists them, and `tahoe pair
+  NR3C1 GENE` gives the arrows between them with every alert, note and support reason in full. `tahoe line X` lists
+  the line's recorded alterations and its natural knockouts, with the arrows that came out of each. `tahoe drug X`
+  lists the arrows to the cells under its doses and its drug-target arrows. `tahoe pair A B` shows any arrow between
+  the two genes, either way, with every alert, note and support reason in full, and the genes with an arrow to both. On a console that cannot show '→' or '⚠' (a Windows code page), they print as '->'
   and '!'.
 - **The literature reviewers' dossiers** (`tahoe review`) end a gene's dossier with its arrows (upstream, downstream,
   cells, capped by the same rule, with the caveat), so that the reviewers can check them against the literature.
@@ -123,9 +129,9 @@ An arrow, as the vault, the map and the look-ups write it (from the synthetic te
 line, wrapped here):
 
 ```
-TP53 → CDKN1A  [B]  TP53 activity strengthens CDKN1A's drug response (mutation: response; q 0.025)  ⚠ within organs,
-on part of the lines; KMT2D, CTNNB1 alterations on the other side; TP53 not expressed in 2 of the 10 altered lines;
-line-wide correction only; artifact flags
+TP53 → CDKN1A  [B]  TP53 activity strengthens CDKN1A's drug response (mutation: response; q 0.025)  ⚠ KMT2D, CTNNB1
+alterations on the other side; line-wide correction only  · notes: within organs, on part of the lines; TP53 not
+expressed in 2 of the 10 altered lines; artifact flags
 ```
 
 - **TP53 → CDKN1A**: the source and the target. The target can be a gene, or *cells under DRUG DOSE*: how many cells
@@ -148,8 +154,13 @@ line-wide correction only; artifact flags
   mutation of the source, tested against the target's drug response.
 - **q 0.025**: the Benjamini–Hochberg q over the whole table of its kind. For an arrow significant only within its own
   group, both are given: *q 0.243 over the table, 0.006 within its group* ([which q](#how-many-tests-and-which-q)).
-- **⚠ ...**: the [alerts](#alerts), as short labels; the full reasons are in the vault's and the map's evidence and
-  in `direction/edges.parquet` (column `alerts`).
+- **⚠ ...**: the [alerts](#alerts-notes-caveats-and-support), as short labels: the reasons to doubt this arrow. The
+  full reasons are in the evidence and in `direction/edges.parquet` (column `alerts`).
+- **· notes: ...**: the notes, as short labels: reasons below the threshold at which they would be an alert (here the
+  comparison uses 7 of the 10 TP53-altered lines, TP53 is not expressed in 2 of the 10, and the artifact-flagged
+  drug-doses carry 20% of the evidence). They carry no ⚠, but read them: column `notes` has them in full.
+- Not on the line: the kind's **caveats**, stated once above each list (for example "every drug-target arrow: drugs
+  can act on other proteins too"), and the **support** (column `support`).
 
 The evidence behind it, in words (column `reading`): *CDKN1A responds less in the TP53-LoF lines than in the other
 lines: 1.32x vs 3.00x at 5-Fluorouracil 5 µM; TP53 activity strengthens CDKN1A's drug response*. The comparison (column
@@ -363,42 +374,85 @@ With 18 lines, 10 degrees of freedom remain after the adjustment, so only very s
 - **A** (strong): a recorded genotype, at least 5 lines on each side (sharing an organ with the other side), q < 0.05
   over the whole table, compared within organs, no co-occurrence alert either way (another gene's altered lines on
   the same side, or on the other side); for a response, not resting on the global-sensitivity correction. The
-  strongest kind of directional evidence this data can give; any alert it still carries is a note to read.
+  strongest kind of directional evidence this data can give; read any alert or note it still carries.
 - **B** (read its alerts): a genotype result over the whole table with alerts (another alteration on a side, compared
   across organs, ...) or only 3–4 lines on a side; a natural knockout with at least 5 lines lacking the gene; a
   drug-target result. Worth taking seriously.
 - **C** (a glimpse): levels; genotype results significant only within their own group, or tissue-confounded; natural
   knockouts with 3–4 lines, absent from whole organs, or co-absent with the target. A lead to check, not a finding.
 
-## Alerts
+## Alerts, notes, caveats and support
 
-Every doubt is written out in plain words, in column `alerts` ('⚠ ' + the reasons, '; '-joined). The vault and the
-map show each reason by a short label, with the full reason in the evidence or the tooltip. The alerts you will meet
-(short label in brackets):
+Every reason the stage writes is kept and shown in full; none is removed. Each reason is in exactly one of four
+columns of `edges.parquet`, and `alerts_all` holds all of them in the order the stage wrote them. A rule in the code
+(`direction.reason_tier`) decides the column; nobody sorts them by hand.
+
+| Column | What it holds | How to read it |
+|---|---|---|
+| `alerts` (⚠) | A doubt about this arrow, or a graded reason at or past its threshold. | Read before you trust the arrow. An arrow with no alert carries no ⚠. |
+| `notes` | A graded reason below its threshold, and context. | Shown muted, in full. Not a doubt about this arrow by itself, but read it. |
+| `caveats` | The same text on every arrow of a kind. | Stated once above each list, not on every row. |
+| `support` | Evidence for the arrow. | Read it as support, not as doubt. |
+
+The caveats of each kind:
+
+- `drug_target`: drugs can act on other proteins too (*off-target possible*);
+- `level`: tissue and other differences between lines can mimic it (*tissue can mimic it*), and a stronger correlation
+  one way can reflect how precisely each gene's level is measured (*precision caveat*);
+- `level_sensitivity`: tissue can mimic it.
+
+The support: *consistent across N compounds (...)* (drug targets); *the lines lacking X carry a recorded loss of X:
+genotype evidence too* (natural knockouts; label *deletion recorded too*).
+
+**Graded reasons.** Five reasons are an alert only past a fixed threshold, and a note below it. The thresholds are
+constants in `tahoemap/direction.py` and are listed in `direction/README.md` and `info.json` (`reason_tiers`).
+
+| Reason (short label) | Constant | An alert when | Otherwise a note, because |
+|---|---|---|---|
+| *Y measured in a of the A and i of the I lines* (*target measured in part of the lines*) | `NOTE_MEASURED_FRAC = 0.75` | fewer than 5 measured lines on a side, or fewer than 75% of a side's lines | a few lines without the target cost little when most are measured |
+| *supporting drug-doses with artifact flags (N% of the evidence)* (*artifact flags*) | `NOTE_ART_SHARE = 0.5` | the flagged drug-doses carry at least 50% of the evidence (`art_share`), or the strongest supporting drug-dose is one of them (the text then says *the strongest among them*) | the arrow rests mostly on unflagged drug-doses |
+| *compared within organs: a of the A ... and i of the I others share an organ* (*within organs, on part of the lines*) | `NOTE_WITHIN_ORGAN_FRAC = 0.5` | fewer than half of either side share an organ with the other side | a within-organ comparison costs lines, not validity |
+| *other genes are absent from most of these lines too ... (and N more line sets)* (*also absent*) | `NOTE_COABSENT_SETS = 10` | 10 or fewer line sets overlap in all: a candidate co-deletion | many genes share the pattern: a tissue programme rather than one deletion |
+| *X itself is not expressed in k of the n altered lines* (*X not expressed in k of the n altered lines*) | `NOTE_NOT_EXPRESSED_FRAC = 0.25` | k is more than a quarter of n | a few deleted or silenced lines leave most of the comparison intact |
+
+How `art_share` is computed: for each of the target's 10 strongest drug-doses, the contrast between the two sides (z
+units). `art_share` = the sum of |contrast| over the drug-doses with an artifact flag (toxic, transcription drop,
+cell-cycle shift, ...) / the sum over all 10. The artifact reason lists every flagged drug-dose among the 10, and
+`drugdoses_all` lists all 10 with their contrast, folds and flags. For a drug-target arrow, the share is that of the
+supporting compounds whose strongest drug-dose is flagged.
+
+**Every other reason is an alert** (short label in brackets):
 
 - few lines (*few lines (3 vs 15)*); tissue-confounded (*tissue-confounded*); compared across organs (*across
-  organs*); compared within organs on part of the lines (*within organs, on part of the lines*);
+  organs*); the lines' organs not known (*organs unknown*);
 - co-occurs with another gene's altered lines (*co-occurs*); another gene's altered lines sit on the other side
   (*X alterations on the other side*: X may be the cause, with the opposite sign); either blocks grade A;
-- the source itself is not expressed in some altered lines (*TP53 not expressed in 2 of the 10 altered lines*:
-  deletion or silencing); a recorded deletion in the lines that lack the gene (*deletion recorded too*); genes absent
-  from exactly the same lines (*co-absent genes*), or from most of them (*also absent: ...*);
-- the target is much lower at baseline in the altered lines (*lower baseline (lost expression?)*: a lost response may
-  be lost expression); the target measured in only some lines;
+- genes absent from exactly the same lines (*co-absent genes*); the lines counted as lacking the gene still read part
+  of its level (*maybe low, not absent*); the target also absent from most of these lines (*co-absent with the
+  target*);
+- the target much lower at baseline in the altered lines (*lower baseline (lost expression?)*: a lost response may
+  be lost expression);
 - the global-sensitivity correction: the difference exists only relative to the other responding genes (*rests on the
   correction*), the reference differs between the sides, no correction (*partly uncorrected*), or only a line-wide
   one (*line-wide correction only*) at the drug-doses carrying the difference;
-- its own permutation p used; artifact flags of the supporting drug-doses (*artifact flags*); none of its drug-doses
-  significant pooled; mechanism not recorded (*sign not inferred*);
+- the difference goes the other way at some drug-doses (*both ways*); the target rises at some drug-doses and falls
+  at others (*rises at some drug-doses, falls at others*);
+- its own permutation p used; none of its drug-doses significant pooled; mechanism not recorded (*sign not
+  inferred*, *mechanism partly not recorded*); the cells' counts less trustworthy at the drug-dose;
 - significant only within its group or drug-dose (*within its group only (a lead)*);
-- drug targets: drugs act on other proteins too (*off-target possible*), the number of compounds, targets that share
-  the compounds (*shared targets*);
-- levels: tissue and other differences can mimic it (*tissue can mimic it*), the measurement-precision caveat
-  (*precision caveat*), direction unclear (the reverse is not clearly weaker once the arrow's selection is allowed
-  for).
+- drug targets: targets that share the compounds (*shared targets*: any of them could be the cause);
+- levels: direction unclear (the reverse is not clearly weaker once the arrow's selection is allowed for).
 
-The note Concepts/Probable direction of the vault lists the labels of the run, each with its count and one reason in
-full.
+What this means for a list: the warning sign now tells arrows apart. In the synthetic test run, 99 of the 506 edges
+carry no alert (95 drug-target, 1 level and 3 level-sensitivity arrows). A list capped at N shows the N strongest
+and, after them, any of the N strongest without an alert; every list says how many rows it holds, how many carry ⚠
+and how many carry notes, for example *9 arrows, 9 with ⚠, 9 with notes; grade A 0, B 2, C 7*.
+
+An output made before these tiers existed (direction version 2) is still read: there, every reason counts as an
+alert, as it did then.
+
+The note Concepts/Probable direction of the vault lists the alert, note and support labels of the run, each with its
+count and one reason in full.
 
 ## How many tests, and which q
 
@@ -490,13 +544,17 @@ stays out of the table. That is the price of controlling false arrows over the w
   (`n_altered`, `n_intact`, `n_lines`), the effect (`contrast` and, by kind, `retained_fraction`, `raw_share`,
   `baseline_log2_diff`, `r`, `r_reverse`, `direction_clear`, `p_direction`; for drug targets `n_compounds`,
   `n_supporting`, `background_rate`, `compounds`, `compounds_supporting`, `drug_effect`), `T`, `p`, `q`, `q_group`,
-  `alerts`, `n_alerts`, `top_drugdoses` (the drug-doses carrying the difference).
+  `top_drugdoses` (the drug-doses carrying the difference), `drugdoses_all` (every drug-dose behind the arrow, with
+  its flags), `art_share`, and the reasons: `alerts`, `notes`, `caveats`, `support`, `alerts_all` (all of them, in
+  order) with their counts `n_alerts`, `n_notes`, `n_caveats`, `n_support`.
 - `groups.parquet`: every comparison group (genotype, natural knockout, pseudo-group): its lines on each side, organs,
-  whether it was compared within organs, its alerts, and how many edges it gave (written, any grade; for a
-  pseudo-group, counted at the real cut and not written).
+  whether it was compared within organs, its `alerts`, `notes` and `alerts_all`, and how many edges it gave (written,
+  any grade; for a pseudo-group, counted at the real cut and not written).
 - `controls.json`: the positive and negative controls and the expected false edges per kind, with their 95% upper
   bounds.
-- `info.json`: the counts per kind and grade, the groups and tests, the cuts, the settings, peak memory and minutes.
+- `info.json`: the counts per kind and grade, the groups and tests, the cuts, the settings, peak memory and minutes,
+  and `reason_tiers` (how many edges carry an alert, a note, a caveat, support; the edges without an alert by kind;
+  the thresholds).
 
 The method in full is the module docstring of `tahoemap/direction.py`; the stage's own options (memory per chunk,
 permutations, pseudo-groups) are those of `python -m tahoemap.direction --help`, and `tahoe run` uses their defaults.

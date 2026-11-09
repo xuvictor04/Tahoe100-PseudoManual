@@ -7,6 +7,8 @@
 #   tahoe gene MDM2    which drugs raise / lower MDM2, in which cell lines, which genes move with it
 #   tahoe review ...   literature-review agents on a finished run (docs/review.md); tahoe duplicate DEST copies a run
 #   tahoe export DEST  the shareable results of a finished run, ready to be pushed to a GitHub branch
+#   tahoe open         the explorer (searchable pages over every result) in a browser; tahoe explorer rebuilds it
+#   tahoe export DEST --explorer    the explorer, ready to publish (GitHub Pages + a data repository)
 #
 # Folders: data = --data DIR, else $TAHOE_DATA, else ~/Tahoe-100M; output = --out DIR, else $TAHOE_OUT, else
 # <data>/tahoemap; venv = $TAHOE_VENV or ~/tahoe-venv. --data / --out go with any command (give the same ones to
@@ -351,13 +353,14 @@ cmd_duplicate() {                # tahoe duplicate DEST [--repo DIR]: DEST and D
 }
 
 cmd_export() {                   # tahoe export DEST [--with-effects] [--include FILE ...] [--force]: paths as typed
-  need_packages
+  need_packages                  # (or: tahoe export DEST --explorer [--force] [--with-line-dd] [--github OWNER/REPO])
   local p dest="" inc=0 args=()
   while [ $# -gt 0 ]; do
     case "$1" in
       --include) inc=1; args+=("$1"); shift ;;
       --include=*) inc=0; args+=("--include" "$(absolute "${1#--include=}")"); shift ;;
-      --max-file-mb) [ $# -ge 2 ] || die "--max-file-mb needs a number"; inc=0; args+=("$1" "$2"); shift 2 ;;
+      --max-file-mb|--github|--pin-data|--pin-data-dd|--site-url)
+        [ $# -ge 2 ] || die "$1 needs a value"; inc=0; args+=("$1" "$2"); shift 2 ;;
       -*) inc=0; args+=("$1"); shift ;;
       *) if [ $inc = 1 ]; then args+=("$(absolute "$1")")
          else
@@ -367,9 +370,29 @@ cmd_export() {                   # tahoe export DEST [--with-effects] [--include
          shift ;;
     esac
   done
-  [ -n "$dest" ] || die "usage: tahoe export DEST [--with-effects] [--include FILE ...] [--force]   (exports $OUT)"
+  [ -n "$dest" ] || die "usage: tahoe export DEST [--with-effects] [--include FILE ...] [--force]   (exports $OUT)" \
+                        "or: tahoe export DEST --explorer [--force] [--with-line-dd] [--github OWNER/REPO]"
   if p="$(job_pid)"; then die "a job is running on $OUT (pid $p): wait for it, or 'tahoe stop$SAME' first"; fi
   tm export "${args[@]}"
+}
+
+cmd_open() {                     # the explorer in a browser; where the map, the vault and the report are
+  local idx="$OUT/explorer/web/index.html"
+  say "Explorer:         $idx   (every gene, drug, drug-dose and cell line; search box at the top)"
+  say "Interactive map:  $OUT/map/gene_map.html   (open it in a browser)"
+  say "Obsidian vault:   $OUT/vault   (Obsidian: Open folder as vault)"
+  say "Validation:       $OUT/validation/report.md"
+  if [ ! -f "$idx" ]; then
+    say "The explorer is not built yet: 'tahoe run$SAME' builds it (or 'tahoe explorer$SAME', the explorer alone)."
+    return 0
+  fi
+  if [ "$(uname -s)" = Darwin ] && command -v open >/dev/null 2>&1; then
+    open "$idx"
+  elif command -v xdg-open >/dev/null 2>&1 && [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+    xdg-open "$idx" >/dev/null 2>&1 &
+  else
+    say "(no browser to open here: open the explorer's index.html above in a browser on this computer)"
+  fi
 }
 
 cmd_update() {
@@ -389,7 +412,9 @@ tahoe - every gene, drug and cell line of Tahoe-100M in one map
   gene SYMBOL           drugs that raise / lower it, in which lines, genes that move with / opposite it,
                         what probably acts on it and what it probably acts on (probable direction)
   drug NAME | line NAME | pair GENE1 GENE2 | module N        the same for a drug, a cell line, two genes
-  open                  where the interactive map, the Obsidian vault and the validation report are
+  open                  the explorer in a browser (searchable pages: every gene, drug, drug-dose and cell
+                        line, every value exact); also says where the map, the vault and the report are
+  explorer              build the explorer again now, in the foreground (tahoe run does it after the map)
   review plan           AI literature-review agents (docs/review.md): the queue, in priority order, and its cost
   review run [options]  review genes / drugs / lines: needs --max-usd X or --limit N (or --no-cap); --kinds
                         gene,drug,line  --only NAMES|@FILE  --keys-file FILE  --dry-run (sends nothing)  --model
@@ -403,10 +428,13 @@ tahoe - every gene, drug and cell line of Tahoe-100M in one map
   export DEST [--with-effects] [--include FILE ...] [--force]     the shareable results (vault, map, tables, ...;
                         no file over 95 MiB) with README.md and MANIFEST.tsv, ready to push to a GitHub branch;
                         it prints the git commands. --force updates an earlier export there
+  export DEST --explorer [--force] [--with-line-dd] [--github OWNER/REPO]     the explorer, ready to publish:
+                        DEST/site (GitHub Pages), DEST/data (a data repository), publish.sh / publish.ps1 and
+                        PUBLISH.md (the one-time GitHub steps). It never pushes; publish.sh does
   test                  the whole pipeline on synthetic data with planted answers (a few minutes)
   update                newest scripts (git pull)
   <stage> [options]     one stage now, in the foreground: build effects tensor tables embed reference
-                        relations graph direction validate vault map
+                        relations graph direction validate vault map explorer
 Folders: data $DATA   output $OUT
   (change them with --data DIR / --out DIR on every command, or set TAHOE_DATA / TAHOE_OUT)
 Options go to python -m tahoemap (e.g. tahoe run --dims 96 --offline); see README.md.
@@ -431,11 +459,8 @@ main() {
     review) cmd_review "$@" ;;
     duplicate) cmd_duplicate "$@" ;;
     export) cmd_export "$@" ;;
-    open|where)
-      say "Interactive map:  $OUT/map/gene_map.html   (open it in a browser)"
-      say "Obsidian vault:   $OUT/vault   (Obsidian: Open folder as vault)"
-      say "Validation:       $OUT/validation/report.md" ;;
-    build|effects|tensor|tables|embed|reference|relations|graph|direction|validate|vault|map)
+    open|where) cmd_open ;;
+    build|effects|tensor|tables|embed|reference|relations|graph|direction|validate|vault|map|explorer)
       need_packages; tm "$c" "$@" ;;
     *) die "unknown command '$c' (tahoe help)" ;;
   esac

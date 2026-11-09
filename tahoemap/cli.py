@@ -1,13 +1,15 @@
 """python -m tahoemap <command> - the one-shot pipeline and the look-ups. The `tahoe` shell wrapper calls this.
 
     run         every stage that is missing or out of date, in order (the one-shot job)
-    build ... map   one stage (and nothing else)
+    build ... map, explorer     one stage (and nothing else)
     status      what is done, what is out of date (and why), what runs next
     gene SYMBOL | drug NAME | line NAME | pair A B | module N     look-ups on a finished run
     review plan|run|status|tables|stop   the literature-review agents (tahoemap/review; docs/review.md)
     duplicate DEST [--repo DIR]     copy a finished output folder for review work (big arrays hard-linked)
     export DEST [--with-effects] [--include FILE ...] [--force]     the shareable results, ready to be committed and
                 pushed to a GitHub branch (tahoemap/export.py)
+    export DEST --explorer [--force] [--with-line-dd] [--github OWNER/REPO]     the explorer, ready to publish: the
+                pages (GitHub Pages, branch 'site'), the data repository, and the scripts that push them
 
 A stage is out of date when it never finished, its method changed, it ran with other values of the options that
 change its results (--dims, --min-cells, ...: once given they stay in force for the output folder, so a stopped run
@@ -32,11 +34,11 @@ from . import atlas_core as A
 from . import stream
 from . import tlib as T
 from .common import (GIT_MISSING, STAGES, PipelineLock, clear_stamps_from, find_git, git_out, in_use_text, is_link,
-                     log, mark_output, read_stamp, stamp_stage, write_json)
+                     log, mark_output, read_stamp, remove_file, stamp_stage, write_json)
 
 STAGE_MODULE = {"tensor": "tensor", "tables": "tables", "embed": "embed", "reference": "reference",
                 "relations": "relations", "graph": "graph", "direction": "direction", "validate": "validate",
-                "vault": "vault", "map": "html_map"}
+                "vault": "vault", "map": "html_map", "explorer": "explorer"}
 LOOKUPS = ("gene", "drug", "line", "pair", "module")
 EXTRA_COMMANDS = ("review", "duplicate", "export")   # not stages: they read a finished output (never run the
                                                      # pipeline)
@@ -45,11 +47,18 @@ EXTRA_COMMANDS = ("review", "duplicate", "export")   # not stages: they read a f
 # another value than the stage ran with redoes that stage and every later one. Once given they are remembered for the
 # output folder (RUN_OPTIONS) and used by later runs that do not give them.
 RESULT_OPTIONS = {"build": ("layout",), "effects": ("min_cells", "unreliable_plates"),
-                  "tensor": ("tensor_dtype", "no_well_tensor"), "embed": ("dims", "min_active", "min_responsive")}
+                  "tensor": ("tensor_dtype", "no_well_tensor"), "embed": ("dims", "min_active", "min_responsive"),
+                  "vault": ("site_url",), "map": ("site_url",),
+                  "explorer": ("site_url", "data_url", "line_dd", "pooled_r")}
 # Recorded too, but compared differently: --limit-files as it is (a trial build is redone by a run without it);
-# --offline never forces a redo (it reads the same cache), but a run with network retries the sources that failed.
-RECORDED_OPTIONS = {"build": ("limit_files",), "reference": ("offline",)}
-REMEMBERED = tuple(k for v in RESULT_OPTIONS.values() for k in v)
+# --offline never forces a redo (it reads the same cache), but a run with network retries the sources that failed;
+# --pages-max-mb only moves parts of the explorer between its two volumes (a run with another value does not redo it).
+RECORDED_OPTIONS = {"build": ("limit_files",), "reference": ("offline",), "explorer": ("pages_max_mb",)}
+REMEMBERED = tuple(dict.fromkeys(k for v in RESULT_OPTIONS.values() for k in v))
+# on / off options: their two spellings
+SWITCHES = {"no_well_tensor": ("--no-well-tensor", "--well-tensor"), "line_dd": ("--with-line-dd", "--no-line-dd"),
+            "pooled_r": ("--with-pooled-r", "--no-pooled-r")}
+PAGES_MAX_MB = 950.0                       # explorer.PAGES_MAX_MB: the default of --pages-max-mb (MiB)
 RUN_OPTIONS = "run_options.json"           # in OUT: the result options given to earlier runs
 RETRY_SOURCES = ("failed", "offline")      # reference source statuses (prefixes) that a run with network retries
 REUSED = "reused_from.json"                # in OUT/atlas: the --reuse-atlas source and how it is linked
@@ -72,8 +81,9 @@ def make_parser():
     ap.add_argument("--reuse-atlas", default=None, help="an old tahoe_atlas.py output folder whose build to reuse")
     ap.add_argument("--from", dest="start", choices=STAGES, default=None, help="run: start at this stage")
     ap.add_argument("--to", dest="stop", choices=STAGES, default=None, help="run: stop after this stage")
-    ap.add_argument("--redo", action="store_true", help="run: redo every stage; review run: review entities again "
-                                                        "that are done")
+    ap.add_argument("--redo", action="store_true",
+                    help="run: redo every stage (the build sums every plate again: its finished plates are removed "
+                         "first); review run: review entities again that are done")
     ap.add_argument("--offline", action="store_true",
                     help="no downloads: the reference stage uses only its cache (else Tahoe's own gene names)")
     ap.add_argument("--refresh-reference", action="store_true",
@@ -96,9 +106,33 @@ def make_parser():
     ap.add_argument("--dims", type=int, default=64, help="embed: dimensions of the vector space")
     ap.add_argument("--min-active", type=int, default=10, help="embed: significant genes a drug-dose needs")
     ap.add_argument("--min-responsive", type=int, default=5, help="embed: contexts with |z| >= 3 a gene needs")
-    ap.add_argument("--top", type=int, default=None, help="look-ups: rows per table (default 15; the probable-"
-                    "direction lists show 10 unless --top is given)")
+    ap.add_argument("--top", type=top_value, default=None,
+                    help="look-ups: rows per table (default 15; the probable-direction lists show 10 unless --top is "
+                         "given); --top all (or 0) shows every row")
     ap.add_argument("--truth", default=None, help="validate: ground_truth.json of synthetic test data (tests only)")
+    g = ap.add_argument_group("explorer (the searchable web pages over every result: OUT/explorer; "
+                              "docs/explorer.md)")
+    g.add_argument("--site-url", default=None,
+                   help="the explorer's web address, which the vault, the map, the look-ups and the explorer link to "
+                        "(default: the GitHub Pages address of this code's repository, https://OWNER.github.io/REPO/, "
+                        "read from `git remote get-url origin`; 'none': no site, the links name the local files)")
+    g.add_argument("--data-url", default=None,
+                   help="explorer: where the pages read the data repository from (default: "
+                        "https://raw.githubusercontent.com/OWNER/REPO-data/main/ of the same repository)")
+    g.add_argument("--with-line-dd", dest="line_dd", action="store_true", default=False,
+                   help="explorer: also the optional volume data_dd (per drug-dose, every gene's value in every cell "
+                        "line; about 4.3 GB on the real data); export --explorer: publish it too")
+    g.add_argument("--no-line-dd", dest="line_dd", action="store_false",
+                   help="explorer: without data_dd again after an earlier --with-line-dd")
+    g.add_argument("--with-pooled-r", dest="pooled_r", action="store_true", default=False,
+                   help="explorer: also d/pooledr.js, a helper that ranks every gene by pooled-profile correlation "
+                        "(about 40 MB on the real data)")
+    g.add_argument("--no-pooled-r", dest="pooled_r", action="store_false",
+                   help="explorer: without the pooled-r helper again")
+    g.add_argument("--pages-max-mb", type=float, default=None,
+                   help=f"explorer: the most the web volume may hold, in MiB (default {PAGES_MAX_MB:g}; GitHub Pages "
+                        "publishes sites up to 1 GB). Above it, parts move to the data volume; nothing is dropped. If "
+                        "moving is not enough, the stage stops and says what is too large")
     g = ap.add_argument_group("review (python -m tahoemap review plan|run|status|tables) and duplicate")
     g.add_argument("--kinds", default=None, help="review: which entities, a comma list of gene,drug,line (default all)")
     g.add_argument("--only", default=None, help="review: only these entities (comma list of names or ids such as "
@@ -111,7 +145,7 @@ def make_parser():
     g.add_argument("--no-cap", action="store_true", help="review run: run without --max-usd / --limit")
     g.add_argument("--concurrency", type=int, default=4, help="review run: entities reviewed at once (threads)")
     g.add_argument("--model", default=None,
-                   help="review: the reviewers' model (default: the agent files', claude-opus-5-5); per agent: "
+                   help="review: the reviewers' model (default: the one the agent files name); per agent: "
                         "AGENT=MODEL,... with AGENT gene, drug, line, checker, reviewers or all")
     g.add_argument("--effort", default=None,
                    help="review: the reviewers' effort, low|medium|high|xhigh|max (default: the agent files': "
@@ -149,8 +183,30 @@ def make_parser():
                    help="export: update an earlier export in DEST (only the files its MANIFEST.tsv lists are "
                         "replaced or removed)")
     g.add_argument("--max-file-mb", type=float, default=95.0,
-                   help="export: files larger than this many MiB are not copied (GitHub refuses files over 100 MB)")
+                   help="export: files larger than this many MiB are not copied (GitHub refuses files over 100 MB); "
+                        "export --explorer: such a file stops the export")
+    g.add_argument("--explorer", action="store_true",
+                   help="export: the explorer instead of the results: DEST/site (the pages, for GitHub Pages), "
+                        "DEST/data (the data repository; hard links when on the same disk), the upload lists, "
+                        "publish.ps1 / publish.sh and PUBLISH.md (the one-time GitHub steps). It never runs git push")
+    g.add_argument("--github", default=None, metavar="OWNER/REPO",
+                   help="export --explorer: the GitHub repository of the pages (branch 'site'); the data go to "
+                        "OWNER/REPO-data (default: this code's repository, from `git remote get-url origin`)")
+    g.add_argument("--pin-data", default=None, metavar="SHA",
+                   help="export DEST --explorer --pin-data SHA: point DEST/site at this commit of the data repository "
+                        "(rewrites site/d/hosts.js and its MANIFEST.tsv line; publish.ps1 does it)")
+    g.add_argument("--pin-data-dd", default=None, metavar="SHA",
+                   help="export DEST --explorer --pin-data-dd SHA: the same for the optional data_dd repository")
     return ap
+
+
+def top_value(v):
+    """--top: a whole number of rows, or 'all' (also 0) for every row (query.parse_top)."""
+    from .query import parse_top
+    try:
+        return parse_top(v)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e)) from None
 
 
 def given_options(argv):
@@ -163,9 +219,9 @@ def given_options(argv):
 
 
 def option_text(k, v):
-    if k == "no_well_tensor":
-        return "--no-well-tensor" if v else "--well-tensor"
-    return f"--{k.replace('_', '-')} " + ("(default)" if v is None else str(v))
+    if k in SWITCHES:
+        return SWITCHES[k][0 if v else 1]
+    return f"--{k.replace('_', '-')} " + ("(default)" if v is None else repr(v) if v == "" else str(v))
 
 
 def remember_options(a, given, save):
@@ -236,8 +292,9 @@ def reference_missing(out, info):
     return sorted(k for k, s in src.items() if str(s or "").startswith(RETRY_SOURCES))
 
 
-def stage_state(a, stage):
-    """'' when the stage's stamp is current for this run, else why the stage must run. Reads only."""
+def stage_state(a, stage, assets=True):
+    """'' when the stage's stamp is current for this run, else why the stage must run. Reads only. assets False: the
+    explorer's page files (tahoemap/explorer_app) are not compared (explorer_assets_only)."""
     st = read_stamp(a.out, stage)
     if st is None:
         return "not run yet"
@@ -275,7 +332,27 @@ def stage_state(a, stage):
         if miss:
             return (f"{len(miss)} source(s) did not load last time ({', '.join(miss)}); a run with network retries "
                     "them (--offline keeps the run as it is)")
+    if stage == "explorer":
+        from . import explorer as X
+        if not os.path.isfile(os.path.join(a.out, "explorer", "manifest.json")):
+            return "its folder (explorer/) is missing"
+        if info.get("run") != X.run_id(a.out):
+            return "the stages it was made from changed since it ran"
+        if assets and (info.get("assets_sha") or None) != X.assets_sha():
+            return EXPLORER_ASSETS
     return ""
+
+
+EXPLORER_ASSETS = "its page files (tahoemap/explorer_app) changed: only they are copied again"
+
+
+def explorer_assets_only(a):
+    """True when the explorer is current in everything but its page files (tahoemap/explorer_app changed since it
+    ran): then only those are copied again (explorer.refresh_assets: seconds, not the whole stage). --redo and
+    --from explorer build it whole."""
+    if a.redo or a.start == "explorer" or read_stamp(a.out, "explorer") is None:
+        return False
+    return stage_state(a, "explorer", assets=False) == "" and stage_state(a, "explorer") == EXPLORER_ASSETS
 
 
 def plan(a, start=None, stop=None, redo=False, skip=()):
@@ -399,9 +476,32 @@ def run_stage(stage, a):
         sys.exit(f"{stage}: {msg}")
 
 
+def remove_built_plates(atl):
+    """--redo: the build sums every plate again. The build keeps a plate whose files exist while the plate's list of
+    input files is unchanged (atlas_core._build_group, verbatim: that is how a stopped build resumes), so data files
+    replaced under the same names would keep the old sums. A redo therefore removes the finished plates
+    (atlas/pseudobulk/group*) first; a run without --redo resumes as before."""
+    pb = os.path.join(atl, "pseudobulk")
+    files = sorted(f for f in glob.glob(os.path.join(pb, "group*")) if os.path.isfile(f))
+    for f in files:
+        remove_file(f)
+    n = len({os.path.basename(f).split("_")[0].split(".")[0] for f in files})
+    if files:
+        log(f"  --redo: removed the {n} finished plate(s) of an earlier build from {pb} ({len(files)} files); every "
+            "plate is summed again")
+    return len(files)
+
+
 def _run_stage(stage, a):
     t0 = time.time()
     atl = os.path.join(a.out, "atlas")
+    if stage == "explorer" and explorer_assets_only(a):
+        from . import explorer as X
+        log("  explorer: only its page files (tahoemap/explorer_app) changed since it ran; copying them again "
+            "(--redo builds the whole explorer)")
+        X.refresh_assets(a.out)
+        log(f"  stage explorer finished in {(time.time() - t0) / 60:.1f} min (page files only)")
+        return
     if stage == "build":
         rec = read_json(os.path.join(atl, REUSED)) or {}
         if rec.get("how") in ("symlink", "junction") or is_link(os.path.join(atl, "pseudobulk")):
@@ -415,6 +515,8 @@ def _run_stage(stage, a):
                 os.remove(os.path.join(atl, f))
             except FileNotFoundError:
                 pass
+        if a.redo:
+            remove_built_plates(atl)
         if a.stream:
             stream.build(atlas_args(a), a.data_in)
         else:
@@ -441,6 +543,14 @@ def _run_stage(stage, a):
         kw = {"data": a.data_in}
     elif stage == "validate" and a.truth:
         kw = {"truth": a.truth}
+    elif stage in ("vault", "map"):
+        kw = {"site_url": a.site_url}                 # None: the GitHub Pages address of this code (links.py)
+    elif stage == "explorer":
+        from . import links
+        kw = {"site_url": links.site_url(a.site_url), "data_url": links.data_url(a.data_url), "line_dd": a.line_dd,
+              "pooled_r": a.pooled_r,
+              "pages_max_mb": a.pages_max_mb if a.pages_max_mb is not None else getattr(mod, "PAGES_MAX_MB",
+                                                                                        PAGES_MAX_MB)}
     elif stage == "reference":
         kw = {"offline": a.offline, "refresh": a.refresh_reference and not a.offline}
         if a.reference_cache:
@@ -462,8 +572,56 @@ def cmd_status(a):
         mark = "done" if not why else ("out of date" if st else "not run")
         when = st.get("finished", "") if st else ""
         print(f"  {s:<10} {mark:<12} {when}" + (f"  ({why})" if why and st else ""))
+    for ln in explorer_status(a.out):
+        print(ln)
     nxt, why = plan(a)
     print("next: " + (" -> ".join(nxt) + f"   ({why})" if nxt else "nothing; everything is up to date"))
+
+
+def _mb(n):
+    return f"{(n or 0) / 1e6:,.1f} MB"
+
+
+def explorer_status(out):
+    """What the explorer stage recorded (status): bytes and files per volume, its row-count checks (every row of each
+    source table in each of its views), the exact check against tables/drug_effects, the self-check, the size
+    guard's moves, its warnings, and where to open it. [] when it has not run."""
+    st = read_stamp(out, "explorer")
+    if not st:
+        return []
+    i = st.get("info") or {}
+    vols = i.get("volumes") or {}
+    L = ["explorer: " + "; ".join(f"{n} {_mb(v.get('bytes'))} in {v.get('files', 0):,} files" for n, v in vols.items())]
+    comp = i.get("complete") or {}
+    short = [f"{src} -> {view}: {got:,} of {want:,} rows" for src, r in sorted(comp.items())
+             for view, (want, got) in sorted((r.get("views") or {}).items()) if want != got]
+    n_views = sum(len(r.get("views") or {}) for r in comp.values())
+    L.append(f"  rows: {len(comp)} source tables, shown in {n_views} places; " +
+             ("each place holds every row of its table" if not short else
+              f"{len(short)} place(s) miss rows: " + "; ".join(short[:5])))
+    ch = i.get("checks") or {}
+    de = ch.get("drug_effects") or {}
+    if de:
+        diff = sum(int(v or 0) for v in (de.get("different") or {}).values())
+        L.append(f"  tables/drug_effects: {int(de.get('rows') or 0):,} rows compared with the explorer's values, "
+                 f"{diff} difference(s)")
+    sc = ch.get("self_check") or {}
+    if sc:
+        L.append(f"  self-check: {int(sc.get('files') or 0):,} of {int(sc.get('of') or 0):,} files decoded and "
+                 f"compared with the sources, {int(sc.get('n_problems') or 0)} difference(s)")
+    moves = i.get("moves") or []
+    web0 = i.get("web_bytes_before_moves")
+    lim = i.get("pages_max_mb")
+    L.append("  size guard: " + ("no part moved" if not moves else "moved to the data volume (nothing dropped): "
+                                    + "; ".join(f"{m.get('what', m.get('part'))} ({m.get('files', 0):,} files, "
+                                                f"{_mb(m.get('bytes_freed'))})" for m in moves))
+             + (f" (the pages held {_mb(web0)} before any move; the limit is {lim:g} MiB)"
+                if web0 is not None and lim else ""))
+    for w in (i.get("warnings") or [])[:5]:
+        L.append(f"  warning: {w}")
+    L.append(f"  open: {os.path.join(out, 'explorer', 'web', 'index.html')}"
+             + (f"   (its address once published: {i['site_url']})" if i.get("site_url") else ""))
+    return L
 
 
 # duplicate: in these folders the arrays and tables are written once (to a .tmp file, then swapped in), so a hard link
@@ -720,8 +878,10 @@ def main(argv=None):
                     log(f"===== stage {s} =====")
                 run_stage(s, a)
             if a.command == "run":
+                xi = os.path.join(a.out, "explorer", "web", "index.html")
                 log(f"Run done in {(time.time() - t0) / 60:.1f} min. Vault: {os.path.join(a.out, 'vault')}  "
-                    f"map: {os.path.join(a.out, 'map', 'gene_map.html')}")
+                    f"map: {os.path.join(a.out, 'map', 'gene_map.html')}"
+                    + (f"  explorer: {xi}" if os.path.exists(xi) else ""))
     except SystemExit as e:
         T.log_exit(e)
         raise

@@ -22,6 +22,17 @@ found (as the pipeline finds it: $TAHOE_GIT, PATH, or on Windows Git for Windows
 repository), a commit of DEST that stores a CRLF file byte for byte with core.autocrlf=true. DIR/export_test is
 removed before and after (--keep keeps it), the commit's read-only git objects included.
 
+The explorer (export DEST --explorer; needs an output whose explorer stage ran): site/ is the web volume byte for
+byte, data/ the data volume as hard links (copies, checked against the stage's sha256, where links cannot be made);
+the pages are copies (never links: the stage can rewrite its page files in place); the upload lists hold every
+data file once, each within its limit, probe.js and MANIFEST.tsv last; publish.ps1 and
+publish.sh push only HEAD:refs/heads/main to the data repository and HEAD:refs/heads/site to the code repository;
+--pin-data rewrites site/d/hosts.js and its MANIFEST.tsv line and never the output's file; a small cap (pages,
+file or upload list) is refused before anything is written; a stale explorer is refused; --force replaces only what
+changed, removes what the explorer no longer has and stops at a file in the way; RELEASE_ASSETS.txt; the results
+README names the explorer; and, with bash and git, publish.sh end to end against local bare repositories standing in
+for GitHub (results and finalized untouched; the data branch keeps one snapshot).
+
 Prints PASS / FAIL per check; exit code 1 if anything fails.
 """
 
@@ -399,6 +410,25 @@ def command_line(base, out):
 
 
 @case
+def explorer_command_line(base, out):
+    if not os.path.exists(os.path.join(out, "stages", "explorer.json")):
+        return
+    dest = os.path.join(base, "pub_cli")
+    r = subprocess.run([sys.executable, "-m", "tahoemap", "export", dest, "--explorer", "--out", out, "--github",
+                        "tahoe-test/Tahoe100-PseudoManual"], cwd=REPO, capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
+    r2 = subprocess.run([sys.executable, "-m", "tahoemap", "export", dest, "--explorer", "--pin-data", "abcdef1"],
+                        cwd=REPO, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    h = _hosts(os.path.join(dest, "site", "d", "hosts.js")) if os.path.exists(os.path.join(dest, "site")) else {}
+    check("explorer", "python -m tahoemap export DEST --explorer: exit 0, next steps printed (create the data "
+          "repository, publish.ps1, Settings > Pages); --pin-data SHA from the command line",
+          r.returncode == 0 and "publish.ps1" in r.stdout and "Settings > Pages" in r.stdout
+          and "Tahoe100-PseudoManual-data" in r.stdout and r2.returncode == 0
+          and "/abcdef1/" in (h.get("data") or [""])[0],
+          (r.stdout + r.stderr)[-400:] + (r2.stdout + r2.stderr)[-200:])
+
+
+@case
 def git_commit(dest):
     git = find_git()             # as `tahoe` finds it: $TAHOE_GIT, PATH, then Git for Windows / a MinGit next to
     if not git:                  # the repository (the PC's git is such a MinGit, not on PATH)
@@ -425,6 +455,304 @@ def git_commit(dest):
           f"{n} tracked, {len(man) + 1} exported")
 
 
+# ----------------------------------------------------------------------------- the explorer (export --explorer)
+def _vol_manifest(root):
+    with open(os.path.join(root, "MANIFEST.tsv"), encoding="utf-8") as fh:
+        lines = fh.read().split("\n")
+    return {p: (int(n), h) for p, n, h in (ln.split("\t") for ln in lines[1:] if ln)}
+
+
+def _hosts(path):
+    import re
+    with open(path, encoding="utf-8") as fh:
+        return json.loads(re.match(r"^TAHOE_HOSTS\((.*)\);\s*$", fh.read(), re.S).group(1))
+
+
+def _pushes(script):
+    """(remote or variable, refspec) of every push line of a publish script, and the names of every branch it
+    names anywhere."""
+    import re
+    pushes = []
+    for ln in script.splitlines():
+        t = ln.strip()
+        if t.startswith("#") or " push " not in f" {t} ":
+            continue
+        pushes += re.findall(r"push\s+(?:-q\s+)?(?:--force\s+)?(\S+)\s+'?\"?([^\s'\"]+)", t)
+    return pushes
+
+
+def refspecs_ok(script, repo):
+    """The publish scripts' rule: every push is HEAD:refs/heads/main (the data repository) or HEAD:refs/heads/site
+    (the code repository); no line pushes or names results, finalized or master; the data remotes are
+    <repo>-data(.git) and the site remote <repo>.git. Returns (ok, detail)."""
+    import re
+    pushes = _pushes(script)
+    specs = sorted({sp for _r, sp in pushes})
+    bad = [sp for sp in specs if sp not in ("HEAD:refs/heads/main", "HEAD:refs/heads/site")]
+    named = [w for w in ("results", "finalized", "master") if re.search(rf"\b{w}\b", script)]
+    remotes = re.findall(r"https://github\.com/[A-Za-z0-9._/-]+", script)
+    data_r = [u for u in remotes if u.rstrip("/").endswith((f"{repo}-data.git", f"{repo}-data-dd.git"))]
+    site_r = [u for u in remotes if u.rstrip("/").endswith(f"/{repo}.git")]
+    others = [u for u in remotes if u not in data_r and u not in site_r]
+    ok = bool(pushes) and not bad and not named and not others and bool(site_r) and bool(data_r) and \
+        "HEAD:refs/heads/site" in specs and "HEAD:refs/heads/main" in specs
+    return ok, f"push refspecs {specs}; other refspecs {bad}; forbidden names {named}; other remotes {others}"
+
+
+@case
+def explorer_export(base, out):
+    xo = os.path.join(out, "explorer")
+    if not os.path.exists(os.path.join(out, "stages", "explorer.json")):
+        check("explorer", "(the output has no explorer: the explorer export checks are skipped)", True)
+        return None
+    web, dat = os.path.join(xo, "web"), os.path.join(xo, "data")
+    dest = os.path.join(base, "pub")
+    rec = quiet(X.explorer_export, out, dest, github="tahoe-test/Tahoe100-PseudoManual")
+    want = ["site", "data", "batches", "publish.ps1", "publish.sh", "PUBLISH.md", "RELEASE_ASSETS.txt",
+            "EXPLORER_EXPORT.json"]
+    have = sorted(os.listdir(dest))
+    check("explorer", "export --explorer writes site/, data/, batches/, publish.ps1, publish.sh, PUBLISH.md, "
+          "RELEASE_ASSETS.txt and EXPLORER_EXPORT.json", all(w in have for w in want), f"{have}")
+    wm = _vol_manifest(web)
+    site = os.path.join(dest, "site")
+    got = files_under(site)
+    diff = [p for p, (n, h) in wm.items() if p != "d/hosts.js"
+            and (not os.path.exists(os.path.join(site, *p.split("/"))) or sha(os.path.join(site, *p.split("/"))) != h)]
+    links = [p for p in got if os.path.samefile(os.path.join(site, *p.split("/")), os.path.join(web, *p.split("/")))]
+    check("explorer", "site/ is the web volume byte for byte, as copies (every MANIFEST.tsv row; .nojekyll, "
+          "README.md, .gitattributes and MANIFEST.tsv included; nothing else)",
+          not diff and got == set(wm) | {"MANIFEST.tsv"} and {".nojekyll", "README.md", ".gitattributes"} <= got
+          and not links, f"{len(got)} files, {len(wm)} listed; different {diff[:3]}; extra "
+                         f"{sorted(got - set(wm))[:4]}; hard links {links[:3]}")
+    dm = _vol_manifest(dat)
+    linked = [p for p in dm if os.path.samefile(os.path.join(dat, *p.split("/")),
+                                                os.path.join(dest, "data", *p.split("/")))]
+    check("explorer", "data/ is the data volume as hard links on the same disk (no extra space; its MANIFEST.tsv a "
+          "copy: DEST's own record)", not os.path.samefile(os.path.join(dat, "MANIFEST.tsv"),
+                                                           os.path.join(dest, "data", "MANIFEST.tsv"))
+          and sha(os.path.join(dat, "MANIFEST.tsv")) == sha(os.path.join(dest, "data", "MANIFEST.tsv")))
+    check("explorer", "data/ is the data volume as hard links on the same disk (no extra space)",
+          rec["hard_links"] and len(linked) == len(dm) and files_under(os.path.join(dest, "data")) == set(dm) |
+          {"MANIFEST.tsv"}, f"{len(linked)} of {len(dm)} files linked")
+    lists = [ln for f in sorted(os.listdir(os.path.join(dest, "batches"))) if f.startswith("data_")
+             for ln in open(os.path.join(dest, "batches", f), encoding="utf-8").read().split("\n") if ln]
+    with open(os.path.join(dest, "batches", "site.txt"), encoding="utf-8") as fh:
+        site_list = [ln for ln in fh.read().split("\n") if ln]
+    check("explorer", "upload lists: every data file in one list, .gitattributes first, probe.js and MANIFEST.tsv "
+          "last; site.txt lists every page file", sorted(lists) == sorted(set(dm) | {"MANIFEST.tsv"})
+          and len(lists) == len(set(lists)) and lists[0] == ".gitattributes" and lists[-2:] == ["probe.js",
+                                                                                                "MANIFEST.tsv"]
+          and sorted(site_list) == sorted(got), f"{len(lists)} data paths, {len(site_list)} site paths")
+    for name in ("publish.ps1", "publish.sh"):
+        with open(os.path.join(dest, name), encoding="utf-8") as fh:
+            ok, detail = refspecs_ok(fh.read(), "Tahoe100-PseudoManual")
+        check("explorer", f"{name} pushes only HEAD:refs/heads/main to the data repository and HEAD:refs/heads/site "
+              "to the code repository (never results, finalized or master)", ok, detail)
+    with open(os.path.join(dest, "PUBLISH.md"), encoding="utf-8") as fh:
+        md = fh.read()
+    words = ["New repository", "Tahoe100-PseudoManual-data", "Public", "Deploy from a branch", "/ (root)", "**site**",
+             "publish.ps1", "-ExecutionPolicy Bypass", "--force", "pages-build-deployment", "never touch"]
+    check("explorer", "PUBLISH.md: the one-time GitHub steps (data repository, Pages from branch site / root), the "
+          "upload and every later run", all(w in md for w in words), f"missing {[w for w in words if w not in md]}")
+    with open(os.path.join(dest, "RELEASE_ASSETS.txt"), encoding="utf-8") as fh:
+        ra = fh.read()
+    npys = sorted(f for f in os.listdir(os.path.join(out, "atlas", "effects")) if f.endswith(".npy"))
+    rows = {ln.split("\t")[0]: ln.split("\t") for ln in ra.splitlines() if ln.startswith("atlas/")}
+    good = [f for f in npys if f"atlas/effects/{f}" in rows
+            and rows[f"atlas/effects/{f}"][2] == sha(os.path.join(out, "atlas", "effects", f))]
+    check("explorer", "RELEASE_ASSETS.txt: every atlas/effects/*.npy with its sha256, and the gh release command",
+          len(good) == len(npys) > 0 and "gh release create explorer-" in ra and "-data" in ra,
+          f"{len(good)} of {len(npys)}")
+    # --pin-data
+    hp_out = os.path.join(web, "d", "hosts.js")
+    before = sha(hp_out)
+    commit = "0123456789abcdef0123456789abcdef01234567"
+    quiet(X.pin, dest, commit)
+    hp = os.path.join(dest, "site", "d", "hosts.js")
+    h = _hosts(hp)
+    sm = _vol_manifest(os.path.join(dest, "site"))
+    check("explorer", "--pin-data: site/d/hosts.js reads the data at that commit first, then the branch; its "
+          "MANIFEST.tsv line matches; the output's hosts.js is unchanged",
+          h["data"] == [f"https://raw.githubusercontent.com/tahoe-test/Tahoe100-PseudoManual-data/{commit}/",
+                        "https://raw.githubusercontent.com/tahoe-test/Tahoe100-PseudoManual-data/main/"]
+          and sm["d/hosts.js"] == (os.path.getsize(hp), sha(hp)) and sha(hp_out) == before
+          and h["run"] == rec["run"], f"{h['data']}")
+    msg = refused(quiet, X.pin, dest, "not-a-sha")
+    check("explorer", "--pin-data with something that is no commit id is refused", bool(msg and "commit" in msg),
+          msg or "")
+    # refusals: not empty without --force; small caps before anything is written; a stale explorer
+    msg = refused(quiet, X.explorer_export, out, dest, github="tahoe-test/Tahoe100-PseudoManual")
+    check("explorer", "a DEST with an earlier explorer export is refused without --force", bool(msg and "--force" in
+                                                                                                    (msg or "")), msg)
+    caps = [("site_max_mb", 1, "--pages-max-mb"), ("max_mb", 0.01, "GitHub refuses files"),
+            ("batch_bytes", 1000, "upload list")]
+    res = []
+    for k, v, word in caps:
+        d = os.path.join(base, f"pub_cap_{k}")
+        msg = refused(quiet, X.explorer_export, out, d, github="tahoe-test/Tahoe100-PseudoManual", **{k: v})
+        res.append((k, bool(msg and word in msg and not os.path.exists(d)), (msg or "")[:90]))
+    check("explorer", "small caps are refused before anything is written: the pages over --pages-max-mb, a file over "
+          "the file limit, a file larger than an upload list", all(r[1] for r in res), res)
+    stamp_p = os.path.join(out, "stages", "explorer.json")
+    keep = open(stamp_p, "rb").read()
+    st = json.loads(keep)
+    st["info"]["assets_sha"] = "0" * 64
+    write(stamp_p, json.dumps(st))
+    try:
+        msg1 = refused(quiet, X.explorer_export, out, os.path.join(base, "pub_stale"))
+    finally:
+        write(stamp_p, keep)
+    tp = os.path.join(out, "stages", "tables.json")
+    keep_t = open(tp, "rb").read()
+    tt = json.loads(keep_t)
+    tt["finished"] = "1999-01-01 00:00:00"
+    write(tp, json.dumps(tt))
+    try:
+        msg2 = refused(quiet, X.explorer_export, out, os.path.join(base, "pub_stale2"))
+    finally:
+        write(tp, keep_t)
+    check("explorer", "a stale explorer is refused: its page files changed (assets_sha), or a stage it was made from "
+          "ran again (run id)", bool(msg1 and "page files" in msg1 and msg2 and "run id" in msg2),
+          f"{(msg1 or '')[:80]} | {(msg2 or '')[:80]}")
+    # --force: unchanged files kept, the pinned hosts.js replaced, a file the explorer no longer has removed
+    gone = os.path.join(dest, "data", "x", "zz_old.js")
+    write(gone, "old")
+    with open(os.path.join(dest, "data", "MANIFEST.tsv"), "a", encoding="utf-8") as fh:
+        fh.write(f"x/zz_old.js\t3\t{sha(gone)}\n")
+    rec2 = quiet(X.explorer_export, out, dest, force=True, github="tahoe-test/Tahoe100-PseudoManual")
+    v2 = rec2["volumes"]
+    check("explorer", "--force: unchanged files kept, the pinned hosts.js replaced by the output's (publish pins it "
+          "again), a file the explorer no longer has removed",
+          v2["data"]["kept"] == len(dm) + 1 - 1 and v2["data"]["removed"] == 1 and not os.path.exists(gone)
+          and v2["site"]["copied"] >= 1 and _hosts(hp)["data"] == [
+              "https://raw.githubusercontent.com/tahoe-test/Tahoe100-PseudoManual-data/main/"], f"{v2}")
+    victim = sorted(p for p in dm if p.startswith("x/"))[0]
+    vp = os.path.join(dest, "data", *victim.split("/"))
+    os.remove(vp)
+    write(vp, "the user's own file")
+    mp = os.path.join(dest, "data", "MANIFEST.tsv")
+    with open(mp, encoding="utf-8") as fh:
+        kept_m = fh.read()
+    write(mp, "".join(ln + "\n" for ln in kept_m.split("\n") if ln and not ln.startswith(victim + "\t")))
+    msg = refused(quiet, X.explorer_export, out, dest, force=True, github="tahoe-test/Tahoe100-PseudoManual")
+    ok_way = bool(msg and victim in msg) and open(vp, encoding="utf-8").read() == "the user's own file"
+    os.remove(vp)
+    write(mp, kept_m)
+    quiet(X.explorer_export, out, dest, force=True, github="tahoe-test/Tahoe100-PseudoManual")
+    check("explorer", "--force: a file in the way that the earlier export did not write stops it, before anything is "
+          "copied", ok_way and os.path.samefile(vp, os.path.join(dat, *victim.split("/"))), msg or "")
+    # copies where hard links cannot be made
+    dcp = os.path.join(base, "pub_copy")
+    real_link = os.link
+
+    def no_link(*a, **k):
+        raise OSError(18, "Invalid cross-device link")
+    os.link = no_link
+    try:
+        rc = quiet(X.explorer_export, out, dcp, github="tahoe-test/Tahoe100-PseudoManual")
+    finally:
+        os.link = real_link
+    copies = [p for p in dm if not os.path.samefile(os.path.join(dat, *p.split("/")),
+                                                    os.path.join(dcp, "data", *p.split("/")))
+              and sha(os.path.join(dcp, "data", *p.split("/"))) == dm[p][1]]
+    check("explorer", "without hard links (another disk): copies, each checked against the stage's sha256",
+          not rc["hard_links"] and len(copies) == len(dm) and rc["volumes"]["data"]["copied"] == len(dm) + 1,
+          f"{len(copies)} of {len(dm)} copied")
+    # several upload lists
+    dsm = os.path.join(base, "pub_parts")
+    lim = max(4 * max(n for n, _h in dm.values()), sum(n for n, _h in dm.values()) // 3 + 1)
+    rp = quiet(X.explorer_export, out, dsm, github="tahoe-test/Tahoe100-PseudoManual", batch_bytes=lim)
+    sizes = rp["parts"]["data"]["bytes"]
+    check("explorer", "upload lists of at most the limit (here a third of the data): several lists, each within it",
+          len(sizes) > 1 and max(sizes) <= lim, f"{len(sizes)} lists, largest {max(sizes):,} of {lim:,} bytes")
+    shutil.rmtree(dcp, ignore_errors=True)
+    return dsm
+
+
+@case
+def results_readme_explorer(base, out):
+    dest = os.path.join(base, "dest_x")
+    rec = quiet(X.export, out, dest, github="tahoe-test/Tahoe100-PseudoManual")
+    with open(os.path.join(dest, "README.md"), encoding="utf-8") as fh:
+        rd = fh.read()
+    lo = dict(rec["left_out"])
+    want = ["**The explorer**", "https://tahoe-test.github.io/Tahoe100-PseudoManual/",
+            "https://github.com/tahoe-test/Tahoe100-PseudoManual-data", "export DEST --explorer"]
+    check("explorer", "the results README names the explorer's address and its data repository; the left-out list "
+          "says the explorer and tensor/ are published with export --explorer",
+          all(w in rd for w in want) and ("explorer" not in os.listdir(out) or "--explorer" in lo.get("explorer", ""))
+          and "explorer" in X.LEFT_OUT["tensor"], f"missing {[w for w in want if w not in rd]}")
+
+
+@case
+def publish_end_to_end(base, out, dest):
+    """publish.sh against local bare repositories (no network): GitHub's two repositories stand in."""
+    git = find_git()
+    bash = shutil.which("bash")
+    if not (git and bash and dest and os.path.exists(os.path.join(dest, "publish.sh")) and os.name != "nt"):
+        check("publish", "(bash, git or an explorer export missing: the end-to-end publish check is skipped)", True)
+        return
+    e2e = os.path.join(base, "e2e")
+    home = os.path.join(e2e, "home")
+    os.makedirs(home)
+    env = dict(os.environ, HOME=home, GIT_CONFIG_NOSYSTEM="1", TAHOE_PYTHON=sys.executable, TAHOE_GIT=git)
+    env.pop("GIT_CONFIG_GLOBAL", None)
+
+    def g(*args, cwd=e2e):
+        return subprocess.run([git, *args], cwd=cwd, capture_output=True, text=True, env=env)
+    g("config", "--global", "user.name", "tahoemap test")
+    g("config", "--global", "user.email", "test@example.invalid")
+    site_r, data_r = os.path.join(e2e, "site.git"), os.path.join(e2e, "data.git")
+    g("init", "-q", "--bare", site_r)
+    g("init", "-q", "--bare", data_r)
+    seed = os.path.join(e2e, "seed")
+    os.makedirs(seed)
+    g("init", "-q", cwd=seed)
+    write(os.path.join(seed, "a.txt"), "code\n")
+    g("add", "-A", cwd=seed)
+    g("commit", "-q", "-m", "code", cwd=seed)
+    g("push", "-q", site_r, "HEAD:refs/heads/finalized", cwd=seed)
+    g("push", "-q", site_r, "HEAD:refs/heads/results", cwd=seed)
+    g("symbolic-ref", "HEAD", "refs/heads/finalized", cwd=site_r)
+    before = g("for-each-ref", "--format=%(refname) %(objectname)", cwd=site_r).stdout
+    sp = os.path.join(dest, "publish.sh")
+    with open(sp, encoding="utf-8") as fh:
+        txt = fh.read()
+    keep = txt
+    txt = txt.replace("https://github.com/tahoe-test/Tahoe100-PseudoManual-data.git", data_r)
+    txt = txt.replace("SITE_REMOTE=https://github.com/tahoe-test/Tahoe100-PseudoManual.git", f"SITE_REMOTE={site_r}")
+    write(sp, txt)
+    try:
+        r1 = subprocess.run([bash, sp], cwd=e2e, capture_output=True, text=True, env=env)
+        refs1 = g("for-each-ref", "--format=%(refname) %(objectname)", cwd=site_r).stdout
+        n_parts = json.load(open(os.path.join(dest, "EXPLORER_EXPORT.json"), encoding="utf-8"))["parts"]["data"][
+            "lists"]
+        main1 = g("rev-parse", "main", cwd=data_r).stdout.strip()
+        count1 = g("rev-list", "--count", "main", cwd=data_r).stdout.strip()
+        hosts = g("show", "site:d/hosts.js", cwd=site_r).stdout
+        n_site = len([x for x in g("ls-tree", "-r", "--name-only", "site", cwd=site_r).stdout.split("\n") if x])
+        n_data = len([x for x in g("ls-tree", "-r", "--name-only", "main", cwd=data_r).stdout.split("\n") if x])
+        dm = _vol_manifest(os.path.join(out, "explorer", "data"))
+        wm = _vol_manifest(os.path.join(out, "explorer", "web"))
+        kept = [ln for ln in before.split("\n") if ln and ln not in refs1.split("\n")]
+        check("publish", "publish.sh: the data in parts to the data repository's main, the pages pinned to that "
+              "commit on the branch site; results and finalized untouched; nothing else pushed",
+              r1.returncode == 0 and not kept and f"/{main1}/" in hosts and count1 == str(n_parts)
+              and n_site == len(wm) + 1 and n_data == len(dm) + 1
+              and sorted(ln.split()[0] for ln in refs1.split("\n") if ln) == [
+                  "refs/heads/finalized", "refs/heads/results", "refs/heads/site"],
+              f"exit {r1.returncode}; {n_parts} part(s), main has {count1} commit(s); {n_site} site files, {n_data} "
+              f"data files; refs {refs1.split()}; {(r1.stderr or '')[-300:]}")
+        r2 = subprocess.run([bash, sp], cwd=e2e, capture_output=True, text=True, env=env)
+        count2 = g("rev-list", "--count", "main", cwd=data_r).stdout.strip()
+        site2 = g("rev-list", "--count", "site", cwd=site_r).stdout.strip()
+        check("publish", "publish.sh again: both branches replaced (one snapshot each: the data branch keeps "
+              f"{n_parts} commit(s), the site one)", r2.returncode == 0 and count2 == str(n_parts) and site2 == "1",
+              f"exit {r2.returncode}; data main {count2} commits, site {site2}; {(r2.stderr or '')[-300:]}")
+    finally:
+        write(sp, keep)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workdir", default=os.environ.get("TAHOE_TEST_DIR", DEFAULT_WORKDIR))
@@ -448,6 +776,10 @@ def main():
     with_effects(base, out)
     cli_dest = command_line(base, out)
     git_commit(cli_dest or os.path.join(base, "dest_cli"))
+    pub = explorer_export(base, out)
+    results_readme_explorer(base, out)
+    publish_end_to_end(base, out, pub)
+    explorer_command_line(base, out)
     if not a.keep:
         check("cleanup", "DEST copies and their git repository removed (read-only git objects too)", rm_tree(base),
               base)

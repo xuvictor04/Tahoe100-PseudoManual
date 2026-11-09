@@ -24,6 +24,11 @@
     tahoe module N        size, arms, label (validation stage), top genes per arm, top drug-doses up / down and the
                           lines where it responds most
 
+Lists and the explorer. Every list shows --top rows (default 15; the probable-direction lists 10 unless --top is
+given; --top all, or 0, shows every row of every list: no cap at all), cut by the cap rule below, and a list that
+leaves rows out says how many, with 'all N: <explorer URL>' - the explorer (pipeline stage `explorer`,
+tahoemap/links.py: its site URL, else the output's own explorer/web/index.html) holds every list in full.
+
 Alerts, not removal. An item with a reason for doubt - an artifact flag of the drug-dose for that gene (toxic,
 transcription drop, cell-cycle shift where it explains the change, unreliable plate only, position not correctable,
 position correction uncertain, wells disagree), a relation seen in one random half of the compounds only or in
@@ -80,6 +85,7 @@ import pandas as pd
 
 from . import atlas_core as A
 from . import direction_view as DV
+from . import links as LK
 from . import tables as TB
 from . import tlib as T
 from .common import ARROW, cap_keep, encodable, marked_names, printable, read_effects_index, safe_filename
@@ -104,6 +110,9 @@ ASCII = False               # set in main(): the output cannot show the arrow or
                             # laid out, so that every line keeps within WIDTH
 N_DIRECTION = 10            # rows per probable-direction list (the cap rule) unless --top is given (then --top)
 TOP_GIVEN = False           # set in main(): the user gave --top (the direction lists then show that many)
+TOP_ALL = 10 ** 9           # --top all (or 0): no list is capped
+SITE = None                 # set in main(): the explorer's site URL (links.site_url), None = none
+LOCAL_X = os.path.join("OUT", "explorer", "web", "index.html")   # set in main(): the output's own explorer
 
 # the file whose presence says a stage has run (look-ups must not depend on stage stamps: an output folder can be
 # assembled from finished stage folders)
@@ -189,11 +198,15 @@ def _text(v):
     return s.strip()
 
 
+_ADDRESS = re.compile(r"://|[\\/]\S*\.html")
+
+
 def _wrap(text, indent=2, sub=None, max_lines=None):
     sub = indent if sub is None else sub
     text = re.sub(r" (?=[µu]M\b)", "\u00a0", str(text))        # a dose stays with its unit ('5 µM')
-    lines = [x.replace("\u00a0", " ") for x in textwrap.wrap(
-        text, width=WIDTH, initial_indent=" " * indent, subsequent_indent=" " * sub, break_on_hyphens=False)] or [""]
+    lines = [x.replace("\u00a0", " ") for x in textwrap.wrap(      # a web address or a file path (the output's own
+        text, width=WIDTH, initial_indent=" " * indent, subsequent_indent=" " * sub, break_on_hyphens=False,
+        break_long_words=not _ADDRESS.search(text))] or [""]        # explorer) is never broken over two lines
     if max_lines and len(lines) > max_lines:
         lines = lines[:max_lines]
         last = _cut(lines[-1], WIDTH - 4)
@@ -309,13 +322,42 @@ def _capped(n, top, ok):
     return np.flatnonzero(keep)
 
 
-def _more(n, shown, n_alert_rest, what="", opt=" (--top)"):
-    """'... k more[ what] (j of them with an alert)' for the items a capped list leaves out ('' when none)."""
+def _more(n, shown, n_alert_rest, what="", opt=" (--top N, or --top all)", url=None):
+    """'... k more[ what] (j of them with an alert) (--top N, or --top all); all N: <explorer URL>' for the items a
+    capped list leaves out ('' when none)."""
     k = n - shown
     if k <= 0:
         return ""
     return (f"  ... {k} more" + (f" {what}" if what else "") + (f" ({n_alert_rest} of them with an alert)"
-                                                                 if n_alert_rest else "") + opt)
+                                                                 if n_alert_rest else "") + opt
+            + (f"; {_all_at(n, url)}" if url else ""))
+
+
+def parse_top(v):
+    """The --top value: a whole number of rows per list, or 'all' (also 0) for every row (TOP_ALL). For cli.py's
+    argument parser (type=query.parse_top)."""
+    if v is None:
+        return None
+    t = str(v).strip().lower()
+    if t in ("all", "0"):
+        return 0
+    try:
+        n = int(t)
+    except ValueError:
+        raise ValueError(f"--top takes a whole number of rows or 'all', not {v!r}") from None
+    if n < 0:
+        raise ValueError(f"--top takes a whole number of rows (>= 0) or 'all', not {v!r}")
+    return n
+
+
+def _xu(fn, *a, **k):
+    """An explorer address (fn: a links builder, links.gene ...); without a site URL the output's own explorer."""
+    return fn(SITE or LOCAL_X, *a, **k)
+
+
+def _all_at(n, url):
+    """'all N: <url>' - where every item of a capped list is (the explorer)."""
+    return f"all {n:,}: {url}" + ("" if SITE else " (this output's explorer, once the explorer stage has run)")
 
 
 def _n_alert(n, n_alert, what=""):
@@ -861,8 +903,9 @@ def _vault_note(o, folder_name, label):
 
 def _single_lines(o, c, direction, k=3):
     """The single-line view of a gene: the drug-doses that pass the calibrated per-line cut in the most lines
-    (tables/drug_line_top.parquet; flagged ones in their place with their alert, capped as _capped), as one sentence
-    ('' when none). An older tables stage listed clean drug-doses only."""
+    (tables/drug_line_top.parquet; flagged ones in their place with their alert, capped as _capped at k: 3, every
+    one with --top all), as one sentence ('' when none), with how many it names and the explorer address of all of
+    them. An older tables stage listed clean drug-doses only."""
     if not o.has("tables/drug_line_top.parquet"):
         return ""
     t = o.pq("tables/drug_line_top.parquet", filters=[("col", "==", int(c))],
@@ -877,19 +920,24 @@ def _single_lines(o, c, direction, k=3):
     order = sorted(g.groups, key=lambda d: (-len(g.groups[d]), -float(g.get_group(d)["az"].max()), d))
     okd = [bool(g.get_group(d)["clean"].iloc[0]) for d in order]
     parts = []
-    for i in _capped(len(order), k, okd):
+    show = _capped(len(order), k, okd)
+    for i in show:
         x = g.get_group(order[i])
         r0 = x.iloc[0]
         al = "" if okd[i] else _alert(r0.get("flags"), r0.get("cc_share"))
         cells = ", ".join(f"{_text(r['cell_name'])} {_fold(2 ** _num(r['lfc']))}" for _, r in x.head(4).iterrows())
         parts.append(f"{T.salt_base(_text(r0['drug']))} {_text(r0['dose'])} uM" + (f" ({ALERT} {al})" if al else "")
-                     + f" in {len(x)} line{'s' if len(x) != 1 else ''} ({cells}{', ...' if len(x) > 4 else ''})")
+                     + f" in {len(x)} line{'s' if len(x) != 1 else ''} ({cells}"
+                     + (f", ... {len(x) - 4} more lines" if len(x) > 4 else "") + ")")
     n_al = sum(not v for v in okd)
     what = (_n_alert(len(order), n_al, "drug-doses") if not older else
             f"{len(order)} clean drug-doses; an older tables stage left flagged ones out")
+    lab = o.genes().at[int(c), "label"]
     return (f"in single lines, at per-line |z| >= {o.line_cut()[0]:.1f} ({o.line_cut_note()}; "
             f"tables/drug_line_top, {what}): " + ("raised by " if direction == "up" else "lowered by ")
-            + "; ".join(parts))
+            + "; ".join(parts) + (f" ({len(show)} of {len(order)} drug-doses named; "
+                                  f"{_all_at(len(order), _xu(LK.gene, lab, 'lines'))})" if len(show) < len(order)
+                                  else ""))
 
 
 # ----------------------------------------------------------------------------- probable direction (direction stage)
@@ -929,7 +977,7 @@ def _dir_n(top):
 
 
 def _top_hint(total):
-    """Where the rows a capped list leaves out are: '--top N' lists them all."""
+    """Where the rows a capped list leaves out are: '--top N' lists them all (so does --top all)."""
     return f"(`--top {int(total)}` lists them all)"
 
 
@@ -943,9 +991,10 @@ def _dir_rows(P, rows, n, alerts="short", extra=None, max_names=4):
     """A probable-direction list, rows in direction_view's ORDER, capped by the cap rule (the n strongest, and any of
     the n strongest without an alert beyond them; DV.cap): per row its rank and edge line (arrow, grade, what the
     source's activity probably does, the kind of evidence, q), then the comparison (kind_text, where it differs from
-    the row above) and its numbers (the stage's reading), extra(row) when given, and the alerts (ALERT + short labels;
-    alerts='long': every reason in full). The texts are direction_view's (and direction.py's readings); lines are
-    wrapped, never cut. Returns (shown, n_more, n_more_alert)."""
+    the row above) and its numbers (the stage's reading), extra(row) when given, the alerts (ALERT + short labels;
+    alerts='long': every reason in full, and the notes in full too) and the support (short labels; with alerts='long'
+    in full). The texts are direction_view's (and direction.py's readings); lines are wrapped, never cut. Returns
+    (shown, n_more, n_more_alert)."""
     if rows is None or not len(rows):
         return 0, 0, 0
     al = rows["has_alert"].to_numpy(dtype=bool)
@@ -962,20 +1011,30 @@ def _dir_rows(P, rows, n, alerts="short", extra=None, max_names=4):
         a = DV.alert_long(r, ASCII) if alerts == "long" else DV.alert_short(r, ASCII)
         if a:
             P += _wrap(a, 7, 9)
+        nl = DV.notes_long(r, ASCII) if alerts == "long" else ""
+        if nl:
+            P += _wrap(_dt(f"notes in full: {nl}"), 7, 9)
+        sp = DV.support_long(r, ASCII) if alerts == "long" else DV.support_short(r, ASCII)
+        if sp:
+            P += _wrap(_dt(f"support: {sp}"), 7, 9)
     rest = np.setdiff1d(np.arange(len(rows)), keep)
     return len(keep), int(rest.size), int(al[rest].sum())
 
 
-def _dir_list(P, title, rows, n, what="arrows", **kw):
-    """One list: its title with the counts (DV.counts_text), the rows (_dir_rows), and what the cap leaves out
-    (DV.more_text)."""
+def _dir_list(P, title, rows, n, what="arrows", url=None, **kw):
+    """One list: its title with the counts (DV.counts_text), the caveats every arrow of its kinds carries (stated
+    once: DV.caveat_header), the rows (_dir_rows: each edge line with the short labels of its notes, its alerts
+    below), and what the cap leaves out (DV.more_text) with the explorer address of all of them (url)."""
     P += _wrap(_dt(f"{title}: {DV.counts_text(rows, what)}"), 2, 4)
     if rows is None or not len(rows):
         return 0
+    cav = DV.caveat_header(rows, ASCII)
+    if cav:
+        P += _wrap(_dt(cav), 4, 4)
     shown, n_more, n_more_al = _dir_rows(P, rows, n, **kw)
     more = DV.more_text(n_more, n_more_al, what)
     if more:
-        P += _wrap(_dt(f"... {more} {_top_hint(len(rows))}"), 2, 6)
+        P += _wrap(_dt(f"... {more} {_top_hint(len(rows))}" + (f"; {_all_at(len(rows), url)}" if url else "")), 2, 6)
     if n is not None and shown > n:
         P += _wrap(f"rows beyond #{n}: among the {n} strongest without an alert, shown so that rows with an alert do "
                    "not push them out", 4, 6)
@@ -989,9 +1048,11 @@ def _dir_legend(P):
                "lowers its level or the cells' numbers under a drug-dose (lowers = makes the cells more sensitive), "
                "strengthens or weakens its drug response, or 'not inferred' (mechanism not recorded) - (the evidence; "
                "q: Benjamini-Hochberg over the kind's whole table of tests); below it the comparison (where it "
-               f"changes) and its numbers; {_dt(ALERT)} = a reason to doubt the arrow, in short labels (every reason "
-               "in full: `tahoe pair SOURCE TARGET`, the map's side panel or direction/edges.parquet), kept in its "
-               f"ranked place; order: {DV.ORDER}", 2, 4)
+               f"changes) and its numbers; {_dt(ALERT)} = a reason to doubt the arrow (an alert), in short labels; "
+               "'notes:' = reasons kept below their thresholds, and context; 'support:' = evidence for the arrow "
+               "(for example the compounds that agree); a caveat that every arrow of a kind "
+               "carries is stated once above the list (every reason in full: `tahoe pair SOURCE TARGET`, the "
+               f"explorer or direction/edges.parquet); a row keeps its ranked place; order: {DV.ORDER}", 2, 4)
     P += _wrap(DV.SIGN_RESPONSE_NOTE, 2, 4)
     P += _wrap("grades: " + "; ".join(DV.grade_legend("long")), 2, 4)
     P += _wrap("evidence: mutation = a recorded mutation of the source (Tahoe's cell-line genetics: lines with it vs "
@@ -1028,8 +1089,9 @@ def _dir_gene(o, P, gene, lab, top):
                    "natural level across the lines; each needs a test result at q < 0.10.", 2, 4)
         P += _wrap(_dt(DV.CAVEAT), 2, 4)
         return
+    url = _xu(LK.gene, lab, "direction") if isinstance(gene, (int, np.integer)) else _xu(LK.search, lab)
     for title, rows in lists:
-        _dir_list(P, title, rows, n)
+        _dir_list(P, title, rows, n, url=url)
     _dir_legend(P)
 
 
@@ -1150,7 +1212,8 @@ def gene_report(o, c, top, how=""):
                f"{_n_alert(len(sub), int((~ok).sum()), f'with |z| >= 3 or q < {Q_CUT:g}')}; {int(sig.sum())} "
                f"significant (*), {int((sig & ok).sum())} of them without an alert; a response in fewer than about "
                "half of the measured lines does not reach the pooled data")
-        one = _single_lines(o, c, "up" if sign > 0 else "down") if int((sig & ok).sum()) < SHORT_POOLED else ""
+        one = _single_lines(o, c, "up" if sign > 0 else "down", k=TOP_ALL if top >= TOP_ALL else 3) \
+            if int((sig & ok).sum()) < SHORT_POOLED else ""
         if not len(sub):
             P.append("  none")
             P += _wrap(one, 2, 4) if one else []
@@ -1170,9 +1233,10 @@ def gene_report(o, c, top, how=""):
         else:
             P += _table(["#", "drug", "uM", "fold", "z", "q", "lines", "alert", "dose pattern", "caveats"], rows,
                         "rlrrrrrlll", flex=(1, 8, 9), mins={1: 14, 8: 12, 9: 10}, drop=(8,))
-        more = _more(len(sub), len(show), int((~ok).sum()) - int((~ok[show]).sum()))
+        more = _more(len(sub), len(show), int((~ok).sum()) - int((~ok[show]).sum()),
+                     url=_xu(LK.gene, lab, "drugs"))
         if more:
-            P.append(more)
+            P += _wrap(more.strip(), 2, 6)
         if len(show) > top:
             P += _wrap(f"rows beyond #{top}: the strongest without an alert, shown so that flagged drug-doses do not "
                        "push them out", 2, 4)
@@ -1247,8 +1311,9 @@ def gene_report(o, c, top, how=""):
                      "z"], rows, "llrrrlrrlrr", flex=(1, 5, 8), mins={1: 6, 5: 14, 8: 14}, drop=(1, 2))
         n_only = int(((rest["n"] > 0) & (rest["n_clean"] == 0)).sum())
         if len(rest):
-            P.append(f"  ... {len(rest)} more lines" + (f" ({n_only} of them with only flagged drug-doses)"
-                                                        if n_only else "") + " (--top)")
+            P += _wrap(f"... {len(rest)} more lines" + (f" ({n_only} of them with only flagged drug-doses)"
+                                                          if n_only else "") + " (--top N, or --top all); "
+                       + _all_at(len(expd), _xu(LK.gene, lab, "lines")), 2, 6)
         if len(shown) > top:
             P += _wrap(f"lines beyond #{top}: among the {top} lines with the most drug-doses without an alert, shown "
                        "so that lines moved only by flagged drug-doses do not push them out", 2, 4)
@@ -1291,7 +1356,8 @@ def gene_report(o, c, top, how=""):
             continue
         P += _table(PARTNER_HEAD, rows, "lrrlrlll", flex=(6, 7, 0), mins={6: 18, 7: 14, 0: 8}, drop=(7, 5))
         if len(rows) < n:
-            P.append(f"  ... {n - len(rows)} more on this side (--top)")
+            P += _wrap(f"... {n - len(rows)} more on this side (--top N, or --top all); "
+                       + _all_at(n, _xu(LK.gene, lab, "partners")), 2, 6)
         rep = rel[(np.sign(rel["cos"]) == sign) & (rel["evidence"] == "both halves")]
         if "fdr" in rep:
             rep = rep[rep["fdr"].fillna(1.0) <= REPRO_FDR]
@@ -1484,9 +1550,10 @@ def drug_report(o, drug, top):
                     rows, "rlrrrllrlrrrl", flex=(1, 5, 8, 12), mins={1: 8, 5: 5, 8: 8, 12: 5})
         for (part, show), word in zip(sides, ("raised", "lowered")):
             al = ~part["clean"].astype(bool).to_numpy()
-            more = _more(len(part), len(show), int(al.sum()) - int(al[show].sum()), word)
+            more = _more(len(part), len(show), int(al.sum()) - int(al[show].sum()), word, url=_xu(LK.dd, d))
             if more:
-                P.append(more)
+                P += _wrap(more.strip(), 2, 6)
+        P += _wrap(f"every gene at {r['dose']} uM (pooled and per line, exact): {_xu(LK.dd, d)}", 2, 6)
 
     # similar drugs
     _title(P, "MOST SIMILAR DRUGS - cosine of the drug vectors (each drug's best dose) in the gene space")
@@ -1528,7 +1595,7 @@ def drug_report(o, drug, top):
             cand = [j for j in np.argsort(-np.where(np.isfinite(cs), cs, -np.inf))
                     if j != i and np.isfinite(cs[j]) and nrm[j] > 0]
             ok = np.array([not why(j) for j in cand], dtype=bool)
-            show = _capped(len(cand), min(top, 12), ok)
+            show = _capped(len(cand), top, ok)
             rows = []
             for k in show:
                 j = cand[k]
@@ -1544,6 +1611,10 @@ def drug_report(o, drug, top):
                            f"significant genes at the drug's vector dose; {ALERT} only N significant genes (< "
                            f"{min_act}): the vector is mostly noise; {ALERT} dose flagged: artifact flags at the "
                            "vector dose", 2, 4)
+                more = _more(len(cand), len(show), int((~ok).sum()) - int((~ok[show]).sum()), "drugs",
+                             url=_xu(LK.drug, drug))
+                if more:
+                    P += _wrap(more.strip(), 2, 6)
             else:
                 P.append("  no other drug has a vector")
 
@@ -1558,7 +1629,8 @@ def drug_report(o, drug, top):
         with np.errstate(invalid="ignore"):
             best = np.nanmax(np.abs(M), axis=1) if M.size else np.zeros(len(mods))
         best = np.nan_to_num(best, nan=0.0)
-        order = [m for m in np.argsort(-best) if best[m] > 0][:min(top, 10)]
+        moved = [m for m in np.argsort(-best, kind="stable") if best[m] > 0]
+        order = moved[:top]
         rows = []
         for m in order:
             mr = mods.iloc[m]
@@ -1566,6 +1638,11 @@ def drug_report(o, drug, top):
                         [o.module_label(int(mr["module"]))])
         P += _table(["module", "genes"] + [f"{x} uM" for x in rows_dd["dose"]] + ["label"], rows,
                     "rr" + "r" * len(dds) + "l", flex=(2 + len(dds),), mins={2 + len(dds): 16})
+        P += _wrap(f"{len(moved):,} of the {len(mods):,} modules have a score at its doses, ranked by the largest "
+                   f"|score|; {len(order):,} shown", 2, 4)
+        more = _more(len(moved), len(order), 0, "modules", url=_xu(LK.drug, drug))
+        if more:
+            P += _wrap(more.strip(), 2, 6)
 
     # lines
     ln = o.lines()
@@ -1588,8 +1665,9 @@ def drug_report(o, drug, top):
         show = _capped(len(rows), top, ok)
         P += _table(["uM", "line", "organ", "abundance", "z", "alert (drug-dose artifact flags)"],
                     [rows[i][2] for i in show], "lllrrl", flex=(2, 5), mins={2: 6, 5: 12})
-        P.append(f"  {_n_alert(len(rows), int((~ok).sum()), 'dose x line pairs')}"
-                 + (f"; {len(rows) - len(show)} more (--top)" if len(rows) > len(show) else ""))
+        P += _wrap(f"{_n_alert(len(rows), int((~ok).sum()), 'dose x line pairs')}"
+                   + (f"; {len(rows) - len(show)} more (--top N, or --top all); "
+                      + _all_at(len(rows), _xu(LK.drug, drug)) if len(rows) > len(show) else ""), 2, 6)
     else:
         P.append("  none")
     _title(P, "LINES THAT SHOW ITS RESPONSE MOST - DD_beta",
@@ -1603,12 +1681,13 @@ def drug_report(o, drug, top):
             continue
         any_beta = True
         o_ = [l for l in np.argsort(-np.nan_to_num(b, nan=-np.inf), kind="stable") if np.isfinite(b[l])]
-        k = min(8, len(o_) // 2)                       # 'most' and 'least' never share a line
+        k = min(top, 8 if not TOP_GIVEN else top, len(o_) // 2)   # 'most' and 'least' never share a line
         fl = _artifacts(r["flags"])
         P += _wrap(f"{r['dose']} uM ({len(o_)} lines{f'; {ALERT} ' + fl if fl else ''}): most: "
                    + ", ".join(f"{ln.at[l, 'name']} {b[l]:.2f}" for l in (o_[:k] if k else o_))
-                   + (";  least: " + ", ".join(f"{ln.at[l, 'name']} {b[l]:.2f}" for l in o_[::-1][:k]) if k else ""),
-                   2, 4)
+                   + (";  least: " + ", ".join(f"{ln.at[l, 'name']} {b[l]:.2f}" for l in o_[::-1][:k]) if k else "")
+                   + (f" ({2 * k} of {len(o_)} lines named, --top N; {_all_at(len(o_), _xu(LK.dd, int(r['dd'])))})"
+                      if k and 2 * k < len(o_) else ""), 2, 4)
     if not any_beta:
         P.append("  no estimate at any dose (fewer than 20 significant genes)")
 
@@ -1645,8 +1724,9 @@ def _dir_drug(o, P, drug, dds, top):
                    "a drug-target arrow (a class of >= 2 compounds sharing a listed target and mechanism).", 2, 4)
         P += _wrap(_dt(DV.CAVEAT), 2, 4)
         return
+    url = _xu(LK.drug, drug, "direction")
     _dir_list(P, "genes that set how the cells fare under it (arrows gene → the cells under one of its doses: their "
-                 "numbers relative to the other lines in the same wells)", cells, n)
+                 "numbers relative to the other lines in the same wells)", cells, n, url=url)
     keys = {drug.lower(), str(T.salt_base(drug)).lower()}
 
     def mine(r):
@@ -1657,7 +1737,7 @@ def _dir_drug(o, P, drug, dds, top):
     _dir_list(P, "its targets: what acting on them probably does (drug-target arrows of the compound classes it "
                  "belongs to - compounds sharing a listed target and mechanism, one molecule counted once under all "
                  "its names: the target → a gene whose level those compounds move; a row naming several targets is "
-                 "one test, any of them could be the cause)", tg, n, extra=mine)
+                 "one test, any of them could be the cause)", tg, n, extra=mine, url=url)
     _dir_legend(P)
 
 
@@ -1701,7 +1781,7 @@ def _dir_group_rows(o, dv):
     return o._cached("dir_group_rows", load)
 
 
-def _dir_groups_block(o, P, dv, recs, n, what):
+def _dir_groups_block(o, P, dv, recs, n, what, url=None):
     """Comparison groups (groups.parquet records) as a ranked list - most arrows first, then the best grade, then the
     gene - capped by the cap rule on the groups' own alerts: per group its comparison, its arrows by target (a gene's
     drug response / its level / the cells) and grade, how it was compared, and its alerts. Returns the positions of
@@ -1738,9 +1818,8 @@ def _dir_groups_block(o, P, dv, recs, n, what):
         bits = []
         if pre == "null":
             names = [x for x in _text(rec.get("genes_same_lines")).split(", ") if x] or [_text(rec.get("gene"))]
-            if len(names) > 1:
-                bits.append(f"genes absent from exactly these lines: {', '.join(names[:8])}"
-                            + (f" (+{len(names) - 8} more)" if len(names) > 8 else "") + "; any of them could be the "
+            if len(names) > 1:                   # every gene of the set (no name is left out)
+                bits.append(f"genes absent from exactly these lines: {', '.join(names)}; any of them could be the "
                             "cause")
         bits.append("compared within organs" if bool(rec.get("stratified")) else "compared across organs")
         if _text(rec.get("note")):
@@ -1749,10 +1828,14 @@ def _dir_groups_block(o, P, dv, recs, n, what):
         a = DV.alert_short(_text(rec.get("alerts")), ASCII)
         if a:
             P += _wrap(a, 7, 9)
+        nt = DV.notes_short(_text(rec.get("notes")), ASCII)
+        if nt:
+            P += _wrap(("- " if ASCII else "· ") + f"notes: {nt}", 7, 9)
     rest = np.setdiff1d(np.arange(len(ranked)), keep)
     more = DV.more_text(int(rest.size), int(al[rest].sum()), what)
     if more:
-        P += _wrap(_dt(f"... {more} {_top_hint(len(ranked))}"), 2, 6)
+        P += _wrap(_dt(f"... {more} {_top_hint(len(ranked))}" + (f"; {_all_at(len(ranked), url)}" if url else "")),
+                   2, 6)
     if len(keep) > n:
         P += _wrap(f"{what} beyond #{n}: among the {n} with the most arrows without an alert, shown so that {what} "
                    "with an alert do not push them out", 4, 6)
@@ -1778,21 +1861,22 @@ def _dir_line(o, P, r, top):
     geno = [x for x in alt if x.get("kind") == "genotype"]
     null = [x for x in alt if x.get("kind") == "null"]
     n = _dir_n(top)
+    url = _xu(LK.line, _text(r.get("cell_name")) or _text(r.get("name")))
     P += _wrap(f"recorded alterations - the comparison groups that count this line as altered (Tahoe's cell-line "
                f"genetics: a gene's loss of function, gain of function, or any record, against the lines with no "
                f"record of the gene; a group needs >= 3 lines on each side): "
                f"{_n_alert(len(geno), sum(1 for x in geno if _text(x.get('alerts'))), 'groups')}; in "
                f"{n_other} other groups it is on the 'not recorded' side", 2, 4)
-    pos_g = _dir_groups_block(o, P, dv, geno, n, "groups") if geno else np.zeros(0, dtype=np.int64)
+    pos_g = _dir_groups_block(o, P, dv, geno, n, "groups", url) if geno else np.zeros(0, dtype=np.int64)
     P += _wrap(f"genes it does not express (natural knockouts) - genes this line does not express (it reads only the "
                f"well's ambient RNA) while >= 3 other lines do, compared as lines without the gene vs lines "
                f"expressing it: "
                f"{_n_alert(len(null), sum(1 for x in null if _text(x.get('alerts'))), 'line sets')}", 2, 4)
-    pos_n = _dir_groups_block(o, P, dv, null, n, "line sets") if null else np.zeros(0, dtype=np.int64)
+    pos_n = _dir_groups_block(o, P, dv, null, n, "line sets", url) if null else np.zeros(0, dtype=np.int64)
     pos = np.unique(np.concatenate([pos_g, pos_n]))
     if len(pos):
         _dir_list(P, "the strongest arrows of these groups (the same arrows for every line of a group)",
-                  dv.rows.iloc[pos], n)
+                  dv.rows.iloc[pos], n, url=url)
         _dir_legend(P)
     else:
         P += _wrap(_dt(DV.CAVEAT), 2, 4)
@@ -1861,13 +1945,20 @@ def cmd_line(o, names, top):
         rows.append([str(k + 1), g.at[i, "label"], _f(cpm[l, i], "{:,.0f}"), _f(2 ** med_o[i] - 1, "{:,.1f}"),
                      _fold(2 ** spec[i]), f"{ln.at[nxt[i], 'name']} {cpm[nxt[i], i]:,.0f}", f"{int(nexp[i])}",
                      gene_alert(i), o.ann_name(i)])
+    lurl = _xu(LK.line, _text(r.get("cell_name")) or nm)
     if rows:
         P += _table(["#", "gene", "CPM here", "median other", "x median", "next highest line (CPM)", "lines expr",
                      "alert", "name"], rows, "rlrrrlrll", flex=(5, 8), mins={5: 12, 8: 10})
+        n_al = sum(1 for i in order if gene_alert(i))
+        P += _wrap(_n_alert(len(order), n_al, f"genes at >= {SPECIFIC_MIN_CPM:g} CPM here, ranked by x median"), 2, 4)
+        more = _more(len(order), len(show), n_al - sum(1 for k in show if gene_alert(order[k])), "genes",
+                     url=lurl)
+        if more:
+            P += _wrap(more.strip(), 2, 6)
     else:
         P.append("  none")
     okl = (med_o >= np.log2(20 + 1)) & (nexp >= 0.5 * len(ln)) & np.isfinite(spec)
-    kl = min(top, 10)
+    kl = top                                   # the cap follows --top (it was 10 at most)
     order = [i for i in np.argsort(np.where(okl, spec, np.inf)) if okl[i] and spec[i] < -1]
     show = _capped(len(order), kl, [not noise[i] for i in order])
     _title(P, "SPECIFICALLY LOW AT BASELINE - absent or low here, expressed in most lines",
@@ -1879,6 +1970,12 @@ def cmd_line(o, names, top):
                       _f(2 ** med_o[order[k]] - 1, "{:,.0f}"), _fold(2 ** spec[order[k]]),
                       "yes" if em[l, order[k]] else "no", f"{ALERT} noise-class RNA" if noise[order[k]] else "",
                       o.ann_name(order[k])] for k in show], "rlrrrlll", flex=(7,), mins={7: 10})
+        n_al = int(sum(bool(noise[i]) for i in order))
+        P += _wrap(_n_alert(len(order), n_al, "genes below 0.5x the median line here"), 2, 4)
+        more = _more(len(order), len(show), n_al - int(sum(bool(noise[order[k]]) for k in show)), "genes",
+                     url=lurl)
+        if more:
+            P += _wrap(more.strip(), 2, 6)
     else:
         P.append("  none at < 0.5x the median line")
 
@@ -1897,9 +1994,9 @@ def cmd_line(o, names, top):
                     [[str(k + 1), dd.at[hit[k], "drug"], dd.at[hit[k], "dose"], _fold(2 ** a_[hit[k]]),
                       _z(az[hit[k]]), _int(dd.at[hit[k], "n_sig_genes"]), _flags_shown(dd.at[hit[k], "flags"])]
                      for k in show], "rllrrrl", flex=(1, 6), mins={1: 14, 6: 12})
-        more = _more(len(hit), len(show), int((~okd).sum()) - int((~okd[show]).sum()))
+        more = _more(len(hit), len(show), int((~okd).sum()) - int((~okd[show]).sum()), url=lurl)
         if more:
-            P.append(more)
+            P += _wrap(more.strip(), 2, 6)
     else:
         P.append("  none")
 
@@ -1927,9 +2024,9 @@ def cmd_line(o, names, top):
         P.append(f"  {_n_alert(len(dlt), int((~okc).sum()), 'cells')}"
                  + (" (an older tables stage: clean drug-doses only)" if older else "")
                  + "; a large per-line fold change with a small pooled one = a response specific to this line")
-        more = _more(len(dlt), len(show), int((~okc).sum()) - int((~okc[show]).sum()))
+        more = _more(len(dlt), len(show), int((~okc).sum()) - int((~okc[show]).sum()), url=lurl)
         if more:
-            P.append(more)
+            P += _wrap(more.strip(), 2, 6)
     else:
         P.append("  none")
     _dir_line(o, P, r, top)
@@ -2266,7 +2363,7 @@ def cmd_pair(o, names, top):
             return f"{ALERT} {a}"
         return f"{ALERT} " + "; ".join(x for x in (f"{la}: {a}" if a else "", f"{lb}: {b}" if b else "") if x)
 
-    k = min(top, 10)
+    k = top if TOP_GIVEN else min(top, 10)          # 10 by default; --top N (or --top all) sets it
     for sign, word in ((1, "SAME DIRECTION"), (-1, "OPPOSITE DIRECTIONS")):
         idx = np.flatnonzero(both & (np.sign(prod) == sign))
         idx = idx[np.argsort(-np.abs(prod[idx]))]
@@ -2275,16 +2372,17 @@ def cmd_pair(o, names, top):
         _title(P, f"DRUG-DOSES THAT MOVE BOTH, {word} - every drug-dose with pooled |z| >= {PAIR_Z:g} for each",
                f"{_n_alert(len(idx), int((~ok).sum()), 'drug-doses')}; {ALERT} = an artifact flag for one or both "
                f"genes ('cell cycle ~N%': the drug-dose's cell-cycle shift would explain ~N% of the gene's change), "
-               f"kept in its place; top {k} by z({la}) x z({lb})")
+               f"kept in its place; " + (f"top {k} by z({la}) x z({lb})" if k < TOP_ALL else
+                                         f"by z({la}) x z({lb})"))
         if len(idx):
             P += _table(["#", "drug", "uM", f"{la} fold", "z", f"{lb} fold", "z", "alert", "caveats"],
                         [[str(j + 1), dd.at[d, "drug"], dd.at[d, "dose"], _fold(2 ** fa[d]), _z(za[d]),
                           _fold(2 ** fb[d]), _z(zb[d]), pair_alert(d), _caveats(dd.at[d, "flags"]) or "-"]
                          for j, d in ((j, idx[j]) for j in show)], "rllrrrrll", flex=(1, 8),
                         mins={1: 12, 8: 8})
-            more = _more(len(idx), len(show), int((~ok).sum()) - int((~ok[show]).sum()))
+            more = _more(len(idx), len(show), int((~ok).sum()) - int((~ok[show]).sum()), url=_xu(LK.pair, la, lb))
             if more:
-                P.append(more)
+                P += _wrap(more.strip(), 2, 6)
         else:
             P.append("  none")
 
@@ -2425,19 +2523,19 @@ def cmd_module(o, names, top):
             n_al = int(part["col"].isin(fo).sum())
             n_al_shown = int(part["col"].iloc[sh].isin(fo).sum()) if len(sh) else 0
             line = f"{a_} arm: {_n_alert(len(part), n_al, 'genes')}" if opp else _n_alert(len(part), n_al, "genes")
-            more = _more(len(part), len(sh), n_al - n_al_shown, "genes")
+            more = _more(len(part), len(sh), n_al - n_al_shown, "genes", url=_xu(LK.module, m))
             P.append(f"  {line}" + (f"; shown {len(sh)}" if len(sh) < len(part) else "") + (
                 f"; rows beyond #{top}: the strongest without an alert, shown so that flagged members do not push "
                 "them out" if len(sh) > top else ""))
             if more:
-                P.append("  " + more.strip())
+                P += _wrap(more.strip(), 2, 6)
 
         dd = o.drugdoses()
         art = dd["artifact"].to_numpy()
         if o.has("graph/module_pooled_z.npy"):
             pz = np.asarray(o.npy("graph/module_pooled_z.npy")[i], dtype=np.float64)
             order = np.argsort(-np.nan_to_num(pz, nan=0.0))
-            k = min(top, 12)
+            k = top if TOP_GIVEN else min(top, 12)      # 12 by default; --top N (or --top all) sets it
             up_all = [d for d in order if np.isfinite(pz[d]) and pz[d] > 0]
             dn_all = [d for d in order[::-1] if np.isfinite(pz[d]) and pz[d] < 0]
             sides = [(lst, _capped(len(lst), k, [not art[d] for d in lst])) for lst in (up_all, dn_all)]
@@ -2467,6 +2565,11 @@ def cmd_module(o, names, top):
                     fl.setdefault(_artifacts(dd.at[d, "flags"]), []).append(dd.at[d, "label"] + " uM")
             if fl:
                 P += _wrap(f"{ALERT} " + "; ".join(f"{', '.join(v)}: {a_}" for a_, v in fl.items()), 2, 4)
+            for (lst, show), word in zip(sides, ("raising it", "lowering it")):
+                more = _more(len(lst), len(show), int(sum(art[d] for d in lst)) - int(sum(art[lst[x]] for x in show)),
+                             f"drug-doses {word}", url=_xu(LK.module, m))
+                if more:
+                    P += _wrap(more.strip(), 2, 6)
         pz = np.asarray(o.npy("graph/module_pooled_z.npy")[i], dtype=np.float64) \
             if o.has("graph/module_pooled_z.npy") else None
         if o.has("graph/module_scores.npy"):
@@ -2485,7 +2588,8 @@ def cmd_module(o, names, top):
                 follow = np.nanmean(S[main] * np.sign(pz[main])[:, None], axis=0) if main else \
                     np.full(S.shape[1], np.nan)
             key = np.where(np.isfinite(follow), follow, spread)
-            ol = [l for l in np.argsort(-np.nan_to_num(key, nan=-np.inf)) if np.isfinite(key[l])][:min(top, 10)]
+            ol_all = [l for l in np.argsort(-np.nan_to_num(key, nan=-np.inf)) if np.isfinite(key[l])]
+            ol = ol_all[:top if TOP_GIVEN else min(top, 10)]       # 10 by default; --top N (or --top all) sets it
             _title(P, "RESPONSIVE LINES - how strongly each line shows the module's response",
                    f"follows = mean per-line score on the module's {len(main)} main clean drug-doses (an estimate: "
                    "drug-doses with an artifact flag are left out of it), signed so that > 0 = the line moves the "
@@ -2507,6 +2611,9 @@ def cmd_module(o, names, top):
                     rows.append(["", "", "", "", f"no alert: {dd.at[d2, 'label']} uM ({_z(S[d2, l])})"])
             P += _table(["line", "organ", "follows", "median |score|", "strongest drug-dose (score)"], rows,
                         "llrrl", flex=(1, 4), mins={1: 6, 4: 16}, drop=(1,))
+            more = _more(len(ol_all), len(ol), 0, "lines", url=_xu(LK.module, m))
+            if more:
+                P += _wrap(more.strip(), 2, 6)
         tb = [["members", o.p("graph", "nodes.parquet"), f"module == {m}"],
               ["module", o.p("graph", "modules.parquet"), f"module == {m}"],
               ["scores", o.p("graph", "module_scores.npy"), f"[{i}] (drug-dose x line)"]]
@@ -2572,11 +2679,16 @@ def main(a):
     WIDTH = max(80, min(120, shutil.get_terminal_size((120, 24)).columns)) - 2
     ASCII = _needs_ascii()
     warnings.filterwarnings("ignore", category=RuntimeWarning)
-    TOP_GIVEN = getattr(a, "top", None) is not None and int(a.top) > 0
-    top = int(a.top) if TOP_GIVEN else 15
+    global SITE, LOCAL_X
+    t = parse_top(getattr(a, "top", None))
+    TOP_GIVEN = t is not None
+    top = TOP_ALL if t == 0 else (t if TOP_GIVEN else 15)
+    SITE = LK.site_url(getattr(a, "site_url", None))
+    LOCAL_X = os.path.join(a.out, "explorer", "web", "index.html")
     names = [n for n in (getattr(a, "names", None) or []) if str(n).strip()]
     if not names:
-        _emit([f"usage: {USAGE[a.command]}   (options: --top N rows per table, --out OUTPUT folder)"])
+        _emit([f"usage: {USAGE[a.command]}   (options: --top N rows per table, or --top all; --out OUTPUT "
+               "folder)"])
         sys.exit(2)
     o = Out(a.out, getattr(a, "data", None))
     if not os.path.isdir(a.out):

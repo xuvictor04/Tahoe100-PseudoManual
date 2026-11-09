@@ -25,16 +25,25 @@ keeps its place with its alerts (rule 1), and a capped list says how many more t
 an alert.
 
 Columns added to edges.parquet's (README.md there documents those): edge_id, members (tuple of edge ids), sources
-(tuple of str), source_cols (tuple of int), n_sources, has_alert (bool), order (int: rank in ORDER over all rows),
-effect (|contrast|), target_drug / target_dose (the drug and dose of target_dd; '' for gene targets).
+(tuple of str), source_cols (tuple of int), n_sources, has_alert (bool: n_alerts > 0), has_note (n_notes > 0), order
+(int: rank in ORDER over all rows), effect (|contrast|), target_drug / target_dose (the drug and dose of target_dd; ''
+for gene targets).
+
+Reasons in four tiers (direction VERSION 3; every reason is kept, in exactly one): alerts (⚠: a doubt about this
+arrow; has_alert), notes (graded reasons below their thresholds: shown muted, in full where there is room, else as
+short labels), caveats (the same on every row of a kind: KIND_CAVEATS, stated once per list - kind_caveats,
+caveat_header) and support (evidence for it). alerts_all holds them all in the original order. An output of an
+older stage (no tier columns) is read as before: alerts = every reason, the other tiers empty (Direction.tiered
+False).
 
 Wording (plain words; the direction is PROBABLE - from cell lines, not proof of direct regulation): arrow / edge_arrow
 ('X → Y', '->' for consoles that cannot show it: common.printable / ascii_signs), sign_word / sign_text (what the
 source's activity does to the target: raises / lowers a level or the cells' numbers, strengthens / weakens a drug
 response - RESPONSE kinds, SIGN_RESPONSE_NOTE -, or 'not inferred'), kind_text / KIND_SHORT (the evidence),
-GRADE_WORDS / grade_legend, CAVEAT / CAVEAT_SHORT / caveat_lines, alert_short / alert_long / alert_reasons, edge_line /
-texts (all of a row's texts at once), more_text and counts_text (for capped lists), expected_text and CONTROLS_CAVEAT
-(the controls' expected false arrows).
+GRADE_WORDS / grade_legend, CAVEAT / CAVEAT_SHORT / caveat_lines, alert_short / alert_long / alert_reasons,
+note_reasons / notes_short / notes_long, caveat_reasons / kind_caveats / caveat_header, support_reasons /
+support_short / support_long, edge_line / texts (all of a row's texts at once), more_text and counts_text (for capped
+lists), expected_text and CONTROLS_CAVEAT (the controls' expected false arrows).
 
 Speed: load() reads the folder once (cached per output folder while edges.parquet is unchanged) and indexes the rows
 by gene col, symbol, drug-dose and compound, so a look-up is a dictionary access, not a scan (the vault calls it once
@@ -55,11 +64,13 @@ from . import tlib as T
 from .common import ALERT, ALERT_ASCII, ARROW, ARROW_ASCII, ascii_signs, cap_keep, printable
 
 __all__ = ["ALERT", "ALERT_ASCII", "ARROW", "ARROW_ASCII", "CAVEAT", "CAVEAT_LINES", "CAVEAT_SHORT", "Direction",
-           "CONTROLS_CAVEAT", "GRADES", "GRADE_SHORT", "GRADE_WORDS", "KINDS", "KIND_SHORT", "KIND_WORDS", "ORDER",
-           "MIXED", "RESPONSE", "SIGN_RESPONSE_NOTE", "alert_long", "expected_text",
-           "alert_reasons", "alert_short", "arrow", "ascii_signs", "available", "cap", "caveat_lines", "counts_text",
-           "edge_arrow", "edge_line", "fmt_q", "grade_legend", "kind_text", "load", "more_text", "order", "printable",
-           "q_text", "sign_text", "sign_word", "source_text", "texts"]
+           "CONTROLS_CAVEAT", "GRADES", "GRADE_SHORT", "GRADE_WORDS", "KINDS", "KIND_CAVEATS", "KIND_SHORT",
+           "KIND_WORDS", "ORDER", "MIXED", "RESPONSE", "SIGN_RESPONSE_NOTE", "TIERS", "TIER_WORDS", "alert_long",
+           "expected_text", "alert_reasons", "alert_short", "all_reasons", "arrow", "ascii_signs", "available", "cap",
+           "caveat_header", "caveat_lines", "caveat_reasons", "counts_text", "edge_arrow", "edge_line", "fmt_q",
+           "grade_legend", "kind_caveats", "kind_text", "load", "more_text", "note_reasons", "notes_long",
+           "notes_short", "order", "printable", "q_text", "sign_text", "sign_word", "source_text", "support_long",
+           "support_reasons", "support_short", "texts"]
 
 KINDS = ("genotype_response", "genotype_baseline", "genotype_sensitivity", "null_response", "null_baseline",
          "null_sensitivity", "drug_target", "level", "level_sensitivity")       # as direction.KINDS
@@ -68,6 +79,20 @@ ORDER = "grade A, B, C, then q (smallest first), then |effect| (largest first), 
 SENSITIVITY = ("genotype_sensitivity", "null_sensitivity", "level_sensitivity")
 RESPONSE = ("genotype_response", "null_response", "level")          # the target is a gene's drug response
 MIXED = 0.25        # as direction.MIXED: rise_share between this and 1 - this = the target rises and falls
+TIERS = ("alerts", "notes", "caveats", "support")                    # as direction.TIERS
+# as direction.KIND_CAVEATS, in the words the edges hold them (a '; ' inside one reason is written ', ')
+KIND_CAVEATS = {
+    "drug_target": ("drugs can act on other proteins too",),
+    "level": ("from natural expression differences between lines, tissue and other differences can mimic it",
+              "a stronger correlation one way can reflect how precisely, or how closely to a shared cause, each "
+              "gene's level is measured, rather than which gene acts first"),
+    "level_sensitivity": ("from natural expression differences between lines, tissue and other differences can mimic "
+                          "it",)}
+TIER_WORDS = {
+    "alerts": f"{ALERT} alerts: reasons to doubt this arrow",
+    "notes": "notes: reasons kept below their thresholds, and context (not a doubt about this arrow by themselves)",
+    "caveats": "caveats: what every arrow of its kind carries (stated once above a list)",
+    "support": "support: evidence for the arrow"}
 
 # ----------------------------------------------------------------------------- words
 CAVEAT_SHORT = "probable direction, from the screen's cell lines: not proof of direct regulation"
@@ -87,7 +112,7 @@ CAVEAT_LINES = (
 GRADE_WORDS = {
     "A": "strong: a recorded mutation, at least 5 lines on each side compared within organs, significant over the "
          "whole table, no other recorded alteration concentrated on either side, and not resting on a correction "
-         "(any alert it carries is a note to read)",
+         "(read any alert or note it still carries)",
     "B": "worth taking seriously - read its alerts: a mutation result with alerts (another alteration on either "
          "side, compared across organs, ...) or only 3-4 lines on a side, a natural knockout with at least 5 lines "
          "lacking the gene, or compounds that target the gene",
@@ -312,13 +337,65 @@ def caveat_lines():
 
 
 # ----------------------------------------------------------------------------- alerts
-def alert_reasons(alerts):
-    """The reasons of an alerts text ('' or '⚠ ' + '; '-joined reasons; a row, or the text itself)."""
-    t = alerts if isinstance(alerts, str) else str(_g(alerts, "alerts", "") or "")
+def _reasons(x, col):
+    """The reasons of a row's column col, or of a text ('' or ['⚠ '] + '; '-joined reasons)."""
+    t = x if isinstance(x, str) else str(_g(x, col, "") or "")
     t = t.strip()
     if t.startswith(ALERT):
         t = t[len(ALERT):].strip()
-    return [x.strip() for x in t.split("; ") if x.strip()]
+    return [r.strip() for r in t.split("; ") if r.strip()]
+
+
+def alert_reasons(alerts):
+    """The reasons of an alerts text ('' or '⚠ ' + '; '-joined reasons; a row, or the text itself): the alerts tier
+    (an output of an older stage: every reason)."""
+    return _reasons(alerts, "alerts")
+
+
+def note_reasons(row):
+    """The notes of a row (or a notes text): graded reasons below their thresholds, and context."""
+    return _reasons(row, "notes")
+
+
+def caveat_reasons(row):
+    """The caveats of a row (or a caveats text): what every arrow of its kind carries (kind_caveats)."""
+    return _reasons(row, "caveats")
+
+
+def support_reasons(row):
+    """The support of a row (or a support text): evidence for the arrow."""
+    return _reasons(row, "support")
+
+
+def all_reasons(row):
+    """Every reason of a row in the stage's order (alerts_all; an older output: its alerts)."""
+    every = _reasons(row, "alerts_all") if not isinstance(row, str) else []
+    return every or alert_reasons(row)
+
+
+def kind_caveats(kind):
+    """The caveats every arrow of a kind carries (KIND_CAVEATS; () for a kind without one)."""
+    return KIND_CAVEATS.get(str(kind or ""), ())
+
+
+def caveat_header(rows, ascii=False, short=False):
+    """The caveats of a list's kinds, to state once above the list (rows: display rows with 'kind', or kinds):
+    "Every arrow of the kind 'drug target: level' carries this caveat: drugs can act on other proteins too." - one
+    sentence per kind present that has caveats; short: "drug target: level - drugs can act on other proteins too";
+    '' when none."""
+    if rows is None:
+        return ""
+    kinds = list(rows["kind"].astype(str).unique()) if hasattr(rows, "columns") else [str(k) for k in rows]
+    out = []
+    for k in KINDS:
+        if k in kinds and kind_caveats(k):
+            cv = kind_caveats(k)
+            if short:
+                out.append(f"{KIND_SHORT.get(k, k)} - " + "; ".join(cv))
+            else:
+                out.append(f"Every arrow of the kind '{KIND_SHORT.get(k, k)}' carries "
+                           f"{'this caveat' if len(cv) == 1 else 'these caveats'}: " + "; ".join(cv) + ".")
+    return _txt(("; " if short else " ").join(out), ascii)
 
 
 def _short_label(reason):
@@ -356,11 +433,42 @@ def alert_long(alerts, ascii=False):
     return _txt(f"{ALERT} " + "; ".join(r), ascii) if r else ""
 
 
+def _labels(reasons):
+    return "; ".join(dict.fromkeys(_short_label(r) for r in reasons))
+
+
+def notes_short(row, ascii=False):
+    """The notes of a row in a few words ('within organs, on part of the lines; artifact flags'; no sign), '' when
+    it has none."""
+    return _txt(_labels(note_reasons(row)), ascii)
+
+
+def notes_long(row, ascii=False):
+    """The notes of a row in full ('; '-joined; no sign), '' when it has none."""
+    return _txt("; ".join(note_reasons(row)), ascii)
+
+
+def support_short(row, ascii=False):
+    """The support of a row in a few words ('3 compounds'; 'deletion recorded too'), '' when none."""
+    return _txt(_labels(support_reasons(row)), ascii)
+
+
+def support_long(row, ascii=False):
+    """The support of a row in full, '' when none."""
+    return _txt("; ".join(support_reasons(row)), ascii)
+
+
 # ----------------------------------------------------------------------------- lines and texts
+def _count(row, col, reasons):
+    v = _num(_g(row, col, np.nan))
+    return int(v) if np.isfinite(v) else len(reasons)
+
+
 def texts(row, ascii=False, max_names=None):
     """Every text of a row at once, for a surface to compose: arrow, source, target, grade, grade_words, sign
     (+1/-1/0), sign_word, sign_text, kind, kind_short, kind_text, reading (direction.py's sentence), q, p,
-    q_group, q_text, alerts_short, alerts_long, has_alert, n_sources."""
+    q_group, q_text, alerts_short, alerts_long, has_alert, n_alerts, notes_short, notes_long, has_note, n_notes,
+    caveats_long, n_caveats, support_short, support_long, n_support, n_sources."""
     g = str(_g(row, "grade", ""))
     out = {"arrow": edge_arrow(row, ascii, max_names), "source": source_text(row, max_names),
            "target": str(_g(row, "target", "")), "grade": g, "grade_words": GRADE_WORDS.get(g, ""),
@@ -372,6 +480,10 @@ def texts(row, ascii=False, max_names=None):
            "q_text": q_text(row),
            "alerts_short": alert_short(row), "alerts_long": alert_long(row),
            "has_alert": bool(alert_reasons(row)), "n_sources": int(_g(row, "n_sources", 1) or 1)}
+    nr, cr, sr = note_reasons(row), caveat_reasons(row), support_reasons(row)
+    out.update({"n_alerts": len(alert_reasons(row)), "notes_short": notes_short(row), "notes_long": notes_long(row),
+                "has_note": bool(nr), "n_notes": len(nr), "caveats_long": "; ".join(cr), "n_caveats": len(cr),
+                "support_short": support_short(row), "support_long": "; ".join(sr), "n_support": len(sr)})
     if ascii:
         out = {k: (ascii_signs(v) if isinstance(v, str) else v) for k, v in out.items()}
     return out
@@ -387,13 +499,17 @@ def q_text(row):
     return f"q {fmt_q(q)}"
 
 
-def edge_line(row, ascii=False, alerts="short", max_names=None):
+def edge_line(row, ascii=False, alerts="short", max_names=None, notes=True):
     """One line for a row: 'TP53 → CDKN1A  [A]  TP53 activity raises CDKN1A's drug response (mutation: response;
-    q 0.003)  ⚠ ...'. alerts: 'short', 'long' or 'none'."""
+    q 0.003)  ⚠ ...  · notes: ...'. alerts: 'short', 'long' or 'none'; notes: True / 'short' (the notes' short
+    labels), 'long' (in full) or False / 'none'. The kind's caveats are not repeated on the line (caveat_header
+    states them once above a list)."""
     t = texts(row, ascii, max_names)
     al = {"short": t["alerts_short"], "long": t["alerts_long"]}.get(alerts, "")
+    nt = {"short": t["notes_short"], "long": t["notes_long"]}.get("short" if notes is True else notes, "")
+    dot = "-" if ascii else "·"
     return f"{t['arrow']}  [{t['grade']}]  {t['sign_text']} ({t['kind_short']}; {t['q_text']})" + (
-        f"  {al}" if al else "")
+        f"  {al}" if al else "") + (f"  {dot} notes: {nt}" if nt else "")
 
 
 CONTROLS_CAVEAT = ("'Up to' is the 95% upper bound of that estimate: the controls are a small sample (no false arrow "
@@ -420,15 +536,24 @@ def more_text(n_more, n_more_alert, what="rows"):
 
 
 def counts_text(rows, what="rows"):
-    """'12 rows, 5 of them with an alert ⚠; grade A 2, B 3, C 7' ('none' for an empty list)."""
+    """'12 rows, 5 with ⚠, 3 with notes; grade A 2, B 3, C 7; every row of a kind carries that kind's caveat (stated
+    above)' ('none' for an empty list; 'row' is `what` in the singular). 'with notes' when the rows hold the notes
+    count (n_notes); the caveat clause when a kind with caveats is among them (caveat_header gives the text to state
+    above)."""
     n = 0 if rows is None else len(rows)
     if not n:
         return "none"
     k = int(rows["has_alert"].sum()) if "has_alert" in rows else 0
     gr = rows["grade"].value_counts()
     w = what[:-1] if n == 1 and what.endswith("s") else what
-    return (f"{n:,} {w}" + (f", {k:,} of them with an alert {ALERT}" if k else "") + "; grade "
-            + ", ".join(f"{g} {int(gr.get(g, 0)):,}" for g in GRADES))
+    out = f"{n:,} {w}, {k:,} with {ALERT}"
+    if "n_notes" in rows:
+        out += f", {int((pd.to_numeric(rows['n_notes'], errors='coerce').fillna(0) > 0).sum()):,} with notes"
+    out += "; grade " + ", ".join(f"{g} {int(gr.get(g, 0)):,}" for g in GRADES)
+    if "kind" in rows and any(kind_caveats(x) for x in rows["kind"].astype(str).unique()):
+        one = what[:-1] if what.endswith("s") and not what.endswith("ss") else what
+        out += f"; every {one} of a kind carries that kind's caveat (stated above)"
+    return out
 
 
 def cap(rows, n):
@@ -532,10 +657,17 @@ class Direction:
             if miss.any():
                 e.loc[miss, "drug_effect"] = np.where(e.loc[miss, "reading"].str.contains(" lowers "), "lowers",
                                                       "raises")
-        e["has_alert"] = e["alerts"].fillna("").astype(str).str.len() > 0
+        self.tiered = _ensure_tiers(e)
+        e["has_alert"] = e["n_alerts"].to_numpy() > 0
+        e["has_note"] = e["n_notes"].to_numpy() > 0
         self.edges = order(e).reset_index(drop=True)
         self.groups = pd.read_parquet(os.path.join(d, "groups.parquet")) if os.path.exists(
             os.path.join(d, "groups.parquet")) else pd.DataFrame()
+        if len(self.groups.columns) and "alerts" in self.groups:
+            for c, v in (("notes", ""), ("alerts_all", None)):
+                if c not in self.groups:                     # an older stage: alerts = every reason
+                    self.groups[c] = v if v is not None else [
+                        "; ".join(alert_reasons(str(a or ""))) for a in self.groups["alerts"]]
         self.controls = _read_json(os.path.join(d, "controls.json"))
         self.info = _read_json(os.path.join(d, "info.json"))
         self._drugdoses()
@@ -584,10 +716,12 @@ class Direction:
         kind = e["kind"].astype(str).to_numpy(dtype=object)
         new = {"members": [(int(i),) for i in eid], "sources": [(s_,) for s_ in src],
                "source_cols": [(int(c_),) for c_ in scol], "n_sources": np.ones(n, dtype=np.int64)}
-        cols = {c_: e[c_].to_numpy(dtype=object).copy() for c_ in ("source", "reading", "group", "alerts")}
+        cols = {c_: e[c_].to_numpy(dtype=object).copy() for c_ in ("source", "reading", "group") + _TEXT_TIERS}
         cols["source_col"] = scol.copy()
-        cols["n_alerts"] = e["n_alerts"].to_numpy(dtype=np.int64).copy() if "n_alerts" in e else np.zeros(n, np.int64)
+        for c_ in _N_TIERS:
+            cols[c_] = e[c_].to_numpy(dtype=np.int64).copy()
         cols["has_alert"] = e["has_alert"].to_numpy(dtype=bool).copy()
+        cols["has_note"] = e["has_note"].to_numpy(dtype=bool).copy()
         drop = np.zeros(n, dtype=bool)
         dt = kind == "drug_target"
         nl = np.array([str(k_).startswith("null") for k_ in kind], dtype=bool)
@@ -613,12 +747,13 @@ class Direction:
                 for c_ in ("members", "sources", "source_cols"):
                     new[c_][i0] = m[c_]
                 new["n_sources"][i0] = m["n_sources"]
-                for c_ in ("source", "source_col", "reading", "group", "alerts", "n_alerts", "has_alert"):
+                for c_ in ("source", "source_col", "reading", "group", "has_alert", "has_note") + _TEXT_TIERS \
+                        + _N_TIERS:
                     cols[c_][i0] = m[c_]
                 drop[pos[1:]] = True
         rows = e.copy()
         for c_, v in cols.items():
-            rows[c_] = v if c_ not in ("source", "reading", "group", "alerts") else pd.array(v, dtype=e[c_].dtype)
+            rows[c_] = v if c_ not in ("source", "reading", "group") + _TEXT_TIERS else pd.array(v, dtype=e[c_].dtype)
         for c_, v in new.items():
             rows[c_] = pd.Series(v, index=rows.index, dtype=object) if c_ != "n_sources" else v
         rows = rows[~drop]
@@ -635,9 +770,13 @@ class Direction:
         srcs = tuple(str(src[j]) for j in pos)
         scs = tuple(int(scol[j]) for j in pos)
         joined = ", ".join(srcs)
-        reasons, shared, coabs, co_names, co_total = [], [], False, [], 0
+        shared, coabs, co_names, co_total = [], False, [], 0
+
+        def special(x):
+            """A member's reason that the merged row words once for all its sources (both are alerts)."""
+            return x.startswith("the supporting compounds also share ") or bool(_COABS.search(x))
         for j in pos:
-            for x in alert_reasons(str(cols["alerts"][j] or "")):
+            for x in all_reasons(str(cols["alerts_all"][j] or "")):
                 if x.startswith("the supporting compounds also share "):
                     shared += [s_.strip() for s_ in x[len("the supporting compounds also share "):].split(":")[0]
                                .split(", ")]
@@ -647,9 +786,15 @@ class Direction:
                     coabs = True
                     co_total = max(co_total, int(m_.group(1)) + 1)
                     co_names += [s_.strip() for s_ in m_.group(2).split(", ") if s_.strip() and s_.strip() != "..."]
-                    continue
-                if x not in reasons:
-                    reasons.append(x)
+        tier = {}
+        for c_ in _TEXT_TIERS:
+            got = []
+            for j in pos:
+                for x in _reasons(str(cols[c_][j] or ""), c_):
+                    if x not in got and not special(x):
+                        got.append(x)
+            tier[c_] = got
+        reasons = tier["alerts"]
         kind = str(e["kind"].iat[i0])
         reading, group = str(cols["reading"][i0]), str(cols["group"][i0])
         if kind == "drug_target":
@@ -675,11 +820,20 @@ class Direction:
             if len(srcs) > 1 and g0:          # the reading names the line set's first gene: name them all
                 reading = reading.replace(f"lines without {g0}", f"lines without {joined}").replace(
                     f"lines expressing {g0}", "lines expressing them")
-        alerts = f"{ALERT} " + "; ".join(r_.replace("; ", ", ") for r_ in reasons) if reasons else ""
-        return {"source": joined, "source_col": scs[0] if len(set(scs)) == 1 else -1, "sources": srcs,
-                "source_cols": scs, "n_sources": len(srcs), "members": tuple(int(eid[j]) for j in pos),
-                "reading": reading, "group": group, "alerts": alerts, "n_alerts": len(reasons),
-                "has_alert": bool(reasons)}
+        merged_new = [r_ for r_ in reasons if r_ not in tier["alerts_all"]]   # the reasons this merge adds
+        tier["alerts_all"] = tier["alerts_all"] + merged_new
+
+        def plain(rs):
+            return "; ".join(r_.replace("; ", ", ") for r_ in rs)
+        out = {"source": joined, "source_col": scs[0] if len(set(scs)) == 1 else -1, "sources": srcs,
+               "source_cols": scs, "n_sources": len(srcs), "members": tuple(int(eid[j]) for j in pos),
+               "reading": reading, "group": group, "has_alert": bool(reasons), "has_note": bool(tier["notes"]),
+               "alerts": f"{ALERT} " + plain(reasons) if reasons else ""}
+        for c_ in ("notes", "caveats", "support", "alerts_all"):
+            out[c_] = plain(tier[c_])
+        for c_ in TIERS:
+            out[f"n_{c_}"] = len(tier[c_])
+        return out
 
     # ---- indexes
     def _index(self):
@@ -848,6 +1002,37 @@ class Direction:
 
 _EMPTY = np.zeros(0, dtype=np.int64)
 _COABS = re.compile(r"(\d+) other gene\(s\) are absent from exactly these lines \((.*)\)")
+_TEXT_TIERS = ("alerts", "notes", "caveats", "support", "alerts_all")
+_N_TIERS = ("n_alerts", "n_notes", "n_caveats", "n_support")
+
+
+def _ensure_tiers(e):
+    """Give an edges table of an older stage (no tier columns) the tier columns in place: alerts = every reason (as
+    before), notes / caveats / support empty, alerts_all = every reason, the counts from the texts. Returns whether the
+    table had the tiers (direction VERSION 3)."""
+    tiered = all(c in e for c in _TEXT_TIERS + _N_TIERS)
+    if not len(e.columns):
+        return tiered
+    if "alerts" not in e:
+        e["alerts"] = ""
+    e["alerts"] = e["alerts"].fillna("").astype(str)
+    if not tiered:
+        for c in ("notes", "caveats", "support"):
+            if c not in e:
+                e[c] = ""
+        if "alerts_all" not in e:
+            e["alerts_all"] = ["; ".join(alert_reasons(a)) for a in e["alerts"]]
+        e["n_alerts"] = np.array([len(alert_reasons(a)) for a in e["alerts"]], dtype=np.int16)
+        for c in ("notes", "caveats", "support"):
+            if f"n_{c}" not in e:
+                e[f"n_{c}"] = np.array([len(_reasons(str(t or ""), c)) for t in e[c]], dtype=np.int16)
+    for c in ("notes", "caveats", "support", "alerts_all"):
+        e[c] = e[c].fillna("").astype(str)
+    if "art_share" not in e:
+        e["art_share"] = np.float32(np.nan)
+    if "drugdoses_all" not in e:
+        e["drugdoses_all"] = ""
+    return tiered
 
 
 @functools.lru_cache(maxsize=None)
