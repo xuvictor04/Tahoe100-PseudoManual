@@ -1,0 +1,130 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes V
+
+120 genes. Back to [[Genes by letter]].
+
+- [[VAC14]] — VAC14 component of PIKFYVE complex · module 005 +
+- [[VAMP1]] — vesicle associated membrane protein 1 · module 011 -
+- [[VAMP2]] — vesicle associated membrane protein 2 · module 059 +
+- [[VAMP3]] — vesicle associated membrane protein 3 · module 025 +
+- [[VAMP4]] — vesicle associated membrane protein 4 · module 004 -
+- [[VAMP5]] — vesicle associated membrane protein 5 · module 023 +
+- [[VAMP7]] — vesicle associated membrane protein 7 · module 057 +
+- [[VAMP8]] — vesicle associated membrane protein 8 · module 024 +
+- [[VANGL1]] — VANGL planar cell polarity protein 1 · module 022 +
+- [[VAPA]] — VAMP associated protein A · module 017 +
+- [[VAPB]] — VAMP associated protein B and C · module 164 +
+- [[VARS1]] — valyl-tRNA synthetase 1 · module 004 +
+- [[VARS2]] — valyl-tRNA synthetase 2, mitochondrial · module 096 +
+- [[VASH1]] — vasohibin 1 · module 082 +
+- [[VASH2]] — vasohibin 2 · module 115 +
+- [[VASN]] — vasorin · module 059 +
+- [[VASP]] — vasodilator stimulated phosphoprotein · module 141 +
+- [[VAT1]] — vesicle amine transport 1 · module 030 +
+- [[VAT1L]] — vesicle amine transport 1 like · module 061 +
+- [[VAV1]] — vav guanine nucleotide exchange factor 1 · module 191 +
+- [[VAV2]] — vav guanine nucleotide exchange factor 2 · module 195 +
+- [[VAV3]] — vav guanine nucleotide exchange factor 3 · module 009 +
+- [[VAX2]] — ventral anterior homeobox 2 · module 015 +
+- [[VBP1]] — VHL binding protein 1 · module 085 -
+- [[VCAM1]] — vascular cell adhesion molecule 1 · module 014 +
+- [[VCAN]] — versican · module 013 +
+- [[VCAN-AS1]] — VCAN antisense RNA 1 · module 021 +
+- [[VCL]] — vinculin · module 111 +
+- [[VCP]] — valosin containing protein · module 060 +
+- [[VCPIP1]] — valosin containing protein interacting protein 1 · module 007 +
+- [[VCPKMT]] — valosin containing protein lysine methyltransferase · module 030 +
+- [[VDAC1]] — voltage dependent anion channel 1 · module 134 +
+- [[VDAC1P8]] — voltage dependent anion channel 1 pseudogene 8 · module 207 +
+- [[VDAC2]] — voltage dependent anion channel 2 · module 020 +
+- [[VDAC3]] — voltage dependent anion channel 3 · module 065 +
+- [[VDR]] — vitamin D receptor · module 162 +
+- [[VEGFA]] — vascular endothelial growth factor A · module 180 +
+- [[VEGFB]] — vascular endothelial growth factor B · module 024 +
+- [[VEGFC]] — vascular endothelial growth factor C · module 013 +
+- [[VEGFD]] — vascular endothelial growth factor D · module 117 +
+- [[VENTXP1]] — VENT homeobox pseudogene 1 · module 090 +
+- [[VEPH1]] — ventricular zone expressed PH domain containing 1 · module 013 +
+- [[VEZF1]] — vascular endothelial zinc finger 1 · module 016 +
+- [[VEZT]] — vezatin, adherens junctions transmembrane protein · module 126 +
+- [[VGF]] — VGF nerve growth factor inducible · module 109 +
+- [[VGLL3]] — vestigial like family member 3 · module 120 +
+- [[VGLL4]] — vestigial like family member 4 · module 186 +
+- [[VHL]] — von Hippel-Lindau tumor suppressor · module 057 -
+- [[VIL1]] — villin 1 · module 027 +
+- [[VILL]] — villin like · module 055 +
+- [[VIM]] — vimentin · module 161 +
+- [[VIM-AS1]] — VIM antisense RNA 1 · module 026 +
+- [[VIPAS39]] — VPS33B interacting protein, apical-basolateral polarity regulator, spe-39 homolog · module 072 +
+- [[VIPR1]] — vasoactive intestinal peptide receptor 1 · module 044 +
+- [[VIPR2]] — vasoactive intestinal peptide receptor 2 · module 009 +
+- [[VIRMA]] — vir like m6A methyltransferase associated · module 012 +
+- [[VKORC1]] — vitamin K epoxide reductase complex subunit 1 · module 079 +
+- [[VKORC1L1]] — vitamin K epoxide reductase complex subunit 1L1 · module 036 +
+- [[VLDLR]] — very low density lipoprotein receptor · module 134 +
+- [[VLDLR-AS1]] — VLDLR antisense RNA 1 · module 133 +
+- [[VMA21]] — vacuolar ATPase assembly factor VMA21 · module 020 +
+- [[VMP1]] — vacuole membrane protein 1 · module 109 +
+- [[VNN1]] — vanin 1 · module 008 +
+- [[VOPP1]] — VOPP1 WW domain binding protein · module 011 -
+- [[VPS11]] — VPS11 core subunit of CORVET and HOPS complexes · module 122 +
+- [[VPS13A]] — vacuolar protein sorting 13 homolog A · module 118 -
+- [[VPS13B]] — vacuolar protein sorting 13 homolog B · module 185 +
+- [[VPS13B-DT]] — VPS13B divergent transcript · module 015 +
+- [[VPS13C]] — vacuolar protein sorting 13 homolog C · module 142 +
+- [[VPS13D]] — vacuolar protein sorting 13 homolog D · module 036 +
+- [[VPS16]] — VPS16 core subunit of CORVET and HOPS complexes · module 209 +
+- [[VPS18]] — VPS18 core subunit of CORVET and HOPS complexes · module 059 +
+- [[VPS25]] — vacuolar protein sorting 25 homolog · module 007 +
+- [[VPS26A]] — VPS26 retromer complex component A · module 122 +
+- [[VPS26B]] — VPS26 retromer complex component B · module 057 +
+- [[VPS26C]] — VPS26 endosomal protein sorting factor C · module 105 +
+- [[VPS28]] — VPS28 subunit of ESCRT-I · module 012 +
+- [[VPS29]] — VPS29 retromer complex component · module 064 +
+- [[VPS33A]] — VPS33A core subunit of CORVET and HOPS complexes · module 089 +
+- [[VPS33B]] — VPS33B late endosome and lysosome associated · module 065 +
+- [[VPS35]] — VPS35 retromer complex component · module 057 +
+- [[VPS35L]] — VPS35 endosomal protein sorting factor like · module 088 +
+- [[VPS36]] — vacuolar protein sorting 36 homolog · module 025 +
+- [[VPS37A]] — VPS37A subunit of ESCRT-I · module 109 +
+- [[VPS37B]] — VPS37B subunit of ESCRT-I · module 141 +
+- [[VPS37C]] — VPS37C subunit of ESCRT-I · module 003 +
+- [[VPS37D]] — VPS37D subunit of ESCRT-I · module 030 +
+- [[VPS39]] — VPS39 subunit of HOPS complex · module 089 +
+- [[VPS39-DT]] — VPS39 divergent transcript · module 021 +
+- [[VPS41]] — VPS41 subunit of HOPS complex · module 122 +
+- [[VPS45]] — vacuolar protein sorting 45 homolog · module 036 +
+- [[VPS4A]] — vacuolar protein sorting 4 homolog A · module 054 -
+- [[VPS4B]] — vacuolar protein sorting 4 homolog B · module 041 +
+- [[VPS50]] — VPS50 subunit of EARP/GARPII complex · module 230 +
+- [[VPS51]] — VPS51 subunit of GARP complex · module 156 +
+- [[VPS52]] — VPS52 subunit of GARP complex · module 148 +
+- [[VPS53]] — VPS53 subunit of GARP complex · module 052 +
+- [[VPS54]] — VPS54 subunit of GARP complex · module 017 +
+- [[VPS72]] — vacuolar protein sorting 72 homolog · module 016 +
+- [[VPS8]] — VPS8 subunit of CORVET complex · module 230 +
+- [[VPS9D1]] — VPS9 domain containing 1 · module 036 +
+- [[VRK1]] — VRK serine/threonine kinase 1 · module 006 +
+- [[VRK2]] — VRK serine/threonine kinase 2 · module 040 -
+- [[VRK3]] — VRK serine/threonine kinase 3 · module 003 +
+- [[VSIG1]] — V-set and immunoglobulin domain containing 1 · module 034 +
+- [[VSIG10]] — V-set and immunoglobulin domain containing 10 · module 046 +
+- [[VSIG10L]] — V-set and immunoglobulin domain containing 10 like · module 157 +
+- [[VSIR]] — V-set immunoregulatory receptor · module 031 +
+- [[VSNL1]] — visinin like 1 · module 055 +
+- [[VSTM2L]] — V-set and transmembrane domain containing 2 like · module 098 +
+- [[VSTM4]] — V-set and transmembrane domain containing 4 · module 013 +
+- [[VTA1]] — vesicle trafficking 1 · module 017 +
+- [[VTI1A]] — vesicle transport through interaction with t-SNAREs 1A · module 185 +
+- [[VTI1B]] — vesicle transport through interaction with t-SNAREs 1B · module 171 +
+- [[VWA1]] — von Willebrand factor A domain containing 1 · module 083 -
+- [[VWA2]] — von Willebrand factor A domain containing 2 · module 027 +
+- [[VWA5A]] — von Willebrand factor A domain containing 5A · module 005 -
+- [[VWA8]] — von Willebrand factor A domain containing 8 · module 004 +
+- [[VWCE]] — von Willebrand factor C and EGF domains · module 038 +
+- [[VWDE]] — von Willebrand factor D and EGF domains · module 017 +

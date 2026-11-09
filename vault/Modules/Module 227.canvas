@@ -1,0 +1,31 @@
+{
+"nodes": [
+{"id": "legend", "type": "text", "x": -40, "y": -260, "width": 560, "height": 200, "text": "**Module 227**\n\n9 genes at their nodal-map positions. A single-armed module: every gene is + (green). Edge label + = move together, − = opposite."},
+{"id": "g8191", "type": "file", "file": "Genes/chr1/NIT1.md", "x": 1600, "y": 910, "width": 180, "height": 50, "color": "4"},
+{"id": "g9858", "type": "file", "file": "Genes/chr10/CSGALNACT2.md", "x": 1800, "y": 1330, "width": 180, "height": 50, "color": "4"},
+{"id": "g6705", "type": "file", "file": "Genes/chr1/PFDN2.md", "x": 400, "y": 1400, "width": 180, "height": 50, "color": "4"},
+{"id": "g5535", "type": "file", "file": "Genes/chr18/SPIRE1.md", "x": 200, "y": 1400, "width": 180, "height": 50, "color": "4"},
+{"id": "g7232", "type": "file", "file": "Genes/chr9/C9orf72.md", "x": 600, "y": 0, "width": 180, "height": 50, "color": "4"},
+{"id": "g10416", "type": "file", "file": "Genes/chrX/BCLAF3.md", "x": 400, "y": 3010, "width": 180, "height": 50, "color": "4"},
+{"id": "g12687", "type": "file", "file": "Genes/chrX/GK.md", "x": 1400, "y": 910, "width": 180, "height": 50, "color": "4"},
+{"id": "g12148", "type": "file", "file": "Genes/chr1/STK40.md", "x": 1600, "y": 840, "width": 180, "height": 50, "color": "4"},
+{"id": "g9542", "type": "file", "file": "Genes/chr19/ZNF558.md", "x": 0, "y": 0, "width": 180, "height": 50, "color": "4"}
+],
+"edges": [
+{"id": "e5535_6705", "fromNode": "g5535", "toNode": "g6705", "label": "+"},
+{"id": "e5535_9858", "fromNode": "g5535", "toNode": "g9858", "label": "+"},
+{"id": "e5535_12687", "fromNode": "g5535", "toNode": "g12687", "label": "+"},
+{"id": "e6705_9858", "fromNode": "g6705", "toNode": "g9858", "label": "+"},
+{"id": "e6705_12148", "fromNode": "g6705", "toNode": "g12148", "label": "+"},
+{"id": "e7232_8191", "fromNode": "g7232", "toNode": "g8191", "label": "+"},
+{"id": "e7232_9858", "fromNode": "g7232", "toNode": "g9858", "label": "+"},
+{"id": "e7232_12687", "fromNode": "g7232", "toNode": "g12687", "label": "+"},
+{"id": "e8191_9542", "fromNode": "g8191", "toNode": "g9542", "label": "+"},
+{"id": "e8191_10416", "fromNode": "g8191", "toNode": "g10416", "label": "+"},
+{"id": "e8191_12148", "fromNode": "g8191", "toNode": "g12148", "label": "+"},
+{"id": "e8191_12687", "fromNode": "g8191", "toNode": "g12687", "label": "+"},
+{"id": "e9858_10416", "fromNode": "g9858", "toNode": "g10416", "label": "+"},
+{"id": "e9858_12687", "fromNode": "g9858", "toNode": "g12687", "label": "+"},
+{"id": "e10416_12148", "fromNode": "g10416", "toNode": "g12148", "label": "+"}
+]
+}

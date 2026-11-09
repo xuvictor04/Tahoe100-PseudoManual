@@ -1,0 +1,140 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes O
+
+130 genes. Back to [[Genes by letter]].
+
+- [[OAF]] — out at first homolog · module 084 +
+- [[OARD1]] — O-acyl-ADP-ribose deacylase 1 · module 015 +
+- [[OAS1]] — 2'-5'-oligoadenylate synthetase 1 · module 032 +
+- [[OAS2]] — 2'-5'-oligoadenylate synthetase 2 · module 032 +
+- [[OAS3]] — 2'-5'-oligoadenylate synthetase 3 · module 032 +
+- [[OASL]] — 2'-5'-oligoadenylate synthetase like · module 032 +
+- [[OAT]] — ornithine aminotransferase · module 042 +
+- [[OAZ1]] — ornithine decarboxylase antizyme 1 · module 005 -
+- [[OAZ2]] — ornithine decarboxylase antizyme 2 · module 029 +
+- [[OBI1]] — ORC ubiquitin ligase 1 · module 011 +
+- [[OBI1-AS1]] — OBI1 antisense RNA 1 · module 166 +
+- [[OBSCN]] — obscurin, cytoskeletal calmodulin and titin-interacting RhoGEF · module 136 +
+- [[OBSL1]] — obscurin like cytoskeletal adaptor 1 · module 046 +
+- [[OCA2]] — OCA2 melanosomal transmembrane protein · module 082 +
+- [[OCEL1]] — occludin/ELL domain containing 1 · module 024 +
+- [[OCIAD1]] — OCIA domain containing 1 · module 077 -
+- [[OCIAD2]] — OCIA domain containing 2 · module 024 +
+- [[OCLN]] — occludin · module 008 +
+- [[OCRL]] — OCRL inositol polyphosphate-5-phosphatase · module 025 +
+- [[ODAD2]] — outer dynein arm docking complex subunit 2 · module 019 +
+- [[ODAD4]] — outer dynein arm docking complex subunit 4 · module 017 +
+- [[ODC1]] — ornithine decarboxylase 1 · module 158 +
+- [[ODF2]] — outer dense fiber of sperm tails 2 · module 042 +
+- [[ODF2L]] — outer dense fiber of sperm tails 2 like · module 007 -
+- [[ODF3B]] — ciliary microtubule associated protein 1B · module 167 +
+- [[ODR4]] — odr-4 GPCR localization factor homolog · module 041 +
+- [[OFCC1]] — orofacial cleft 1 candidate 1 (pseudogene) · module 009 +
+- [[OFD1]] — OFD1 centriole and centriolar satellite protein · module 020 -
+- [[OGA]] — O-GlcNAcase · module 069 +
+- [[OGDH]] — oxoglutarate dehydrogenase · module 039 +
+- [[OGFOD1]] — 2-oxoglutarate and iron dependent oxygenase domain containing 1 · module 005 +
+- [[OGFOD2]] — 2-oxoglutarate and iron dependent oxygenase domain containing 2 · module 107 +
+- [[OGFOD3]] — 2-oxoglutarate and iron dependent oxygenase domain containing 3 · module 018 +
+- [[OGFR]] — opioid growth factor receptor · module 070 +
+- [[OGFRL1]] — opioid growth factor receptor like 1 · module 014 +
+- [[OGG1]] — 8-oxoguanine DNA glycosylase · module 218 +
+- [[OGT]] — O-linked N-acetylglucosamine (GlcNAc) transferase · module 020 +
+- [[OIP5]] — Opa interacting protein 5 · module 067 +
+- [[OIT3]] — oncoprotein induced transcript 3 · module 039 +
+- [[OLA1]] — Obg like ATPase 1 · module 188 +
+- [[OLFM1]] — olfactomedin 1 · module 061 +
+- [[OLFM2]] — olfactomedin 2 · module 061 +
+- [[OLFML2A]] — olfactomedin like 2A · module 066 +
+- [[OLMALINC]] — oligodendrocyte maturation-associated long intergenic non-coding RNA · module 086 +
+- [[OLR1]] — oxidized low density lipoprotein receptor 1 · module 066 +
+- [[OMA1]] — OMA1 zinc metallopeptidase · module 010 +
+- [[OMG]] — oligodendrocyte myelin glycoprotein · module 021 +
+- [[ONECUT2]] — one cut homeobox 2 · module 014 +
+- [[ONECUT3]] — one cut homeobox 3 · module 031 +
+- [[OOEP]] — oocyte expressed protein · module 021 +
+- [[OPA1]] — OPA1 mitochondrial dynamin like GTPase · module 025 +
+- [[OPA3]] — outer mitochondrial membrane lipid metabolism regulator OPA3 · module 182 -
+- [[OPCML]] — opioid binding protein/cell adhesion molecule like · module 165 +
+- [[OPHN1]] — oligophrenin 1 · module 008 +
+- [[OPLAH]] — 5-oxoprolinase, ATP-hydrolysing · module 096 +
+- [[OPN3]] — opsin 3 · module 155 +
+- [[OPRD1]] — opioid receptor delta 1 · module 087 +
+- [[OPTN]] — optineurin · module 059 +
+- [[OR3A2]] — olfactory receptor family 3 subfamily A member 2 · module 108 +
+- [[OR4F15]] — olfactory receptor family 4 subfamily F member 15 · module 014 +
+- [[OR51B5]] — olfactory receptor family 51 subfamily B member 5 · module 009 +
+- [[OR7E38P]] — olfactory receptor family 7 subfamily E member 38 pseudogene · module 011 +
+- [[OR9Q1]] — olfactory receptor family 9 subfamily Q member 1 · module 013 +
+- [[ORAI1]] — ORAI calcium release-activated calcium modulator 1 · module 029 -
+- [[ORAI2]] — ORAI calcium release-activated calcium modulator 2 · module 038 +
+- [[ORAI3]] — ORAI calcium release-activated calcium modulator 3 · module 118 +
+- [[ORC1]] — origin recognition complex subunit 1 · module 006 +
+- [[ORC2]] — origin recognition complex subunit 2 · module 156 +
+- [[ORC3]] — origin recognition complex subunit 3 · module 040 +
+- [[ORC4]] — origin recognition complex subunit 4 · module 065 +
+- [[ORC5]] — origin recognition complex subunit 5 · module 033 +
+- [[ORC6]] — origin recognition complex subunit 6 · module 006 +
+- [[ORMDL1]] — ORMDL sphingolipid biosynthesis regulator 1 · module 015 +
+- [[ORMDL2]] — ORMDL sphingolipid biosynthesis regulator 2 · module 184 +
+- [[ORMDL3]] — ORMDL sphingolipid biosynthesis regulator 3 · module 040 +
+- [[OS9]] — OS9 endoplasmic reticulum lectin · module 042 +
+- [[OSBP]] — oxysterol binding protein · module 041 +
+- [[OSBP2]] — oxysterol binding protein 2 · module 160 +
+- [[OSBPL10]] — oxysterol binding protein like 10 · module 195 +
+- [[OSBPL11]] — oxysterol binding protein like 11 · module 129 +
+- [[OSBPL1A]] — oxysterol binding protein like 1A · module 057 +
+- [[OSBPL2]] — oxysterol binding protein like 2 · module 041 +
+- [[OSBPL3]] — oxysterol binding protein like 3 · module 034 +
+- [[OSBPL5]] — oxysterol binding protein like 5 · module 097 +
+- [[OSBPL6]] — oxysterol binding protein like 6 · module 095 -
+- [[OSBPL7]] — oxysterol binding protein like 7 · module 030 +
+- [[OSBPL8]] — oxysterol binding protein like 8 · module 078 +
+- [[OSBPL9]] — oxysterol binding protein like 9 · module 045 +
+- [[OSCAR]] — osteoclast associated Ig-like receptor · module 021 +
+- [[OSCP1]] — organic solute carrier partner 1 · module 012 +
+- [[OSER1]] — oxidative stress responsive serine rich 1 · module 069 +
+- [[OSER1-DT]] — OSER1 divergent transcript · module 069 +
+- [[OSGEP]] — O-sialoglycoprotein endopeptidase · module 028 +
+- [[OSGEPL1]] — O-sialoglycoprotein endopeptidase like 1 · module 016 +
+- [[OSGIN1]] — oxidative stress induced growth inhibitor 1 · module 125 +
+- [[OSGIN2]] — oxidative stress induced growth inhibitor family member 2 · module 094 +
+- [[OSMR]] — oncostatin M receptor · module 013 +
+- [[OSMR-DT]] — OSMR divergent transcript · module 101 +
+- [[OSR2]] — odd-skipped related transciption factor 2 · module 123 +
+- [[OST4]] — oligosaccharyltransferase complex subunit 4, non-catalytic · module 048 +
+- [[OSTC]] — oligosaccharyltransferase complex non-catalytic subunit · module 049 +
+- [[OSTF1]] — osteoclast stimulating factor 1 · module 088 -
+- [[OSTM1]] — osteoclastogenesis associated transmembrane protein 1 · module 065 -
+- [[OTUB1]] — OTU deubiquitinase, ubiquitin aldehyde binding 1 · module 007 +
+- [[OTUB2]] — OTU deubiquitinase, ubiquitin aldehyde binding 2 · module 034 +
+- [[OTUD1]] — OTU deubiquitinase 1 · module 069 +
+- [[OTUD3]] — OTU deubiquitinase 3 · module 126 +
+- [[OTUD4]] — OTU deubiquitinase 4 · module 010 +
+- [[OTUD5]] — OTU deubiquitinase 5 · module 145 +
+- [[OTUD6B]] — OTU deubiquitinase 6B · module 188 +
+- [[OTUD6B-AS1]] — OTUD6B antisense RNA 1 · module 051 +
+- [[OTUD7A]] — OTU deubiquitinase 7A · module 115 +
+- [[OTUD7B]] — OTU deubiquitinase 7B · module 149 +
+- [[OTULIN]] — OTU deubiquitinase with linear linkage specificity · module 030 +
+- [[OTULINL]] — OTU deubiquitinase with linear linkage specificity like · module 176 +
+- [[OTX1]] — orthodenticle homeobox 1 · module 030 +
+- [[OVAAL]] — ovarian adenocarcinoma amplified long non-coding RNA · module 022 +
+- [[OVGP1]] — oviductal glycoprotein 1 · module 037 +
+- [[OVOL1]] — ovo like transcriptional repressor 1 · module 004 -
+- [[OVOL2]] — ovo like zinc finger 2 · module 021 +
+- [[OXA1L]] — OXA1L mitochondrial inner membrane insertase · module 029 +
+- [[OXA1L-DT]] — OXA1L divergent transcript · module 023 +
+- [[OXCT1]] — 3-oxoacid CoA-transferase 1 · module 003 -
+- [[OXLD1]] — oxidoreductase like domain containing 1 · module 011 +
+- [[OXNAD1]] — oxidoreductase NAD binding domain containing 1 · module 040 +
+- [[OXR1]] — oxidation resistance 1 · module 079 +
+- [[OXR1-AS1]] — OXR1 antisense RNA 1 · module 021 +
+- [[OXSM]] — 3-oxoacyl-ACP synthase, mitochondrial · module 012 +
+- [[OXSR1]] — oxidative stress responsive kinase 1 · module 031 +
+- [[OXTR]] — oxytocin receptor · module 080 +

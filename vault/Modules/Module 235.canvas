@@ -1,0 +1,16 @@
+{
+"nodes": [
+{"id": "legend", "type": "text", "x": -40, "y": -260, "width": 560, "height": 200, "text": "**Module 235**\n\n5 genes at their nodal-map positions. A single-armed module: every gene is + (green). Edge label + = move together, − = opposite."},
+{"id": "g2400", "type": "file", "file": "Genes/chr15/CEMIP.md", "x": 1800, "y": 140, "width": 180, "height": 50, "color": "4"},
+{"id": "g5858", "type": "file", "file": "Genes/chr15/ABHD17C.md", "x": 1000, "y": 0, "width": 180, "height": 50, "color": "4"},
+{"id": "g3759", "type": "file", "file": "Genes/chr2/EPHA4.md", "x": 1000, "y": 3010, "width": 180, "height": 50, "color": "4"},
+{"id": "g7141", "type": "file", "file": "Genes/chrX/SYTL5.md", "x": 1600, "y": 140, "width": 180, "height": 50, "color": "4"},
+{"id": "g3831", "type": "file", "file": "Genes/chr1/RGS2.md", "x": 0, "y": 280, "width": 180, "height": 50, "color": "4"}
+],
+"edges": [
+{"id": "e2400_3759", "fromNode": "g2400", "toNode": "g3759", "label": "+"},
+{"id": "e2400_5858", "fromNode": "g2400", "toNode": "g5858", "label": "+"},
+{"id": "e2400_7141", "fromNode": "g2400", "toNode": "g7141", "label": "+"},
+{"id": "e3759_3831", "fromNode": "g3759", "toNode": "g3831", "label": "+"}
+]
+}

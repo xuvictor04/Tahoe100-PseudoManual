@@ -1,0 +1,586 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes D
+
+576 genes. Back to [[Genes by letter]].
+
+- [[D2HGDH]] — D-2-hydroxyglutarate dehydrogenase · module 010 +
+- [[DAAM1]] — dishevelled associated activator of morphogenesis 1 · module 059 +
+- [[DAAM2]] — dishevelled associated activator of morphogenesis 2 · module 104 +
+- [[DAB1]] — DAB adaptor protein 1 · module 026 +
+- [[DAB2]] — DAB adaptor protein 2 · module 013 +
+- [[DAB2IP]] — DAB2 interacting protein · module 008 +
+- [[DACH1]] — dachshund family transcription factor 1 · module 027 +
+- [[DACH2]] — dachshund family transcription factor 2 · module 061 +
+- [[DAD1]] — defender against cell death 1 · module 041 +
+- [[DAG1]] — dystroglycan 1 · module 050 +
+- [[DAGLA]] — diacylglycerol lipase alpha · module 037 +
+- [[DAGLB]] — diacylglycerol lipase beta · module 192 +
+- [[DALRD3]] — DALR anticodon binding domain containing 3 · module 093 +
+- [[DANCR]] — differentiation antagonizing non-protein coding RNA · module 025 +
+- [[DANT1]] — DXZ4 associated non-coding transcript 1, proximal · module 010 +
+- [[DANT2]] — DXZ4 associated non-coding transcript 2, distal · module 200 +
+- [[DAP]] — death associated protein · module 042 +
+- [[DAP3]] — death associated protein 3 · module 036 +
+- [[DAPK1]] — death associated protein kinase 1 · module 008 +
+- [[DAPK2]] — death associated protein kinase 2 · module 008 +
+- [[DAPK3]] — death associated protein kinase 3 · module 189 +
+- [[DAPP1]] — dual adaptor of phosphotyrosine and 3-phosphoinositides 1 · module 008 +
+- [[DARS1]] — aspartyl-tRNA synthetase 1 · module 028 +
+- [[DARS1-AS1]] — DARS1 antisense RNA 1 · module 015 +
+- [[DARS2]] — aspartyl-tRNA synthetase 2, mitochondrial · module 024 -
+- [[DAW1]] — dynein assembly factor with WD repeats 1 · module 120 +
+- [[DAXX]] — death domain associated protein · module 011 +
+- [[DAZAP1]] — DAZ associated protein 1 · module 018 +
+- [[DAZAP2]] — DAZ associated protein 2 · module 023 +
+- [[DBF4]] — DBF4-CDC7 kinase regulatory subunit · module 022 +
+- [[DBF4B]] — DBF4B-CDC7 kinase regulatory subunit · module 071 +
+- [[DBI]] — diazepam binding inhibitor, acyl-CoA binding protein · module 086 +
+- [[DBN1]] — drebrin 1 · module 025 +
+- [[DBNDD1]] — dysbindin domain containing 1 · module 102 +
+- [[DBNDD2]] — dysbindin domain containing 2 · module 024 +
+- [[DBNL]] — drebrin like · module 111 +
+- [[DBP]] — D-box binding PAR bZIP transcription factor · module 059 +
+- [[DBR1]] — debranching RNA lariats 1 · module 107 +
+- [[DBT]] — dihydrolipoamide branched chain transacylase E2 · module 028 +
+- [[DCAF1]] — DDB1 and CUL4 associated factor 1 · module 004 +
+- [[DCAF10]] — DDB1 and CUL4 associated factor 10 · module 114 +
+- [[DCAF11]] — DDB1 and CUL4 associated factor 11 · module 076 +
+- [[DCAF12]] — DDB1 and CUL4 associated factor 12 · module 171 +
+- [[DCAF13]] — DDB1 and CUL4 associated factor 13 · module 033 +
+- [[DCAF15]] — DDB1 and CUL4 associated factor 15 · module 071 +
+- [[DCAF16]] — DDB1 and CUL4 associated factor 16 · module 020 +
+- [[DCAF17]] — DDB1 and CUL4 associated factor 17 · module 001 +
+- [[DCAF4]] — DDB1 and CUL4 associated factor 4 · module 033 +
+- [[DCAF4L1]] — DDB1 and CUL4 associated factor 4 like 1 · module 037 +
+- [[DCAF5]] — DDB1 and CUL4 associated factor 5 · module 169 +
+- [[DCAF6]] — DDB1 and CUL4 associated factor 6 · module 001 -
+- [[DCAF7]] — DDB1 and CUL4 associated factor 7 · module 022 +
+- [[DCAF8]] — DDB1 and CUL4 associated factor 8 · module 077 -
+- [[DCAKD]] — dephospho-CoA kinase domain containing · module 052 +
+- [[DCBLD1]] — discoidin, CUB and LCCL domain containing 1 · module 147 +
+- [[DCBLD2]] — discoidin, CUB and LCCL domain containing 2 · module 151 +
+- [[DCC]] — DCC netrin 1 receptor · module 166 +
+- [[DCDC1]] — doublecortin domain containing 1 · module 010 +
+- [[DCDC2]] — doublecortin domain containing 2 · module 027 +
+- [[DCK]] — deoxycytidine kinase · module 006 +
+- [[DCLK1]] — doublecortin like kinase 1 · module 150 +
+- [[DCLK2]] — doublecortin like kinase 2 · module 008 +
+- [[DCLRE1A]] — DNA cross-link repair 1A · module 016 +
+- [[DCLRE1B]] — DNA cross-link repair 1B · module 006 +
+- [[DCLRE1C]] — DNA cross-link repair 1C · module 007 +
+- [[DCN]] — decorin · module 104 +
+- [[DCP1A]] — decapping mRNA 1A · module 012 +
+- [[DCP1B]] — decapping mRNA 1B · module 062 +
+- [[DCP2]] — decapping mRNA 2 · module 022 +
+- [[DCPS]] — decapping enzyme, scavenger · module 001 +
+- [[DCT]] — dopachrome tautomerase · module 009 +
+- [[DCTD]] — dCMP deaminase · module 005 +
+- [[DCTN1]] — dynactin subunit 1 · module 025 +
+- [[DCTN2]] — dynactin subunit 2 · module 064 +
+- [[DCTN3]] — dynactin subunit 3 · module 024 +
+- [[DCTN4]] — dynactin subunit 4 · module 064 +
+- [[DCTN5]] — dynactin subunit 5 · module 156 +
+- [[DCTN6]] — dynactin subunit 6 · module 012 +
+- [[DCTN6-DT]] — DCTN6 divergent transcript · module 024 +
+- [[DCTPP1]] — dCTP pyrophosphatase 1 · module 033 +
+- [[DCUN1D1]] — defective in cullin neddylation 1 domain containing 1 · module 028 +
+- [[DCUN1D2]] — defective in cullin neddylation 1 domain containing 2 · module 016 -
+- [[DCUN1D3]] — defective in cullin neddylation 1 domain containing 3 · module 109 +
+- [[DCUN1D4]] — defective in cullin neddylation 1 domain containing 4 · module 163 +
+- [[DCUN1D5]] — defective in cullin neddylation 1 domain containing 5 · module 054 +
+- [[DCXR]] — dicarbonyl and L-xylulose reductase · module 024 +
+- [[DDA1]] — DET1 and DDB1 associated 1 · module 002 +
+- [[DDAH1]] — dimethylarginine dimethylaminohydrolase 1 · module 120 +
+- [[DDAH2]] — DDAH family member 2, ADMA-independent · module 005 -
+- [[DDB1]] — damage specific DNA binding protein 1 · module 042 +
+- [[DDB2]] — damage specific DNA binding protein 2 · module 062 +
+- [[DDHD1]] — DDHD domain containing 1 · module 134 +
+- [[DDHD2]] — DDHD domain containing 2 · module 175 +
+- [[DDI2]] — DDI proteasomal shuttling factor 2 · module 020 -
+- [[DDIAS]] — DNA damage induced apoptosis suppressor · module 071 +
+- [[DDIT3]] — DNA damage inducible transcript 3 · module 063 +
+- [[DDIT4]] — DNA damage inducible transcript 4 · module 079 +
+- [[DDIT4L]] — DNA damage inducible transcript 4 like · module 019 +
+- [[DDN-AS1]] — DDN and PRKAG1 antisense RNA 1 · module 021 +
+- [[DDOST]] — dolichyl-diphosphooligosaccharide--protein glycosyltransferase non-catalytic subunit · module 029 +
+- [[DDR1]] — discoidin domain receptor tyrosine kinase 1 · module 014 +
+- [[DDR2]] — discoidin domain receptor tyrosine kinase 2 · module 053 +
+- [[DDRGK1]] — DDRGK domain containing 1 · module 030 +
+- [[DDT]] — D-dopachrome tautomerase · module 048 +
+- [[DDX1]] — DEAD-box helicase 1 · module 028 +
+- [[DDX10]] — DEAD-box helicase 10 · module 001 +
+- [[DDX11]] — DEAD/H-box helicase 11 · module 006 +
+- [[DDX11-AS1]] — DDX11 antisense RNA 1 · module 006 +
+- [[DDX12P]] — DEAD/H-box helicase 12, pseudogene · module 006 +
+- [[DDX17]] — DEAD-box helicase 17 · module 095 +
+- [[DDX18]] — DEAD-box helicase 18 · module 001 +
+- [[DDX19A]] — DEAD-box helicase 19A · module 052 +
+- [[DDX19A-DT]] — DDX19A divergent transcript · module 035 +
+- [[DDX19B]] — DEAD-box helicase 19B · module 017 +
+- [[DDX20]] — DEAD-box helicase 20 · module 016 +
+- [[DDX21]] — DExD-box helicase 21 · module 005 +
+- [[DDX23]] — DEAD-box helicase 23 · module 007 +
+- [[DDX24]] — DEAD-box helicase 24 · module 011 +
+- [[DDX27]] — DEAD-box helicase 27 · module 011 +
+- [[DDX28]] — DEAD-box helicase 28 · module 007 +
+- [[DDX31]] — DEAD-box helicase 31 · module 005 +
+- [[DDX39A]] — DExD-box helicase 39A · module 003 -
+- [[DDX39B]] — DExD-box helicase 39B · module 058 +
+- [[DDX3X]] — DEAD-box helicase 3 X-linked · module 003 -
+- [[DDX3Y]] — DEAD-box helicase 3 Y-linked · module 062 +
+- [[DDX41]] — DEAD-box helicase 41 · module 103 +
+- [[DDX42]] — DEAD-box helicase 42 · module 057 +
+- [[DDX43]] — DEAD-box helicase 43 · module 042 +
+- [[DDX46]] — DEAD-box helicase 46 · module 036 +
+- [[DDX49]] — DEAD-box helicase 49 · module 210 +
+- [[DDX5]] — DEAD-box helicase 5 · module 017 -
+- [[DDX50]] — DExD-box helicase 50 · module 052 +
+- [[DDX51]] — DEAD-box helicase 51 · module 005 +
+- [[DDX52]] — DExD-box helicase 52 · module 011 +
+- [[DDX54]] — DEAD-box helicase 54 · module 018 +
+- [[DDX55]] — DEAD-box helicase 55 · module 033 +
+- [[DDX56]] — DEAD-box helicase 56 · module 005 +
+- [[DDX59]] — DEAD-box helicase 59 · module 046 +
+- [[DDX59-AS1]] — DDX59 antisense RNA 1 · module 015 +
+- [[DDX6]] — DEAD-box helicase 6 · module 095 +
+- [[DDX60]] — DExD/H-box helicase 60 · module 032 +
+- [[DDX60L]] — DExD/H-box 60 like · module 032 +
+- [[DEAF1]] — DEAF1 transcription factor · module 037 +
+- [[DECR1]] — 2,4-dienoyl-CoA reductase 1 · module 085 -
+- [[DECR2]] — 2,4-dienoyl-CoA reductase 2 · module 012 +
+- [[DEDD]] — death effector domain containing · module 016 +
+- [[DEDD2]] — death effector domain containing 2 · module 060 +
+- [[DEF6]] — DEF6 guanine nucleotide exchange factor · module 031 +
+- [[DEF8]] — differentially expressed in FDCP 8 homolog · module 138 +
+- [[DEGS1]] — delta 4-desaturase, sphingolipid 1 · module 065 -
+- [[DEK]] — DEK proto-oncogene · module 022 +
+- [[DELE1]] — DAP3 binding cell death enhancer 1 · module 144 +
+- [[DELEC1]] — deleted in esophageal cancer 1 · module 165 +
+- [[DENND10]] — DENN domain containing 10 · module 015 +
+- [[DENND11]] — DENN domain containing 11 · module 176 +
+- [[DENND1A]] — DENN domain containing 1A · module 118 -
+- [[DENND1B]] — DENN domain containing 1B · module 040 -
+- [[DENND2A]] — DENN domain containing 2A · module 013 +
+- [[DENND2B]] — DENN domain containing 2B · module 014 +
+- [[DENND2C]] — DENN domain containing 2C · module 034 +
+- [[DENND2D]] — DENN domain containing 2D · module 055 +
+- [[DENND3]] — DENN domain containing 3 · module 097 +
+- [[DENND3-AS1]] — DENND3 antisense RNA 1 · module 035 +
+- [[DENND4A]] — DENN domain containing 4A · module 004 -
+- [[DENND4B]] — DENN domain containing 4B · module 002 +
+- [[DENND4C]] — DENN domain containing 4C · module 045 +
+- [[DENND5A]] — DENN domain containing 5A · module 214 +
+- [[DENND5B]] — DENN domain containing 5B · module 222 +
+- [[DENND5B-AS1]] — DENND5B antisense RNA 1 · module 080 +
+- [[DENND6A]] — DENN domain containing 6A · module 026 -
+- [[DENND6A-AS1]] — DENND6A antisense RNA 1 · module 026 +
+- [[DENND6B]] — DENN domain containing 6B · module 003 +
+- [[DENR]] — density regulated re-initiation and release factor · module 018 +
+- [[DEPDC1]] — DEP domain containing 1 · module 022 +
+- [[DEPDC1B]] — DEP domain containing 1B · module 022 +
+- [[DEPDC4]] — DEP domain containing 4 · module 021 +
+- [[DEPDC5]] — DEP domain containing 5, GATOR1 subcomplex subunit · module 142 +
+- [[DEPDC7]] — DEP domain containing 7 · module 072 +
+- [[DEPP1]] — DEPP autophagy regulator 1 · module 079 +
+- [[DEPTOR]] — DEP domain containing MTOR interacting protein · module 008 +
+- [[DERA]] — deoxyribose-phosphate aldolase · module 029 +
+- [[DERL1]] — derlin 1 · module 056 +
+- [[DERL2]] — derlin 2 · module 049 +
+- [[DESI1]] — desumoylating isopeptidase 1 · module 045 -
+- [[DESI2]] — desumoylating isopeptidase 2 · module 063 +
+- [[DET1]] — DET1 partner of COP1 E3 ubiquitin ligase · module 170 +
+- [[DEXI]] — Dexi homolog · module 003 +
+- [[DFFA]] — DNA fragmentation factor subunit alpha · module 004 +
+- [[DFFB]] — DNA fragmentation factor subunit beta · module 036 +
+- [[DGAT1]] — diacylglycerol O-acyltransferase 1 · module 002 +
+- [[DGAT2]] — diacylglycerol O-acyltransferase 2 · module 051 +
+- [[DGCR2]] — DiGeorge syndrome critical region gene 2 · module 015 +
+- [[DGCR5]] — DiGeorge syndrome critical region gene 5 · module 102 +
+- [[DGCR8]] — DGCR8 microprocessor complex subunit · module 071 +
+- [[DGKA]] — diacylglycerol kinase alpha · module 062 +
+- [[DGKB]] — diacylglycerol kinase beta · module 009 +
+- [[DGKD]] — diacylglycerol kinase delta · module 023 -
+- [[DGKE]] — diacylglycerol kinase epsilon · module 016 -
+- [[DGKG]] — diacylglycerol kinase gamma · module 072 +
+- [[DGKH]] — diacylglycerol kinase eta · module 065 -
+- [[DGKI]] — diacylglycerol kinase iota · module 039 +
+- [[DGKQ]] — diacylglycerol kinase theta · module 002 +
+- [[DGKZ]] — diacylglycerol kinase zeta · module 002 +
+- [[DGLUCY]] — D-glutamate cyclase · module 032 +
+- [[DGUOK]] — deoxyguanosine kinase · module 007 +
+- [[DGUOK-AS1]] — DGUOK antisense RNA 1 · module 150 +
+- [[DHCR24]] — 24-dehydrocholesterol reductase · module 086 +
+- [[DHCR7]] — 7-dehydrocholesterol reductase · module 086 +
+- [[DHDDS]] — dehydrodolichyl diphosphate synthase subunit · module 056 +
+- [[DHDH]] — dihydrodiol dehydrogenase · module 053 +
+- [[DHFR]] — dihydrofolate reductase · module 020 +
+- [[DHFR2]] — dihydrofolate reductase 2 · module 051 +
+- [[DHODH]] — dihydroorotate dehydrogenase (quinone) · module 033 +
+- [[DHPS]] — deoxyhypusine synthase · module 003 +
+- [[DHRS1]] — dehydrogenase/reductase 1 · module 030 +
+- [[DHRS11]] — dehydrogenase/reductase 11 · module 006 +
+- [[DHRS12]] — dehydrogenase/reductase 12 · module 068 +
+- [[DHRS13]] — dehydrogenase/reductase 13 · module 105 +
+- [[DHRS2]] — dehydrogenase/reductase 2 · module 015 -
+- [[DHRS3]] — dehydrogenase/reductase 3 · module 069 +
+- [[DHRS4]] — dehydrogenase/reductase 4 · module 137 +
+- [[DHRS4-AS1]] — DHRS4 antisense RNA 1 · module 015 +
+- [[DHRS4L2]] — dehydrogenase/reductase 4 like 2 · module 010 +
+- [[DHRS7]] — dehydrogenase/reductase 7 · module 003 +
+- [[DHRS7B]] — dehydrogenase/reductase 7B · module 071 +
+- [[DHRS9]] — dehydrogenase/reductase 9 · module 034 +
+- [[DHRSX]] — dehydrogenase/reductase X-linked · module 029 -
+- [[DHTKD1]] — dehydrogenase E1 and transketolase domain containing 1 · module 085 +
+- [[DHX15]] — DEAH-box helicase 15 · module 020 +
+- [[DHX16]] — DEAH-box helicase 16 · module 127 +
+- [[DHX29]] — DExH-box helicase 29 · module 012 +
+- [[DHX30]] — DExH-box helicase 30 · module 001 +
+- [[DHX32]] — DEAH-box helicase 32 (putative) · module 144 +
+- [[DHX33]] — DEAH-box helicase 33 · module 005 +
+- [[DHX34]] — DExH-box helicase 34 · module 005 +
+- [[DHX35]] — DEAH-box helicase 35 · module 015 +
+- [[DHX36]] — DEAH-box helicase 36 · module 012 +
+- [[DHX37]] — DEAH-box helicase 37 · module 005 +
+- [[DHX38]] — DEAH-box helicase 38 · module 173 +
+- [[DHX40]] — DEAH-box helicase 40 · module 074 +
+- [[DHX57]] — DExH-box helicase 57 · module 129 +
+- [[DHX58]] — DExH-box helicase 58 · module 032 +
+- [[DHX8]] — DEAH-box helicase 8 · module 145 +
+- [[DHX9]] — DExH-box helicase 9 · module 004 +
+- [[DIABLO]] — diablo IAP-binding mitochondrial protein · module 052 +
+- [[DIAPH1]] — diaphanous related formin 1 · module 114 +
+- [[DIAPH2]] — diaphanous related formin 2 · module 200 +
+- [[DIAPH2-AS1]] — DIAPH2 antisense RNA 1 · module 158 +
+- [[DIAPH3]] — diaphanous related formin 3 · module 022 +
+- [[DICER1]] — dicer 1, ribonuclease III · module 001 +
+- [[DICER1-AS1]] — DICER1 antisense RNA 1 · module 015 +
+- [[DIDO1]] — death inducer-obliterator 1 · module 015 +
+- [[DIMT1]] — DIM1 rRNA methyltransferase and ribosome maturation factor · module 005 +
+- [[DIO2]] — iodothyronine deiodinase 2 · module 066 +
+- [[DIO3OS]] — DIO3 opposite strand upstream RNA · module 141 +
+- [[DIP2A]] — DIP2 acetate--CoA ligase A · module 002 +
+- [[DIP2B]] — DIP2 acetate--CoA ligase B (putative) · module 056 +
+- [[DIP2C]] — DIP2 acetate--CoA ligase C (putative) · module 098 +
+- [[DIP2C-AS1]] — DIP2C antisense RNA 1 · module 027 +
+- [[DIPK1A]] — divergent protein kinase domain 1A · module 065 +
+- [[DIPK2A]] — divergent protein kinase domain 2A · module 144 +
+- [[DIRAS3]] — DIRAS family GTPase 3 · module 013 +
+- [[DIRC3]] — disrupted in renal carcinoma 3 · module 066 +
+- [[DIRC3-AS1]] — testicular germ cell expressed HSF2 interacting lncRNA · module 165 +
+- [[DIS3]] — DIS3 exosome endoribonuclease and 3'-5' exoribonuclease · module 041 +
+- [[DIS3L]] — DIS3 like exosome 3'-5' exoribonuclease · module 001 +
+- [[DIS3L2]] — DIS3 like 3'-5' exoribonuclease 2 · module 004 +
+- [[DISC1]] — DISC1 scaffold protein · module 037 +
+- [[DISC1FP1]] — DISC1 fusion partner 1 · module 009 +
+- [[DISP1]] — dispatched RND transporter family member 1 · module 054 +
+- [[DISP3]] — dispatched RND transporter family member 3 · module 165 +
+- [[DIXDC1]] — DIX domain containing 1 · module 017 +
+- [[DKC1]] — dyskerin pseudouridine synthase 1 · module 018 +
+- [[DKK1]] — dickkopf Wnt signaling pathway inhibitor 1 · module 120 +
+- [[DKK2]] — dickkopf Wnt signaling pathway inhibitor 2 · module 075 +
+- [[DKK3]] — dickkopf Wnt signaling pathway inhibitor 3 · module 013 +
+- [[DLAT]] — dihydrolipoamide S-acetyltransferase · module 004 +
+- [[DLC1]] — DLC1 Rho GTPase activating protein · module 120 +
+- [[DLD]] — dihydrolipoamide dehydrogenase · module 025 +
+- [[DLEU1]] — deleted in lymphocytic leukemia 1 · module 027 +
+- [[DLEU2]] — deleted in lymphocytic leukemia 2 · module 091 +
+- [[DLEU7]] — deleted in lymphocytic leukemia 7 · module 075 +
+- [[DLG1]] — discs large MAGUK scaffold protein 1 · module 001 -
+- [[DLG2]] — discs large MAGUK scaffold protein 2 · module 026 +
+- [[DLG3]] — discs large MAGUK scaffold protein 3 · module 008 +
+- [[DLG4]] — discs large MAGUK scaffold protein 4 · module 053 +
+- [[DLG5]] — discs large MAGUK scaffold protein 5 · module 137 +
+- [[DLGAP1]] — DLG associated protein 1 · module 075 +
+- [[DLGAP1-AS1]] — DLGAP1 antisense RNA 1 · module 010 +
+- [[DLGAP1-AS2]] — DLGAP1 antisense RNA 2 · module 035 +
+- [[DLGAP2]] — DLG associated protein 2 · module 165 +
+- [[DLGAP4]] — DLG associated protein 4 · module 189 +
+- [[DLGAP4-AS1]] — DLGAP4 antisense RNA 1 · module 035 +
+- [[DLGAP5]] — DLG associated protein 5 · module 022 +
+- [[DLK2]] — delta like non-canonical Notch ligand 2 · module 128 +
+- [[DLL1]] — delta like canonical Notch ligand 1 · module 035 +
+- [[DLL3]] — delta like canonical Notch ligand 3 · module 024 +
+- [[DLST]] — dihydrolipoamide S-succinyltransferase · module 025 +
+- [[DLX1]] — distal-less homeobox 1 · module 007 +
+- [[DLX2]] — distal-less homeobox 2 · module 068 +
+- [[DLX6-AS1]] — DLX6 antisense RNA 1 · module 046 +
+- [[DMAC1]] — distal membrane arm assembly component 1 · module 011 +
+- [[DMAC2]] — distal membrane arm assembly component 2 · module 072 +
+- [[DMAC2L]] — distal membrane arm assembly component 2 like · module 001 +
+- [[DMAP1]] — DNA methyltransferase 1 associated protein 1 · module 127 +
+- [[DMBX1]] — diencephalon/mesencephalon homeobox 1 · module 124 -
+- [[DMC1]] — DNA meiotic recombinase 1 · module 071 +
+- [[DMD]] — dystrophin · module 009 +
+- [[DMGDH]] — dimethylglycine dehydrogenase · module 133 +
+- [[DMKN]] — dermokine · module 073 +
+- [[DMPK]] — DM1 protein kinase · module 038 +
+- [[DMRTA1]] — DMRT like family A1 · module 014 +
+- [[DMTF1]] — cyclin D binding myb like transcription factor 1 · module 011 +
+- [[DMTN]] — dematin actin binding protein · module 027 +
+- [[DMWD]] — DM1 locus, WD repeat containing · module 138 +
+- [[DMXL1]] — Dmx like 1 · module 017 +
+- [[DMXL1-DT]] — DMXL1 divergent transcript · module 023 +
+- [[DMXL2]] — Dmx like 2 · module 028 +
+- [[DNA2]] — DNA replication helicase/nuclease 2 · module 006 +
+- [[DNAAF10]] — dynein axonemal assembly factor 10 · module 083 +
+- [[DNAAF11]] — dynein axonemal assembly factor 11 · module 155 +
+- [[DNAAF2]] — dynein axonemal assembly factor 2 · module 001 +
+- [[DNAAF3]] — dynein axonemal assembly factor 3 · module 137 -
+- [[DNAAF4]] — dynein axonemal assembly factor 4 · module 017 +
+- [[DNAAF5]] — dynein axonemal assembly factor 5 · module 004 +
+- [[DNAAF9]] — dynein axonemal assembly factor 9 · module 008 +
+- [[DNAH1]] — dynein axonemal heavy chain 1 · module 047 +
+- [[DNAH10]] — dynein axonemal heavy chain 10 · module 053 +
+- [[DNAH11]] — dynein axonemal heavy chain 11 · module 121 +
+- [[DNAH12]] — dynein axonemal heavy chain 12 · module 026 +
+- [[DNAH14]] — dynein axonemal heavy chain 14 · module 016 +
+- [[DNAH17]] — dynein axonemal heavy chain 17 · module 228 +
+- [[DNAH2]] — dynein axonemal heavy chain 2 · module 090 +
+- [[DNAH3]] — dynein axonemal heavy chain 3 · module 191 +
+- [[DNAH5]] — dynein axonemal heavy chain 5 · module 104 +
+- [[DNAH6]] — dynein axonemal heavy chain 6 · module 027 +
+- [[DNAH7]] — dynein axonemal heavy chain 7 · module 027 +
+- [[DNAI1]] — dynein axonemal intermediate chain 1 · module 100 +
+- [[DNAI3]] — dynein axonemal intermediate chain 3 · module 062 +
+- [[DNAI4]] — dynein axonemal intermediate chain 4 · module 023 +
+- [[DNAI7]] — dynein axonemal intermediate chain 7 · module 037 +
+- [[DNAJA1]] — DnaJ heat shock protein family (Hsp40) member A1 · module 060 +
+- [[DNAJA2]] — DnaJ heat shock protein family (Hsp40) member A2 · module 007 +
+- [[DNAJA3]] — DnaJ heat shock protein family (Hsp40) member A3 · module 001 +
+- [[DNAJA4]] — DnaJ heat shock protein family (Hsp40) member A4 · module 060 +
+- [[DNAJB1]] — DnaJ heat shock protein family (Hsp40) member B1 · module 060 +
+- [[DNAJB11]] — DnaJ heat shock protein family (Hsp40) member B11 · module 042 +
+- [[DNAJB12]] — DnaJ heat shock protein family (Hsp40) member B12 · module 007 +
+- [[DNAJB14]] — DnaJ heat shock protein family (Hsp40) member B14 · module 083 +
+- [[DNAJB2]] — DnaJ heat shock protein family (Hsp40) member B2 · module 012 +
+- [[DNAJB4]] — DnaJ heat shock protein family (Hsp40) member B4 · module 135 +
+- [[DNAJB5]] — DnaJ heat shock protein family (Hsp40) member B5 · module 189 +
+- [[DNAJB6]] — DnaJ heat shock protein family (Hsp40) member B6 · module 012 -
+- [[DNAJB9]] — DnaJ heat shock protein family (Hsp40) member B9 · module 049 +
+- [[DNAJC1]] — DnaJ heat shock protein family (Hsp40) member C1 · module 001 -
+- [[DNAJC10]] — DnaJ heat shock protein family (Hsp40) member C10 · module 020 +
+- [[DNAJC11]] — DnaJ heat shock protein family (Hsp40) member C11 · module 001 +
+- [[DNAJC12]] — DnaJ heat shock protein family (Hsp40) member C12 · module 059 +
+- [[DNAJC13]] — DnaJ heat shock protein family (Hsp40) member C13 · module 025 +
+- [[DNAJC14]] — DnaJ heat shock protein family (Hsp40) member C14 · module 016 +
+- [[DNAJC15]] — DnaJ heat shock protein family (Hsp40) member C15 · module 055 +
+- [[DNAJC16]] — DnaJ heat shock protein family (Hsp40) member C16 · module 036 +
+- [[DNAJC17]] — DnaJ heat shock protein family (Hsp40) member C17 · module 036 +
+- [[DNAJC18]] — DnaJ heat shock protein family (Hsp40) member C18 · module 064 +
+- [[DNAJC19]] — DnaJ heat shock protein family (Hsp40) member C19 · module 017 +
+- [[DNAJC2]] — DnaJ heat shock protein family (Hsp40) member C2 · module 012 +
+- [[DNAJC21]] — DnaJ heat shock protein family (Hsp40) member C21 · module 020 -
+- [[DNAJC22]] — DnaJ heat shock protein family (Hsp40) member C22 · module 055 +
+- [[DNAJC24]] — DnaJ heat shock protein family (Hsp40) member C24 · module 030 +
+- [[DNAJC25]] — DnaJ heat shock protein family (Hsp40) member C25 · module 049 +
+- [[DNAJC27]] — DnaJ heat shock protein family (Hsp40) member C27 · module 130 +
+- [[DNAJC27-AS1]] — DNAJC27 antisense RNA 1 · module 023 +
+- [[DNAJC3]] — DnaJ heat shock protein family (Hsp40) member C3 · module 042 +
+- [[DNAJC3-DT]] — DNAJC3 divergent transcript · module 021 +
+- [[DNAJC30]] — DnaJ heat shock protein family (Hsp40) member C30 · module 118 +
+- [[DNAJC4]] — DnaJ heat shock protein family (Hsp40) member C4 · module 024 +
+- [[DNAJC5]] — DnaJ heat shock protein family (Hsp40) member C5 · module 134 +
+- [[DNAJC6]] — DnaJ heat shock protein family (Hsp40) member C6 · module 038 +
+- [[DNAJC7]] — DnaJ heat shock protein family (Hsp40) member C7 · module 064 +
+- [[DNAJC8]] — DnaJ heat shock protein family (Hsp40) member C8 · module 051 +
+- [[DNAJC9]] — DnaJ heat shock protein family (Hsp40) member C9 · module 071 +
+- [[DNAJC9-AS1-1]] — DNAJC9 and MRPS16 antisense RNA 1 · module 021 +
+- [[DNAL1]] — dynein axonemal light chain 1 · module 017 +
+- [[DNAL4]] — dynein axonemal light chain 4 · module 012 +
+- [[DNASE1]] — deoxyribonuclease 1 · module 080 +
+- [[DNASE1L1]] — deoxyribonuclease 1 like 1 · module 192 +
+- [[DNASE2]] — deoxyribonuclease 2, lysosomal · module 045 +
+- [[DNER]] — delta/notch like EGF repeat containing · module 104 +
+- [[DNHD1]] — dynein heavy chain domain 1 · module 037 +
+- [[DNLZ]] — DNL-type zinc finger · module 024 +
+- [[DNM1]] — dynamin 1 · module 057 +
+- [[DNM1L]] — dynamin 1L · module 004 +
+- [[DNM2]] — dynamin 2 · module 085 +
+- [[DNM3]] — dynamin 3 · module 008 +
+- [[DNMBP]] — dynamin binding protein · module 084 +
+- [[DNMBP-AS1]] — DNMBP antisense RNA 1 · module 165 +
+- [[DNMT1]] — DNA methyltransferase 1 · module 006 +
+- [[DNMT3A]] — DNA methyltransferase 3 alpha · module 046 +
+- [[DNMT3B]] — DNA methyltransferase 3 beta · module 082 +
+- [[DNPEP]] — aspartyl aminopeptidase · module 032 +
+- [[DNPH1]] — 2'-deoxynucleoside 5'-phosphate N-hydrolase 1 · module 004 +
+- [[DNTTIP1]] — deoxynucleotidyltransferase terminal interacting protein 1 · module 149 +
+- [[DNTTIP2]] — deoxynucleotidyltransferase terminal interacting protein 2 · module 007 +
+- [[DOC2A]] — double C2 domain alpha · module 045 +
+- [[DOC2B]] — double C2 domain beta · module 009 +
+- [[DOCK1]] — dedicator of cytokinesis 1 · module 005 +
+- [[DOCK10]] — dedicator of cytokinesis 10 · module 121 +
+- [[DOCK11]] — dedicator of cytokinesis 11 · module 132 +
+- [[DOCK2]] — dedicator of cytokinesis 2 · module 013 +
+- [[DOCK3]] — dedicator of cytokinesis 3 · module 102 +
+- [[DOCK4]] — dedicator of cytokinesis 4 · module 193 +
+- [[DOCK5]] — dedicator of cytokinesis 5 · module 174 +
+- [[DOCK6]] — dedicator of cytokinesis 6 · module 003 +
+- [[DOCK7]] — dedicator of cytokinesis 7 · module 200 +
+- [[DOCK7-DT]] — DOCK7 divergent transcript · module 015 +
+- [[DOCK8]] — dedicator of cytokinesis 8 · module 062 +
+- [[DOCK9]] — dedicator of cytokinesis 9 · module 193 +
+- [[DOHH]] — deoxyhypusine hydroxylase · module 114 +
+- [[DOK1]] — docking protein 1 · module 007 +
+- [[DOK3]] — docking protein 3 · module 047 +
+- [[DOK4]] — docking protein 4 · module 085 +
+- [[DOK5]] — docking protein 5 · module 009 +
+- [[DOK6]] — docking protein 6 · module 019 +
+- [[DOLPP1]] — dolichyldiphosphatase 1 · module 007 +
+- [[DONSON]] — DNA replication fork stabilization factor DONSON · module 071 +
+- [[DOP1A]] — DOP1 leucine zipper like protein A · module 060 -
+- [[DOP1B]] — DOP1 leucine zipper like protein B · module 002 +
+- [[DOT1L]] — DOT1 like histone lysine methyltransferase · module 206 +
+- [[DPAGT1]] — dolichyl-phosphate N-acetylglucosaminephosphotransferase 1 · module 020 +
+- [[DPCD]] — deleted in primary ciliary dyskinesia homolog (mouse) · module 103 +
+- [[DPF1]] — double PHD fingers 1 · module 015 -
+- [[DPF2]] — double PHD fingers 2 · module 012 +
+- [[DPF3]] — double PHD fingers 3 · module 081 +
+- [[DPH1]] — diphthamide biosynthesis 1 · module 011 +
+- [[DPH1-AS1]] — DPH1 antisense RNA 1 · module 171 -
+- [[DPH2]] — diphthamide biosynthesis 2 · module 001 +
+- [[DPH3]] — diphthamide biosynthesis 3 · module 007 +
+- [[DPH5]] — diphthamide biosynthesis 5 · module 001 +
+- [[DPH5-DT]] — DPH5 divergent transcript · module 124 +
+- [[DPH6]] — diphthamine biosynthesis 6 · module 004 +
+- [[DPH6-DT]] — DPH6 divergent transcript · module 010 +
+- [[DPH7]] — diphthamide biosynthesis 7 · module 002 +
+- [[DPM1]] — dolichyl-phosphate mannosyltransferase subunit 1, catalytic · module 040 +
+- [[DPM2]] — dolichyl-phosphate mannosyltransferase subunit 2, regulatory · module 020 +
+- [[DPM3]] — dolichyl-phosphate mannosyltransferase subunit 3, regulatory · module 024 +
+- [[DPP10]] — dipeptidyl peptidase like 10 · module 019 +
+- [[DPP3]] — dipeptidyl peptidase 3 · module 004 +
+- [[DPP4]] — dipeptidyl peptidase 4 · module 008 +
+- [[DPP6]] — dipeptidyl peptidase like 6 · module 075 +
+- [[DPP7]] — dipeptidyl peptidase 7 · module 122 +
+- [[DPP8]] — dipeptidyl peptidase 8 · module 194 +
+- [[DPP9]] — dipeptidyl peptidase 9 · module 052 +
+- [[DPY19L1]] — dpy-19 like C-mannosyltransferase 1 · module 149 +
+- [[DPY19L1P1]] — DPY19L1 pseudogene 1 · module 018 +
+- [[DPY19L1P2]] — DPY19L1 pseudogene 2 · module 003 -
+- [[DPY19L2]] — dpy-19 like 2 · module 121 +
+- [[DPY19L2P1]] — DPY19L2 pseudogene 1 · module 009 +
+- [[DPY19L2P2]] — DPY19L2 pseudogene 2 · module 080 +
+- [[DPY19L2P2-1]] · module 016 +
+- [[DPY19L2P3]] — DPY19L2 pseudogene 3 · module 015 +
+- [[DPY19L3]] — dpy-19 like C-mannosyltransferase 3 · module 142 +
+- [[DPY19L3-DT]] — DPY19L3 divergent transcript · module 015 +
+- [[DPY19L4]] — dpy-19 like 4 · module 025 +
+- [[DPY30]] — dpy-30 histone methyltransferase complex regulatory subunit · module 030 +
+- [[DPYD]] — dihydropyrimidine dehydrogenase · module 167 +
+- [[DPYD-AS1]] — DPYD antisense RNA 1 · module 140 +
+- [[DPYS]] — dihydropyrimidinase · module 039 +
+- [[DPYSL2]] — dihydropyrimidinase like 2 · module 011 -
+- [[DPYSL3]] — dihydropyrimidinase like 3 · module 066 +
+- [[DPYSL4]] — dihydropyrimidinase like 4 · module 103 +
+- [[DPYSL5]] — dihydropyrimidinase like 5 · module 082 +
+- [[DR1]] — down-regulator of transcription 1 · module 025 +
+- [[DRAIC]] — downregulated RNA in cancer, inhibitor of cell invasion and migration · module 026 +
+- [[DRAM1]] — DNA damage regulated autophagy modulator 1 · module 014 +
+- [[DRAM2]] — DNA damage regulated autophagy modulator 2 · module 190 +
+- [[DRAP1]] — DR1 associated protein 1 · module 206 +
+- [[DRC1]] — dynein regulatory complex subunit 1 · module 037 +
+- [[DRC3]] — dynein regulatory complex subunit 3 · module 205 +
+- [[DRD4]] — dopamine receptor D4 · module 052 +
+- [[DRG1]] — developmentally regulated GTP binding protein 1 · module 012 +
+- [[DRG2]] — developmentally regulated GTP binding protein 2 · module 001 +
+- [[DROSHA]] — drosha ribonuclease III · module 004 +
+- [[DSC2]] — desmocollin 2 · module 031 +
+- [[DSC3]] — desmocollin 3 · module 062 +
+- [[DSCAM]] — DS cell adhesion molecule · module 013 +
+- [[DSCAML1]] — DS cell adhesion molecule like 1 · module 008 +
+- [[DSCC1]] — DNA replication and sister chromatid cohesion 1 · module 006 +
+- [[DSE]] — dermatan sulfate epimerase · module 112 +
+- [[DSEL]] — dermatan sulfate epimerase like · module 066 +
+- [[DSG2]] — desmoglein 2 · module 111 +
+- [[DSG2-AS1]] — DSG2 antisense RNA 1 · module 021 +
+- [[DSG3]] — desmoglein 3 · module 073 +
+- [[DSG4]] — desmoglein 4 · module 073 +
+- [[DSN1]] — DSN1 component of MIS12 kinetochore complex · module 071 +
+- [[DSP]] — desmoplakin · module 054 -
+- [[DST]] — dystonin · module 016 +
+- [[DSTN]] — destrin, actin depolymerizing factor · module 045 +
+- [[DSTYK]] — dual serine/threonine and tyrosine protein kinase · module 003 +
+- [[DTD1]] — D-aminoacyl-tRNA deacylase 1 · module 063 +
+- [[DTD2]] — D-aminoacyl-tRNA deacylase 2 · module 018 +
+- [[DTL]] — denticleless E3 ubiquitin protein ligase adapter · module 006 +
+- [[DTNA]] — dystrobrevin alpha · module 154 +
+- [[DTNB]] — dystrobrevin beta · module 018 +
+- [[DTNBP1]] — dystrobrevin binding protein 1 · module 036 +
+- [[DTWD1]] — DTW motif tRNA-uridine aminocarboxypropyltransferase 1 · module 198 +
+- [[DTWD2]] — DTW motif tRNA-uridine aminocarboxypropyltransferase 2 · module 004 +
+- [[DTX2]] — deltex E3 ubiquitin ligase 2 · module 031 +
+- [[DTX2P1]] — DTX2 pseudogene 1 · module 153 +
+- [[DTX2P1-UPK3BP1-PMS2P11]] — DTX2P1-UPK3BP1-PMS2P11 readthrough, transcribed pseudogene · module 025 -
+- [[DTX3]] — deltex E3 ubiquitin ligase 3 · module 096 +
+- [[DTX3L]] — deltex E3 ubiquitin ligase 3L · module 032 +
+- [[DTX4]] — deltex E3 ubiquitin ligase 4 · module 044 +
+- [[DTYMK]] — deoxythymidylate kinase · module 067 +
+- [[DUBR]] — DPPA2 upstream binding RNA · module 182 +
+- [[DUOX2]] — dual oxidase 2 · module 070 +
+- [[DUS1L]] — dihydrouridine synthase 1 like · module 002 +
+- [[DUS2]] — dihydrouridine synthase 2 · module 005 +
+- [[DUS3L]] — dihydrouridine synthase 3 like · module 001 +
+- [[DUS4L]] — dihydrouridine synthase 4 like · module 135 +
+- [[DUSP1]] — dual specificity phosphatase 1 · module 113 +
+- [[DUSP10]] — dual specificity phosphatase 10 · module 112 +
+- [[DUSP11]] — dual specificity phosphatase 11 · module 065 +
+- [[DUSP12]] — dual specificity phosphatase 12 · module 017 +
+- [[DUSP14]] — dual specificity phosphatase 14 · module 224 +
+- [[DUSP15]] — dual specificity phosphatase 15 · module 094 +
+- [[DUSP16]] — dual specificity phosphatase 16 · module 068 +
+- [[DUSP18]] — dual specificity phosphatase 18 · module 003 +
+- [[DUSP19]] — dual specificity phosphatase 19 · module 016 +
+- [[DUSP2]] — dual specificity phosphatase 2 · module 162 +
+- [[DUSP22]] — dual specificity phosphatase 22 · module 126 +
+- [[DUSP23]] — dual specificity phosphatase 23 · module 058 +
+- [[DUSP28]] — dual specificity phosphatase 28 · module 035 +
+- [[DUSP3]] — dual specificity phosphatase 3 · module 138 +
+- [[DUSP4]] — dual specificity phosphatase 4 · module 092 +
+- [[DUSP5]] — dual specificity phosphatase 5 · module 141 +
+- [[DUSP5-DT]] — DUSP5 divergent transcript · module 116 +
+- [[DUSP6]] — dual specificity phosphatase 6 · module 174 +
+- [[DUSP7]] — dual specificity phosphatase 7 · module 141 +
+- [[DUSP8]] — dual specificity phosphatase 8 · module 123 +
+- [[DUSP9]] — dual specificity phosphatase 9 · module 045 +
+- [[DUT]] — deoxyuridine triphosphatase · module 006 +
+- [[DUXAP10]] — double homeobox A pseudogene 10 · module 040 +
+- [[DUXAP8]] — double homeobox A pseudogene 8 · module 033 +
+- [[DUXAP9]] — double homeobox A pseudogene 9 · module 033 +
+- [[DVL1]] — dishevelled segment polarity protein 1 · module 002 +
+- [[DVL2]] — dishevelled segment polarity protein 2 · module 122 +
+- [[DVL3]] — dishevelled segment polarity protein 3 · module 126 +
+- [[DXO]] — decapping exoribonuclease · module 096 +
+- [[DYM]] — dymeclin · module 040 +
+- [[DYNC1H1]] — dynein cytoplasmic 1 heavy chain 1 · module 025 +
+- [[DYNC1I1]] — dynein cytoplasmic 1 intermediate chain 1 · module 072 +
+- [[DYNC1I2]] — dynein cytoplasmic 1 intermediate chain 2 · module 017 +
+- [[DYNC1LI1]] — dynein cytoplasmic 1 light intermediate chain 1 · module 169 +
+- [[DYNC1LI2]] — dynein cytoplasmic 1 light intermediate chain 2 · module 042 +
+- [[DYNC2H1]] — dynein cytoplasmic 2 heavy chain 1 · module 017 +
+- [[DYNC2I1]] — dynein 2 intermediate chain 1 · module 020 -
+- [[DYNC2I2]] — dynein 2 intermediate chain 2 · module 006 +
+- [[DYNC2LI1]] — dynein cytoplasmic 2 light intermediate chain 1 · module 017 +
+- [[DYNLL1]] — dynein light chain LC8-type 1 · module 020 -
+- [[DYNLL2]] — dynein light chain LC8-type 2 · module 096 +
+- [[DYNLRB1]] — dynein light chain roadblock-type 1 · module 018 -
+- [[DYNLRB2-AS1]] — DYNLRB2 antisense RNA 1 · module 191 +
+- [[DYNLT1]] — dynein light chain Tctex-type 1 · module 184 +
+- [[DYNLT2]] — dynein light chain Tctex-type 2 · module 015 +
+- [[DYNLT2B]] — dynein light chain Tctex-type 2B · module 037 +
+- [[DYNLT3]] — dynein light chain Tctex-type 3 · module 208 +
+- [[DYRK1A]] — dual specificity tyrosine phosphorylation regulated kinase 1A · module 046 +
+- [[DYRK1B]] — dual specificity tyrosine phosphorylation regulated kinase 1B · module 130 +
+- [[DYRK2]] — dual specificity tyrosine phosphorylation regulated kinase 2 · module 055 +
+- [[DYRK3]] — dual specificity tyrosine phosphorylation regulated kinase 3 · module 112 +
+- [[DYRK4]] — dual specificity tyrosine phosphorylation regulated kinase 4 · module 071 +
+- [[DYSF]] — dysferlin · module 053 +
+- [[DZANK1]] — double zinc ribbon and ankyrin repeat domains 1 · module 205 +
+- [[DZIP1]] — DAZ interacting zinc finger protein 1 · module 082 +
+- [[DZIP1L]] — DAZ interacting zinc finger protein 1 like · module 031 +
+- [[DZIP3]] — DAZ interacting zinc finger protein 3 · module 028 +

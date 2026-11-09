@@ -1,0 +1,1010 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes A 1
+
+1,000 genes. Back to [[Genes by letter]].
+
+- [[A1BG]] — alpha-1-B glycoprotein · module 003 +
+- [[A1BG-AS1]] — A1BG antisense RNA 1 · module 003 +
+- [[A1CF]] — APOBEC1 complementation factor · module 027 +
+- [[A2M]] — alpha-2-macroglobulin · module 087 +
+- [[A2ML1-AS1]] — A2ML1 antisense RNA 1 · module 021 +
+- [[A2MP1]] — PZP alpha-2-macroglobulin like 2, pseudogene · module 058 +
+- [[A3GALT2]] — alpha 1,3-galactosyltransferase 2 · module 047 +
+- [[A4GALT]] — alpha 1,4-galactosyltransferase (P1PK blood group) · module 113 +
+- [[AAAS]] — aladin WD repeat nucleoporin · module 017 +
+- [[AACS]] — acetoacetyl-CoA synthetase · module 025 -
+- [[AACSP1]] — acetoacetyl-CoA synthetase pseudogene 1 · module 177 +
+- [[AADAC]] — arylacetamide deacetylase · module 081 +
+- [[AADACL2-AS1]] — AADACL2 antisense RNA 1 · module 021 +
+- [[AADACP1]] — arylacetamide deacetylase pseudogene 1 · module 081 +
+- [[AADAT]] — aminoadipate aminotransferase · module 033 +
+- [[AAGAB]] — alpha and gamma adaptin binding protein · module 036 +
+- [[AAK1]] — AP2 associated kinase 1 · module 072 +
+- [[AAMDC]] — adipogenesis associated Mth938 domain containing · module 004 -
+- [[AAMP]] — angio associated migratory cell protein · module 076 +
+- [[AAR2]] — AAR2 splicing factor · module 119 +
+- [[AARS1]] — alanyl-tRNA synthetase 1 · module 063 +
+- [[AARS2]] — alanyl-tRNA synthetase 2, mitochondrial · module 107 +
+- [[AARSD1]] — alanyl-tRNA synthetase domain containing 1 · module 012 +
+- [[AASDH]] — aminoadipate-semialdehyde dehydrogenase · module 011 +
+- [[AASDHPPT]] — aminoadipate-semialdehyde dehydrogenase-phosphopantetheinyl transferase · module 028 +
+- [[AASS]] — aminoadipate-semialdehyde synthase · module 217 +
+- [[AATF]] — apoptosis antagonizing transcription factor · module 004 +
+- [[AATK]] — lemur tail kinase 1 · module 102 +
+- [[ABAT]] — 4-aminobutyrate aminotransferase · module 002 +
+- [[ABCA1]] — ATP binding cassette subfamily A member 1 · module 013 +
+- [[ABCA10]] — ATP binding cassette subfamily A member 10 · module 039 +
+- [[ABCA12]] — ATP binding cassette subfamily A member 12 · module 062 +
+- [[ABCA13]] — ATP binding cassette subfamily A member 13 · module 009 +
+- [[ABCA15P]] — ATP binding cassette subfamily A member 15, pseudogene · module 125 +
+- [[ABCA17P]] — ATP binding cassette subfamily A member 17, pseudogene · module 010 +
+- [[ABCA2]] — ATP binding cassette subfamily A member 2 · module 002 +
+- [[ABCA3]] — ATP binding cassette subfamily A member 3 · module 036 +
+- [[ABCA5]] — ATP binding cassette subfamily A member 5 · module 059 +
+- [[ABCA6]] — ATP binding cassette subfamily A member 6 · module 010 +
+- [[ABCA7]] — ATP binding cassette subfamily A member 7 · module 135 -
+- [[ABCB1]] — ATP binding cassette subfamily B member 1 · module 061 +
+- [[ABCB10]] — ATP binding cassette subfamily B member 10 · module 175 +
+- [[ABCB6]] — ATP binding cassette subfamily B member 6 (LAN blood group) · module 103 +
+- [[ABCB7]] — ATP binding cassette subfamily B member 7 · module 051 +
+- [[ABCB8]] — ATP binding cassette subfamily B member 8 · module 072 +
+- [[ABCB9]] — ATP binding cassette subfamily B member 9 · module 079 +
+- [[ABCC1]] — ATP binding cassette subfamily C member 1 (ABCC1 blood group) · module 041 -
+- [[ABCC10]] — ATP binding cassette subfamily C member 10 · module 002 +
+- [[ABCC11]] — ATP binding cassette subfamily C member 11 · module 021 +
+- [[ABCC2]] — ATP binding cassette subfamily C member 2 · module 117 +
+- [[ABCC3]] — ATP binding cassette subfamily C member 3 · module 031 +
+- [[ABCC4]] — ATP binding cassette subfamily C member 4 (PEL blood group) · module 018 +
+- [[ABCC5]] — ATP binding cassette subfamily C member 5 · module 060 +
+- [[ABCC6]] — ATP binding cassette subfamily C member 6 · module 008 +
+- [[ABCC9]] — ATP binding cassette subfamily C member 9 · module 019 +
+- [[ABCD1]] — ATP binding cassette subfamily D member 1 · module 002 +
+- [[ABCD3]] — ATP binding cassette subfamily D member 3 · module 015 -
+- [[ABCD4]] — ATP binding cassette subfamily D member 4 · module 030 +
+- [[ABCE1]] — ATP binding cassette subfamily E member 1 · module 001 +
+- [[ABCF1]] — ATP binding cassette subfamily F member 1 · module 011 +
+- [[ABCF2]] — ATP binding cassette subfamily F member 2 · module 005 +
+- [[ABCF3]] — ATP binding cassette subfamily F member 3 · module 127 +
+- [[ABCG1]] — ATP binding cassette subfamily G member 1 · module 059 +
+- [[ABCG2]] — ATP binding cassette subfamily G member 2 (JR blood group) · module 014 +
+- [[ABHD10]] — abhydrolase domain containing 10, depalmitoylase · module 065 +
+- [[ABHD11]] — abhydrolase domain containing 11 · module 031 +
+- [[ABHD12]] — abhydrolase domain containing 12, lysophospholipase · module 163 +
+- [[ABHD12B]] — abhydrolase domain containing 12B · module 055 +
+- [[ABHD13]] — abhydrolase domain containing 13 · module 001 +
+- [[ABHD14A]] — abhydrolase domain containing 14A · module 024 +
+- [[ABHD14B]] — abhydrolase domain containing 14B · module 029 +
+- [[ABHD15]] — abhydrolase domain containing 15 · module 007 +
+- [[ABHD15-AS1]] — ABHD15 antisense RNA 1 · module 021 +
+- [[ABHD16A]] — abhydrolase domain containing 16A, phospholipase · module 017 +
+- [[ABHD17A]] — abhydrolase domain containing 17A, depalmitoylase · module 002 +
+- [[ABHD17B]] — abhydrolase domain containing 17B, depalmitoylase · module 093 +
+- [[ABHD17C]] — abhydrolase domain containing 17C, depalmitoylase · module 235 +
+- [[ABHD18]] — abhydrolase domain containing 18 · module 131 +
+- [[ABHD2]] — abhydrolase domain containing 2, acylglycerol lipase · module 097 +
+- [[ABHD3]] — abhydrolase domain containing 3, phospholipase · module 072 +
+- [[ABHD4]] — abhydrolase domain containing 4, N-acyl phospholipase B · module 171 +
+- [[ABHD5]] — abhydrolase domain containing 5, lysophosphatidic acid acyltransferase · module 093 +
+- [[ABHD6]] — abhydrolase domain containing 6, acylglycerol lipase · module 010 -
+- [[ABHD8]] — abhydrolase domain containing 8 · module 030 +
+- [[ABI1]] — abl interactor 1 · module 005 -
+- [[ABI2]] — abl interactor 2 · module 012 -
+- [[ABI3BP]] — ABI family member 3 binding protein · module 013 +
+- [[ABITRAM]] — actin binding transcription modulator · module 017 +
+- [[ABL1]] — ABL proto-oncogene 1, non-receptor tyrosine kinase · module 103 +
+- [[ABL2]] — ABL proto-oncogene 2, non-receptor tyrosine kinase · module 120 +
+- [[ABLIM1]] — actin binding LIM protein 1 · module 066 +
+- [[ABLIM2]] — actin binding LIM protein family member 2 · module 097 +
+- [[ABLIM3]] — actin binding LIM protein family member 3 · module 097 +
+- [[ABO]] — ABO, alpha 1-3-N-acetylgalactosaminyltransferase and alpha 1-3-galactosyltransferase · module 055 +
+- [[ABR]] — ABR activator of RhoGEF and GTPase · module 101 +
+- [[ABRACL]] — ABRA C-terminal like · module 046 +
+- [[ABRAXAS1]] — abraxas 1, BRCA1 A complex subunit · module 057 +
+- [[ABRAXAS2]] — abraxas 2, BRISC complex subunit · module 011 +
+- [[ABT1]] — activator of basal transcription 1 · module 007 +
+- [[ABTB1]] — ankyrin repeat and BTB domain containing 1 · module 076 +
+- [[ABTB2]] — ankyrin repeat and BTB domain containing 2 · module 014 +
+- [[ABTB3]] — ankyrin repeat and BTB domain containing 3 · module 084 +
+- [[ACAA1]] — acetyl-CoA acyltransferase 1 · module 002 +
+- [[ACAA2]] — acetyl-CoA acyltransferase 2 · module 003 -
+- [[ACACA]] — acetyl-CoA carboxylase alpha · module 018 +
+- [[ACACB]] — acetyl-CoA carboxylase beta · module 045 +
+- [[ACAD10]] — acyl-CoA dehydrogenase family member 10 · module 054 +
+- [[ACAD11]] — acyl-CoA dehydrogenase family member 11 · module 028 +
+- [[ACAD8]] — acyl-CoA dehydrogenase family member 8 · module 002 +
+- [[ACAD9]] — acyl-CoA dehydrogenase family member 9 · module 083 +
+- [[ACAD9-DT]] — ACAD9 divergent transcript · module 010 +
+- [[ACADM]] — acyl-CoA dehydrogenase medium chain · module 003 -
+- [[ACADS]] — acyl-CoA dehydrogenase short chain · module 024 +
+- [[ACADSB]] — acyl-CoA dehydrogenase short/branched chain · module 005 -
+- [[ACADVL]] — acyl-CoA dehydrogenase very long chain · module 050 +
+- [[ACAP1]] — ArfGAP with coiled-coil, ankyrin repeat and PH domains 1 · module 004 -
+- [[ACAP2]] — ArfGAP with coiled-coil, ankyrin repeat and PH domains 2 · module 046 -
+- [[ACAP3]] — ArfGAP with coiled-coil, ankyrin repeat and PH domains 3 · module 189 +
+- [[ACAT1]] — acetyl-CoA acetyltransferase 1 · module 017 +
+- [[ACAT2]] — acetyl-CoA acetyltransferase 2 · module 086 +
+- [[ACBD3]] — acyl-CoA binding domain containing 3 · module 041 +
+- [[ACBD4]] — acyl-CoA binding domain containing 4 · module 045 +
+- [[ACBD5]] — acyl-CoA binding domain containing 5 · module 130 +
+- [[ACBD6]] — acyl-CoA binding domain containing 6 · module 213 +
+- [[ACBD7]] — acyl-CoA binding domain containing 7 · module 022 +
+- [[ACCS]] — 1-aminocyclopropane-1-carboxylate synthase homolog (inactive) · module 046 +
+- [[ACD]] — ACD shelterin complex subunit and telomerase recruitment factor · module 002 +
+- [[ACER2]] — alkaline ceramidase 2 · module 062 +
+- [[ACER3]] — alkaline ceramidase 3 · module 151 +
+- [[ACHE]] — acetylcholinesterase (Yt blood group) · module 061 +
+- [[ACIN1]] — apoptotic chromatin condensation inducer 1 · module 051 +
+- [[ACKR2]] — atypical chemokine receptor 2 · module 035 +
+- [[ACKR3]] — atypical chemokine receptor 3 · module 014 +
+- [[ACLY]] — ATP citrate lyase · module 012 -
+- [[ACO1]] — aconitase 1 · module 045 +
+- [[ACO2]] — aconitase 2 · module 210 +
+- [[ACOT11]] — acyl-CoA thioesterase 11 · module 031 +
+- [[ACOT12]] — acyl-CoA thioesterase 12 · module 039 +
+- [[ACOT13]] — acyl-CoA thioesterase 13 · module 064 +
+- [[ACOT2]] — acyl-CoA thioesterase 2 · module 046 +
+- [[ACOT7]] — acyl-CoA thioesterase 7 · module 195 +
+- [[ACOT8]] — acyl-CoA thioesterase 8 · module 183 +
+- [[ACOT9]] — acyl-CoA thioesterase 9 · module 079 +
+- [[ACOX1]] — acyl-CoA oxidase 1 · module 004 -
+- [[ACOX3]] — acyl-CoA oxidase 3, pristanoyl · module 210 +
+- [[ACOXL]] — acyl-CoA oxidase like · module 155 +
+- [[ACP1]] — acid phosphatase 1 · module 065 +
+- [[ACP2]] — acid phosphatase 2, lysosomal · module 096 +
+- [[ACP6]] — acid phosphatase 6, lysophosphatidic · module 201 +
+- [[ACP7]] — acid phosphatase 7, tartrate resistant (putative) · module 110 +
+- [[ACSF2]] — acyl-CoA synthetase family member 2 · module 030 +
+- [[ACSF3]] — acyl-CoA synthetase family member 3 · module 001 +
+- [[ACSL1]] — acyl-CoA synthetase long chain family member 1 · module 106 +
+- [[ACSL3]] — acyl-CoA synthetase long chain family member 3 · module 086 +
+- [[ACSL4]] — acyl-CoA synthetase long chain family member 4 · module 216 +
+- [[ACSL5]] — acyl-CoA synthetase long chain family member 5 · module 073 +
+- [[ACSM3]] — acyl-CoA synthetase medium chain family member 3 · module 021 +
+- [[ACSS1]] — acyl-CoA synthetase short chain family member 1 · module 190 +
+- [[ACSS2]] — acyl-CoA synthetase short chain family member 2 · module 086 +
+- [[ACSS3]] — acyl-CoA synthetase short chain family member 3 · module 019 +
+- [[ACTA2]] — actin alpha 2, smooth muscle · module 062 +
+- [[ACTB]] — actin beta · module 111 +
+- [[ACTG1]] — actin gamma 1 · module 046 -
+- [[ACTG1P17]] — actin gamma 1 pseudogene 17 · module 035 +
+- [[ACTL6A]] — actin like 6A · module 006 +
+- [[ACTN1]] — actinin alpha 1 · module 078 +
+- [[ACTN2]] — actinin alpha 2 · module 125 +
+- [[ACTN4]] — actinin alpha 4 · module 111 +
+- [[ACTR10]] — actin related protein 10 · module 017 +
+- [[ACTR1A]] — actin related protein 1A · module 072 +
+- [[ACTR1B]] — actin related protein 1B · module 189 +
+- [[ACTR2]] — actin related protein 2 · module 024 -
+- [[ACTR3]] — actin related protein 3 · module 111 +
+- [[ACTR3-AS1]] — ACTR3 antisense RNA 1 · module 035 +
+- [[ACTR3B]] — actin related protein 3B · module 005 +
+- [[ACTR3C]] — actin related protein 3C · module 008 +
+- [[ACTR5]] — actin related protein 5 · module 026 -
+- [[ACTR6]] — actin related protein 6 · module 003 +
+- [[ACTR8]] — actin related protein 8 · module 007 +
+- [[ACVR1]] — activin A receptor type 1 · module 081 +
+- [[ACVR1B]] — activin A receptor type 1B · module 146 +
+- [[ACVR1C]] — activin A receptor type 1C · module 037 +
+- [[ACVR2A]] — activin A receptor type 2A · module 024 +
+- [[ACVR2B]] — activin A receptor type 2B · module 069 +
+- [[ACY1]] — aminoacylase 1 · module 092 +
+- [[ACYP1]] — acylphosphatase 1 · module 006 +
+- [[ACYP2]] — acylphosphatase 2 · module 026 +
+- [[ADA]] — adenosine deaminase · module 077 +
+- [[ADAL]] — N6-Methyl-AMP deaminase · module 010 +
+- [[ADAM10]] — ADAM metallopeptidase domain 10 · module 011 -
+- [[ADAM12]] — ADAM metallopeptidase domain 12 · module 013 +
+- [[ADAM15]] — ADAM metallopeptidase domain 15 · module 050 +
+- [[ADAM17]] — ADAM metallopeptidase domain 17 · module 042 +
+- [[ADAM19]] — ADAM metallopeptidase domain 19 · module 034 +
+- [[ADAM20]] — ADAM metallopeptidase domain 20 · module 037 +
+- [[ADAM20P1]] — ADAM metallopeptidase domain 20 pseudogene 1 · module 037 +
+- [[ADAM22]] — ADAM metallopeptidase domain 22 · module 176 +
+- [[ADAM23]] — ADAM metallopeptidase domain 23 · module 102 +
+- [[ADAM28]] — ADAM metallopeptidase domain 28 · module 155 +
+- [[ADAM32]] — ADAM metallopeptidase domain 32 · module 039 +
+- [[ADAM7-AS1]] — ADAM7, ADAMDEC1 and ADAM28 antisense RNA 1 · module 061 +
+- [[ADAM8]] — ADAM metallopeptidase domain 8 · module 034 +
+- [[ADAM9]] — ADAM metallopeptidase domain 9 · module 029 +
+- [[ADAMTS1]] — ADAM metallopeptidase with thrombospondin type 1 motif 1 · module 009 +
+- [[ADAMTS10]] — ADAM metallopeptidase with thrombospondin type 1 motif 10 · module 128 +
+- [[ADAMTS12]] — ADAM metallopeptidase with thrombospondin type 1 motif 12 · module 013 +
+- [[ADAMTS13]] — ADAM metallopeptidase with thrombospondin type 1 motif 13 · module 010 +
+- [[ADAMTS14]] — ADAM metallopeptidase with thrombospondin type 1 motif 14 · module 013 +
+- [[ADAMTS15]] — ADAM metallopeptidase with thrombospondin type 1 motif 15 · module 196 +
+- [[ADAMTS16]] — ADAM metallopeptidase with thrombospondin type 1 motif 16 · module 013 +
+- [[ADAMTS17]] — ADAM metallopeptidase with thrombospondin type 1 motif 17 · module 183 +
+- [[ADAMTS18]] — ADAM metallopeptidase with thrombospondin type 1 motif 18 · module 013 +
+- [[ADAMTS19]] — ADAM metallopeptidase with thrombospondin type 1 motif 19 · module 090 +
+- [[ADAMTS2]] — ADAM metallopeptidase with thrombospondin type 1 motif 2 · module 013 +
+- [[ADAMTS3]] — ADAM metallopeptidase with thrombospondin type 1 motif 3 · module 009 +
+- [[ADAMTS4]] — ADAM metallopeptidase with thrombospondin type 1 motif 4 · module 084 +
+- [[ADAMTS6]] — ADAM metallopeptidase with thrombospondin type 1 motif 6 · module 013 +
+- [[ADAMTS7]] — ADAM metallopeptidase with thrombospondin type 1 motif 7 · module 062 +
+- [[ADAMTS9]] — ADAM metallopeptidase with thrombospondin type 1 motif 9 · module 098 +
+- [[ADAMTS9-AS2]] — ADAMTS9 antisense RNA 2 · module 013 +
+- [[ADAMTSL1]] — ADAMTS like 1 · module 061 +
+- [[ADAMTSL3]] — ADAMTS like 3 · module 009 +
+- [[ADAMTSL4]] — ADAMTS like 4 · module 113 +
+- [[ADAMTSL4-AS2]] — ADAMTSL4 antisense RNA 2 · module 038 +
+- [[ADAMTSL5]] — ADAMTS like 5 · module 002 +
+- [[ADAP1]] — ArfGAP with dual PH domains 1 · module 031 +
+- [[ADAP2]] — ArfGAP with dual PH domains 2 · module 035 +
+- [[ADAR]] — adenosine deaminase RNA specific · module 032 +
+- [[ADARB1]] — adenosine deaminase RNA specific B1 · module 135 -
+- [[ADARB2]] — adenosine deaminase RNA specific B2 (inactive) · module 009 +
+- [[ADAT1]] — adenosine deaminase tRNA specific 1 · module 005 +
+- [[ADAT2]] — adenosine deaminase tRNA specific 2 · module 018 +
+- [[ADAT3]] — adenosine deaminase tRNA specific 3 · module 015 +
+- [[ADCK1]] — aarF domain containing kinase 1 · module 124 +
+- [[ADCK2]] — aarF domain containing kinase 2 · module 030 +
+- [[ADCK5]] — aarF domain containing kinase 5 · module 002 +
+- [[ADCY1]] — adenylate cyclase 1 · module 082 +
+- [[ADCY10]] — adenylate cyclase 10 · module 037 +
+- [[ADCY10P1]] — ADCY10 pseudogene 1 · module 038 +
+- [[ADCY3]] — adenylate cyclase 3 · module 018 +
+- [[ADCY4]] — adenylate cyclase 4 · module 008 +
+- [[ADCY6]] — adenylate cyclase 6 · module 126 +
+- [[ADCY7]] — adenylate cyclase 7 · module 117 +
+- [[ADCY9]] — adenylate cyclase 9 · module 159 +
+- [[ADD1]] — adducin 1 · module 171 +
+- [[ADD2]] — adducin 2 · module 082 +
+- [[ADD3]] — adducin 3 · module 005 -
+- [[ADD3-AS1]] — ADD3 antisense RNA 1 · module 044 +
+- [[ADGRA2]] — adhesion G protein-coupled receptor A2 · module 062 +
+- [[ADGRA3]] — adhesion G protein-coupled receptor A3 · module 143 +
+- [[ADGRB1]] — adhesion G protein-coupled receptor B1 · module 128 +
+- [[ADGRB2]] — adhesion G protein-coupled receptor B2 · module 100 +
+- [[ADGRB3]] — adhesion G protein-coupled receptor B3 · module 108 +
+- [[ADGRD1]] — adhesion G protein-coupled receptor D1 · module 019 +
+- [[ADGRE2]] — adhesion G protein-coupled receptor E2 · module 174 +
+- [[ADGRE3]] — adhesion G protein-coupled receptor E3 · module 078 +
+- [[ADGRE5]] — adhesion G protein-coupled receptor E5 · module 162 +
+- [[ADGRF1]] — adhesion G protein-coupled receptor F1 · module 008 +
+- [[ADGRF4]] — adhesion G protein-coupled receptor F4 · module 008 +
+- [[ADGRF5]] — adhesion G protein-coupled receptor F5 · module 019 +
+- [[ADGRG1]] — adhesion G protein-coupled receptor G1 · module 014 +
+- [[ADGRG2]] — adhesion G protein-coupled receptor G2 · module 098 +
+- [[ADGRG5]] — adhesion G protein-coupled receptor G5 · module 055 +
+- [[ADGRG6]] — adhesion G protein-coupled receptor G6 · module 024 -
+- [[ADGRG7]] — adhesion G protein-coupled receptor G7 · module 108 +
+- [[ADGRL1]] — adhesion G protein-coupled receptor L1 · module 100 +
+- [[ADGRL1-AS1]] — ADGRL1 antisense RNA 1 · module 101 +
+- [[ADGRL2]] — adhesion G protein-coupled receptor L2 · module 009 +
+- [[ADGRL3]] — adhesion G protein-coupled receptor L3 · module 009 +
+- [[ADGRL3-AS1]] — ADGRL3 antisense RNA 1 · module 043 +
+- [[ADGRL4]] — adhesion G protein-coupled receptor L4 · module 092 +
+- [[ADGRV1]] — adhesion G protein-coupled receptor V1 · module 009 +
+- [[ADH5]] — alcohol dehydrogenase 5 (class III), chi polypeptide · module 017 +
+- [[ADHFE1]] — alcohol dehydrogenase iron containing 1 · module 026 +
+- [[ADI1]] — acireductone dioxygenase 1 · module 154 +
+- [[ADIPOR1]] — adiponectin receptor 1 · module 076 +
+- [[ADIPOR2]] — adiponectin receptor 2 · module 086 +
+- [[ADIRF]] — adipogenesis regulatory factor · module 073 +
+- [[ADK]] — adenosine kinase · module 211 +
+- [[ADM]] — adrenomedullin · module 079 +
+- [[ADM2]] — adrenomedullin 2 · module 063 +
+- [[ADNP]] — activity dependent neuroprotector homeobox · module 051 +
+- [[ADNP-AS1]] — ADNP antisense RNA 1 · module 021 +
+- [[ADNP2]] — ADNP homeobox 2 · module 175 +
+- [[ADO]] — 2-aminoethanethiol dioxygenase · module 016 +
+- [[ADORA1]] — adenosine A1 receptor · module 038 +
+- [[ADORA2A]] — adenosine A2a receptor · module 014 +
+- [[ADORA2B]] — adenosine A2b receptor · module 005 +
+- [[ADPGK]] — ADP dependent glucokinase · module 226 +
+- [[ADPRHL1]] — ADP-ribosylhydrolase like 1 · module 098 +
+- [[ADPRM]] — ADP-ribose/CDP-alcohol diphosphatase, manganese dependent · module 020 -
+- [[ADPRS]] — ADP-ribosylserine hydrolase · module 119 +
+- [[ADRA1B]] — adrenoceptor alpha 1B · module 097 +
+- [[ADRA2C]] — adrenoceptor alpha 2C · module 027 +
+- [[ADRB2]] — adrenoceptor beta 2 · module 113 +
+- [[ADRM1]] — ADRM1 26S proteasome ubiquitin receptor · module 007 +
+- [[ADSL]] — adenylosuccinate lyase · module 018 +
+- [[ADSS1]] — adenylosuccinate synthase 1 · module 047 +
+- [[ADSS2]] — adenylosuccinate synthase 2 · module 048 -
+- [[ADTRP]] — androgen dependent TFPI regulating protein · module 116 +
+- [[AEBP1]] — AE binding protein 1 · module 087 +
+- [[AEBP2]] — AE binding protein 2 · module 026 +
+- [[AEN]] — apoptosis enhancing nuclease · module 062 +
+- [[AFAP1]] — actin filament associated protein 1 · module 084 +
+- [[AFAP1-AS1]] — AFAP1 antisense RNA 1 · module 042 +
+- [[AFAP1L1]] — actin filament associated protein 1 like 1 · module 104 +
+- [[AFAP1L2]] — actin filament associated protein 1 like 2 · module 055 +
+- [[AFDN]] — afadin, adherens junction formation factor · module 083 -
+- [[AFF1]] — ALF transcription elongation factor 1 · module 187 +
+- [[AFF2]] — ALF transcription elongation factor 2 · module 061 +
+- [[AFF3]] — ALF transcription elongation factor 3 · module 013 +
+- [[AFF4]] — ALF transcription elongation factor 4 · module 016 +
+- [[AFG1L]] — AFG1 like ATPase · module 001 +
+- [[AFG3L1P]] — AFG3 like matrix AAA peptidase subunit 1, pseudogene · module 088 +
+- [[AFG3L2]] — AFG3 like matrix AAA peptidase subunit 2 · module 001 +
+- [[AFMID]] — arylformamidase · module 003 +
+- [[AFP]] — alpha fetoprotein · module 008 +
+- [[AFTPH]] — aftiphilin · module 059 +
+- [[AGA]] — aspartylglucosaminidase · module 029 +
+- [[AGA-DT]] — AGA divergent transcript · module 010 +
+- [[AGAP1]] — ArfGAP with GTPase domain, ankyrin repeat and PH domain 1 · module 134 +
+- [[AGAP13P]] — ArfGAP with GTPase domain, ankyrin repeat and PH domain 13, pseudogene · module 028 +
+- [[AGAP3]] — ArfGAP with GTPase domain, ankyrin repeat and PH domain 3 · module 003 +
+- [[AGAP4]] — ArfGAP with GTPase domain, ankyrin repeat and PH domain 4 · module 005 +
+- [[AGAP5]] — ArfGAP with GTPase domain, ankyrin repeat and PH domain 5 · module 037 +
+- [[AGAP6]] — ArfGAP with GTPase domain, ankyrin repeat and PH domain 6 · module 005 +
+- [[AGAP9]] — ArfGAP with GTPase domain, ankyrin repeat and PH domain 9 · module 028 +
+- [[AGBL1]] — AGBL carboxypeptidase 1 · module 140 +
+- [[AGBL2]] — AGBL carboxypeptidase 2 · module 010 +
+- [[AGBL3]] — AGBL carboxypeptidase 3 · module 023 +
+- [[AGBL4]] — AGBL carboxypeptidase 4 · module 150 +
+- [[AGBL5]] — AGBL carboxypeptidase 5 · module 020 +
+- [[AGER]] — advanced glycosylation end-product specific receptor · module 181 +
+- [[AGFG1]] — ArfGAP with FG repeats 1 · module 214 +
+- [[AGFG2]] — ArfGAP with FG repeats 2 · module 097 +
+- [[AGGF1]] — angiogenic factor with G-patch and FHA domains 1 · module 011 +
+- [[AGK]] — acylglycerol kinase · module 001 +
+- [[AGL]] — amylo-alpha-1,6-glucosidase and 4-alpha-glucanotransferase · module 028 +
+- [[AGMAT]] — agmatinase (putative) · module 004 +
+- [[AGMO]] — alkylglycerol monooxygenase · module 009 +
+- [[AGO1]] — argonaute RISC component 1 · module 025 +
+- [[AGO2]] — argonaute RISC catalytic component 2 · module 092 +
+- [[AGO3]] — argonaute RISC catalytic component 3 · module 038 +
+- [[AGO4]] — argonaute RISC component 4 · module 187 +
+- [[AGPAT1]] — 1-acylglycerol-3-phosphate O-acyltransferase 1 · module 050 +
+- [[AGPAT2]] — 1-acylglycerol-3-phosphate O-acyltransferase 2 · module 192 +
+- [[AGPAT3]] — 1-acylglycerol-3-phosphate O-acyltransferase 3 · module 018 +
+- [[AGPAT4]] — 1-acylglycerol-3-phosphate O-acyltransferase 4 · module 034 +
+- [[AGPAT5]] — 1-acylglycerol-3-phosphate O-acyltransferase 5 · module 028 +
+- [[AGPS]] — alkylglycerone phosphate synthase · module 004 +
+- [[AGR2]] — anterior gradient 2, protein disulphide isomerase family member · module 049 +
+- [[AGR3]] — anterior gradient 3, protein disulphide isomerase family member · module 044 +
+- [[AGRN]] — agrin · module 138 +
+- [[AGT]] — angiotensinogen · module 008 +
+- [[AGTPBP1]] — ATP/GTP binding carboxypeptidase 1 · module 113 +
+- [[AGTR1]] — angiotensin II receptor type 1 · module 013 +
+- [[AGTRAP]] — angiotensin II receptor associated protein · module 012 +
+- [[AHCTF1]] — AT-hook containing transcription factor 1 · module 033 +
+- [[AHCY]] — adenosylhomocysteinase · module 018 +
+- [[AHCYL1]] — adenosylhomocysteinase like 1 · module 056 +
+- [[AHCYL2]] — adenosylhomocysteinase like 2 · module 018 +
+- [[AHDC1]] — AT-hook DNA binding motif containing 1 · module 161 +
+- [[AHI1]] — Abelson helper integration site 1 · module 050 +
+- [[AHI1-DT]] — AHI1 divergent transcript · module 023 +
+- [[AHNAK]] — AHNAK nucleoprotein · module 054 -
+- [[AHNAK2]] — AHNAK nucleoprotein 2 · module 111 +
+- [[AHR]] — aryl hydrocarbon receptor · module 066 +
+- [[AHRR]] — aryl hydrocarbon receptor repressor · module 047 +
+- [[AHSA1]] — activator of HSP90 ATPase activity 1 · module 060 +
+- [[AHSA2P]] — activator of HSP90 ATPase homolog 2, pseudogene · module 157 +
+- [[AHSG]] — alpha 2-HS glycoprotein · module 008 +
+- [[AIDA]] — axin interactor, dorsalization associated · module 025 +
+- [[AIF1L]] — allograft inflammatory factor 1 like · module 176 +
+- [[AIFM1]] — apoptosis inducing factor mitochondria associated 1 · module 025 +
+- [[AIFM2]] — AIF family member 2, ferroptosis suppressor · module 135 +
+- [[AIG1]] — androgen induced 1 · module 207 -
+- [[AIM2]] — absent in melanoma 2 · module 013 +
+- [[AIMP1]] — aminoacyl tRNA synthetase complex interacting multifunctional protein 1 · module 028 +
+- [[AIMP2]] — aminoacyl tRNA synthetase complex interacting multifunctional protein 2 · module 001 +
+- [[AIP]] — AHR interacting HSP90 co-chaperone · module 130 +
+- [[AJAP1]] — adherens junctions associated protein 1 · module 116 +
+- [[AJM1]] — apical junction component 1 homolog · module 126 +
+- [[AJUBA]] — ajuba LIM protein · module 123 +
+- [[AJUBA-DT]] — AJUBA divergent transcript · module 010 +
+- [[AK1]] — adenylate kinase 1 · module 062 +
+- [[AK2]] — adenylate kinase 2 · module 105 +
+- [[AK3]] — adenylate kinase 3 · module 029 +
+- [[AK4]] — adenylate kinase 4 · module 144 +
+- [[AK4P3]] — adenylate kinase 4 pseudogene 3 · module 009 +
+- [[AK5]] — adenylate kinase 5 · module 013 +
+- [[AK6]] — adenylate kinase 6 · module 029 -
+- [[AK7]] — adenylate kinase 7 · module 021 +
+- [[AK8]] — adenylate kinase 8 · module 010 +
+- [[AK9]] — adenylate kinase 9 · module 010 +
+- [[AKAP1]] — A-kinase anchoring protein 1 · module 033 +
+- [[AKAP1-DT]] — AKAP1 divergent transcript · module 024 +
+- [[AKAP10]] — A-kinase anchoring protein 10 · module 144 +
+- [[AKAP11]] — A-kinase anchoring protein 11 · module 025 +
+- [[AKAP12]] — A-kinase anchoring protein 12 · module 147 +
+- [[AKAP13]] — A-kinase anchoring protein 13 · module 097 +
+- [[AKAP13-AS1]] — AKAP13 antisense RNA 1 · module 021 +
+- [[AKAP17A]] — A-kinase anchoring protein 17A · module 041 +
+- [[AKAP6]] — A-kinase anchoring protein 6 · module 009 +
+- [[AKAP7]] — A-kinase anchoring protein 7 · module 018 +
+- [[AKAP8]] — A-kinase anchoring protein 8 · module 156 +
+- [[AKAP8L]] — A-kinase anchoring protein 8 like · module 149 +
+- [[AKAP9]] — A-kinase anchoring protein 9 · module 074 +
+- [[AKIP1]] — A-kinase interacting protein 1 · module 017 +
+- [[AKIRIN1]] — akirin 1 · module 178 +
+- [[AKIRIN2]] — akirin 2 · module 020 -
+- [[AKNA]] — AT-hook transcription factor · module 063 +
+- [[AKR1A1]] — aldo-keto reductase family 1 member A1 · module 049 +
+- [[AKR1B1]] — aldo-keto reductase family 1 member B · module 066 +
+- [[AKR1B10]] — aldo-keto reductase family 1 member B10 · module 044 +
+- [[AKR1C1]] — aldo-keto reductase family 1 member C1 · module 117 +
+- [[AKR1C2]] — aldo-keto reductase family 1 member C2 · module 117 +
+- [[AKR1C3]] — aldo-keto reductase family 1 member C3 · module 117 +
+- [[AKR1E2]] — aldo-keto reductase family 1 member E2 · module 078 +
+- [[AKR7A2]] — aldo-keto reductase family 7 member A2 · module 058 +
+- [[AKT1]] — AKT serine/threonine kinase 1 · module 002 +
+- [[AKT1S1]] — AKT1 substrate 1 · module 173 +
+- [[AKT2]] — AKT serine/threonine kinase 2 · module 157 +
+- [[AKT3]] — AKT serine/threonine kinase 3 · module 084 +
+- [[AKTIP]] — AKT interacting protein · module 188 +
+- [[ALAD]] — aminolevulinate dehydratase · module 045 +
+- [[ALAS1]] — 5'-aminolevulinate synthase 1 · module 015 -
+- [[ALB]] — albumin · module 008 +
+- [[ALCAM]] — activated leukocyte cell adhesion molecule · module 197 +
+- [[ALDH16A1]] — aldehyde dehydrogenase 16 family member A1 · module 148 +
+- [[ALDH18A1]] — aldehyde dehydrogenase 18 family member A1 · module 042 +
+- [[ALDH1A1]] — aldehyde dehydrogenase 1 family member A1 · module 019 +
+- [[ALDH1A2]] — aldehyde dehydrogenase 1 family member A2 · module 080 +
+- [[ALDH1A3]] — aldehyde dehydrogenase 1 family member A3 · module 078 +
+- [[ALDH1A3-AS1]] — ALDH1A3 antisense RNA 1 · module 046 +
+- [[ALDH1B1]] — aldehyde dehydrogenase 1 family member B1 · module 005 +
+- [[ALDH1L1]] — aldehyde dehydrogenase 1 family member L1 · module 055 +
+- [[ALDH1L2]] — aldehyde dehydrogenase 1 family member L2 · module 063 +
+- [[ALDH2]] — aldehyde dehydrogenase 2 family member · module 072 +
+- [[ALDH3A1]] — aldehyde dehydrogenase 3 family member A1 · module 044 +
+- [[ALDH3A2]] — aldehyde dehydrogenase 3 family member A2 · module 035 -
+- [[ALDH3B1]] — aldehyde dehydrogenase 3 family member B1 · module 081 +
+- [[ALDH4A1]] — aldehyde dehydrogenase 4 family member A1 · module 154 +
+- [[ALDH5A1]] — aldehyde dehydrogenase 5 family member A1 · module 018 +
+- [[ALDH6A1]] — aldehyde dehydrogenase 6 family member A1 · module 041 +
+- [[ALDH7A1]] — aldehyde dehydrogenase 7 family member A1 · module 057 +
+- [[ALDH8A1]] — aldehyde dehydrogenase 8 family member A1 · module 039 +
+- [[ALDH9A1]] — aldehyde dehydrogenase 9 family member A1 · module 186 +
+- [[ALDOA]] — aldolase, fructose-bisphosphate A · module 099 +
+- [[ALDOC]] — aldolase, fructose-bisphosphate C · module 079 +
+- [[ALG1]] — ALG1 chitobiosyldiphosphodolichol beta-mannosyltransferase · module 064 +
+- [[ALG10]] — ALG10 alpha-1,2-glucosyltransferase · module 025 +
+- [[ALG10B]] — ALG10 alpha-1,2-glucosyltransferase B · module 025 +
+- [[ALG11]] — ALG11 alpha-1,2-mannosyltransferase · module 041 +
+- [[ALG12]] — ALG12 alpha-1,6-mannosyltransferase · module 012 +
+- [[ALG13]] — ALG13 UDP-N-acetylglucosaminyltransferase subunit · module 030 -
+- [[ALG14]] — ALG14 UDP-N-acetylglucosaminyltransferase subunit · module 036 +
+- [[ALG1L9P]] — ALG1 like 9, pseudogene · module 026 +
+- [[ALG2]] — ALG2 alpha-1,3/1,6-mannosyltransferase · module 012 +
+- [[ALG3]] — ALG3 alpha-1,3- mannosyltransferase · module 033 +
+- [[ALG5]] — ALG5 dolichyl-phosphate beta-glucosyltransferase · module 049 +
+- [[ALG6]] — ALG6 alpha-1,3-glucosyltransferase · module 175 +
+- [[ALG8]] — ALG8 alpha-1,3-glucosyltransferase · module 005 +
+- [[ALG9]] — ALG9 alpha-1,2-mannosyltransferase · module 065 +
+- [[ALK]] — ALK receptor tyrosine kinase · module 061 +
+- [[ALKBH1]] — alkB homolog 1, histone H2A dioxygenase · module 114 +
+- [[ALKBH2]] — alkB homolog 2, alpha-ketoglutarate dependent dioxygenase · module 033 +
+- [[ALKBH3]] — alkB homolog 3, alpha-ketoglutarate dependent dioxygenase · module 089 +
+- [[ALKBH4]] — alkB homolog 4, lysine demethylase · module 119 +
+- [[ALKBH5]] — alkB homolog 5, RNA demethylase · module 099 +
+- [[ALKBH6]] — alkB homolog 6, nucleotide demethylase · module 072 +
+- [[ALKBH7]] — alkB homolog 7, RNA demethylase · module 003 +
+- [[ALKBH8]] — alkB homolog 8, tRNA methyltransferase · module 004 +
+- [[ALMS1]] — ALMS1 centrosome and basal body associated protein · module 006 +
+- [[ALOX12-AS1]] — mir-497-195 cluster host gene · module 026 +
+- [[ALOX12P2-1]] · module 117 +
+- [[ALOX5]] — arachidonate 5-lipoxygenase · module 008 +
+- [[ALOXE3]] — arachidonate epidermal lipoxygenase 3 · module 158 +
+- [[ALPK1]] — alpha kinase 1 · module 070 +
+- [[ALPK2]] — alpha kinase 2 · module 066 +
+- [[ALPK3]] — alpha kinase 3 · module 047 +
+- [[ALS2]] — alsin Rho guanine nucleotide exchange factor ALS2 · module 057 -
+- [[ALS2CL]] — ALS2 C-terminal like · module 031 +
+- [[ALYREF]] — Aly/REF export factor · module 157 +
+- [[AMACR]] — alpha-methylacyl-CoA racemase · module 028 +
+- [[AMBP]] — alpha-1-microglobulin/bikunin precursor · module 008 +
+- [[AMBRA1]] — autophagy and beclin 1 regulator 1 · module 024 +
+- [[AMD1]] — adenosylmethionine decarboxylase 1 · module 077 +
+- [[AMDHD1]] — amidohydrolase domain containing 1 · module 019 +
+- [[AMDHD2]] — amidohydrolase domain containing 2 · module 002 +
+- [[AMER1]] — APC membrane recruitment protein 1 · module 005 +
+- [[AMFR]] — autocrine motility factor receptor · module 214 +
+- [[AMIGO2]] — adhesion molecule with Ig like domain 2 · module 120 +
+- [[AMMECR1]] — AMMECR nuclear protein 1 · module 137 +
+- [[AMMECR1L]] — AMMECR1 like · module 007 +
+- [[AMN]] — amnion associated transmembrane protein · module 031 +
+- [[AMN1]] — antagonist of mitotic exit network 1 homolog · module 158 +
+- [[AMOT]] — angiomotin · module 044 +
+- [[AMOTL1]] — angiomotin like 1 · module 151 +
+- [[AMOTL2]] — angiomotin like 2 · module 123 +
+- [[AMPD2]] — adenosine monophosphate deaminase 2 · module 042 +
+- [[AMPD3]] — adenosine monophosphate deaminase 3 · module 181 +
+- [[AMPH]] — amphiphysin · module 104 +
+- [[AMY2B]] — amylase alpha 2B · module 023 +
+- [[AMZ1]] — archaelysin family metallopeptidase 1 · module 053 +
+- [[AMZ2]] — archaelysin family metallopeptidase 2 · module 023 +
+- [[AMZ2P1]] — AMZ2 pseudogene 1 · module 028 +
+- [[AMZ2P1-1]] · module 012 +
+- [[ANAPC1]] — anaphase promoting complex subunit 1 · module 018 +
+- [[ANAPC10]] — anaphase promoting complex subunit 10 · module 185 +
+- [[ANAPC11]] — anaphase promoting complex subunit 11 · module 048 +
+- [[ANAPC13]] — anaphase promoting complex subunit 13 · module 016 +
+- [[ANAPC15]] — anaphase promoting complex subunit 15 · module 029 +
+- [[ANAPC16]] — anaphase promoting complex subunit 16 · module 028 +
+- [[ANAPC1P2]] — ANAPC1 pseudogene 2 · module 069 +
+- [[ANAPC1P4]] — ANAPC1 pseudogene 4 · module 151 +
+- [[ANAPC2]] — anaphase promoting complex subunit 2 · module 153 +
+- [[ANAPC4]] — anaphase promoting complex subunit 4 · module 065 +
+- [[ANAPC5]] — anaphase promoting complex subunit 5 · module 057 +
+- [[ANAPC7]] — anaphase promoting complex subunit 7 · module 001 +
+- [[ANG]] — angiogenin · module 001 -
+- [[ANGEL1]] — angel homolog 1 · module 001 +
+- [[ANGEL2]] — angel homolog 2 · module 137 +
+- [[ANGPT1]] — angiopoietin 1 · module 009 +
+- [[ANGPT2]] — angiopoietin 2 · module 080 +
+- [[ANGPTL2]] — angiopoietin like 2 · module 013 +
+- [[ANGPTL4]] — angiopoietin like 4 · module 113 +
+- [[ANK1]] — ankyrin 1 · module 080 +
+- [[ANK2]] — ankyrin 2 · module 063 +
+- [[ANK3]] — ankyrin 3 · module 008 +
+- [[ANKAR]] — ankyrin and armadillo repeat containing · module 039 +
+- [[ANKDD1A]] — ankyrin repeat and death domain containing 1A · module 161 +
+- [[ANKDD1B]] — ankyrin repeat and death domain containing 1B · module 039 +
+- [[ANKEF1]] — ankyrin repeat and EF-hand domain containing 1 · module 016 +
+- [[ANKFN1]] — ankyrin repeat and fibronectin type III domain containing 1 · module 133 +
+- [[ANKFY1]] — ankyrin repeat and FYVE domain containing 1 · module 032 +
+- [[ANKH]] — ANKH inorganic pyrophosphate transport regulator · module 092 +
+- [[ANKHD1]] — ankyrin repeat and KH domain containing 1 · module 074 +
+- [[ANKHD1-DT]] — ANKHD1 divergent transcript · module 023 +
+- [[ANKHD1-EIF4EBP3]] — ANKHD1-EIF4EBP3 readthrough · module 023 +
+- [[ANKIB1]] — ankyrin repeat and IBR domain containing 1 · module 040 +
+- [[ANKLE2]] — ankyrin repeat and LEM domain containing 2 · module 065 -
+- [[ANKMY1]] — ankyrin repeat and MYND domain containing 1 · module 017 -
+- [[ANKMY2]] — ankyrin repeat and MYND domain containing 2 · module 030 +
+- [[ANKRA2]] — ankyrin repeat family A member 2 · module 062 +
+- [[ANKRD1]] — ankyrin repeat domain 1 · module 120 +
+- [[ANKRD10]] — ankyrin repeat domain 10 · module 015 +
+- [[ANKRD11]] — ankyrin repeat domain 11 · module 063 +
+- [[ANKRD12]] — ankyrin repeat domain 12 · module 074 +
+- [[ANKRD13A]] — ankyrin repeat domain 13A · module 017 +
+- [[ANKRD13B]] — ankyrin repeat domain 13B · module 018 +
+- [[ANKRD13C]] — ankyrin repeat domain 13C · module 198 +
+- [[ANKRD13D]] — ankyrin repeat domain 13D · module 003 +
+- [[ANKRD16]] — ankyrin repeat domain 16 · module 015 +
+- [[ANKRD17]] — ankyrin repeat domain 17 · module 001 +
+- [[ANKRD17-DT]] — ANKRD17 divergent transcript · module 023 +
+- [[ANKRD18A]] — ankyrin repeat domain 18A · module 124 +
+- [[ANKRD18B]] — ankyrin repeat domain 18B · module 202 +
+- [[ANKRD18CP]] — ankyrin repeat domain 18C, pseudogene · module 010 +
+- [[ANKRD20A1]] — ankyrin repeat domain 20 family member A1 · module 196 +
+- [[ANKRD20A11P]] — ankyrin repeat domain 20 family member A11, pseudogene · module 010 +
+- [[ANKRD20A21P]] — ankyrin repeat domain 20 family member A21, pseudogene · module 010 +
+- [[ANKRD20A4P]] — ankyrin repeat domain 20 family member A4, pseudogene · module 196 +
+- [[ANKRD20A5P]] — ankyrin repeat domain 20 family member A5, pseudogene · module 068 +
+- [[ANKRD20A7P]] — ankyrin repeat domain 20 family member A7, pseudogene · module 022 +
+- [[ANKRD20A8P]] — ankyrin repeat domain 20 family member A8, pseudogene · module 177 +
+- [[ANKRD20A9P]] — ankyrin repeat domain 20 family member A9, pseudogene · module 177 +
+- [[ANKRD22]] — ankyrin repeat domain 22 · module 008 +
+- [[ANKRD23]] — ankyrin repeat domain 23 · module 072 +
+- [[ANKRD24]] — ankyrin repeat domain 24 · module 017 +
+- [[ANKRD26]] — ankyrin repeat domain 26 · module 028 +
+- [[ANKRD27]] — ankyrin repeat domain 27 · module 077 +
+- [[ANKRD28]] — ankyrin repeat domain 28 · module 033 +
+- [[ANKRD29]] — ankyrin repeat domain 29 · module 196 +
+- [[ANKRD30A]] — ankyrin repeat domain 30A · module 108 +
+- [[ANKRD30B]] — ankyrin repeat domain 30B · module 125 +
+- [[ANKRD30BL]] — ankyrin repeat domain 30B like · module 020 +
+- [[ANKRD31]] — ankyrin repeat domain 31 · module 010 +
+- [[ANKRD33B]] — ankyrin repeat domain 33B · module 014 +
+- [[ANKRD36]] — ankyrin repeat domain 36 · module 175 +
+- [[ANKRD36B]] — ankyrin repeat domain 36B · module 175 +
+- [[ANKRD36C]] — ankyrin repeat domain 36C · module 175 +
+- [[ANKRD37]] — ankyrin repeat domain 37 · module 079 +
+- [[ANKRD39]] — ankyrin repeat domain 39 · module 072 +
+- [[ANKRD40]] — ankyrin repeat domain 40 · module 005 +
+- [[ANKRD42]] — ankyrin repeat domain 42 · module 205 +
+- [[ANKRD42-DT]] — ANKRD42 divergent transcript · module 015 +
+- [[ANKRD44]] — ankyrin repeat domain 44 · module 193 +
+- [[ANKRD46]] — ankyrin repeat domain 46 · module 015 +
+- [[ANKRD49]] — ankyrin repeat domain 49 · module 149 +
+- [[ANKRD50]] — ankyrin repeat domain 50 · module 040 -
+- [[ANKRD52]] — ankyrin repeat domain 52 · module 002 +
+- [[ANKRD54]] — ankyrin repeat domain 54 · module 030 +
+- [[ANKRD6]] — ankyrin repeat domain 6 · module 102 +
+- [[ANKRD7]] — ankyrin repeat domain 7 · module 026 +
+- [[ANKRD9]] — ankyrin repeat domain 9 · module 088 -
+- [[ANKS1A]] — ankyrin repeat and sterile alpha motif domain containing 1A · module 048 +
+- [[ANKS1B]] — ankyrin repeat and sterile alpha motif domain containing 1B · module 010 +
+- [[ANKS3]] — ankyrin repeat and sterile alpha motif domain containing 3 · module 052 +
+- [[ANKS6]] — ankyrin repeat and sterile alpha motif domain containing 6 · module 036 +
+- [[ANKUB1]] — ankyrin repeat and ubiquitin domain containing 1 · module 015 +
+- [[ANKZF1]] — ankyrin repeat and zinc finger peptidyl tRNA hydrolase 1 · module 079 +
+- [[ANLN]] — anillin, actin binding protein · module 022 +
+- [[ANO1]] — anoctamin 1 · module 031 +
+- [[ANO10]] — anoctamin 10 · module 040 +
+- [[ANO3]] — anoctamin 3 · module 019 +
+- [[ANO4]] — anoctamin 4 · module 027 +
+- [[ANO5]] — anoctamin 5 · module 019 +
+- [[ANO6]] — anoctamin 6 · module 013 +
+- [[ANO7]] — anoctamin 7 · module 105 +
+- [[ANO8]] — anoctamin 8 · module 100 +
+- [[ANO9]] — anoctamin 9 · module 014 +
+- [[ANOS1]] — anosmin 1 · module 152 +
+- [[ANOS2P]] — anosmin 2, pseudogene · module 061 +
+- [[ANP32A]] — acidic nuclear phosphoprotein 32 family member A · module 029 +
+- [[ANP32B]] — acidic nuclear phosphoprotein 32 family member B · module 018 +
+- [[ANP32E]] — acidic nuclear phosphoprotein 32 family member E · module 022 +
+- [[ANPEP]] — alanyl aminopeptidase, membrane · module 104 +
+- [[ANTKMT]] — adenine nucleotide translocase lysine methyltransferase · module 058 +
+- [[ANTXR1]] — ANTXR cell adhesion molecule 1 · module 066 +
+- [[ANTXR2]] — ANTXR cell adhesion molecule 2 · module 081 +
+- [[ANXA1]] — annexin A1 · module 111 +
+- [[ANXA10]] — annexin A10 · module 081 +
+- [[ANXA11]] — annexin A11 · module 031 +
+- [[ANXA2]] — annexin A2 · module 111 +
+- [[ANXA2R-AS1]] — ANXA2R antisense RNA 1 · module 046 +
+- [[ANXA2R-OT1]] — ANXA2R overlapping transcript 1 · module 015 +
+- [[ANXA3]] — annexin A3 · module 008 +
+- [[ANXA4]] — annexin A4 · module 015 +
+- [[ANXA5]] — annexin A5 · module 078 +
+- [[ANXA6]] — annexin A6 · module 132 +
+- [[ANXA7]] — annexin A7 · module 064 +
+- [[ANXA8]] — annexin A8 · module 066 +
+- [[AOAH]] — acyloxyacyl hydrolase · module 044 +
+- [[AOC2]] — amine oxidase copper containing 2 · module 037 +
+- [[AOPEP]] — aminopeptidase O (putative) · module 066 +
+- [[AOX1]] — aldehyde oxidase 1 · module 053 +
+- [[AP1AR]] — adaptor related protein complex 1 associated regulatory protein · module 063 +
+- [[AP1B1]] — adaptor related protein complex 1 subunit beta 1 · module 111 +
+- [[AP1G1]] — adaptor related protein complex 1 subunit gamma 1 · module 012 +
+- [[AP1G2]] — adaptor related protein complex 1 subunit gamma 2 · module 096 +
+- [[AP1G2-AS1]] — AP1G2 antisense RNA 1 · module 157 +
+- [[AP1M1]] — adaptor related protein complex 1 subunit mu 1 · module 002 +
+- [[AP1M2]] — adaptor related protein complex 1 subunit mu 2 · module 044 +
+- [[AP1S1]] — adaptor related protein complex 1 subunit sigma 1 · module 010 -
+- [[AP1S2]] — adaptor related protein complex 1 subunit sigma 2 · module 078 +
+- [[AP1S3]] — adaptor related protein complex 1 subunit sigma 3 · module 003 -
+- [[AP2A1]] — adaptor related protein complex 2 subunit alpha 1 · module 042 +
+- [[AP2A2]] — adaptor related protein complex 2 subunit alpha 2 · module 002 +
+- [[AP2B1]] — adaptor related protein complex 2 subunit beta 1 · module 020 +
+- [[AP2M1]] — adaptor related protein complex 2 subunit mu 1 · module 025 +
+- [[AP2S1]] — adaptor related protein complex 2 subunit sigma 1 · module 048 +
+- [[AP3B1]] — adaptor related protein complex 3 subunit beta 1 · module 056 +
+- [[AP3B2]] — adaptor related protein complex 3 subunit beta 2 · module 165 +
+- [[AP3D1]] — adaptor related protein complex 3 subunit delta 1 · module 052 +
+- [[AP3M1]] — adaptor related protein complex 3 subunit mu 1 · module 025 +
+- [[AP3M2]] — adaptor related protein complex 3 subunit mu 2 · module 035 -
+- [[AP3S1]] — adaptor related protein complex 3 subunit sigma 1 · module 007 -
+- [[AP3S2]] — adaptor related protein complex 3 subunit sigma 2 · module 012 +
+- [[AP4B1]] — adaptor related protein complex 4 subunit beta 1 · module 072 +
+- [[AP4E1]] — adaptor related protein complex 4 subunit epsilon 1 · module 011 +
+- [[AP4M1]] — adaptor related protein complex 4 subunit mu 1 · module 021 +
+- [[AP4S1]] — adaptor related protein complex 4 subunit sigma 1 · module 035 +
+- [[AP5B1]] — adaptor related protein complex 5 subunit beta 1 · module 065 -
+- [[AP5M1]] — adaptor related protein complex 5 subunit mu 1 · module 135 +
+- [[AP5S1]] — adaptor related protein complex 5 subunit sigma 1 · module 095 +
+- [[AP5Z1]] — adaptor related protein complex 5 subunit zeta 1 · module 122 +
+- [[APAF1]] — apoptotic peptidase activating factor 1 · module 040 +
+- [[APBA1]] — amyloid beta precursor protein binding family A member 1 · module 115 +
+- [[APBA2]] — amyloid beta precursor protein binding family A member 2 · module 132 +
+- [[APBA3]] — amyloid beta precursor protein binding family A member 3 · module 059 +
+- [[APBB1]] — amyloid beta precursor protein binding family B member 1 · module 061 +
+- [[APBB1IP]] — amyloid beta precursor protein binding family B member 1 interacting protein · module 013 +
+- [[APBB2]] — amyloid beta precursor protein binding family B member 2 · module 084 +
+- [[APBB3]] — amyloid beta precursor protein binding family B member 3 · module 002 +
+- [[APC]] — APC regulator of Wnt signaling pathway · module 017 +
+- [[APC2]] — APC regulator of Wnt signaling pathway 2 · module 053 +
+- [[APCDD1]] — APC down-regulated 1 · module 027 +
+- [[APCDD1L]] — APC down-regulated 1 like · module 013 +
+- [[APCDD1L-DT]] — APCDD1L divergent transcript · module 013 +
+- [[APEH]] — acylaminoacyl-peptide hydrolase · module 050 +
+- [[APEX1]] — apurinic/apyrimidinic endodeoxyribonuclease 1 · module 020 +
+- [[APEX2]] — apurinic/apyrimidinic endodeoxyribonuclease 2 · module 021 +
+- [[APH1A]] — aph-1A gamma-secretase subunit · module 002 +
+- [[APH1B]] — aph-1B gamma-secretase subunit · module 039 +
+- [[API5]] — apoptosis inhibitor 5 · module 025 +
+- [[APIP]] — APAF1 interacting protein · module 018 +
+- [[APLF]] — aprataxin and PNKP like factor · module 068 +
+- [[APLN]] — apelin · module 103 +
+- [[APLP1]] — amyloid beta precursor like protein 1 · module 050 +
+- [[APLP2]] — amyloid beta precursor like protein 2 · module 011 -
+- [[APMAP]] — adipocyte plasma membrane associated protein · module 023 -
+- [[APOA1]] — apolipoprotein A1 · module 008 +
+- [[APOA2]] — apolipoprotein A2 · module 008 +
+- [[APOB]] — apolipoprotein B · module 027 +
+- [[APOBEC3A]] — apolipoprotein B mRNA editing enzyme catalytic subunit 3A · module 091 +
+- [[APOBEC3B]] — apolipoprotein B mRNA editing enzyme catalytic subunit 3B · module 091 +
+- [[APOBEC3C]] — apolipoprotein B mRNA editing enzyme catalytic subunit 3C · module 062 +
+- [[APOBEC3F]] — apolipoprotein B mRNA editing enzyme catalytic subunit 3F · module 032 +
+- [[APOBEC3G]] — apolipoprotein B mRNA editing enzyme catalytic subunit 3G · module 032 +
+- [[APOC1]] — apolipoprotein C1 · module 024 +
+- [[APOD]] — apolipoprotein D · module 087 +
+- [[APOE]] — apolipoprotein E · module 021 +
+- [[APOH]] — apolipoprotein H · module 044 +
+- [[APOL1]] — apolipoprotein L1 · module 070 +
+- [[APOL2]] — apolipoprotein L2 · module 032 +
+- [[APOL3]] — apolipoprotein L3 · module 070 +
+- [[APOL6]] — apolipoprotein L6 · module 070 +
+- [[APOLD1]] — apolipoprotein L domain containing 1 · module 023 +
+- [[APOO]] — apolipoprotein O · module 025 +
+- [[APOOL]] — apolipoprotein O like · module 017 +
+- [[APP]] — amyloid beta precursor protein · module 029 +
+- [[APPAT]] — atherosclerotic plaque pathogenesis associated transcript · module 041 -
+- [[APPBP2]] — amyloid beta precursor protein binding protein 2 · module 118 +
+- [[APPBP2-DT]] — APPBP2 divergent transcript · module 035 +
+- [[APPL1]] — adaptor protein, phosphotyrosine interacting with PH domain and leucine zipper 1 · module 057 +
+- [[APPL2]] — adaptor protein, phosphotyrosine interacting with PH domain and leucine zipper 2 · module 110 +
+- [[APRG1]] — APRG1 tumor suppressor candidate · module 038 +
+- [[APRT]] — adenine phosphoribosyltransferase · module 058 +
+- [[APTR]] — Alu-mediated CDKN1A/p21 transcriptional regulator · module 040 +
+- [[APTX]] — aprataxin · module 089 +
+- [[AQP11]] — aquaporin 11 · module 045 +
+- [[AQP3]] — aquaporin 3 (Gill blood group) · module 155 +
+- [[AQP4-AS1]] — AQP4 antisense RNA 1 · module 140 +
+- [[AQR]] — aquarius intron-binding spliceosomal factor · module 049 +
+- [[AR]] — androgen receptor · module 009 +
+- [[ARAF]] — A-Raf proto-oncogene, serine/threonine kinase · module 153 +
+- [[ARAP1]] — ArfGAP with RhoGAP domain, ankyrin repeat and PH domain 1 · module 034 +
+- [[ARAP2]] — ArfGAP with RhoGAP domain, ankyrin repeat and PH domain 2 · module 143 +
+- [[ARAP3]] — ArfGAP with RhoGAP domain, ankyrin repeat and PH domain 3 · module 036 +
+- [[ARC]] — activity regulated cytoskeleton associated protein · module 109 +
+- [[ARCN1]] — archain 1 coat protein complex I subunit delta · module 042 +
+- [[AREG]] — amphiregulin · module 162 +
+- [[AREL1]] — apoptosis resistant E3 ubiquitin protein ligase 1 · module 036 +
+- [[ARF1]] — ARF GTPase 1 · module 020 +
+- [[ARF3]] — ARF GTPase 3 · module 029 +
+- [[ARF4]] — ARF GTPase 4 · module 041 +
+- [[ARF4-AS1]] — ARF4 antisense RNA 1 · module 053 +
+- [[ARF5]] — ARF GTPase 5 · module 048 +
+- [[ARF6]] — ARF GTPase 6 · module 078 +
+- [[ARFGAP1]] — ARF GTPase activating protein 1 · module 040 +
+- [[ARFGAP2]] — ARF GTPase activating protein 2 · module 173 +
+- [[ARFGAP3]] — ARF GTPase activating protein 3 · module 056 +
+- [[ARFGEF1]] — ARF guanine nucleotide exchange factor 1 · module 076 +
+- [[ARFGEF2]] — ARF guanine nucleotide exchange factor 2 · module 122 +
+- [[ARFGEF3]] — ARFGEF family member 3 · module 180 +
+- [[ARFIP1]] — ARF interacting protein 1 · module 012 +
+- [[ARFIP2]] — ARF interacting protein 2 · module 041 +
+- [[ARFRP1]] — ARF related protein 1 · module 096 +
+- [[ARG2]] — arginase 2 · module 056 +
+- [[ARGLU1]] — arginine and glutamate rich 1 · module 021 +
+- [[ARHGAP1]] — Rho GTPase activating protein 1 · module 222 +
+- [[ARHGAP10]] — Rho GTPase activating protein 10 · module 210 +
+- [[ARHGAP11A]] — Rho GTPase activating protein 11A · module 022 +
+- [[ARHGAP11B]] — Rho GTPase activating protein 11B · module 067 +
+- [[ARHGAP12]] — Rho GTPase activating protein 12 · module 045 +
+- [[ARHGAP15]] — Rho GTPase activating protein 15 · module 026 +
+- [[ARHGAP17]] — Rho GTPase activating protein 17 · module 214 +
+- [[ARHGAP18]] — Rho GTPase activating protein 18 · module 120 +
+- [[ARHGAP19]] — Rho GTPase activating protein 19 · module 022 +
+- [[ARHGAP20]] — Rho GTPase activating protein 20 · module 152 +
+- [[ARHGAP21]] — Rho GTPase activating protein 21 · module 011 -
+- [[ARHGAP22]] — Rho GTPase activating protein 22 · module 110 +
+- [[ARHGAP23]] — Rho GTPase activating protein 23 · module 101 +
+- [[ARHGAP24]] — Rho GTPase activating protein 24 · module 121 +
+- [[ARHGAP25]] — Rho GTPase activating protein 25 · module 027 +
+- [[ARHGAP26]] — Rho GTPase activating protein 26 · module 141 +
+- [[ARHGAP27]] — Rho GTPase activating protein 27 · module 031 +
+- [[ARHGAP27P1-BPTFP1-KPNA2P3]] — ARHGAP27P1-BPTFP1-KPNA2P3 readthrough, transcribed pseudogene · module 034 +
+- [[ARHGAP28]] — Rho GTPase activating protein 28 · module 152 +
+- [[ARHGAP29]] — Rho GTPase activating protein 29 · module 184 +
+- [[ARHGAP30]] — Rho GTPase activating protein 30 · module 008 +
+- [[ARHGAP31]] — Rho GTPase activating protein 31 · module 147 +
+- [[ARHGAP32]] — Rho GTPase activating protein 32 · module 023 -
+- [[ARHGAP33]] — Rho GTPase activating protein 33 · module 067 +
+- [[ARHGAP35]] — Rho GTPase activating protein 35 · module 045 +
+- [[ARHGAP39]] — Rho GTPase activating protein 39 · module 190 +
+- [[ARHGAP4]] — Rho GTPase activating protein 4 · module 018 +
+- [[ARHGAP40]] — Rho GTPase activating protein 40 · module 014 +
+- [[ARHGAP42]] — Rho GTPase activating protein 42 · module 066 +
+- [[ARHGAP44]] — Rho GTPase activating protein 44 · module 115 +
+- [[ARHGAP45]] — Rho GTPase activating protein 45 · module 132 +
+- [[ARHGAP5]] — Rho GTPase activating protein 5 · module 006 -
+- [[ARHGAP6]] — Rho GTPase activating protein 6 · module 073 +
+- [[ARHGAP8]] — Rho GTPase activating protein 8 · module 023 -
+- [[ARHGDIA]] — Rho GDP dissociation inhibitor alpha · module 078 +
+- [[ARHGDIB]] — Rho GDP dissociation inhibitor beta · module 029 +
+- [[ARHGEF1]] — Rho guanine nucleotide exchange factor 1 · module 002 +
+- [[ARHGEF10]] — Rho guanine nucleotide exchange factor 10 · module 085 +
+- [[ARHGEF10L]] — Rho guanine nucleotide exchange factor 10 like · module 148 -
+- [[ARHGEF11]] — Rho guanine nucleotide exchange factor 11 · module 018 +
+- [[ARHGEF12]] — Rho guanine nucleotide exchange factor 12 · module 197 +
+- [[ARHGEF16]] — Rho guanine nucleotide exchange factor 16 · module 031 +
+- [[ARHGEF17]] — Rho guanine nucleotide exchange factor 17 · module 046 +
+- [[ARHGEF18]] — Rho/Rac guanine nucleotide exchange factor 18 · module 160 +
+- [[ARHGEF19]] — Rho guanine nucleotide exchange factor 19 · module 002 +
+- [[ARHGEF2]] — Rho/Rac guanine nucleotide exchange factor 2 · module 063 +
+- [[ARHGEF25]] — Rho guanine nucleotide exchange factor 25 · module 128 +
+- [[ARHGEF26]] — Rho guanine nucleotide exchange factor 26 · module 115 +
+- [[ARHGEF26-AS1]] — ARHGEF26 antisense RNA 1 · module 150 +
+- [[ARHGEF28]] — Rho guanine nucleotide exchange factor 28 · module 120 +
+- [[ARHGEF3]] — Rho guanine nucleotide exchange factor 3 · module 031 +
+- [[ARHGEF34P]] — Rho guanine nucleotide exchange factor 34, pseudogene · module 031 +
+- [[ARHGEF35-AS1]] — ARHGEF35 antisense RNA 1 · module 137 +
+- [[ARHGEF37]] — Rho guanine nucleotide exchange factor 37 · module 010 +
+- [[ARHGEF38]] — Rho guanine nucleotide exchange factor 38 · module 008 +
+- [[ARHGEF39]] — Rho guanine nucleotide exchange factor 39 · module 022 +
+- [[ARHGEF4]] — Rho guanine nucleotide exchange factor 4 · module 034 +
+- [[ARHGEF40]] — Rho guanine nucleotide exchange factor 40 · module 014 +
+- [[ARHGEF5]] — Rho guanine nucleotide exchange factor 5 · module 031 +
+- [[ARHGEF6]] — Rac/Cdc42 guanine nucleotide exchange factor 6 · module 013 +
+- [[ARHGEF7]] — Rho guanine nucleotide exchange factor 7 · module 169 +
+- [[ARHGEF9]] — Cdc42 guanine nucleotide exchange factor 9 · module 003 -
+- [[ARID1A]] — AT-rich interaction domain 1A · module 046 +
+- [[ARID1B]] — AT-rich interaction domain 1B · module 137 +
+- [[ARID2]] — AT-rich interaction domain 2 · module 002 -
+- [[ARID3A]] — AT-rich interaction domain 3A · module 003 +
+- [[ARID3B]] — AT-rich interaction domain 3B · module 136 +
+- [[ARID4A]] — AT-rich interaction domain 4A · module 069 +
+- [[ARID4B]] — AT-rich interaction domain 4B · module 231 +
+- [[ARID5A]] — AT-rich interaction domain 5A · module 189 +
+- [[ARID5B]] — AT-rich interaction domain 5B · module 123 +
+- [[ARIH1]] — ariadne RBR E3 ubiquitin protein ligase 1 · module 093 +
+- [[ARIH2]] — ariadne RBR E3 ubiquitin protein ligase 2 · module 036 +
+- [[ARL1]] — ARF like GTPase 1 · module 049 +
+- [[ARL10]] — ARF like GTPase 10 · module 013 +
+- [[ARL13B]] — ARF like GTPase 13B · module 060 -
+- [[ARL14]] — ARF like GTPase 14 · module 158 +
+- [[ARL14EP]] — ARF like GTPase 14 effector protein · module 011 +
+- [[ARL14EP-DT]] — ARL14EP divergent transcript · module 140 +
+- [[ARL14EPL]] — ARF like GTPase 14 effector protein like · module 181 +
+- [[ARL15]] — ARF like GTPase 15 · module 016 -
+- [[ARL16]] — ARF like GTPase 16 · module 007 +
+- [[ARL17A]] — ARF like GTPase 17A · module 021 +
+- [[ARL17B]] — ARF like GTPase 17B · module 004 -
+- [[ARL2]] — ARF like GTPase 2 · module 029 +
+- [[ARL2BP]] — ARF like GTPase 2 binding protein · module 041 +
+- [[ARL3]] — ARF like GTPase 3 · module 001 -
+- [[ARL4A]] — ARF like GTPase 4A · module 123 +
+- [[ARL4C]] — ARF like GTPase 4C · module 112 +
+- [[ARL4D]] — ARF like GTPase 4D · module 079 +
+- [[ARL5A]] — ARF like GTPase 5A · module 025 +
+- [[ARL5B]] — ARF like GTPase 5B · module 172 +
+- [[ARL6]] — ARF like GTPase 6 · module 065 +
+- [[ARL6IP1]] — ARL6 interacting reticulophagy regulator 1 · module 022 +
+- [[ARL6IP4]] — ARF like GTPase 6 interacting protein 4 · module 024 +
+- [[ARL6IP5]] — ARF like GTPase 6 interacting protein 5 · module 045 +
+- [[ARL6IP6]] — ARF like GTPase 6 interacting protein 6 · module 006 +
+- [[ARL8A]] — ARF like GTPase 8A · module 003 +
+- [[ARL8B]] — ARF like GTPase 8B · module 030 +
+- [[ARL9]] — ARF like GTPase 9 · module 038 +
+- [[ARMC1]] — armadillo repeat containing 1 · module 017 +
+- [[ARMC10]] — armadillo repeat containing 10 · module 018 +
+- [[ARMC2]] — armadillo repeat containing 2 · module 017 +
+- [[ARMC5]] — armadillo repeat containing 5 · module 051 +
+- [[ARMC6]] — armadillo repeat containing 6 · module 005 +
+- [[ARMC7]] — armadillo repeat containing 7 · module 021 +
+- [[ARMC8]] — armadillo repeat containing 8 · module 229 +
+- [[ARMC9]] — armadillo repeat containing 9 · module 023 -
+- [[ARMCX1]] — armadillo repeat containing X-linked 1 · module 122 +
+- [[ARMCX2]] — armadillo repeat containing X-linked 2 · module 013 +
+- [[ARMCX3]] — armadillo repeat containing X-linked 3 · module 059 +
+- [[ARMCX4]] — armadillo repeat containing X-linked 4 · module 088 +
+- [[ARMCX5]] — armadillo repeat containing X-linked 5 · module 028 +
+- [[ARMCX5-GPRASP2]] — ARMCX5-GPRASP2 readthrough · module 023 +
+- [[ARMCX6]] — armadillo repeat containing X-linked 6 · module 178 +
+- [[ARMH1]] — armadillo like helical domain containing 1 · module 035 +
+- [[ARMH3]] — armadillo like helical domain containing 3 · module 169 +
+- [[ARMH4]] — armadillo like helical domain containing 4 · module 051 +
+- [[ARMT1]] — damage control phosphatase 1 · module 077 -
+- [[ARNT]] — aryl hydrocarbon receptor nuclear translocator · module 065 +
+- [[ARNT2]] — aryl hydrocarbon receptor nuclear translocator 2 · module 087 +
+- [[ARNT2-DT]] — ARNT2 divergent transcript · module 087 +
+- [[ARPC1A]] — actin related protein 2/3 complex subunit 1A · module 168 +
+- [[ARPC1B]] — actin related protein 2/3 complex subunit 1B · module 136 +
+- [[ARPC2]] — actin related protein 2/3 complex subunit 2 · module 078 +
+- [[ARPC3]] — actin related protein 2/3 complex subunit 3 · module 142 +
+- [[ARPC4]] — actin related protein 2/3 complex subunit 4 · module 111 +
+- [[ARPC5]] — actin related protein 2/3 complex subunit 5 · module 060 +
+- [[ARPC5L]] — actin related protein 2/3 complex subunit 5 like · module 036 +
+- [[ARPIN]] — actin related protein 2/3 complex inhibitor · module 096 +
+- [[ARPP19]] — cAMP regulated phosphoprotein 19 · module 025 +
+- [[ARRB1]] — arrestin beta 1 · module 014 +
+- [[ARRB2]] — arrestin beta 2 · module 083 -
+- [[ARRDC1]] — arrestin domain containing 1 · module 002 +
+- [[ARRDC1-AS1]] — ARRDC1 antisense RNA 1 · module 007 +
+- [[ARRDC2]] — arrestin domain containing 2 · module 029 -
+- [[ARRDC3]] — arrestin domain containing 3 · module 014 +
+- [[ARRDC3-AS1]] — ARRDC3 antisense RNA 1 · module 010 +
+- [[ARRDC4]] — arrestin domain containing 4 · module 020 -
+- [[ARSA]] — arylsulfatase A · module 050 +
+- [[ARSB]] — arylsulfatase B · module 124 +
+- [[ARSD]] — arylsulfatase D · module 010 +
+- [[ARSG]] — arylsulfatase G · module 092 +
+- [[ARSJ]] — arylsulfatase family member J · module 151 +
+- [[ARSK]] — arylsulfatase family member K · module 079 +
+- [[ARSL]] — arylsulfatase L · module 008 +
+- [[ARV1]] — ARV1 fatty acid homeostasis modulator · module 041 +
+- [[ARVCF]] — ARVCF delta catenin family member · module 189 +
+- [[AS3MT]] — arsenite methyltransferase · module 037 +
+- [[ASAH1]] — N-acylsphingosine amidohydrolase 1 · module 045 +
+- [[ASAH2B]] — N-acylsphingosine amidohydrolase 2B · module 001 +
+- [[ASAP1]] — ArfGAP with SH3 domain, ankyrin repeat and PH domain 1 · module 116 +
+- [[ASAP2]] — ArfGAP with SH3 domain, ankyrin repeat and PH domain 2 · module 193 +
+- [[ASAP3]] — ArfGAP with SH3 domain, ankyrin repeat and PH domain 3 · module 030 +
+- [[ASB1]] — ankyrin repeat and SOCS box containing 1 · module 147 +
+- [[ASB13]] — ankyrin repeat and SOCS box containing 13 · module 033 +
+- [[ASB14]] — ankyrin repeat and SOCS box containing 14 · module 021 +
+- [[ASB16-AS1]] — ASB16 antisense RNA 1 · module 142 +
+- [[ASB3]] — ankyrin repeat and SOCS box containing 3 · module 038 +
+- [[ASB4]] — ankyrin repeat and SOCS box containing 4 · module 027 +
+- [[ASB6]] — ankyrin repeat and SOCS box containing 6 · module 007 +
+- [[ASB7]] — ankyrin repeat and SOCS box containing 7 · module 178 +
+- [[ASB8]] — ankyrin repeat and SOCS box containing 8 · module 012 +
+- [[ASCC1]] — activating signal cointegrator 1 complex subunit 1 · module 015 +
+- [[ASCC2]] — activating signal cointegrator 1 complex subunit 2 · module 052 +
+- [[ASCC3]] — activating signal cointegrator 1 complex subunit 3 · module 062 +
+- [[ASCL1]] — achaete-scute family bHLH transcription factor 1 · module 009 +
+- [[ASF1A]] — anti-silencing function 1A histone chaperone · module 016 +
+- [[ASF1B]] — anti-silencing function 1B histone chaperone · module 071 +
+- [[ASGR1]] — asialoglycoprotein receptor 1 · module 053 +
+- [[ASH1L]] — ASH1 like histone lysine methyltransferase · module 023 +
+- [[ASH2L]] — ASH2 like, histone lysine methyltransferase complex subunit · module 071 +
+- [[ASIC1]] — acid sensing ion channel subunit 1 · module 176 +
+- [[ASIC2]] — acid sensing ion channel subunit 2 · module 165 +
+- [[ASIC4]] — acid sensing ion channel subunit family member 4 · module 038 +
+- [[ASL]] — argininosuccinate lyase · module 218 +
+- [[ASMTL]] — acetylserotonin O-methyltransferase like · module 161 +
+- [[ASMTL-AS1]] — ASMTL antisense RNA 1 · module 005 +
+- [[ASNS]] — asparagine synthetase (glutamine-hydrolyzing) · module 063 +
+- [[ASNSD1]] — asparagine synthetase domain containing 1 · module 012 +
+- [[ASNSP1]] — ASNS pseudogene 1 · module 063 +
+- [[ASPH]] — aspartate beta-hydroxylase · module 078 +
+- [[ASPHD1]] — aspartate beta-hydroxylase domain containing 1 · module 161 +
+- [[ASPM]] — assembly factor for spindle microtubules · module 022 +
+- [[ASPSCR1]] — ASPSCR1 tether for SLC2A4, UBX domain containing · module 007 +
+- [[ASRGL1]] — asparaginase and isoaspartyl peptidase 1 · module 115 +
+- [[ASS1]] — argininosuccinate synthase 1 · module 008 +
+- [[ASTE1]] — asteroid structure-specific endonuclease 1 · module 149 +
+- [[ASTL]] — astacin like metalloendopeptidase · module 109 +
+- [[ASTN2]] — astrotactin 2 · module 131 +
+- [[ASXL1]] — ASXL transcriptional regulator 1 · module 051 +
+- [[ASXL2]] — ASXL transcriptional regulator 2 · module 030 -
+- [[ASXL3]] — ASXL transcriptional regulator 3 · module 009 +
+- [[ATAD1]] — ATPase family AAA domain containing 1 · module 001 +
+- [[ATAD2]] — ATPase family AAA domain containing 2 · module 006 +
+- [[ATAD2B]] — ATPase family AAA domain containing 2B · module 046 +
+- [[ATAD3A]] — ATPase family AAA domain containing 3A · module 036 +
+- [[ATAD3B]] — ATPase family AAA domain containing 3B · module 036 +
+- [[ATAD3C]] — ATPase family AAA domain containing 3C · module 047 +
+- [[ATAD5]] — ATPase family AAA domain containing 5 · module 006 +
+- [[ATAT1]] — alpha tubulin acetyltransferase 1 · module 212 +
+- [[ATE1]] — arginyltransferase 1 · module 143 +
+- [[ATE1OSP]] — ATE1 opposite strand, pseudogene · module 023 +
+- [[ATF1]] — activating transcription factor 1 · module 051 +
+- [[ATF2]] — activating transcription factor 2 · module 045 +
+- [[ATF3]] — activating transcription factor 3 · module 093 +
+- [[ATF4]] — activating transcription factor 4 · module 029 -
+- [[ATF5]] — activating transcription factor 5 · module 023 +
+- [[ATF6]] — activating transcription factor 6 · module 117 +
+- [[ATF6B]] — activating transcription factor 6 beta · module 076 +
+- [[ATF7]] — activating transcription factor 7 · module 058 +
+- [[ATF7IP]] — activating transcription factor 7 interacting protein · module 143 +
+- [[ATF7IP2]] — activating transcription factor 7 interacting protein 2 · module 023 +
+- [[ATG10]] — autophagy related 10 · module 028 +
+- [[ATG101]] — autophagy related 101 · module 052 +
+- [[ATG12]] — autophagy related 12 · module 018 -
+- [[ATG13]] — autophagy related 13 · module 187 +
+- [[ATG14]] — autophagy related 14 · module 076 +
+- [[ATG16L1]] — autophagy related 16 like 1 · module 034 +
+- [[ATG16L2]] — autophagy related 16 like 2 · module 154 +
+- [[ATG2A]] — autophagy related 2A · module 192 +
+- [[ATG2B]] — autophagy related 2B · module 130 +
+- [[ATG3]] — autophagy related 3 · module 017 +
+- [[ATG4A]] — autophagy related 4A cysteine peptidase · module 072 +
+- [[ATG4B]] — autophagy related 4B cysteine peptidase · module 003 +
+- [[ATG4C]] — autophagy related 4C cysteine peptidase · module 065 +
+- [[ATG4D]] — autophagy related 4D cysteine peptidase · module 012 +
+- [[ATG5]] — autophagy related 5 · module 199 +
+- [[ATG7]] — autophagy related 7 · module 171 -
+- [[ATG9A]] — autophagy related 9A · module 002 +
+- [[ATG9B]] — autophagy related 9B · module 034 +
+- [[ATIC]] — 5-aminoimidazole-4-carboxamide ribonucleotide formyltransferase/IMP cyclohydrolase · module 004 +
+- [[ATL1]] — atlastin GTPase 1 · module 090 +
+- [[ATL2]] — atlastin GTPase 2 · module 067 +
+- [[ATL3]] — atlastin GTPase 3 · module 025 +
+- [[ATM]] — ATM serine/threonine kinase · module 042 +
+- [[ATMIN]] — ATM interactor · module 007 +
+- [[ATN1]] — atrophin 1 · module 126 +
+- [[ATOH8]] — atonal bHLH transcription factor 8 · module 104 +
+- [[ATOSA]] — atos homolog A · module 069 +
+- [[ATOSB]] — atos homolog B · module 161 +
+- [[ATOX1]] — antioxidant 1 copper chaperone · module 048 +
+- [[ATP10A]] — ATPase phospholipid transporting 10A (putative) · module 167 +
+- [[ATP10B]] — ATPase phospholipid transporting 10B (putative) · module 044 +
+- [[ATP10D]] — ATPase phospholipid transporting 10D (putative) · module 032 +
+- [[ATP11A]] — ATPase phospholipid transporting 11A · module 195 +
+- [[ATP11B]] — ATPase phospholipid transporting 11B (putative) · module 233 +
+- [[ATP11C]] — ATPase phospholipid transporting 11C (ATP11C blood group) · module 017 -
+- [[ATP13A1]] — ATPase 13A1 · module 153 +
+- [[ATP13A2]] — ATPase cation transporting 13A2 · module 002 +

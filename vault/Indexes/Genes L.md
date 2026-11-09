@@ -1,0 +1,804 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes L
+
+794 genes. Back to [[Genes by letter]].
+
+- [[L1CAM]] — L1 cell adhesion molecule · module 002 +
+- [[L2HGDH]] — L-2-hydroxyglutarate dehydrogenase · module 010 -
+- [[L3HYPDH]] — trans-L-3-hydroxyproline dehydratase · module 005 +
+- [[L3MBTL1]] — L3MBTL histone methyl-lysine binding protein 1 · module 037 +
+- [[L3MBTL2]] — L3MBTL histone methyl-lysine binding protein 2 · module 007 +
+- [[L3MBTL2-AS1]] — L3MBTL2 antisense RNA 1 · module 053 +
+- [[L3MBTL3]] — L3MBTL histone methyl-lysine binding protein 3 · module 018 +
+- [[L3MBTL4]] — L3MBTL histone methyl-lysine binding protein 4 · module 121 +
+- [[LACC1]] — laccase domain multifunctional purine nucleosidase 1 · module 068 +
+- [[LACTB]] — lactamase beta · module 059 +
+- [[LACTB2]] — lactamase beta 2 · module 068 +
+- [[LAD1]] — ladinin 1 · module 073 +
+- [[LAG3]] — lymphocyte activating 3 · module 053 +
+- [[LAGE3]] — L antigen family member 3 · module 024 +
+- [[LAMA1]] — laminin subunit alpha 1 · module 116 +
+- [[LAMA2]] — laminin subunit alpha 2 · module 150 +
+- [[LAMA3]] — laminin subunit alpha 3 · module 034 +
+- [[LAMA4]] — laminin subunit alpha 4 · module 013 +
+- [[LAMA5]] — laminin subunit alpha 5 · module 002 +
+- [[LAMB1]] — laminin subunit beta 1 · module 097 +
+- [[LAMB2]] — laminin subunit beta 2 · module 050 +
+- [[LAMB2P1]] — laminin subunit beta 2 pseudogene 1 · module 114 +
+- [[LAMB3]] — laminin subunit beta 3 · module 101 +
+- [[LAMB4]] — laminin subunit beta 4 · module 019 +
+- [[LAMC1]] — laminin subunit gamma 1 · module 078 +
+- [[LAMC2]] — laminin subunit gamma 2 · module 034 +
+- [[LAMC3]] — laminin subunit gamma 3 · module 128 +
+- [[LAMP1]] — lysosome associated membrane protein 1 · module 050 +
+- [[LAMP2]] — lysosome associated membrane protein 2 · module 029 +
+- [[LAMP3]] — lysosome associated membrane protein 3 · module 032 +
+- [[LAMTOR1]] — late endosomal/lysosomal adaptor, MAPK and MTOR activator 1 · module 007 +
+- [[LAMTOR2]] — late endosomal/lysosomal adaptor, MAPK and MTOR activator 2 · module 048 +
+- [[LAMTOR3]] — late endosomal/lysosomal adaptor, MAPK and MTOR activator 3 · module 023 +
+- [[LAMTOR4]] — late endosomal/lysosomal adaptor, MAPK and MTOR activator 4 · module 024 +
+- [[LAMTOR5]] — late endosomal/lysosomal adaptor, MAPK and MTOR activator 5 · module 024 +
+- [[LAMTOR5-AS1]] — LAMTOR5 and SLC16A4 antisense RNA 1 · module 015 +
+- [[LANCL1]] — LanC like glutathione S-transferase 1 · module 029 +
+- [[LANCL1-AS1]] — LANCL1 antisense RNA 1 · module 021 +
+- [[LANCL2]] — LanC like glutathione S-transferase 2 · module 051 +
+- [[LANCL3]] — LanC like family member 3 · module 034 +
+- [[LAP3]] — leucine aminopeptidase 3 · module 032 +
+- [[LAPTM4A]] — lysosomal protein transmembrane 4 alpha · module 011 -
+- [[LAPTM4B]] — lysosomal protein transmembrane 4 beta · module 029 +
+- [[LAPTM5]] — lysosomal protein transmembrane 5 · module 196 +
+- [[LARGE1]] — LARGE xylosyl- and glucuronyltransferase 1 · module 017 -
+- [[LARGE2]] — LARGE xylosyl- and glucuronyltransferase 2 · module 027 +
+- [[LARP1]] — La ribonucleoprotein 1, translational regulator · module 018 +
+- [[LARP1B]] — La ribonucleoprotein 1B · module 039 +
+- [[LARP4]] — La ribonucleoprotein 4 · module 004 +
+- [[LARP4B]] — La ribonucleoprotein 4B · module 045 -
+- [[LARP6]] — La ribonucleoprotein 6, translational regulator · module 063 +
+- [[LARP7]] — La ribonucleoprotein 7, transcriptional regulator · module 051 +
+- [[LARS1]] — leucyl-tRNA synthetase 1 · module 001 +
+- [[LARS2]] — leucyl-tRNA synthetase 2, mitochondrial · module 004 +
+- [[LAS1L]] — LAS1 like ribosome biogenesis factor · module 004 +
+- [[LASP1]] — LIM and SH3 protein 1 · module 004 -
+- [[LASTR]] — lncRNA associated with SART3 regulation of splicing · module 031 +
+- [[LAT]] — linker for activation of T cells · module 034 +
+- [[LAT2]] — linker for activation of T cells family member 2 · module 047 +
+- [[LATS1]] — large tumor suppressor kinase 1 · module 068 +
+- [[LATS2]] — large tumor suppressor kinase 2 · module 123 +
+- [[LAYN]] — layilin · module 013 +
+- [[LBH]] — LBH regulator of Wnt signaling pathway · module 206 +
+- [[LBHD1]] — LBH domain containing 1 · module 007 +
+- [[LBR]] — lamin B receptor · module 022 +
+- [[LCA5]] — lebercilin LCA5 · module 059 +
+- [[LCA5L]] — lebercilin LCA5 like · module 035 +
+- [[LCAT]] — lecithin-cholesterol acyltransferase · module 029 -
+- [[LCK]] — LCK proto-oncogene, Src family tyrosine kinase · module 031 +
+- [[LCLAT1]] — lysocardiolipin acyltransferase 1 · module 004 +
+- [[LCMT1]] — leucine carboxyl methyltransferase 1 · module 003 +
+- [[LCN2]] — lipocalin 2 · module 008 +
+- [[LCOR]] — ligand dependent nuclear receptor corepressor · module 060 -
+- [[LCORL]] — ligand dependent nuclear receptor corepressor like · module 225 +
+- [[LCP1]] — lymphocyte cytosolic protein 1 · module 116 +
+- [[LDAF1]] — lipid droplet assembly factor 1 · module 024 +
+- [[LDAH]] — lipid droplet associated hydrolase · module 001 +
+- [[LDB1]] — LIM domain binding 1 · module 126 +
+- [[LDB2]] — LIM domain binding 2 · module 009 +
+- [[LDHA]] — lactate dehydrogenase A · module 099 +
+- [[LDHB]] — lactate dehydrogenase B · module 170 -
+- [[LDHC]] — lactate dehydrogenase C · module 038 +
+- [[LDLR]] — low density lipoprotein receptor · module 086 +
+- [[LDLRAD3]] — low density lipoprotein receptor class A domain containing 3 · module 018 +
+- [[LDLRAD4]] — low density lipoprotein receptor class A domain containing 4 · module 044 +
+- [[LDLRAP1]] — low density lipoprotein receptor adaptor protein 1 · module 002 +
+- [[LDOC1]] — LDOC1 regulator of NFKB signaling · module 042 +
+- [[LEF1]] — lymphoid enhancer binding factor 1 · module 087 +
+- [[LEF1-AS1]] — LEF1 antisense RNA 1 · module 087 +
+- [[LEKR1]] — leucine, glutamate and lysine rich 1 · module 010 +
+- [[LEMD1]] — LEM domain containing 1 · module 031 +
+- [[LEMD2]] — LEM domain nuclear envelope protein 2 · module 007 +
+- [[LEMD3]] — LEM domain containing 3 · module 015 +
+- [[LENG1]] — leukocyte receptor cluster member 1 · module 011 +
+- [[LENG8]] — leukocyte receptor cluster member 8 · module 157 +
+- [[LENG8-AS1]] — LENG8 antisense RNA 1 · module 015 +
+- [[LENG9]] — leukocyte receptor cluster member 9 · module 012 +
+- [[LEO1]] — LEO1 component of Paf1/RNA polymerase II complex · module 012 +
+- [[LEPR]] — leptin receptor · module 037 +
+- [[LEPROT]] — leptin receptor overlapping transcript · module 003 -
+- [[LEPROTL1]] — leptin receptor overlapping transcript like 1 · module 183 +
+- [[LETM1]] — leucine zipper and EF-hand containing transmembrane protein 1 · module 018 +
+- [[LETM2]] — leucine zipper and EF-hand containing transmembrane protein 2 · module 080 +
+- [[LETMD1]] — LETM1 domain containing 1 · module 011 +
+- [[LFNG]] — LFNG O-fucosylpeptide 3-beta-N-acetylglucosaminyltransferase · module 154 +
+- [[LGALS1]] — galectin 1 · module 192 +
+- [[LGALS3]] — galectin 3 · module 014 +
+- [[LGALS3BP]] — galectin 3 binding protein · module 050 +
+- [[LGALS4]] — galectin 4 · module 044 +
+- [[LGALS8]] — galectin 8 · module 077 -
+- [[LGALS9]] — galectin 9 · module 032 +
+- [[LGALSL]] — galectin like · module 016 +
+- [[LGALSL-DT]] — LGALSL divergent transcript · module 068 +
+- [[LGI4]] — leucine rich repeat LGI family member 4 · module 100 +
+- [[LGMN]] — legumain · module 093 +
+- [[LGR4]] — leucine rich repeat containing G protein-coupled receptor 4 · module 045 +
+- [[LGR5]] — leucine rich repeat containing G protein-coupled receptor 5 · module 055 +
+- [[LGR6]] — leucine rich repeat containing G protein-coupled receptor 6 · module 055 +
+- [[LGSN]] — lengsin, lens protein with glutamine synthetase domain · module 019 +
+- [[LHFPL2]] — LHFPL tetraspan subfamily member 2 · module 072 +
+- [[LHFPL3]] — LHFPL tetraspan subfamily member 3 · module 026 +
+- [[LHFPL3-AS1]] — LHFPL3 antisense RNA 1 · module 087 +
+- [[LHFPL4]] — LHFPL tetraspan subfamily member 4 · module 016 +
+- [[LHFPL5]] — LHFPL tetraspan subfamily member 5 · module 090 +
+- [[LHFPL6]] — LHFPL tetraspan subfamily member 6 · module 014 +
+- [[LHPP]] — phospholysine phosphohistidine inorganic pyrophosphate phosphatase · module 080 +
+- [[LHX1]] — LIM homeobox 1 · module 112 +
+- [[LHX1-DT]] — LHX1 divergent transcript · module 154 +
+- [[LHX2]] — LIM homeobox 2 · module 115 +
+- [[LHX4]] — LIM homeobox 4 · module 053 +
+- [[LHX6]] — LIM homeobox 6 · module 082 +
+- [[LIAS]] — lipoic acid synthetase · module 017 +
+- [[LIF]] — LIF interleukin 6 family cytokine · module 112 +
+- [[LIF-AS2]] — LIF antisense RNA 2 · module 112 +
+- [[LIFR]] — LIF receptor subunit alpha · module 167 +
+- [[LIG1]] — DNA ligase 1 · module 006 +
+- [[LIG3]] — DNA ligase 3 · module 020 +
+- [[LIG4]] — DNA ligase 4 · module 016 +
+- [[LIMA1]] — LIM domain and actin binding 1 · module 224 +
+- [[LIMCH1]] — LIM and calponin homology domains 1 · module 099 +
+- [[LIMD1]] — LIM domain containing 1 · module 005 +
+- [[LIMD2]] — LIM domain containing 2 · module 092 +
+- [[LIME1]] — Lck interacting transmembrane adaptor 1 · module 029 -
+- [[LIMK1]] — LIM domain kinase 1 · module 002 +
+- [[LIMK2]] — LIM domain kinase 2 · module 019 +
+- [[LIMS1]] — LIM zinc finger domain containing 1 · module 178 +
+- [[LIMS2]] — LIM zinc finger domain containing 2 · module 035 +
+- [[LIN28B]] — lin-28 RNA binding posttranscriptional regulator B · module 009 +
+- [[LIN52]] — lin-52 DREAM MuvB core complex component · module 071 +
+- [[LIN54]] — lin-54 DREAM MuvB core complex component · module 067 +
+- [[LIN7A]] — lin-7 cell polarity scaffold A · module 019 +
+- [[LIN7B]] — lin-7 cell polarity scaffold B · module 003 +
+- [[LIN7C]] — lin-7 cell polarity scaffold C · module 025 +
+- [[LIN9]] — lin-9 DREAM MuvB core complex component · module 071 +
+- [[LINC-PINT]] — long independently transcribed non-coding RNA, p53 induced transcript · module 116 +
+- [[LINC00106]] — long independently transcribed non-coding RNA 106 · module 005 +
+- [[LINC00115]] — long independently transcribed non-coding RNA 115 · module 015 +
+- [[LINC00159]] — long independently transcribed non-coding RNA 159 · module 037 +
+- [[LINC00173]] — long independently transcribed non-coding RNA 173 · module 045 +
+- [[LINC00174]] — long independently transcribed non-coding RNA 174 · module 010 +
+- [[LINC00205]] — long independently transcribed non-coding RNA 205 · module 016 +
+- [[LINC00240]] — long independently transcribed non-coding RNA 240 · module 010 +
+- [[LINC00243]] — long independently transcribed non-coding RNA 243 · module 191 +
+- [[LINC00265]] — long independently transcribed non-coding RNA 265 · module 068 +
+- [[LINC00276]] — long independently transcribed non-coding RNA 276 · module 166 +
+- [[LINC00278]] — long independently transcribed non-coding RNA 278 · module 070 +
+- [[LINC00298]] · module 090 +
+- [[LINC00299]] — long independently transcribed non-coding RNA 299 · module 027 +
+- [[LINC00310]] — long independently transcribed non-coding RNA 310 · module 037 +
+- [[LINC00334]] — long independently transcribed non-coding RNA 334 · module 047 +
+- [[LINC00342]] — long independently transcribed non-coding RNA 342 · module 041 -
+- [[LINC00355]] — long independently transcribed non-coding RNA 355 · module 009 +
+- [[LINC00383]] — long independently transcribed non-coding RNA 383 · module 121 +
+- [[LINC00393]] — long independently transcribed non-coding RNA 393 · module 053 +
+- [[LINC00408]] — long independently transcribed non-coding RNA 408 · module 177 +
+- [[LINC00412]] — long independently transcribed non-coding RNA 412 · module 010 +
+- [[LINC00457]] — long independently transcribed non-coding RNA 457 · module 073 +
+- [[LINC00460]] — long independently transcribed non-coding RNA 460 · module 158 +
+- [[LINC00461]] — MIR9-2 host gene · module 019 +
+- [[LINC00466]] — long independently transcribed non-coding RNA 466 · module 010 +
+- [[LINC00467]] — long independently transcribed non-coding RNA 467 · module 092 +
+- [[LINC00470]] — long independently transcribed non-coding RNA 470 · module 177 +
+- [[LINC00472]] — long independently transcribed non-coding RNA 472 · module 092 +
+- [[LINC00482]] — long independently transcribed non-coding RNA 482 · module 019 +
+- [[LINC00486]] — long independently transcribed non-coding RNA 486 · module 039 +
+- [[LINC00491]] — long independently transcribed non-coding RNA 491 · module 027 +
+- [[LINC00504]] — long independently transcribed non-coding RNA 504 · module 075 +
+- [[LINC00511]] — long independently transcribed non-coding RNA 511 · module 106 +
+- [[LINC00513]] — long independently transcribed non-coding RNA 513 · module 116 +
+- [[LINC00520]] — long independently transcribed non-coding RNA 520 · module 125 +
+- [[LINC00534]] — long independently transcribed non-coding RNA 534 · module 075 +
+- [[LINC00536]] — long independently transcribed non-coding RNA 536 · module 075 +
+- [[LINC00540]] — long independently transcribed non-coding RNA 540 · module 113 +
+- [[LINC00571]] — long independently transcribed non-coding RNA 571 · module 026 +
+- [[LINC00578]] — long independently transcribed non-coding RNA 578 · module 090 +
+- [[LINC00589]] — long independently transcribed non-coding RNA 589 · module 073 +
+- [[LINC00592]] — long independently transcribed non-coding RNA 592 · module 075 +
+- [[LINC00595]] — long independently transcribed non-coding RNA 595 · module 037 +
+- [[LINC00598]] — long independently transcribed non-coding RNA 598 · module 097 +
+- [[LINC00607]] — long independently transcribed non-coding RNA 607 · module 150 +
+- [[LINC00616]] — long independently transcribed non-coding RNA 616 · module 053 +
+- [[LINC00623]] — long independently transcribed non-coding RNA 623 · module 095 +
+- [[LINC00624]] — long independently transcribed non-coding RNA 624 · module 191 +
+- [[LINC00630]] — long independently transcribed non-coding RNA 630 · module 185 +
+- [[LINC00632]] — long independently transcribed non-coding RNA 632 · module 056 +
+- [[LINC00640]] — long independently transcribed non-coding RNA 640 · module 037 +
+- [[LINC00641]] — long independently transcribed non-coding RNA 641 · module 096 +
+- [[LINC00648]] — long independently transcribed non-coding RNA 648 · module 108 +
+- [[LINC00649]] — long independently transcribed non-coding RNA 649 · module 027 +
+- [[LINC00654]] — long independently transcribed non-coding RNA 654 · module 039 +
+- [[LINC00659]] — long independently transcribed non-coding RNA 659 · module 141 +
+- [[LINC00662]] — long independently transcribed non-coding RNA 662 · module 063 +
+- [[LINC00663]] — long independently transcribed non-coding RNA 663 · module 010 +
+- [[LINC00665]] — long independently transcribed non-coding RNA 665 · module 089 +
+- [[LINC00667]] — long independently transcribed non-coding RNA 667 · module 010 +
+- [[LINC00672]] — LASP1 neighbor · module 038 +
+- [[LINC00674]] — long independently transcribed non-coding RNA 674 · module 183 +
+- [[LINC00685]] — long independently transcribed non-coding RNA 685 · module 021 +
+- [[LINC00698]] — long independently transcribed non-coding RNA 698 · module 013 +
+- [[LINC00702]] — long independently transcribed non-coding RNA 702 · module 013 +
+- [[LINC00705]] — long independently transcribed non-coding RNA 705 · module 080 +
+- [[LINC00707]] · module 120 +
+- [[LINC00824]] — long independently transcribed non-coding RNA 824 · module 019 +
+- [[LINC00839]] — long independently transcribed non-coding RNA 839 · module 018 +
+- [[LINC00842]] — long independently transcribed non-coding RNA 842 · module 066 +
+- [[LINC00847]] — long independently transcribed non-coding RNA 847 · module 024 +
+- [[LINC00857]] — long independently transcribed non-coding RNA 857 · module 080 +
+- [[LINC00861]] — long independently transcribed non-coding RNA 861 · module 090 +
+- [[LINC00862]] — long independently transcribed non-coding RNA 862 · module 037 +
+- [[LINC00863]] — long independently transcribed non-coding RNA 863 · module 035 +
+- [[LINC00869-1]] · module 095 +
+- [[LINC00871]] — long independently transcribed non-coding RNA 871 · module 090 +
+- [[LINC00879]] — long independently transcribed non-coding RNA 879 · module 108 +
+- [[LINC00880]] — long independently transcribed non-coding RNA 880 · module 053 +
+- [[LINC00882]] — long independently transcribed non-coding RNA 882 · module 121 +
+- [[LINC00886]] — long independently transcribed non-coding RNA 886 · module 010 +
+- [[LINC00887]] — long independently transcribed non-coding RNA 887 · module 105 +
+- [[LINC00888]] — small nucleolar RNA host gene 33 · module 017 +
+- [[LINC00888-1]] · module 012 +
+- [[LINC00907]] — long independently transcribed non-coding RNA 907 · module 026 +
+- [[LINC00910]] — long independently transcribed non-coding RNA 910 · module 093 +
+- [[LINC00922]] — long independently transcribed non-coding RNA 922 · module 140 +
+- [[LINC00923]] — long independently transcribed non-coding RNA 923 · module 027 +
+- [[LINC00937]] — long independently transcribed non-coding RNA 937 · module 115 +
+- [[LINC00938]] — long independently transcribed non-coding RNA 938 · module 046 +
+- [[LINC00941]] — long independently transcribed non-coding RNA 941 · module 147 +
+- [[LINC00944]] — long independently transcribed non-coding RNA 944 · module 068 +
+- [[LINC00958]] — long independently transcribed non-coding RNA 958 · module 009 +
+- [[LINC00960]] — long independently transcribed non-coding RNA 960 · module 047 +
+- [[LINC00963]] — long independently transcribed non-coding RNA 963 · module 057 -
+- [[LINC00973]] — long independently transcribed non-coding RNA 973 · module 112 +
+- [[LINC00992]] — long independently transcribed non-coding RNA 992 · module 027 +
+- [[LINC00993]] — long independently transcribed non-coding RNA 993 · module 108 +
+- [[LINC01004]] · module 023 +
+- [[LINC01010]] — long independently transcribed non-coding RNA 1010 · module 110 +
+- [[LINC01012]] — long independently transcribed non-coding RNA 1012 · module 183 +
+- [[LINC01013]] — long independently transcribed non-coding RNA 1013 · module 010 +
+- [[LINC01019]] — long independently transcribed non-coding RNA 1019 · module 021 +
+- [[LINC01029]] — long independently transcribed non-coding RNA 1029 · module 009 +
+- [[LINC01030]] — long independently transcribed non-coding RNA 1030 · module 039 +
+- [[LINC01031]] — long independently transcribed non-coding RNA 1031 · module 039 +
+- [[LINC01033]] — long independently transcribed non-coding RNA 1033 · module 075 +
+- [[LINC01035]] — long independently transcribed non-coding RNA 1035 · module 019 +
+- [[LINC01036]] — long independently transcribed non-coding RNA 1036 · module 006 +
+- [[LINC01060]] — long independently transcribed non-coding RNA 1060 · module 009 +
+- [[LINC01088]] — long independently transcribed non-coding RNA 1088 · module 010 +
+- [[LINC01090]] — long independently transcribed non-coding RNA 1090 · module 035 +
+- [[LINC01091]] — long independently transcribed non-coding RNA 1091 · module 027 +
+- [[LINC01098]] — long independently transcribed non-coding RNA 1098 · module 108 +
+- [[LINC01116]] — long independently transcribed non-coding RNA 1116 · module 202 +
+- [[LINC01117]] — long independently transcribed non-coding RNA 1117 · module 150 +
+- [[LINC01118]] — long independently transcribed non-coding RNA 1118 · module 037 +
+- [[LINC01119]] — long independently transcribed non-coding RNA 1119 · module 013 +
+- [[LINC01122]] — long independently transcribed non-coding RNA 1122 · module 150 +
+- [[LINC01128]] — long independently transcribed non-coding RNA 1128 · module 064 -
+- [[LINC01133]] — long independently transcribed non-coding RNA 1133 · module 044 +
+- [[LINC01134]] — long independently transcribed non-coding RNA 1134 · module 083 +
+- [[LINC01135]] — JUN divergent transcript · module 026 +
+- [[LINC01138]] — long independently transcribed non-coding RNA 1138 · module 095 +
+- [[LINC01139]] — long independently transcribed non-coding RNA 1139 · module 019 +
+- [[LINC01145-1]] · module 095 +
+- [[LINC01151]] — long independently transcribed non-coding RNA 1151 · module 166 +
+- [[LINC01169]] — long independently transcribed non-coding RNA 1169 · module 031 +
+- [[LINC01170]] — long independently transcribed non-coding RNA 1170 · module 026 +
+- [[LINC01186]] — long independently transcribed non-coding RNA 1186 · module 080 +
+- [[LINC01191]] — long independently transcribed non-coding RNA 1191 · module 039 +
+- [[LINC01194]] — long independently transcribed non-coding RNA 1194 · module 009 +
+- [[LINC01203]] — long independently transcribed non-coding RNA 1203 · module 009 +
+- [[LINC01204]] — long independently transcribed non-coding RNA 1204 · module 116 +
+- [[LINC01205]] — long independently transcribed non-coding RNA 1205 · module 087 +
+- [[LINC01208]] — long independently transcribed non-coding RNA 1208 · module 026 +
+- [[LINC01226]] — long independently transcribed non-coding RNA 1226 · module 075 +
+- [[LINC01232]] — long independently transcribed non-coding RNA 1232 · module 020 +
+- [[LINC01234]] — long independently transcribed non-coding RNA 1234 · module 037 +
+- [[LINC01237]] — long independently transcribed non-coding RNA 1237 · module 033 +
+- [[LINC01239]] — long independently transcribed non-coding RNA 1239 · module 026 +
+- [[LINC01242]] — long independently transcribed non-coding RNA 1242 · module 108 +
+- [[LINC01250]] — long independently transcribed non-coding RNA 1250 · module 047 +
+- [[LINC01252]] — long independently transcribed non-coding RNA 1252 · module 026 +
+- [[LINC01257]] — long independently transcribed non-coding RNA 1257 · module 019 +
+- [[LINC01266]] — long independently transcribed non-coding RNA 1266 · module 108 +
+- [[LINC01273]] — long independently transcribed non-coding RNA 1273 · module 059 +
+- [[LINC01277]] — long independently transcribed non-coding RNA 1277 · module 047 +
+- [[LINC01278]] — long independently transcribed non-coding RNA 1278 · module 064 +
+- [[LINC01285]] — long independently transcribed non-coding RNA 1285 · module 032 +
+- [[LINC01287]] — long independently transcribed non-coding RNA 1287 · module 009 +
+- [[LINC01290]] — long independently transcribed non-coding RNA 1290 · module 055 +
+- [[LINC01291]] — long independently transcribed non-coding RNA 1291 · module 038 +
+- [[LINC01301]] — long independently transcribed non-coding RNA 1301 · module 026 +
+- [[LINC01320]] — long independently transcribed non-coding RNA 1320 · module 009 +
+- [[LINC01322]] — long independently transcribed non-coding RNA 1322 · module 034 +
+- [[LINC01340]] — long independently transcribed non-coding RNA 1340 · module 026 +
+- [[LINC01341]] — long independently transcribed non-coding RNA 1341 · module 035 +
+- [[LINC01348]] — long independently transcribed non-coding RNA 1348 · module 167 +
+- [[LINC01355]] — long independently transcribed non-coding RNA 1355 · module 039 +
+- [[LINC01357]] · module 004 +
+- [[LINC01358]] · module 166 +
+- [[LINC01376]] — long independently transcribed non-coding RNA 1376 · module 010 +
+- [[LINC01393]] — long independently transcribed non-coding RNA 1393 · module 039 +
+- [[LINC01399]] — long independently transcribed non-coding RNA 1399 · module 116 +
+- [[LINC01409]] — long independently transcribed non-coding RNA 1409 · module 015 +
+- [[LINC01411]] — long independently transcribed non-coding RNA 1411 · module 013 +
+- [[LINC01414]] — long independently transcribed non-coding RNA 1414 · module 090 +
+- [[LINC01422]] — long independently transcribed non-coding RNA 1422 · module 037 +
+- [[LINC01425]] — long independently transcribed non-coding RNA 1425 · module 131 +
+- [[LINC01426]] — long independently transcribed non-coding RNA 1426 · module 116 +
+- [[LINC01429]] — long independently transcribed non-coding RNA 1429 · module 140 +
+- [[LINC01435]] — long independently transcribed non-coding RNA 1435 · module 013 +
+- [[LINC01440]] — long independently transcribed non-coding RNA 1440 · module 155 +
+- [[LINC01446]] — long independently transcribed non-coding RNA 1446 · module 108 +
+- [[LINC01456]] — long independently transcribed non-coding RNA 1456 · module 027 +
+- [[LINC01473]] — long independently transcribed non-coding RNA 1473 · module 028 +
+- [[LINC01482]] — long independently transcribed non-coding RNA 1482 · module 037 +
+- [[LINC01483]] — long independently transcribed non-coding RNA 1483 · module 090 +
+- [[LINC01500]] — long independently transcribed non-coding RNA 1500 · module 166 +
+- [[LINC01503]] — long independently transcribed non-coding RNA 1503 · module 155 +
+- [[LINC01504]] — long independently transcribed non-coding RNA 1504 · module 008 +
+- [[LINC01505]] — long independently transcribed non-coding RNA 1505 · module 026 +
+- [[LINC01508]] — long independently transcribed non-coding RNA 1508 · module 019 +
+- [[LINC01515]] — long independently transcribed non-coding RNA 1515 · module 022 +
+- [[LINC01518]] — long independently transcribed non-coding RNA 1518 · module 177 +
+- [[LINC01524]] — long independently transcribed non-coding RNA 1524 · module 166 +
+- [[LINC01535]] — long independently transcribed non-coding RNA 1535 · module 089 +
+- [[LINC01551]] — long independently transcribed non-coding RNA 1551 · module 027 +
+- [[LINC01559]] — long independently transcribed non-coding RNA 1559 · module 055 +
+- [[LINC01564]] — long independently transcribed non-coding RNA 1564 · module 117 +
+- [[LINC01569]] — long independently transcribed non-coding RNA 1569 · module 010 +
+- [[LINC01572]] — long independently transcribed non-coding RNA 1572 · module 022 +
+- [[LINC01579]] — long independently transcribed non-coding RNA 1579 · module 140 +
+- [[LINC01583]] — long independently transcribed non-coding RNA 1583 · module 152 +
+- [[LINC01588]] — long independently transcribed non-coding RNA 1588 · module 038 +
+- [[LINC01589]] — long independently transcribed non-coding RNA 1589 · module 034 +
+- [[LINC01592]] — long independently transcribed non-coding RNA 1592 · module 009 +
+- [[LINC01605]] — long independently transcribed non-coding RNA 1605 · module 090 +
+- [[LINC01610]] — long independently transcribed non-coding RNA 1610 · module 034 +
+- [[LINC01611]] — long independently transcribed non-coding RNA 1611 · module 027 +
+- [[LINC01615]] — long independently transcribed non-coding RNA 1615 · module 013 +
+- [[LINC01618]] — long independently transcribed non-coding RNA 1618 · module 026 +
+- [[LINC01619]] — long independently transcribed non-coding RNA 1619 · module 039 +
+- [[LINC01622]] — long independently transcribed non-coding RNA 1622 · module 027 +
+- [[LINC01629]] — long independently transcribed non-coding RNA 1629 · module 110 +
+- [[LINC01684]] — long independently transcribed non-coding RNA 1684 · module 019 +
+- [[LINC01687]] — long independently transcribed non-coding RNA 1687 · module 121 +
+- [[LINC01695]] — long independently transcribed non-coding RNA 1695 · module 009 +
+- [[LINC01705]] — long independently transcribed non-coding RNA 1705 · module 013 +
+- [[LINC01725]] — long independently transcribed non-coding RNA 1725 · module 010 +
+- [[LINC01748]] — long independently transcribed non-coding RNA 1748 · module 027 +
+- [[LINC01762]] — long independently transcribed non-coding RNA 1762 · module 026 +
+- [[LINC01772]] — long independently transcribed non-coding RNA 1772 · module 015 +
+- [[LINC01776]] — long independently transcribed non-coding RNA 1776 · module 121 +
+- [[LINC01798]] — long independently transcribed non-coding RNA 1798 · module 150 +
+- [[LINC01807]] — long independently transcribed non-coding RNA 1807 · module 150 +
+- [[LINC01811]] — long independently transcribed non-coding RNA 1811 · module 075 +
+- [[LINC01812]] — long independently transcribed non-coding RNA 1812 · module 087 +
+- [[LINC01814]] · module 027 +
+- [[LINC01819]] — long independently transcribed non-coding RNA 1819 · module 055 +
+- [[LINC01828]] — long independently transcribed non-coding RNA 1828 · module 125 +
+- [[LINC01829]] — long independently transcribed non-coding RNA 1829 · module 080 +
+- [[LINC01836]] — long independently transcribed non-coding RNA 1836 · module 095 +
+- [[LINC01844]] · module 092 +
+- [[LINC01876]] — long independently transcribed non-coding RNA 1876 · module 027 +
+- [[LINC01881]] — long independently transcribed non-coding RNA 1881 · module 076 +
+- [[LINC01885]] — long independently transcribed non-coding RNA 1885 · module 009 +
+- [[LINC01905]] — long independently transcribed non-coding RNA 1905 · module 027 +
+- [[LINC01909]] — long independently transcribed non-coding RNA 1909 · module 039 +
+- [[LINC01917]] — long independently transcribed non-coding RNA 1917 · module 026 +
+- [[LINC01933]] — long independently transcribed non-coding RNA 1933 · module 075 +
+- [[LINC01934]] — long independently transcribed non-coding RNA 1934 · module 039 +
+- [[LINC01950]] — long independently transcribed non-coding RNA 1950 · module 037 +
+- [[LINC01956]] — long independently transcribed non-coding RNA 1956 · module 055 +
+- [[LINC01967]] — long independently transcribed non-coding RNA 1967 · module 019 +
+- [[LINC01980]] — long independently transcribed non-coding RNA 1980 · module 027 +
+- [[LINC02006]] — long independently transcribed non-coding RNA 2006 · module 075 +
+- [[LINC02008]] — long independently transcribed non-coding RNA 2008 · module 009 +
+- [[LINC02015]] — long independently transcribed non-coding RNA 2015 · module 167 +
+- [[LINC02018]] — long independently transcribed non-coding RNA 2018 · module 026 +
+- [[LINC02026]] — long independently transcribed non-coding RNA 2026 · module 010 +
+- [[LINC02035]] — long independently transcribed non-coding RNA 2035 · module 232 +
+- [[LINC02036]] · module 037 +
+- [[LINC02050]] — long independently transcribed non-coding RNA 2050 · module 027 +
+- [[LINC02055]] — long independently transcribed non-coding RNA 2055 · module 108 +
+- [[LINC02057]] — long independently transcribed non-coding RNA 2057 · module 066 +
+- [[LINC02058]] — long independently transcribed non-coding RNA 2058 · module 027 +
+- [[LINC02068]] — long independently transcribed non-coding RNA 2068 · module 080 +
+- [[LINC02086]] — long independently transcribed non-coding RNA 2086 · module 046 +
+- [[LINC02099]] — long independently transcribed non-coding RNA 2099 · module 102 +
+- [[LINC02100]] — long independently transcribed non-coding RNA 2100 · module 070 +
+- [[LINC02109]] — long independently transcribed non-coding RNA 2109 · module 108 +
+- [[LINC02112]] — long independently transcribed non-coding RNA 2112 · module 037 +
+- [[LINC02133]] — long independently transcribed non-coding RNA 2133 · module 047 +
+- [[LINC02147]] — long independently transcribed non-coding RNA 2147 · module 027 +
+- [[LINC02154]] — long independently transcribed non-coding RNA 2154 · module 125 +
+- [[LINC02175]] — long independently transcribed non-coding RNA 2175 · module 010 +
+- [[LINC02197]] — long independently transcribed non-coding RNA 2197 · module 009 +
+- [[LINC02208]] — long independently transcribed non-coding RNA 2208 · module 090 +
+- [[LINC02210-CRHR1]] — LINC02210-CRHR1 readthrough · module 179 +
+- [[LINC02211]] — long independently transcribed non-coding RNA 2211 · module 108 +
+- [[LINC02220]] — long independently transcribed non-coding RNA 2220 · module 009 +
+- [[LINC02223]] — long independently transcribed non-coding RNA 2223 · module 090 +
+- [[LINC02226]] — long independently transcribed non-coding RNA 2226 · module 087 +
+- [[LINC02236]] — long independently transcribed non-coding RNA 2236 · module 047 +
+- [[LINC02240]] — long independently transcribed non-coding RNA 2240 · module 009 +
+- [[LINC02241]] — long independently transcribed non-coding RNA 2241 · module 009 +
+- [[LINC02245]] — long independently transcribed non-coding RNA 2245 · module 038 +
+- [[LINC02253]] — long independently transcribed non-coding RNA 2253 · module 027 +
+- [[LINC02254]] · module 027 +
+- [[LINC02256]] — long independently transcribed non-coding RNA 2256 · module 015 +
+- [[LINC02257]] · module 053 +
+- [[LINC02267]] — long independently transcribed non-coding RNA 2267 · module 108 +
+- [[LINC02268]] — long independently transcribed non-coding RNA 2268 · module 150 +
+- [[LINC02269]] — long independently transcribed non-coding RNA 2269 · module 019 +
+- [[LINC02284]] — long independently transcribed non-coding RNA 2284 · module 039 +
+- [[LINC02306]] — long independently transcribed non-coding RNA 2306 · module 090 +
+- [[LINC02307]] — long independently transcribed non-coding RNA 2307 · module 095 +
+- [[LINC02315]] — long independently transcribed non-coding RNA 2315 · module 027 +
+- [[LINC02320]] — long independently transcribed non-coding RNA 2320 · module 141 +
+- [[LINC02327]] — long independently transcribed non-coding RNA 2327 · module 009 +
+- [[LINC02328]] — long independently transcribed non-coding RNA 2328 · module 117 +
+- [[LINC02331]] — long independently transcribed non-coding RNA 2331 · module 044 +
+- [[LINC02335]] — long independently transcribed non-coding RNA 2335 · module 177 +
+- [[LINC02340]] · module 010 +
+- [[LINC02343]] — long independently transcribed non-coding RNA 2343 · module 087 +
+- [[LINC02360]] — long independently transcribed non-coding RNA 2360 · module 009 +
+- [[LINC02362]] — long independently transcribed non-coding RNA 2362 · module 039 +
+- [[LINC02363]] — long independently transcribed non-coding RNA 2363 · module 039 +
+- [[LINC02377]] — long independently transcribed non-coding RNA 2377 · module 108 +
+- [[LINC02384]] — long independently transcribed non-coding RNA 2384 · module 066 +
+- [[LINC02398]] — long independently transcribed non-coding RNA 2398 · module 026 +
+- [[LINC02405]] — long independently transcribed non-coding RNA 2405 · module 055 +
+- [[LINC02428]] — long independently transcribed non-coding RNA 2428 · module 027 +
+- [[LINC02432]] — long independently transcribed non-coding RNA 2432 · module 086 +
+- [[LINC02438]] — long independently transcribed non-coding RNA 2438 · module 121 +
+- [[LINC02454]] — long independently transcribed non-coding RNA 2454 · module 147 +
+- [[LINC02456]] — long independently transcribed non-coding RNA 2456 · module 026 +
+- [[LINC02458]] — long independently transcribed non-coding RNA 2458 · module 092 +
+- [[LINC02466]] — long independently transcribed non-coding RNA 2466 · module 027 +
+- [[LINC02474]] — long independently transcribed non-coding RNA 2474 · module 073 +
+- [[LINC02476]] — long independently transcribed non-coding RNA 2476 · module 177 +
+- [[LINC02482]] — long independently transcribed non-coding RNA 2482 · module 023 +
+- [[LINC02484]] — long independently transcribed non-coding RNA 2484 · module 009 +
+- [[LINC02492]] — long independently transcribed non-coding RNA 2492 · module 009 +
+- [[LINC02506]] — long independently transcribed non-coding RNA 2506 · module 177 +
+- [[LINC02509]] — long independently transcribed non-coding RNA 2509 · module 110 +
+- [[LINC02511]] — long independently transcribed non-coding RNA 2511 · module 061 +
+- [[LINC02516]] — long independently transcribed non-coding RNA 2516 · module 026 +
+- [[LINC02542]] — long independently transcribed non-coding RNA 2542 · module 010 +
+- [[LINC02566]] — long independently transcribed non-coding RNA 2566 · module 087 +
+- [[LINC02575]] — long independently transcribed non-coding RNA 2575 · module 103 +
+- [[LINC02577]] — long independently transcribed non-coding RNA 2577 · module 070 +
+- [[LINC02580]] — long independently transcribed non-coding RNA 2580 · module 055 +
+- [[LINC02582]] — long independently transcribed non-coding RNA 2582 · module 073 +
+- [[LINC02595]] · module 073 +
+- [[LINC02603]] — long independently transcribed non-coding RNA 2603 · module 021 +
+- [[LINC02605]] — long independently transcribed non-coding RNA 2605 · module 014 +
+- [[LINC02608]] — long independently transcribed non-coding RNA 2608 · module 021 +
+- [[LINC02609]] — long independently transcribed non-coding RNA 2609 · module 023 +
+- [[LINC02614]] — long independently transcribed non-coding RNA 2614 · module 002 +
+- [[LINC02615]] — long independently transcribed non-coding RNA 2615 · module 010 +
+- [[LINC02616]] — long independently transcribed non-coding RNA 2616 · module 108 +
+- [[LINC02631]] — long independently transcribed non-coding RNA 2631 · module 039 +
+- [[LINC02641]] — long independently transcribed non-coding RNA 2641 · module 026 +
+- [[LINC02643]] — long independently transcribed non-coding RNA 2643 · module 128 +
+- [[LINC02646]] — long independently transcribed non-coding RNA 2646 · module 026 +
+- [[LINC02649]] — long independently transcribed non-coding RNA 2649 · module 105 +
+- [[LINC02656]] — long independently transcribed non-coding RNA 2656 · module 037 +
+- [[LINC02666]] — long independently transcribed non-coding RNA 2666 · module 004 +
+- [[LINC02680]] — long independently transcribed non-coding RNA 2680 · module 037 +
+- [[LINC02693]] — long independently transcribed non-coding RNA 2693 · module 049 +
+- [[LINC02694]] — long independently transcribed non-coding RNA 2694 · module 075 +
+- [[LINC02725]] — long independently transcribed non-coding RNA 2725 · module 034 +
+- [[LINC02728]] — long independently transcribed non-coding RNA 2728 · module 005 +
+- [[LINC02742]] — long independently transcribed non-coding RNA 2742 · module 019 +
+- [[LINC02755]] — long independently transcribed non-coding RNA 2755 · module 075 +
+- [[LINC02762]] — long independently transcribed non-coding RNA 2762 · module 026 +
+- [[LINC02763]] — long independently transcribed non-coding RNA 2763 · module 026 +
+- [[LINC02798]] — long independently transcribed non-coding RNA 2798 · module 039 +
+- [[LINC02803]] — long independently transcribed non-coding RNA 2803 · module 039 +
+- [[LINC02804]] · module 038 +
+- [[LINC02813]] — long independently transcribed non-coding RNA 2813 · module 013 +
+- [[LINC02832]] — long independently transcribed non-coding RNA 2832 · module 027 +
+- [[LINC02842]] — long independently transcribed non-coding RNA 2842 · module 061 +
+- [[LINC02864]] — long independently transcribed non-coding RNA 2864 · module 019 +
+- [[LINC02882]] — long independently transcribed non-coding RNA 2882 · module 108 +
+- [[LINC02885]] — long independently transcribed non-coding RNA 2885 · module 037 +
+- [[LINC02889]] — long independently transcribed non-coding RNA 2889 · module 026 +
+- [[LINC02899]] — long independently transcribed non-coding RNA 2899 · module 108 +
+- [[LINC02901]] — long independently transcribed non-coding RNA 2901 · module 053 +
+- [[LINC02904]] — LY6S antisense RNA 1 · module 032 +
+- [[LINC02930]] — long independently transcribed non-coding RNA 2930 · module 151 +
+- [[LINC02932]] — long independently transcribed non-coding RNA 2932 · module 075 +
+- [[LINC02934]] — long independently transcribed non-coding RNA 2934 · module 092 +
+- [[LINC02935]] — long independently transcribed non-coding RNA 2935 · module 052 +
+- [[LINC02936]] — long independently transcribed non-coding RNA 2936 · module 037 +
+- [[LINC02937]] — long independently transcribed non-coding RNA 2937 · module 026 +
+- [[LINC02940]] — long independently transcribed non-coding RNA 2940 · module 027 +
+- [[LINC02941]] — long independently transcribed non-coding RNA 2941 · module 087 +
+- [[LINC02945]] — long independently transcribed non-coding RNA 2945 · module 019 +
+- [[LINC02951]] — long independently transcribed non-coding RNA 2951 · module 035 +
+- [[LINC02955]] — long independently transcribed non-coding RNA 2955 · module 053 +
+- [[LINC02964]] — long independently transcribed non-coding RNA 2964 · module 027 +
+- [[LINC02966]] — long independently transcribed non-coding RNA 2966 · module 010 +
+- [[LINC02967]] — long independently transcribed non-coding RNA 2967 · module 044 +
+- [[LINC02968]] — long independently transcribed non-coding RNA 2968 · module 061 +
+- [[LINC02970]] — long independently transcribed non-coding RNA 2970 · module 084 +
+- [[LINC02976]] — long independently transcribed non-coding RNA 2976 · module 025 -
+- [[LINC02977]] — long independently transcribed non-coding RNA 2977 · module 026 +
+- [[LINC02981]] — long independently transcribed non-coding RNA 2981 · module 027 +
+- [[LINC02985]] — long independently transcribed non-coding RNA 2985 · module 033 +
+- [[LINC02987]] — long independently transcribed non-coding RNA 2987 · module 015 +
+- [[LINC02994]] — long independently transcribed non-coding RNA 2994 · module 019 +
+- [[LINC02999]] — long independently transcribed non-coding RNA 2999 · module 027 +
+- [[LINC03000]] — long independently transcribed non-coding RNA 3000 · module 019 +
+- [[LINC03002]] — long independently transcribed non-coding RNA 3002 · module 191 +
+- [[LINC03004]] — long independently transcribed non-coding RNA 3004 · module 151 +
+- [[LINC03006-1]] — long independently transcribed non-coding RNA 3006 · module 030 +
+- [[LINC03009]] · module 020 +
+- [[LINC03009-1]] — long independently transcribed non-coding RNA 3009 · module 105 +
+- [[LINC03015]] — long independently transcribed non-coding RNA 3015 · module 010 +
+- [[LINC03016]] — long independently transcribed non-coding RNA 3016 · module 039 +
+- [[LINC03036]] — long independently transcribed non-coding RNA 3036 · module 053 +
+- [[LINC03040]] — long independently transcribed non-coding RNA 3040 · module 055 +
+- [[LINC03041]] — long independently transcribed non-coding RNA 3041 · module 121 +
+- [[LINC03042]] — long independently transcribed non-coding RNA 3042 · module 027 +
+- [[LINC03046]] — long independently transcribed non-coding RNA 3046 · module 019 +
+- [[LINC03047]] — long independently transcribed non-coding RNA 3047 · module 103 +
+- [[LINC03048]] — long independently transcribed non-coding RNA 3048 · module 026 +
+- [[LINGO2]] — leucine rich repeat and Ig domain containing 2 · module 152 +
+- [[LINP1]] — lncRNA in non-homologous end joining pathway 1 · module 034 +
+- [[LINS1]] — lines homolog 1 · module 011 +
+- [[LIPA]] — lipase A, lysosomal acid type · module 032 +
+- [[LIPC]] — lipase C, hepatic type · module 090 +
+- [[LIPE]] — lipase E, hormone sensitive type · module 161 +
+- [[LIPE-AS1]] — LIPE antisense RNA 1 · module 028 -
+- [[LIPG]] — lipase G, endothelial type · module 086 +
+- [[LIPH]] — lipase H · module 031 +
+- [[LIPT1]] — lipoyltransferase 1 · module 051 +
+- [[LITAF]] — lipopolysaccharide induced TNF factor · module 014 +
+- [[LIX1-AS1]] — LIX1 and RIOK2 antisense RNA 1 · module 026 +
+- [[LIX1L]] — limb and CNS expressed 1 like · module 079 +
+- [[LLGL1]] — LLGL scribble cell polarity complex component 1 · module 002 +
+- [[LLGL2]] — LLGL scribble cell polarity complex component 2 · module 003 +
+- [[LLPH]] — LLP homolog, long-term synaptic facilitation factor · module 011 +
+- [[LMAN1]] — lectin, mannose binding 1 · module 042 +
+- [[LMAN2]] — lectin, mannose binding 2 · module 042 +
+- [[LMAN2L]] — lectin, mannose binding 2 like · module 064 +
+- [[LMBR1]] — limb development membrane protein 1 · module 028 -
+- [[LMBR1L]] — limb development membrane protein 1 like · module 076 +
+- [[LMBRD1]] — LMBR1 domain containing 1 · module 045 +
+- [[LMBRD2]] — LMBR1 domain containing 2 · module 215 +
+- [[LMCD1]] — LIM and cysteine rich domains 1 · module 015 -
+- [[LMCD1-AS1]] — LMCD1 antisense RNA 1 · module 062 +
+- [[LMF1]] — lipase maturation factor 1 · module 005 +
+- [[LMF2]] — lipase maturation factor 2 · module 002 +
+- [[LMLN]] — leishmanolysin like peptidase · module 028 +
+- [[LMNA]] — lamin A/C · module 123 +
+- [[LMNB1]] — lamin B1 · module 022 +
+- [[LMNB1-DT]] — LMNB1 divergent transcript · module 035 +
+- [[LMNB2]] — lamin B2 · module 022 +
+- [[LMNTD1]] — lamin tail domain containing 1 · module 019 +
+- [[LMNTD2]] — lamin tail domain containing 2 · module 157 +
+- [[LMO2]] — LIM domain only 2 · module 032 +
+- [[LMO3]] — LIM domain only 3 · module 162 +
+- [[LMO4]] — LIM domain only 4 · module 133 +
+- [[LMO7]] — LIM domain 7 · module 031 +
+- [[LMO7-AS1]] — LMO7 antisense RNA 1 · module 010 +
+- [[LMO7DN]] — LMO7 downstream neighbor · module 039 +
+- [[LMTK2]] — lemur tail kinase 2 · module 148 -
+- [[LMTK3]] — lemur tail kinase 3 · module 161 +
+- [[LMX1B]] — LIM homeobox transcription factor 1 beta · module 082 +
+- [[LNC-LBCS]] — lncRNA bladder and prostate cancer suppressor, hnRNPK interacting · module 010 +
+- [[LNCAROD]] — lncRNA activating regulator of DKK1 · module 027 +
+- [[LNCOG]] — lncRNA osteogenesis associated · module 116 +
+- [[LNCRNA-IUR]] — lncRNA imatinib upregulated · module 026 +
+- [[LNP1]] — leukemia NUP98 fusion partner 1 · module 038 +
+- [[LNPEP]] — leucyl and cystinyl aminopeptidase · module 032 +
+- [[LNPK]] — lunapark, ER junction formation factor · module 164 +
+- [[LNX1]] — ligand of numb-protein X 1 · module 008 +
+- [[LNX2]] — ligand of numb-protein X 2 · module 130 +
+- [[LONP1]] — lon peptidase 1, mitochondrial · module 105 +
+- [[LONP2]] — lon peptidase 2, peroxisomal · module 057 +
+- [[LONRF1]] — LON peptidase N-terminal domain and ring finger 1 · module 024 +
+- [[LONRF2]] — LON peptidase N-terminal domain and ring finger 2 · module 025 +
+- [[LONRF3]] — LON peptidase N-terminal domain and ring finger 3 · module 092 +
+- [[LOX]] — lysyl oxidase · module 013 +
+- [[LOXL1]] — lysyl oxidase like 1 · module 013 +
+- [[LOXL1-AS1]] — LOXL1 antisense RNA 1 · module 082 +
+- [[LOXL2]] — lysyl oxidase like 2 · module 013 +
+- [[LOXL3]] — lysyl oxidase like 3 · module 087 +
+- [[LOXL4]] — lysyl oxidase like 4 · module 087 +
+- [[LPAR1]] — lysophosphatidic acid receptor 1 · module 104 +
+- [[LPAR2]] — lysophosphatidic acid receptor 2 · module 031 +
+- [[LPAR3]] — lysophosphatidic acid receptor 3 · module 082 +
+- [[LPAR5]] — lysophosphatidic acid receptor 5 · module 055 +
+- [[LPAR6]] — lysophosphatidic acid receptor 6 · module 080 +
+- [[LPCAT1]] — lysophosphatidylcholine acyltransferase 1 · module 077 +
+- [[LPCAT2]] — lysophosphatidylcholine acyltransferase 2 · module 088 -
+- [[LPCAT3]] — lysophosphatidylcholine acyltransferase 3 · module 039 +
+- [[LPCAT4]] — lysophosphatidylcholine acyltransferase 4 · module 077 +
+- [[LPGAT1]] — lysophosphatidylglycerol acyltransferase 1 · module 025 +
+- [[LPIN1]] — lipin 1 · module 086 +
+- [[LPIN2]] — lipin 2 · module 079 +
+- [[LPIN3]] — lipin 3 · module 096 +
+- [[LPP]] — LIM domain containing preferred translocation partner in lipoma · module 040 -
+- [[LPXN]] — leupaxin · module 080 +
+- [[LRAT]] — lecithin retinol acyltransferase · module 152 +
+- [[LRATD1]] — LRAT domain containing 1 · module 062 +
+- [[LRATD2]] — LRAT domain containing 2 · module 143 +
+- [[LRBA]] — LPS responsive beige-like anchor protein · module 023 -
+- [[LRCH1]] — leucine rich repeats and calponin homology domain containing 1 · module 141 +
+- [[LRCH2]] — leucine rich repeats and calponin homology domain containing 2 · module 009 +
+- [[LRCH3]] — leucine rich repeats and calponin homology domain containing 3 · module 020 -
+- [[LRCH4]] — leucine rich repeats and calponin homology domain containing 4 · module 138 +
+- [[LRFN2]] — leucine rich repeat and fibronectin type III domain containing 2 · module 009 +
+- [[LRFN3]] — leucine rich repeat and fibronectin type III domain containing 3 · module 199 +
+- [[LRFN4]] — leucine rich repeat and fibronectin type III domain containing 4 · module 203 +
+- [[LRFN5]] — leucine rich repeat and fibronectin type III domain containing 5 · module 013 +
+- [[LRG1]] — leucine rich alpha-2-glycoprotein 1 · module 008 +
+- [[LRGUK]] — leucine rich repeats and guanylate kinase domain containing · module 026 +
+- [[LRIF1]] — ligand dependent nuclear receptor interacting factor 1 · module 038 +
+- [[LRIG1]] — leucine rich repeats and immunoglobulin like domains 1 · module 013 +
+- [[LRIG2]] — leucine rich repeats and immunoglobulin like domains 2 · module 065 +
+- [[LRIG2-DT]] — LRIG2 divergent transcript · module 035 +
+- [[LRIG3]] — leucine rich repeats and immunoglobulin like domains 3 · module 045 +
+- [[LRIG3-DT]] — LRIG3 divergent transcript · module 010 +
+- [[LRMDA]] — leucine rich melanocyte differentiation associated · module 121 +
+- [[LRP1]] — LDL receptor related protein 1 · module 099 +
+- [[LRP10]] — LDL receptor related protein 10 · module 033 -
+- [[LRP11]] — LDL receptor related protein 11 · module 029 +
+- [[LRP12]] — LDL receptor related protein 12 · module 057 +
+- [[LRP1B]] — LDL receptor related protein 1B · module 117 +
+- [[LRP2]] — LDL receptor related protein 2 · module 152 +
+- [[LRP2BP]] — LRP2 binding protein · module 026 +
+- [[LRP2BP-AS1]] · module 038 +
+- [[LRP3]] — LDL receptor related protein 3 · module 146 +
+- [[LRP4]] — LDL receptor related protein 4 · module 044 +
+- [[LRP5]] — LDL receptor related protein 5 · module 004 +
+- [[LRP5L]] — LDL receptor related protein 5 like (pseudogene) · module 204 +
+- [[LRP6]] — LDL receptor related protein 6 · module 197 +
+- [[LRP8]] — LDL receptor related protein 8 · module 005 +
+- [[LRPAP1]] — LDL receptor related protein associated protein 1 · module 050 +
+- [[LRPPRC]] — leucine rich pentatricopeptide repeat containing · module 004 +
+- [[LRR1]] — leucine rich repeat protein 1 · module 071 +
+- [[LRRC1]] — leucine rich repeat containing 1 · module 163 +
+- [[LRRC14]] — leucine rich repeat containing 14 · module 007 +
+- [[LRRC17]] — leucine rich repeat containing 17 · module 010 +
+- [[LRRC20]] — leucine rich repeat containing 20 · module 176 +
+- [[LRRC23]] — leucine rich repeat containing 23 · module 038 +
+- [[LRRC27]] — leucine rich repeat containing 27 · module 130 +
+- [[LRRC28]] — leucine rich repeat containing 28 · module 080 +
+- [[LRRC34]] — leucine rich repeat containing 34 · module 046 +
+- [[LRRC36]] — leucine rich repeat containing 36 · module 128 +
+- [[LRRC37A16P]] — leucine rich repeat containing 37 member A16, pseudogene · module 021 +
+- [[LRRC37A2]] — leucine rich repeat containing 37 member A2 · module 028 +
+- [[LRRC37A3]] — leucine rich repeat containing 37 member A3 · module 023 +
+- [[LRRC37A4P]] — leucine rich repeat containing 37 member A4, pseudogene · module 068 +
+- [[LRRC37B]] — leucine rich repeat containing 37B · module 059 +
+- [[LRRC39]] — leucine rich repeat containing 39 · module 039 +
+- [[LRRC40]] — leucine rich repeat containing 40 · module 065 +
+- [[LRRC41]] — leucine rich repeat containing 41 · module 156 +
+- [[LRRC42]] — leucine rich repeat containing 42 · module 085 +
+- [[LRRC45]] — leucine rich repeat containing 45 · module 006 +
+- [[LRRC47]] — leucine rich repeat containing 47 · module 107 +
+- [[LRRC49]] — leucine rich repeat containing 49 · module 014 +
+- [[LRRC4B]] — leucine rich repeat containing 4B · module 128 +
+- [[LRRC4C]] — leucine rich repeat containing 4C · module 075 +
+- [[LRRC51]] — leucine rich repeat containing 51 · module 010 +
+- [[LRRC56]] — leucine rich repeat containing 56 · module 053 +
+- [[LRRC57]] — leucine rich repeat containing 57 · module 040 -
+- [[LRRC58]] — leucine rich repeat containing 58 · module 025 +
+- [[LRRC59]] — leucine rich repeat containing 59 · module 052 +
+- [[LRRC61]] — leucine rich repeat containing 61 · module 007 +
+- [[LRRC63]] — leucine rich repeat containing 63 · module 019 +
+- [[LRRC66]] — leucine rich repeat containing 66 · module 039 +
+- [[LRRC69]] — leucine rich repeat containing 69 · module 005 +
+- [[LRRC7]] — leucine rich repeat containing 7 · module 152 +
+- [[LRRC75A]] — leucine rich repeat containing 75A · module 021 +
+- [[LRRC8A]] — leucine rich repeat containing 8 VRAC subunit A · module 160 +
+- [[LRRC8B]] — leucine rich repeat containing 8 VRAC subunit B · module 118 -
+- [[LRRC8C]] — leucine rich repeat containing 8 VRAC subunit C · module 110 +
+- [[LRRC8C-DT]] — LRRC8C divergent transcript · module 035 +
+- [[LRRC8D]] — leucine rich repeat containing 8 VRAC subunit D · module 018 +
+- [[LRRC8E]] — leucine rich repeat containing 8 VRAC subunit E · module 020 -
+- [[LRRCC1]] — leucine rich repeat and coiled-coil centrosomal protein 1 · module 006 +
+- [[LRRFIP1]] — LRR binding FLII interacting protein 1 · module 136 +
+- [[LRRFIP2]] — LRR binding FLII interacting protein 2 · module 214 +
+- [[LRRIQ1]] — leucine rich repeats and IQ motif containing 1 · module 009 +
+- [[LRRIQ3]] — leucine rich repeats and IQ motif containing 3 · module 010 +
+- [[LRRK1]] — leucine rich repeat kinase 1 · module 005 +
+- [[LRRK2]] — leucine rich repeat kinase 2 · module 010 +
+- [[LRRN1]] — leucine rich repeat neuronal 1 · module 014 +
+- [[LRRN2]] — leucine rich repeat neuronal 2 · module 102 +
+- [[LRRN3]] — leucine rich repeat neuronal 3 · module 090 +
+- [[LRRTM4]] — leucine rich repeat transmembrane neuronal 4 · module 027 +
+- [[LRSAM1]] — leucine rich repeat and sterile alpha motif containing 1 · module 172 +
+- [[LRWD1]] — leucine rich repeats and WD repeat domain containing 1 · module 078 +
+- [[LSAMP]] — limbic system associated membrane protein · module 019 +
+- [[LSG1]] — large 60S subunit nuclear export GTPase 1 · module 004 +
+- [[LSM1]] — LSM1 homolog, mRNA degradation associated · module 114 +
+- [[LSM10]] — LSM10, U7 small nuclear RNA associated · module 024 +
+- [[LSM11]] — LSM11, U7 small nuclear RNA associated · module 051 -
+- [[LSM12]] — LSM12 homolog · module 033 +
+- [[LSM14A]] — LSM14A mRNA processing body assembly factor · module 028 +
+- [[LSM14B]] — LSM family member 14B · module 060 -
+- [[LSM2]] — LSM2 homolog, U6 small nuclear RNA and mRNA degradation associated · module 054 +
+- [[LSM3]] — LSM3 homolog, U6 small nuclear RNA and mRNA degradation associated · module 071 +
+- [[LSM4]] — LSM4 homolog, U6 small nuclear RNA and mRNA degradation associated · module 006 +
+- [[LSM5]] — LSM5 homolog, U6 small nuclear RNA and mRNA degradation associated · module 022 +
+- [[LSM6]] — LSM6 homolog, U6 small nuclear RNA and mRNA degradation associated · module 046 +
+- [[LSM7]] — LSM7 homolog, U6 small nuclear RNA and mRNA degradation associated · module 058 +
+- [[LSM8]] — LSM8 homolog, U6 small nuclear RNA associated · module 015 +
+- [[LSMEM1]] — leucine rich single-pass membrane protein 1 · module 037 +
+- [[LSMEM2]] — leucine rich single-pass membrane protein 2 · module 047 +
+- [[LSP1P4]] — LSP1 pseudogene 4 · module 014 +
+- [[LSP1P5-1]] · module 037 +
+- [[LSR]] — lipolysis stimulated lipoprotein receptor · module 141 +
+- [[LSS]] — lanosterol synthase · module 086 +
+- [[LTA4H]] — leukotriene A4 hydrolase · module 065 +
+- [[LTB]] — lymphotoxin beta · module 014 +
+- [[LTB4R]] — leukotriene B4 receptor · module 015 +
+- [[LTBP1]] — latent transforming growth factor beta binding protein 1 · module 104 +
+- [[LTBP2]] — latent transforming growth factor beta binding protein 2 · module 116 +
+- [[LTBP3]] — latent transforming growth factor beta binding protein 3 · module 078 +
+- [[LTBP4]] — latent transforming growth factor beta binding protein 4 · module 208 +
+- [[LTBR]] — lymphotoxin beta receptor · module 098 +
+- [[LTN1]] — listerin E3 ubiquitin protein ligase 1 · module 041 +
+- [[LTO1]] — LTO1 maturation factor of ABCE1 · module 083 +
+- [[LTV1]] — LTV1 ribosome biogenesis factor · module 001 +
+- [[LUC7L]] — LUC7 like · module 131 +
+- [[LUC7L2]] — LUC7 like 2, pre-mRNA splicing factor · module 184 -
+- [[LUC7L3]] — LUC7 like 3 pre-mRNA splicing factor · module 021 +
+- [[LUCAT1]] — lung cancer associated transcript 1 · module 101 +
+- [[LUM]] — lumican · module 066 +
+- [[LURAP1]] — leucine rich adaptor protein 1 · module 155 +
+- [[LURAP1L]] — leucine rich adaptor protein 1 like · module 133 +
+- [[LURAP1L-AS1]] — LURAP1L antisense RNA 1 · module 133 +
+- [[LUZP1]] — leucine zipper protein 1 · module 160 +
+- [[LUZP2]] — leucine zipper protein 2 · module 150 +
+- [[LVRN]] — laeverin · module 037 +
+- [[LXN]] — latexin · module 008 +
+- [[LY6E]] — lymphocyte antigen 6 family member E · module 032 +
+- [[LY6E-DT]] — LY6E divergent transcript · module 032 +
+- [[LY6G5B]] — lymphocyte antigen 6 family member G5B · module 126 +
+- [[LY6K]] — lymphocyte antigen 6 family member K · module 120 +
+- [[LY75]] — lymphocyte antigen 75 · module 008 +
+- [[LY96]] — lymphocyte antigen 96 · module 075 +
+- [[LYAR]] — Ly1 antibody reactive · module 005 +
+- [[LYG1]] — lysozyme g1 · module 039 +
+- [[LYN]] — LYN proto-oncogene, Src family tyrosine kinase · module 008 +
+- [[LYPD1]] — LY6/PLAUR domain containing 1 · module 009 +
+- [[LYPD3]] — LY6/PLAUR domain containing 3 · module 034 +
+- [[LYPD5]] — LY6/PLAUR domain containing 5 · module 008 +
+- [[LYPD6]] — LY6/PLAUR domain containing 6 · module 006 +
+- [[LYPD6B]] — LY6/PLAUR domain containing 6B · module 055 +
+- [[LYPLA1]] — lysophospholipase 1 · module 035 -
+- [[LYPLA2]] — lysophospholipase 2 · module 017 -
+- [[LYPLAL1]] — lysophospholipase like 1 · module 017 +
+- [[LYPLAL1-AS1]] — LYPLAL1 antisense RNA 1 · module 027 +
+- [[LYPLAL1-DT]] — LYPLAL1 divergent transcript · module 019 +
+- [[LYRM1]] — LYR motif containing 1 · module 026 +
+- [[LYRM2]] — LYR motif containing 2 · module 016 +
+- [[LYRM4]] — LYR motif containing 4 · module 005 +
+- [[LYRM7]] — LYR motif containing 7 · module 011 -
+- [[LYRM9]] — LYR motif containing 9 · module 028 +
+- [[LYSMD1]] — LysM domain containing 1 · module 107 +
+- [[LYSMD2]] — LysM domain containing 2 · module 070 +
+- [[LYSMD3]] — LysM domain containing 3 · module 041 +
+- [[LYSMD4]] — LysM domain containing 4 · module 002 +
+- [[LYST]] — lysosomal trafficking regulator · module 014 +
+- [[LYZ]] — lysozyme · module 044 +
+- [[LZIC]] — leucine zipper and CTNNBIP1 domain containing · module 088 +
+- [[LZTFL1]] — leucine zipper transcription factor like 1 · module 127 +
+- [[LZTR1]] — leucine zipper like post translational regulator 1 · module 002 +
+- [[LZTS2]] — leucine zipper tumor suppressor 2 · module 103 +
+- [[LZTS3]] — leucine zipper tumor suppressor family member 3 · module 002 +

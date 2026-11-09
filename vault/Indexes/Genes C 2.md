@@ -1,0 +1,558 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes C 2
+
+548 genes. Back to [[Genes by letter]].
+
+- [[CLIP2]] — CAP-Gly domain containing linker protein 2 · module 161 +
+- [[CLIP3]] — CAP-Gly domain containing linker protein 3 · module 071 +
+- [[CLIP4]] — CAP-Gly domain containing linker protein family member 4 · module 133 +
+- [[CLK1]] — CDC like kinase 1 · module 069 +
+- [[CLK2]] — CDC like kinase 2 · module 089 +
+- [[CLK3]] — CDC like kinase 3 · module 180 +
+- [[CLK4]] — CDC like kinase 4 · module 028 +
+- [[CLMN]] — calmin · module 194 -
+- [[CLMP]] — CXADR like cell adhesion molecule · module 147 +
+- [[CLN3]] — CLN3 lysosomal/endosomal transmembrane protein, battenin · module 122 +
+- [[CLN5]] — CLN5 lysosomal BMP synthase · module 094 +
+- [[CLN6]] — CLN6 transmembrane ER protein · module 018 +
+- [[CLN8]] — CLN8 transmembrane ER and ERGIC protein · module 002 +
+- [[CLN8-AS1]] — CLN8 antisense RNA 1 · module 024 +
+- [[CLNS1A]] — chloride nucleotide-sensitive channel 1A · module 020 +
+- [[CLOCK]] — clock circadian regulator · module 194 +
+- [[CLP1]] — cleavage factor polyribonucleotide kinase subunit 1 · module 007 +
+- [[CLPB]] — ClpB family mitochondrial disaggregase · module 004 +
+- [[CLPP]] — caseinolytic mitochondrial matrix peptidase proteolytic subunit · module 054 +
+- [[CLPTM1]] — CLPTM1 regulator of GABA type A receptor forward trafficking · module 003 +
+- [[CLPTM1L]] — CLPTM1 like · module 138 +
+- [[CLPX]] — caseinolytic mitochondrial matrix peptidase chaperone subunit X · module 198 +
+- [[CLRN3]] — clarin 3 · module 055 +
+- [[CLSPN]] — claspin · module 006 +
+- [[CLSTN1]] — calsyntenin 1 · module 050 +
+- [[CLSTN2]] — calsyntenin 2 · module 061 +
+- [[CLSTN3]] — calsyntenin 3 · module 002 +
+- [[CLTA]] — clathrin light chain A · module 146 -
+- [[CLTB]] — clathrin light chain B · module 101 +
+- [[CLTC]] — clathrin heavy chain · module 020 +
+- [[CLTCL1]] — clathrin heavy chain like 1 · module 010 -
+- [[CLU]] — clusterin · module 060 +
+- [[CLUAP1]] — intraflagellar transport 38 · module 028 +
+- [[CLUH]] — CLUH binding protein of NUMT mRNA · module 001 +
+- [[CLVS1]] — clavesin 1 · module 090 +
+- [[CLYBL]] — citramalyl-CoA lyase · module 004 +
+- [[CMAHP]] — cytidine monophospho-N-acetylneuraminic acid hydroxylase, pseudogene · module 021 +
+- [[CMAS]] — cytidine monophosphate N-acetylneuraminic acid synthetase · module 012 +
+- [[CMBL]] — carboxymethylenebutenolidase homolog · module 045 +
+- [[CMC1]] — C-X9-C motif containing 1 · module 065 +
+- [[CMC2]] — C-X9-C motif containing 2 · module 067 +
+- [[CMC4]] — C-X9-C motif containing 4 · module 130 +
+- [[CMIP]] — c-Maf inducing protein · module 154 +
+- [[CMKLR2]] — chemerin chemokine-like receptor 2 · module 063 +
+- [[CMPK1]] — cytidine/uridine monophosphate kinase 1 · module 029 +
+- [[CMPK2]] — cytidine/uridine monophosphate kinase 2 · module 032 +
+- [[CMSS1]] — cms1 ribosomal small subunit homolog · module 004 +
+- [[CMTM1]] — CKLF like MARVEL transmembrane domain containing 1 · module 006 +
+- [[CMTM3]] — CKLF like MARVEL transmembrane domain containing 3 · module 147 +
+- [[CMTM4]] — CKLF like MARVEL transmembrane domain containing 4 · module 018 +
+- [[CMTM6]] — CKLF like MARVEL transmembrane domain containing 6 · module 156 +
+- [[CMTM7]] — CKLF like MARVEL transmembrane domain containing 7 · module 018 +
+- [[CMTM8]] — CKLF like MARVEL transmembrane domain containing 8 · module 018 +
+- [[CMTR1]] — cap methyltransferase 1 · module 032 +
+- [[CMTR2]] — cap methyltransferase 2 · module 011 +
+- [[CMYA5]] — cardiomyopathy associated 5 · module 037 +
+- [[CNBD1]] — cyclic nucleotide binding domain containing 1 · module 090 +
+- [[CNBD2]] — cyclic nucleotide binding domain containing 2 · module 053 +
+- [[CNBP]] — CCHC-type zinc finger nucleic acid binding protein · module 025 +
+- [[CNDP2]] — carnosine dipeptidase 2 · module 018 +
+- [[CNEP1R1]] — CTD nuclear envelope phosphatase 1 regulatory subunit 1 · module 030 +
+- [[CNGA1]] — cyclic nucleotide gated channel subunit alpha 1 · module 008 +
+- [[CNGB3]] — cyclic nucleotide gated channel subunit beta 3 · module 021 +
+- [[CNIH1]] — cornichon family member 1 · module 057 +
+- [[CNIH3]] — cornichon family AMPA receptor auxiliary protein 3 · module 092 +
+- [[CNIH4]] — cornichon family member 4 · module 003 +
+- [[CNKSR1]] — connector enhancer of kinase suppressor of Ras 1 · module 094 +
+- [[CNKSR2]] — connector enhancer of kinase suppressor of Ras 2 · module 019 +
+- [[CNKSR3]] — CNKSR family member 3 · module 217 +
+- [[CNN2]] — calponin 2 · module 111 +
+- [[CNN3]] — calponin 3 · module 029 +
+- [[CNN3-DT]] — CNN3 divergent transcript · module 010 +
+- [[CNNM1]] — cyclin and CBS domain divalent metal cation transport mediator 1 · module 033 +
+- [[CNNM2]] — cyclin and CBS domain divalent metal cation transport mediator 2 · module 225 +
+- [[CNNM3]] — cyclin and CBS domain divalent metal cation transport mediator 3 · module 225 +
+- [[CNNM4]] — cyclin and CBS domain divalent metal cation transport mediator 4 · module 003 +
+- [[CNOT1]] — CCR4-NOT transcription complex subunit 1 · module 029 +
+- [[CNOT10]] — CCR4-NOT transcription complex subunit 10 · module 006 +
+- [[CNOT11]] — CCR4-NOT transcription complex subunit 11 · module 007 +
+- [[CNOT2]] — CCR4-NOT transcription complex subunit 2 · module 076 +
+- [[CNOT3]] — CCR4-NOT transcription complex subunit 3 · module 096 +
+- [[CNOT4]] — CCR4-NOT transcription complex subunit 4 · module 017 +
+- [[CNOT6]] — CCR4-NOT transcription complex subunit 6 · module 004 +
+- [[CNOT6L]] — CCR4-NOT transcription complex subunit 6 like · module 204 +
+- [[CNOT7]] — CCR4-NOT transcription complex subunit 7 · module 057 +
+- [[CNOT8]] — CCR4-NOT transcription complex subunit 8 · module 164 +
+- [[CNOT9]] — CCR4-NOT transcription complex subunit 9 · module 006 +
+- [[CNP]] — 2',3'-cyclic nucleotide 3' phosphodiesterase · module 032 +
+- [[CNPPD1]] — cyclin Pas1/PHO80 domain containing 1 · module 024 +
+- [[CNPY2]] — canopy FGF signaling regulator 2 · module 118 +
+- [[CNPY2-AS1]] — CNPY2 antisense RNA 1 · module 035 +
+- [[CNPY3]] — canopy FGF signaling regulator 3 · module 050 +
+- [[CNPY4]] — canopy FGF signaling regulator 4 · module 013 +
+- [[CNRIP1]] — cannabinoid receptor interacting protein 1 · module 013 +
+- [[CNST]] — consortin, connexin sorting protein · module 116 +
+- [[CNTD1]] — cyclin N-terminal domain containing 1 · module 021 +
+- [[CNTLN]] — centlein · module 010 +
+- [[CNTN1]] — contactin 1 · module 019 +
+- [[CNTN4]] — contactin 4 · module 166 +
+- [[CNTN5]] — contactin 5 · module 140 +
+- [[CNTN6]] — contactin 6 · module 121 +
+- [[CNTNAP1]] — contactin associated protein 1 · module 014 +
+- [[CNTNAP2]] — contactin associated protein 2 · module 090 +
+- [[CNTNAP3]] — contactin associated protein family member 3 · module 196 +
+- [[CNTNAP3B]] — contactin associated protein family member 3B · module 196 +
+- [[CNTNAP3C]] — contactin associated protein family member 3C · module 196 +
+- [[CNTNAP3P2]] — CNTNAP3 pseudogene 2 · module 196 +
+- [[CNTNAP4]] — contactin associated protein family member 4 · module 090 +
+- [[CNTNAP5]] — contactin associated protein family member 5 · module 090 +
+- [[CNTRL]] — centriolin · module 022 +
+- [[CNTROB]] — centrobin, centriole duplication and spindle assembly protein · module 067 +
+- [[COA1]] — cytochrome c oxidase assembly factor 1 · module 004 +
+- [[COA3]] — cytochrome c oxidase assembly factor 3 · module 007 +
+- [[COA4]] — cytochrome c oxidase assembly factor 4 homolog · module 001 +
+- [[COA5]] — cytochrome c oxidase assembly factor 5 · module 220 +
+- [[COA6]] — cytochrome c oxidase assembly factor 6 · module 089 +
+- [[COA7]] — cytochrome c oxidase assembly factor 7 · module 001 +
+- [[COA8]] — cytochrome c oxidase assembly factor 8 · module 012 +
+- [[COASY]] — Coenzyme A synthase · module 107 +
+- [[COBL]] — cordon-bleu WH2 repeat protein · module 197 +
+- [[COBLL1]] — cordon-bleu WH2 repeat protein like 1 · module 034 +
+- [[COCH]] — cochlin · module 021 +
+- [[COG1]] — component of oligomeric golgi complex 1 · module 041 +
+- [[COG2]] — component of oligomeric golgi complex 2 · module 001 +
+- [[COG3]] — component of oligomeric golgi complex 3 · module 049 +
+- [[COG4]] — component of oligomeric golgi complex 4 · module 028 +
+- [[COG5]] — component of oligomeric golgi complex 5 · module 040 +
+- [[COG6]] — component of oligomeric golgi complex 6 · module 056 +
+- [[COG7]] — component of oligomeric golgi complex 7 · module 207 +
+- [[COG8]] — component of oligomeric golgi complex 8 · module 004 +
+- [[COIL]] — coilin · module 012 +
+- [[COL11A1]] — collagen type XI alpha 1 chain · module 009 +
+- [[COL11A2]] — collagen type XI alpha 2 chain · module 181 +
+- [[COL12A1]] — collagen type XII alpha 1 chain · module 066 +
+- [[COL13A1]] — collagen type XIII alpha 1 chain · module 084 +
+- [[COL15A1]] — collagen type XV alpha 1 chain · module 013 +
+- [[COL16A1]] — collagen type XVI alpha 1 chain · module 014 +
+- [[COL17A1]] — collagen type XVII alpha 1 chain · module 073 +
+- [[COL18A1]] — collagen type XVIII alpha 1 chain · module 002 +
+- [[COL19A1]] — collagen type XIX alpha 1 chain · module 087 +
+- [[COL1A1]] — collagen type I alpha 1 chain · module 066 +
+- [[COL1A2]] — collagen type I alpha 2 chain · module 066 +
+- [[COL20A1]] — collagen type XX alpha 1 chain · module 038 +
+- [[COL21A1]] — collagen type XXI alpha 1 chain · module 090 +
+- [[COL22A1]] — collagen type XXII alpha 1 chain · module 228 +
+- [[COL23A1]] — collagen type XXIII alpha 1 chain · module 165 +
+- [[COL24A1]] — collagen type XXIV alpha 1 chain · module 166 +
+- [[COL25A1]] — collagen type XXV alpha 1 chain · module 150 +
+- [[COL26A1]] — collagen type XXVI alpha 1 chain · module 191 +
+- [[COL27A1]] — collagen type XXVII alpha 1 chain · module 080 +
+- [[COL28A1]] — collagen type XXVIII alpha 1 chain · module 068 +
+- [[COL3A1]] — collagen type III alpha 1 chain · module 066 +
+- [[COL4A1]] — collagen type IV alpha 1 chain · module 066 +
+- [[COL4A2]] — collagen type IV alpha 2 chain · module 066 +
+- [[COL4A3]] — collagen type IV alpha 3 chain · module 019 +
+- [[COL4A4]] — collagen type IV alpha 4 chain · module 019 +
+- [[COL4A5]] — collagen type IV alpha 5 chain · module 019 +
+- [[COL4A6]] — collagen type IV alpha 6 chain · module 019 +
+- [[COL5A1]] — collagen type V alpha 1 chain · module 013 +
+- [[COL5A2]] — collagen type V alpha 2 chain · module 066 +
+- [[COL5A3]] — collagen type V alpha 3 chain · module 013 +
+- [[COL6A1]] — collagen type VI alpha 1 chain · module 013 +
+- [[COL6A2]] — collagen type VI alpha 2 chain · module 013 +
+- [[COL6A3]] — collagen type VI alpha 3 chain · module 013 +
+- [[COL7A1]] — collagen type VII alpha 1 chain · module 013 +
+- [[COL8A1]] — collagen type VIII alpha 1 chain · module 019 +
+- [[COL9A3]] — collagen type IX alpha 3 chain · module 044 +
+- [[COLEC10]] — collectin subfamily member 10 · module 009 +
+- [[COLEC11]] — collectin subfamily member 11 · module 021 +
+- [[COLEC12]] — collectin subfamily member 12 · module 061 +
+- [[COLGALT1]] — collagen beta(1-O)galactosyltransferase 1 · module 050 +
+- [[COLGALT2]] — collagen beta(1-O)galactosyltransferase 2 · module 027 +
+- [[COLQ]] — collagen like tail subunit of asymmetric acetylcholinesterase · module 026 +
+- [[COMMD1]] — copper metabolism domain containing 1 · module 114 +
+- [[COMMD10]] — COMM domain containing 10 · module 001 +
+- [[COMMD2]] — COMM domain containing 2 · module 017 +
+- [[COMMD3]] — COMM domain containing 3 · module 012 +
+- [[COMMD4]] — COMM domain containing 4 · module 046 +
+- [[COMMD5]] — COMM domain containing 5 · module 007 +
+- [[COMMD6]] — COMM domain containing 6 · module 003 +
+- [[COMMD7]] — COMM domain containing 7 · module 017 +
+- [[COMMD8]] — COMM domain containing 8 · module 017 +
+- [[COMMD9]] — COMM domain containing 9 · module 209 +
+- [[COMT]] — catechol-O-methyltransferase · module 005 +
+- [[COMTD1]] — catechol-O-methyltransferase domain containing 1 · module 058 +
+- [[COP1]] — COP1 E3 ubiquitin ligase · module 036 +
+- [[COP1-DT]] — COP1 divergent transcript · module 133 +
+- [[COPA]] — coat protein complex I subunit alpha · module 056 +
+- [[COPB1]] — coat protein complex I subunit beta 1 · module 056 +
+- [[COPB2]] — coat protein complex I subunit beta 2 · module 056 +
+- [[COPB2-DT]] — COPB2 divergent transcript · module 023 +
+- [[COPE]] — coat protein complex I subunit epsilon · module 041 +
+- [[COPG1]] — coat protein complex I subunit gamma 1 · module 042 +
+- [[COPG2]] — coat protein complex I subunit gamma 2 · module 026 -
+- [[COPG2IT1]] — COPG2 imprinted transcript 1 · module 033 +
+- [[COPRS]] — coordinator of PRMT5 and differentiation stimulator · module 024 +
+- [[COPS2]] — COP9 signalosome subunit 2 · module 064 +
+- [[COPS3]] — COP9 signalosome subunit 3 · module 024 -
+- [[COPS4]] — COP9 signalosome subunit 4 · module 045 +
+- [[COPS5]] — COP9 signalosome subunit 5 · module 028 +
+- [[COPS6]] — COP9 signalosome subunit 6 · module 025 +
+- [[COPS7A]] — COP9 signalosome subunit 7A · module 127 +
+- [[COPS7B]] — COP9 signalosome subunit 7B · module 171 +
+- [[COPS8]] — COP9 signalosome subunit 8 · module 104 +
+- [[COPS8-DT]] — COPS8 divergent transcript · module 146 +
+- [[COPS9]] — COP9 signalosome subunit 9 · module 048 +
+- [[COPZ1]] — coat protein complex I subunit zeta 1 · module 042 +
+- [[COPZ2]] — coat protein complex I subunit zeta 2 · module 015 +
+- [[COQ10A]] — coenzyme Q10A · module 059 +
+- [[COQ10B]] — coenzyme Q10B · module 041 +
+- [[COQ2]] — coenzyme Q2, polyprenyltransferase · module 051 +
+- [[COQ3]] — coenzyme Q3, methyltransferase · module 039 +
+- [[COQ4]] — coenzyme Q4 · module 030 +
+- [[COQ5]] — coenzyme Q5, methyltransferase · module 028 +
+- [[COQ6]] — coenzyme Q6, monooxygenase · module 028 +
+- [[COQ7]] — coenzyme Q7, hydroxylase · module 051 +
+- [[COQ8A]] — coenzyme Q8A · module 076 +
+- [[COQ8B]] — coenzyme Q8B · module 031 +
+- [[COQ9]] — coenzyme Q9 · module 028 +
+- [[CORIN]] — corin, serine peptidase · module 037 +
+- [[CORO1B]] — coronin 1B · module 002 +
+- [[CORO1C]] — coronin 1C · module 078 +
+- [[CORO2A]] — coronin 2A · module 031 +
+- [[CORO2B]] — coronin 2B · module 110 +
+- [[CORO7]] — coronin 7 · module 002 +
+- [[COTL1]] — coactosin like F-actin binding protein 1 · module 078 +
+- [[COX10]] — cytochrome c oxidase assembly factor heme A:farnesyltransferase COX10 · module 004 +
+- [[COX10-DT]] — COX10 divergent transcript · module 018 +
+- [[COX11]] — cytochrome c oxidase copper chaperone COX11 · module 025 +
+- [[COX14]] — cytochrome c oxidase assembly factor COX14 · module 003 +
+- [[COX15]] — cytochrome c oxidase assembly factor COX15 · module 017 +
+- [[COX16]] — cytochrome c oxidase assembly factor COX16 · module 178 +
+- [[COX17]] — cytochrome c oxidase copper chaperone COX17 · module 048 +
+- [[COX18]] — cytochrome c oxidase assembly factor COX18 · module 148 +
+- [[COX19]] — cytochrome c oxidase assembly factor COX19 · module 012 +
+- [[COX20]] — cytochrome c oxidase assembly factor COX20 · module 052 -
+- [[COX4I1]] — cytochrome c oxidase subunit 4I1 · module 043 +
+- [[COX5A]] — cytochrome c oxidase subunit 5A · module 043 +
+- [[COX5B]] — cytochrome c oxidase subunit 5B · module 048 +
+- [[COX6A1]] — cytochrome c oxidase subunit 6A1 · module 048 +
+- [[COX6B1]] — cytochrome c oxidase subunit 6B1 · module 048 +
+- [[COX6C]] — cytochrome c oxidase subunit 6C · module 048 +
+- [[COX7A2]] — cytochrome c oxidase subunit 7A2 · module 048 +
+- [[COX7A2L]] — cytochrome c oxidase subunit 7A2 like · module 040 +
+- [[COX7B]] — cytochrome c oxidase subunit 7B · module 048 +
+- [[COX7B2]] — cytochrome c oxidase subunit 7B2 · module 108 +
+- [[COX7C]] — cytochrome c oxidase subunit 7C · module 048 +
+- [[COX8A]] — cytochrome c oxidase subunit 8A · module 048 +
+- [[CP]] — ceruloplasmin · module 167 +
+- [[CPA4]] — carboxypeptidase A4 · module 224 +
+- [[CPA6]] — carboxypeptidase A6 · module 081 +
+- [[CPAMD8]] — C3 and PZP like alpha-2-macroglobulin domain containing 8 · module 014 +
+- [[CPB2-AS1]] — CPB2 antisense RNA 1 · module 035 +
+- [[CPD]] — carboxypeptidase D · module 106 +
+- [[CPE]] — carboxypeptidase E · module 009 +
+- [[CPEB1]] — cytoplasmic polyadenylation element binding protein 1 · module 125 +
+- [[CPEB2]] — cytoplasmic polyadenylation element binding protein 2 · module 068 +
+- [[CPEB2-DT]] — CPEB2 divergent transcript · module 026 +
+- [[CPEB3]] — cytoplasmic polyadenylation element binding protein 3 · module 069 +
+- [[CPEB4]] — cytoplasmic polyadenylation element binding protein 4 · module 006 -
+- [[CPED1]] — cadherin like and PC-esterase domain containing 1 · module 019 +
+- [[CPLANE1]] — ciliogenesis and planar polarity effector complex subunit 1 · module 105 +
+- [[CPLX1]] — complexin 1 · module 047 +
+- [[CPLX2]] — complexin 2 · module 027 +
+- [[CPM]] — carboxypeptidase M · module 021 +
+- [[CPNE1]] — copine 1 · module 003 -
+- [[CPNE2]] — copine 2 · module 002 +
+- [[CPNE3]] — copine 3 · module 029 +
+- [[CPNE4]] — copine 4 · module 140 +
+- [[CPNE5]] — copine 5 · module 084 +
+- [[CPNE7]] — copine 7 · module 018 +
+- [[CPNE8]] — copine 8 · module 014 +
+- [[CPNE9]] — copine family member 9 · module 053 +
+- [[CPOX]] — coproporphyrinogen oxidase · module 088 -
+- [[CPPED1]] — calcineurin like phosphoesterase domain containing 1 · module 064 +
+- [[CPQ]] — carboxypeptidase Q · module 013 +
+- [[CPS1]] — carbamoyl-phosphate synthase 1 · module 019 +
+- [[CPSF1]] — cleavage and polyadenylation specific factor 1 · module 002 +
+- [[CPSF2]] — cleavage and polyadenylation specific factor 2 · module 194 +
+- [[CPSF3]] — cleavage and polyadenylation specific factor 3 · module 005 +
+- [[CPSF4]] — cleavage and polyadenylation specific factor 4 · module 199 +
+- [[CPSF6]] — cleavage and polyadenylation specific factor 6 · module 020 +
+- [[CPSF7]] — cleavage and polyadenylation specific factor 7 · module 016 +
+- [[CPT1A]] — carnitine palmitoyltransferase 1A · module 179 -
+- [[CPT1B]] — carnitine palmitoyltransferase 1B · module 012 +
+- [[CPT1C]] — carnitine palmitoyltransferase 1C · module 053 +
+- [[CPT2]] — carnitine palmitoyltransferase 2 · module 011 +
+- [[CPTP]] — ceramide-1-phosphate transfer protein · module 007 +
+- [[CPVL]] — carboxypeptidase vitellogenic like · module 029 +
+- [[CRABP2]] — cellular retinoic acid binding protein 2 · module 103 +
+- [[CRACD]] — capping protein inhibiting regulator of actin dynamics · module 115 +
+- [[CRACDL]] — CRACD like · module 044 +
+- [[CRACR2A]] — calcium release activated channel regulator 2A · module 004 +
+- [[CRACR2B]] — calcium release activated channel regulator 2B · module 058 +
+- [[CRADD]] — CARD and death domain containing adaptor protein · module 001 +
+- [[CRAMP1]] — cramped chromatin regulator 1 · module 145 +
+- [[CRAT]] — carnitine O-acetyltransferase · module 002 +
+- [[CRB1]] — crumbs cell polarity complex component 1 · module 010 +
+- [[CRB3]] — crumbs cell polarity complex component 3 · module 012 +
+- [[CRBN]] — cereblon · module 074 +
+- [[CRCP]] — CGRP receptor component · module 011 +
+- [[CREB1]] — cAMP responsive element binding protein 1 · module 088 +
+- [[CREB3]] — cAMP responsive element binding protein 3 · module 012 +
+- [[CREB3L1]] — cAMP responsive element binding protein 3 like 1 · module 044 +
+- [[CREB3L2]] — cAMP responsive element binding protein 3 like 2 · module 056 +
+- [[CREB3L4]] — cAMP responsive element binding protein 3 like 4 · module 035 +
+- [[CREB5]] — cAMP responsive element binding protein 5 · module 125 +
+- [[CREBBP]] — CREB binding lysine acetyltransferase · module 095 +
+- [[CREBL2]] — cAMP responsive element binding protein like 2 · module 130 +
+- [[CREBRF]] — CREB3 regulatory factor · module 069 +
+- [[CREBZF]] — CREB/ATF bZIP transcription factor · module 096 +
+- [[CREG1]] — cellular repressor of E1A stimulated genes 1 · module 029 +
+- [[CREG2]] — cellular repressor of E1A stimulated genes 2 · module 081 +
+- [[CRELD1]] — CRELD disulfide isomerase 1 · module 042 +
+- [[CRELD2]] — CRELD disulfide isomerase 2 · module 042 +
+- [[CREM]] — cAMP responsive element modulator · module 057 -
+- [[CRIM1]] — cysteine rich transmembrane BMP regulator 1 · module 120 +
+- [[CRIP1]] — cysteine rich protein 1 · module 058 +
+- [[CRIP2]] — cysteine rich protein 2 · module 005 -
+- [[CRIPT]] — CXXC repeat containing interactor of PDZ3 domain · module 076 +
+- [[CRISPLD1]] — cysteine rich secretory protein LCCL domain containing 1 · module 009 +
+- [[CRISPLD2]] — cysteine rich secretory protein LCCL domain containing 2 · module 093 +
+- [[CRK]] — CRK proto-oncogene, adaptor protein · module 182 -
+- [[CRKL]] — CRK like proto-oncogene, adaptor protein · module 020 +
+- [[CRLF1]] — cytokine receptor like factor 1 · module 021 +
+- [[CRLF2]] — cytokine receptor like factor 2 · module 019 +
+- [[CRLF3]] — cytokine receptor like factor 3 · module 159 +
+- [[CRLS1]] — cardiolipin synthase 1 · module 040 +
+- [[CRMP1]] — collapsin response mediator protein 1 · module 082 +
+- [[CRNDE]] — colorectal neoplasia differentially expressed · module 012 -
+- [[CRNKL1]] — crooked neck pre-mRNA splicing factor 1 · module 007 +
+- [[CROCC]] — ciliary rootlet coiled-coil, rootletin · module 054 -
+- [[CROCCP2]] — CROCC pseudogene 2 · module 209 +
+- [[CROCCP2-1]] · module 020 -
+- [[CROCCP3]] — CROCC pseudogene 3 · module 002 +
+- [[CROCCP3-1]] · module 002 +
+- [[CROT]] — carnitine O-octanoyltransferase · module 057 +
+- [[CRPPA]] — CDP-L-ribitol pyrophosphorylase A · module 124 +
+- [[CRTAC1]] — cartilage acidic protein 1 · module 112 +
+- [[CRTAP]] — cartilage associated protein · module 029 +
+- [[CRTC1]] — CREB regulated transcription coactivator 1 · module 003 +
+- [[CRTC2]] — CREB regulated transcription coactivator 2 · module 138 +
+- [[CRTC3]] — CREB regulated transcription coactivator 3 · module 018 +
+- [[CRTC3-AS1]] — CRTC3 antisense RNA 1 · module 035 +
+- [[CRY1]] — cryptochrome circadian regulator 1 · module 089 +
+- [[CRY2]] — cryptochrome circadian regulator 2 · module 004 -
+- [[CRYAB]] — crystallin alpha B · module 060 +
+- [[CRYBB2P1]] — crystallin beta B2 pseudogene 1 · module 105 +
+- [[CRYBB2P1-1]] · module 105 +
+- [[CRYBG1]] — crystallin beta-gamma domain containing 1 · module 040 -
+- [[CRYBG2]] — crystallin beta-gamma domain containing 2 · module 031 +
+- [[CRYBG3]] — crystallin beta-gamma domain containing 3 · module 180 +
+- [[CRYGS]] — crystallin gamma S · module 037 +
+- [[CRYL1]] — crystallin lambda 1 · module 110 +
+- [[CRYM]] — crystallin mu · module 125 +
+- [[CRYZ]] — crystallin zeta · module 025 +
+- [[CRYZL1]] — crystallin zeta like 1 · module 030 +
+- [[CRYZL2P]] — crystallin zeta like 2, pseudogene · module 008 +
+- [[CS]] — citrate synthase · module 050 +
+- [[CSAD]] — cysteine sulfinic acid decarboxylase · module 021 +
+- [[CSAG1]] — chondrosarcoma associated gene 1 · module 024 +
+- [[CSDE1]] — cold shock domain containing E1 · module 020 +
+- [[CSE1L]] — chromosome segregation 1 like · module 006 +
+- [[CSF1]] — colony stimulating factor 1 · module 014 +
+- [[CSF1R]] — colony stimulating factor 1 receptor · module 013 +
+- [[CSF2]] — colony stimulating factor 2 · module 112 +
+- [[CSF2RA]] — colony stimulating factor 2 receptor subunit alpha · module 034 +
+- [[CSF3]] — colony stimulating factor 3 · module 014 +
+- [[CSGALNACT1]] — chondroitin sulfate N-acetylgalactosaminyltransferase 1 · module 167 +
+- [[CSGALNACT2]] — chondroitin sulfate N-acetylgalactosaminyltransferase 2 · module 227 +
+- [[CSK]] — C-terminal Src kinase · module 002 +
+- [[CSKMT]] — citrate synthase lysine methyltransferase · module 024 +
+- [[CSMD1]] — CUB and Sushi multiple domains 1 · module 140 +
+- [[CSMD2]] — CUB and Sushi multiple domains 2 · module 013 +
+- [[CSMD3]] — CUB and Sushi multiple domains 3 · module 009 +
+- [[CSNK1A1]] — casein kinase 1 alpha 1 · module 065 -
+- [[CSNK1D]] — casein kinase 1 delta · module 219 +
+- [[CSNK1E]] — casein kinase 1 epsilon · module 136 +
+- [[CSNK1G1]] — casein kinase 1 gamma 1 · module 118 +
+- [[CSNK1G2]] — casein kinase 1 gamma 2 · module 003 +
+- [[CSNK1G3]] — casein kinase 1 gamma 3 · module 188 +
+- [[CSNK2A1]] — casein kinase 2 alpha 1 · module 040 +
+- [[CSNK2A2]] — casein kinase 2 alpha 2 · module 002 +
+- [[CSNK2B]] — casein kinase 2 beta · module 007 +
+- [[CSPG4]] — chondroitin sulfate proteoglycan 4 · module 013 +
+- [[CSPG5]] — chondroitin sulfate proteoglycan 5 · module 047 +
+- [[CSPP1]] — centrosome and spindle pole associated protein 1 · module 007 -
+- [[CSRNP1]] — cysteine and serine rich nuclear protein 1 · module 109 +
+- [[CSRNP2]] — cysteine and serine rich nuclear protein 2 · module 148 +
+- [[CSRNP3]] — cysteine and serine rich nuclear protein 3 · module 009 +
+- [[CSRP1]] — cysteine and glycine rich protein 1 · module 078 +
+- [[CSRP1-AS1]] — CSRP1 antisense RNA 1 · module 063 +
+- [[CSRP2]] — cysteine and glycine rich protein 2 · module 001 -
+- [[CST3]] — cystatin C · module 048 +
+- [[CST6]] — cystatin E/M · module 058 +
+- [[CSTB]] — cystatin B · module 003 +
+- [[CSTF1]] — cleavage stimulation factor subunit 1 · module 011 +
+- [[CSTF2]] — cleavage stimulation factor subunit 2 · module 004 +
+- [[CSTF2T]] — cleavage stimulation factor subunit 2 tau variant · module 016 +
+- [[CSTF3]] — cleavage stimulation factor subunit 3 · module 083 +
+- [[CSTF3-DT]] — CSTF3 divergent transcript · module 091 +
+- [[CSTPP1]] — centriolar satellite-associated tubulin polyglutamylase complex regulator 1 · module 230 +
+- [[CTBP1]] — C-terminal binding protein 1 · module 126 +
+- [[CTBP1-AS]] — CTBP1 antisense RNA · module 021 +
+- [[CTBP1-DT]] — CTBP1 divergent transcript · module 010 +
+- [[CTBP2]] — C-terminal binding protein 2 · module 064 -
+- [[CTBS]] — chitobiase · module 005 -
+- [[CTC-338M12.4]] · module 015 +
+- [[CTC1]] — CST telomere replication complex component 1 · module 020 +
+- [[CTCF]] — CCCTC-binding factor · module 007 +
+- [[CTDNEP1]] — CTD nuclear envelope phosphatase 1 · module 157 +
+- [[CTDP1]] — CTD phosphatase 1 · module 105 +
+- [[CTDSP1]] — CTD small phosphatase 1 · module 007 +
+- [[CTDSP2]] — CTD small phosphatase 2 · module 069 +
+- [[CTDSPL]] — CTD small phosphatase like · module 018 +
+- [[CTDSPL2]] — CTD small phosphatase like 2 · module 067 +
+- [[CTDSPL2-DT]] — CTDSPL2 divergent transcript · module 021 +
+- [[CTH]] — cystathionine gamma-lyase · module 063 +
+- [[CTHRC1]] — collagen triple helix repeat containing 1 · module 013 +
+- [[CTIF]] — cap binding complex dependent translation initiation factor · module 211 +
+- [[CTNNA1]] — catenin alpha 1 · module 119 +
+- [[CTNNA2]] — catenin alpha 2 · module 009 +
+- [[CTNNA3]] — catenin alpha 3 · module 009 +
+- [[CTNNAL1]] — catenin alpha like 1 · module 120 +
+- [[CTNNB1]] — catenin beta 1 · module 106 +
+- [[CTNNBIP1]] — catenin beta interacting protein 1 · module 002 +
+- [[CTNNBL1]] — catenin beta like 1 · module 199 +
+- [[CTNND1]] — catenin delta 1 · module 059 +
+- [[CTNND2]] — catenin delta 2 · module 019 +
+- [[CTNS]] — cystinosin, lysosomal cystine transporter · module 122 +
+- [[CTPS1]] — CTP synthase 1 · module 005 +
+- [[CTPS2]] — CTP synthase 2 · module 046 +
+- [[CTR9]] — CTR9 component of Paf1/RNA polymerase II complex · module 126 +
+- [[CTSA]] — cathepsin A · module 122 +
+- [[CTSB]] — cathepsin B · module 050 +
+- [[CTSC]] — cathepsin C · module 012 -
+- [[CTSD]] — cathepsin D · module 050 +
+- [[CTSE]] — cathepsin E · module 073 +
+- [[CTSF]] — cathepsin F · module 050 +
+- [[CTSH]] — cathepsin H · module 029 +
+- [[CTSK]] — cathepsin K · module 037 +
+- [[CTSL]] — cathepsin L · module 081 +
+- [[CTSO]] — cathepsin O · module 070 +
+- [[CTSS]] — cathepsin S · module 070 +
+- [[CTSV]] — cathepsin V · module 001 -
+- [[CTSZ]] — cathepsin Z · module 050 +
+- [[CTTN]] — cortactin · module 017 -
+- [[CTTN-DT]] — CTTN divergent transcript · module 015 +
+- [[CTTNBP2]] — cortactin binding protein 2 · module 087 +
+- [[CTTNBP2NL]] — CTTNBP2 N-terminal like · module 034 +
+- [[CTU1]] — cytosolic thiouridylase subunit 1 · module 033 +
+- [[CTU2]] — cytosolic thiouridylase subunit 2 · module 002 +
+- [[CTXN1]] — cortexin 1 · module 135 -
+- [[CUBN]] — cubilin · module 080 +
+- [[CUEDC1]] — CUE domain containing 1 · module 041 -
+- [[CUEDC2]] — CUE domain containing 2 · module 012 +
+- [[CUL1]] — cullin 1 · module 007 +
+- [[CUL2]] — cullin 2 · module 029 +
+- [[CUL3]] — cullin 3 · module 003 +
+- [[CUL4A]] — cullin 4A · module 005 +
+- [[CUL4B]] — cullin 4B · module 029 +
+- [[CUL5]] — cullin 5 · module 064 +
+- [[CUL7]] — cullin 7 · module 049 +
+- [[CUL9]] — cullin 9 · module 127 +
+- [[CUTA]] — cutA divalent cation tolerance homolog · module 024 +
+- [[CUTALP]] — cutA divalent cation tolerance like, pseudogene · module 010 +
+- [[CUTC]] — cutC copper transporter · module 049 +
+- [[CUX1]] — cut like homeobox 1 · module 168 -
+- [[CUX2]] — cut like homeobox 2 · module 140 +
+- [[CUZD1]] — CUB and zona pellucida like domains 1 · module 049 +
+- [[CWC15]] — CWC15 spliceosome associated protein · module 220 +
+- [[CWC22]] — CWC22 spliceosome associated protein · module 011 +
+- [[CWC25]] — CWC25 spliceosome associated protein · module 118 +
+- [[CWC27]] — CWC27 spliceosome associated cyclophilin · module 213 +
+- [[CWF19L1]] — CWF19 like cell cycle control factor 1 · module 142 +
+- [[CWF19L2]] — CWF19 like cell cycle control factor 2 · module 118 +
+- [[CX3CL1]] — C-X3-C motif chemokine ligand 1 · module 014 +
+- [[CXADR]] — CXADR cell adhesion molecule · module 045 +
+- [[CXCL1]] — C-X-C motif chemokine ligand 1 · module 014 +
+- [[CXCL10]] — C-X-C motif chemokine ligand 10 · module 032 +
+- [[CXCL13]] — C-X-C motif chemokine ligand 13 · module 026 +
+- [[CXCL16]] — C-X-C motif chemokine ligand 16 · module 070 +
+- [[CXCL2]] — C-X-C motif chemokine ligand 2 · module 014 +
+- [[CXCL3]] — C-X-C motif chemokine ligand 3 · module 014 +
+- [[CXCL5]] — C-X-C motif chemokine ligand 5 · module 014 +
+- [[CXCL8]] — C-X-C motif chemokine ligand 8 · module 112 +
+- [[CXCR4]] — C-X-C motif chemokine receptor 4 · module 001 -
+- [[CXorf38]] — chromosome X open reading frame 38 · module 020 -
+- [[CXXC1]] — CXXC finger protein 1 · module 002 +
+- [[CXXC4]] — CXXC finger protein 4 · module 223 +
+- [[CXXC5]] — CXXC finger protein 5 · module 059 +
+- [[CYB561]] — cytochrome b561 · module 014 +
+- [[CYB561A3]] — cytochrome b561 family member A3 · module 046 +
+- [[CYB561D1]] — cytochrome b561 family member D1 · module 024 +
+- [[CYB561D2]] — cytochrome b561 family member D2 · module 040 +
+- [[CYB5A]] — cytochrome b5 type A · module 045 +
+- [[CYB5B]] — cytochrome b5 type B · module 029 +
+- [[CYB5D1]] — cytochrome b5 domain containing 1 · module 054 -
+- [[CYB5D2]] — cytochrome b5 domain containing 2 · module 023 +
+- [[CYB5R1]] — cytochrome b5 reductase 1 · module 064 +
+- [[CYB5R2]] — cytochrome b5 reductase 2 · module 112 +
+- [[CYB5R3]] — cytochrome b5 reductase 3 · module 002 +
+- [[CYB5R4]] — cytochrome b5 reductase 4 · module 057 +
+- [[CYB5RL]] — cytochrome b5 reductase 5 (putative) · module 051 +
+- [[CYBA]] — cytochrome b-245 alpha chain · module 058 +
+- [[CYBC1]] — cytochrome b-245 chaperone 1 · module 007 +
+- [[CYBRD1]] — cytochrome b reductase 1 · module 029 +
+- [[CYC1]] — cytochrome c1 · module 058 +
+- [[CYCS]] — cytochrome c, somatic · module 183 +
+- [[CYFIP1]] — cytoplasmic FMR1 interacting protein 1 · module 101 +
+- [[CYFIP2]] — cytoplasmic FMR1 interacting protein 2 · module 062 +
+- [[CYGB]] — cytoglobin · module 013 +
+- [[CYLD]] — CYLD lysine 63 deubiquitinase · module 069 +
+- [[CYP1B1]] — cytochrome P450 family 1 subfamily B member 1 · module 019 +
+- [[CYP1B1-AS1]] — CYP1B1 antisense RNA 1 · module 010 +
+- [[CYP20A1]] — cytochrome P450 family 20 subfamily A member 1 · module 170 +
+- [[CYP24A1]] — cytochrome P450 family 24 subfamily A member 1 · module 019 +
+- [[CYP26B1]] — cytochrome P450 family 26 subfamily B member 1 · module 013 +
+- [[CYP27A1]] — cytochrome P450 family 27 subfamily A member 1 · module 037 +
+- [[CYP27B1]] — cytochrome P450 family 27 subfamily B member 1 · module 181 +
+- [[CYP27C1]] — cytochrome P450 family 27 subfamily C member 1 · module 013 +
+- [[CYP2D7]] — cytochrome P450 family 2 subfamily D member 7 (gene/pseudogene) · module 047 +
+- [[CYP2E1]] — cytochrome P450 family 2 subfamily E member 1 · module 047 +
+- [[CYP2J2]] — cytochrome P450 family 2 subfamily J member 2 · module 032 +
+- [[CYP2R1]] — cytochrome P450 family 2 subfamily R member 1 · module 063 +
+- [[CYP2S1]] — cytochrome P450 family 2 subfamily S member 1 · module 055 +
+- [[CYP2U1]] — cytochrome P450 family 2 subfamily U member 1 · module 028 +
+- [[CYP2U1-AS1]] — CYP2U1 and SGMS2 antisense RNA 1 · module 021 +
+- [[CYP39A1]] — cytochrome P450 family 39 subfamily A member 1 · module 045 +
+- [[CYP3A5]] — cytochrome P450 family 3 subfamily A member 5 · module 073 +
+- [[CYP46A1]] — cytochrome P450 family 46 subfamily A member 1 · module 001 -
+- [[CYP4A22-AS1]] — CYP4A22 antisense RNA 1 · module 003 -
+- [[CYP4F11]] — cytochrome P450 family 4 subfamily F member 11 · module 117 +
+- [[CYP4F12]] — cytochrome P450 family 4 subfamily F member 12 · module 044 +
+- [[CYP4F3]] — cytochrome P450 family 4 subfamily F member 3 · module 008 +
+- [[CYP4V2]] — cytochrome P450 family 4 subfamily V member 2 · module 010 +
+- [[CYP51A1]] — cytochrome P450 family 51 subfamily A member 1 · module 086 +
+- [[CYREN]] — cell cycle regulator of NHEJ · module 045 -
+- [[CYRIA]] — CYFIP related Rac1 interactor A · module 014 +
+- [[CYRIB]] — CYFIP related Rac1 interactor B · module 023 -
+- [[CYS1]] — cystin 1 · module 128 +
+- [[CYSTM1]] — cysteine rich transmembrane module containing 1 · module 141 +
+- [[CYTH1]] — cytohesin 1 · module 160 +
+- [[CYTH2]] — cytohesin 2 · module 190 +
+- [[CYTH3]] — cytohesin 3 · module 163 +
+- [[CYTH4]] — cytohesin 4 · module 206 +
+- [[CYTOR]] — cytoskeleton regulator RNA · module 151 +
+- [[CZIB]] — CXXC motif containing zinc binding protein · module 012 +

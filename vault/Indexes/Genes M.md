@@ -1,0 +1,988 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes M
+
+978 genes. Back to [[Genes by letter]].
+
+- [[M6PR]] — mannose-6-phosphate receptor, cation dependent · module 029 +
+- [[MACC1]] — MET transcriptional regulator MACC1 · module 008 +
+- [[MACF1]] — microtubule actin crosslinking factor 1 · module 147 +
+- [[MACIR]] — macrophage immunometabolism regulator · module 146 +
+- [[MACO1]] — macoilin 1 · module 003 +
+- [[MACROD1]] — mono-ADP ribosylhydrolase 1 · module 018 +
+- [[MACROD2]] — mono-ADP ribosylhydrolase 2 · module 008 +
+- [[MACROH2A1]] — macroH2A.1 histone · module 004 +
+- [[MACROH2A2]] — macroH2A.2 histone · module 018 +
+- [[MAD1L1]] — mitotic arrest deficient 1 like 1 · module 005 +
+- [[MAD2L1]] — mitotic arrest deficient 2 like 1 · module 022 +
+- [[MAD2L1-DT]] — MAD2L1 divergent transcript · module 010 +
+- [[MAD2L1BP]] — MAD2L1 binding protein · module 011 +
+- [[MAD2L2]] — mitotic arrest deficient 2 like 2 · module 085 +
+- [[MADD]] — MAP kinase activating death domain · module 127 +
+- [[MAEA]] — macrophage erythroblast attacher, E3 ubiquitin ligase · module 083 +
+- [[MAF]] — MAF bZIP transcription factor · module 014 +
+- [[MAF1]] — MAF1 negative regulator of RNA polymerase III · module 130 +
+- [[MAFB]] — MAF bZIP transcription factor B · module 098 +
+- [[MAFF]] — MAF bZIP transcription factor F · module 109 +
+- [[MAFG]] — MAF bZIP transcription factor G · module 050 +
+- [[MAFIP]] — MAFF interacting protein · module 089 +
+- [[MAFK]] — MAF bZIP transcription factor K · module 002 +
+- [[MAGEA1]] — MAGE family member A1 · module 016 +
+- [[MAGEA10]] — MAGE family member A10 · module 009 +
+- [[MAGEA3-DT]] — MAGEA3 divergent transcript · module 108 +
+- [[MAGEA4]] — MAGE family member A4 · module 158 +
+- [[MAGEA4-AS1]] — MAGEA4 antisense RNA 1 · module 109 +
+- [[MAGEB2]] — MAGE family member B2 · module 158 +
+- [[MAGED1]] — MAGE family member D1 · module 041 +
+- [[MAGED2]] — MAGE family member D2 · module 041 +
+- [[MAGEF1]] — MAGE family member F1 · module 011 +
+- [[MAGI1]] — membrane associated guanylate kinase, WW and PDZ domain containing 1 · module 160 +
+- [[MAGI2]] — membrane associated guanylate kinase, WW and PDZ domain containing 2 · module 121 +
+- [[MAGI2-AS3]] — MAGI2 antisense RNA 3 · module 121 +
+- [[MAGI3]] — membrane associated guanylate kinase, WW and PDZ domain containing 3 · module 001 -
+- [[MAGOH]] — mago homolog, exon junction complex subunit · module 210 +
+- [[MAGOHB]] — mago homolog B, exon junction complex subunit · module 148 +
+- [[MAGT1]] — magnesium transporter 1 · module 042 +
+- [[MAILR]] — macrophage interferon regulatory lncRNA · module 023 +
+- [[MAIP1]] — matrix AAA peptidase interacting protein 1 · module 023 +
+- [[MAK]] — male germ cell associated kinase · module 014 +
+- [[MAK16]] — MAK16 homolog · module 001 +
+- [[MAL2]] — mal, T cell differentiation protein 2 · module 008 +
+- [[MAL2-AS1]] — MAL2 antisense RNA 1 · module 021 +
+- [[MALAT1]] — metastasis associated lung adenocarcinoma transcript 1 · module 016 -
+- [[MALINC1]] — mitosis associated long intergenic non-coding RNA 1 · module 035 +
+- [[MALL]] — mal, T cell differentiation protein like · module 034 +
+- [[MALRD1]] — MAM and LDL receptor class A domain containing 1 · module 075 +
+- [[MALSU1]] — mitochondrial assembly of ribosomal large subunit 1 · module 054 +
+- [[MALT1]] — MALT1 paracaspase · module 016 -
+- [[MAMDC2]] — MAM domain containing 2 · module 009 +
+- [[MAMDC2-AS1]] — MAMDC2 antisense RNA 1 · module 026 +
+- [[MAMDC4]] — MAM domain containing 4 · module 157 +
+- [[MAML1]] — mastermind like transcriptional coactivator 1 · module 144 +
+- [[MAML2]] — mastermind like transcriptional coactivator 2 · module 070 +
+- [[MAML3]] — mastermind like transcriptional coactivator 3 · module 092 +
+- [[MAMLD1]] — mastermind like domain containing 1 · module 193 +
+- [[MAN1A1]] — mannosidase alpha class 1A member 1 · module 027 +
+- [[MAN1A2]] — mannosidase alpha class 1A member 2 · module 143 +
+- [[MAN1B1]] — mannosidase alpha class 1B member 1 · module 002 +
+- [[MAN1C1]] — mannosidase alpha class 1C member 1 · module 009 +
+- [[MAN2A1]] — mannosidase alpha class 2A member 1 · module 059 -
+- [[MAN2A2]] — mannosidase alpha class 2A member 2 · module 126 +
+- [[MAN2B1]] — mannosidase alpha class 2B member 1 · module 004 -
+- [[MAN2B2]] — mannosidase alpha class 2B member 2 · module 050 +
+- [[MAN2C1]] — mannosidase alpha class 2C member 1 · module 012 -
+- [[MANBA]] — mannosidase beta · module 169 +
+- [[MANBAL]] — mannosidase beta like · module 016 +
+- [[MANCR]] — mitotically associated long non coding RNA · module 013 +
+- [[MANEA]] — mannosidase endo-alpha · module 025 +
+- [[MANEAL]] — mannosidase endo-alpha like · module 033 +
+- [[MANF]] — mesencephalic astrocyte derived neurotrophic factor · module 042 +
+- [[MANSC1]] — MANSC domain containing 1 · module 044 +
+- [[MAOA]] — monoamine oxidase A · module 098 +
+- [[MAOB]] — monoamine oxidase B · module 034 +
+- [[MAP1A]] — microtubule associated protein 1A · module 117 +
+- [[MAP1B]] — microtubule associated protein 1B · module 136 +
+- [[MAP1LC3A]] — microtubule associated protein 1 light chain 3 alpha · module 039 +
+- [[MAP1LC3B]] — microtubule associated protein 1 light chain 3 beta · module 004 -
+- [[MAP1LC3B2]] — microtubule associated protein 1 light chain 3 beta 2 · module 150 +
+- [[MAP1S]] — microtubule associated protein 1S · module 020 -
+- [[MAP2]] — microtubule associated protein 2 · module 106 +
+- [[MAP2K1]] — mitogen-activated protein kinase kinase 1 · module 105 +
+- [[MAP2K2]] — mitogen-activated protein kinase kinase 2 · module 002 +
+- [[MAP2K3]] — mitogen-activated protein kinase kinase 3 · module 141 +
+- [[MAP2K4]] — mitogen-activated protein kinase kinase 4 · module 024 +
+- [[MAP2K5]] — mitogen-activated protein kinase kinase 5 · module 074 +
+- [[MAP2K6]] — mitogen-activated protein kinase kinase 6 · module 027 +
+- [[MAP2K7]] — mitogen-activated protein kinase kinase 7 · module 024 +
+- [[MAP3K1]] — mitogen-activated protein kinase kinase kinase 1 · module 217 +
+- [[MAP3K10]] — mitogen-activated protein kinase kinase kinase 10 · module 172 +
+- [[MAP3K11]] — mitogen-activated protein kinase kinase kinase 11 · module 038 +
+- [[MAP3K12]] — mitogen-activated protein kinase kinase kinase 12 · module 021 +
+- [[MAP3K13]] — mitogen-activated protein kinase kinase kinase 13 · module 059 +
+- [[MAP3K14]] — mitogen-activated protein kinase kinase kinase 14 · module 162 +
+- [[MAP3K14-AS1]] — MAP3K14 antisense RNA 1 · module 015 +
+- [[MAP3K15]] — mitogen-activated protein kinase kinase kinase 15 · module 132 +
+- [[MAP3K2]] — mitogen-activated protein kinase kinase kinase 2 · module 079 +
+- [[MAP3K2-DT]] — MAP3K2 divergent transcript · module 035 +
+- [[MAP3K20]] — mitogen-activated protein kinase kinase kinase 20 · module 044 +
+- [[MAP3K20-AS1]] — MAP3K20 antisense RNA 1 · module 075 +
+- [[MAP3K21]] — mitogen-activated protein kinase kinase kinase 21 · module 077 +
+- [[MAP3K3]] — mitogen-activated protein kinase kinase kinase 3 · module 145 +
+- [[MAP3K4]] — mitogen-activated protein kinase kinase kinase 4 · module 004 +
+- [[MAP3K5]] — mitogen-activated protein kinase kinase kinase 5 · module 174 +
+- [[MAP3K6]] — mitogen-activated protein kinase kinase kinase 6 · module 002 +
+- [[MAP3K7]] — mitogen-activated protein kinase kinase kinase 7 · module 052 +
+- [[MAP3K7CL]] — MAP3K7 C-terminal like · module 026 +
+- [[MAP3K8]] — mitogen-activated protein kinase kinase kinase 8 · module 014 +
+- [[MAP3K9]] — mitogen-activated protein kinase kinase kinase 9 · module 003 +
+- [[MAP3K9-DT]] — MAP3K9 divergent transcript · module 160 +
+- [[MAP4]] — microtubule associated protein 4 · module 211 +
+- [[MAP4K2]] — mitogen-activated protein kinase kinase kinase kinase 2 · module 030 +
+- [[MAP4K3]] — mitogen-activated protein kinase kinase kinase kinase 3 · module 048 +
+- [[MAP4K3-DT]] — MAP4K3 divergent transcript · module 004 -
+- [[MAP4K4]] — mitogen-activated protein kinase kinase kinase kinase 4 · module 147 +
+- [[MAP4K5]] — mitogen-activated protein kinase kinase kinase kinase 5 · module 017 +
+- [[MAP6]] — microtubule associated protein 6 · module 082 +
+- [[MAP7]] — microtubule associated protein 7 · module 031 +
+- [[MAP7D1]] — MAP7 domain containing 1 · module 096 +
+- [[MAP7D2]] — MAP7 domain containing 2 · module 037 +
+- [[MAP7D3]] — MAP7 domain containing 3 · module 020 -
+- [[MAP9]] — microtubule associated protein 9 · module 028 +
+- [[MAPK1]] — mitogen-activated protein kinase 1 · module 050 +
+- [[MAPK10]] — mitogen-activated protein kinase 10 · module 009 +
+- [[MAPK11]] — mitogen-activated protein kinase 11 · module 002 +
+- [[MAPK12]] — mitogen-activated protein kinase 12 · module 002 +
+- [[MAPK13]] — mitogen-activated protein kinase 13 · module 055 +
+- [[MAPK14]] — mitogen-activated protein kinase 14 · module 169 +
+- [[MAPK1IP1L]] — mitogen-activated protein kinase 1 interacting protein 1 like · module 011 +
+- [[MAPK3]] — mitogen-activated protein kinase 3 · module 030 +
+- [[MAPK4]] — mitogen-activated protein kinase 4 · module 019 +
+- [[MAPK6]] — mitogen-activated protein kinase 6 · module 133 +
+- [[MAPK7]] — mitogen-activated protein kinase 7 · module 002 +
+- [[MAPK8]] — mitogen-activated protein kinase 8 · module 159 +
+- [[MAPK8IP1]] — mitogen-activated protein kinase 8 interacting protein 1 · module 053 +
+- [[MAPK8IP2]] — mitogen-activated protein kinase 8 interacting protein 2 · module 010 +
+- [[MAPK8IP3]] — mitogen-activated protein kinase 8 interacting protein 3 · module 003 +
+- [[MAPK9]] — mitogen-activated protein kinase 9 · module 012 -
+- [[MAPKAP1]] — MAPK associated protein 1 · module 005 +
+- [[MAPKAPK2]] — MAPK activated protein kinase 2 · module 160 +
+- [[MAPKAPK3]] — MAPK activated protein kinase 3 · module 004 +
+- [[MAPKAPK5]] — MAPK activated protein kinase 5 · module 005 +
+- [[MAPKAPK5-AS1]] — MAPKAPK5 antisense RNA 1 · module 040 +
+- [[MAPKBP1]] — mitogen-activated protein kinase binding protein 1 · module 029 -
+- [[MAPRE1]] — microtubule associated protein RP/EB family member 1 · module 024 -
+- [[MAPRE2]] — microtubule associated protein RP/EB family member 2 · module 044 +
+- [[MAPRE3]] — microtubule associated protein RP/EB family member 3 · module 057 +
+- [[MAPT]] — microtubule associated protein tau · module 100 +
+- [[MARCHF1]] — membrane associated ring-CH-type finger 1 · module 009 +
+- [[MARCHF2]] — membrane associated ring-CH-type finger 2 · module 136 +
+- [[MARCHF3]] — membrane associated ring-CH-type finger 3 · module 081 +
+- [[MARCHF4]] — membrane associated ring-CH-type finger 4 · module 116 +
+- [[MARCHF5]] — membrane associated ring-CH-type finger 5 · module 169 +
+- [[MARCHF6]] — membrane associated ring-CH-type finger 6 · module 045 +
+- [[MARCHF7]] — membrane associated ring-CH-type finger 7 · module 011 +
+- [[MARCHF8]] — membrane associated ring-CH-type finger 8 · module 076 +
+- [[MARCHF9]] — membrane associated ring-CH-type finger 9 · module 025 -
+- [[MARCKS]] — myristoylated alanine rich protein kinase C substrate · module 014 +
+- [[MARCKSL1]] — MARCKS like 1 · module 012 -
+- [[MARCOL]] — MARCO like · module 019 +
+- [[MARF1]] — meiosis regulator and mRNA stability factor 1 · module 076 +
+- [[MARK1]] — microtubule affinity regulating kinase 1 · module 124 +
+- [[MARK2]] — microtubule affinity regulating kinase 2 · module 042 +
+- [[MARK3]] — microtubule affinity regulating kinase 3 · module 136 +
+- [[MARK4]] — microtubule affinity regulating kinase 4 · module 003 +
+- [[MARS1]] — methionyl-tRNA synthetase 1 · module 063 +
+- [[MARVELD1]] — MARVEL domain containing 1 · module 098 +
+- [[MARVELD2]] — MARVEL domain containing 2 · module 068 +
+- [[MARVELD3]] — MARVEL domain containing 3 · module 008 +
+- [[MASP2]] — MBL associated serine protease 2 · module 053 +
+- [[MAST1]] — microtubule associated serine/threonine kinase 1 · module 100 +
+- [[MAST2]] — microtubule associated serine/threonine kinase 2 · module 163 +
+- [[MAST3]] — microtubule associated serine/threonine kinase 3 · module 085 +
+- [[MAST4]] — microtubule associated serine/threonine kinase family member 4 · module 081 +
+- [[MASTL]] — microtubule associated serine/threonine kinase like · module 091 +
+- [[MAT2A]] — methionine adenosyltransferase 2A · module 020 +
+- [[MAT2B]] — methionine adenosyltransferase 2 non-catalytic beta subunit · module 130 +
+- [[MATCAP1]] — microtubule associated tyrosine carboxypeptidase 1 · module 023 -
+- [[MATCAP2]] — microtubule associated tyrosine carboxypeptidase 2 · module 036 -
+- [[MATN1-AS1]] — MATN1 antisense RNA 1 · module 181 +
+- [[MATN2]] — matrilin 2 · module 166 +
+- [[MATN3]] — matrilin 3 · module 050 +
+- [[MATR3]] — matrin 3 · module 003 -
+- [[MATR3-1]] · module 048 -
+- [[MAU2]] — MAU2 sister chromatid cohesion factor · module 149 +
+- [[MAVS]] — mitochondrial antiviral signaling protein · module 118 +
+- [[MAX]] — MYC associated transcriptional regulator X · module 040 +
+- [[MAZ]] — MYC associated zinc finger protein · module 067 +
+- [[MB21D2]] — Mab-21 domain containing 2 · module 014 +
+- [[MBD1]] — methyl-CpG binding domain protein 1 · module 052 +
+- [[MBD2]] — methyl-CpG binding domain protein 2 · module 188 +
+- [[MBD3]] — methyl-CpG binding domain protein 3 · module 005 +
+- [[MBD4]] — methyl-CpG binding domain 4, DNA glycosylase · module 111 +
+- [[MBD5]] — methyl-CpG binding domain protein 5 · module 074 +
+- [[MBD6]] — methyl-CpG binding domain protein 6 · module 096 +
+- [[MBIP]] — MAP3K12 binding inhibitory protein 1 · module 045 +
+- [[MBLAC2]] — metallo-beta-lactamase domain containing 2 · module 028 +
+- [[MBNL1]] — muscleblind like splicing regulator 1 · module 217 +
+- [[MBNL2]] — muscleblind like splicing regulator 2 · module 110 +
+- [[MBNL3]] — muscleblind like splicing regulator 3 · module 002 -
+- [[MBOAT1]] — membrane bound glycerophospholipid O-acyltransferase 1 · module 163 +
+- [[MBOAT2]] — membrane bound glycerophospholipid O-acyltransferase 2 · module 030 +
+- [[MBOAT7]] — membrane bound acylglycerophosphatidylinositol O-acyltransferase MBOAT7 · module 072 +
+- [[MBP]] — myelin basic protein · module 092 +
+- [[MBTD1]] — mbt domain containing 1 · module 156 +
+- [[MBTPS1]] — membrane bound transcription factor peptidase, site 1 · module 076 +
+- [[MBTPS2]] — membrane bound transcription factor peptidase, site 2 · module 025 +
+- [[MC1R]] — melanocortin 1 receptor · module 181 +
+- [[MCAM]] — melanoma cell adhesion molecule · module 132 +
+- [[MCAT]] — malonyl-CoA-acyl carrier protein transacylase · module 033 +
+- [[MCC]] — MCC regulator of Wnt signaling pathway · module 009 +
+- [[MCCC1]] — methylcrotonyl-CoA carboxylase subunit 1 · module 122 +
+- [[MCCC2]] — methylcrotonyl-CoA carboxylase subunit 2 · module 001 +
+- [[MCEE]] — methylmalonyl-CoA epimerase · module 056 +
+- [[MCF2]] — MCF.2 cell line derived transforming sequence · module 037 +
+- [[MCF2L]] — MCF.2 cell line derived transforming sequence like · module 055 +
+- [[MCF2L2]] — MCF.2 cell line derived transforming sequence-like 2 · module 102 +
+- [[MCFD2]] — multiple coagulation factor deficiency 2, ER cargo receptor complex subunit · module 042 +
+- [[MCL1]] — MCL1 apoptosis regulator, BCL2 family member · module 109 +
+- [[MCM10]] — minichromosome maintenance 10 replication initiation factor · module 006 +
+- [[MCM2]] — minichromosome maintenance complex component 2 · module 006 +
+- [[MCM3]] — minichromosome maintenance complex component 3 · module 006 +
+- [[MCM3AP]] — minichromosome maintenance complex component 3 associated protein · module 005 +
+- [[MCM3AP-AS1]] — MCM3AP antisense RNA 1 · module 018 +
+- [[MCM4]] — minichromosome maintenance complex component 4 · module 006 +
+- [[MCM5]] — minichromosome maintenance complex component 5 · module 006 +
+- [[MCM6]] — minichromosome maintenance complex component 6 · module 006 +
+- [[MCM7]] — minichromosome maintenance complex component 7 · module 006 +
+- [[MCM8]] — minichromosome maintenance 8 homologous recombination repair factor · module 006 +
+- [[MCM9]] — minichromosome maintenance 9 homologous recombination repair factor · module 036 +
+- [[MCMBP]] — minichromosome maintenance complex binding protein · module 006 +
+- [[MCOLN1]] — mucolipin TRP cation channel 1 · module 122 +
+- [[MCOLN2]] — mucolipin TRP cation channel 2 · module 033 +
+- [[MCOLN3]] — mucolipin TRP cation channel 3 · module 124 +
+- [[MCPH1]] — microcephalin 1 · module 088 +
+- [[MCPH1-AS1]] — MCPH1 antisense RNA 1 · module 023 +
+- [[MCRIP1]] — MAPK regulated corepressor interacting protein 1 · module 003 +
+- [[MCRIP2]] — MAPK regulated corepressor interacting protein 2 · module 058 +
+- [[MCRS1]] — microspherule protein 1 · module 007 +
+- [[MCTP1]] — multiple C2 and transmembrane domain containing 1 · module 092 +
+- [[MCTP2]] — multiple C2 and transmembrane domain containing 2 · module 056 +
+- [[MCTS1]] — MCTS1 re-initiation and release factor · module 148 +
+- [[MCU]] — mitochondrial calcium uniporter · module 095 -
+- [[MCUB]] — mitochondrial calcium uniporter dominant negative subunit beta · module 095 -
+- [[MCUR1]] — mitochondrial calcium uniporter regulator 1 · module 188 +
+- [[MDC1]] — mediator of DNA damage checkpoint 1 · module 022 +
+- [[MDFI]] — MyoD family inhibitor · module 034 +
+- [[MDFIC]] — MyoD family inhibitor domain containing · module 143 +
+- [[MDGA1]] — MAM domain containing glycosylphosphatidylinositol anchor 1 · module 013 +
+- [[MDGA2]] — MAM domain containing glycosylphosphatidylinositol anchor 2 · module 087 +
+- [[MDH1]] — malate dehydrogenase 1 · module 025 +
+- [[MDH2]] — malate dehydrogenase 2 · module 029 +
+- [[MDK]] — midkine · module 070 +
+- [[MDM1]] — stabilizer of axonemal microtubules 6 · module 028 +
+- [[MDM2]] — MDM2 proto-oncogene · module 062 +
+- [[MDM4]] — MDM4 regulator of p53 · module 028 +
+- [[MDN1]] — midasin AAA ATPase 1 · module 018 +
+- [[MDP1]] — magnesium dependent phosphatase 1 · module 035 +
+- [[ME1]] — malic enzyme 1 · module 117 +
+- [[ME2]] — malic enzyme 2 · module 018 +
+- [[ME3]] — malic enzyme 3 · module 001 +
+- [[MEA1]] — male-enhanced antigen 1 · module 003 +
+- [[MEAF6]] — MYST/Esa1 associated factor 6 · module 074 +
+- [[MEAK7]] — MTOR associated protein MEAK7 · module 206 +
+- [[MECOM]] — MDS1 and EVI1 complex locus · module 044 +
+- [[MECP2]] — methyl-CpG binding protein 2 · module 051 +
+- [[MECR]] — mitochondrial trans-2-enoyl-CoA reductase · module 005 +
+- [[MED1]] — mediator complex subunit 1 · module 168 -
+- [[MED10]] — mediator complex subunit 10 · module 024 +
+- [[MED11]] — mediator complex subunit 11 · module 007 +
+- [[MED12]] — mediator complex subunit 12 · module 173 +
+- [[MED12L]] — mediator complex subunit 12L · module 102 +
+- [[MED13]] — mediator complex subunit 13 · module 023 +
+- [[MED13L]] — mediator complex subunit 13L · module 052 -
+- [[MED14]] — mediator complex subunit 14 · module 012 -
+- [[MED15]] — mediator complex subunit 15 · module 020 -
+- [[MED16]] — mediator complex subunit 16 · module 096 +
+- [[MED17]] — mediator complex subunit 17 · module 168 +
+- [[MED18]] — mediator complex subunit 18 · module 011 +
+- [[MED19]] — mediator complex subunit 19 · module 012 +
+- [[MED20]] — mediator complex subunit 20 · module 017 +
+- [[MED21]] — mediator complex subunit 21 · module 015 +
+- [[MED22]] — mediator complex subunit 22 · module 126 +
+- [[MED23]] — mediator complex subunit 23 · module 178 +
+- [[MED24]] — mediator complex subunit 24 · module 046 +
+- [[MED25]] — mediator complex subunit 25 · module 076 +
+- [[MED26]] — mediator complex subunit 26 · module 040 +
+- [[MED27]] — mediator complex subunit 27 · module 036 +
+- [[MED28]] — mediator complex subunit 28 · module 015 +
+- [[MED28-DT]] — MED28 divergent transcript · module 035 +
+- [[MED29]] — mediator complex subunit 29 · module 077 -
+- [[MED30]] — mediator complex subunit 30 · module 045 +
+- [[MED31]] — mediator complex subunit 31 · module 072 +
+- [[MED4]] — mediator complex subunit 4 · module 118 +
+- [[MED6]] — mediator complex subunit 6 · module 041 +
+- [[MED7]] — mediator complex subunit 7 · module 007 +
+- [[MED8]] — mediator complex subunit 8 · module 049 +
+- [[MED9]] — mediator complex subunit 9 · module 036 +
+- [[MEF2A]] — myocyte enhancer factor 2A · module 005 -
+- [[MEF2B]] — myocyte enhancer factor 2B · module 036 +
+- [[MEF2C]] — myocyte enhancer factor 2C · module 152 +
+- [[MEF2C-AS1]] — MEF2C antisense RNA 1 · module 108 +
+- [[MEF2D]] — myocyte enhancer factor 2D · module 001 -
+- [[MEG3]] — maternally expressed 3 · module 013 +
+- [[MEG8]] — maternally expressed 8, small nucleolar RNA host gene · module 013 +
+- [[MEGF11]] — multiple EGF like domains 11 · module 102 +
+- [[MEGF6]] — multiple EGF like domains 6 · module 189 +
+- [[MEGF8]] — multiple EGF like domains 8 · module 173 +
+- [[MEGF9]] — multiple EGF like domains 9 · module 085 +
+- [[MEI1]] — meiotic double-stranded break formation protein 1 · module 053 +
+- [[MEIOB]] — meiosis specific with OB-fold · module 019 +
+- [[MEIOC]] — meiosis specific with coiled-coil domain · module 140 +
+- [[MEIS1]] — Meis homeobox 1 · module 152 +
+- [[MEIS2]] — Meis homeobox 2 · module 002 -
+- [[MEIS3]] — Meis homeobox 3 · module 136 +
+- [[MELK]] — maternal embryonic leucine zipper kinase · module 006 +
+- [[MELTF]] — melanotransferrin · module 045 -
+- [[MEMO1]] — mediator of cell motility 1 · module 210 +
+- [[MEN1]] — menin 1 · module 127 +
+- [[MEOX2]] — mesenchyme homeobox 2 · module 009 +
+- [[MEPCE]] — methylphosphate capping enzyme · module 173 +
+- [[MERTK]] — MER proto-oncogene, tyrosine kinase · module 115 +
+- [[MESD]] — mesoderm development LRP chaperone · module 049 +
+- [[MEST]] — mesoderm specific transcript · module 004 +
+- [[MET]] — MET proto-oncogene, receptor tyrosine kinase · module 034 +
+- [[METAP1]] — methionyl aminopeptidase 1 · module 188 +
+- [[METAP1D]] — methionyl aminopeptidase type 1D, mitochondrial · module 001 +
+- [[METAP2]] — methionyl aminopeptidase 2 · module 011 +
+- [[METRN]] — meteorin, glial cell differentiation regulator · module 058 +
+- [[METRNL]] — meteorin like, glial cell differentiation regulator · module 218 +
+- [[METTL1]] — methyltransferase 1, tRNA methylguanosine · module 001 +
+- [[METTL13]] — methyltransferase 13, eEF1A N-terminus and K55 · module 107 +
+- [[METTL14]] — methyltransferase 14, N6-adenosine-methyltransferase non-catalytic subunit · module 017 +
+- [[METTL15]] — methyltransferase 15, mitochondrial 12S rRNA N4-cytidine · module 213 +
+- [[METTL16]] — methyltransferase 16, RNA N6-adenosine · module 156 +
+- [[METTL17]] — methyltransferase like 17 · module 017 +
+- [[METTL18]] — methyltransferase 18, RPL3 N3(tau)-histidine · module 011 +
+- [[METTL21A]] — methyltransferase 21A, HSPA lysine · module 016 -
+- [[METTL21EP-1]] · module 037 +
+- [[METTL22]] — methyltransferase 22, Kin17 lysine · module 089 +
+- [[METTL23]] — methyltransferase 23, arginine · module 020 -
+- [[METTL25]] — methyltransferase like 25 · module 064 +
+- [[METTL25B]] — methyltransferase like 25B · module 012 +
+- [[METTL26]] — methyltransferase like 26 · module 003 +
+- [[METTL27]] — methyltransferase like 27 · module 148 -
+- [[METTL2A]] — methyltransferase 2A, tRNA N3-cytidine · module 001 +
+- [[METTL2B]] — methyltransferase 2B, tRNA N3-cytidine · module 005 +
+- [[METTL3]] — methyltransferase 3, N6-adenosine-methyltransferase complex catalytic subunit · module 018 +
+- [[METTL4]] — methyltransferase 4, N6-adenosine · module 015 +
+- [[METTL5]] — methyltransferase 5, N6-adenosine · module 017 +
+- [[METTL6]] — methyltransferase 6, tRNA N3-cytidine · module 023 +
+- [[METTL8]] — methyltransferase 8, tRNA N3-cytidine · module 005 +
+- [[METTL9]] — methyltransferase 9, His-X-His N1(pi)-histidine · module 168 +
+- [[MEX3A]] — mex-3 RNA binding family member A · module 005 +
+- [[MEX3B]] — mex-3 RNA binding family member B · module 059 +
+- [[MEX3C]] — mex-3 RNA binding family member C · module 095 +
+- [[MEX3D]] — mex-3 RNA binding family member D · module 003 +
+- [[MFAP1]] — microfibril associated protein 1 · module 012 +
+- [[MFAP3]] — microfibril associated protein 3 · module 007 +
+- [[MFAP3L]] — microfibril associated protein 3 like · module 133 +
+- [[MFF]] — mitochondrial fission factor · module 041 +
+- [[MFF-DT]] — MFF divergent transcript · module 023 +
+- [[MFGE8]] — milk fat globule EGF and factor V/VIII domain containing · module 097 +
+- [[MFHAS1]] — multifunctional ROCO family signaling regulator 1 · module 018 +
+- [[MFN1]] — mitofusin 1 · module 016 -
+- [[MFN2]] — mitofusin 2 · module 025 +
+- [[MFNG]] — MFNG O-fucosylpeptide 3-beta-N-acetylglucosaminyltransferase · module 034 +
+- [[MFSD1]] — major facilitator superfamily domain containing 1 · module 026 +
+- [[MFSD10]] — solute carrier family 75 member 1 · module 136 +
+- [[MFSD11]] — major facilitator superfamily domain containing 11 · module 018 -
+- [[MFSD12]] — major facilitator superfamily domain containing 12 · module 002 +
+- [[MFSD13A]] — solute carrier family 68 member 1 · module 017 +
+- [[MFSD14A]] — solute carrier family 71 member 1 · module 029 +
+- [[MFSD14B]] — solute carrier family 71 member 2 · module 163 +
+- [[MFSD14CP]] — solute carrier family 71 member 3, pseudogene · module 163 +
+- [[MFSD14CP-1]] · module 005 +
+- [[MFSD2A]] — MFSD2 lysolipid transporter A, lysophospholipid · module 141 +
+- [[MFSD2B]] — MFSD2 lysolipid transporter B, sphingolipid · module 039 +
+- [[MFSD3]] — solute carrier family 33 member 2 · module 058 +
+- [[MFSD4B]] — solute carrier family 60 member 2 · module 112 +
+- [[MFSD5]] — solute carrier family 61 member 1 · module 119 +
+- [[MFSD6]] — major facilitator superfamily domain containing 6 · module 055 +
+- [[MFSD8]] — major facilitator superfamily domain containing 8 · module 015 +
+- [[MFSD9]] — solute carrier family 67 member 2 · module 030 +
+- [[MGA]] — MAX dimerization protein MGA · module 001 +
+- [[MGAM]] — maltase-glucoamylase · module 026 +
+- [[MGAM2]] — maltase-glucoamylase 2 (putative) · module 044 +
+- [[MGAT1]] — alpha-1,3-mannosyl-glycoprotein 2-beta-N-acetylglucosaminyltransferase · module 040 +
+- [[MGAT2]] — alpha-1,6-mannosyl-glycoprotein 2-beta-N-acetylglucosaminyltransferase · module 007 +
+- [[MGAT4A]] — alpha-1,3-mannosyl-glycoprotein 4-beta-N-acetylglucosaminyltransferase A · module 011 -
+- [[MGAT4B]] — alpha-1,3-mannosyl-glycoprotein 4-beta-N-acetylglucosaminyltransferase B · module 138 +
+- [[MGAT4C]] — MGAT4 family member C · module 108 +
+- [[MGAT5]] — alpha-1,6-mannosylglycoprotein 6-beta-N-acetylglucosaminyltransferase · module 134 +
+- [[MGAT5B]] — alpha-1,6-mannosylglycoprotein 6-beta-N-acetylglucosaminyltransferase B · module 195 +
+- [[MGC32805]] — SNCAIP antisense RNA 3 · module 008 +
+- [[MGC4859]] · module 026 +
+- [[MGLL]] — monoglyceride lipase · module 116 +
+- [[MGME1]] — mitochondrial genome maintenance exonuclease 1 · module 091 +
+- [[MGMT]] — O-6-methylguanine-DNA methyltransferase · module 004 +
+- [[MGP]] — matrix Gla protein · module 104 +
+- [[MGRN1]] — mahogunin ring finger 1 · module 041 +
+- [[MGST1]] — microsomal glutathione S-transferase 1 · module 034 +
+- [[MGST2]] — microsomal glutathione S-transferase 2 · module 055 +
+- [[MGST3]] — microsomal glutathione S-transferase 3 · module 030 +
+- [[MHENCR]] — melanoma highly expressed competing endogenous lncRNA for miR-425 and miR-489 · module 024 +
+- [[MIA]] — MIA SH3 domain containing · module 037 +
+- [[MIA2]] — MIA SH3 domain ER export factor 2 · module 133 +
+- [[MIA3]] — MIA SH3 domain ER export factor 3 · module 035 -
+- [[MIAT]] — myocardial infarction associated transcript · module 090 +
+- [[MIATNB]] — MIAT neighbor · module 017 -
+- [[MIB1]] — MIB E3 ubiquitin protein ligase 1 · module 017 -
+- [[MIB2]] — MIB E3 ubiquitin protein ligase 2 · module 157 +
+- [[MICA]] — MHC class I polypeptide-related sequence A · module 001 -
+- [[MICAL1]] — microtubule associated monooxygenase, calponin and LIM domain containing 1 · module 002 +
+- [[MICAL2]] — microtubule associated monooxygenase, calponin and LIM domain containing 2 · module 078 +
+- [[MICAL3]] — microtubule associated monooxygenase, calponin and LIM domain containing 3 · module 195 +
+- [[MICALL1]] — MICAL like 1 · module 065 -
+- [[MICALL2]] — MICAL like 2 · module 033 -
+- [[MICB]] — MHC class I polypeptide-related sequence B · module 072 +
+- [[MICE]] — MHC class I polypeptide-related sequence E (pseudogene) · module 183 +
+- [[MICOS10]] — mitochondrial contact site and cristae organizing system subunit 10 · module 014 +
+- [[MICOS13]] — mitochondrial contact site and cristae organizing system subunit 13 · module 058 +
+- [[MICU1]] — mitochondrial calcium uptake 1 · module 024 +
+- [[MICU2]] — mitochondrial calcium uptake 2 · module 038 +
+- [[MICU3]] — mitochondrial calcium uptake 3 · module 016 +
+- [[MID1]] — midline 1 · module 009 +
+- [[MID1IP1]] — MID1 interacting protein 1 · module 133 +
+- [[MID2]] — midline 2 · module 160 -
+- [[MIDEAS]] — mitotic deacetylase associated SANT domain protein · module 014 +
+- [[MIDN]] — midnolin · module 192 +
+- [[MIEF1]] — mitochondrial elongation factor 1 · module 119 +
+- [[MIEF2]] — mitochondrial elongation factor 2 · module 002 +
+- [[MIEN1]] — migration and invasion enhancer 1 · module 024 +
+- [[MIER1]] — MIER1 transcriptional regulator · module 017 +
+- [[MIER2]] — MIER family member 2 · module 002 +
+- [[MIER3]] — MIER family member 3 · module 011 +
+- [[MIF]] — macrophage migration inhibitory factor · module 048 +
+- [[MIF4GD]] — MIF4G domain containing · module 058 +
+- [[MIGA1]] — mitoguardin 1 · module 057 +
+- [[MIGA2]] — mitoguardin 2 · module 003 +
+- [[MIIP]] — migration and invasion inhibitory protein · module 002 +
+- [[MILIP]] — MYC inducible lncRNA inactivating p53 · module 025 -
+- [[MILR1]] — mast cell immunoglobulin like receptor 1 · module 196 +
+- [[MINAR1]] — membrane integral NOTCH2 associated receptor 1 · module 049 +
+- [[MINCR]] — MYC-induced long non-coding RNA · module 024 +
+- [[MINDY1]] — MINDY lysine 48 deubiquitinase 1 · module 029 +
+- [[MINDY2]] — MINDY lysine 48 deubiquitinase 2 · module 041 +
+- [[MINDY3]] — MINDY lysine 48 deubiquitinase 3 · module 065 +
+- [[MINDY4]] — MINDY lysine 48 deubiquitinase 4 · module 004 +
+- [[MINK1]] — misshapen like kinase 1 · module 077 +
+- [[MINPP1]] — multiple inositol-polyphosphate phosphatase 1 · module 020 +
+- [[MIOS]] — meiosis regulator for oocyte development · module 001 +
+- [[MIPEP]] — mitochondrial intermediate peptidase · module 018 +
+- [[MIPOL1]] — mirror-image polydactyly 1 · module 004 +
+- [[MIR100HG]] — mir-100-let-7a-2-mir-125b-1 cluster host gene · module 151 +
+- [[MIR130AHG]] — MIR130A host gene · module 010 +
+- [[MIR137HG]] — MIR137 host gene · module 121 +
+- [[MIR155HG]] — MIR155 host gene · module 112 +
+- [[MIR17HG]] — miR-17-92a-1 cluster host gene · module 005 +
+- [[MIR181A1HG]] — MIR181A1 host gene · module 024 +
+- [[MIR181A2HG]] — MIR181A2 host gene · module 046 +
+- [[MIR1915HG]] — MIR1915 host gene · module 010 +
+- [[MIR193BHG]] — MIR193b-365a host gene · module 024 +
+- [[MIR2052HG]] — MIR2052 host gene · module 027 +
+- [[MIR210HG]] — MIR210 host gene · module 048 +
+- [[MIR222HG]] — miR222/221 cluster host gene · module 078 +
+- [[MIR22HG]] — MIR22 host gene · module 038 +
+- [[MIR23AHG]] — miR-23a/27a/24-2 cluster host gene · module 109 +
+- [[MIR29B2CHG]] — MIR29B2 and MIR29C host gene · module 030 +
+- [[MIR30DHG]] · module 083 +
+- [[MIR3142HG]] — MIR3142 host gene · module 112 +
+- [[MIR3171HG]] — MIR3171 host gene · module 108 +
+- [[MIR31HG]] — MIR31 host gene · module 116 +
+- [[MIR325HG]] — MIR325 host gene · module 090 +
+- [[MIR34AHG]] — MIR34A host gene · module 062 +
+- [[MIR3659HG]] — MIR3659 host gene · module 062 +
+- [[MIR3667HG]] — MIR3667 host gene · module 027 +
+- [[MIR3681HG]] — MIR3681 host gene · module 087 +
+- [[MIR3936HG]] — MIR3936 host gene · module 013 +
+- [[MIR4280HG]] — MIR4280 host gene · module 196 +
+- [[MIR4300HG]] — MIR4300 host gene · module 075 +
+- [[MIR4307HG]] — MIR4307 host gene · module 009 +
+- [[MIR4435-2HG]] — MIR4435-2 host gene · module 151 +
+- [[MIR4458HG]] — MIR4458 host gene · module 024 +
+- [[MIR4500HG]] — MIR4500 host gene · module 027 +
+- [[MIR4527HG]] — MIR4527 host gene · module 061 +
+- [[MIR4713HG]] — MIR4713 host gene · module 027 +
+- [[MIR493HG]] — MIR493 cluster host gene · module 013 +
+- [[MIR548XHG]] — MIR548X host gene · module 108 +
+- [[MIR583HG]] · module 026 +
+- [[MIR646HG]] — MIR646 host gene · module 108 +
+- [[MIR762HG]] — MIR762 host gene · module 015 +
+- [[MIR9-1HG]] — MIR9-1 host gene · module 053 +
+- [[MIR9-3HG]] — MIR9-3 host gene · module 019 +
+- [[MIR924HG]] — MIR924 host gene · module 006 +
+- [[MIR99AHG]] — mir-99a-let-7c cluster host gene · module 009 +
+- [[MIRLET7A1HG]] — miRlet-7a-1/let-7f-1/let-7d cluster host gene · module 083 +
+- [[MIRLET7BHG]] — MIRLET7B and MIRLET7A3 host gene · module 081 +
+- [[MIRLET7IHG]] — MIRLET7I host gene · module 039 +
+- [[MIS12]] — MIS12 kinetochore complex component · module 016 +
+- [[MIS18A]] — MIS18 kinetochore protein A · module 022 +
+- [[MIS18BP1]] — MIS18 binding protein 1 · module 067 +
+- [[MISP]] — mitotic spindle positioning · module 031 +
+- [[MITD1]] — microtubule interacting and trafficking domain containing 1 · module 059 +
+- [[MITF]] — melanocyte inducing transcription factor · module 017 +
+- [[MIX23]] — mitochondrial matrix import factor 23 · module 089 +
+- [[MKI67]] — marker of proliferation Ki-67 · module 022 +
+- [[MKKS]] — MKKS centrosomal shuttling protein · module 001 +
+- [[MKLN1]] — muskelin 1 · module 026 +
+- [[MKLN1-AS]] — MKLN1 antisense RNA · module 035 +
+- [[MKNK1]] — MAPK interacting serine/threonine kinase 1 · module 002 +
+- [[MKNK2]] — MAPK interacting serine/threonine kinase 2 · module 003 +
+- [[MKRN1]] — makorin ring finger protein 1 · module 069 +
+- [[MKRN2]] — makorin ring finger protein 2 · module 030 +
+- [[MKRN3]] — makorin ring finger protein 3 · module 023 +
+- [[MKRN5P]] — makorin ring finger protein 5, pseudogene · module 126 +
+- [[MKS1]] — MKS transition zone complex subunit 1 · module 028 +
+- [[MKX]] — mohawk homeobox · module 027 +
+- [[MLANA]] — melan-A · module 021 +
+- [[MLEC]] — malectin · module 042 +
+- [[MLF1]] — myeloid leukemia factor 1 · module 083 -
+- [[MLF2]] — myeloid leukemia factor 2 · module 042 +
+- [[MLH1]] — mutL homolog 1 · module 148 +
+- [[MLH3]] — mutL homolog 3 · module 001 +
+- [[MLIP]] — muscular LMNA interacting protein · module 038 +
+- [[MLKL]] — mixed lineage kinase domain like pseudokinase · module 097 +
+- [[MLLT1]] — MLLT1 super elongation complex subunit · module 002 +
+- [[MLLT10]] — MLLT10 histone lysine methyltransferase DOT1L cofactor · module 146 +
+- [[MLLT11]] — MLLT11 transcription factor 7 cofactor · module 060 +
+- [[MLLT3]] — MLLT3 super elongation complex subunit · module 099 +
+- [[MLLT6]] — MLLT6, PHD finger containing · module 138 +
+- [[MLPH]] — melanophilin · module 174 +
+- [[MLST8]] — MTOR associated protein MLST8 · module 012 +
+- [[MLX]] — MAX dimerization protein MLX · module 026 -
+- [[MLXIP]] — MLX interacting protein · module 218 +
+- [[MLXIPL]] — MLX interacting protein like · module 115 +
+- [[MLYCD]] — malonyl-CoA decarboxylase · module 015 +
+- [[MMAA]] — metabolism of cobalamin associated A · module 007 +
+- [[MMAB]] — metabolism of cobalamin associated B · module 086 +
+- [[MMACHC]] — metabolism of cobalamin associated C · module 001 +
+- [[MMADHC]] — metabolism of cobalamin associated D · module 012 +
+- [[MMADHC-DT]] — MMADHC divergent transcript · module 026 +
+- [[MMD]] — monocyte to macrophage differentiation associated · module 217 +
+- [[MME]] — membrane metalloendopeptidase · module 013 +
+- [[MME-AS1]] — MME antisense RNA 1 · module 021 +
+- [[MMGT1]] — membrane magnesium transporter 1 · module 025 +
+- [[MMP1]] — matrix metallopeptidase 1 · module 081 +
+- [[MMP13]] — matrix metallopeptidase 13 · module 070 +
+- [[MMP14]] — matrix metallopeptidase 14 · module 013 +
+- [[MMP15]] — matrix metallopeptidase 15 · module 176 +
+- [[MMP16]] — matrix metallopeptidase 16 · module 009 +
+- [[MMP17]] — matrix metallopeptidase 17 · module 084 +
+- [[MMP2]] — matrix metallopeptidase 2 · module 050 +
+- [[MMP24]] — matrix metallopeptidase 24 · module 021 +
+- [[MMP24OS]] — MMP24 opposite strand · module 037 +
+- [[MMP25]] — matrix metallopeptidase 25 · module 047 +
+- [[MMP25-AS1]] — MMP25 antisense RNA 1 · module 010 +
+- [[MMP28]] — matrix metallopeptidase 28 · module 073 +
+- [[MMP7]] — matrix metallopeptidase 7 · module 008 +
+- [[MMRN1]] — multimerin 1 · module 009 +
+- [[MMRN2]] — multimerin 2 · module 080 +
+- [[MMS19]] — MMS19 cytosolic iron-sulfur assembly component · module 030 +
+- [[MMS22L]] — MMS22 like, DNA repair protein · module 006 +
+- [[MMUT]] — methylmalonyl-CoA mutase · module 041 +
+- [[MN1]] — MN1 proto-oncogene, transcriptional regulator · module 019 +
+- [[MNAT1]] — MNAT1 component of CDK activating kinase · module 017 +
+- [[MND1]] — meiotic nuclear divisions 1 · module 006 +
+- [[MNS1]] — meiosis specific nuclear structural 1 · module 006 +
+- [[MNT]] — MAX network transcriptional repressor · module 041 +
+- [[MNX1]] — motor neuron and pancreas homeobox 1 · module 054 +
+- [[MOAP1]] — modulator of apoptosis 1
+- [[MOB1A]] — MOB kinase activator 1A · module 025 +
+- [[MOB1B]] — MOB kinase activator 1B · module 018 +
+- [[MOB2]] — MOB kinase activator 2 · module 145 +
+- [[MOB3A]] — MOB kinase activator 3A · module 218 +
+- [[MOB3B]] — MOB kinase activator 3B · module 026 +
+- [[MOB3C]] — MOB kinase activator 3C · module 080 +
+- [[MOB4]] — MOB family member 4, phocein · module 007 +
+- [[MOCOS]] — molybdenum cofactor sulfurase · module 133 +
+- [[MOCS1]] — molybdenum cofactor synthesis 1 · module 015 -
+- [[MOCS2]] — molybdenum cofactor synthesis 2 · module 057 +
+- [[MOCS2-DT]] — MOCS2 divergent transcript · module 039 +
+- [[MOCS3]] — molybdenum cofactor synthesis 3 · module 007 +
+- [[MOGAT3]] — monoacylglycerol O-acyltransferase 3 · module 031 +
+- [[MOGS]] — mannosyl-oligosaccharide glucosidase · module 040 +
+- [[MOK]] — MOK protein kinase · module 205 +
+- [[MON1A]] — MON1 vesicular trafficking associated A · module 033 +
+- [[MON1B]] — MON1 vesicular trafficking associated B · module 038 +
+- [[MON2]] — MON2 regulator of endosome-to-Golgi trafficking · module 056 +
+- [[MORC2]] — MORC family CW-type zinc finger 2 · module 005 +
+- [[MORC3]] — MORC family CW-type zinc finger 3 · module 003 +
+- [[MORC4]] — MORC family CW-type zinc finger 4 · module 060 +
+- [[MORF4L1]] — mortality factor 4 like 1 · module 025 +
+- [[MORF4L1P1]] — mortality factor 4 like 1 pseudogene 1 · module 042 +
+- [[MORF4L2]] — mortality factor 4 like 2 · module 056 +
+- [[MORN1]] — MORN repeat containing 1 · module 015 +
+- [[MORN2]] — MORN repeat containing 2 · module 012 +
+- [[MORN4]] — MORN repeat containing 4 · module 198 +
+- [[MOSMO]] — modulator of smoothened · module 147 +
+- [[MOSPD1]] — motile sperm domain containing 1 · module 074 +
+- [[MOSPD2]] — motile sperm domain containing 2 · module 005 -
+- [[MOSPD3]] — motile sperm domain containing 3 · module 076 +
+- [[MOV10]] — Mov10 RNA helicase · module 032 +
+- [[MOXD1]] — monooxygenase DBH like 1 · module 066 +
+- [[MPC1]] — mitochondrial pyruvate carrier 1 · module 049 +
+- [[MPC2]] — mitochondrial pyruvate carrier 2 · module 005 -
+- [[MPDU1]] — mannose-P-dolichol utilization defect 1 · module 083 +
+- [[MPDZ]] — multiple PDZ domain crumbs cell polarity complex component · module 207 -
+- [[MPG]] — N-methylpurine DNA glycosylase · module 003 +
+- [[MPHOSPH10]] — M-phase phosphoprotein 10 · module 012 +
+- [[MPHOSPH6]] — M-phase phosphoprotein 6 · module 001 +
+- [[MPHOSPH8]] — M-phase phosphoprotein 8 · module 012 +
+- [[MPHOSPH9]] — M-phase phosphoprotein 9 · module 067 +
+- [[MPI]] — mannose phosphate isomerase · module 103 +
+- [[MPLKIP]] — M-phase specific PLK1 interacting protein · module 011 +
+- [[MPND]] — MPN domain containing · module 003 +
+- [[MPP1]] — MAGUK p55 scaffold protein 1 · module 045 +
+- [[MPP2]] — MAGUK p55 scaffold protein 2 · module 154 +
+- [[MPP3]] — MAGUK p55 scaffold protein 3 · module 018 +
+- [[MPP4]] — MAGUK p55 scaffold protein 4 · module 039 +
+- [[MPP7]] — MAGUK p55 scaffold protein 7 · module 027 +
+- [[MPPE1]] — metallophosphoesterase 1 · module 039 +
+- [[MPRIP]] — myosin phosphatase Rho interacting protein · module 034 +
+- [[MPST]] — mercaptopyruvate sulfurtransferase · module 003 +
+- [[MPV17]] — mitochondrial inner membrane protein MPV17 · module 028 +
+- [[MPV17L]] — MPV17 mitochondrial inner membrane protein like · module 033 +
+- [[MPZL1]] — myelin protein zero like 1 · module 077 +
+- [[MPZL2]] — myelin protein zero like 2 · module 008 +
+- [[MPZL3]] — myelin protein zero like 3 · module 008 +
+- [[MR1]] — major histocompatibility complex, class I-related · module 023 +
+- [[MRAS]] — muscle RAS oncogene homolog · module 010 +
+- [[MRC2]] — mannose receptor C-type 2 · module 053 +
+- [[MRE11]] — MRE11 double strand break repair nuclease · module 006 +
+- [[MREG]] — melanoregulin · module 020 +
+- [[MRFAP1]] — Morf4 family associated protein 1 · module 011 +
+- [[MRFAP1L1]] — Morf4 family associated protein 1 like 1 · module 011 +
+- [[MRGBP]] — MRG domain binding protein · module 030 +
+- [[MRI1]] — methylthioribose-1-phosphate isomerase 1 · module 030 +
+- [[MRM1]] — mitochondrial rRNA methyltransferase 1 · module 005 +
+- [[MRM2]] — mitochondrial rRNA methyltransferase 2 · module 011 +
+- [[MRM3]] — mitochondrial rRNA methyltransferase 3 · module 007 +
+- [[MRNIP]] — MRN complex interacting protein · module 020 -
+- [[MROH1]] — maestro heat like repeat family member 1 · module 017 -
+- [[MROH3P]] — maestro heat like repeat family member 3, pseudogene · module 047 +
+- [[MROH6]] — maestro heat like repeat family member 6 · module 029 -
+- [[MROH7]] — maestro heat like repeat family member 7 · module 055 +
+- [[MROH8]] — maestro heat like repeat family member 8 · module 021 +
+- [[MRPL1]] — mitochondrial ribosomal protein L1 · module 213 +
+- [[MRPL10]] — mitochondrial ribosomal protein L10 · module 012 +
+- [[MRPL11]] — mitochondrial ribosomal protein L11 · module 015 +
+- [[MRPL12]] — mitochondrial ribosomal protein L12 · module 058 +
+- [[MRPL13]] — mitochondrial ribosomal protein L13 · module 057 +
+- [[MRPL14]] — mitochondrial ribosomal protein L14 · module 054 +
+- [[MRPL15]] — mitochondrial ribosomal protein L15 · module 001 +
+- [[MRPL16]] — mitochondrial ribosomal protein L16 · module 017 +
+- [[MRPL17]] — mitochondrial ribosomal protein L17 · module 003 +
+- [[MRPL18]] — mitochondrial ribosomal protein L18 · module 072 +
+- [[MRPL19]] — mitochondrial ribosomal protein L19 · module 004 +
+- [[MRPL2]] — mitochondrial ribosomal protein L2 · module 049 +
+- [[MRPL20]] — mitochondrial ribosomal protein L20 · module 007 +
+- [[MRPL20-AS1]] — MRPL20 antisense RNA 1 · module 007 +
+- [[MRPL21]] — mitochondrial ribosomal protein L21 · module 012 +
+- [[MRPL22]] — mitochondrial ribosomal protein L22 · module 220 +
+- [[MRPL23]] — mitochondrial ribosomal protein L23 · module 024 +
+- [[MRPL24]] — mitochondrial ribosomal protein L24 · module 004 +
+- [[MRPL27]] — mitochondrial ribosomal protein L27 · module 119 +
+- [[MRPL28]] — mitochondrial ribosomal protein L28 · module 016 +
+- [[MRPL3]] — mitochondrial ribosomal protein L3 · module 004 +
+- [[MRPL30]] — mitochondrial ribosomal protein L30 · module 148 +
+- [[MRPL32]] — mitochondrial ribosomal protein L32 · module 011 +
+- [[MRPL33]] — mitochondrial ribosomal protein L33 · module 048 +
+- [[MRPL34]] — mitochondrial ribosomal protein L34 · module 054 +
+- [[MRPL35]] — mitochondrial ribosomal protein L35 · module 016 +
+- [[MRPL36]] — mitochondrial ribosomal protein L36 · module 011 +
+- [[MRPL37]] — mitochondrial ribosomal protein L37 · module 072 +
+- [[MRPL38]] — mitochondrial ribosomal protein L38 · module 011 +
+- [[MRPL39]] — mitochondrial ribosomal protein L39 · module 065 +
+- [[MRPL4]] — mitochondrial ribosomal protein L4 · module 033 +
+- [[MRPL40]] — mitochondrial ribosomal protein L40 · module 058 +
+- [[MRPL41]] — mitochondrial ribosomal protein L41 · module 058 +
+- [[MRPL42]] — mitochondrial ribosomal protein L42 · module 004 +
+- [[MRPL43]] — mitochondrial ribosomal protein L43 · module 024 +
+- [[MRPL44]] — mitochondrial ribosomal protein L44 · module 119 +
+- [[MRPL45]] — mitochondrial ribosomal protein L45 · module 064 +
+- [[MRPL45P2]] · module 172 +
+- [[MRPL46]] — mitochondrial ribosomal protein L46 · module 011 +
+- [[MRPL47]] — mitochondrial ribosomal protein L47 · module 016 +
+- [[MRPL48]] — mitochondrial ribosomal protein L48 · module 057 +
+- [[MRPL49]] — mitochondrial ribosomal protein L49 · module 007 +
+- [[MRPL50]] — mitochondrial ribosomal protein L50 · module 007 +
+- [[MRPL51]] — mitochondrial ribosomal protein L51 · module 048 +
+- [[MRPL52]] — mitochondrial ribosomal protein L52 · module 058 +
+- [[MRPL54]] — mitochondrial ribosomal protein L54 · module 024 +
+- [[MRPL55]] — mitochondrial ribosomal protein L55 · module 003 +
+- [[MRPL57]] — mitochondrial ribosomal protein L57 · module 012 +
+- [[MRPL58]] — mitochondrial ribosomal protein L58 · module 011 +
+- [[MRPL9]] — mitochondrial ribosomal protein L9 · module 007 +
+- [[MRPS10]] — mitochondrial ribosomal protein S10 · module 028 +
+- [[MRPS11]] — mitochondrial ribosomal protein S11 · module 119 +
+- [[MRPS12]] — mitochondrial ribosomal protein S12 · module 054 +
+- [[MRPS14]] — mitochondrial ribosomal protein S14 · module 220 +
+- [[MRPS15]] — mitochondrial ribosomal protein S15 · module 072 +
+- [[MRPS16]] — mitochondrial ribosomal protein S16 · module 011 +
+- [[MRPS17]] — mitochondrial ribosomal protein S17 · module 001 +
+- [[MRPS18A]] — mitochondrial ribosomal protein S18A · module 016 +
+- [[MRPS18B]] — mitochondrial ribosomal protein S18B · module 011 +
+- [[MRPS18C]] — mitochondrial ribosomal protein S18C · module 012 +
+- [[MRPS2]] — mitochondrial ribosomal protein S2 · module 033 +
+- [[MRPS21]] — mitochondrial ribosomal protein S21 · module 054 +
+- [[MRPS22]] — mitochondrial ribosomal protein S22 · module 020 +
+- [[MRPS23]] — mitochondrial ribosomal protein S23 · module 033 +
+- [[MRPS24]] — mitochondrial ribosomal protein S24 · module 043 +
+- [[MRPS25]] — mitochondrial ribosomal protein S25 · module 018 +
+- [[MRPS26]] — mitochondrial ribosomal protein S26 · module 054 +
+- [[MRPS27]] — mitochondrial ribosomal protein S27 · module 004 +
+- [[MRPS28]] — mitochondrial ribosomal protein S28 · module 033 +
+- [[MRPS30]] — mitochondrial ribosomal protein S30 · module 033 +
+- [[MRPS30-DT]] — MRPS30 divergent transcript · module 029 +
+- [[MRPS31]] — mitochondrial ribosomal protein S31 · module 012 +
+- [[MRPS31P4]] — mitochondrial ribosomal protein S31 pseudogene 4 · module 017 +
+- [[MRPS31P5-1]] · module 017 +
+- [[MRPS33]] — mitochondrial ribosomal protein S33 · module 012 +
+- [[MRPS34]] — mitochondrial ribosomal protein S34 · module 054 +
+- [[MRPS35]] — mitochondrial ribosomal protein S35 · module 171 +
+- [[MRPS36]] — alpha-ketoglutarate dehydrogenase subunit 4 · module 024 +
+- [[MRPS5]] — mitochondrial ribosomal protein S5 · module 030 +
+- [[MRPS6]] — mitochondrial ribosomal protein S6 · module 001 -
+- [[MRPS7]] — mitochondrial ribosomal protein S7 · module 001 +
+- [[MRPS9]] — mitochondrial ribosomal protein S9 · module 213 +
+- [[MRRF]] — mitochondrial ribosome recycling factor · module 001 +
+- [[MRS2]] — magnesium transporter MRS2 · module 065 +
+- [[MRTFA]] — myocardin related transcription factor A · module 214 +
+- [[MRTFB]] — myocardin related transcription factor B · module 018 +
+- [[MRTO4]] — MRT4 homolog, ribosome maturation factor · module 005 +
+- [[MSANTD1]] — Myb/SANT DNA binding domain containing 1 · module 047 +
+- [[MSANTD2]] — Myb/SANT DNA binding domain containing 2 · module 124 +
+- [[MSANTD3]] — Myb/SANT DNA binding domain containing 3 · module 112 +
+- [[MSANTD3-TMEFF1]] — MSANTD3-TMEFF1 readthrough · module 181 +
+- [[MSANTD4]] — Myb/SANT DNA binding domain containing 4 with coiled-coils · module 016 +
+- [[MSANTD7]] — Myb/SANT DNA binding domain containing 7 · module 007 +
+- [[MSC]] — musculin · module 014 +
+- [[MSC-AS1]] — MSC antisense RNA 1 · module 108 +
+- [[MSH2]] — mutS homolog 2 · module 006 +
+- [[MSH3]] — mutS homolog 3 · module 004 +
+- [[MSH4]] — mutS homolog 4 · module 039 +
+- [[MSH5]] — mutS homolog 5 · module 006 +
+- [[MSH6]] — mutS homolog 6 · module 006 +
+- [[MSI1]] — musashi RNA binding protein 1 · module 102 +
+- [[MSI2]] — musashi RNA binding protein 2 · module 029 +
+- [[MSL1]] — MSL complex subunit 1 · module 015 +
+- [[MSL2]] — MSL complex subunit 2 · module 001 +
+- [[MSL3]] — MSL complex subunit 3 · module 029 +
+- [[MSL3P1]] — MSL complex subunit 3B · module 011 +
+- [[MSLN]] — mesothelin · module 044 +
+- [[MSMO1]] — methylsterol monooxygenase 1 · module 086 +
+- [[MSN]] — moesin · module 078 +
+- [[MSR1]] — macrophage scavenger receptor 1 · module 009 +
+- [[MSRA]] — methionine sulfoxide reductase A · module 030 -
+- [[MSRB1]] — methionine sulfoxide reductase B1 · module 007 +
+- [[MSRB2]] — methionine sulfoxide reductase B2 · module 012 +
+- [[MSRB3]] — methionine sulfoxide reductase B3 · module 013 +
+- [[MSRB3-AS1]] — MSRB3 antisense RNA 1 · module 087 +
+- [[MSS51]] — MSS51 mitochondrial translational activator · module 038 +
+- [[MST1R]] — macrophage stimulating 1 receptor · module 031 +
+- [[MSTO1]] — misato mitochondrial distribution and morphology regulator 1 · module 023 +
+- [[MSTO2P]] — misato family member 2, pseudogene · module 042 +
+- [[MSX1]] — msh homeobox 1 · module 127 +
+- [[MSX2]] — msh homeobox 2 · module 020 -
+- [[MT-ATP6]] — mitochondrially encoded ATP synthase membrane subunit 6
+- [[MT-ATP8]] — mitochondrially encoded ATP synthase membrane subunit 8
+- [[MT-CO1]] — mitochondrially encoded cytochrome c oxidase I
+- [[MT-CO2]] — mitochondrially encoded cytochrome c oxidase II
+- [[MT-CO3]] — mitochondrially encoded cytochrome c oxidase III
+- [[MT-CYB]] — mitochondrially encoded cytochrome b
+- [[MT-ND1]] — mitochondrially encoded NADH:ubiquinone oxidoreductase core subunit 1
+- [[MT-ND2]] — mitochondrially encoded NADH:ubiquinone oxidoreductase core subunit 2
+- [[MT-ND3]] — mitochondrially encoded NADH:ubiquinone oxidoreductase core subunit 3
+- [[MT-ND4]] — mitochondrially encoded NADH:ubiquinone oxidoreductase core subunit 4
+- [[MT-ND4L]] — mitochondrially encoded NADH:ubiquinone oxidoreductase core subunit 4L
+- [[MT-ND5]] — mitochondrially encoded NADH:ubiquinone oxidoreductase core subunit 5
+- [[MT-ND6]] — mitochondrially encoded NADH:ubiquinone oxidoreductase core subunit 6
+- [[MT-RNR1]] — mitochondrially encoded 12S rRNA
+- [[MT-RNR2]] — mitochondrially encoded 16S rRNA
+- [[MT-TL1]] — mitochondrially encoded tRNA-Leu (UUA/G) 1
+- [[MT-TV]] — mitochondrially encoded tRNA-Val (GUN)
+- [[MT1A]] — metallothionein 1A · module 113 +
+- [[MT1E]] — metallothionein 1E · module 113 +
+- [[MT1F]] — metallothionein 1F · module 113 +
+- [[MT1G]] — metallothionein 1G · module 123 +
+- [[MT1M]] — metallothionein 1M · module 098 +
+- [[MT1X]] — metallothionein 1X · module 113 +
+- [[MT2A]] — metallothionein 2A · module 113 +
+- [[MTA1]] — metastasis associated 1 · module 018 +
+- [[MTA2]] — metastasis associated 1 family member 2 · module 126 +
+- [[MTA3]] — metastasis associated 1 family member 3 · module 064 +
+- [[MTAP]] — methylthioadenosine phosphorylase · module 004 +
+- [[MTARC1]] — mitochondrial amidoxime reducing component 1 · module 004 +
+- [[MTARC2]] — mitochondrial amidoxime reducing component 2 · module 160 -
+- [[MTATP6P1]] — MT-ATP6 pseudogene 1
+- [[MTBP]] — MDM2 binding protein · module 071 +
+- [[MTCH1]] — mitochondrial carrier 1 · module 001 -
+- [[MTCH2]] — mitochondrial carrier 2 · module 028 +
+- [[MTCL1]] — microtubule crosslinking factor 1 · module 195 +
+- [[MTCO1P12]] — MT-CO1 pseudogene 12
+- [[MTCP1]] — mature T cell proliferation 1 · module 021 +
+- [[MTDH]] — metadherin · module 056 +
+- [[MTERF1]] — mitochondrial transcription termination factor 1 · module 089 +
+- [[MTERF2]] — mitochondrial transcription termination factor 2 · module 199 +
+- [[MTERF3]] — mitochondrial transcription termination factor 3 · module 018 +
+- [[MTERF4]] — mitochondrial transcription termination factor 4 · module 089 +
+- [[MTF1]] — metal regulatory transcription factor 1 · module 119 +
+- [[MTF2]] — metal response element binding transcription factor 2 · module 065 +
+- [[MTFMT]] — mitochondrial methionyl-tRNA formyltransferase · module 198 +
+- [[MTFP1]] — mitochondrial fission process 1 · module 011 +
+- [[MTFR1]] — mitochondrial fission regulator 1 · module 016 -
+- [[MTFR1L]] — mitochondrial fission regulator 1 like · module 025 +
+- [[MTFR2]] — mitochondrial fission regulator 2 · module 071 +
+- [[MTG1]] — mitochondrial ribosome associated GTPase 1 · module 018 +
+- [[MTG2]] — mitochondrial ribosome associated GTPase 2 · module 114 +
+- [[MTHFD1]] — methylenetetrahydrofolate dehydrogenase, cyclohydrolase and formyltetrahydrofolate synthetase 1 · module 006 +
+- [[MTHFD1L]] — methylenetetrahydrofolate dehydrogenase (NADP+ dependent) 1 like · module 005 +
+- [[MTHFD2]] — methylenetetrahydrofolate dehydrogenase (NADP+ dependent) 2, methenyltetrahydrofolate cyclohydrolase · module 063 +
+- [[MTHFD2L]] — methylenetetrahydrofolate dehydrogenase (NADP+ dependent) 2 like · module 004 +
+- [[MTHFR]] — methylenetetrahydrofolate reductase · module 004 -
+- [[MTHFS]] — methenyltetrahydrofolate synthetase · module 114 +
+- [[MTHFSD]] — methenyltetrahydrofolate synthetase domain containing · module 135 +
+- [[MTIF2]] — mitochondrial translational initiation factor 2 · module 001 +
+- [[MTIF3]] — mitochondrial translational initiation factor 3 · module 024 +
+- [[MTLN]] — mitoregulin · module 024 +
+- [[MTM1]] — myotubularin 1 · module 054 +
+- [[MTMR1]] — myotubularin related protein 1 · module 088 +
+- [[MTMR10]] — myotubularin related protein 10 · module 017 +
+- [[MTMR11]] — myotubularin related protein 11 · module 005 -
+- [[MTMR12]] — myotubularin related protein 12 · module 077 +
+- [[MTMR14]] — myotubularin related protein 14 · module 076 +
+- [[MTMR2]] — myotubularin related protein 2 · module 025 +
+- [[MTMR3]] — myotubularin related protein 3 · module 051 +
+- [[MTMR4]] — myotubularin related protein 4 · module 017 +
+- [[MTMR6]] — myotubularin related protein 6 · module 028 +
+- [[MTMR7]] — myotubularin related protein 7 · module 009 +
+- [[MTMR8]] — myotubularin related protein 8 · module 146 +
+- [[MTMR9]] — myotubularin related protein 9 · module 129 +
+- [[MTMR9LP]] — myotubularin related protein 9 like, pseudogene · module 035 +
+- [[MTND1P23]] — MT-ND1 pseudogene 23
+- [[MTND2P28]] — MT-ND2 pseudogene 28
+- [[MTND4P12]] — MT-ND4 pseudogene 12
+- [[MTND5P11]] — MT-ND5 pseudogene 11
+- [[MTNR1A]] — melatonin receptor 1A · module 047 +
+- [[MTO1]] — mitochondrial tRNA translation optimization 1 · module 133 +
+- [[MTOR]] — mechanistic target of rapamycin kinase · module 036 +
+- [[MTPAP]] — mitochondrial poly(A) polymerase · module 001 +
+- [[MTPN]] — myotrophin · module 042 +
+- [[MTR]] — 5-methyltetrahydrofolate-homocysteine methyltransferase · module 148 +
+- [[MTRES1]] — mitochondrial transcription rescue factor 1 · module 012 +
+- [[MTREX]] — Mtr4 exosome RNA helicase · module 001 +
+- [[MTRF1]] — mitochondrial translation release factor 1 · module 023 +
+- [[MTRF1L]] — mitochondrial translation release factor 1 like · module 054 -
+- [[MTRFR]] — mitochondrial translation release factor in rescue · module 149 +
+- [[MTRR]] — 5-methyltetrahydrofolate-homocysteine methyltransferase reductase · module 168 +
+- [[MTSS1]] — MTSS I-BAR domain containing 1 · module 084 +
+- [[MTSS2]] — MTSS I-BAR domain containing 2 · module 138 +
+- [[MTURN]] — maturin, neural progenitor differentiation regulator homolog · module 069 +
+- [[MTUS1]] — microtubule associated scaffold protein 1 · module 008 +
+- [[MTUS1-DT]] — MTUS1 divergent transcript · module 023 +
+- [[MTUS2]] — microtubule associated scaffold protein 2 · module 165 +
+- [[MTX1]] — metaxin 1 · module 153 +
+- [[MTX2]] — metaxin 2 · module 065 +
+- [[MTX3]] — metaxin 3 · module 135 +
+- [[MUC1]] — mucin 1, cell surface associated · module 008 +
+- [[MUC12]] — mucin 12, cell surface associated · module 044 +
+- [[MUC13]] — mucin 13, cell surface associated · module 044 +
+- [[MUC16]] — mucin 16, cell surface associated · module 008 +
+- [[MUC17]] — mucin 17, cell surface associated · module 073 +
+- [[MUC2]] — mucin 2, oligomeric mucus/gel-forming · module 073 +
+- [[MUC20]] — mucin 20, cell surface associated · module 008 +
+- [[MUC20-OT1]] — MUC20 overlapping transcript · module 038 +
+- [[MUC3A]] — mucin 3A, cell surface associated · module 044 +
+- [[MUC4]] — mucin 4, cell surface associated · module 008 +
+- [[MUC5AC]] — mucin 5AC, oligomeric mucus/gel-forming · module 155 +
+- [[MUC5B]] — mucin 5B, oligomeric mucus/gel-forming · module 044 +
+- [[MUC6]] — mucin 6, oligomeric mucus/gel-forming (gene/pseudogene) · module 044 +
+- [[MUL1]] — mitochondrial E3 ubiquitin protein ligase 1 · module 007 +
+- [[MUS81]] — MUS81 structure-specific endonuclease subunit · module 002 +
+- [[MUTYH]] — mutY DNA glycosylase · module 035 +
+- [[MVB12A]] — multivesicular body subunit 12A · module 032 +
+- [[MVB12B]] — multivesicular body subunit 12B · module 018 +
+- [[MVD]] — mevalonate diphosphate decarboxylase · module 086 +
+- [[MVK]] — mevalonate kinase · module 086 +
+- [[MVP]] — major vault protein · module 070 +
+- [[MVP-DT]] — MVP divergent transcript · module 070 +
+- [[MX1]] — MX dynamin like GTPase 1 · module 032 +
+- [[MX2]] — MX dynamin like GTPase 2 · module 032 +
+- [[MXD1]] — MAX dimerization protein 1 · module 001 -
+- [[MXD3]] — MAX dimerization protein 3 · module 022 +
+- [[MXD4]] — MAX dimerization protein 4 · module 145 +
+- [[MXI1]] — MAX interactor 1, dimerization protein · module 079 +
+- [[MXRA5]] — matrix remodeling associated 5 · module 013 +
+- [[MXRA7]] — matrix remodeling associated 7 · module 051 -
+- [[MXRA8]] — matrix remodeling associated 8 · module 066 +
+- [[MYADM]] — myeloid associated differentiation marker · module 161 +
+- [[MYADM-AS1]] — MYADM antisense RNA 1 · module 047 +
+- [[MYB]] — MYB proto-oncogene, transcription factor · module 044 +
+- [[MYBBP1A]] — MYB binding protein 1a · module 004 +
+- [[MYBL1]] — MYB proto-oncogene like 1 · module 022 +
+- [[MYBL2]] — MYB proto-oncogene like 2 · module 006 +
+- [[MYC]] — MYC proto-oncogene, bHLH transcription factor · module 001 +
+- [[MYCBP]] — MYC binding protein · module 006 +
+- [[MYCBP2]] — MYC binding protein 2 · module 216 +
+- [[MYD88]] — MYD88 innate immune signal transduction adaptor · module 032 +
+- [[MYDGF]] — myeloid derived growth factor · module 049 +
+- [[MYEF2]] — myelin expression factor 2 · module 022 +
+- [[MYEOV]] — myeloma overexpressed · module 141 +
+- [[MYG1]] — MYG1 exonuclease · module 012 +
+- [[MYH10]] — myosin heavy chain 10 · module 164 +
+- [[MYH11]] — myosin heavy chain 11 · module 021 +
+- [[MYH14]] — myosin heavy chain 14 · module 008 +
+- [[MYH15]] — myosin heavy chain 15 · module 039 +
+- [[MYH16]] — myosin heavy chain 16 · module 229 +
+- [[MYH3]] — myosin heavy chain 3 · module 047 +
+- [[MYH7B]] — myosin heavy chain 7B · module 035 +
+- [[MYH9]] — myosin heavy chain 9 · module 111 +
+- [[MYL12A]] — myosin light chain 12A · module 174 +
+- [[MYL12B]] — myosin light chain 12B · module 120 +
+- [[MYL5]] — myosin light chain 5 · module 010 +
+- [[MYL6]] — myosin light chain 6 · module 033 -
+- [[MYL6B]] — myosin light chain 6B · module 021 +
+- [[MYL6B-AS1]] — MYL6B antisense RNA 1 · module 035 +
+- [[MYL9]] — myosin light chain 9 · module 066 +
+- [[MYLIP]] — myosin regulatory light chain interacting protein · module 059 +
+- [[MYLK]] — myosin light chain kinase · module 066 +
+- [[MYLK-AS1]] — MYLK antisense RNA 1 · module 124 +
+- [[MYLK2]] — myosin light chain kinase 2 · module 047 +
+- [[MYLK3]] — myosin light chain kinase 3 · module 021 +
+- [[MYLK4]] — myosin light chain kinase family member 4 · module 035 +
+- [[MYNN]] — myoneurin · module 041 +
+- [[MYO10]] — myosin X · module 013 +
+- [[MYO15A]] — myosin XVA · module 047 +
+- [[MYO15B]] — myosin XVB · module 141 +
+- [[MYO16]] — myosin XVI · module 075 +
+- [[MYO16-AS1]] — MYO16 antisense RNA 1 · module 073 +
+- [[MYO18A]] — myosin XVIIIA · module 031 +
+- [[MYO18B]] — myosin XVIIIB · module 061 +
+- [[MYO19]] — myosin XIX · module 006 +
+- [[MYO1B]] — myosin IB · module 113 +
+- [[MYO1C]] — myosin IC · module 101 +
+- [[MYO1D]] — myosin ID · module 031 +
+- [[MYO1E]] — myosin IE · module 113 +
+- [[MYO1F]] — myosin IF · module 021 +
+- [[MYO3B]] — myosin IIIB · module 150 +
+- [[MYO5A]] — myosin VA · module 078 +
+- [[MYO5B]] — myosin VB · module 031 +
+- [[MYO5C]] — myosin VC · module 008 +
+- [[MYO6]] — myosin VI · module 005 -
+- [[MYO7A]] — myosin VIIA · module 053 +
+- [[MYO7B]] — myosin VIIB · module 055 +
+- [[MYO9A]] — myosin IXA · module 020 -
+- [[MYO9B]] — myosin IXB · module 136 +
+- [[MYOCOS]] — myocilin opposite strand · module 039 +
+- [[MYOF]] — myoferlin · module 081 +
+- [[MYOM1]] — myomesin 1 · module 047 +
+- [[MYOM3]] — myomesin 3 · module 055 +
+- [[MYORG]] — myogenesis regulating glycosidase · module 031 +
+- [[MYOSLID]] — myocardin-induced smooth muscle lncRNA, inducer of differentiation · module 054 -
+- [[MYPN]] — myopalladin · module 066 +
+- [[MYPOP]] — Myb related transcription factor, partner of profilin · module 030 +
+- [[MYRF]] — myelin regulatory factor · module 031 +
+- [[MYRFL]] — myelin regulatory factor like · module 039 +
+- [[MYRIP]] — myosin VIIA and Rab interacting protein · module 027 +
+- [[MYSM1]] — Myb like, SWIRM and MPN domains 1 · module 163 +
+- [[MYT1]] — myelin transcription factor 1 · module 128 +
+- [[MYT1L]] — myelin transcription factor 1 like · module 090 +
+- [[MZF1]] — myeloid zinc finger 1 · module 017 -
+- [[MZF1-AS1]] — MZF1 antisense RNA 1 · module 080 +
+- [[MZT1]] — mitotic spindle organizing protein 1 · module 022 +
+- [[MZT2A]] — mitotic spindle organizing protein 2A · module 131 +
+- [[MZT2B]] — mitotic spindle organizing protein 2B · module 131 +

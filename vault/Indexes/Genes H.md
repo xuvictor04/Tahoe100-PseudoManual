@@ -1,0 +1,448 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes H
+
+438 genes. Back to [[Genes by letter]].
+
+- [[H1-0]] — H1.0 linker histone
+- [[H1-10]] — H1.10 linker histone
+- [[H1-2]] — H1.2 linker histone, cluster member
+- [[H1-3]] — H1.3 linker histone, cluster member
+- [[H1-4]] — H1.4 linker histone, cluster member
+- [[H1-5]] — H1.5 linker histone, cluster member
+- [[H19]] — H19 imprinted maternally expressed transcript · module 009 +
+- [[H2AC12]] — H2A clustered histone 12
+- [[H2AC20]] — H2A clustered histone 20
+- [[H2AC25]] — H2A clustered histone 25
+- [[H2AC6]] — H2A clustered histone 6
+- [[H2AJ]] — H2A.J histone · module 068 +
+- [[H2AX]] — H2A.X variant histone · module 022 +
+- [[H2AZ1]] — H2A.Z variant histone 1 · module 071 +
+- [[H2AZ1-DT]] — H2AZ1 divergent transcript · module 026 +
+- [[H2AZ2]] — H2A.Z variant histone 2 · module 022 +
+- [[H2BC11]] — H2B clustered histone 11
+- [[H2BC12]] — H2B clustered histone 12
+- [[H2BC15]] — H2B clustered histone 15
+- [[H2BC17]] — H2B clustered histone 17
+- [[H2BC18]] — H2B clustered histone 18
+- [[H2BC21]] — H2B clustered histone 21
+- [[H2BC4]] — H2B clustered histone 4
+- [[H2BC5]] — H2B clustered histone 5
+- [[H2BC6]] — H2B clustered histone 6
+- [[H2BC8]] — H2B clustered histone 8
+- [[H2BC9]] — H2B clustered histone 9
+- [[H3-3A]] — H3.3 histone A · module 156 +
+- [[H3-3A-DT]] — H3-3A divergent transcript · module 015 +
+- [[H3-3B]] — H3.3 histone B · module 020 -
+- [[H3C12]] — H3 clustered histone 12
+- [[H3C6]] — H3 clustered histone 6
+- [[H4C3]] — H4 clustered histone 3
+- [[H4C5]] — H4 clustered histone 5
+- [[H4C8]] — H4 clustered histone 8
+- [[H6PD]] — hexose-6-phosphate dehydrogenase/glucose 1-dehydrogenase · module 060 -
+- [[HABP4]] — hyaluronan binding protein 4 · module 024 +
+- [[HACD1]] — 3-hydroxyacyl-CoA dehydratase 1 · module 124 +
+- [[HACD2]] — 3-hydroxyacyl-CoA dehydratase 2 · module 025 +
+- [[HACD3]] — 3-hydroxyacyl-CoA dehydratase 3 · module 170 -
+- [[HACE1]] — HECT domain and ankyrin repeat containing E3 ubiquitin protein ligase 1 · module 065 +
+- [[HACL1]] — 2-hydroxyacyl-CoA lyase 1 · module 076 +
+- [[HADH]] — hydroxyacyl-CoA dehydrogenase · module 006 +
+- [[HADHA]] — hydroxyacyl-CoA dehydrogenase trifunctional multienzyme complex subunit alpha · module 029 +
+- [[HADHB]] — hydroxyacyl-CoA dehydrogenase trifunctional multienzyme complex subunit beta · module 005 -
+- [[HAGH]] — hydroxyacylglutathione hydrolase · module 145 +
+- [[HAGHL]] — hydroxyacylglutathione hydrolase like · module 058 +
+- [[HAGLR]] — HOXD antisense growth-associated long non-coding RNA · module 102 +
+- [[HAL]] — histidine ammonia-lyase · module 047 +
+- [[HAND2-AS1]] — HAND2 antisense RNA 1 · module 090 +
+- [[HAP1]] — huntingtin associated protein 1 · module 093 +
+- [[HAPLN3]] — hyaluronan and proteoglycan link protein 3 · module 021 +
+- [[HAPSTR1]] — HUWE1 associated protein modifying stress responses · module 054 -
+- [[HARBI1]] — harbinger transposase derived 1 · module 170 +
+- [[HARS1]] — histidyl-tRNA synthetase 1 · module 004 +
+- [[HARS2]] — histidyl-tRNA synthetase 2, mitochondrial · module 017 +
+- [[HAS2]] — hyaluronan synthase 2 · module 013 +
+- [[HAS2-AS1]] — HAS2 antisense RNA 1 · module 026 +
+- [[HAS3]] — hyaluronan synthase 3 · module 034 +
+- [[HASPIN]] — histone H3 associated protein kinase · module 022 +
+- [[HAT1]] — histone acetyltransferase 1 · module 006 +
+- [[HAUS1]] — HAUS augmin like complex subunit 1 · module 006 +
+- [[HAUS2]] — HAUS augmin like complex subunit 2 · module 083 +
+- [[HAUS3]] — HAUS augmin like complex subunit 3 · module 003 +
+- [[HAUS4]] — HAUS augmin like complex subunit 4 · module 045 +
+- [[HAUS5]] — HAUS augmin like complex subunit 5 · module 006 +
+- [[HAUS6]] — HAUS augmin like complex subunit 6 · module 006 +
+- [[HAUS7]] — HAUS augmin like complex subunit 7 · module 033 +
+- [[HAUS8]] — HAUS augmin like complex subunit 8 · module 071 +
+- [[HAVCR1]] — hepatitis A virus cellular receptor 1 · module 008 +
+- [[HAVCR2]] — hepatitis A virus cellular receptor 2 · module 023 +
+- [[HAX1]] — HCLS1 associated protein X-1 · module 012 +
+- [[HBEGF]] — heparin binding EGF like growth factor · module 081 +
+- [[HBG2]] — hemoglobin subunit gamma 2 · module 009 +
+- [[HBP1]] — HMG-box transcription factor 1 · module 069 +
+- [[HBS1L]] — HBS1 like translational GTPase · module 057 +
+- [[HCCS]] — holocytochrome c synthase · module 007 +
+- [[HCCS-DT]] — HCCS divergent transcript · module 022 +
+- [[HCFC1]] — host cell factor C1 · module 126 +
+- [[HCFC1R1]] — host cell factor C1 regulator 1 · module 024 +
+- [[HCFC2]] — host cell factor C2 · module 005 -
+- [[HCG11]] — HLA complex group 11 · module 088 +
+- [[HCG17]] · module 026 +
+- [[HCG18]] — HLA complex group 18 · module 017 -
+- [[HCG20]] — HLA complex group 20 · module 101 +
+- [[HCG25]] — HLA complex group 25 · module 021 +
+- [[HCG27]] — HLA complex group 27 · module 035 +
+- [[HCLS1]] — hematopoietic cell-specific Lyn substrate 1 · module 039 +
+- [[HCN1]] — hyperpolarization activated cyclic nucleotide gated potassium channel 1 · module 055 +
+- [[HCN2]] — hyperpolarization activated cyclic nucleotide gated potassium and sodium channel 2 · module 053 +
+- [[HCN3]] — hyperpolarization activated cyclic nucleotide gated potassium channel 3 · module 157 +
+- [[HCP5]] — HLA complex P5 · module 070 +
+- [[HDAC1]] — histone deacetylase 1 · module 011 -
+- [[HDAC10]] — histone deacetylase 10 · module 002 +
+- [[HDAC11]] — histone deacetylase 11 · module 159 +
+- [[HDAC2]] — histone deacetylase 2 · module 182 +
+- [[HDAC2-AS2]] — HDAC2 and HS3ST5 antisense RNA 2 · module 026 +
+- [[HDAC3]] — histone deacetylase 3 · module 099 +
+- [[HDAC4]] — histone deacetylase 4 · module 005 +
+- [[HDAC5]] — histone deacetylase 5 · module 074 +
+- [[HDAC6]] — histone deacetylase 6 · module 040 +
+- [[HDAC7]] — histone deacetylase 7 · module 127 +
+- [[HDAC8]] — histone deacetylase 8 · module 213 +
+- [[HDAC9]] — histone deacetylase 9 · module 125 +
+- [[HDDC2]] — HD domain containing 2 · module 018 +
+- [[HDDC3]] — HD domain containing 3 · module 012 +
+- [[HDGF]] — heparin binding growth factor · module 184 -
+- [[HDGFL2]] — HDGF like 2 · module 085 +
+- [[HDGFL3]] — HDGF like 3 · module 124 +
+- [[HDHD2]] — haloacid dehalogenase like hydrolase domain containing 2 · module 025 +
+- [[HDHD3]] — haloacid dehalogenase like hydrolase domain containing 3 · module 008 +
+- [[HDHD5]] — haloacid dehalogenase like hydrolase domain containing 5 · module 164 +
+- [[HDLBP]] — high density lipoprotein binding protein · module 042 +
+- [[HDX]] — highly divergent homeobox · module 032 +
+- [[HEATR1]] — HEAT repeat containing 1 · module 018 +
+- [[HEATR3]] — HEAT repeat containing 3 · module 018 +
+- [[HEATR4]] — HEAT repeat containing 4 · module 035 +
+- [[HEATR5A]] — HEAT repeat containing 5A · module 056 +
+- [[HEATR5B]] — HEAT repeat containing 5B · module 003 +
+- [[HEATR6]] — HEAT repeat containing 6 · module 017 +
+- [[HEBP1]] — heme binding protein 1 · module 054 +
+- [[HEBP2]] — heme binding protein 2 · module 003 +
+- [[HECA]] — HECA ribonucleoprotein granule regulator · module 069 +
+- [[HECTD1]] — HECT domain E3 ubiquitin protein ligase 1 · module 099 +
+- [[HECTD2]] — HECT domain E3 ubiquitin protein ligase 2 · module 010 +
+- [[HECTD3]] — HECT domain E3 ubiquitin protein ligase 3 · module 002 +
+- [[HECTD4]] — HECT domain E3 ubiquitin protein ligase 4 · module 054 +
+- [[HECW1]] — HECT, C2 and WW domain containing E3 ubiquitin protein ligase 1 · module 072 +
+- [[HECW2]] — HECT, C2 and WW domain containing E3 ubiquitin protein ligase 2 · module 121 +
+- [[HEG1]] — heart development protein with EGF like domains 1 · module 066 +
+- [[HEIH]] — hepatocellular carcinoma up-regulated EZH2-associated long non-coding RNA · module 012 +
+- [[HELB]] — DNA helicase B · module 187 +
+- [[HELLPAR]] — HELLP associated long non-coding RNA · module 022 +
+- [[HELLS]] — helicase, lymphoid specific · module 006 +
+- [[HELQ]] — helicase, POLQ like · module 051 +
+- [[HELZ]] — helicase with zinc finger · module 164 +
+- [[HELZ2]] — helicase with zinc finger 2 · module 032 +
+- [[HEMK1]] — HemK methyltransferase 1, mitochondrial release factors N(5)-glutamine · module 002 +
+- [[HENMT1]] — HEN methyltransferase 1 · module 010 +
+- [[HEPH]] — hephaestin · module 073 +
+- [[HEPHL1]] — hephaestin like 1 · module 027 +
+- [[HERC1]] — HECT and RLD domain containing E3 ubiquitin protein ligase family member 1 · module 083 -
+- [[HERC2]] — HECT and RLD domain containing E3 ubiquitin protein ligase 2 · module 036 +
+- [[HERC2P10]] — HERC2 pseudogene 10 · module 067 +
+- [[HERC2P2]] — HERC2 pseudogene 2 · module 036 +
+- [[HERC2P3]] — HERC2 pseudogene 3 · module 036 +
+- [[HERC2P3-1]] · module 019 +
+- [[HERC2P9]] — HERC2 pseudogene 9 · module 036 +
+- [[HERC2P9-1]] · module 036 +
+- [[HERC3]] — HECT and RLD domain containing E3 ubiquitin protein ligase 3 · module 164 +
+- [[HERC4]] — HECT and RLD domain containing E3 ubiquitin protein ligase 4 · module 037 +
+- [[HERC5]] — HECT and RLD domain containing E3 ubiquitin protein ligase 5 · module 032 +
+- [[HERC6]] — HECT and RLD domain containing E3 ubiquitin protein ligase family member 6 · module 032 +
+- [[HERPUD1]] — homocysteine inducible ER protein with ubiquitin like domain 1 · module 056 +
+- [[HERPUD2]] — HERPUD family member 2 · module 234 +
+- [[HERPUD2-AS1]] — HERPUD2 antisense RNA 1 · module 016 +
+- [[HES1]] — hes family bHLH transcription factor 1 · module 109 +
+- [[HES2]] — hes family bHLH transcription factor 2 · module 115 +
+- [[HES4]] — hes family bHLH transcription factor 4 · module 004 -
+- [[HES6]] — hes family bHLH transcription factor 6 · module 024 +
+- [[HES7]] — hes family bHLH transcription factor 7 · module 094 +
+- [[HESX1]] — HESX homeobox 1 · module 035 +
+- [[HEXA]] — hexosaminidase subunit alpha · module 122 +
+- [[HEXB]] — hexosaminidase subunit beta · module 029 +
+- [[HEXD]] — hexosaminidase D · module 089 +
+- [[HEXIM1]] — HEXIM P-TEFb complex subunit 1 · module 093 +
+- [[HEXIM2-AS1]] — HEXIM2 antisense RNA 1 · module 023 +
+- [[HEY1]] — hes related family bHLH transcription factor with YRPW motif 1 · module 092 +
+- [[HEYL]] — hes related family bHLH transcription factor with YRPW motif like · module 082 +
+- [[HFE]] — homeostatic iron regulator · module 046 +
+- [[HFM1]] — helicase for meiosis 1 · module 020 +
+- [[HGD]] — homogentisate 1,2-dioxygenase · module 008 +
+- [[HGF]] — hepatocyte growth factor · module 019 +
+- [[HGH1]] — HGH1 cochaperone · module 001 +
+- [[HGS]] — hepatocyte growth factor-regulated tyrosine kinase substrate · module 002 +
+- [[HGSNAT]] — heparan-alpha-glucosaminide N-acetyltransferase · module 015 +
+- [[HHAT]] — hedgehog acyltransferase · module 068 +
+- [[HHEX]] — hematopoietically expressed homeobox · module 016 +
+- [[HHIP]] — hedgehog interacting protein · module 013 +
+- [[HHIPL2]] — HHIP like 2 · module 066 +
+- [[HHLA2]] — HHLA2 member of B7 family · module 008 +
+- [[HHLA3]] — ANKRD13C divergent transcript · module 068 +
+- [[HIBADH]] — 3-hydroxyisobutyrate dehydrogenase · module 065 +
+- [[HIBCH]] — 3-hydroxyisobutyryl-CoA hydrolase · module 060 +
+- [[HIC2]] — HIC ZBTB transcriptional repressor 2 · module 025 -
+- [[HID1]] — HID1 domain containing · module 049 +
+- [[HIF1A]] — hypoxia inducible factor 1 subunit alpha · module 139 +
+- [[HIF1A-AS3]] — HIF1A antisense RNA 1 · module 099 +
+- [[HIF1AN]] — hypoxia inducible factor 1 subunit alpha inhibitor · module 127 +
+- [[HIGD1A]] — HIG1 hypoxia inducible domain family member 1A · module 024 -
+- [[HIGD2A]] — HIG1 hypoxia inducible domain family member 2A · module 048 +
+- [[HIKESHI]] — heat shock protein nuclear import factor hikeshi · module 148 +
+- [[HILPDA]] — hypoxia inducible lipid droplet associated · module 079 +
+- [[HINFP]] — histone H4 transcription factor · module 076 +
+- [[HINT1]] — histidine triad nucleotide binding protein 1 · module 131 +
+- [[HINT2]] — histidine triad nucleotide binding protein 2 · module 058 +
+- [[HINT3]] — histidine triad nucleotide binding protein 3 · module 029 +
+- [[HIP1]] — huntingtin interacting protein 1 · module 100 +
+- [[HIP1R]] — huntingtin interacting protein 1 related · module 097 +
+- [[HIPK1]] — homeodomain interacting protein kinase 1 · module 029 +
+- [[HIPK2]] — homeodomain interacting protein kinase 2 · module 098 +
+- [[HIPK3]] — homeodomain interacting protein kinase 3 · module 137 +
+- [[HIRA]] — histone cell cycle regulator · module 036 +
+- [[HIRIP3]] — HIRA interacting protein 3 · module 091 +
+- [[HIVEP1]] — HIVEP zinc finger 1 · module 057 -
+- [[HIVEP2]] — HIVEP zinc finger 2 · module 014 +
+- [[HIVEP2-DT]] — HIVEP2 divergent transcript · module 080 +
+- [[HIVEP3]] — HIVEP zinc finger 3 · module 162 +
+- [[HJURP]] — Holliday junction recognition protein · module 022 +
+- [[HK1]] — hexokinase 1 · module 134 +
+- [[HK2]] — hexokinase 2 · module 099 +
+- [[HKDC1]] — hexokinase domain containing 1 · module 117 +
+- [[HLA-A]] — major histocompatibility complex, class I, A · module 070 +
+- [[HLA-B]] — major histocompatibility complex, class I, B · module 070 +
+- [[HLA-C]] — major histocompatibility complex, class I, C · module 070 +
+- [[HLA-DMA]] — major histocompatibility complex, class II, DM alpha · module 015 +
+- [[HLA-DRA]] — major histocompatibility complex, class II, DR alpha · module 008 +
+- [[HLA-DRB1]] — major histocompatibility complex, class II, DR beta 1 · module 008 +
+- [[HLA-E]] — major histocompatibility complex, class I, E · module 070 +
+- [[HLA-F]] — major histocompatibility complex, class I, F · module 070 +
+- [[HLA-F-AS1]] — HLA-F antisense RNA 1 · module 040 +
+- [[HLA-H]] — major histocompatibility complex, class I, H (pseudogene) · module 070 +
+- [[HLA-K]] — major histocompatibility complex, class I, K (pseudogene) · module 169 +
+- [[HLA-L-1]] · module 014 +
+- [[HLA-V-1]] · module 023 +
+- [[HLCS]] — holocarboxylase synthetase · module 004 +
+- [[HLCS-AS1]] — HLCS antisense RNA 1 · module 015 +
+- [[HLF]] — HLF transcription factor, PAR bZIP family member · module 014 +
+- [[HLTF]] — helicase like transcription factor · module 057 +
+- [[HM13]] — histocompatibility minor 13 · module 049 +
+- [[HMBOX1]] — homeobox containing 1 · module 178 +
+- [[HMBS]] — hydroxymethylbilane synthase · module 033 +
+- [[HMCES]] — 5-hydroxymethylcytosine binding, ES cell specific · module 042 +
+- [[HMCN1]] — hemicentin 1 · module 009 +
+- [[HMG20A]] — high mobility group 20A · module 011 +
+- [[HMG20B]] — high mobility group 20B · module 002 +
+- [[HMGA1]] — high mobility group AT-hook 1 · module 206 +
+- [[HMGA1P4]] — high mobility group AT-hook 1 pseudogene 4 · module 035 +
+- [[HMGA2]] — high mobility group AT-hook 2 · module 147 +
+- [[HMGA2-AS1]] — HMGA2 antisense RNA 1 · module 147 +
+- [[HMGB1]] — high mobility group box 1 · module 022 +
+- [[HMGB1P5]] — high mobility group box 1 pseudogene 5 · module 067 +
+- [[HMGB2]] — high mobility group box 2 · module 022 +
+- [[HMGB3]] — high mobility group box 3 · module 022 +
+- [[HMGCL]] — 3-hydroxy-3-methylglutaryl-CoA lyase · module 004 -
+- [[HMGCR]] — 3-hydroxy-3-methylglutaryl-CoA reductase · module 086 +
+- [[HMGCS1]] — 3-hydroxy-3-methylglutaryl-CoA synthase 1 · module 086 +
+- [[HMGN1]] — high mobility group nucleosome binding domain 1 · module 003 -
+- [[HMGN2]] — high mobility group nucleosomal binding domain 2 · module 173 +
+- [[HMGN2P46]] — high mobility group nucleosomal binding domain 2 pseudogene 46 · module 112 +
+- [[HMGN2P5]] — high mobility group nucleosomal binding domain 2 pseudogene 5 · module 173 +
+- [[HMGN3]] — high mobility group nucleosomal binding domain 3 · module 045 +
+- [[HMGN4]] — high mobility group nucleosomal binding domain 4 · module 094 +
+- [[HMGN5]] — high mobility group nucleosome binding domain 5 · module 045 +
+- [[HMGXB3]] — HMG-box containing 3 · module 069 +
+- [[HMGXB4]] — HMG-box containing 4 · module 011 +
+- [[HMMR]] — hyaluronan mediated motility receptor · module 022 +
+- [[HMOX1]] — heme oxygenase 1 · module 125 +
+- [[HMOX2]] — heme oxygenase 2 · module 077 +
+- [[HMSD]] — histocompatibility minor serpin domain containing · module 014 +
+- [[HNF1A]] — HNF1 homeobox A · module 027 +
+- [[HNF1A-AS1]] — HNF1A antisense RNA 1 · module 044 +
+- [[HNF1B]] — HNF1 homeobox B · module 008 +
+- [[HNF4A]] — hepatocyte nuclear factor 4 alpha · module 055 +
+- [[HNF4G]] — hepatocyte nuclear factor 4 gamma · module 008 +
+- [[HNMT]] — histamine N-methyltransferase · module 008 +
+- [[HNRNPA0]] — heterogeneous nuclear ribonucleoprotein A0 · module 051 +
+- [[HNRNPA1]] — heterogeneous nuclear ribonucleoprotein A1 · module 043 +
+- [[HNRNPA1L3]] — heterogeneous nuclear ribonucleoprotein A1 like 3 · module 020 +
+- [[HNRNPA2B1]] — heterogeneous nuclear ribonucleoprotein A2/B1 · module 003 -
+- [[HNRNPA3]] — heterogeneous nuclear ribonucleoprotein A3 · module 020 +
+- [[HNRNPAB]] — heterogeneous nuclear ribonucleoprotein A/B · module 005 +
+- [[HNRNPC]] — heterogeneous nuclear ribonucleoprotein C · module 003 -
+- [[HNRNPD]] — heterogeneous nuclear ribonucleoprotein D · module 003 -
+- [[HNRNPD-DT]] — HNRNPD divergent transcript · module 021 +
+- [[HNRNPDL]] — heterogeneous nuclear ribonucleoprotein D like · module 017 +
+- [[HNRNPF]] — heterogeneous nuclear ribonucleoprotein F · module 001 +
+- [[HNRNPH1]] — heterogeneous nuclear ribonucleoprotein H1 · module 012 +
+- [[HNRNPH2]] — heterogeneous nuclear ribonucleoprotein H2 · module 016 +
+- [[HNRNPH3]] — heterogeneous nuclear ribonucleoprotein H3 · module 003 -
+- [[HNRNPK]] — heterogeneous nuclear ribonucleoprotein K · module 003 -
+- [[HNRNPK-AS1]] — HNRNPK antisense RNA 1 · module 021 +
+- [[HNRNPL]] — heterogeneous nuclear ribonucleoprotein L · module 003 -
+- [[HNRNPLL]] — heterogeneous nuclear ribonucleoprotein L like · module 004 -
+- [[HNRNPM]] — heterogeneous nuclear ribonucleoprotein M · module 003 -
+- [[HNRNPR]] — heterogeneous nuclear ribonucleoprotein R · module 004 +
+- [[HNRNPU]] — heterogeneous nuclear ribonucleoprotein U · module 003 -
+- [[HNRNPUL1]] — heterogeneous nuclear ribonucleoprotein U like 1 · module 003 -
+- [[HNRNPUL2]] — heterogeneous nuclear ribonucleoprotein U like 2 · module 022 +
+- [[HOMER1]] — homer scaffold protein 1 · module 101 +
+- [[HOMER2]] — homer scaffold protein 2 · module 102 +
+- [[HOMER3]] — homer scaffold protein 3 · module 029 -
+- [[HOMEZ]] — homeobox and leucine zipper encoding · module 023 +
+- [[HOOK1]] — hook microtubule tethering protein 1 · module 118 -
+- [[HOOK2]] — hook microtubule tethering protein 2 · module 059 +
+- [[HOOK3]] — hook microtubule tethering protein 3 · module 001 -
+- [[HOPX]] — HOP homeobox · module 106 +
+- [[HORMAD1]] — HORMA domain containing 1 · module 019 +
+- [[HORMAD2-AS1]] — HORMAD2 and MTMR3 antisense RNA 1 · module 053 +
+- [[HOTAIR]] — HOX transcript antisense RNA · module 046 +
+- [[HOTAIRM1]] — HOXA transcript antisense RNA, myeloid-specific 1 · module 004 -
+- [[HOXA-AS2]] — HOXA cluster antisense RNA 2 · module 023 +
+- [[HOXA10]] — homeobox A10 · module 201 +
+- [[HOXA10-AS]] — HOXA10 antisense RNA · module 011 +
+- [[HOXA11]] — homeobox A11 · module 201 +
+- [[HOXA13]] — homeobox A13 · module 103 +
+- [[HOXA3]] — homeobox A3 · module 201 +
+- [[HOXA5]] — homeobox A5 · module 201 +
+- [[HOXA6]] — homeobox A6 · module 201 +
+- [[HOXA7]] — homeobox A7 · module 068 +
+- [[HOXA9]] — homeobox A9 · module 201 +
+- [[HOXB-AS1]] — HOXB cluster antisense RNA 1 · module 035 +
+- [[HOXB-AS3]] — HOXB cluster antisense RNA 3 · module 021 +
+- [[HOXB2]] — homeobox B2 · module 095 +
+- [[HOXB3]] — homeobox B3 · module 201 +
+- [[HOXB4]] — homeobox B4 · module 201 +
+- [[HOXB5]] — homeobox B5 · module 201 +
+- [[HOXB6]] — homeobox B6 · module 201 +
+- [[HOXB7]] — homeobox B7 · module 046 +
+- [[HOXB8]] — homeobox B8 · module 201 +
+- [[HOXB9]] — homeobox B9 · module 133 +
+- [[HOXC10]] — homeobox C10 · module 130 +
+- [[HOXC4]] — homeobox C4 · module 010 +
+- [[HOXC6]] — homeobox C6 · module 046 +
+- [[HOXC8]] — homeobox C8 · module 046 +
+- [[HOXC9]] — homeobox C9 · module 046 +
+- [[HOXD10]] — homeobox D10 · module 046 +
+- [[HOXD11]] — homeobox D11 · module 046 +
+- [[HOXD3]] — homeobox D3 · module 046 +
+- [[HOXD8]] — homeobox D8 · module 009 +
+- [[HP1BP3]] — heterochromatin protein 1 binding protein 3 · module 022 +
+- [[HPCAL1]] — hippocalcin like 1 · module 174 +
+- [[HPF1]] — histone PARylation factor 1 · module 017 +
+- [[HPGD]] — 15-hydroxyprostaglandin dehydrogenase · module 055 +
+- [[HPN]] — hepsin · module 047 +
+- [[HPRT1]] — hypoxanthine phosphoribosyltransferase 1 · module 016 -
+- [[HPS1]] — HPS1 biogenesis of lysosomal organelles complex 3 subunit 1 · module 023 +
+- [[HPS3]] — HPS3 biogenesis of lysosomal organelles complex 2 subunit 1 · module 124 -
+- [[HPS4]] — HPS4 biogenesis of lysosomal organelles complex 3 subunit 2 · module 122 +
+- [[HPS5]] — HPS5 biogenesis of lysosomal organelles complex 2 subunit 2 · module 139 +
+- [[HPS6]] — HPS6 biogenesis of lysosomal organelles complex 2 subunit 3 · module 007 +
+- [[HPSE]] — heparanase · module 176 +
+- [[HPSE2]] — heparanase 2 (inactive) · module 166 +
+- [[HPX]] — hemopexin · module 047 +
+- [[HR]] — HR lysine demethylase and nuclear receptor corepressor · module 055 +
+- [[HRAS]] — HRas proto-oncogene, GTPase · module 024 +
+- [[HRG-AS1]] — HRG and FETUB antisense RNA 1 · module 021 +
+- [[HRH1]] — histamine receptor H1 · module 151 +
+- [[HRK]] — harakiri, BCL2 interacting protein · module 125 +
+- [[HROB]] — homologous recombination factor with OB-fold · module 091 +
+- [[HS1BP3]] — HCLS1 binding protein 3 · module 122 +
+- [[HS2ST1]] — heparan sulfate 2-O-sulfotransferase 1 · module 016 -
+- [[HS3ST1]] — heparan sulfate-glucosamine 3-sulfotransferase 1 · module 031 +
+- [[HS3ST3A1]] — heparan sulfate-glucosamine 3-sulfotransferase 3A1 · module 013 +
+- [[HS3ST3B1]] — heparan sulfate-glucosamine 3-sulfotransferase 3B1 · module 104 +
+- [[HS3ST5]] — heparan sulfate-glucosamine 3-sulfotransferase 5 · module 027 +
+- [[HS6ST1]] — heparan sulfate 6-O-sulfotransferase 1 · module 093 +
+- [[HS6ST2]] — heparan sulfate 6-O-sulfotransferase 2 · module 018 +
+- [[HS6ST3]] — heparan sulfate 6-O-sulfotransferase 3 · module 061 +
+- [[HSBP1]] — heat shock factor binding protein 1 · module 048 +
+- [[HSBP1L1]] — heat shock factor binding protein 1 like 1 · module 035 +
+- [[HSCB]] — HscB mitochondrial iron-sulfur cluster cochaperone · module 114 +
+- [[HSD11B1]] — hydroxysteroid 11-beta dehydrogenase 1 · module 104 +
+- [[HSD11B1-AS1]] — HSD11B1 antisense RNA 1 · module 075 +
+- [[HSD11B2]] — hydroxysteroid 11-beta dehydrogenase 2 · module 078 +
+- [[HSD17B10]] — hydroxysteroid 17-beta dehydrogenase 10 · module 058 +
+- [[HSD17B11]] — hydroxysteroid 17-beta dehydrogenase 11 · module 022 +
+- [[HSD17B12]] — hydroxysteroid 17-beta dehydrogenase 12 · module 086 +
+- [[HSD17B14]] — hydroxysteroid 17-beta dehydrogenase 14 · module 023 +
+- [[HSD17B2]] — hydroxysteroid 17-beta dehydrogenase 2 · module 055 +
+- [[HSD17B2-AS1]] — HSD17B2 antisense RNA 1 · module 047 +
+- [[HSD17B3]] — hydroxysteroid 17-beta dehydrogenase 3 · module 026 +
+- [[HSD17B4]] — hydroxysteroid 17-beta dehydrogenase 4 · module 057 +
+- [[HSD17B7]] — hydroxysteroid 17-beta dehydrogenase 7 · module 086 +
+- [[HSD17B7P2]] — hydroxysteroid 17-beta dehydrogenase 7 pseudogene 2 · module 086 +
+- [[HSD3B7]] — hydroxy-delta-5-steroid dehydrogenase, 3 beta- and steroid delta-isomerase 7 · module 032 +
+- [[HSDL1]] — hydroxysteroid dehydrogenase like 1 · module 030 +
+- [[HSDL2]] — hydroxysteroid dehydrogenase like 2 · module 045 +
+- [[HSDL2-AS1]] — HSDL2 antisense RNA 1 · module 035 +
+- [[HSF1]] — heat shock transcription factor 1 · module 036 +
+- [[HSF2]] — heat shock transcription factor 2 · module 146 +
+- [[HSF2BP]] — heat shock transcription factor 2 binding protein · module 001 +
+- [[HSF4]] — heat shock transcription factor 4 · module 103 +
+- [[HSH2D]] — hematopoietic SH2 domain containing · module 008 +
+- [[HSP90AA1]] — heat shock protein 90 alpha family class A member 1 · module 060 +
+- [[HSP90AA2P]] — heat shock protein 90 alpha family class A member 2, pseudogene · module 060 +
+- [[HSP90AB1]] — heat shock protein 90 alpha family class B member 1 · module 060 +
+- [[HSP90AB2P]] — heat shock protein 90 alpha family class B member 2, pseudogene · module 060 +
+- [[HSP90AB3P]] — heat shock protein 90 alpha family class B member 3, pseudogene · module 060 +
+- [[HSP90B1]] — heat shock protein 90 beta family member 1 · module 042 +
+- [[HSPA12A]] — heat shock protein family A (Hsp70) member 12A · module 159 +
+- [[HSPA13]] — heat shock protein family A (Hsp70) member 13 · module 042 +
+- [[HSPA14]] — heat shock protein family A (Hsp70) member 14 · module 071 +
+- [[HSPA1A]] — heat shock protein family A (Hsp70) member 1A · module 060 +
+- [[HSPA1B]] — heat shock protein family A (Hsp70) member 1B · module 060 +
+- [[HSPA2]] — heat shock protein family A (Hsp70) member 2 · module 093 +
+- [[HSPA2-AS1]] — HSPA2 and ZBTB1 antisense RNA 1 · module 021 +
+- [[HSPA4]] — heat shock protein family A (Hsp70) member 4 · module 060 +
+- [[HSPA4L]] — heat shock protein family A (Hsp70) member 4 like · module 094 +
+- [[HSPA5]] — heat shock protein family A (Hsp70) member 5 · module 042 +
+- [[HSPA8]] — heat shock protein family A (Hsp70) member 8 · module 060 +
+- [[HSPA9]] — heat shock protein family A (Hsp70) member 9 · module 063 +
+- [[HSPB1]] — heat shock protein family B (small) member 1 · module 060 +
+- [[HSPB11]] — intraflagellar transport 25 · module 040 +
+- [[HSPB8]] — heat shock protein family B (small) member 8 · module 215 +
+- [[HSPBAP1]] — HSPB1 associated protein 1 · module 124 +
+- [[HSPBP1]] — HSPA (Hsp70) binding protein 1 · module 004 +
+- [[HSPD1]] — heat shock protein family D (Hsp60) member 1 · module 060 +
+- [[HSPE1]] — heat shock protein family E (Hsp10) member 1 · module 060 +
+- [[HSPE1-MOB4]] — HSPE1-MOB4 readthrough · module 060 +
+- [[HSPG2]] — heparan sulfate proteoglycan 2 · module 154 +
+- [[HSPH1]] — heat shock protein family H (Hsp110) member 1 · module 060 +
+- [[HTATIP2]] — HIV-1 Tat interactive protein 2 · module 135 +
+- [[HTATSF1]] — HIV-1 Tat specific factor 1 · module 025 +
+- [[HTR1D]] — 5-hydroxytryptamine receptor 1D · module 073 +
+- [[HTR1F]] — 5-hydroxytryptamine receptor 1F · module 013 +
+- [[HTR2C]] — 5-hydroxytryptamine receptor 2C · module 090 +
+- [[HTR7]] — 5-hydroxytryptamine receptor 7 · module 084 +
+- [[HTRA1]] — HtrA serine peptidase 1 · module 011 -
+- [[HTRA2]] — HtrA serine peptidase 2 · module 058 +
+- [[HTRA3]] — HtrA serine peptidase 3 · module 167 +
+- [[HTT]] — huntingtin · module 030 +
+- [[HULC]] — hepatocellular carcinoma up-regulated long non-coding RNA · module 191 +
+- [[HUNK]] — hormonally up-regulated Neu-associated kinase · module 027 +
+- [[HUS1]] — HUS1 checkpoint clamp component · module 001 +
+- [[HUWE1]] — HECT, UBA and WWE domain containing E3 ubiquitin protein ligase 1 · module 025 +
+- [[HVCN1]] — hydrogen voltage gated channel 1 · module 053 +
+- [[HYAL1]] — hyaluronidase 1 · module 038 +
+- [[HYAL2]] — hyaluronidase 2 · module 023 -
+- [[HYAL3]] — hyaluronidase 3 · module 002 +
+- [[HYCC1]] — hyccin PI4KA lipid kinase complex subunit 1 · module 089 +
+- [[HYCC2]] — hyccin PI4KA lipid kinase complex subunit 2 · module 048 +
+- [[HYDIN]] — HYDIN axonemal central pair apparatus protein · module 061 +
+- [[HYI]] — hydroxypyruvate isomerase (putative) · module 096 +
+- [[HYKK]] — hydroxylysine kinase · module 030 +
+- [[HYLS1]] — HYLS1 centriolar and ciliogenesis associated · module 022 +
+- [[HYOU1]] — hypoxia up-regulated 1 · module 042 +
+- [[HYPK]] — huntingtin interacting protein K · module 179 +

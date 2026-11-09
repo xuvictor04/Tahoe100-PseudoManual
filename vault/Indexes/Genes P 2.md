@@ -1,0 +1,362 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes P 2
+
+352 genes. Back to [[Genes by letter]].
+
+- [[PRDX4]] — peroxiredoxin 4 · module 048 +
+- [[PRDX5]] — peroxiredoxin 5 · module 042 +
+- [[PRDX6]] — peroxiredoxin 6 · module 029 +
+- [[PRDX6-AS1]] — PRDX6 antisense RNA 1 · module 146 +
+- [[PREB]] — prolactin regulatory element binding · module 049 +
+- [[PRECSIT]] — p53 regulated carcinoma associated Stat3 activating long intergenic non-protein coding transcript · module 010 +
+- [[PRELID1]] — PRELI domain containing 1 · module 058 +
+- [[PRELID2]] — PRELI domain containing 2 · module 144 +
+- [[PRELID3A]] — PRELI domain containing 3A · module 018 +
+- [[PRELID3B]] — PRELI domain containing 3B · module 025 +
+- [[PREP]] — prolyl endopeptidase · module 134 +
+- [[PREPL]] — prolyl endopeptidase like · module 045 +
+- [[PREX1]] — phosphatidylinositol-3,4,5-trisphosphate dependent Rac exchange factor 1 · module 100 +
+- [[PREX2]] — phosphatidylinositol-3,4,5-trisphosphate dependent Rac exchange factor 2 · module 008 +
+- [[PRH1]] — proline rich protein HaeIII subfamily 1 · module 026 +
+- [[PRICKLE1]] — prickle planar cell polarity protein 1 · module 019 +
+- [[PRICKLE2]] — prickle planar cell polarity protein 2 · module 013 +
+- [[PRICKLE3]] — prickle planar cell polarity protein 3 · module 059 +
+- [[PRIM1]] — DNA primase subunit 1 · module 006 +
+- [[PRIM2]] — DNA primase subunit 2 · module 006 +
+- [[PRIMPOL]] — primase and DNA directed polymerase · module 006 +
+- [[PRKAA1]] — protein kinase AMP-activated catalytic subunit alpha 1 · module 017 +
+- [[PRKAA2]] — protein kinase AMP-activated catalytic subunit alpha 2 · module 011 +
+- [[PRKAB1]] — protein kinase AMP-activated non-catalytic subunit beta 1 · module 007 +
+- [[PRKAB2]] — protein kinase AMP-activated non-catalytic subunit beta 2 · module 030 +
+- [[PRKACA]] — protein kinase cAMP-activated catalytic subunit alpha · module 050 +
+- [[PRKACB]] — protein kinase cAMP-activated catalytic subunit beta · module 117 +
+- [[PRKAG1]] — protein kinase AMP-activated non-catalytic subunit gamma 1 · module 052 +
+- [[PRKAG2]] — protein kinase AMP-activated non-catalytic subunit gamma 2 · module 113 +
+- [[PRKAR1A]] — protein kinase cAMP-dependent type I regulatory subunit alpha · module 003 -
+- [[PRKAR1B]] — protein kinase cAMP-dependent type I regulatory subunit beta · module 001 +
+- [[PRKAR2A]] — protein kinase cAMP-dependent type II regulatory subunit alpha · module 041 +
+- [[PRKAR2B]] — protein kinase cAMP-dependent type II regulatory subunit beta · module 176 +
+- [[PRKCA]] — protein kinase C alpha · module 141 +
+- [[PRKCA-AS1]] — PRKCA antisense RNA 1 · module 021 +
+- [[PRKCD]] — protein kinase C delta · module 218 +
+- [[PRKCE]] — protein kinase C epsilon · module 017 -
+- [[PRKCG]] — protein kinase C gamma · module 053 +
+- [[PRKCH]] — protein kinase C eta · module 061 +
+- [[PRKCH-AS1]] — PRKCH antisense RNA 1 · module 044 +
+- [[PRKCI]] — protein kinase C iota · module 023 -
+- [[PRKCQ]] — protein kinase C theta · module 115 +
+- [[PRKCSH]] — PRKCSH beta subunit of glucosidase II · module 050 +
+- [[PRKCZ]] — protein kinase C zeta · module 002 +
+- [[PRKD1]] — protein kinase D1 · module 009 +
+- [[PRKD2]] — protein kinase D2 · module 048 +
+- [[PRKD3]] — protein kinase D3 · module 079 +
+- [[PRKDC]] — protein kinase, DNA-activated, catalytic subunit · module 004 +
+- [[PRKG1]] — protein kinase cGMP-dependent 1 · module 009 +
+- [[PRKG1-AS1]] — PRKG1 antisense RNA 1 · module 120 +
+- [[PRKG2]] — protein kinase cGMP-dependent 2 · module 158 +
+- [[PRKG2-AS1]] — PRKG2 antisense RNA 1 · module 158 +
+- [[PRKN]] — parkin RBR E3 ubiquitin protein ligase · module 010 +
+- [[PRKRA]] — protein activator of interferon induced protein kinase EIF2AK2 · module 040 +
+- [[PRKRIP1]] — PRKR interacting protein 1 · module 105 +
+- [[PRKX]] — protein kinase cAMP-dependent X-linked catalytic subunit · module 018 +
+- [[PRKY]] — protein kinase Y-linked (pseudogene) · module 013 +
+- [[PRLR]] — prolactin receptor · module 009 +
+- [[PRMT1]] — protein arginine methyltransferase 1 · module 004 +
+- [[PRMT2]] — protein arginine methyltransferase 2 · module 074 +
+- [[PRMT3]] — protein arginine methyltransferase 3 · module 005 +
+- [[PRMT5]] — protein arginine methyltransferase 5 · module 001 +
+- [[PRMT5-DT]] — PRMT5 divergent transcript · module 021 +
+- [[PRMT7]] — protein arginine methyltransferase 7 · module 175 +
+- [[PRMT9]] — protein arginine methyltransferase 9 · module 065 +
+- [[PRNP]] — prion protein (Kanno blood group) · module 003 -
+- [[PROCA1]] — protein interacting with cyclin A1 · module 035 +
+- [[PROCR]] — protein C receptor · module 012 -
+- [[PROM1]] — prominin 1 · module 008 +
+- [[PROM2]] — prominin 2 · module 044 +
+- [[PRORP]] — protein only RNase P catalytic subunit · module 001 +
+- [[PROS1]] — protein S · module 139 +
+- [[PROSER1]] — proline and serine rich 1 · module 001 +
+- [[PROSER2]] — proline and serine rich 2 · module 031 +
+- [[PROSER2-AS1]] — PROSER2 antisense RNA 1 · module 021 +
+- [[PROSER3]] — proline and serine rich 3 · module 182 -
+- [[PROX1]] — prospero homeobox 1 · module 027 +
+- [[PROX1-AS1]] — PROX1 antisense RNA 1 · module 027 +
+- [[PRPF18]] — pre-mRNA processing factor 18 · module 118 +
+- [[PRPF19]] — pre-mRNA processing factor 19 · module 004 +
+- [[PRPF3]] — pre-mRNA processing factor 3 · module 049 +
+- [[PRPF31]] — pre-mRNA processing factor 31 · module 127 +
+- [[PRPF38A]] — pre-mRNA processing factor 38A · module 041 +
+- [[PRPF38B]] — pre-mRNA processing factor 38B · module 011 +
+- [[PRPF39]] — pre-mRNA processing factor 39 · module 017 +
+- [[PRPF4]] — pre-mRNA splicing tri-snRNP complex factor PRPF4 · module 011 +
+- [[PRPF40A]] — pre-mRNA processing factor 40A · module 051 +
+- [[PRPF40B]] — pre-mRNA processing factor 40B · module 005 +
+- [[PRPF4B]] — pre-mRNA processing factor kinase PRP4K · module 184 -
+- [[PRPF6]] — pre-mRNA processing factor 6 · module 012 +
+- [[PRPF8]] — pre-mRNA processing factor 8 · module 127 +
+- [[PRPS1]] — phosphoribosyl pyrophosphate synthetase 1 · module 004 +
+- [[PRPS2]] — phosphoribosyl pyrophosphate synthetase 2 · module 006 +
+- [[PRPSAP1]] — phosphoribosyl pyrophosphate synthetase associated protein 1 · module 038 +
+- [[PRPSAP2]] — phosphoribosyl pyrophosphate synthetase associated protein 2 · module 170 +
+- [[PRR11]] — proline rich 11 · module 022 +
+- [[PRR12]] — proline rich 12 · module 036 +
+- [[PRR13]] — proline rich 13 · module 072 +
+- [[PRR14]] — proline rich 14 · module 014 +
+- [[PRR14L]] — proline rich 14 like · module 007 +
+- [[PRR15]] — proline rich 15 · module 044 +
+- [[PRR15-DT]] — PRR15 divergent transcript · module 044 +
+- [[PRR15L]] — proline rich 15 like · module 044 +
+- [[PRR16]] — proline rich 16 · module 013 +
+- [[PRR3]] — proline rich 3 · module 010 +
+- [[PRR36]] — proline rich 36 · module 002 +
+- [[PRR4]] — proline rich 4 · module 026 +
+- [[PRR5]] — proline rich 5 · module 159 +
+- [[PRR5-ARHGAP8]] — PRR5-ARHGAP8 readthrough · module 077 +
+- [[PRR5L]] — proline rich 5 like · module 005 +
+- [[PRR7]] — proline rich 7, synaptic · module 206 +
+- [[PRR7-AS1]] — PRR7 antisense RNA 1 · module 005 +
+- [[PRRC1]] — proline rich coiled-coil 1 · module 056 +
+- [[PRRC2A]] — proline rich coiled-coil 2A · module 016 +
+- [[PRRC2B]] — proline rich coiled-coil 2B · module 005 +
+- [[PRRC2C]] — proline rich coiled-coil 2C · module 012 +
+- [[PRRG1]] — proline rich and Gla domain 1 · module 023 -
+- [[PRRG2]] — proline rich and Gla domain 2 · module 008 +
+- [[PRRG4]] — proline rich and Gla domain 4 · module 008 +
+- [[PRRT1]] — proline rich transmembrane protein 1 · module 035 +
+- [[PRRT2]] — proline rich transmembrane protein 2 · module 035 +
+- [[PRRT3]] — proline rich transmembrane protein 3 · module 053 +
+- [[PRRT3-AS1]] — PRRT3 antisense RNA 1 · module 038 +
+- [[PRRX1]] — paired related homeobox 1 · module 013 +
+- [[PRRX2]] — paired related homeobox 2 · module 128 +
+- [[PRSS12]] — serine protease 12 · module 008 +
+- [[PRSS16]] — serine protease 16 · module 008 +
+- [[PRSS22]] — serine protease 22 · module 073 +
+- [[PRSS23]] — serine protease 23 · module 013 +
+- [[PRSS23-AS1]] — PRSS23 antisense RNA 1 · module 019 +
+- [[PRSS3]] — serine protease 3 · module 034 +
+- [[PRSS48]] — serine protease 48 · module 021 +
+- [[PRSS51]] — serine protease 51 · module 008 +
+- [[PRSS53]] — serine protease 53 · module 103 +
+- [[PRSS8]] — serine protease 8 · module 031 +
+- [[PRTFDC1]] — phosphoribosyl transferase domain containing 1 · module 025 +
+- [[PRTG]] — protogenin · module 094 +
+- [[PRUNE1]] — prune exopolyphosphatase 1 · module 030 +
+- [[PRUNE2]] — prune homolog 2 with BCH domain · module 009 +
+- [[PRX]] — periaxin · module 053 +
+- [[PRXL2A]] — peroxiredoxin like 2A · module 045 +
+- [[PRXL2B]] — peroxiredoxin like 2B · module 031 +
+- [[PRXL2C]] — peroxiredoxin like 2C · module 017 +
+- [[PSAP]] — prosaposin · module 050 +
+- [[PSAT1]] — phosphoserine aminotransferase 1 · module 063 +
+- [[PSD]] — pleckstrin and Sec7 domain containing · module 090 +
+- [[PSD2]] — pleckstrin and Sec7 domain containing 2 · module 027 +
+- [[PSD3]] — pleckstrin and Sec7 domain containing 3 · module 034 +
+- [[PSD4]] — pleckstrin and Sec7 domain containing 4 · module 031 +
+- [[PSEN1]] — presenilin 1 · module 145 +
+- [[PSEN2]] — presenilin 2 · module 001 +
+- [[PSENEN]] — presenilin enhancer, gamma-secretase subunit · module 048 +
+- [[PSG1]] — pregnancy specific beta-1-glycoprotein 1 · module 027 +
+- [[PSG4]] — pregnancy specific beta-1-glycoprotein 4 · module 125 +
+- [[PSG5]] — pregnancy specific beta-1-glycoprotein 5 · module 125 +
+- [[PSG9]] — pregnancy specific beta-1-glycoprotein 9 · module 125 +
+- [[PSIP1]] — PC4 and SRSF1 interacting protein 1 · module 022 +
+- [[PSKH1]] — protein serine kinase H1 · module 083 +
+- [[PSMA1]] — proteasome 20S subunit alpha 1 · module 072 +
+- [[PSMA2]] — proteasome 20S subunit alpha 2 · module 072 +
+- [[PSMA3]] — proteasome 20S subunit alpha 3 · module 072 +
+- [[PSMA4]] — proteasome 20S subunit alpha 4 · module 064 +
+- [[PSMA5]] — proteasome 20S subunit alpha 5 · module 064 +
+- [[PSMA6]] — proteasome 20S subunit alpha 6 · module 072 +
+- [[PSMA7]] — proteasome 20S subunit alpha 7 · module 024 +
+- [[PSMB1]] — proteasome 20S subunit beta 1 · module 012 +
+- [[PSMB10]] — proteasome 20S subunit beta 10 · module 070 +
+- [[PSMB2]] — proteasome 20S subunit beta 2 · module 072 +
+- [[PSMB3]] — proteasome 20S subunit beta 3 · module 072 +
+- [[PSMB4]] — proteasome 20S subunit beta 4 · module 072 +
+- [[PSMB5]] — proteasome 20S subunit beta 5 · module 064 +
+- [[PSMB6]] — proteasome 20S subunit beta 6 · module 064 +
+- [[PSMB7]] — proteasome 20S subunit beta 7 · module 060 +
+- [[PSMB8]] — proteasome 20S subunit beta 8 · module 032 +
+- [[PSMB9]] — proteasome 20S subunit beta 9 · module 070 +
+- [[PSMC1]] — proteasome 26S subunit, ATPase 1 · module 064 +
+- [[PSMC2]] — proteasome 26S subunit, ATPase 2 · module 007 +
+- [[PSMC3]] — proteasome 26S subunit, ATPase 3 · module 215 +
+- [[PSMC3IP]] — PSMC3 interacting protein · module 006 +
+- [[PSMC4]] — proteasome 26S subunit, ATPase 4 · module 072 +
+- [[PSMC5]] — proteasome 26S subunit, ATPase 5 · module 064 +
+- [[PSMC6]] — proteasome 26S subunit, ATPase 6 · module 072 +
+- [[PSMD1]] — proteasome 26S subunit, non-ATPase 1 · module 036 +
+- [[PSMD10]] — proteasome 26S subunit, non-ATPase 10 · module 074 +
+- [[PSMD11]] — proteasome 26S subunit, non-ATPase 11 · module 117 +
+- [[PSMD12]] — proteasome 26S subunit, non-ATPase 12 · module 060 +
+- [[PSMD13]] — proteasome 26S subunit, non-ATPase 13 · module 072 +
+- [[PSMD14]] — proteasome 26S subunit, non-ATPase 14 · module 060 +
+- [[PSMD14-DT]] — PSMD14 divergent transcript · module 035 +
+- [[PSMD2]] — proteasome 26S subunit ubiquitin receptor, non-ATPase 2 · module 060 +
+- [[PSMD3]] — proteasome 26S subunit, non-ATPase 3 · module 064 +
+- [[PSMD4]] — proteasome 26S subunit ubiquitin receptor, non-ATPase 4 · module 064 +
+- [[PSMD5]] — proteasome 26S subunit, non-ATPase 5 · module 149 +
+- [[PSMD6]] — proteasome 26S subunit, non-ATPase 6 · module 064 +
+- [[PSMD6-AS1]] — PSMD6 antisense RNA 1 · module 083 +
+- [[PSMD6-AS2]] — PSMD6 antisense RNA 2 · module 023 +
+- [[PSMD7]] — proteasome 26S subunit, non-ATPase 7 · module 007 +
+- [[PSMD7-DT]] — PSMD7 divergent transcript · module 026 +
+- [[PSMD8]] — proteasome 26S subunit, non-ATPase 8 · module 072 +
+- [[PSMD9]] — proteasome 26S subunit, non-ATPase 9 · module 030 +
+- [[PSME1]] — proteasome activator subunit 1 · module 070 +
+- [[PSME2]] — proteasome activator subunit 2 · module 070 +
+- [[PSME3]] — proteasome activator subunit 3 · module 003 -
+- [[PSME3IP1]] — proteasome activator subunit 3 interacting protein 1 · module 148 +
+- [[PSME4]] — proteasome activator subunit 4 · module 094 +
+- [[PSMF1]] — proteasome inhibitor subunit 1 · module 030 +
+- [[PSMG1]] — proteasome assembly chaperone 1 · module 001 +
+- [[PSMG2]] — proteasome assembly chaperone 2 · module 178 +
+- [[PSMG3]] — proteasome assembly chaperone 3 · module 024 +
+- [[PSMG3-AS1]] — PSMG3 antisense RNA 1 · module 035 +
+- [[PSMG4]] — proteasome assembly chaperone 4 · module 015 +
+- [[PSORS1C1]] — psoriasis susceptibility 1 candidate 1 · module 031 +
+- [[PSPC1]] — paraspeckle component 1 · module 143 +
+- [[PSPH]] — phosphoserine phosphatase · module 063 +
+- [[PSRC1]] — proline and serine rich coiled-coil 1 · module 022 +
+- [[PSTK]] — phosphoseryl-tRNA kinase · module 004 +
+- [[PSTPIP2]] — proline-serine-threonine phosphatase interacting protein 2 · module 062 +
+- [[PTAFR]] — platelet activating factor receptor · module 034 +
+- [[PTAR1]] — protein prenyltransferase alpha subunit repeat containing 1 · module 025 +
+- [[PTBP1]] — polypyrimidine tract binding protein 1 · module 003 -
+- [[PTBP2]] — polypyrimidine tract binding protein 2 · module 051 +
+- [[PTBP3]] — polypyrimidine tract binding protein 3 · module 156 +
+- [[PTCD1]] — pentatricopeptide repeat domain 1 · module 083 +
+- [[PTCD2]] — pentatricopeptide repeat domain 2 · module 001 +
+- [[PTCD3]] — pentatricopeptide repeat domain 3 · module 017 +
+- [[PTCH1]] — patched 1 · module 079 +
+- [[PTCH2]] — patched 2 · module 047 +
+- [[PTCHD1]] — patched domain containing 1 · module 102 +
+- [[PTCHD4]] — patched domain containing 4 · module 062 +
+- [[PTDSS1]] — phosphatidylserine synthase 1 · module 012 -
+- [[PTDSS2]] — phosphatidylserine synthase 2 · module 003 +
+- [[PTEN]] — phosphatase and tensin homolog · module 045 +
+- [[PTER]] — phosphotriesterase related · module 001 +
+- [[PTGER4]] — prostaglandin E receptor 4 · module 123 +
+- [[PTGES]] — prostaglandin E synthase · module 167 +
+- [[PTGES2]] — prostaglandin E synthase 2 · module 033 +
+- [[PTGES3]] — prostaglandin E synthase 3 · module 060 +
+- [[PTGFR]] — prostaglandin F receptor · module 013 +
+- [[PTGFRN]] — prostaglandin F2 receptor inhibitor · module 029 +
+- [[PTGIS]] — prostaglandin I2 synthase · module 009 +
+- [[PTGR1]] — prostaglandin reductase 1 · module 117 +
+- [[PTGR2]] — prostaglandin reductase 2 · module 025 +
+- [[PTGR3]] — prostaglandin reductase 3 · module 015 +
+- [[PTGS1]] — prostaglandin-endoperoxide synthase 1 · module 084 +
+- [[PTGS2]] — prostaglandin-endoperoxide synthase 2 · module 112 +
+- [[PTH2R]] — parathyroid hormone 2 receptor · module 121 +
+- [[PTHLH]] — parathyroid hormone like hormone · module 081 +
+- [[PTK2]] — protein tyrosine kinase 2 · module 041 -
+- [[PTK2B]] — protein tyrosine kinase 2 beta · module 031 +
+- [[PTK6]] — protein tyrosine kinase 6 · module 031 +
+- [[PTK7]] — protein tyrosine kinase 7 (inactive) · module 115 +
+- [[PTMA]] — prothymosin alpha · module 007 -
+- [[PTMAP2]] — prothymosin alpha pseudogene 2 · module 058 +
+- [[PTMAP5]] — prothymosin alpha pseudogene 5 · module 058 +
+- [[PTMS]] — parathymosin · module 001 -
+- [[PTN]] — pleiotrophin · module 066 +
+- [[PTOV1]] — PTOV1 extended AT-hook containing adaptor protein · module 003 +
+- [[PTOV1-AS1]] — PTOV1 antisense RNA 1 · module 026 +
+- [[PTP4A1]] — protein tyrosine phosphatase 4A1 · module 020 +
+- [[PTP4A2]] — protein tyrosine phosphatase 4A2 · module 045 +
+- [[PTP4A3]] — protein tyrosine phosphatase 4A3 · module 014 +
+- [[PTPA]] — protein phosphatase 2 phosphatase activator · module 043 -
+- [[PTPDC1]] — protein tyrosine phosphatase domain containing 1 · module 018 +
+- [[PTPMT1]] — protein tyrosine phosphatase mitochondrial 1 · module 036 +
+- [[PTPN1]] — protein tyrosine phosphatase non-receptor type 1 · module 097 +
+- [[PTPN11]] — protein tyrosine phosphatase non-receptor type 11 · module 004 +
+- [[PTPN12]] — protein tyrosine phosphatase non-receptor type 12 · module 174 +
+- [[PTPN13]] — protein tyrosine phosphatase non-receptor type 13 · module 009 +
+- [[PTPN14]] — protein tyrosine phosphatase non-receptor type 14 · module 120 +
+- [[PTPN18]] — protein tyrosine phosphatase non-receptor type 18 · module 020 +
+- [[PTPN2]] — protein tyrosine phosphatase non-receptor type 2 · module 139 +
+- [[PTPN20]] — protein tyrosine phosphatase non-receptor type 20 · module 019 +
+- [[PTPN21]] — protein tyrosine phosphatase non-receptor type 21 · module 079 +
+- [[PTPN22]] — protein tyrosine phosphatase non-receptor type 22 · module 008 +
+- [[PTPN23]] — protein tyrosine phosphatase non-receptor type 23 · module 107 +
+- [[PTPN23-DT]] — PTPN23 divergent transcript · module 035 +
+- [[PTPN3]] — protein tyrosine phosphatase non-receptor type 3 · module 023 -
+- [[PTPN4]] — protein tyrosine phosphatase non-receptor type 4 · module 018 +
+- [[PTPN6]] — protein tyrosine phosphatase non-receptor type 6 · module 038 +
+- [[PTPN9]] — protein tyrosine phosphatase non-receptor type 9 · module 015 +
+- [[PTPRA]] — protein tyrosine phosphatase receptor type A · module 204 +
+- [[PTPRB]] — protein tyrosine phosphatase receptor type B · module 044 +
+- [[PTPRD]] — protein tyrosine phosphatase receptor type D · module 152 +
+- [[PTPRE]] — protein tyrosine phosphatase receptor type E · module 034 +
+- [[PTPRF]] — protein tyrosine phosphatase receptor type F · module 180 +
+- [[PTPRG]] — protein tyrosine phosphatase receptor type G · module 005 +
+- [[PTPRG-AS1]] — PTPRG antisense RNA 1 · module 006 +
+- [[PTPRH]] — protein tyrosine phosphatase receptor type H · module 189 +
+- [[PTPRJ]] — protein tyrosine phosphatase receptor type J · module 186 +
+- [[PTPRK]] — protein tyrosine phosphatase receptor type K · module 143 +
+- [[PTPRM]] — protein tyrosine phosphatase receptor type M · module 104 +
+- [[PTPRN]] — protein tyrosine phosphatase receptor type N · module 013 +
+- [[PTPRN2]] — protein tyrosine phosphatase receptor type N2 · module 141 +
+- [[PTPRO]] — protein tyrosine phosphatase receptor type O · module 140 +
+- [[PTPRR]] — protein tyrosine phosphatase receptor type R · module 008 +
+- [[PTPRS]] — protein tyrosine phosphatase receptor type S · module 082 +
+- [[PTPRT]] — protein tyrosine phosphatase receptor type T · module 090 +
+- [[PTPRU]] — protein tyrosine phosphatase receptor type U · module 132 +
+- [[PTPRZ1]] — protein tyrosine phosphatase receptor type Z1 · module 087 +
+- [[PTRH1]] — peptidyl-tRNA hydrolase 1 homolog · module 045 -
+- [[PTRH2]] — peptidyl-tRNA hydrolase 2 · module 033 +
+- [[PTRHD1]] — peptidyl-tRNA hydrolase domain containing 1 · module 024 +
+- [[PTS]] — 6-pyruvoyltetrahydropterin synthase · module 015 +
+- [[PTTG1]] — PTTG1 regulator of sister chromatid separation, securin · module 022 +
+- [[PTTG1IP]] — PTTG1 interacting protein · module 076 +
+- [[PTX3]] — pentraxin 3 · module 014 +
+- [[PUDP]] — pseudouridine 5'-phosphatase · module 001 +
+- [[PUF60]] — poly(U) binding splicing factor 60 · module 016 +
+- [[PUM1]] — pumilio RNA binding family member 1 · module 052 -
+- [[PUM2]] — pumilio RNA binding family member 2 · module 051 +
+- [[PUM3]] — pumilio RNA binding family member 3 · module 005 +
+- [[PURA]] — purine rich element binding protein A · module 020 -
+- [[PURB]] — purine rich element binding protein B · module 016 +
+- [[PURPL]] — p53 upregulated regulator of p53 levels · module 062 +
+- [[PUS1]] — pseudouridine synthase 1 · module 005 +
+- [[PUS10]] — pseudouridine synthase 10 · module 023 +
+- [[PUS3]] — pseudouridine synthase 3 · module 012 +
+- [[PUS7]] — pseudouridine synthase 7 · module 018 +
+- [[PUS7L]] — pseudouridine synthase 7 like · module 215 +
+- [[PUSL1]] — pseudouridine synthase like 1 · module 058 +
+- [[PVR]] — PVR cell adhesion molecule · module 065 -
+- [[PVT1]] — Pvt1 oncogene · module 004 +
+- [[PWP1]] — PWP1 homolog, endonuclein · module 001 +
+- [[PWP2]] — PWP2 small subunit processome component · module 005 +
+- [[PWRN1]] — Prader-Willi region non-protein coding RNA 1 · module 090 +
+- [[PWWP2A]] — PWWP domain containing 2A · module 057 -
+- [[PWWP2B]] — PWWP domain containing 2B · module 020 -
+- [[PWWP3A]] — PWWP domain containing 3A, DNA repair factor · module 060 +
+- [[PWWP3B]] — PWWP domain containing 3B · module 027 +
+- [[PXDC1]] — PX domain containing 1 · module 046 +
+- [[PXDN]] — peroxidasin · module 066 +
+- [[PXDNL]] — peroxidasin like · module 037 +
+- [[PXK]] — PX domain containing serine/threonine kinase like · module 065 +
+- [[PXMP2]] — peroxisomal membrane protein 2 · module 006 +
+- [[PXMP4]] — peroxisomal membrane protein 4 · module 209 +
+- [[PXN]] — paxillin · module 147 +
+- [[PXN-AS1]] — PXN antisense RNA 1 · module 021 +
+- [[PXYLP1]] — 2-phosphoxylose phosphatase 1 · module 097 +
+- [[PYCR1]] — pyrroline-5-carboxylate reductase 1 · module 063 +
+- [[PYCR2]] — pyrroline-5-carboxylate reductase 2 · module 124 +
+- [[PYCR3]] — pyrroline-5-carboxylate reductase 3 · module 036 +
+- [[PYDC2-AS1]] — PYDC2 antisense RNA 1 · module 009 +
+- [[PYGB]] — glycogen phosphorylase B · module 097 +
+- [[PYGL]] — glycogen phosphorylase L · module 084 +
+- [[PYGM]] — glycogen phosphorylase, muscle associated · module 038 +
+- [[PYGO1]] — pygopus family PHD finger 1 · module 018 +
+- [[PYGO2]] — pygopus family PHD finger 2 · module 021 +
+- [[PYM1]] — PYM1 exon junction complex associated factor · module 016 +
+- [[PYROXD1]] — pyridine nucleotide-disulphide oxidoreductase domain 1 · module 063 +
+- [[PYROXD2]] — pyridine nucleotide-disulphide oxidoreductase domain 2 · module 053 +
+- [[PYURF]] — PIGY upstream open reading frame · module 029 +
+- [[PYY]] — peptide YY · module 038 +

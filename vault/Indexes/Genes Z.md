@@ -1,0 +1,741 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes Z
+
+731 genes. Back to [[Genes by letter]].
+
+- [[ZBED1]] — zinc finger BED-type containing 1 · module 007 +
+- [[ZBED2]] — zinc finger BED-type containing 2 · module 031 +
+- [[ZBED3]] — zinc finger BED-type containing 3 · module 133 +
+- [[ZBED4]] — zinc finger BED-type containing 4 · module 036 +
+- [[ZBED5]] — zinc finger BED-type containing 5 · module 095 +
+- [[ZBED5-AS1]] — ZBED5 antisense RNA 1 · module 010 +
+- [[ZBED6]] — zinc finger BED-type containing 6 · module 153 +
+- [[ZBED8]] — zinc finger BED-type containing 8 · module 016 +
+- [[ZBED9]] — SCAN domain containing 3 · module 016 +
+- [[ZBTB1]] — zinc finger and BTB domain containing 1 · module 095 +
+- [[ZBTB10]] — zinc finger and BTB domain containing 10 · module 069 +
+- [[ZBTB11]] — zinc finger and BTB domain containing 11 · module 015 +
+- [[ZBTB14]] — zinc finger and BTB domain containing 14 · module 016 +
+- [[ZBTB17]] — zinc finger and BTB domain containing 17 · module 016 +
+- [[ZBTB18]] — zinc finger and BTB domain containing 18 · module 004 -
+- [[ZBTB2]] — zinc finger and BTB domain containing 2 · module 095 +
+- [[ZBTB20]] — zinc finger and BTB domain containing 20 · module 074 +
+- [[ZBTB20-AS5]] — ZBTB20 antisense RNA 5 · module 021 +
+- [[ZBTB21]] — zinc finger and BTB domain containing 21 · module 068 +
+- [[ZBTB22]] — zinc finger and BTB domain containing 22 · module 153 +
+- [[ZBTB24]] — zinc finger and BTB domain containing 24 · module 001 +
+- [[ZBTB25]] — zinc finger and BTB domain containing 25 · module 144 +
+- [[ZBTB26]] — zinc finger and BTB domain containing 26 · module 015 +
+- [[ZBTB3]] — zinc finger and BTB domain containing 3 · module 119 +
+- [[ZBTB33]] — zinc finger and BTB domain containing 33 · module 007 +
+- [[ZBTB34]] — zinc finger and BTB domain containing 34 · module 015 +
+- [[ZBTB37]] — zinc finger and BTB domain containing 37 · module 025 +
+- [[ZBTB38]] — zinc finger and BTB domain containing 38 · module 219 +
+- [[ZBTB39]] — zinc finger and BTB domain containing 39 · module 007 +
+- [[ZBTB4]] — zinc finger and BTB domain containing 4 · module 016 +
+- [[ZBTB40]] — zinc finger and BTB domain containing 40 · module 007 +
+- [[ZBTB41]] — zinc finger and BTB domain containing 41 · module 041 +
+- [[ZBTB43]] — zinc finger and BTB domain containing 43 · module 034 +
+- [[ZBTB44]] — zinc finger and BTB domain containing 44 · module 225 +
+- [[ZBTB45]] — zinc finger and BTB domain containing 45 · module 007 +
+- [[ZBTB46]] — zinc finger and BTB domain containing 46 · module 160 +
+- [[ZBTB47]] — zinc finger and BTB domain containing 47 · module 005 +
+- [[ZBTB47-AS1]] — ZBTB47 and NKTR antisense RNA 1 · module 021 +
+- [[ZBTB48]] — zinc finger and BTB domain containing 48 · module 012 +
+- [[ZBTB49]] — zinc finger and BTB domain containing 49 · module 142 +
+- [[ZBTB5]] — zinc finger and BTB domain containing 5 · module 041 +
+- [[ZBTB6]] — zinc finger and BTB domain containing 6 · module 007 +
+- [[ZBTB7A]] — zinc finger and BTB domain containing 7A · module 025 -
+- [[ZBTB7B]] — zinc finger and BTB domain containing 7B · module 110 +
+- [[ZBTB7C]] — zinc finger and BTB domain containing 7C · module 055 +
+- [[ZBTB8A]] — zinc finger and BTB domain containing 8A · module 046 +
+- [[ZBTB8OS]] — tRNA splicing ligase complex subunit 1 · module 114 +
+- [[ZBTB9]] — zinc finger and BTB domain containing 9 · module 016 +
+- [[ZC2HC1A]] — zinc finger C2HC-type containing 1A · module 003 +
+- [[ZC2HC1C]] — zinc finger C2HC-type containing 1C · module 035 +
+- [[ZC3H10]] — zinc finger CCCH-type containing 10 · module 016 +
+- [[ZC3H11A]] — zinc finger CCCH-type containing 11A · module 168 -
+- [[ZC3H12A]] — zinc finger CCCH-type containing 12A · module 014 +
+- [[ZC3H12A-DT]] — lncRNA induced by TGF-beta and antagonizes TGF-beta signaling 1 · module 139 +
+- [[ZC3H12B]] — zinc finger CCCH-type containing 12B · module 200 +
+- [[ZC3H12C]] — zinc finger CCCH-type containing 12C · module 219 +
+- [[ZC3H13]] — zinc finger CCCH-type containing 13 · module 012 +
+- [[ZC3H14]] — zinc finger CCCH-type containing 14 · module 025 +
+- [[ZC3H15]] — zinc finger CCCH-type containing 15 · module 012 +
+- [[ZC3H18]] — zinc finger CCCH-type containing 18 · module 011 +
+- [[ZC3H3]] — zinc finger CCCH-type containing 3 · module 021 +
+- [[ZC3H4]] — zinc finger CCCH-type containing 4 · module 088 +
+- [[ZC3H6]] — zinc finger CCCH-type containing 6 · module 028 +
+- [[ZC3H7A]] — zinc finger CCCH-type containing 7A · module 028 +
+- [[ZC3H7B]] — zinc finger CCCH-type containing 7B · module 088 +
+- [[ZC3H8]] — zinc finger CCCH-type containing 8 · module 001 +
+- [[ZC3HAV1]] — zinc finger CCCH-type containing, antiviral 1 · module 032 +
+- [[ZC3HAV1L]] — ZC3HAV1 like · module 018 +
+- [[ZC3HC1]] — zinc finger C3HC-type containing 1 · module 114 +
+- [[ZC4H2]] — zinc finger C4H2-type containing · module 017 +
+- [[ZCCHC10]] — zinc finger CCHC-type containing 10 · module 114 +
+- [[ZCCHC14]] — zinc finger CCHC-type containing 14 · module 030 -
+- [[ZCCHC17]] — zinc finger CCHC-type containing 17 · module 142 +
+- [[ZCCHC2]] — zinc finger CCHC-type containing 2 · module 032 +
+- [[ZCCHC24]] — zinc finger CCHC-type containing 24 · module 136 +
+- [[ZCCHC3]] — zinc finger CCHC-type containing 3 · module 011 +
+- [[ZCCHC4]] — zinc finger CCHC-type containing 4 · module 020 +
+- [[ZCCHC7]] — zinc finger CCHC-type containing 7 · module 040 +
+- [[ZCCHC8]] — zinc finger CCHC-type containing 8 · module 046 +
+- [[ZCCHC9]] — zinc finger CCHC-type containing 9 · module 012 +
+- [[ZCRB1]] — zinc finger CCHC-type and RNA binding motif containing 1 · module 048 +
+- [[ZCWPW1]] — zinc finger CW-type and PWWP domain containing 1 · module 035 +
+- [[ZCWPW2]] — zinc finger CW-type and PWWP domain containing 2 · module 023 +
+- [[ZDBF2]] — zinc finger DBF-type containing 2 · module 023 +
+- [[ZDHHC1]] — zDHHC palmitoyltransferase 1 · module 023 +
+- [[ZDHHC11]] — zDHHC palmitoyltransferase 11 · module 047 +
+- [[ZDHHC11B]] — zDHHC palmitoyltransferase 11B (putative) · module 015 -
+- [[ZDHHC12]] — zDHHC palmitoyltransferase 12 · module 048 +
+- [[ZDHHC13]] — zDHHC palmitoyltransferase 13 · module 006 +
+- [[ZDHHC14]] — zDHHC palmitoyltransferase 14 · module 057 -
+- [[ZDHHC16]] — zDHHC palmitoyltransferase 16 · module 002 +
+- [[ZDHHC17]] — zDHHC palmitoyltransferase 17 · module 017 +
+- [[ZDHHC18]] — zDHHC palmitoyltransferase 18 · module 002 +
+- [[ZDHHC2]] — zDHHC palmitoyltransferase 2 · module 132 +
+- [[ZDHHC20]] — zDHHC palmitoyltransferase 20 · module 057 +
+- [[ZDHHC21]] — zDHHC palmitoyltransferase 21 · module 025 +
+- [[ZDHHC23]] — zDHHC palmitoyltransferase 23 · module 014 +
+- [[ZDHHC24]] — zDHHC palmitoyltransferase 24 · module 221 +
+- [[ZDHHC3]] — zDHHC palmitoyltransferase 3 · module 050 +
+- [[ZDHHC4]] — zDHHC palmitoyltransferase 4 · module 028 +
+- [[ZDHHC5]] — zDHHC palmitoyltransferase 5 · module 036 +
+- [[ZDHHC6]] — zDHHC palmitoyltransferase 6 · module 065 +
+- [[ZDHHC7]] — zDHHC palmitoyltransferase 7 · module 169 +
+- [[ZDHHC8]] — zDHHC palmitoyltransferase 8 · module 002 +
+- [[ZDHHC9]] — zDHHC palmitoyltransferase 9 · module 077 +
+- [[ZEB1]] — zinc finger E-box binding homeobox 1 · module 110 +
+- [[ZEB1-AS1]] — ZEB1 antisense RNA 1 · module 095 +
+- [[ZEB2]] — zinc finger E-box binding homeobox 2 · module 121 +
+- [[ZER1]] — zyg-11 related cell cycle regulator · module 145 +
+- [[ZFAND1]] — zinc finger AN1-type containing 1 · module 063 +
+- [[ZFAND2A]] — zinc finger AN1-type containing 2A · module 072 +
+- [[ZFAND2A-DT]] — ZFAND2A divergent transcript · module 024 +
+- [[ZFAND2B]] — zinc finger AN1-type containing 2B · module 024 +
+- [[ZFAND3]] — zinc finger AN1-type containing 3 · module 211 +
+- [[ZFAND4]] — zinc finger AN1-type containing 4 · module 026 -
+- [[ZFAND5]] — zinc finger AN1-type containing 5 · module 106 +
+- [[ZFAND6]] — zinc finger AN1-type containing 6 · module 184 +
+- [[ZFAS1]] — ZNFX1 antisense RNA 1 · module 020 -
+- [[ZFAT]] — zinc finger and AT-hook domain containing · module 036 +
+- [[ZFC3H1]] — zinc finger C3H1-type containing · module 179 +
+- [[ZFHX2]] — zinc finger homeobox 2 · module 016 +
+- [[ZFHX2-AS1]] — ZFHX2 antisense RNA 1 · module 035 +
+- [[ZFHX3]] — zinc finger homeobox 3 · module 217 +
+- [[ZFHX3-AS1]] — ZFHX3 antisense RNA 1 · module 091 +
+- [[ZFHX4]] — zinc finger homeobox 4 · module 009 +
+- [[ZFHX4-AS1]] — ZFHX4 antisense RNA 1 · module 009 +
+- [[ZFP1]] — ZFP1 zinc finger protein · module 016 +
+- [[ZFP14]] — ZFP14 zinc finger protein · module 030 +
+- [[ZFP2]] — ZFP2 zinc finger protein · module 010 +
+- [[ZFP28]] — ZFP28 zinc finger protein · module 129 +
+- [[ZFP30]] — ZFP30 zinc finger protein · module 011 +
+- [[ZFP36]] — ZFP36 zinc finger CCCH-type · module 109 +
+- [[ZFP36L1]] — ZFP36 like 1 zinc finger CCCH-type · module 113 +
+- [[ZFP36L2]] — ZFP36 like 2 zinc finger CCCH-type · module 123 +
+- [[ZFP37]] — ZFP37 zinc finger protein · module 016 +
+- [[ZFP41]] — ZFP41 zinc finger protein · module 016 +
+- [[ZFP62]] — ZFP62 zinc finger protein · module 001 +
+- [[ZFP64]] — ZFP64 zinc finger protein · module 146 +
+- [[ZFP69]] — ZFP69 zinc finger protein · module 033 +
+- [[ZFP69B]] — ZFP69 zinc finger protein B · module 001 +
+- [[ZFP82]] — ZFP82 zinc finger protein · module 129 +
+- [[ZFP90]] — ZFP90 zinc finger protein · module 011 +
+- [[ZFP91]] — ZFP91 zinc finger protein, atypical E3 ubiquitin ligase · module 194 +
+- [[ZFPL1]] — zinc finger protein like 1 · module 040 +
+- [[ZFPM1]] — zinc finger protein, FOG family member 1 · module 002 +
+- [[ZFPM2]] — zinc finger protein, FOG family member 2 · module 075 +
+- [[ZFPM2-AS1]] — ZFPM2 antisense RNA 1 · module 092 +
+- [[ZFR]] — zinc finger RNA binding protein · module 046 +
+- [[ZFTA]] — zinc finger translocation associated · module 135 +
+- [[ZFTRAF1]] — zinc finger TRAF-type and ring finger containing 1 · module 138 +
+- [[ZFX]] — zinc finger protein X-linked · module 095 +
+- [[ZFY]] — zinc finger protein Y-linked · module 068 +
+- [[ZFYVE1]] — zinc finger FYVE-type containing 1 · module 004 -
+- [[ZFYVE16]] — zinc finger FYVE-type containing 16 · module 057 -
+- [[ZFYVE19]] — zinc finger FYVE-type containing 19 · module 030 +
+- [[ZFYVE21]] — zinc finger FYVE-type containing 21 · module 002 +
+- [[ZFYVE26]] — zinc finger FYVE-type containing 26 · module 122 +
+- [[ZFYVE27]] — zinc finger FYVE-type containing 27 · module 015 +
+- [[ZFYVE28]] — zinc finger FYVE-type containing 28 · module 136 +
+- [[ZFYVE9]] — zinc finger FYVE-type containing 9 · module 018 +
+- [[ZG16B]] — zymogen granule protein 16B · module 141 +
+- [[ZGPAT]] — zinc finger CCCH-type and G-patch domain containing · module 129 +
+- [[ZGRF1]] — zinc finger GRF-type containing 1 · module 006 +
+- [[ZHX1]] — zinc fingers and homeoboxes 1 · module 130 +
+- [[ZHX2]] — zinc fingers and homeoboxes 2 · module 080 +
+- [[ZHX3]] — zinc fingers and homeoboxes 3 · module 097 +
+- [[ZIC1]] — Zic family zinc finger 1 · module 010 +
+- [[ZIC2]] — Zic family zinc finger 2 · module 020 -
+- [[ZIM2-AS1]] — ZIM2 antisense RNA 1 · module 129 +
+- [[ZKSCAN1]] — zinc finger with KRAB and SCAN domains 1 · module 020 -
+- [[ZKSCAN2]] — zinc finger with KRAB and SCAN domains 2 · module 016 +
+- [[ZKSCAN2-DT]] — ZKSCAN2 divergent transcript · module 114 +
+- [[ZKSCAN3]] — zinc finger with KRAB and SCAN domains 3 · module 016 +
+- [[ZKSCAN4]] — zinc finger with KRAB and SCAN domains 4 · module 089 +
+- [[ZKSCAN5]] — zinc finger with KRAB and SCAN domains 5 · module 149 +
+- [[ZKSCAN7-AS1]] — ZKSCAN7 ZNF cluster antisense RNA 1 · module 035 +
+- [[ZKSCAN8]] — zinc finger with KRAB and SCAN domains 8 · module 094 +
+- [[ZMAT1]] — zinc finger matrin-type 1 · module 010 +
+- [[ZMAT2]] — zinc finger matrin-type 2 · module 007 +
+- [[ZMAT3]] — zinc finger matrin-type 3 · module 062 +
+- [[ZMAT4]] — zinc finger matrin-type 4 · module 152 +
+- [[ZMAT5]] — zinc finger matrin-type 5 · module 079 +
+- [[ZMIZ1]] — zinc finger MIZ-type containing 1 · module 154 +
+- [[ZMIZ1-AS1]] — ZMIZ1 antisense RNA 1 · module 100 +
+- [[ZMIZ2]] — zinc finger MIZ-type containing 2 · module 002 +
+- [[ZMPSTE24]] — zinc metallopeptidase STE24 · module 025 +
+- [[ZMYM1]] — zinc finger MYM-type containing 1 · module 022 +
+- [[ZMYM2]] — zinc finger MYM-type containing 2 · module 079 +
+- [[ZMYM3]] — zinc finger MYM-type containing 3 · module 029 +
+- [[ZMYM4]] — zinc finger MYM-type containing 4 · module 016 +
+- [[ZMYM5]] — zinc finger MYM-type containing 5 · module 020 -
+- [[ZMYM6]] — zinc finger MYM-type containing 6 · module 041 +
+- [[ZMYND11]] — zinc finger MYND-type containing 11 · module 194 +
+- [[ZMYND19]] — zinc finger MYND-type containing 19 · module 002 +
+- [[ZMYND8]] — zinc finger MYND-type containing 8 · module 113 +
+- [[ZNF10]] — zinc finger protein 10 · module 025 -
+- [[ZNF100]] — zinc finger protein 100 · module 091 +
+- [[ZNF101]] — zinc finger protein 101 · module 094 +
+- [[ZNF106]] — zinc finger protein 106 · module 074 +
+- [[ZNF107]] — zinc finger protein 107 · module 091 +
+- [[ZNF112]] — zinc finger protein 112 · module 017 +
+- [[ZNF114]] — zinc finger protein 114 · module 060 +
+- [[ZNF117]] — zinc finger protein 117 · module 015 +
+- [[ZNF12]] — zinc finger protein 12 · module 017 +
+- [[ZNF121]] — zinc finger protein 121 · module 001 +
+- [[ZNF124]] — zinc finger protein 124 · module 005 +
+- [[ZNF131]] — zinc finger and BTB domain containing 35 · module 156 +
+- [[ZNF133]] — zinc finger protein 133 · module 089 +
+- [[ZNF134]] — zinc finger protein 134 · module 016 +
+- [[ZNF136]] — zinc finger protein 136 · module 016 +
+- [[ZNF138]] — zinc finger protein 138 · module 091 +
+- [[ZNF14]] — zinc finger protein 14 · module 017 +
+- [[ZNF140]] — zinc finger protein 140 · module 016 +
+- [[ZNF141]] — zinc finger protein 141 · module 168 +
+- [[ZNF142]] — zinc finger protein 142 · module 005 +
+- [[ZNF143]] — zinc finger protein 143 · module 105 +
+- [[ZNF146]] — zinc finger protein 146 · module 011 +
+- [[ZNF148]] — zinc finger protein 148 · module 169 +
+- [[ZNF155]] — zinc finger protein 155 · module 016 +
+- [[ZNF16]] — zinc finger protein 16 · module 107 +
+- [[ZNF160]] — zinc finger protein 160 · module 011 +
+- [[ZNF165]] — zinc finger protein 165 · module 125 +
+- [[ZNF169]] — zinc finger protein 169 · module 036 +
+- [[ZNF17]] — zinc finger protein 17 · module 143 +
+- [[ZNF174]] — zinc finger protein 174 · module 030 +
+- [[ZNF175]] — zinc finger protein 175 · module 013 +
+- [[ZNF177]] — zinc finger protein 177 · module 129 +
+- [[ZNF18]] — zinc finger protein 18 · module 017 +
+- [[ZNF180]] — zinc finger protein 180 · module 016 +
+- [[ZNF181]] — zinc finger protein 181 · module 011 +
+- [[ZNF182]] — zinc finger protein 182 · module 011 +
+- [[ZNF184]] — zinc finger protein 184 · module 017 +
+- [[ZNF185]] — zinc finger protein 185 with LIM domain · module 034 +
+- [[ZNF189]] — zinc finger protein 189 · module 007 +
+- [[ZNF19]] — zinc finger protein 19 · module 010 +
+- [[ZNF195]] — zinc finger protein 195 · module 001 +
+- [[ZNF197]] — zinc finger protein 197 · module 011 +
+- [[ZNF2]] — zinc finger protein 2 · module 107 +
+- [[ZNF20]] — zinc finger protein 20 · module 094 +
+- [[ZNF200]] — zinc finger protein 200 · module 149 +
+- [[ZNF202]] — zinc finger protein 202 · module 005 +
+- [[ZNF205]] — zinc finger protein 205 · module 012 +
+- [[ZNF207]] — zinc finger protein 207 · module 023 +
+- [[ZNF208]] — zinc finger protein 208 · module 108 +
+- [[ZNF211]] — zinc finger protein 211 · module 016 +
+- [[ZNF212]] — zinc finger protein 212 · module 129 +
+- [[ZNF213]] — zinc finger protein 213 · module 012 +
+- [[ZNF213-AS1]] — ZNF213 antisense RNA 1 · module 015 +
+- [[ZNF214]] — zinc finger protein 214 · module 011 +
+- [[ZNF215]] — zinc finger protein 215 · module 105 +
+- [[ZNF217]] — zinc finger protein 217 · module 014 +
+- [[ZNF219]] — zinc finger protein 219 · module 035 +
+- [[ZNF22]] — zinc finger protein 22 · module 016 +
+- [[ZNF221]] — zinc finger protein 221 · module 016 +
+- [[ZNF222]] — zinc finger protein 222 · module 007 +
+- [[ZNF223]] — zinc finger protein 223 · module 119 +
+- [[ZNF224]] — zinc finger protein 224 · module 178 +
+- [[ZNF225]] — zinc finger protein 225 · module 016 +
+- [[ZNF226]] — zinc finger protein 226 · module 011 +
+- [[ZNF227]] — zinc finger protein 227 · module 028 +
+- [[ZNF229]] — zinc finger protein 229 · module 016 +
+- [[ZNF23]] — zinc finger protein 23 · module 011 +
+- [[ZNF230]] — zinc finger protein 230 · module 119 +
+- [[ZNF232]] — zinc finger protein 232 · module 033 +
+- [[ZNF232-AS1]] — ZNF232 antisense RNA 1 · module 024 +
+- [[ZNF234]] — zinc finger protein 234 · module 089 +
+- [[ZNF235]] — zinc finger protein 235 · module 043 +
+- [[ZNF236]] — zinc finger protein 236 · module 194 +
+- [[ZNF236-DT]] — ZNF236 divergent transcript · module 035 +
+- [[ZNF239]] — zinc finger protein 239 · module 001 +
+- [[ZNF24]] — zinc finger protein 24 · module 016 +
+- [[ZNF248]] — zinc finger protein 248 · module 037 +
+- [[ZNF25]] — zinc finger protein 25 · module 175 +
+- [[ZNF250]] — zinc finger protein 250 · module 015 +
+- [[ZNF251]] — zinc finger protein 251 · module 142 +
+- [[ZNF252P]] — zinc finger protein 252, pseudogene · module 007 +
+- [[ZNF252P-1]] · module 016 +
+- [[ZNF253]] — zinc finger protein 253 · module 023 +
+- [[ZNF254]] — zinc finger protein 254 · module 172 +
+- [[ZNF256]] — zinc finger protein 256 · module 007 +
+- [[ZNF257]] — zinc finger protein 257 · module 091 +
+- [[ZNF26]] — zinc finger protein 26 · module 083 +
+- [[ZNF260]] — zinc finger protein 260 · module 016 +
+- [[ZNF263]] — zinc finger protein 263 · module 156 +
+- [[ZNF264]] — zinc finger protein 264 · module 170 +
+- [[ZNF266]] — zinc finger protein 266 · module 107 +
+- [[ZNF267]] — zinc finger protein 267 · module 112 +
+- [[ZNF268]] — zinc finger protein 268 · module 016 +
+- [[ZNF271P]] — zinc finger protein 271, pseudogene · module 114 +
+- [[ZNF273]] — zinc finger protein 273 · module 091 +
+- [[ZNF274]] — zinc finger protein 274 · module 190 +
+- [[ZNF275]] — zinc finger protein 275 · module 052 +
+- [[ZNF276]] — zinc finger protein 276 · module 005 +
+- [[ZNF277]] — zinc finger protein 277 · module 048 +
+- [[ZNF28]] — zinc finger protein 28 · module 203 +
+- [[ZNF280B]] — zinc finger protein 280B · module 016 +
+- [[ZNF280C]] — zinc finger protein 280C · module 107 +
+- [[ZNF280D]] — zinc finger protein 280D · module 051 +
+- [[ZNF281]] — zinc finger protein 281 · module 011 +
+- [[ZNF282]] — zinc finger protein 282 · module 107 +
+- [[ZNF283]] — zinc finger protein 283 · module 089 +
+- [[ZNF284]] — zinc finger protein 284 · module 016 +
+- [[ZNF286A]] — zinc finger protein 286A · module 033 +
+- [[ZNF286B]] — zinc finger protein 286B (pseudogene) · module 011 +
+- [[ZNF287]] — zinc finger protein 287 · module 016 +
+- [[ZNF292]] — zinc finger protein 292 · module 079 +
+- [[ZNF3]] — zinc finger protein 3 · module 149 +
+- [[ZNF30]] — zinc finger protein 30 · module 017 +
+- [[ZNF300]] — zinc finger protein 300 · module 003 -
+- [[ZNF302]] — zinc finger protein 302 · module 089 +
+- [[ZNF304]] — zinc finger protein 304 · module 007 +
+- [[ZNF316]] — zinc finger protein 316 · module 029 -
+- [[ZNF317]] — zinc finger protein 317 · module 016 +
+- [[ZNF318]] — zinc finger protein 318 · module 014 +
+- [[ZNF32]] — zinc finger protein 32 · module 012 +
+- [[ZNF320]] — zinc finger protein 320 · module 001 +
+- [[ZNF322]] — zinc finger protein 322 · module 129 +
+- [[ZNF324]] — zinc finger protein 324 · module 118 +
+- [[ZNF324B]] — zinc finger protein 324B · module 036 +
+- [[ZNF326]] — zinc finger protein 326 · module 040 -
+- [[ZNF329]] — zinc finger protein 329 · module 129 +
+- [[ZNF330]] — nucleolar atypical zinc finger · module 011 +
+- [[ZNF331]] — zinc finger protein 331 · module 164 +
+- [[ZNF333]] — zinc finger protein 333 · module 175 +
+- [[ZNF334]] — zinc finger protein 334 · module 016 +
+- [[ZNF335]] — zinc finger protein 335 · module 095 +
+- [[ZNF337]] — zinc finger protein 337 · module 203 +
+- [[ZNF337-AS1]] — ZNF337 antisense RNA 1 · module 124 +
+- [[ZNF33A]] — zinc finger protein 33A · module 110 +
+- [[ZNF33B]] — zinc finger protein 33B · module 064 +
+- [[ZNF34]] — zinc finger protein 34 · module 047 +
+- [[ZNF341]] — zinc finger protein 341 · module 030 +
+- [[ZNF341-AS1]] — ZNF341 antisense RNA 1 · module 080 +
+- [[ZNF343]] — zinc finger protein 343 · module 107 +
+- [[ZNF345]] — zinc finger protein 345 · module 023 +
+- [[ZNF346]] — zinc finger protein 346 · module 004 +
+- [[ZNF347]] — zinc finger protein 347 · module 011 +
+- [[ZNF35]] — zinc finger protein 35 · module 114 +
+- [[ZNF350]] — zinc finger protein 350 · module 119 +
+- [[ZNF354A]] — zinc finger protein 354A · module 001 +
+- [[ZNF354B]] — zinc finger protein 354B · module 001 +
+- [[ZNF354C]] — zinc finger protein 354C · module 016 +
+- [[ZNF358]] — zinc finger protein 358 · module 024 +
+- [[ZNF362]] — zinc finger protein 362 · module 046 +
+- [[ZNF365]] — zinc finger protein 365 · module 034 +
+- [[ZNF367]] — zinc finger protein 367 · module 006 +
+- [[ZNF37A]] — zinc finger protein 37A · module 004 +
+- [[ZNF37BP]] — zinc finger protein 37B, pseudogene · module 004 +
+- [[ZNF382]] — zinc finger protein 382 · module 026 +
+- [[ZNF383]] — zinc finger protein 383 · module 089 +
+- [[ZNF384]] — zinc finger protein 384 · module 007 +
+- [[ZNF385A]] — zinc finger protein 385A · module 208 +
+- [[ZNF385B]] — zinc finger protein 385B · module 115 +
+- [[ZNF385C]] — zinc finger protein 385C · module 014 +
+- [[ZNF385D]] — zinc finger protein 385D · module 013 +
+- [[ZNF391]] — zinc finger protein 391 · module 094 +
+- [[ZNF394]] — zinc finger protein 394 · module 015 +
+- [[ZNF395]] — zinc finger protein 395 · module 079 +
+- [[ZNF397]] — zinc finger protein 397 · module 011 +
+- [[ZNF398]] — zinc finger protein 398 · module 107 +
+- [[ZNF404]] — zinc finger protein 404 · module 103 +
+- [[ZNF407]] — zinc finger protein 407 · module 017 -
+- [[ZNF407-AS1]] — ZNF407 antisense RNA 1 · module 010 +
+- [[ZNF408]] — zinc finger protein 408 · module 007 +
+- [[ZNF41]] — zinc finger protein 41 · module 156 +
+- [[ZNF410]] — zinc finger protein 410 · module 029 +
+- [[ZNF414]] — zinc finger protein 414 · module 051 +
+- [[ZNF415]] — zinc finger protein 415 · module 011 +
+- [[ZNF417]] — zinc finger protein 417 · module 049 +
+- [[ZNF418]] — zinc finger protein 418 · module 015 +
+- [[ZNF419]] — zinc finger protein 419 · module 094 +
+- [[ZNF420]] — zinc finger protein 420 · module 129 +
+- [[ZNF423]] — zinc finger protein 423 · module 062 +
+- [[ZNF425]] — zinc finger protein 425 · module 023 +
+- [[ZNF426]] — zinc finger protein 426 · module 007 +
+- [[ZNF428]] — zinc finger protein 428 · module 051 +
+- [[ZNF429]] — zinc finger protein 429 · module 010 +
+- [[ZNF43]] — zinc finger protein 43 · module 091 +
+- [[ZNF430]] — zinc finger protein 430 · module 203 +
+- [[ZNF431]] — zinc finger protein 431 · module 203 +
+- [[ZNF432]] — zinc finger protein 432 · module 038 +
+- [[ZNF433]] — zinc finger protein 433 · module 094 +
+- [[ZNF436]] — zinc finger protein 436 · module 007 +
+- [[ZNF438]] — zinc finger protein 438 · module 200 +
+- [[ZNF439]] — zinc finger protein 439 · module 013 +
+- [[ZNF44]] — zinc finger protein 44 · module 094 +
+- [[ZNF440]] — zinc finger protein 440 · module 094 +
+- [[ZNF441]] — zinc finger protein 441 · module 094 +
+- [[ZNF442]] — zinc finger protein 442 · module 094 +
+- [[ZNF443]] — zinc finger protein 443 · module 006 +
+- [[ZNF444]] — zinc finger protein 444 · module 064 +
+- [[ZNF445]] — zinc finger protein 445 · module 017 +
+- [[ZNF446]] — zinc finger protein 446 · module 118 +
+- [[ZNF449]] — zinc finger protein 449 · module 175 +
+- [[ZNF45]] — zinc finger protein 45 · module 017 +
+- [[ZNF45-AS1]] — ZNF45 antisense RNA 1 · module 166 +
+- [[ZNF451]] — zinc finger protein 451 · module 130 +
+- [[ZNF451-AS1]] — ZNF451 regulatory antisense RNA 1 · module 021 +
+- [[ZNF460]] — zinc finger protein 460 · module 215 +
+- [[ZNF460-AS1]] — ZNF460 antisense RNA 1 · module 015 +
+- [[ZNF461]] — zinc finger protein 461 · module 129 +
+- [[ZNF462]] — zinc finger protein 462 · module 068 +
+- [[ZNF468]] — zinc finger protein 468 · module 007 +
+- [[ZNF469]] — zinc finger protein 469 · module 065 -
+- [[ZNF470]] — zinc finger protein 470 · module 129 +
+- [[ZNF471]] — zinc finger protein 471 · module 013 +
+- [[ZNF473]] — zinc finger protein 473 · module 036 +
+- [[ZNF473CR]] — ZNF473 cis regulating lncRNA · module 037 +
+- [[ZNF474]] — zinc finger protein 474 · module 026 +
+- [[ZNF48]] — zinc finger protein 48 · module 007 +
+- [[ZNF480]] — zinc finger protein 480 · module 016 +
+- [[ZNF483]] — zinc finger protein 483 · module 132 +
+- [[ZNF484]] — zinc finger protein 484 · module 016 +
+- [[ZNF485]] — zinc finger protein 485 · module 001 +
+- [[ZNF486]] — zinc finger protein 486 · module 091 +
+- [[ZNF487]] — zinc finger protein 487 · module 205 +
+- [[ZNF490]] — zinc finger protein 490 · module 004 -
+- [[ZNF493]] — zinc finger protein 493 · module 089 +
+- [[ZNF496]] — zinc finger protein 496 · module 036 +
+- [[ZNF500]] — zinc finger protein 500 · module 142 +
+- [[ZNF502]] — zinc finger protein 502 · module 016 +
+- [[ZNF503]] — zinc finger protein 503 · module 020 -
+- [[ZNF503-AS1]] — ZNF503 antisense RNA 1 · module 055 +
+- [[ZNF506]] — zinc finger protein 506 · module 114 +
+- [[ZNF507]] — zinc finger protein 507 · module 001 +
+- [[ZNF510]] — zinc finger protein 510 · module 016 +
+- [[ZNF511]] — zinc finger protein 511 · module 085 +
+- [[ZNF512]] — zinc finger protein 512 · module 057 +
+- [[ZNF512B]] — zinc finger protein 512B · module 016 +
+- [[ZNF513]] — zinc finger protein 513 · module 007 +
+- [[ZNF514]] — zinc finger protein 514 · module 015 +
+- [[ZNF516]] — zinc finger protein 516 · module 124 -
+- [[ZNF518A]] — zinc finger protein 518A · module 011 +
+- [[ZNF518B]] — zinc finger protein 518B · module 016 +
+- [[ZNF519]] — zinc finger protein 519 · module 071 +
+- [[ZNF521]] — zinc finger protein 521 · module 108 +
+- [[ZNF524]] — zinc finger protein 524 · module 024 +
+- [[ZNF525]] — zinc finger protein 525 · module 011 +
+- [[ZNF526]] — zinc finger protein 526 · module 049 +
+- [[ZNF527]] — zinc finger protein 527 · module 129 +
+- [[ZNF528]] — zinc finger protein 528 · module 016 +
+- [[ZNF528-AS1]] — ZNF528 antisense RNA 1 · module 015 +
+- [[ZNF529]] — zinc finger protein 529 · module 001 +
+- [[ZNF529-AS1]] — ZNF529 antisense RNA 1 · module 015 +
+- [[ZNF530]] — zinc finger protein 530 · module 071 +
+- [[ZNF532]] — zinc finger protein 532 · module 095 +
+- [[ZNF536]] — zinc finger protein 536 · module 102 +
+- [[ZNF540]] — zinc finger protein 540 · module 045 +
+- [[ZNF543]] — zinc finger protein 543 · module 007 +
+- [[ZNF544]] — zinc finger protein 544 · module 036 +
+- [[ZNF546]] — zinc finger protein 546 · module 083 +
+- [[ZNF547]] — zinc finger protein 547 · module 037 +
+- [[ZNF548]] — zinc finger protein 548 · module 016 +
+- [[ZNF549]] — zinc finger protein 549 · module 129 +
+- [[ZNF550]] — zinc finger protein 550 · module 041 +
+- [[ZNF551]] — zinc finger protein 551 · module 036 +
+- [[ZNF552]] — zinc finger protein 552 · module 030 +
+- [[ZNF554]] — zinc finger protein 554 · module 016 +
+- [[ZNF555]] — zinc finger protein 555 · module 012 +
+- [[ZNF557]] — zinc finger protein 557 · module 149 +
+- [[ZNF558]] — zinc finger protein 558 · module 227 +
+- [[ZNF559]] — zinc finger protein 559 · module 129 +
+- [[ZNF559-ZNF177]] — ZNF559-ZNF177 readthrough · module 129 +
+- [[ZNF561]] — zinc finger protein 561 · module 007 +
+- [[ZNF561-AS1]] — ZNF561 antisense RNA 1 · module 035 +
+- [[ZNF562]] — zinc finger protein 562 · module 005 +
+- [[ZNF563]] — zinc finger protein 563 · module 094 +
+- [[ZNF564]] — zinc finger protein 564 · module 007 +
+- [[ZNF565]] — zinc finger protein 565 · module 024 +
+- [[ZNF566]] — zinc finger protein 566 · module 129 +
+- [[ZNF567]] — zinc finger protein 567 · module 129 +
+- [[ZNF567-DT]] — ZNF567 divergent transcript · module 030 +
+- [[ZNF568]] — zinc finger protein 568 · module 129 +
+- [[ZNF569]] — zinc finger protein 569 · module 129 +
+- [[ZNF57]] — zinc finger protein 57 · module 119 +
+- [[ZNF570]] — zinc finger protein 570 · module 016 +
+- [[ZNF571]] — zinc finger protein 571 · module 129 +
+- [[ZNF573]] — zinc finger protein 573 · module 089 +
+- [[ZNF574]] — zinc finger protein 574 · module 007 +
+- [[ZNF576]] — zinc finger protein 576 · module 119 +
+- [[ZNF577]] — zinc finger protein 577 · module 083 +
+- [[ZNF579]] — zinc finger protein 579 · module 012 +
+- [[ZNF580]] — zinc finger protein 580 · module 114 +
+- [[ZNF581]] — zinc finger protein 581 · module 107 +
+- [[ZNF583]] — zinc finger protein 583 · module 129 +
+- [[ZNF584]] — zinc finger protein 584 · module 038 +
+- [[ZNF585A]] — zinc finger protein 585A · module 011 +
+- [[ZNF585B]] — zinc finger protein 585B · module 016 +
+- [[ZNF586]] — zinc finger protein 586 · module 114 +
+- [[ZNF587]] — zinc finger protein 587 · module 052 +
+- [[ZNF587B]] — zinc finger protein 587B · module 033 +
+- [[ZNF589]] — zinc finger protein 589 · module 004 +
+- [[ZNF592]] — zinc finger protein 592 · module 146 +
+- [[ZNF593]] — zinc finger protein 593 · module 011 +
+- [[ZNF594]] — zinc finger protein 594 · module 016 +
+- [[ZNF594-DT]] — ZNF594 divergent transcript · module 209 +
+- [[ZNF595]] — zinc finger protein 595 · module 015 +
+- [[ZNF596]] — zinc finger protein 596 · module 015 +
+- [[ZNF597]] — zinc finger protein 597 · module 007 +
+- [[ZNF598]] — zinc finger protein 598, E3 ubiquitin ligase · module 002 +
+- [[ZNF600]] — zinc finger protein 600 · module 203 +
+- [[ZNF605]] — zinc finger protein 605 · module 001 +
+- [[ZNF606]] — zinc finger protein 606 · module 016 +
+- [[ZNF607]] — zinc finger protein 607 · module 016 +
+- [[ZNF608]] — zinc finger protein 608 · module 217 +
+- [[ZNF609]] — zinc finger protein 609 · module 172 +
+- [[ZNF610]] — zinc finger protein 610 · module 010 +
+- [[ZNF611]] — zinc finger protein 611 · module 203 +
+- [[ZNF613]] — zinc finger protein 613 · module 016 +
+- [[ZNF614]] — zinc finger protein 614 · module 007 +
+- [[ZNF615]] — zinc finger protein 615 · module 016 +
+- [[ZNF616]] — zinc finger protein 616 · module 011 +
+- [[ZNF618]] — zinc finger protein 618 · module 018 +
+- [[ZNF620]] — zinc finger protein 620 · module 016 +
+- [[ZNF621]] — zinc finger protein 621 · module 083 +
+- [[ZNF622]] — zinc finger protein 622 · module 012 +
+- [[ZNF623]] — zinc finger protein 623 · module 007 +
+- [[ZNF624]] — zinc finger protein 624 · module 016 +
+- [[ZNF625]] — zinc finger protein 625 · module 016 +
+- [[ZNF626]] — zinc finger protein 626 · module 023 +
+- [[ZNF627]] — zinc finger protein 627 · module 094 +
+- [[ZNF628]] — zinc finger protein 628 · module 096 +
+- [[ZNF629]] — zinc finger protein 629 · module 007 +
+- [[ZNF630]] — zinc finger protein 630 · module 023 +
+- [[ZNF638]] — zinc finger protein 638 · module 028 +
+- [[ZNF639]] — zinc finger protein 639 · module 033 +
+- [[ZNF641]] — zinc finger protein 641 · module 080 +
+- [[ZNF644]] — zinc finger protein 644 · module 051 +
+- [[ZNF646]] — zinc finger protein 646 · module 007 +
+- [[ZNF649]] — zinc finger protein 649 · module 011 +
+- [[ZNF652]] — zinc finger protein 652 · module 041 +
+- [[ZNF653]] — zinc finger protein 653 · module 114 +
+- [[ZNF654]] — zinc finger protein 654 · module 144 +
+- [[ZNF655]] — zinc finger protein 655 · module 054 -
+- [[ZNF66]] — zinc finger protein 66 · module 091 +
+- [[ZNF664]] — zinc finger protein 664 · module 025 +
+- [[ZNF665]] — zinc finger protein 665 · module 023 +
+- [[ZNF667]] — zinc finger protein 667 · module 013 +
+- [[ZNF667-AS1]] — ZNF667 antisense RNA 1 · module 030 +
+- [[ZNF668]] — zinc finger protein 668 · module 142 +
+- [[ZNF669]] — zinc finger protein 669 · module 011 +
+- [[ZNF670]] — zinc finger protein 670 · module 052 -
+- [[ZNF672]] — zinc finger protein 672 · module 219 +
+- [[ZNF674]] — zinc finger protein 674 · module 186 +
+- [[ZNF675]] — zinc finger protein 675 · module 091 +
+- [[ZNF677]] — zinc finger protein 677 · module 016 +
+- [[ZNF678]] — zinc finger protein 678 · module 016 +
+- [[ZNF680]] — zinc finger protein 680 · module 091 +
+- [[ZNF681]] — zinc finger protein 681 · module 016 +
+- [[ZNF682]] — zinc finger protein 682 · module 094 +
+- [[ZNF684]] — zinc finger protein 684 · module 071 +
+- [[ZNF687]] — zinc finger protein 687 · module 007 +
+- [[ZNF689]] — zinc finger protein 689 · module 011 +
+- [[ZNF69]] — zinc finger protein 69 · module 027 +
+- [[ZNF691]] — zinc finger protein 691 · module 007 +
+- [[ZNF692]] — zinc finger protein 692 · module 033 +
+- [[ZNF695]] — zinc finger protein 695 · module 091 +
+- [[ZNF696]] — zinc finger protein 696 · module 005 +
+- [[ZNF697]] — zinc finger protein 697 · module 158 +
+- [[ZNF699]] — zinc finger protein 699 · module 011 +
+- [[ZNF7]] — zinc finger protein 7 · module 170 +
+- [[ZNF70]] — zinc finger protein 70 · module 049 +
+- [[ZNF700]] — zinc finger protein 700 · module 094 +
+- [[ZNF701]] — zinc finger protein 701 · module 007 +
+- [[ZNF702P]] — zinc finger protein 702, pseudogene · module 068 +
+- [[ZNF703]] — zinc finger protein 703 · module 027 +
+- [[ZNF704]] — zinc finger protein 704 · module 143 +
+- [[ZNF706]] — zinc finger protein 706 · module 059 +
+- [[ZNF707]] — zinc finger protein 707 · module 149 +
+- [[ZNF708]] — zinc finger protein 708 · module 107 +
+- [[ZNF71]] — zinc finger protein 71 · module 129 +
+- [[ZNF710]] — zinc finger protein 710 · module 110 +
+- [[ZNF710-AS1]] — ZNF710 antisense RNA 1 · module 040 +
+- [[ZNF711]] — ZFX family zinc finger ZNF711 · module 028 +
+- [[ZNF713]] — zinc finger protein 713 · module 051 +
+- [[ZNF714]] — zinc finger protein 714 · module 091 +
+- [[ZNF717]] — zinc finger protein 717 · module 010 +
+- [[ZNF718]] — zinc finger protein 718 · module 071 +
+- [[ZNF721]] — zinc finger protein 721 · module 114 +
+- [[ZNF724]] — zinc finger protein 724 · module 091 +
+- [[ZNF726]] — zinc finger protein 726 · module 091 +
+- [[ZNF727]] — zinc finger protein 727 · module 094 +
+- [[ZNF730]] — zinc finger protein 730 · module 006 +
+- [[ZNF731P]] — zinc finger protein 731, pseudogene · module 059 -
+- [[ZNF732]] — zinc finger protein 732 · module 006 +
+- [[ZNF736]] — zinc finger protein 736 · module 091 +
+- [[ZNF736P9Y]] — zinc finger protein 736 pseudogene 9, Y-linked · module 073 +
+- [[ZNF737]] — zinc finger protein 737 · module 012 +
+- [[ZNF738]] — zinc finger protein 738 · module 091 +
+- [[ZNF74]] — zinc finger protein 74 · module 033 +
+- [[ZNF740]] — zinc finger protein 740 · module 126 +
+- [[ZNF746]] — zinc finger protein 746 · module 007 +
+- [[ZNF747]] — zinc finger protein 747 · module 010 +
+- [[ZNF749]] — zinc finger protein 749 · module 018 +
+- [[ZNF75A]] — zinc finger protein 75A · module 011 +
+- [[ZNF75D]] — zinc finger protein 75D · module 179 +
+- [[ZNF76]] — zinc finger protein 76 · module 170 +
+- [[ZNF761]] — zinc finger protein 761 · module 203 +
+- [[ZNF764]] — zinc finger protein 764 · module 068 +
+- [[ZNF765]] — zinc finger protein 765 · module 203 +
+- [[ZNF766]] — zinc finger protein 766 · module 149 +
+- [[ZNF767P-1]] · module 036 +
+- [[ZNF768]] — zinc finger protein 768 · module 011 +
+- [[ZNF77]] — zinc finger protein 77 · module 012 +
+- [[ZNF770]] — zinc finger protein 770 · module 007 +
+- [[ZNF771]] — zinc finger protein 771 · module 072 +
+- [[ZNF772]] — zinc finger protein 772 · module 016 +
+- [[ZNF773]] — zinc finger protein 773 · module 011 +
+- [[ZNF774]] — zinc finger protein 774 · module 075 +
+- [[ZNF775]] — zinc finger protein 775 · module 046 +
+- [[ZNF776]] — zinc finger protein 776 · module 016 +
+- [[ZNF777]] — zinc finger protein 777 · module 107 +
+- [[ZNF778]] — zinc finger protein 778 · module 015 +
+- [[ZNF780A]] — zinc finger protein 780A · module 016 +
+- [[ZNF780B]] — zinc finger protein 780B · module 016 +
+- [[ZNF782]] — zinc finger protein 782 · module 119 +
+- [[ZNF783]] — zinc finger protein 783 · module 001 +
+- [[ZNF785]] — zinc finger protein 785 · module 023 +
+- [[ZNF786]] — zinc finger protein 786 · module 107 +
+- [[ZNF787]] — zinc finger protein 787 · module 005 +
+- [[ZNF789]] — zinc finger protein 789 · module 015 +
+- [[ZNF79]] — zinc finger protein 79 · module 062 +
+- [[ZNF790]] — zinc finger protein 790 · module 089 +
+- [[ZNF790-AS1]] — ZNF790 antisense RNA 1 · module 129 +
+- [[ZNF791]] — zinc finger protein 791 · module 149 +
+- [[ZNF793]] — zinc finger protein 793 · module 016 +
+- [[ZNF799]] — zinc finger protein 799 · module 006 +
+- [[ZNF8]] — zinc finger protein 8 · module 059 -
+- [[ZNF8-DT]] — ZNF8 divergent transcript · module 103 +
+- [[ZNF800]] — zinc finger protein 800 · module 017 -
+- [[ZNF804A]] — zinc finger protein 804A · module 009 +
+- [[ZNF805]] — zinc finger protein 805 · module 041 +
+- [[ZNF808]] — zinc finger protein 808 · module 007 +
+- [[ZNF81]] — zinc finger protein 81 · module 016 +
+- [[ZNF813]] — zinc finger protein 813 · module 007 +
+- [[ZNF814]] — zinc finger protein 814 · module 037 +
+- [[ZNF815P]] — zinc finger protein 815, pseudogene · module 191 +
+- [[ZNF816]] — zinc finger protein 816 · module 007 +
+- [[ZNF816-ZNF321P]] — ZNF816-ZNF321P readthrough · module 025 -
+- [[ZNF818P]] — zinc finger protein 818, pseudogene · module 010 +
+- [[ZNF821]] — zinc finger protein 821 · module 036 -
+- [[ZNF823]] — zinc finger protein 823 · module 003 +
+- [[ZNF827]] — zinc finger protein 827 · module 095 +
+- [[ZNF829]] — zinc finger protein 829 · module 016 +
+- [[ZNF83]] — zinc finger protein 83 · module 110 +
+- [[ZNF830]] — zinc finger protein 830 · module 011 +
+- [[ZNF836]] — zinc finger protein 836 · module 183 +
+- [[ZNF839]] — zinc finger protein 839 · module 016 +
+- [[ZNF84]] — zinc finger protein 84 · module 017 +
+- [[ZNF841]] — zinc finger protein 841 · module 052 +
+- [[ZNF844]] — zinc finger protein 844 · module 094 +
+- [[ZNF845]] — zinc finger protein 845 · module 007 +
+- [[ZNF846]] — zinc finger protein 846 · module 023 +
+- [[ZNF85]] — zinc finger protein 85 · module 091 +
+- [[ZNF850]] — zinc finger protein 850 · module 071 +
+- [[ZNF852]] — zinc finger protein 852 · module 029 +
+- [[ZNF860]] — zinc finger protein 860 · module 031 +
+- [[ZNF862]] — zinc finger protein 862 · module 015 +
+- [[ZNF865]] — zinc finger protein 865 · module 129 +
+- [[ZNF875]] — zinc finger protein 875 · module 036 +
+- [[ZNF876P]] — zinc finger protein 876, pseudogene · module 071 +
+- [[ZNF880]] — zinc finger protein 880 · module 016 +
+- [[ZNF883]] — zinc finger protein 883 · module 108 +
+- [[ZNF888]] — zinc finger protein 888 · module 011 +
+- [[ZNF891]] — zinc finger protein 891 · module 057 +
+- [[ZNF90]] — zinc finger protein 90 · module 091 +
+- [[ZNF91]] — zinc finger protein 91 · module 023 +
+- [[ZNF92]] — zinc finger protein 92 · module 091 +
+- [[ZNF93]] — zinc finger protein 93 · module 091 +
+- [[ZNFX1]] — zinc finger NFX1-type containing 1 · module 032 +
+- [[ZNG1A]] — Zn regulated GTPase metalloprotein activator 1A · module 028 +
+- [[ZNG1B]] — Zn regulated GTPase metalloprotein activator 1B · module 028 +
+- [[ZNG1C]] — Zn regulated GTPase metalloprotein activator 1C · module 005 +
+- [[ZNG1E]] — Zn regulated GTPase metalloprotein activator 1E · module 005 +
+- [[ZNG1F]] — Zn regulated GTPase metalloprotein activator 1F · module 005 +
+- [[ZNHIT1]] — zinc finger HIT-type containing 1 · module 048 +
+- [[ZNHIT3]] — zinc finger HIT-type containing 3 · module 024 +
+- [[ZNHIT6]] — zinc finger HIT-type containing 6 · module 001 +
+- [[ZNNT1]] — ZNF706 neighboring transcript 1 · module 037 +
+- [[ZNRD2]] — zinc ribbon domain containing 2 · module 003 +
+- [[ZNRF1]] — zinc and ring finger 1 · module 154 +
+- [[ZNRF2]] — zinc and ring finger 2 · module 145 +
+- [[ZNRF2P1]] — zinc and ring finger 2 pseudogene 1 · module 018 +
+- [[ZNRF2P2]] — zinc and ring finger 2 pseudogene 2 · module 018 +
+- [[ZNRF3]] — zinc and ring finger 3 · module 005 +
+- [[ZP3]] — zona pellucida glycoprotein 3 · module 004 +
+- [[ZPLD1]] — zona pellucida like domain containing 1 · module 165 +
+- [[ZPR1]] — ZPR1 zinc finger · module 001 +
+- [[ZRANB1]] — zinc finger RANBP2-type containing 1 · module 074 +
+- [[ZRANB2]] — zinc finger RANBP2-type containing 2 · module 064 +
+- [[ZRANB2-AS1]] — ZRANB2 antisense RNA 1 · module 021 +
+- [[ZRANB2-DT]] — ZRANB2 divergent transcript · module 010 +
+- [[ZRANB3]] — zinc finger RANBP2-type containing 3 · module 071 +
+- [[ZRSR2]] — zinc finger CCCH-type, RNA binding motif and serine/arginine rich 2 · module 041 +
+- [[ZSCAN12]] — zinc finger and SCAN domain containing 12 · module 016 +
+- [[ZSCAN16]] — zinc finger and SCAN domain containing 16 · module 012 +
+- [[ZSCAN16-AS1]] — ZSCAN16 antisense RNA 1 · module 023 +
+- [[ZSCAN18]] — zinc finger and SCAN domain containing 18 · module 016 +
+- [[ZSCAN2]] — zinc finger and SCAN domain containing 2 · module 183 +
+- [[ZSCAN20]] — zinc finger and SCAN domain containing 20 · module 016 +
+- [[ZSCAN21]] — zinc finger and SCAN domain containing 21 · module 028 +
+- [[ZSCAN22]] — zinc finger and SCAN domain containing 22 · module 016 +
+- [[ZSCAN23]] — zinc finger and SCAN domain containing 23 · module 016 +
+- [[ZSCAN25]] — zinc finger and SCAN domain containing 25 · module 089 +
+- [[ZSCAN26]] — zinc finger and SCAN domain containing 26 · module 016 +
+- [[ZSCAN29]] — zinc finger and SCAN domain containing 29 · module 007 +
+- [[ZSCAN30]] — zinc finger and SCAN domain containing 30 · module 010 +
+- [[ZSCAN31]] — zinc finger and SCAN domain containing 31 · module 117 +
+- [[ZSCAN32]] — zinc finger and SCAN domain containing 32 · module 114 +
+- [[ZSCAN5A]] — zinc finger and SCAN domain containing 5A · module 045 -
+- [[ZSCAN9]] — zinc finger and SCAN domain containing 9 · module 016 +
+- [[ZSWIM1]] — zinc finger SWIM-type containing 1 · module 007 +
+- [[ZSWIM3]] — zinc finger SWIM-type containing 3 · module 170 +
+- [[ZSWIM4]] — zinc finger SWIM-type containing 4 · module 158 +
+- [[ZSWIM5]] — zinc finger SWIM-type containing 5 · module 144 +
+- [[ZSWIM6]] — zinc finger SWIM-type containing 6 · module 171 -
+- [[ZSWIM7]] — zinc finger SWIM-type containing 7 · module 028 +
+- [[ZSWIM8]] — zinc finger SWIM-type containing 8 · module 041 +
+- [[ZSWIM9]] — zinc finger SWIM-type containing 9 · module 012 +
+- [[ZUP1]] — zinc finger containing ubiquitin peptidase 1 · module 015 +
+- [[ZW10]] — zw10 kinetochore protein · module 040 +
+- [[ZWILCH]] — zwilch kinetochore protein · module 006 +
+- [[ZWINT]] — ZW10 interacting kinetochore protein · module 006 +
+- [[ZXDA]] — zinc finger X-linked duplicated A · module 135 +
+- [[ZXDB]] — zinc finger X-linked duplicated B · module 007 +
+- [[ZXDC]] — ZXD family zinc finger C · module 003 +
+- [[ZYG11A]] — zyg-11 family member A, cell cycle regulator · module 077 +
+- [[ZYG11B]] — zyg-11 family member B, cell cycle regulator · module 017 +
+- [[ZYX]] — zyxin · module 096 +
+- [[ZZEF1]] — zinc finger ZZ-type and EF-hand domain containing 1 · module 041 +
+- [[ZZZ3]] — zinc finger ZZ-type containing 3 · module 001 +

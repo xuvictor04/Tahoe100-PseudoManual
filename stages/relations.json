@@ -1,0 +1,25 @@
+{
+ "stage": "relations",
+ "version": 4,
+ "finished": "2026-11-09 11:02:27",
+ "info": {
+  "version": 4,
+  "genes": 15076,
+  "top": 100,
+  "pairs": 1507600,
+  "reproducible_pairs": 745357,
+  "one_half_pairs": 6700,
+  "fdr_le_0.05_pairs": 758505,
+  "known_pairs": 66952,
+  "locus_pairs": 1582,
+  "readthrough_risk_pairs": 117,
+  "pairs_with_alert": 24012,
+  "pairs_with_flagged_only_gene": 9321,
+  "novel_candidate_pairs": 2815,
+  "reference": true,
+  "novel_assessed": true,
+  "novel_blocked_by": [],
+  "repro_fdr": 0.1,
+  "minutes": 0.29
+ }
+}

@@ -1,0 +1,21 @@
+{
+ "stage": "effects",
+ "version": 3,
+ "finished": "2026-11-07 20:01:33",
+ "info": {
+  "min_cells": 30,
+  "median_cells_per_profile": 1217.0,
+  "unreliable_plates": [
+   "plate13"
+  ],
+  "comp_min_cpm": 10.0,
+  "comp_min_genes": 200,
+  "pos_clean_z": 3.0,
+  "plate_scale_min_wells": 20,
+  "method_version": 3,
+  "options": {
+   "min_cells": 0,
+   "unreliable_plates": null
+  }
+ }
+}

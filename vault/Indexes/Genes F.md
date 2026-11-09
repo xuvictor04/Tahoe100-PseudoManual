@@ -1,0 +1,543 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes F
+
+533 genes. Back to [[Genes by letter]].
+
+- [[F10]] — coagulation factor X · module 027 +
+- [[F11-AS1]] — F11 antisense RNA 1 · module 009 +
+- [[F11R]] — F11 receptor · module 208 +
+- [[F12]] — coagulation factor XII · module 025 -
+- [[F2]] — coagulation factor II, thrombin · module 053 +
+- [[F2R]] — coagulation factor II thrombin receptor · module 078 +
+- [[F2RL1]] — F2R like trypsin receptor 1 · module 078 +
+- [[F2RL2]] — coagulation factor II thrombin receptor like 2 · module 019 +
+- [[F3]] — coagulation factor III, tissue factor · module 034 +
+- [[F5]] — coagulation factor V · module 027 +
+- [[F8]] — coagulation factor VIII · module 010 +
+- [[FA2H]] — fatty acid 2-hydroxylase · module 031 +
+- [[FAAH]] — fatty acid amide hydrolase · module 055 +
+- [[FAAH2]] — fatty acid amide hydrolase 2 · module 008 +
+- [[FAAP100]] — FA core complex associated protein 100 · module 002 +
+- [[FAAP20]] — FA core complex associated protein 20 · module 003 +
+- [[FAAP24]] — FA core complex associated protein 24 · module 203 +
+- [[FABP5]] — fatty acid binding protein 5 · module 004 +
+- [[FADD]] — Fas associated via death domain · module 007 +
+- [[FADS1]] — fatty acid desaturase 1 · module 086 +
+- [[FADS2]] — fatty acid desaturase 2 · module 086 +
+- [[FADS3]] — fatty acid desaturase 3 · module 100 +
+- [[FAF1]] — Fas associated factor 1 · module 004 +
+- [[FAF2]] — Fas associated factor family member 2 · module 156 +
+- [[FAH]] — fumarylacetoacetate hydrolase · module 104 +
+- [[FAHD1]] — FAH domain containing oxaloacetate decarboxylase 1 · module 016 +
+- [[FAHD2A]] — fumarylacetoacetate hydrolase domain containing 2A · module 015 +
+- [[FAHD2B]] — fumarylacetoacetate hydrolase domain containing 2B · module 012 +
+- [[FAHD2CP]] — fumarylacetoacetate hydrolase domain containing 2C, pseudogene · module 038 +
+- [[FAIM]] — Fas apoptotic inhibitory molecule · module 137 +
+- [[FAM102A]] — estrogen-induced osteoclastogenesis regulator 1 · module 161 +
+- [[FAM102B]] — EEIG family member 2 · module 083 -
+- [[FAM104A]] — VCP nuclear cofactor family member 1 · module 030 +
+- [[FAM104B]] — VCP nuclear cofactor family member 2 · module 058 +
+- [[FAM106A]] — family with sequence similarity 106 member A · module 108 +
+- [[FAM107B]] — family with sequence similarity 107 member B · module 081 +
+- [[FAM110A]] — family with sequence similarity 110 member A · module 022 +
+- [[FAM110B]] — family with sequence similarity 110 member B · module 009 +
+- [[FAM110C]] — family with sequence similarity 110 member C · module 034 +
+- [[FAM111A]] — FAM111 trypsin like peptidase A · module 091 +
+- [[FAM111A-DT]] — FAM111A divergent transcript · module 014 +
+- [[FAM111B]] — FAM111 trypsin like peptidase B · module 006 +
+- [[FAM114A1]] — family with sequence similarity 114 member A1 · module 056 +
+- [[FAM114A2]] — family with sequence similarity 114 member A2 · module 028 +
+- [[FAM117A]] — family with sequence similarity 117 member A · module 004 -
+- [[FAM117B]] — family with sequence similarity 117 member B · module 134 +
+- [[FAM118A]] — SIR2 antiphage like 2 · module 010 -
+- [[FAM118B]] — SIR2 antiphage like 1 · module 129 +
+- [[FAM120A]] — family with sequence similarity 120 member A · module 018 +
+- [[FAM120AOS]] — family with sequence similarity 120 member A opposite strand · module 010 +
+- [[FAM120B]] — family with sequence similarity 120 member B · module 045 -
+- [[FAM120C]] — family with sequence similarity 120 member C · module 001 +
+- [[FAM124A]] — family with sequence similarity 124 member A · module 082 +
+- [[FAM131A]] — family with sequence similarity 131 member A · module 136 +
+- [[FAM131B-AS2]] — FAM131B antisense RNA 2 · module 101 +
+- [[FAM133A]] — family with sequence similarity 133 member A · module 009 +
+- [[FAM133B]] — family with sequence similarity 133 member B · module 017 +
+- [[FAM135A]] — family with sequence similarity 135 member A · module 018 +
+- [[FAM136A]] — TIM double twin CX3C motif chaperone · module 018 +
+- [[FAM13A]] — family with sequence similarity 13 member A · module 079 +
+- [[FAM13A-AS1]] — FAM13A antisense RNA 1 · module 099 +
+- [[FAM13B]] — family with sequence similarity 13 member B · module 085 +
+- [[FAM13C]] — family with sequence similarity 13 member C · module 009 +
+- [[FAM149A]] — family with sequence similarity 149 member A · module 008 +
+- [[FAM149B1]] — family with sequence similarity 149 member B1 · module 028 +
+- [[FAM151B]] — family with sequence similarity 151 member B · module 039 +
+- [[FAM151B-DT]] — FAM151B divergent transcript · module 021 +
+- [[FAM156A]] — family with sequence similarity 156 member A · module 216 +
+- [[FAM161A]] — FAM161 centrosomal protein A · module 175 +
+- [[FAM161B]] — FAM161 centrosomal protein B · module 041 +
+- [[FAM162A]] — family with sequence similarity 162 member A · module 079 +
+- [[FAM167A]] — family with sequence similarity 167 member A · module 013 +
+- [[FAM168A]] — family with sequence similarity 168 member A · module 065 +
+- [[FAM168B]] — family with sequence similarity 168 member B · module 065 +
+- [[FAM169A]] — family with sequence similarity 169 member A · module 137 +
+- [[FAM171A1]] — family with sequence similarity 171 member A1 · module 222 +
+- [[FAM171B]] — family with sequence similarity 171 member B · module 052 -
+- [[FAM172A]] — ARB2 cotranscriptional regulator A · module 185 +
+- [[FAM174A]] — family with sequence similarity 174 member A · module 205 +
+- [[FAM174A-DT]] — FAM174A divergent transcript · module 010 +
+- [[FAM174B]] — family with sequence similarity 174 member B · module 035 +
+- [[FAM174C]] — family with sequence similarity 174 member C · module 011 +
+- [[FAM177A1]] — family with sequence similarity 177 member A1 · module 041 +
+- [[FAM177B]] — family with sequence similarity 177 member B · module 021 +
+- [[FAM182B]] — family with sequence similarity 182 member B · module 043 +
+- [[FAM184A]] — family with sequence similarity 184 member A · module 102 +
+- [[FAM184B]] — family with sequence similarity 184 member B · module 026 +
+- [[FAM185A]] — family with sequence similarity 185 member A · module 015 +
+- [[FAM185BP]] — family with sequence similarity 185 member B, pseudogene · module 178 +
+- [[FAM193A]] — family with sequence similarity 193 member A · module 020 -
+- [[FAM193B]] — family with sequence similarity 193 member B · module 003 +
+- [[FAM199X]] — family with sequence similarity 199, X-linked · module 025 +
+- [[FAM200A]] — ZBED8 like · module 011 +
+- [[FAM200B]] — zinc finger BED-type containing 11 · module 068 +
+- [[FAM204A]] — family with sequence similarity 204 member A · module 028 +
+- [[FAM209A]] — family with sequence similarity 209 member A · module 038 +
+- [[FAM20B]] — FAM20B glycosaminoglycan xylosylkinase · module 018 +
+- [[FAM20C]] — FAM20C golgi associated secretory pathway kinase · module 013 +
+- [[FAM210A]] — mitochondrial inner membrane structural 1 · module 105 +
+- [[FAM210B]] — mitochondrial inner membrane structural 2 · module 029 +
+- [[FAM216A]] — family with sequence similarity 216 member A · module 144 +
+- [[FAM217A]] — family with sequence similarity 217 member A · module 021 +
+- [[FAM217B]] — family with sequence similarity 217 member B · module 064 +
+- [[FAM219A]] — family with sequence similarity 219 member A · module 072 +
+- [[FAM219B]] — family with sequence similarity 219 member B · module 221 +
+- [[FAM220A]] — family with sequence similarity 220 member A · module 041 +
+- [[FAM221A]] — family with sequence similarity 221 member A · module 055 +
+- [[FAM222A]] — family with sequence similarity 222 member A · module 093 +
+- [[FAM222A-AS1]] — FAM222A antisense RNA 1 · module 033 +
+- [[FAM222B]] — family with sequence similarity 222 member B · module 024 +
+- [[FAM227A]] — family with sequence similarity 227 member A · module 106 +
+- [[FAM227B]] — family with sequence similarity 227 member B · module 010 +
+- [[FAM228B]] — family with sequence similarity 228 member B · module 008 +
+- [[FAM229A]] — family with sequence similarity 229 member A · module 037 +
+- [[FAM229B]] — family with sequence similarity 229 member B · module 045 +
+- [[FAM230C]] — family with sequence similarity 230 member C · module 177 +
+- [[FAM234A]] — family with sequence similarity 234 member A · module 050 +
+- [[FAM234B]] — family with sequence similarity 234 member B · module 134 +
+- [[FAM241A]] — family with sequence similarity 241 member A · module 233 +
+- [[FAM241B]] — family with sequence similarity 241 member B · module 012 +
+- [[FAM24B]] — family with sequence similarity 24 member B · module 077 +
+- [[FAM27C]] — family with sequence similarity 27 member C · module 133 +
+- [[FAM32A]] — family with sequence similarity 32 member A · module 012 +
+- [[FAM3A]] — FAM3 metabolism regulating signaling molecule A · module 002 +
+- [[FAM3B]] — FAM3 metabolism regulating signaling molecule B · module 047 +
+- [[FAM3C]] — FAM3 metabolism regulating signaling molecule C · module 034 +
+- [[FAM3C2P]] — family with sequence similarity 3 member C2, pseudogene · module 034 +
+- [[FAM3D]] — FAM3 metabolism regulating signaling molecule D · module 073 +
+- [[FAM43A]] — family with sequence similarity 43 member A · module 112 +
+- [[FAM50A]] — family with sequence similarity 50 member A · module 123 +
+- [[FAM53A]] — family with sequence similarity 53 member A · module 047 +
+- [[FAM53B]] — family with sequence similarity 53 member B · module 001 +
+- [[FAM53C]] — family with sequence similarity 53 member C · module 093 +
+- [[FAM66C]] — family with sequence similarity 66 member C · module 010 +
+- [[FAM72A]] — regulator of UNG2 and MKLN1 interacting yippee protein 1 · module 022 +
+- [[FAM72B]] — RUMY family member 2 · module 022 +
+- [[FAM72D]] — RUMY family member 4 · module 022 +
+- [[FAM76A]] — family with sequence similarity 76 member A · module 047 +
+- [[FAM76B]] — family with sequence similarity 76 member B · module 130 +
+- [[FAM78B]] — family with sequence similarity 78 member B · module 132 +
+- [[FAM81A]] — family with sequence similarity 81 member A · module 012 -
+- [[FAM83A]] — scaffolding CK1 anchoring protein A · module 031 +
+- [[FAM83B]] — scaffolding CK1 anchoring protein B · module 031 +
+- [[FAM83D]] — scaffolding CK1 anchoring protein D · module 022 +
+- [[FAM83E]] — scaffolding CK1 anchoring protein E · module 031 +
+- [[FAM83F]] — scaffolding CK1 anchoring protein F · module 055 +
+- [[FAM83G]] — scaffolding CK1 anchoring protein G · module 101 +
+- [[FAM83H]] — scaffolding CK1 anchoring protein H · module 001 +
+- [[FAM85B]] — family with sequence similarity 85 member B · module 136 +
+- [[FAM86DP]] — family with sequence similarity 86 member D, pseudogene · module 018 +
+- [[FAM86DP-1]] · module 005 +
+- [[FAM86HP]] — family with sequence similarity 86 member H, pseudogene · module 124 +
+- [[FAM89A]] — family with sequence similarity 89 member A · module 018 +
+- [[FAM89B]] — family with sequence similarity 89 member B · module 192 +
+- [[FAM8A1]] — family with sequence similarity 8 member A1 · module 005 -
+- [[FAM91A1]] — family with sequence similarity 91 member A1 · module 020 +
+- [[FAM95A]] — family with sequence similarity 95 member A · module 177 +
+- [[FAM98A]] — tRNA splicing ligase complex subunit 3A · module 049 +
+- [[FAM98B]] — tRNA splicing ligase complex subunit 3B · module 004 +
+- [[FAM98C]] — tRNA splicing ligase complex subunit 3C · module 020 -
+- [[FAN1]] — FANCD2 and FANCI associated nuclease 1 · module 001 +
+- [[FANCA]] — FA complementation group A · module 006 +
+- [[FANCB]] — FA complementation group B · module 006 +
+- [[FANCC]] — FA complementation group C · module 006 +
+- [[FANCD2]] — FA complementation group D2 · module 006 +
+- [[FANCE]] — FA complementation group E · module 085 +
+- [[FANCF]] — FA complementation group F · module 016 +
+- [[FANCG]] — FA complementation group G · module 006 +
+- [[FANCI]] — FA complementation group I · module 006 +
+- [[FANCL]] — FA complementation group L · module 006 +
+- [[FANCM]] — FA complementation group M · module 071 +
+- [[FANK1]] — fibronectin type III and ankyrin repeat domains 1 · module 026 +
+- [[FAP]] — fibroblast activation protein alpha · module 121 +
+- [[FAR1]] — fatty acyl-CoA reductase 1 · module 188 +
+- [[FAR2]] — fatty acyl-CoA reductase 2 · module 005 +
+- [[FAR2P1]] — fatty acyl-CoA reductase 2 pseudogene 1 · module 177 +
+- [[FARP1]] — FERM, ARH/RhoGEF and pleckstrin domain protein 1 · module 059 -
+- [[FARP2]] — FERM, ARH/RhoGEF and pleckstrin domain protein 2 · module 028 -
+- [[FARS2]] — phenylalanyl-tRNA synthetase 2, mitochondrial · module 185 +
+- [[FARSA]] — phenylalanyl-tRNA synthetase subunit alpha · module 033 +
+- [[FARSB]] — phenylalanyl-tRNA synthetase subunit beta · module 004 +
+- [[FAS]] — Fas cell surface death receptor · module 062 +
+- [[FASN]] — fatty acid synthase · module 086 +
+- [[FASTK]] — Fas activated serine/threonine kinase · module 096 +
+- [[FASTKD1]] — FASTK mitochondrial RNA regulator 1 · module 105 +
+- [[FASTKD2]] — FASTK mitochondrial RNA regulator 2 · module 001 +
+- [[FASTKD3]] — FASTK mitochondrial RNA regulator 3 · module 107 +
+- [[FASTKD5]] — FASTK mitochondrial RNA regulator 5 · module 007 +
+- [[FAT1]] — FAT atypical cadherin 1 · module 197 +
+- [[FAT3]] — FAT atypical cadherin 3 · module 150 +
+- [[FAT4]] — FAT atypical cadherin 4 · module 121 +
+- [[FAU]] — FAU ubiquitin like and ribosomal protein S30 fusion · module 131 +
+- [[FAXC]] — failed axon connections homolog, metaxin like GST domain containing · module 010 +
+- [[FAXDC2]] — fatty acid hydroxylase domain containing 2 · module 021 +
+- [[FBF1]] — Fas binding factor 1 · module 091 +
+- [[FBH1]] — F-box DNA helicase 1 · module 052 +
+- [[FBL]] — fibrillarin rRNA 2'-O-methyltransferase · module 134 +
+- [[FBLIM1]] — filamin binding LIM protein 1 · module 031 +
+- [[FBLN1]] — fibulin 1 · module 067 +
+- [[FBLN2]] — fibulin 2 · module 100 +
+- [[FBLN7]] — fibulin 7 · module 013 +
+- [[FBN1]] — fibrillin 1 · module 066 +
+- [[FBN2]] — fibrillin 2 · module 121 +
+- [[FBRS]] — fibrosin · module 173 +
+- [[FBRSL1]] — fibrosin like 1 · module 002 +
+- [[FBXL12]] — F-box and leucine rich repeat protein 12 · module 212 +
+- [[FBXL13]] — F-box and leucine rich repeat protein 13 · module 026 +
+- [[FBXL14]] — F-box and leucine rich repeat protein 14 · module 089 +
+- [[FBXL15]] — F-box and leucine rich repeat protein 15 · module 024 +
+- [[FBXL16]] — F-box and leucine rich repeat protein 16 · module 085 +
+- [[FBXL17]] — F-box and leucine rich repeat protein 17 · module 137 +
+- [[FBXL18]] — F-box and leucine rich repeat protein 18 · module 036 +
+- [[FBXL19]] — F-box and leucine rich repeat protein 19 · module 007 +
+- [[FBXL19-AS1]] — FBXL19 antisense RNA 1 · module 026 +
+- [[FBXL2]] — F-box and leucine rich repeat protein 2 · module 030 +
+- [[FBXL20]] — F-box and leucine rich repeat protein 20 · module 145 +
+- [[FBXL3]] — F-box and leucine rich repeat protein 3 · module 130 +
+- [[FBXL4]] — F-box and leucine rich repeat protein 4 · module 018 +
+- [[FBXL5]] — F-box and leucine rich repeat protein 5 · module 198 +
+- [[FBXL6]] — F-box and leucine rich repeat protein 6 · module 029 -
+- [[FBXL7]] — F-box and leucine rich repeat protein 7 · module 177 +
+- [[FBXL8]] — F-box and leucine rich repeat protein 8 · module 011 -
+- [[FBXL9P]] — F-box and leucine rich repeat protein 9, pseudogene · module 089 +
+- [[FBXO10]] — F-box protein 10 · module 038 +
+- [[FBXO11]] — F-box protein 11 · module 025 -
+- [[FBXO15]] — F-box protein 15 · module 010 +
+- [[FBXO16]] — F-box protein 16 · module 049 +
+- [[FBXO17]] — F-box protein 17 · module 018 +
+- [[FBXO2]] — F-box protein 2 · module 021 +
+- [[FBXO21]] — F-box protein 21 · module 024 +
+- [[FBXO22]] — F-box protein 22 · module 062 +
+- [[FBXO25]] — F-box protein 25 · module 076 +
+- [[FBXO27]] — F-box protein 27 · module 128 +
+- [[FBXO28]] — F-box protein 28 · module 114 +
+- [[FBXO3]] — F-box protein 3 · module 045 +
+- [[FBXO30]] — F-box protein 30 · module 135 +
+- [[FBXO31]] — F-box protein 31 · module 168 +
+- [[FBXO32]] — F-box protein 32 · module 069 +
+- [[FBXO33]] — F-box protein 33 · module 001 -
+- [[FBXO34]] — F-box protein 34 · module 040 +
+- [[FBXO36]] — F-box protein 36 · module 185 +
+- [[FBXO38]] — F-box protein 38 · module 007 +
+- [[FBXO38-DT]] — FBXO38 divergent transcript · module 010 +
+- [[FBXO39]] — F-box protein 39 · module 032 +
+- [[FBXO4]] — F-box protein 4 · module 010 +
+- [[FBXO41]] — F-box protein 41 · module 158 +
+- [[FBXO42]] — F-box protein 42 · module 079 +
+- [[FBXO43]] — F-box protein 43 · module 071 +
+- [[FBXO44]] — F-box protein 44 · module 221 +
+- [[FBXO45]] — F-box protein 45 · module 119 +
+- [[FBXO46]] — F-box protein 46 · module 160 +
+- [[FBXO48]] — F-box protein 48 · module 080 +
+- [[FBXO5]] — F-box protein 5 · module 022 +
+- [[FBXO6]] — F-box protein 6 · module 070 +
+- [[FBXO7]] — F-box protein 7 · module 171 +
+- [[FBXO8]] — F-box protein 8 · module 130 +
+- [[FBXO9]] — F-box protein 9 · module 198 +
+- [[FBXW10B]] — F-box and WD repeat domain containing 10B · module 047 +
+- [[FBXW11]] — F-box and WD repeat domain containing 11 · module 036 +
+- [[FBXW2]] — F-box and WD repeat domain containing 2 · module 199 +
+- [[FBXW4]] — F-box and WD repeat domain containing 4 · module 046 +
+- [[FBXW5]] — F-box and WD repeat domain containing 5 · module 024 +
+- [[FBXW7]] — F-box and WD repeat domain containing 7 · module 017 -
+- [[FBXW8]] — F-box and WD repeat domain containing 8 · module 001 +
+- [[FBXW9]] — F-box and WD repeat domain containing 9 · module 051 +
+- [[FCF1]] — FCF1 rRNA-processing protein · module 028 +
+- [[FCGBP]] — Fc gamma binding protein · module 008 +
+- [[FCGRT]] — Fc gamma receptor and transporter · module 027 +
+- [[FCHO1]] — FCH and mu domain containing endocytic adaptor 1 · module 085 +
+- [[FCHO2]] — FCH and mu domain containing endocytic adaptor 2 · module 234 +
+- [[FCHSD1]] — FCH and double SH3 domains 1 · module 002 +
+- [[FCHSD2]] — FCH and double SH3 domains 2 · module 014 +
+- [[FCRLA]] — Fc receptor like A · module 087 +
+- [[FCSK]] — fucose kinase · module 017 +
+- [[FDFT1]] — farnesyl-diphosphate farnesyltransferase 1 · module 086 +
+- [[FDPS]] — farnesyl diphosphate synthase · module 086 +
+- [[FDX1]] — ferredoxin 1 · module 214 +
+- [[FDX2]] — ferredoxin 2 · module 011 +
+- [[FDXR]] — ferredoxin reductase · module 062 +
+- [[FECH]] — ferrochelatase · module 025 +
+- [[FEM1A]] — fem-1 homolog A · module 007 +
+- [[FEM1B]] — fem-1 homolog B · module 007 +
+- [[FEM1C]] — fem-1 homolog C · module 099 +
+- [[FEN1]] — flap structure-specific endonuclease 1 · module 006 +
+- [[FENDRR]] — FOXF1 adjacent non-coding developmental regulatory RNA · module 019 +
+- [[FER]] — FER tyrosine kinase · module 065 -
+- [[FER1L4]] — fer-1 like family member 4 (pseudogene) · module 047 +
+- [[FER1L6]] — fer-1 like family member 6 · module 075 +
+- [[FERMT1]] — FERM domain containing kindlin 1 · module 034 +
+- [[FERMT2]] — FERM domain containing kindlin 2 · module 111 +
+- [[FERMT3]] — FERM domain containing kindlin 3 · module 047 +
+- [[FES]] — FES proto-oncogene, tyrosine kinase · module 038 +
+- [[FEZ1]] — fasciculation and elongation protein zeta 1 · module 075 +
+- [[FEZ2]] — fasciculation and elongation protein zeta 2 · module 116 +
+- [[FGA]] — fibrinogen alpha chain · module 139 +
+- [[FGB]] — fibrinogen beta chain · module 155 +
+- [[FGD1]] — FYVE, RhoGEF and PH domain containing 1 · module 015 +
+- [[FGD3]] — FYVE, RhoGEF and PH domain containing 3 · module 027 +
+- [[FGD4]] — FYVE, RhoGEF and PH domain containing 4 · module 098 +
+- [[FGD5]] — FYVE, RhoGEF and PH domain containing 5 · module 027 +
+- [[FGD5-AS1]] — FGD5 antisense RNA 1 · module 043 -
+- [[FGD6]] — FYVE, RhoGEF and PH domain containing 6 · module 034 +
+- [[FGF1]] — fibroblast growth factor 1 · module 116 +
+- [[FGF11]] — fibroblast growth factor 11 · module 103 +
+- [[FGF12]] — fibroblast growth factor 12 · module 026 +
+- [[FGF13]] — fibroblast growth factor 13 · module 121 +
+- [[FGF14]] — fibroblast growth factor 14 · module 108 +
+- [[FGF18]] — fibroblast growth factor 18 · module 038 +
+- [[FGF19]] — fibroblast growth factor 19 · module 027 +
+- [[FGF2]] — fibroblast growth factor 2 · module 202 +
+- [[FGF20]] — fibroblast growth factor 20 · module 027 +
+- [[FGF5]] — fibroblast growth factor 5 · module 013 +
+- [[FGF9]] — fibroblast growth factor 9 · module 009 +
+- [[FGFBP1]] — fibroblast growth factor binding protein 1 · module 073 +
+- [[FGFR1]] — fibroblast growth factor receptor 1 · module 154 +
+- [[FGFR1OP2]] — FGFR1 oncogene partner 2 · module 024 +
+- [[FGFR2]] — fibroblast growth factor receptor 2 · module 044 +
+- [[FGFR3]] — fibroblast growth factor receptor 3 · module 002 +
+- [[FGFR4]] — fibroblast growth factor receptor 4 · module 044 +
+- [[FGFRL1]] — fibroblast growth factor receptor like 1 · module 002 +
+- [[FGG]] — fibrinogen gamma chain · module 155 +
+- [[FGGY]] — FGGY carbohydrate kinase domain containing · module 200 +
+- [[FGL1]] — fibrinogen like 1 · module 008 +
+- [[FH]] — fumarate hydratase · module 025 +
+- [[FHAD1]] — forkhead associated phosphopeptide binding domain 1 · module 140 +
+- [[FHDC1]] — FH2 domain containing 1 · module 039 +
+- [[FHIP1A]] — FHF complex subunit HOOK interacting protein 1A · module 099 +
+- [[FHIP1B]] — FHF complex subunit HOOK interacting protein 1B · module 030 +
+- [[FHIP2A]] — FHF complex subunit HOOK interacting protein 2A · module 190 +
+- [[FHIP2B]] — FHF complex subunit HOOK interacting protein 2B · module 002 +
+- [[FHIT]] — fragile histidine triad diadenosine triphosphatase · module 200 +
+- [[FHL1]] — four and a half LIM domains 1 · module 132 +
+- [[FHL2]] — four and a half LIM domains 2 · module 224 +
+- [[FHL3]] — four and a half LIM domains 3 · module 011 +
+- [[FHOD1]] — formin homology 2 domain containing 1 · module 195 +
+- [[FHOD3]] — formin homology 2 domain containing 3 · module 193 +
+- [[FIBCD1]] — fibrinogen C domain containing 1 · module 195 +
+- [[FIBP]] — FGF1 intracellular binding protein · module 206 +
+- [[FICD]] — FIC domain protein adenylyltransferase · module 049 +
+- [[FIG4]] — FIG4 phosphoinositide 5-phosphatase · module 065 +
+- [[FIGN]] — fidgetin, microtubule severing factor · module 009 +
+- [[FIGNL1]] — fidgetin like 1 · module 006 +
+- [[FILIP1]] — filamin A interacting protein 1 · module 140 +
+- [[FILIP1L]] — filamin A interacting protein 1 like · module 066 +
+- [[FIP1L1]] — factor interacting with PAPOLA and CPSF1 · module 065 +
+- [[FIRRE]] — firre intergenic repeating RNA element · module 004 +
+- [[FIS1]] — fission, mitochondrial 1 · module 024 +
+- [[FITM2]] — fat storage inducing transmembrane protein 2 · module 017 +
+- [[FIZ1]] — FLT3 interacting zinc finger 1 · module 088 +
+- [[FJX1]] — four-jointed box kinase 1 · module 120 +
+- [[FKBP10]] — FKBP prolyl isomerase 10 · module 042 +
+- [[FKBP11]] — FKBP prolyl isomerase 11 · module 049 +
+- [[FKBP14]] — FKBP prolyl isomerase 14 · module 056 +
+- [[FKBP14-AS1]] — FKBP14 antisense RNA 1 · module 015 +
+- [[FKBP15]] — FKBP prolyl isomerase family member 15 · module 004 -
+- [[FKBP1A]] — FKBP prolyl isomerase 1A · module 029 +
+- [[FKBP1B]] — FKBP prolyl isomerase 1B · module 192 +
+- [[FKBP2]] — FKBP prolyl isomerase 2 · module 131 +
+- [[FKBP3]] — FKBP prolyl isomerase 3 · module 033 -
+- [[FKBP4]] — FKBP prolyl isomerase 4 · module 060 +
+- [[FKBP5]] — FKBP prolyl isomerase 5 · module 098 +
+- [[FKBP7]] — FKBP prolyl isomerase 7 · module 045 +
+- [[FKBP8]] — FKBP prolyl isomerase 8 · module 076 +
+- [[FKBP9]] — FKBP prolyl isomerase 9 · module 029 +
+- [[FKBP9P1]] — FKBP prolyl isomerase 9 pseudogene 1 · module 027 +
+- [[FKBP9P1-1]] · module 087 +
+- [[FKRP]] — fukutin related protein · module 088 +
+- [[FKTN]] — fukutin · module 001 +
+- [[FLACC1]] — flagellum associated containing coiled-coil domains 1 · module 039 +
+- [[FLAD1]] — flavin adenine dinucleotide synthetase 1 · module 001 +
+- [[FLCN]] — folliculin · module 059 +
+- [[FLG-AS1]] — cervical cancer associated DHX9 suppressive transcript · module 010 +
+- [[FLI1]] — Fli-1 proto-oncogene, ETS transcription factor · module 013 +
+- [[FLII]] — FLII actin remodeling protein · module 054 -
+- [[FLJ12825]] · module 010 +
+- [[FLJ40194]] · module 021 +
+- [[FLJ46284]] · module 037 +
+- [[FLNA]] — filamin A · module 111 +
+- [[FLNB]] — filamin B · module 136 +
+- [[FLNB-AS1]] — FLNB antisense RNA 1 · module 136 +
+- [[FLNC]] — filamin C · module 111 +
+- [[FLOT1]] — flotillin 1 · module 109 +
+- [[FLOT2]] — flotillin 2 · module 003 -
+- [[FLRT1]] — fibronectin leucine rich transmembrane protein 1 · module 053 +
+- [[FLRT2]] — fibronectin leucine rich transmembrane protein 2 · module 121 +
+- [[FLRT3]] — fibronectin leucine rich transmembrane protein 3 · module 155 +
+- [[FLT1]] — fms related receptor tyrosine kinase 1 · module 084 +
+- [[FLT3LG]] — fms related receptor tyrosine kinase 3 ligand · module 070 +
+- [[FLVCR1]] — FLVCR choline and heme transporter 1 · module 010 -
+- [[FLVCR1-DT]] — FLVCR1 divergent transcript · module 024 +
+- [[FLVCR2]] — FLVCR choline and putative heme transporter 2 · module 106 +
+- [[FLYWCH1]] — FLYWCH-type zinc finger 1 · module 030 +
+- [[FLYWCH2]] — FLYWCH family member 2 · module 030 +
+- [[FMC1]] — formation of mitochondrial complex V assembly factor 1 · module 024 +
+- [[FMN1]] — formin 1 · module 106 +
+- [[FMN2]] — formin 2 · module 009 +
+- [[FMNL1]] — formin like 1 · module 013 +
+- [[FMNL1-DT]] — FMNL1 divergent transcript · module 013 +
+- [[FMNL2]] — formin like 2 · module 193 +
+- [[FMNL3]] — formin like 3 · module 013 +
+- [[FMO4]] — flavin containing dimethylaniline monoxygenase 4 · module 010 +
+- [[FMO5]] — flavin containing dimethylaniline monoxygenase 5 · module 008 +
+- [[FMR1]] — fragile X messenger ribonucleoprotein 1 · module 130 +
+- [[FN1]] — fibronectin 1 · module 104 +
+- [[FN3K]] — fructosamine 3 kinase · module 057 +
+- [[FN3KRP]] — fructosamine 3 kinase related protein · module 085 +
+- [[FNBP1]] — formin binding protein 1 · module 004 -
+- [[FNBP1L]] — formin binding protein 1 like · module 204 +
+- [[FNBP1P1]] — formin binding protein 1 pseudogene 1 · module 016 +
+- [[FNBP4]] — formin binding protein 4 · module 012 +
+- [[FNDC3A]] — fibronectin type III domain containing 3A · module 002 -
+- [[FNDC3B]] — fibronectin type III domain containing 3B · module 139 +
+- [[FNDC7]] — fibronectin type III domain containing 7 · module 038 +
+- [[FNIP1]] — folliculin interacting protein 1 · module 059 +
+- [[FNIP2]] — folliculin interacting protein 2 · module 123 +
+- [[FNTA]] — farnesyltransferase, CAAX box, subunit alpha · module 011 +
+- [[FNTB]] — farnesyltransferase, CAAX box, subunit beta · module 105 +
+- [[FOCAD]] — focadhesin · module 040 +
+- [[FOS]] — Fos proto-oncogene, AP-1 transcription factor subunit · module 109 +
+- [[FOSB]] — FosB proto-oncogene, AP-1 transcription factor subunit · module 109 +
+- [[FOSL1]] — FOS like 1, AP-1 transcription factor subunit · module 158 +
+- [[FOSL2]] — FOS like 2, AP-1 transcription factor subunit · module 123 +
+- [[FOXA1]] — forkhead box A1 · module 068 +
+- [[FOXA2]] — forkhead box A2 · module 020 -
+- [[FOXC1]] — forkhead box C1 · module 025 -
+- [[FOXC2]] — forkhead box C2 · module 098 +
+- [[FOXD1]] — forkhead box D1 · module 020 -
+- [[FOXG1]] — forkhead box G1 · module 154 +
+- [[FOXJ2]] — forkhead box J2 · module 046 +
+- [[FOXJ3]] — forkhead box J3 · module 168 +
+- [[FOXK1]] — forkhead box K1 · module 085 +
+- [[FOXK2]] — forkhead box K2 · module 003 +
+- [[FOXL1]] — forkhead box L1 · module 147 +
+- [[FOXM1]] — forkhead box M1 · module 022 +
+- [[FOXN2]] — forkhead box N2 · module 098 +
+- [[FOXN3]] — forkhead box N3 · module 225 +
+- [[FOXO1]] — forkhead box O1 · module 097 +
+- [[FOXO3]] — forkhead box O3 · module 074 +
+- [[FOXO3B]] — forkhead box O3B · module 033 +
+- [[FOXO4]] — forkhead box O4 · module 076 +
+- [[FOXO6]] — forkhead box O6 · module 100 +
+- [[FOXP1]] — forkhead box P1 · module 143 +
+- [[FOXP2]] — forkhead box P2 · module 008 +
+- [[FOXP4]] — forkhead box P4 · module 138 +
+- [[FOXP4-AS1]] — FOXP4 antisense RNA 1 · module 001 +
+- [[FOXQ1]] — forkhead box Q1 · module 055 +
+- [[FOXRED1]] — FAD dependent oxidoreductase domain containing 1 · module 052 +
+- [[FOXRED2]] — FAD dependent oxidoreductase domain containing 2 · module 051 +
+- [[FPGS]] — folylpolyglutamate synthase · module 002 +
+- [[FPGT]] — fucose-1-phosphate guanylyltransferase · module 017 +
+- [[FRA10AC1]] — FRA10A associated CGG repeat 1 · module 012 +
+- [[FRAS1]] — Fraser extracellular matrix complex subunit 1 · module 008 +
+- [[FRAT2]] — FRAT regulator of Wnt signaling pathway 2 · module 069 +
+- [[FREM2]] — FRAS1 related extracellular matrix 2 · module 009 +
+- [[FRG1]] — FSHD region gene 1 · module 012 +
+- [[FRG1-DT]] — FRG1 divergent transcript · module 010 +
+- [[FRG1BP]] — FSHD region gene 1 family member B, pseudogene · module 017 +
+- [[FRG1CP]] — FSHD region gene 1 family member C, pseudogene · module 045 +
+- [[FRG1DP]] — FSHD region gene 1 family member D, pseudogene · module 183 +
+- [[FRG1FP]] — FSHD region gene 1 family member F, pseudogene · module 009 +
+- [[FRG1GP]] — FSHD region gene 1 family member G, pseudogene · module 183 +
+- [[FRG1HP]] — FSHD region gene 1 family member H, pseudogene · module 015 +
+- [[FRG1JP]] — FSHD region gene 1 family member J, pseudogene · module 183 +
+- [[FRK]] — fyn related Src family tyrosine kinase · module 008 +
+- [[FRMD3]] — FERM domain containing 3 · module 098 +
+- [[FRMD4A]] — FERM domain containing 4A · module 013 +
+- [[FRMD4B]] — FERM domain containing 4B · module 008 +
+- [[FRMD5]] — FERM domain containing 5 · module 034 +
+- [[FRMD6]] — FERM domain containing 6 · module 116 +
+- [[FRMD6-AS2]] — FRMD6 antisense RNA 2 · module 080 +
+- [[FRMD8]] — FERM domain containing 8 · module 160 +
+- [[FRMPD3]] — FERM and PDZ domain containing 3 · module 115 +
+- [[FRMPD4]] — FERM and PDZ domain containing 4 · module 019 +
+- [[FRRS1]] — ferric chelate reductase 1 · module 045 +
+- [[FRS2]] — fibroblast growth factor receptor substrate 2 · module 118 +
+- [[FRY]] — FRY microtubule binding protein · module 097 +
+- [[FRYL]] — FRY like transcription coactivator · module 001 -
+- [[FRZB]] — frizzled related protein · module 037 +
+- [[FSBP]] — fibrinogen silencer binding protein · module 071 +
+- [[FSCN1]] — fascin actin-bundling protein 1 · module 084 +
+- [[FSCN2]] — fascin actin-bundling protein 2, retinal · module 047 +
+- [[FSD1]] — fibronectin type III and SPRY domain containing 1 · module 082 +
+- [[FSD1L]] — fibronectin type III and SPRY domain containing 1 like · module 017 +
+- [[FSIP1]] — fibrous sheath interacting protein 1 · module 075 +
+- [[FSIP2]] — fibrous sheath interacting protein 2 · module 009 +
+- [[FSIP2-AS1]] — FSIP2 antisense RNA 1 · module 026 +
+- [[FST]] — follistatin · module 081 +
+- [[FSTL1]] — follistatin like 1 · module 029 +
+- [[FSTL3]] — follistatin like 3 · module 098 +
+- [[FSTL4]] — follistatin like 4 · module 140 +
+- [[FSTL5]] — follistatin like 5 · module 009 +
+- [[FTCDNL1]] — formiminotransferase cyclodeaminase N-terminal like · module 010 +
+- [[FTH1]] — ferritin heavy chain 1 · module 139 +
+- [[FTL]] — ferritin light chain · module 043 +
+- [[FTO]] — FTO alpha-ketoglutarate dependent dioxygenase · module 185 +
+- [[FTSJ1]] — FtsJ RNA 2'-O-methyltransferase 1 · module 052 +
+- [[FTSJ3]] — FtsJ RNA 2'-O-methyltransferase 3 · module 007 +
+- [[FTX]] — FTX transcript, XIST regulator · module 026 +
+- [[FUBP1]] — far upstream element binding protein 1 · module 192 +
+- [[FUBP3]] — far upstream element binding protein 3 · module 052 +
+- [[FUCA1]] — alpha-L-fucosidase 1 · module 050 +
+- [[FUCA2]] — alpha-L-fucosidase 2 · module 029 +
+- [[FUNDC1]] — FUN14 domain containing 1 · module 028 +
+- [[FUNDC2]] — FUN14 domain containing 2 · module 020 +
+- [[FURIN]] — furin, paired basic amino acid cleaving enzyme · module 092 +
+- [[FUS]] — FUS DNA/RNA binding protein · module 093 +
+- [[FUT10]] — protein O-fucosyltransferase 3 · module 025 +
+- [[FUT11]] — protein O-fucosyltransferase 4 · module 144 +
+- [[FUT2]] — fucosyltransferase 2 (H blood group) · module 055 +
+- [[FUT3]] — fucosyltransferase 3 (Lewis blood group) · module 008 +
+- [[FUT4]] — fucosyltransferase 4 · module 073 +
+- [[FUT8]] — fucosyltransferase 8 · module 034 +
+- [[FUT9]] — fucosyltransferase 9 · module 009 +
+- [[FXN]] — frataxin · module 033 +
+- [[FXR1]] — FMR1 autosomal homolog 1 · module 060 +
+- [[FXR2]] — FMR1 autosomal homolog 2 · module 003 +
+- [[FXYD2]] — FXYD domain containing ion transport regulator 2 · module 008 +
+- [[FXYD3]] — FXYD domain containing ion transport regulator 3 · module 044 +
+- [[FXYD5]] — FXYD domain containing ion transport regulator 5 · module 110 +
+- [[FXYD6]] — FXYD domain containing ion transport regulator 6 · module 082 +
+- [[FYB1]] — FYN binding protein 1 · module 166 +
+- [[FYCO1]] — FYVE and coiled-coil domain autophagy adaptor 1 · module 033 +
+- [[FYN]] — FYN proto-oncogene, Src family tyrosine kinase · module 134 +
+- [[FYTTD1]] — forty-two-three domain containing 1 · module 028 +
+- [[FZD1]] — frizzled class receptor 1 · module 087 +
+- [[FZD3]] — frizzled class receptor 3 · module 186 +
+- [[FZD4]] — frizzled class receptor 4 · module 097 +
+- [[FZD4-DT]] — FZD4 divergent transcript · module 010 +
+- [[FZD5]] — frizzled class receptor 5 · module 008 +
+- [[FZD6]] — frizzled class receptor 6 · module 137 +
+- [[FZD7]] — frizzled class receptor 7 · module 011 +
+- [[FZD8]] — frizzled class receptor 8 · module 112 +
+- [[FZR1]] — fizzy and cell division cycle 20 related 1 · module 003 +

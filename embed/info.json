@@ -1,0 +1,427 @@
+{
+ "version": 4,
+ "dims": 64,
+ "genes_included": 15076,
+ "genes_total": 16643,
+ "contexts": 46527,
+ "drugdoses_active": 968,
+ "drugdoses_total": 1132,
+ "lines": 50,
+ "min_active": 10,
+ "min_responsive": 5,
+ "z_clip": 8.0,
+ "drugdoses_active_pooled": 581,
+ "drugdoses_active_lines_only": 387,
+ "line_active_z": 5.0,
+ "line_z_responsive": 8.45,
+ "n_genes_significant_pooled": 15076,
+ "n_genes_significant_pooled_clean": 14988,
+ "n_genes_line_responsive": 13849,
+ "n_genes_line_responsive_clean": 12355,
+ "n_genes_evidence_flagged_only": 79,
+ "evidence_rule": "a significant pooled drug-dose (q < 0.1, >= 1.2x), with or without an artifact flag, or a per-line |z| >= line_z_responsive in >= 2 lines of one trustworthy drug-dose, with or without an artifact flag for the gene; 79 genes are in the space only through drug-doses that carry an alert for them, pooled and per line (genes.parquet evidence_flagged_only; shown with an alert)",
+ "gene_level_clean": "tables/drug_effects.parquet clean",
+ "n_genes_excluded_chance": 0,
+ "drugdoses_left_out_untrusted": 46,
+ "drugdoses_not_active": 118,
+ "left_out_rule": "drug-doses flagged 'unreliable plate only', 'position not correctable', 'wells disagree' are technically untrustworthy and stay out of the fit (their vectors are still projected); drugdoses.parquet fit_status says it per drug-dose",
+ "left_out_untrusted": [
+  {
+   "dd": 42,
+   "drug": "Abemaciclib",
+   "dose": "0.05",
+   "n_sig_genes": 77,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 54,
+   "drug": "Adagrasib",
+   "dose": "0.05",
+   "n_sig_genes": 321,
+   "why": "position not correctable"
+  },
+  {
+   "dd": 248,
+   "drug": "Carbidopa (monohydrate)",
+   "dose": "0.05",
+   "n_sig_genes": 306,
+   "why": "unreliable plate only, position not correctable"
+  },
+  {
+   "dd": 249,
+   "drug": "Carbidopa (monohydrate)",
+   "dose": "0.5",
+   "n_sig_genes": 7,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 250,
+   "drug": "Carbidopa (monohydrate)",
+   "dose": "5",
+   "n_sig_genes": 5,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 311,
+   "drug": "DTP3",
+   "dose": "0.05",
+   "n_sig_genes": 15,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 326,
+   "drug": "Daptomycin",
+   "dose": "0.05",
+   "n_sig_genes": 58,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 327,
+   "drug": "Daptomycin",
+   "dose": "0.5",
+   "n_sig_genes": 1373,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 328,
+   "drug": "Daptomycin",
+   "dose": "5",
+   "n_sig_genes": 1546,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 398,
+   "drug": "Edoxaban (tosylate monohydrate)",
+   "dose": "0.05",
+   "n_sig_genes": 0,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 399,
+   "drug": "Edoxaban (tosylate monohydrate)",
+   "dose": "0.5",
+   "n_sig_genes": 6,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 400,
+   "drug": "Edoxaban (tosylate monohydrate)",
+   "dose": "5",
+   "n_sig_genes": 35,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 471,
+   "drug": "Fostamatinib (disodium hexahydrate)",
+   "dose": "0.05",
+   "n_sig_genes": 1,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 472,
+   "drug": "Fostamatinib (disodium hexahydrate)",
+   "dose": "0.5",
+   "n_sig_genes": 0,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 473,
+   "drug": "Fostamatinib (disodium hexahydrate)",
+   "dose": "5",
+   "n_sig_genes": 3,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 507,
+   "drug": "Glasdegib",
+   "dose": "0.05",
+   "n_sig_genes": 4,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 508,
+   "drug": "Glasdegib",
+   "dose": "0.5",
+   "n_sig_genes": 2,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 509,
+   "drug": "Glasdegib",
+   "dose": "5",
+   "n_sig_genes": 1,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 531,
+   "drug": "Hydroxyfasudil",
+   "dose": "0.05",
+   "n_sig_genes": 51,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 570,
+   "drug": "Ivabradine (hydrochloride)",
+   "dose": "0.05",
+   "n_sig_genes": 0,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 571,
+   "drug": "Ivabradine (hydrochloride)",
+   "dose": "0.5",
+   "n_sig_genes": 8,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 572,
+   "drug": "Ivabradine (hydrochloride)",
+   "dose": "5",
+   "n_sig_genes": 21,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 609,
+   "drug": "Larotrectinib sulfate",
+   "dose": "0.05",
+   "n_sig_genes": 60,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 610,
+   "drug": "Larotrectinib sulfate",
+   "dose": "0.5",
+   "n_sig_genes": 94,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 611,
+   "drug": "Larotrectinib sulfate",
+   "dose": "5",
+   "n_sig_genes": 21,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 678,
+   "drug": "Methylprednisolone succinate",
+   "dose": "0.05",
+   "n_sig_genes": 12,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 723,
+   "drug": "Nimesulide",
+   "dose": "0.05",
+   "n_sig_genes": 1,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 724,
+   "drug": "Nimesulide",
+   "dose": "0.5",
+   "n_sig_genes": 1,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 725,
+   "drug": "Nimesulide",
+   "dose": "5",
+   "n_sig_genes": 345,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 747,
+   "drug": "Ornidazole",
+   "dose": "0.05",
+   "n_sig_genes": 0,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 748,
+   "drug": "Ornidazole",
+   "dose": "0.5",
+   "n_sig_genes": 0,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 749,
+   "drug": "Ornidazole",
+   "dose": "5",
+   "n_sig_genes": 1,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 762,
+   "drug": "PF-06260933",
+   "dose": "0.05",
+   "n_sig_genes": 8,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 827,
+   "drug": "Plicamycin",
+   "dose": "0.05",
+   "n_sig_genes": 0,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 828,
+   "drug": "Plicamycin",
+   "dose": "0.5",
+   "n_sig_genes": 1,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 829,
+   "drug": "Plicamycin",
+   "dose": "5",
+   "n_sig_genes": 3,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 866,
+   "drug": "Ralimetinib dimesylate",
+   "dose": "0.05",
+   "n_sig_genes": 265,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 890,
+   "drug": "Ribociclib",
+   "dose": "0.05",
+   "n_sig_genes": 433,
+   "why": "unreliable plate only, position not correctable"
+  },
+  {
+   "dd": 891,
+   "drug": "Ribociclib",
+   "dose": "0.5",
+   "n_sig_genes": 15,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 892,
+   "drug": "Ribociclib",
+   "dose": "5",
+   "n_sig_genes": 0,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 902,
+   "drug": "Rimonabant (Hydrochloride)",
+   "dose": "0.05",
+   "n_sig_genes": 23,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 903,
+   "drug": "Rimonabant (Hydrochloride)",
+   "dose": "0.5",
+   "n_sig_genes": 1,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 904,
+   "drug": "Rimonabant (Hydrochloride)",
+   "dose": "5",
+   "n_sig_genes": 1,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 961,
+   "drug": "Sonidegib",
+   "dose": "0.05",
+   "n_sig_genes": 20,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 1111,
+   "drug": "c-Kit-IN-1",
+   "dose": "0.05",
+   "n_sig_genes": 5673,
+   "why": "unreliable plate only"
+  },
+  {
+   "dd": 1117,
+   "drug": "olaparib",
+   "dose": "0.05",
+   "n_sig_genes": 26,
+   "why": "unreliable plate only"
+  }
+ ],
+ "broad_removed": [
+  1,
+  2,
+  3
+ ],
+ "halves": true,
+ "variance_captured_pct": 23.17,
+ "singular_values": [
+  3686.15625,
+  3223.51904296875,
+  2769.13720703125,
+  2637.4931640625,
+  2509.814453125,
+  2302.1640625,
+  2108.91357421875,
+  1863.7105712890625,
+  1832.6544189453125,
+  1773.02001953125,
+  1738.4134521484375,
+  1665.5885009765625,
+  1640.1861572265625,
+  1580.2886962890625,
+  1571.0638427734375,
+  1463.4608154296875,
+  1413.5155029296875,
+  1347.07080078125,
+  1306.4993896484375,
+  1293.6246337890625,
+  1247.765625,
+  1233.97265625,
+  1189.154052734375,
+  1150.70654296875,
+  1132.31494140625,
+  1096.0517578125,
+  1066.5567626953125,
+  1055.0643310546875,
+  1031.08984375,
+  1024.3563232421875,
+  1018.1471557617188,
+  979.2166748046875,
+  941.515625,
+  924.929443359375,
+  906.7333374023438,
+  902.4545288085938,
+  894.8758544921875,
+  874.9964599609375,
+  866.8634643554688,
+  860.5572509765625,
+  857.5197143554688,
+  835.2409057617188,
+  828.3055419921875,
+  820.1492309570312,
+  811.6007080078125,
+  806.8322143554688,
+  793.4153442382812,
+  776.1194458007812,
+  768.9140625,
+  762.0487670898438,
+  756.1895751953125,
+  751.2865600585938,
+  740.44677734375,
+  731.7021484375,
+  726.296142578125,
+  718.1878051757812,
+  712.8615112304688,
+  711.5279541015625,
+  699.6403198242188,
+  693.1150512695312,
+  688.9505615234375,
+  684.7418823242188,
+  681.51123046875,
+  674.9353637695312
+ ],
+ "minutes": 0.74,
+ "model": "X ~ U S V'; gene g = U S; context c = V; drug-dose d = S^-1 U' x; predicted z = g . c or g . d (in standardised units); drug_vectors = U' x of the best trustworthy dose (cosine)"
+}

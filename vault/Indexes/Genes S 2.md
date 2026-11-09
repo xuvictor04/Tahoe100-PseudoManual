@@ -1,0 +1,560 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes S 2
+
+550 genes. Back to [[Genes by letter]].
+
+- [[SNX25]] — sorting nexin 25 · module 134 +
+- [[SNX27]] — sorting nexin 27 · module 065 +
+- [[SNX29]] — sorting nexin 29 · module 072 +
+- [[SNX3]] — sorting nexin 3 · module 060 +
+- [[SNX30]] — sorting nexin family member 30 · module 045 +
+- [[SNX31]] — sorting nexin 31 · module 037 +
+- [[SNX32]] — sorting nexin 32 · module 021 +
+- [[SNX33]] — sorting nexin 33 · module 020 +
+- [[SNX4]] — sorting nexin 4 · module 171 +
+- [[SNX5]] — sorting nexin 5 · module 001 +
+- [[SNX6]] — sorting nexin 6 · module 167 +
+- [[SNX7]] — sorting nexin 7 · module 025 +
+- [[SNX8]] — sorting nexin 8 · module 025 -
+- [[SNX9]] — sorting nexin 9 · module 206 +
+- [[SOAT1]] — sterol O-acyltransferase 1 · module 023 -
+- [[SOBP]] — sine oculis binding protein homolog · module 009 +
+- [[SOCS2]] — suppressor of cytokine signaling 2 · module 068 +
+- [[SOCS2-AS1]] — SOCS2 antisense RNA 1 · module 068 +
+- [[SOCS3]] — suppressor of cytokine signaling 3 · module 014 +
+- [[SOCS3-DT]] — SOCS3 divergent transcript · module 035 +
+- [[SOCS4]] — suppressor of cytokine signaling 4 · module 003 -
+- [[SOCS5]] — suppressor of cytokine signaling 5 · module 035 +
+- [[SOCS6]] — suppressor of cytokine signaling 6 · module 095 +
+- [[SOCS7]] — suppressor of cytokine signaling 7 · module 040 +
+- [[SOD1]] — superoxide dismutase 1 · module 060 +
+- [[SOD2]] — superoxide dismutase 2 · module 139 +
+- [[SOD3]] — superoxide dismutase 3 · module 044 +
+- [[SOGA1]] — microtubule crosslinking factor 2 · module 022 +
+- [[SOGA3]] — MTCL family member 3 · module 082 +
+- [[SOHLH2]] — spermatogenesis and oogenesis specific basic helix-loop-helix 2 · module 121 +
+- [[SON]] — SON DNA and RNA binding protein · module 095 +
+- [[SORBS1]] — sorbin and SH3 domain containing 1 · module 060 +
+- [[SORBS2]] — sorbin and SH3 domain containing 2 · module 034 +
+- [[SORBS3]] — sorbin and SH3 domain containing 3 · module 126 +
+- [[SORCS1]] — sortilin related VPS10 domain containing receptor 1 · module 166 +
+- [[SORCS2]] — sortilin related VPS10 domain containing receptor 2 · module 013 +
+- [[SORCS3]] — sortilin related VPS10 domain containing receptor 3 · module 140 +
+- [[SORD]] — sorbitol dehydrogenase · module 018 +
+- [[SORL1]] — sortilin related receptor 1 · module 027 +
+- [[SORT1]] — sortilin 1 · module 106 +
+- [[SOS1]] — SOS Ras/Rac guanine nucleotide exchange factor 1 · module 231 +
+- [[SOS2]] — SOS Ras/Rho guanine nucleotide exchange factor 2 · module 234 +
+- [[SOWAHC]] — sosondowah ankyrin repeat domain family member C · module 101 +
+- [[SOX10]] — SRY-box transcription factor 10 · module 087 +
+- [[SOX11]] — SRY-box transcription factor 11 · module 009 +
+- [[SOX12]] — SRY-box transcription factor 12 · module 003 +
+- [[SOX13]] — SRY-box transcription factor 13 · module 162 +
+- [[SOX2]] — SRY-box transcription factor 2 · module 009 +
+- [[SOX2-OT]] — SOX2 overlapping transcript · module 026 +
+- [[SOX4]] — SRY-box transcription factor 4 · module 020 -
+- [[SOX5]] — SRY-box transcription factor 5 · module 009 +
+- [[SOX6]] — SRY-box transcription factor 6 · module 019 +
+- [[SOX7]] — SRY-box transcription factor 7 · module 019 +
+- [[SOX9]] — SRY-box transcription factor 9 · module 112 +
+- [[SP1]] — Sp1 transcription factor · module 029 +
+- [[SP100]] — SP100 nuclear body protein · module 032 +
+- [[SP110]] — SP110 nuclear body protein · module 032 +
+- [[SP140]] — SP140 nuclear body protein · module 075 +
+- [[SP140L]] — SP140 like nuclear body protein · module 032 +
+- [[SP2]] — Sp2 transcription factor · module 173 +
+- [[SP2-AS1]] — SP2 antisense RNA 1 · module 005 +
+- [[SP2-DT]] · module 024 +
+- [[SP3]] — Sp3 transcription factor · module 064 -
+- [[SP4]] — Sp4 transcription factor · module 025 -
+- [[SPA17]] — sperm autoantigenic protein 17 · module 022 +
+- [[SPACA6]] — sperm acrosome associated 6 · module 021 +
+- [[SPACA9]] — sperm acrosome associated 9 · module 130 +
+- [[SPACDR]] — sperm acrosome developmental regulator · module 038 +
+- [[SPAG1]] — sperm associated antigen 1 · module 068 +
+- [[SPAG16]] — sperm associated antigen 16 · module 010 +
+- [[SPAG17]] — sperm associated antigen 17 · module 150 +
+- [[SPAG4]] — sperm associated antigen 4 · module 103 +
+- [[SPAG5]] — sperm associated antigen 5 · module 067 +
+- [[SPAG5-AS1]] — SPAG5 antisense RNA 1 · module 021 +
+- [[SPAG7]] — sperm associated antigen 7 · module 038 +
+- [[SPAG9]] — sperm associated antigen 9 · module 005 -
+- [[SPANXA2-OT1]] — SPANXA2 overlapping transcript 1 · module 019 +
+- [[SPARC]] — secreted protein acidic and cysteine rich · module 066 +
+- [[SPART]] — spartin · module 064 +
+- [[SPART-AS1]] — SPART antisense RNA 1 · module 083 +
+- [[SPAST]] — spastin · module 171 +
+- [[SPATA1]] — spermatogenesis associated 1 · module 021 +
+- [[SPATA13]] — spermatogenesis associated 13 · module 023 -
+- [[SPATA17]] — spermatogenesis associated 17 · module 010 +
+- [[SPATA18]] — spermatogenesis associated 18 · module 062 +
+- [[SPATA2]] — spermatogenesis associated 2 · module 007 +
+- [[SPATA20]] — spermatogenesis associated 20 · module 096 +
+- [[SPATA21]] — spermatogenesis associated 21 · module 021 +
+- [[SPATA24]] — spermatogenesis associated 24 · module 023 +
+- [[SPATA2L]] — spermatogenesis associated 2 like · module 218 +
+- [[SPATA32]] — spermatogenesis associated 32 · module 047 +
+- [[SPATA33]] — spermatogenesis associated 33 · module 051 -
+- [[SPATA5]] — AAA ATPase AFG2A · module 036 +
+- [[SPATA5L1]] — AAA ATPase AFG2B · module 198 +
+- [[SPATA6]] — spermatogenesis associated 6 · module 080 +
+- [[SPATA6L]] — spermatogenesis associated 6 like · module 008 +
+- [[SPATA7]] — spermatogenesis associated 7 · module 178 +
+- [[SPATC1]] — spermatogenesis and centriole associated 1 · module 021 +
+- [[SPATC1L]] — spermatogenesis and centriole associated 1 like · module 058 +
+- [[SPATS2]] — spermatogenesis associated serine rich 2 · module 168 -
+- [[SPATS2L]] — spermatogenesis associated serine rich 2 like · module 032 +
+- [[SPC24]] — SPC24 component of NDC80 kinetochore complex · module 067 +
+- [[SPC25]] — SPC25 component of NDC80 kinetochore complex · module 067 +
+- [[SPCS1]] — signal peptidase complex subunit 1 · module 048 +
+- [[SPCS2]] — signal peptidase complex subunit 2 · module 049 +
+- [[SPCS3]] — signal peptidase complex subunit 3 · module 020 +
+- [[SPDL1]] — spindle apparatus coiled-coil protein 1 · module 022 +
+- [[SPDYA]] — speedy/RINGO cell cycle regulator family member A · module 039 +
+- [[SPDYE10]] — speedy/RINGO cell cycle regulator family member E10 · module 019 +
+- [[SPDYE5]] — speedy/RINGO cell cycle regulator family member E5 · module 021 +
+- [[SPECC1]] — sperm antigen with calponin homology and coiled-coil domains 1 · module 210 +
+- [[SPECC1L]] — sperm antigen with calponin homology and coiled-coil domains 1 like · module 018 +
+- [[SPEF2]] — sperm flagellar and cilia associated 2 · module 028 +
+- [[SPEG]] — striated muscle enriched protein kinase · module 132 +
+- [[SPEN]] — spen family transcriptional repressor · module 011 +
+- [[SPEN-AS1]] — SPEN antisense RNA 1 · module 035 +
+- [[SPESP1]] — sperm equatorial segment protein 1 · module 015 +
+- [[SPG11]] — SPG11 vesicle trafficking associated, spatacsin · module 028 +
+- [[SPG21]] — SPG21 abhydrolase domain containing, maspardin · module 122 +
+- [[SPG7]] — SPG7 matrix AAA peptidase subunit, paraplegin · module 052 +
+- [[SPHK1]] — sphingosine kinase 1 · module 080 +
+- [[SPHK2]] — sphingosine kinase 2 · module 036 +
+- [[SPICE1]] — spindle and centriole associated protein 1 · module 040 +
+- [[SPIDR]] — scaffold protein involved in DNA repair · module 004 +
+- [[SPIN1]] — spindlin 1 · module 017 +
+- [[SPIN2B]] — spindlin family member 2B · module 220 +
+- [[SPIN3]] — spindlin family member 3 · module 004 +
+- [[SPIN4]] — spindlin family member 4 · module 006 +
+- [[SPINDOC]] — spindlin interactor and repressor of chromatin binding · module 072 +
+- [[SPINK1]] — serine peptidase inhibitor Kazal type 1 · module 125 +
+- [[SPINK13]] — serine peptidase inhibitor Kazal type 13 · module 019 +
+- [[SPINK5]] — serine peptidase inhibitor Kazal type 5 · module 027 +
+- [[SPINT1]] — serine peptidase inhibitor, Kunitz type 1 · module 008 +
+- [[SPINT1-AS1]] — SPINT1 antisense RNA 1 · module 055 +
+- [[SPINT2]] — serine peptidase inhibitor, Kunitz type 2 · module 044 +
+- [[SPIRE1]] — spire type actin nucleation factor 1 · module 227 +
+- [[SPIRE2]] — spire type actin nucleation factor 2 · module 055 +
+- [[SPNS1]] — SPNS lysolipid transporter 1, lysophospholipid · module 122 +
+- [[SPNS2]] — SPNS lysolipid transporter 2, sphingosine-1-phosphate · module 161 +
+- [[SPOCD1]] — SPOC domain containing 1 · module 013 +
+- [[SPOCK1]] — SPARC (osteonectin), cwcv and kazal like domains proteoglycan 1 · module 013 +
+- [[SPOCK2]] — SPARC (osteonectin), cwcv and kazal like domains proteoglycan 2 · module 039 +
+- [[SPOCK3]] — SPARC (osteonectin), cwcv and kazal like domains proteoglycan 3 · module 009 +
+- [[SPON1]] — spondin 1 · module 073 +
+- [[SPON1-AS1]] — SPON1 antisense RNA 1 · module 047 +
+- [[SPON2]] — spondin 2 · module 047 +
+- [[SPOP]] — speckle type BTB/POZ protein · module 012 +
+- [[SPOPL]] — speckle type BTB/POZ protein like · module 045 +
+- [[SPOPL-DT]] — SPOPL divergent transcript · module 005 +
+- [[SPOUT1]] — SPOUT domain containing methyltransferase 1 · module 005 +
+- [[SPP1]] — secreted phosphoprotein 1 · module 019 +
+- [[SPPL2A]] — signal peptide peptidase like 2A · module 068 +
+- [[SPPL2B]] — signal peptide peptidase like 2B · module 002 +
+- [[SPPL3]] — signal peptide peptidase like 3 · module 052 -
+- [[SPR]] — sepiapterin reductase · module 007 +
+- [[SPRED1]] — sprouty related EVH1 domain containing 1 · module 092 +
+- [[SPRED2]] — sprouty related EVH1 domain containing 2 · module 092 +
+- [[SPRED3]] — sprouty related EVH1 domain containing 3 · module 038 +
+- [[SPRING1]] — SREBF pathway regulator in golgi 1 · module 050 +
+- [[SPRTN]] — SprT-like N-terminal domain · module 007 +
+- [[SPRY1]] — sprouty RTK signaling antagonist 1 · module 144 +
+- [[SPRY2]] — sprouty RTK signaling antagonist 2 · module 092 +
+- [[SPRY3]] — sprouty RTK signaling antagonist 3 · module 137 +
+- [[SPRY4]] — sprouty RTK signaling antagonist 4 · module 092 +
+- [[SPRY4-AS1]] — SPRY4 antisense RNA 1 · module 092 +
+- [[SPRYD3]] — SPRY domain containing 3 · module 002 +
+- [[SPRYD4]] — SPRY domain containing 4 · module 001 +
+- [[SPRYD7]] — SPRY domain containing 7 · module 012 +
+- [[SPSB1]] — splA/ryanodine receptor domain and SOCS box containing 1 · module 081 +
+- [[SPSB2]] — splA/ryanodine receptor domain and SOCS box containing 2 · module 093 +
+- [[SPSB3]] — splA/ryanodine receptor domain and SOCS box containing 3 · module 076 +
+- [[SPTAN1]] — spectrin alpha, non-erythrocytic 1 · module 111 +
+- [[SPTB]] — spectrin beta, erythrocytic · module 009 +
+- [[SPTBN1]] — spectrin beta, non-erythrocytic 1 · module 025 +
+- [[SPTBN1-AS2]] — SPTBN1 antisense RNA 2 · module 021 +
+- [[SPTBN2]] — spectrin beta, non-erythrocytic 2 · module 004 +
+- [[SPTBN4]] — spectrin beta, non-erythrocytic 4 · module 100 +
+- [[SPTBN5]] — spectrin beta, non-erythrocytic 5 · module 047 +
+- [[SPTLC1]] — serine palmitoyltransferase long chain base subunit 1 · module 020 +
+- [[SPTLC2]] — serine palmitoyltransferase long chain base subunit 2 · module 077 +
+- [[SPTLC3]] — serine palmitoyltransferase long chain base subunit 3 · module 008 +
+- [[SPTSSA]] — serine palmitoyltransferase small subunit A · module 139 +
+- [[SPTSSB]] — serine palmitoyltransferase small subunit B · module 155 +
+- [[SPTY2D1]] — SPT2 chromatin protein domain containing 1 · module 041 +
+- [[SPTY2D1OS]] — mitochondrial sheath formation associated · module 023 +
+- [[SPX]] — spexin hormone · module 037 +
+- [[SQLE]] — squalene epoxidase · module 086 +
+- [[SQOR]] — sulfide quinone oxidoreductase · module 139 +
+- [[SQSTM1]] — sequestosome 1 · module 093 +
+- [[SRA1]] — steroid receptor RNA activator 1 · module 052 +
+- [[SRBD1]] — S1 RNA binding domain 1 · module 005 +
+- [[SRC]] — SRC proto-oncogene, non-receptor tyrosine kinase · module 102 +
+- [[SRCAP]] — Snf2 related CREBBP activator protein · module 016 +
+- [[SRCIN1]] — SRC kinase signaling inhibitor 1 · module 128 +
+- [[SRD5A1]] — steroid 5 alpha-reductase 1 · module 016 -
+- [[SRD5A3]] — steroid 5 alpha-reductase 3 · module 061 +
+- [[SREBF1]] — sterol regulatory element binding transcription factor 1 · module 086 +
+- [[SREBF2]] — sterol regulatory element binding transcription factor 2 · module 086 +
+- [[SREK1]] — splicing regulatory glutamic acid and lysine rich protein 1 · module 051 +
+- [[SREK1IP1]] — SREK1 interacting protein 1 · module 203 +
+- [[SRF]] — serum response factor · module 138 +
+- [[SRFBP1]] — serum response factor binding protein 1 · module 001 +
+- [[SRGAP1]] — SLIT-ROBO Rho GTPase activating protein 1 · module 120 +
+- [[SRGAP2]] — SLIT-ROBO Rho GTPase activating protein 2 · module 064 -
+- [[SRGAP2B]] — SLIT-ROBO Rho GTPase activating protein 2B · module 145 +
+- [[SRGAP2C]] — SLIT-ROBO Rho GTPase activating protein 2C · module 145 +
+- [[SRGAP2D]] — SLIT-ROBO Rho GTPase activating protein 2D (pseudogene) · module 016 -
+- [[SRGAP3]] — SLIT-ROBO Rho GTPase activating protein 3 · module 026 +
+- [[SRGN]] — serglycin · module 104 +
+- [[SRI]] — sorcin · module 017 +
+- [[SRM]] — spermidine synthase · module 036 +
+- [[SRMS]] — src-related kinase lacking C-terminal regulatory tyrosine and N-terminal myristylation sites · module 047 +
+- [[SRP14]] — signal recognition particle 14 · module 060 +
+- [[SRP14-DT]] — SRP14 divergent transcript · module 010 +
+- [[SRP19]] — signal recognition particle 19 · module 156 +
+- [[SRP54]] — signal recognition particle 54 · module 041 +
+- [[SRP54-AS1]] — SRP54 antisense RNA 1 · module 040 +
+- [[SRP68]] — signal recognition particle 68 · module 007 +
+- [[SRP72]] — signal recognition particle 72 · module 042 +
+- [[SRP9]] — signal recognition particle 9 · module 025 +
+- [[SRPK1]] — SRSF protein kinase 1 · module 059 -
+- [[SRPK2]] — SRSF protein kinase 2 · module 186 +
+- [[SRPRA]] — SRP receptor subunit alpha · module 042 +
+- [[SRPRB]] — SRP receptor subunit beta · module 049 +
+- [[SRPX]] — sushi repeat containing protein X-linked · module 104 +
+- [[SRPX2]] — sushi repeat containing protein X-linked 2 · module 151 +
+- [[SRR]] — serine racemase · module 015 +
+- [[SRRD]] — SRR1 domain containing · module 016 +
+- [[SRRM1]] — serine and arginine repetitive matrix 1 · module 184 -
+- [[SRRM2]] — serine/arginine repetitive matrix 2 · module 096 +
+- [[SRRM2-AS1]] — SRRM2 antisense RNA 1 · module 035 +
+- [[SRRM3]] — serine/arginine repetitive matrix 3 · module 191 +
+- [[SRRM4]] — serine/arginine repetitive matrix 4 · module 009 +
+- [[SRRM5]] — serine/arginine repetitive matrix 5 · module 038 +
+- [[SRRT]] — serrate, RNA effector molecule · module 157 +
+- [[SRSF1]] — serine and arginine rich splicing factor 1 · module 003 -
+- [[SRSF10]] — serine and arginine rich splicing factor 10 · module 003 -
+- [[SRSF11]] — serine and arginine rich splicing factor 11 · module 012 +
+- [[SRSF12]] — serine and arginine rich splicing factor 12 · module 140 +
+- [[SRSF2]] — serine and arginine rich splicing factor 2 · module 033 +
+- [[SRSF3]] — serine and arginine rich splicing factor 3 · module 003 -
+- [[SRSF4]] — serine and arginine rich splicing factor 4 · module 051 +
+- [[SRSF5]] — serine and arginine rich splicing factor 5 · module 015 +
+- [[SRSF6]] — serine and arginine rich splicing factor 6 · module 096 +
+- [[SRSF7]] — serine and arginine rich splicing factor 7 · module 093 +
+- [[SRSF8]] — serine and arginine rich splicing factor 8 · module 011 +
+- [[SRSF9]] — serine and arginine rich splicing factor 9 · module 020 -
+- [[SS18]] — SS18 subunit of BAF chromatin remodeling complex · module 022 +
+- [[SS18L1]] — SS18L1 subunit of BAF chromatin remodeling complex · module 142 +
+- [[SS18L2]] — SS18 like 2 · module 025 -
+- [[SSB]] — small RNA binding exonuclease protection factor La · module 001 +
+- [[SSBP1]] — single stranded DNA binding protein 1 · module 023 +
+- [[SSBP2]] — single stranded DNA binding protein 2 · module 106 +
+- [[SSBP3]] — single stranded DNA binding protein 3 · module 059 +
+- [[SSBP4]] — single stranded DNA binding protein 4 · module 077 +
+- [[SSC5D]] — scavenger receptor cysteine rich family member with 5 domains · module 053 +
+- [[SSH1]] — slingshot protein phosphatase 1 · module 084 +
+- [[SSH2]] — slingshot protein phosphatase 2 · module 014 +
+- [[SSH3]] — slingshot protein phosphatase 3 · module 126 +
+- [[SSNA1]] — SS nuclear autoantigen 1 · module 024 +
+- [[SSPN]] — sarcospan · module 080 +
+- [[SSPOP]] — SCO-spondin, pseudogene · module 010 +
+- [[SSR1]] — signal sequence receptor subunit 1 · module 042 +
+- [[SSR2]] — signal sequence receptor subunit 2 · module 049 +
+- [[SSR3]] — signal sequence receptor subunit 3 · module 042 +
+- [[SSR4]] — signal sequence receptor subunit 4 · module 048 +
+- [[SSRP1]] — structure specific recognition protein 1 · module 006 +
+- [[SSTR2]] — somatostatin receptor 2 · module 014 +
+- [[SSU72]] — SSU72 homolog, RNA polymerase II CTD phosphatase · module 003 -
+- [[SSUH2]] — ssu-2 homolog · module 039 +
+- [[SSX1]] — SSX family member 1 · module 072 +
+- [[SSX2IP]] — SSX family member 2 interacting protein · module 025 +
+- [[ST13]] — ST13 Hsp70 interacting protein · module 060 +
+- [[ST14]] — ST14 transmembrane serine protease matriptase · module 008 +
+- [[ST18]] — ST18 C2H2C-type zinc finger transcription factor · module 027 +
+- [[ST20-MTHFS]] — ST20-MTHFS readthrough · module 023 +
+- [[ST3GAL1]] — ST3 beta-galactoside alpha-2,3-sialyltransferase 1 · module 174 +
+- [[ST3GAL2]] — ST3 beta-galactoside alpha-2,3-sialyltransferase 2 · module 192 +
+- [[ST3GAL3]] — ST3 beta-galactoside alpha-2,3-sialyltransferase 3 · module 031 +
+- [[ST3GAL4]] — ST3 beta-galactoside alpha-2,3-sialyltransferase 4 · module 148 -
+- [[ST3GAL5]] — ST3 beta-galactoside alpha-2,3-sialyltransferase 5 · module 135 -
+- [[ST3GAL6]] — ST3 beta-galactoside alpha-2,3-sialyltransferase 6 · module 092 +
+- [[ST6GAL1]] — ST6 beta-galactoside alpha-2,6-sialyltransferase 1 · module 018 +
+- [[ST6GAL2]] — ST6 beta-galactoside alpha-2,6-sialyltransferase 2 · module 092 +
+- [[ST6GALNAC1]] — ST6 N-acetylgalactosaminide alpha-2,6-sialyltransferase 1 · module 044 +
+- [[ST6GALNAC2]] — ST6 N-acetylgalactosaminide alpha-2,6-sialyltransferase 2 · module 128 +
+- [[ST6GALNAC3]] — ST6 N-acetylgalactosaminide alpha-2,6-sialyltransferase 3 · module 082 +
+- [[ST6GALNAC4]] — ST6 N-acetylgalactosaminide alpha-2,6-sialyltransferase 4 · module 068 -
+- [[ST6GALNAC5]] — ST6 N-acetylgalactosaminide alpha-2,6-sialyltransferase 5 · module 008 +
+- [[ST6GALNAC6]] — ST6 N-acetylgalactosaminide alpha-2,6-sialyltransferase 6 · module 002 +
+- [[ST6GALNAC6-1]] · module 038 +
+- [[ST7]] — suppression of tumorigenicity 7 · module 137 +
+- [[ST7-AS2]] — ST7 antisense RNA 2 · module 021 +
+- [[ST7L]] — suppression of tumorigenicity 7 like · module 088 +
+- [[ST8SIA1]] — ST8 alpha-N-acetyl-neuraminide alpha-2,8-sialyltransferase 1 · module 166 +
+- [[ST8SIA4]] — ST8 alpha-N-acetyl-neuraminide alpha-2,8-sialyltransferase 4 · module 019 +
+- [[ST8SIA5]] — ST8 alpha-N-acetyl-neuraminide alpha-2,8-sialyltransferase 5 · module 026 +
+- [[ST8SIA6]] — ST8 alpha-N-acetyl-neuraminide alpha-2,8-sialyltransferase 6 · module 008 +
+- [[ST8SIA6-AS1]] — ST8SIA6 antisense RNA 1 · module 009 +
+- [[STAC]] — SH3 and cysteine rich domain · module 013 +
+- [[STAC3]] — SH3 and cysteine rich domain 3 · module 047 +
+- [[STAG1]] — STAG1 cohesin complex component · module 051 +
+- [[STAG2]] — STAG2 cohesin complex component · module 003 -
+- [[STAG3]] — STAG3 cohesin complex component · module 087 +
+- [[STAG3L4]] — STAG3 cohesin complex component like 4 (pseudogene) · module 020 +
+- [[STAG3L4-1]] · module 016 -
+- [[STAG3L5P-1]] · module 067 +
+- [[STAM]] — signal transducing adaptor molecule · module 030 +
+- [[STAM2]] — signal transducing adaptor molecule 2 · module 049 +
+- [[STAMBP]] — STAM binding protein · module 028 +
+- [[STAMBPL1]] — STAM binding protein like 1 · module 092 +
+- [[STAP2]] — signal transducing adaptor family member 2 · module 014 +
+- [[STARD10]] — StAR related lipid transfer domain containing 10 · module 004 -
+- [[STARD13]] — StAR related lipid transfer domain containing 13 · module 120 +
+- [[STARD13-AS]] — STARD13 antisense RNA · module 021 +
+- [[STARD3]] — StAR related lipid transfer domain containing 3 · module 142 +
+- [[STARD3NL]] — STARD3 N-terminal like · module 057 +
+- [[STARD4]] — StAR related lipid transfer domain containing 4 · module 086 +
+- [[STARD4-AS1]] — STARD4 antisense RNA 1 · module 026 +
+- [[STARD5]] — StAR related lipid transfer domain containing 5 · module 083 -
+- [[STARD7]] — StAR related lipid transfer domain containing 7 · module 033 +
+- [[STARD7-AS1]] — STARD7 antisense RNA 1 · module 015 +
+- [[STARD8]] — StAR related lipid transfer domain containing 8 · module 022 +
+- [[STARD9]] — StAR related lipid transfer domain containing 9 · module 030 +
+- [[STAT1]] — signal transducer and activator of transcription 1 · module 032 +
+- [[STAT2]] — signal transducer and activator of transcription 2 · module 032 +
+- [[STAT3]] — signal transducer and activator of transcription 3 · module 139 +
+- [[STAT4]] — signal transducer and activator of transcription 4 · module 150 +
+- [[STAT5A]] — signal transducer and activator of transcription 5A · module 014 +
+- [[STAT5B]] — signal transducer and activator of transcription 5B · module 042 +
+- [[STAT6]] — signal transducer and activator of transcription 6 · module 068 +
+- [[STAU1]] — staufen double-stranded RNA binding protein 1 · module 085 +
+- [[STAU2]] — staufen double-stranded RNA binding protein 2 · module 222 +
+- [[STBD1]] — starch binding domain 1 · module 107 +
+- [[STC1]] — stanniocalcin 1 · module 081 +
+- [[STC2]] — stanniocalcin 2 · module 063 +
+- [[STEAP1]] — STEAP family member 1 · module 001 +
+- [[STEAP1B]] — STEAP family member 1B · module 019 +
+- [[STEAP1B-AS1]] — STEAP1B antisense RNA 1 · module 019 +
+- [[STEAP2]] — STEAP2 metalloreductase · module 008 +
+- [[STEAP2-AS1]] — STEAP2 antisense RNA 1 · module 008 +
+- [[STEAP3]] — STEAP3 metalloreductase · module 104 +
+- [[STEAP4]] — STEAP4 metalloreductase · module 008 +
+- [[STEEP1]] — STING1 ER exit protein 1 · module 209 +
+- [[STIL]] — STIL centriolar assembly protein · module 067 +
+- [[STIM1]] — stromal interaction molecule 1 · module 186 +
+- [[STIM2]] — stromal interaction molecule 2 · module 197 +
+- [[STIMATE]] — STIM activating enhancer · module 159 +
+- [[STING1]] — stimulator of interferon response cGAMP interactor 1 · module 070 +
+- [[STIP1]] — stress induced phosphoprotein 1 · module 060 +
+- [[STK10]] — serine/threonine kinase 10 · module 101 +
+- [[STK11]] — serine/threonine kinase 11 · module 173 +
+- [[STK11IP]] — serine/threonine kinase 11 interacting protein · module 127 +
+- [[STK16]] — serine/threonine kinase 16 · module 012 +
+- [[STK17A]] — serine/threonine kinase 17a · module 081 +
+- [[STK17B]] — serine/threonine kinase 17b · module 004 -
+- [[STK19]] — winged helix repair factor 1 · module 041 +
+- [[STK24]] — serine/threonine kinase 24 · module 031 +
+- [[STK25]] — serine/threonine kinase 25 · module 002 +
+- [[STK26]] — serine/threonine kinase 26 · module 054 -
+- [[STK3]] — serine/threonine kinase 3 · module 216 +
+- [[STK31]] — serine/threonine kinase 31 · module 027 +
+- [[STK32A]] — serine/threonine kinase 32A · module 094 +
+- [[STK32B]] — serine/threonine kinase 32B · module 013 +
+- [[STK32C]] — serine/threonine kinase 32C · module 003 +
+- [[STK33]] — serine/threonine kinase 33 · module 016 +
+- [[STK35]] — serine/threonine kinase 35 · module 050 +
+- [[STK36]] — serine/threonine kinase 36 · module 127 +
+- [[STK38]] — serine/threonine kinase 38 · module 054 +
+- [[STK38L]] — serine/threonine kinase 38 like · module 111 +
+- [[STK39]] — serine/threonine kinase 39 · module 059 -
+- [[STK4]] — serine/threonine kinase 4 · module 078 +
+- [[STK40]] — serine/threonine kinase 40 · module 227 +
+- [[STMN1]] — stathmin 1 · module 022 +
+- [[STMN3]] — stathmin 3 · module 078 +
+- [[STMP1]] — short transmembrane mitochondrial protein 1 · module 025 +
+- [[STN1]] — STN1 subunit of CST complex · module 174 +
+- [[STOM]] — stomatin · module 139 +
+- [[STOML2]] — stomatin like 2 · module 007 +
+- [[STON1]] — stonin 1 · module 039 +
+- [[STON2]] — stonin 2 · module 066 +
+- [[STOX1]] — storkhead box 1 · module 010 +
+- [[STOX2]] — storkhead box 2 · module 082 +
+- [[STPG1]] — sperm tail PG-rich repeat containing 1 · module 221 +
+- [[STPG2]] — sperm tail PG-rich repeat containing 2 · module 010 +
+- [[STPG4]] — sperm-tail PG-rich repeat containing 4 · module 053 +
+- [[STRA6]] — signaling receptor and transporter of retinol STRA6 · module 013 +
+- [[STRA6LP]] — STRA6 like, pseudogene · module 017 +
+- [[STRADA]] — STE20 related adaptor alpha · module 038 +
+- [[STRADB]] — STE20 related adaptor beta · module 029 +
+- [[STRAP]] — serine/threonine kinase receptor associated protein · module 042 +
+- [[STRBP]] — spermatid perinuclear RNA binding protein · module 115 +
+- [[STRIP1]] — striatin interacting protein 1 · module 046 +
+- [[STRIP2]] — striatin interacting protein 2 · module 034 +
+- [[STRN]] — striatin · module 163 +
+- [[STRN3]] — striatin 3 · module 046 +
+- [[STRN4]] — striatin 4 · module 153 +
+- [[STS]] — steroid sulfatase · module 008 +
+- [[STT3A]] — STT3 oligosaccharyltransferase complex catalytic subunit A · module 042 +
+- [[STT3B]] — STT3 oligosaccharyltransferase complex catalytic subunit B · module 029 +
+- [[STUB1]] — STIP1 homology and U-box containing protein 1 · module 058 +
+- [[STX10]] — syntaxin 10 · module 109 +
+- [[STX11]] — syntaxin 11 · module 014 +
+- [[STX12]] — syntaxin 12 · module 004 -
+- [[STX16]] — syntaxin 16 · module 025 +
+- [[STX16-NPEPL1]] — STX16-NPEPL1 readthrough (NMD candidate) · module 052 +
+- [[STX17]] — syntaxin 17 · module 032 +
+- [[STX17-DT]] — non-protein coding RNA, associated with MAP kinase pathway and growth arrest · module 026 +
+- [[STX18]] — syntaxin 18 · module 178 +
+- [[STX18-AS1]] — STX18 antisense RNA 1 · module 004 +
+- [[STX19]] — syntaxin 19 · module 008 +
+- [[STX1A]] — syntaxin 1A · module 084 +
+- [[STX2]] — syntaxin 2 · module 002 +
+- [[STX3]] — syntaxin 3 · module 068 +
+- [[STX4]] — syntaxin 4 · module 096 +
+- [[STX5]] — syntaxin 5 · module 041 +
+- [[STX5-DT]] — STX5 divergent transcript · module 041 +
+- [[STX6]] — syntaxin 6 · module 084 +
+- [[STX7]] — syntaxin 7 · module 030 +
+- [[STX8]] — syntaxin 8 · module 230 +
+- [[STXBP1]] — syntaxin binding protein 1 · module 136 +
+- [[STXBP2]] — syntaxin binding protein 2 · module 035 +
+- [[STXBP3]] — syntaxin binding protein 3 · module 068 +
+- [[STXBP4]] — syntaxin binding protein 4 · module 004 +
+- [[STXBP5]] — syntaxin binding protein 5 · module 098 +
+- [[STXBP5-AS1]] — STXBP5 antisense RNA 1 · module 098 +
+- [[STXBP5L]] — syntaxin binding protein 5L · module 061 +
+- [[STXBP6]] — syntaxin binding protein 6 · module 055 +
+- [[STYK1]] — STY kinase 1 · module 008 +
+- [[STYX]] — serine/threonine/tyrosine interacting protein · module 020 +
+- [[STYXL1]] — serine/threonine/tyrosine interacting like 1 · module 011 +
+- [[SUB1]] — SUB1 regulator of transcription · module 003 -
+- [[SUCLA2]] — succinate-CoA ligase ADP-forming subunit beta · module 003 -
+- [[SUCLG1]] — succinate-CoA ligase GDP/ADP-forming subunit alpha · module 012 +
+- [[SUCLG2]] — succinate-CoA ligase GDP-forming subunit beta · module 200 +
+- [[SUCLG2-DT]] — SUCLG2 divergent transcript · module 010 +
+- [[SUCNR1]] — succinate receptor 1 · module 013 +
+- [[SUCO]] — SUN domain containing ossification factor · module 056 +
+- [[SUDS3]] — SIN3A corepressor complex component SDS3 · module 025 +
+- [[SUFU]] — SUFU negative regulator of hedgehog signaling · module 030 +
+- [[SUGCT]] — succinyl-CoA:glutarate-CoA transferase · module 102 +
+- [[SUGP1]] — SURP and G-patch domain containing 1 · module 020 -
+- [[SUGP2]] — SURP and G-patch domain containing 2 · module 067 +
+- [[SUGT1]] — SGT1 assembly cochaperone of MIS12 kinetochore complex · module 060 +
+- [[SUGT1P3]] — SUGT1 pseudogene 3 · module 003 -
+- [[SUGT1P3-1]] · module 012 +
+- [[SUGT1P4-STRA6LP]] — SUGT1P4-STRA6LP readthrough · module 017 +
+- [[SUGT1P4-STRA6LP-CCDC180]] — SUGT1P4-STRA6LP-CCDC180 readthrough · module 017 +
+- [[SULF1]] — sulfatase 1 · module 066 +
+- [[SULF2]] — sulfatase 2 · module 073 +
+- [[SULT1A1]] — sulfotransferase family 1A member 1 · module 146 +
+- [[SULT1C2]] — sulfotransferase family 1C member 2 · module 055 +
+- [[SULT2B1]] — sulfotransferase family 2B member 1 · module 031 +
+- [[SULT4A1]] — sulfotransferase family 4A member 1 · module 132 +
+- [[SUMF1]] — sulfatase modifying factor 1 · module 010 +
+- [[SUMF2]] — sulfatase modifying factor 2 · module 029 +
+- [[SUMO1]] — small ubiquitin like modifier 1 · module 020 +
+- [[SUMO2]] — small ubiquitin like modifier 2 · module 007 -
+- [[SUMO2P17]] — SUMO2 pseudogene 17 · module 035 +
+- [[SUMO3]] — small ubiquitin like modifier 3 · module 029 +
+- [[SUMO4]] — small ubiquitin like modifier 4 · module 020 -
+- [[SUN1]] — Sad1 and UNC84 domain containing 1 · module 002 +
+- [[SUN2]] — Sad1 and UNC84 domain containing 2 · module 022 +
+- [[SUN3]] — Sad1 and UNC84 domain containing 3 · module 125 +
+- [[SUOX]] — sulfite oxidase · module 103 +
+- [[SUPT16H]] — SPT16 homolog, facilitates chromatin remodeling subunit · module 004 +
+- [[SUPT20H]] — SPT20 homolog, SAGA complex component · module 028 +
+- [[SUPT3H]] — SPT3 homolog, SAGA and STAGA complex component · module 211 +
+- [[SUPT4H1]] — SPT4 homolog, DSIF elongation factor subunit · module 048 +
+- [[SUPT5H]] — SPT5 homolog, DSIF elongation factor subunit · module 041 +
+- [[SUPT6H]] — SPT6 homolog, histone chaperone and transcription elongation factor · module 011 +
+- [[SUPT7L]] — SPT7 like, STAGA complex subunit gamma · module 023 +
+- [[SUPV3L1]] — Suv3 like RNA helicase · module 107 +
+- [[SURF1]] — SURF1 cytochrome c oxidase assembly factor · module 056 +
+- [[SURF2]] — surfeit 2 · module 012 +
+- [[SURF4]] — surfeit 4 · module 042 +
+- [[SURF6]] — surfeit 6 · module 011 +
+- [[SUSD1]] — sushi domain containing 1 · module 124 +
+- [[SUSD4]] — sushi domain containing 4 · module 115 +
+- [[SUSD5]] — sushi domain containing 5 · module 066 +
+- [[SUSD6]] — sushi domain containing 6 · module 060 -
+- [[SUV39H1]] — SUV39H1 histone lysine methyltransferase · module 022 +
+- [[SUV39H2]] — SUV39H2 histone lysine methyltransferase · module 006 +
+- [[SUZ12]] — SUZ12 polycomb repressive complex 2 subunit · module 091 +
+- [[SUZ12P1]] — SUZ12 pseudogene 1 · module 071 +
+- [[SV2A]] — synaptic vesicle glycoprotein 2A · module 047 +
+- [[SVBP]] — small vasohibin binding protein · module 024 +
+- [[SVEP1]] — sushi, von Willebrand factor type A, EGF and pentraxin domain containing 1 · module 150 +
+- [[SVIL]] — supervillin · module 151 +
+- [[SVIL-AS1-1]] · module 221 +
+- [[SVIP]] — small VCP interacting protein · module 005 -
+- [[SWAP70]] — switching B cell complex subunit SWAP70 · module 059 +
+- [[SWI5]] — SWI5 homologous recombination repair protein · module 056 +
+- [[SWT1]] — SWT1 RNA endoribonuclease homolog · module 001 -
+- [[SYAP1]] — synapse associated protein 1 · module 109 +
+- [[SYBU]] — syntabulin · module 146 +
+- [[SYCE1L]] — synaptonemal complex central element protein 1 like · module 038 +
+- [[SYCE2]] — synaptonemal complex central element protein 2 · module 038 +
+- [[SYCP2]] — synaptonemal complex protein 2 · module 010 +
+- [[SYCP2L]] — synaptonemal complex protein 2 like · module 105 +
+- [[SYDE1]] — synapse defective Rho GTPase activating protein 1 · module 055 +
+- [[SYDE2]] — synapse defective Rho GTPase homolog 2 · module 123 +
+- [[SYF2]] — SYF2 pre-mRNA splicing factor · module 074 +
+- [[SYK]] — spleen associated tyrosine kinase · module 055 +
+- [[SYMPK]] — symplekin scaffold protein · module 005 +
+- [[SYN1]] — synapsin I · module 061 +
+- [[SYN2]] — synapsin II · module 102 +
+- [[SYN3]] — synapsin III · module 166 +
+- [[SYNC]] — syncoilin, intermediate filament protein · module 021 +
+- [[SYNCRIP]] — synaptotagmin binding cytoplasmic RNA interacting protein · module 003 -
+- [[SYNDIG1]] — synapse differentiation inducing 1 · module 013 +
+- [[SYNE1]] — spectrin repeat containing nuclear envelope protein 1 · module 028 +
+- [[SYNE2]] — spectrin repeat containing nuclear envelope protein 2 · module 197 +
+- [[SYNE3]] — spectrin repeat containing nuclear envelope family member 3 · module 031 +
+- [[SYNGAP1]] — synaptic Ras GTPase activating protein 1 · module 014 +
+- [[SYNGR1]] — synaptogyrin 1 · module 100 +
+- [[SYNGR2]] — synaptogyrin 2 · module 024 +
+- [[SYNJ1]] — synaptojanin 1 · module 001 -
+- [[SYNJ2]] — synaptojanin 2 · module 112 +
+- [[SYNJ2BP]] — synaptojanin 2 binding protein · module 025 +
+- [[SYNM]] — synemin · module 009 +
+- [[SYNM-AS1]] — SYNM antisense RNA 1 · module 021 +
+- [[SYNPO]] — synaptopodin · module 014 +
+- [[SYNPO2]] — synaptopodin 2 · module 150 +
+- [[SYNPR-AS1]] — SYNPR antisense RNA 1 · module 008 +
+- [[SYNRG]] — synergin gamma · module 118 +
+- [[SYP]] — synaptophysin · module 161 +
+- [[SYPL1]] — synaptophysin like 1 · module 029 +
+- [[SYS1]] — SYS1 golgi trafficking protein · module 188 +
+- [[SYS1-DBNDD2]] — SYS1-DBNDD2 readthrough (NMD candidate) · module 047 +
+- [[SYT1]] — synaptotagmin 1 · module 009 +
+- [[SYT11]] — synaptotagmin 11 · module 082 +
+- [[SYT12]] — synaptotagmin 12 · module 061 +
+- [[SYT13]] — synaptotagmin 13 · module 034 +
+- [[SYT14]] — synaptotagmin 14 · module 121 +
+- [[SYT16]] — synaptotagmin 16 · module 053 +
+- [[SYT17]] — synaptotagmin 17 · module 128 +
+- [[SYT4]] — synaptotagmin 4 · module 009 +
+- [[SYT5]] — synaptotagmin 5 · module 053 +
+- [[SYT7]] — synaptotagmin 7 · module 208 +
+- [[SYT9]] — synaptotagmin 9 · module 110 +
+- [[SYT9-AS1]] — SYT9 antisense RNA 1 · module 010 +
+- [[SYTL1]] — synaptotagmin like 1 · module 008 +
+- [[SYTL2]] — synaptotagmin like 2 · module 224 +
+- [[SYTL3]] — synaptotagmin like 3 · module 013 +
+- [[SYTL4]] — synaptotagmin like 4 · module 006 +
+- [[SYTL5]] — synaptotagmin like 5 · module 235 +
+- [[SYVN1]] — synoviolin 1 · module 040 +
+- [[SZRD1]] — SUZ RNA binding domain containing 1 · module 025 +
+- [[SZT2]] — SZT2 subunit of KICSTOR complex · module 052 +

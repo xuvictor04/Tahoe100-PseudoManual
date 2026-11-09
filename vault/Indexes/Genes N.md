@@ -1,0 +1,663 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes N
+
+653 genes. Back to [[Genes by letter]].
+
+- [[N4BP1]] — NEDD4 binding protein 1 · module 032 +
+- [[N4BP2]] — NEDD4 binding protein 2 · module 137 +
+- [[N4BP2L1]] — NEDD4 binding protein 2 like 1 · module 023 +
+- [[N4BP2L2]] — NEDD4 binding protein 2 like 2 · module 149 +
+- [[N4BP3]] — NEDD4 binding protein 3 · module 206 +
+- [[N6AMT1]] — HemK methyltransferase 2, ETF1 glutamine and histone H4 lysine · module 001 +
+- [[NAA10]] — N-alpha-acetyltransferase 10, NatA catalytic subunit · module 058 +
+- [[NAA11]] — N-alpha-acetyltransferase 11, NatA catalytic subunit · module 009 +
+- [[NAA15]] — N-alpha-acetyltransferase 15, NatA auxiliary subunit · module 004 +
+- [[NAA16]] — N-alpha-acetyltransferase 16, NatA auxiliary subunit · module 146 +
+- [[NAA20]] — N-alpha-acetyltransferase 20, NatB catalytic subunit · module 033 +
+- [[NAA25]] — N-alpha-acetyltransferase 25, NatB auxiliary subunit · module 004 +
+- [[NAA30]] — N-alpha-acetyltransferase 30, NatC catalytic subunit · module 012 +
+- [[NAA35]] — N-alpha-acetyltransferase 35, NatC auxiliary subunit · module 056 +
+- [[NAA38]] — N-alpha-acetyltransferase 38, NatC auxiliary subunit · module 024 +
+- [[NAA40]] — N-alpha-acetyltransferase 40, NatD catalytic subunit · module 026 -
+- [[NAA50]] — N-alpha-acetyltransferase 50, NatE catalytic subunit · module 004 +
+- [[NAA60]] — N-alpha-acetyltransferase 60, NatF catalytic subunit · module 149 +
+- [[NAA80]] — N-alpha-acetyltransferase 80, NatH catalytic subunit · module 088 -
+- [[NAAA]] — N-acylethanolamine acid amidase · module 026 +
+- [[NAALADL2]] — N-acetylated alpha-linked acidic dipeptidase like 2 · module 010 +
+- [[NAALADL2-AS2]] — NAALADL2 antisense RNA 2 · module 009 +
+- [[NAB1]] — NGFI-A binding protein 1 · module 197 +
+- [[NAB2]] — NGFI-A binding protein 2 · module 162 +
+- [[NABP1]] — nucleic acid binding protein 1 · module 116 +
+- [[NABP2]] — nucleic acid binding protein 2 · module 130 +
+- [[NACA]] — nascent polypeptide associated complex subunit alpha · module 043 +
+- [[NACA4P]] — NACA family member 4, pseudogene · module 043 +
+- [[NACC1]] — nucleus accumbens associated 1 · module 005 +
+- [[NACC2]] — NACC family member 2 · module 017 -
+- [[NADK]] — NAD kinase · module 005 +
+- [[NADK2]] — NAD kinase 2, mitochondrial · module 094 +
+- [[NADSYN1]] — NAD synthetase 1 · module 015 +
+- [[NAE1]] — NEDD8 activating enzyme E1 subunit 1 · module 018 +
+- [[NAF1]] — nuclear assembly factor 1 ribonucleoprotein · module 005 +
+- [[NAGA]] — alpha-N-acetylgalactosaminidase · module 050 +
+- [[NAGK]] — N-acetylglucosamine kinase · module 041 +
+- [[NAGLU]] — N-acetyl-alpha-glucosaminidase · module 036 +
+- [[NAGPA]] — N-acetylglucosamine-1-phosphodiester alpha-N-acetylglucosaminidase · module 122 +
+- [[NAIF1]] — nuclear apoptosis inducing factor 1 · module 011 +
+- [[NALCN]] — sodium leak channel, non-selective · module 121 +
+- [[NALF1]] — NALCN channel auxiliary factor 1 · module 013 +
+- [[NAMPT]] — nicotinamide phosphoribosyltransferase · module 139 +
+- [[NAMPTP1]] — nicotinamide phosphoribosyltransferase pseudogene 1 · module 139 +
+- [[NANOS3]] — nanos C2HC-type zinc finger 3 · module 080 +
+- [[NANP]] — N-acetylneuraminic acid phosphatase · module 001 +
+- [[NANS]] — N-acetylneuraminate synthase · module 056 +
+- [[NAP1L1]] — nucleosome assembly protein 1 like 1 · module 043 +
+- [[NAP1L4]] — nucleosome assembly protein 1 like 4 · module 057 +
+- [[NAPA]] — NSF attachment protein alpha · module 032 +
+- [[NAPA-AS1]] — NAPA antisense RNA 1 · module 035 +
+- [[NAPB]] — NSF attachment protein beta · module 190 +
+- [[NAPEPLD]] — N-acyl phosphatidylethanolamine phospholipase D · module 136 +
+- [[NAPG]] — NSF attachment protein gamma · module 199 +
+- [[NAPRT]] — nicotinate phosphoribosyltransferase · module 001 +
+- [[NARF]] — nuclear prelamin A recognition factor · module 079 +
+- [[NARS1]] — asparaginyl-tRNA synthetase 1 · module 063 +
+- [[NARS2]] — asparaginyl-tRNA synthetase 2, mitochondrial · module 033 +
+- [[NASP]] — nuclear autoantigenic sperm protein · module 006 +
+- [[NAT1]] — N-acetyltransferase 1 · module 012 +
+- [[NAT10]] — N-acetyltransferase 10 · module 005 +
+- [[NAT14]] — N-acetyltransferase 14 (putative) · module 024 +
+- [[NAT9]] — N-acetyltransferase 9 · module 049 +
+- [[NATD1]] — N-acetyltransferase domain containing 1 · module 069 +
+- [[NAV1]] — neuron navigator 1 · module 013 +
+- [[NAV2]] — neuron navigator 2 · module 084 +
+- [[NAV3]] — neuron navigator 3 · module 116 +
+- [[NAXD]] — NAD(P)HX dehydratase · module 020 +
+- [[NAXE]] — NAD(P)HX epimerase · module 012 -
+- [[NBAS]] — NBAS subunit of NRZ tethering complex · module 040 +
+- [[NBDY]] — negative regulator of P-body association · module 017 +
+- [[NBEA]] — neurobeachin · module 207 -
+- [[NBEAL1]] — neurobeachin like 1 · module 005 -
+- [[NBEAL2]] — neurobeachin like 2 · module 002 +
+- [[NBEAP1]] — neurobeachin pseudogene 1 · module 062 +
+- [[NBEAP2]] — neurobeachin pseudogene 2 · module 033 +
+- [[NBL1]] — NBL1, DAN family BMP antagonist · module 028 -
+- [[NBN]] — nibrin · module 028 +
+- [[NBPF1]] — NBPF member 1 · module 030 +
+- [[NBPF10]] — NBPF member 10 · module 226 +
+- [[NBPF11]] — NBPF member 11 · module 020 -
+- [[NBPF12]] — NBPF member 12 · module 020 -
+- [[NBPF14]] — NBPF member 14 · module 226 +
+- [[NBPF15]] — NBPF member 15 · module 110 +
+- [[NBPF19]] — NBPF member 19 · module 226 +
+- [[NBPF20]] — NBPF member 20 · module 059 -
+- [[NBPF26]] — NBPF member 26 · module 226 +
+- [[NBPF3]] — NBPF member 3 · module 030 +
+- [[NBPF8]] — NBPF member 8 · module 110 +
+- [[NBPF9]] — NBPF member 9 · module 110 +
+- [[NBR1]] — NBR1 autophagy cargo receptor · module 074 +
+- [[NBR2]] — neighbor of BRCA1 lncRNA 2 · module 133 +
+- [[NCALD]] — neurocalcin delta · module 027 +
+- [[NCAM1]] — neural cell adhesion molecule 1 · module 009 +
+- [[NCAM2]] — neural cell adhesion molecule 2 · module 009 +
+- [[NCAPD2]] — non-SMC condensin I complex subunit D2 · module 022 +
+- [[NCAPD3]] — non-SMC condensin II complex subunit D3 · module 006 +
+- [[NCAPG]] — non-SMC condensin I complex subunit G · module 022 +
+- [[NCAPG2]] — non-SMC condensin II complex subunit G2 · module 006 +
+- [[NCAPH]] — non-SMC condensin I complex subunit H · module 022 +
+- [[NCAPH2]] — non-SMC condensin II complex subunit H2 · module 006 +
+- [[NCBP1]] — nuclear cap binding protein subunit 1 · module 004 +
+- [[NCBP2]] — nuclear cap binding protein subunit 2 · module 001 +
+- [[NCBP2AS2]] — NCBP2 antisense 2 (head to head) · module 119 +
+- [[NCBP3]] — nuclear cap binding subunit 3 · module 172 +
+- [[NCDN]] — neurochondrin · module 096 +
+- [[NCEH1]] — neutral cholesterol ester hydrolase 1 · module 120 +
+- [[NCF2]] — neutrophil cytosolic factor 2 · module 075 +
+- [[NCK1]] — NCK adaptor protein 1 · module 049 +
+- [[NCK1-DT]] — NCK1 divergent transcript · module 021 +
+- [[NCK2]] — NCK adaptor protein 2 · module 036 +
+- [[NCKAP1]] — NCK associated protein 1 · module 025 +
+- [[NCKAP5]] — NCK associated protein 5 · module 019 +
+- [[NCKAP5-AS2]] — NCKAP5 antisense RNA 2 · module 019 +
+- [[NCKAP5L]] — NCK associated protein 5 like · module 162 +
+- [[NCKIPSD]] — NCK interacting protein with SH3 domain · module 180 +
+- [[NCL]] — nucleolin multifunctional protein · module 005 +
+- [[NCLN]] — nicalin · module 004 +
+- [[NCMAP]] — non-compact myelin associated protein · module 044 +
+- [[NCOA1]] — nuclear receptor coactivator 1 · module 074 +
+- [[NCOA2]] — nuclear receptor coactivator 2 · module 046 +
+- [[NCOA3]] — nuclear receptor coactivator 3 · module 097 +
+- [[NCOA4]] — nuclear receptor coactivator 4 · module 003 -
+- [[NCOA5]] — nuclear receptor coactivator 5 · module 051 +
+- [[NCOA6]] — nuclear receptor coactivator 6 · module 172 +
+- [[NCOA7]] — nuclear receptor coactivator 7 · module 070 +
+- [[NCOR1]] — nuclear receptor corepressor 1 · module 051 +
+- [[NCOR2]] — nuclear receptor corepressor 2 · module 002 +
+- [[NCR3LG1]] — natural killer cell cytotoxicity receptor 3 ligand 1 · module 003 -
+- [[NCS1]] — neuronal calcium sensor 1 · module 018 +
+- [[NCSTN]] — nicastrin · module 050 +
+- [[NDC1]] — NDC1 transmembrane nucleoporin · module 186 +
+- [[NDC80]] — NDC80 kinetochore complex component · module 022 +
+- [[NDE1]] — nudE neurodevelopment protein 1 · module 022 +
+- [[NDEL1]] — nudE neurodevelopment protein 1 like 1 · module 056 +
+- [[NDFIP1]] — Nedd4 family interacting protein 1 · module 188 +
+- [[NDFIP2]] — Nedd4 family interacting protein 2 · module 046 -
+- [[NDNF]] — neuron derived neurotrophic factor · module 013 +
+- [[NDOR1]] — NADPH dependent diflavin oxidoreductase 1 · module 071 +
+- [[NDRG1]] — N-myc downstream regulated 1 · module 180 +
+- [[NDRG2]] — NDRG family member 2 · module 014 +
+- [[NDRG3]] — NDRG family member 3 · module 057 +
+- [[NDRG4]] — NDRG family member 4 · module 061 +
+- [[NDST1]] — N-deacetylase and N-sulfotransferase 1 · module 005 +
+- [[NDST2]] — N-deacetylase and N-sulfotransferase 2 · module 157 +
+- [[NDUFA1]] — NADH:ubiquinone oxidoreductase subunit A1 · module 048 +
+- [[NDUFA10]] — NADH:ubiquinone oxidoreductase subunit A10 · module 020 +
+- [[NDUFA11]] — NADH:ubiquinone oxidoreductase subunit A11 · module 048 +
+- [[NDUFA12]] — NADH:ubiquinone oxidoreductase subunit A12 · module 017 +
+- [[NDUFA13]] — NADH:ubiquinone oxidoreductase subunit A13 · module 048 +
+- [[NDUFA2]] — NADH:ubiquinone oxidoreductase subunit A2 · module 048 +
+- [[NDUFA3]] — NADH:ubiquinone oxidoreductase subunit A3 · module 058 +
+- [[NDUFA4]] — cytochrome c oxidase associated subunit FA4 · module 048 +
+- [[NDUFA4L2]] — cytochrome c oxidase hypoxia associated subunit FA4L2 · module 027 +
+- [[NDUFA5]] — NADH:ubiquinone oxidoreductase subunit A5 · module 028 +
+- [[NDUFA6]] — NADH:ubiquinone oxidoreductase subunit A6 · module 024 +
+- [[NDUFA6-DT]] — NDUFA6 divergent transcript · module 023 +
+- [[NDUFA7]] — NADH:ubiquinone oxidoreductase subunit A7 · module 024 +
+- [[NDUFA8]] — NADH:ubiquinone oxidoreductase subunit A8 · module 012 +
+- [[NDUFA9]] — NADH:ubiquinone oxidoreductase subunit A9 · module 220 +
+- [[NDUFAB1]] — NADH:ubiquinone oxidoreductase subunit AB1 · module 058 +
+- [[NDUFAF1]] — NADH:ubiquinone oxidoreductase complex assembly factor 1 · module 170 +
+- [[NDUFAF2]] — NADH:ubiquinone oxidoreductase complex assembly factor 2 · module 005 +
+- [[NDUFAF3]] — NADH:ubiquinone oxidoreductase complex assembly factor 3 · module 058 +
+- [[NDUFAF4]] — NADH:ubiquinone oxidoreductase complex assembly factor 4 · module 001 +
+- [[NDUFAF5]] — NADH:ubiquinone oxidoreductase complex assembly factor 5 · module 017 +
+- [[NDUFAF6]] — NADH:ubiquinone oxidoreductase complex assembly factor 6 · module 015 +
+- [[NDUFAF7]] — NADH:ubiquinone oxidoreductase complex assembly factor 7 · module 030 +
+- [[NDUFAF8]] — NADH:ubiquinone oxidoreductase complex assembly factor 8 · module 048 +
+- [[NDUFB1]] — NADH:ubiquinone oxidoreductase subunit B1 · module 048 +
+- [[NDUFB10]] — NADH:ubiquinone oxidoreductase subunit B10 · module 024 +
+- [[NDUFB11]] — NADH:ubiquinone oxidoreductase subunit B11 · module 048 +
+- [[NDUFB2]] — NADH:ubiquinone oxidoreductase subunit B2 · module 048 +
+- [[NDUFB3]] — NADH:ubiquinone oxidoreductase subunit B3 · module 058 +
+- [[NDUFB4]] — NADH:ubiquinone oxidoreductase subunit B4 · module 024 +
+- [[NDUFB5]] — NADH:ubiquinone oxidoreductase subunit B5 · module 028 +
+- [[NDUFB6]] — NADH:ubiquinone oxidoreductase subunit B6 · module 220 +
+- [[NDUFB7]] — NADH:ubiquinone oxidoreductase subunit B7 · module 178 +
+- [[NDUFB8]] — NADH:ubiquinone oxidoreductase subunit B8 · module 134 +
+- [[NDUFB9]] — NADH:ubiquinone oxidoreductase subunit B9 · module 012 +
+- [[NDUFC1]] — NADH:ubiquinone oxidoreductase subunit C1 · module 024 +
+- [[NDUFC2]] — NADH:ubiquinone oxidoreductase subunit C2 · module 048 +
+- [[NDUFS1]] — NADH:ubiquinone oxidoreductase core subunit S1 · module 194 +
+- [[NDUFS2]] — NADH:ubiquinone oxidoreductase core subunit S2 · module 178 +
+- [[NDUFS3]] — NADH:ubiquinone oxidoreductase core subunit S3 · module 118 +
+- [[NDUFS4]] — NADH:ubiquinone oxidoreductase subunit S4 · module 220 +
+- [[NDUFS5]] — NADH:ubiquinone oxidoreductase subunit S5 · module 058 +
+- [[NDUFS6]] — NADH:ubiquinone oxidoreductase subunit S6 · module 036 +
+- [[NDUFS7]] — NADH:ubiquinone oxidoreductase core subunit S7 · module 058 +
+- [[NDUFS8]] — NADH:ubiquinone oxidoreductase core subunit S8 · module 058 +
+- [[NDUFV1]] — NADH:ubiquinone oxidoreductase core subunit V1 · module 057 +
+- [[NDUFV2]] — NADH:ubiquinone oxidoreductase core subunit V2 · module 065 +
+- [[NDUFV2-AS1]] — NDUFV2 antisense RNA 1 · module 021 +
+- [[NDUFV3]] — NADH:ubiquinone oxidoreductase subunit V3 · module 012 +
+- [[NEAT1]] — nuclear paraspeckle assembly transcript 1 · module 016 -
+- [[NEB]] — nebulin · module 026 +
+- [[NEBL]] — nebulette · module 106 +
+- [[NECAB2]] — N-terminal EF-hand calcium binding protein 2 · module 047 +
+- [[NECAB3]] — N-terminal EF-hand calcium binding protein 3 · module 060 +
+- [[NECAP1]] — NECAP endocytosis associated 1 · module 017 +
+- [[NECAP2]] — NECAP endocytosis associated 2 · module 011 +
+- [[NECTIN1]] — nectin cell adhesion molecule 1 · module 034 +
+- [[NECTIN2]] — nectin cell adhesion molecule 2 · module 160 +
+- [[NECTIN3]] — nectin cell adhesion molecule 3 · module 111 +
+- [[NECTIN3-AS1]] — NECTIN3 antisense RNA 1 · module 010 +
+- [[NECTIN4]] — nectin cell adhesion molecule 4 · module 008 +
+- [[NEDD1]] — NEDD1 gamma-tubulin ring complex targeting factor · module 006 +
+- [[NEDD4]] — NEDD4 E3 ubiquitin protein ligase · module 028 +
+- [[NEDD4L]] — NEDD4 like E3 ubiquitin protein ligase · module 120 +
+- [[NEDD8]] — NEDD8 ubiquitin like modifier · module 048 +
+- [[NEDD9]] — neural precursor cell expressed, developmentally down-regulated 9 · module 123 +
+- [[NEFL]] — neurofilament light chain · module 019 +
+- [[NEFM]] — neurofilament medium chain · module 019 +
+- [[NEGR1]] — neuronal growth regulator 1 · module 009 +
+- [[NEIL1]] — nei like DNA glycosylase 1 · module 046 +
+- [[NEIL2]] — nei like DNA glycosylase 2 · module 036 +
+- [[NEIL3]] — nei like DNA glycosylase 3 · module 067 +
+- [[NEK1]] — NIMA related kinase 1 · module 015 -
+- [[NEK10]] — NIMA related kinase 10 · module 039 +
+- [[NEK11]] — NIMA related kinase 11 · module 026 +
+- [[NEK2]] — NIMA related kinase 2 · module 022 +
+- [[NEK3]] — NIMA related kinase 3 · module 017 +
+- [[NEK4]] — NIMA related kinase 4 · module 036 +
+- [[NEK5]] — NIMA related kinase 5 · module 027 +
+- [[NEK6]] — NIMA related kinase 6 · module 033 +
+- [[NEK7]] — NIMA related kinase 7 · module 069 +
+- [[NEK8]] — NIMA related kinase 8 · module 080 +
+- [[NEK9]] — NIMA related kinase 9 · module 088 +
+- [[NELFA]] — negative elongation factor complex member A · module 146 +
+- [[NELFB]] — negative elongation factor complex member B · module 003 +
+- [[NELFCD]] — negative elongation factor complex member C/D · module 025 +
+- [[NELFE]] — negative elongation factor complex member E · module 007 +
+- [[NELL1]] — neural EGFL like 1 · module 009 +
+- [[NELL2]] — neural EGFL like 2 · module 009 +
+- [[NEMF]] — nuclear export mediator factor · module 012 +
+- [[NEMP1]] — nuclear envelope integral membrane protein 1 · module 022 +
+- [[NEMP2]] — nuclear envelope integral membrane protein 2 · module 116 +
+- [[NEMP2-DT]] — NEMP2 divergent transcript · module 010 +
+- [[NENF]] — neudesin neurotrophic factor · module 048 +
+- [[NEO1]] — neogenin 1 · module 197 +
+- [[NEPRO]] — ribonuclease MRP subunit p64 · module 017 +
+- [[NEPRO-AS1]] — NEPRO antisense RNA 1 · module 088 +
+- [[NES]] — nestin · module 078 +
+- [[NET1]] — neuroepithelial cell transforming 1 · module 031 +
+- [[NETO1]] — neuropilin and tolloid like 1 · module 108 +
+- [[NETO2]] — neuropilin and tolloid like 2 · module 018 +
+- [[NEU1]] — neuraminidase 1 · module 059 +
+- [[NEU3]] — neuraminidase 3 · module 038 +
+- [[NEURL1]] — neuralized E3 ubiquitin protein ligase 1 · module 061 +
+- [[NEURL1B]] — neuralized E3 ubiquitin protein ligase 1B · module 067 +
+- [[NEURL3]] — neuralized E3 ubiquitin protein ligase 3 · module 014 +
+- [[NEURL4]] — neuralized E3 ubiquitin protein ligase 4 · module 002 +
+- [[NEXMIF]] — neurite extension and migration factor · module 019 +
+- [[NEXN]] — nexilin F-actin binding protein · module 068 +
+- [[NF1]] — neurofibromin 1 · module 213 +
+- [[NF2]] — NF2, moesin-ezrin-radixin like (MERLIN) tumor suppressor · module 151 +
+- [[NFASC]] — neurofascin · module 082 +
+- [[NFAT5]] — nuclear factor of activated T cells 5 · module 051 +
+- [[NFATC1]] — nuclear factor of activated T cells 1 · module 181 +
+- [[NFATC2]] — nuclear factor of activated T cells 2 · module 014 +
+- [[NFATC2IP]] — nuclear factor of activated T cells 2 interacting protein · module 028 -
+- [[NFATC2IP-AS1]] — NFATC2IP antisense RNA 1 · module 021 +
+- [[NFATC3]] — nuclear factor of activated T cells 3 · module 186 +
+- [[NFATC4]] — nuclear factor of activated T cells 4 · module 035 +
+- [[NFE2L1]] — NFE2 like bZIP transcription factor 1 · module 133 +
+- [[NFE2L2]] — NFE2 like bZIP transcription factor 2 · module 057 -
+- [[NFE2L3]] — NFE2 like bZIP transcription factor 3 · module 078 +
+- [[NFIA]] — nuclear factor I A · module 217 +
+- [[NFIB]] — nuclear factor I B · module 143 +
+- [[NFIC]] — nuclear factor I C · module 098 +
+- [[NFIL3]] — nuclear factor, interleukin 3 regulated · module 139 +
+- [[NFIX]] — nuclear factor I X · module 014 +
+- [[NFKB1]] — nuclear factor kappa B subunit 1 · module 014 +
+- [[NFKB2]] — nuclear factor kappa B subunit 2 · module 014 +
+- [[NFKBIA]] — NFKB inhibitor alpha · module 014 +
+- [[NFKBIB]] — NFKB inhibitor beta · module 020 -
+- [[NFKBID]] — NFKB inhibitor delta · module 026 +
+- [[NFKBIE]] — NFKB inhibitor epsilon · module 014 +
+- [[NFKBIL1]] — NFKB inhibitor like 1 · module 012 +
+- [[NFKBIZ]] — NFKB inhibitor zeta · module 014 +
+- [[NFRKB]] — nuclear factor related to kappaB binding protein · module 030 +
+- [[NFS1]] — NFS1 cysteine desulfurase · module 012 +
+- [[NFU1]] — NFU1 iron-sulfur cluster scaffold · module 012 +
+- [[NFX1]] — nuclear transcription factor, X-box binding 1 · module 011 +
+- [[NFXL1]] — nuclear transcription factor, X-box binding like 1 · module 049 +
+- [[NFYA]] — nuclear transcription factor Y subunit alpha · module 040 +
+- [[NFYB]] — nuclear transcription factor Y subunit beta · module 028 +
+- [[NFYC]] — nuclear transcription factor Y subunit gamma · module 051 +
+- [[NGDN]] — neuroguidin · module 118 +
+- [[NGEF]] — neuronal guanine nucleotide exchange factor · module 034 +
+- [[NGF]] — nerve growth factor · module 125 +
+- [[NGFR]] — nerve growth factor receptor · module 094 +
+- [[NGLY1]] — N-glycanase 1 · module 180 +
+- [[NGRN]] — neugrin, neurite outgrowth associated · module 081 +
+- [[NHEJ1]] — non-homologous end joining factor 1 · module 038 +
+- [[NHLRC2]] — NHL repeat containing 2 · module 016 +
+- [[NHLRC3]] — NHL repeat containing 3 · module 184 -
+- [[NHP2]] — NHP2 ribonucleoprotein · module 023 -
+- [[NHS]] — NHS actin remodeling regulator · module 034 +
+- [[NHSL1]] — NHS like 1 · module 092 +
+- [[NHSL1-AS1]] — NHSL1 antisense RNA 1 · module 084 +
+- [[NHSL2]] — NHS like 2 · module 061 +
+- [[NIBAN1]] — niban apoptosis regulator 1 · module 133 +
+- [[NIBAN2]] — niban apoptosis regulator 2 · module 174 +
+- [[NID1]] — nidogen 1 · module 054 -
+- [[NID2]] — nidogen 2 · module 066 +
+- [[NIF3L1]] — NGG1 interacting factor 3 like 1 · module 071 +
+- [[NIFK]] — nucleolar protein interacting with the FHA domain of MKI67 · module 001 +
+- [[NIFK-AS1]] — NIFK antisense RNA 1 · module 015 +
+- [[NIHCOLE]] — ncRNA involved in NHEJ oncogenic ligation efficiency · module 027 +
+- [[NIM1K]] — NIM1 serine/threonine protein kinase · module 038 +
+- [[NIN]] — ninein · module 118 -
+- [[NINJ1]] — ninjurin 1 · module 014 +
+- [[NINJ2]] — ninjurin 2 · module 035 +
+- [[NINL]] — ninein like · module 203 +
+- [[NIP7]] — nucleolar pre-rRNA processing protein NIP7 · module 005 +
+- [[NIPA1]] — NIPA magnesium transporter 1 · module 159 +
+- [[NIPA2]] — NIPA magnesium transporter 2 · module 036 +
+- [[NIPAL1]] — NIPA like domain containing 1 · module 110 +
+- [[NIPAL2]] — NIPA like domain containing 2 · module 137 +
+- [[NIPAL3]] — NIPA like domain containing 3 · module 076 +
+- [[NIPBL]] — NIPBL cohesin loading factor · module 074 +
+- [[NIPBL-DT]] — NIPBL divergent transcript · module 015 +
+- [[NIPSNAP1]] — nipsnap homolog 1 · module 045 +
+- [[NIPSNAP2]] — nipsnap homolog 2 · module 017 +
+- [[NIPSNAP3A]] — nipsnap homolog 3A · module 047 +
+- [[NISCH]] — nischarin · module 209 +
+- [[NIT1]] — nitrilase 1 · module 227 +
+- [[NIT2]] — nitrilase family member 2 · module 004 +
+- [[NKAIN1]] — sodium/potassium transporting ATPase interacting 1 · module 102 +
+- [[NKAIN2]] — sodium/potassium transporting ATPase interacting 2 · module 019 +
+- [[NKAIN3]] — sodium/potassium transporting ATPase interacting 3 · module 009 +
+- [[NKAP]] — NFKB activating protein · module 020 -
+- [[NKAPD1]] — NKAP domain containing 1 · module 149 +
+- [[NKD1]] — NKD inhibitor of Wnt signaling pathway 1 · module 027 +
+- [[NKD2]] — NKD inhibitor of Wnt signaling pathway 2 · module 162 +
+- [[NKIRAS1]] — NFKB inhibitor interacting Ras like 1 · module 046 +
+- [[NKIRAS2]] — NFKB inhibitor interacting Ras like 2 · module 007 +
+- [[NKRF]] — NFKB repressing factor · module 033 +
+- [[NKTR]] — natural killer cell triggering receptor · module 041 +
+- [[NKX3-1]] — NK3 homeobox 1 · module 014 +
+- [[NLE1]] — notchless homolog 1 · module 033 +
+- [[NLGN1]] — neuroligin 1 · module 121 +
+- [[NLGN2]] — neuroligin 2 · module 001 -
+- [[NLGN3]] — neuroligin 3 · module 181 +
+- [[NLGN4X]] — neuroligin 4 X-linked · module 087 +
+- [[NLGN4Y]] — neuroligin 4 Y-linked · module 019 +
+- [[NLK]] — nemo like kinase · module 036 +
+- [[NLN]] — neurolysin · module 018 +
+- [[NLRC5]] — NLR family CARD domain containing 5 · module 032 +
+- [[NLRP1]] — NLR family pyrin domain containing 1 · module 013 +
+- [[NLRP2]] — NLR family pyrin domain containing 2 · module 023 -
+- [[NLRP3]] — NLR family pyrin domain containing 3 · module 013 +
+- [[NLRX1]] — NLR family member X1 · module 046 +
+- [[NMB]] — neuromedin B · module 024 +
+- [[NMD3]] — NMD3 ribosome export adaptor · module 041 +
+- [[NME1]] — NME/NM23 nucleoside diphosphate kinase 1 · module 004 +
+- [[NME2]] — NME/NM23 nucleoside diphosphate kinase 2 · module 043 +
+- [[NME3]] — NME/NM23 nucleoside diphosphate kinase 3 · module 058 +
+- [[NME4]] — NME/NM23 nucleoside diphosphate kinase 4 · module 029 +
+- [[NME6]] — NME/NM23 nucleoside diphosphate kinase 6 · module 011 +
+- [[NME7]] — NME/NM23 family member 7 · module 135 -
+- [[NME9]] — NME/NM23 family member 9 · module 021 +
+- [[NMI]] — N-myc and STAT interactor · module 032 +
+- [[NMNAT1]] — nicotinamide nucleotide adenylyltransferase 1 · module 023 +
+- [[NMNAT2]] — nicotinamide nucleotide adenylyltransferase 2 · module 013 +
+- [[NMNAT3]] — nicotinamide nucleotide adenylyltransferase 3 · module 027 +
+- [[NMRAL1]] — NmrA like redox sensor 1 · module 030 +
+- [[NMRAL2P]] — NmrA like redox sensor 2, pseudogene · module 117 +
+- [[NMRAL2P-1]] · module 117 +
+- [[NMRK1]] — nicotinamide riboside kinase 1 · module 051 -
+- [[NMT1]] — N-myristoyltransferase 1 · module 156 +
+- [[NMT2]] — N-myristoyltransferase 2 · module 024 +
+- [[NMU]] — neuromedin U · module 067 +
+- [[NNMT]] — nicotinamide N-methyltransferase · module 139 +
+- [[NNT]] — nicotinamide nucleotide transhydrogenase · module 192 +
+- [[NNT-AS1]] — NNT antisense RNA 1 · module 068 +
+- [[NOA1]] — nitric oxide associated 1 · module 024 +
+- [[NOB1]] — NIN1 (RPN12) binding protein 1 homolog · module 033 +
+- [[NOC2L]] — NOC2 like nucleolar associated transcriptional repressor · module 004 +
+- [[NOC3L]] — NOC3 like DNA replication regulator · module 001 +
+- [[NOC4L]] — nucleolar complex associated 4 homolog · module 001 +
+- [[NOCT]] — nocturnin · module 224 +
+- [[NOD1]] — nucleotide binding oligomerization domain containing 1 · module 146 +
+- [[NOD2]] — nucleotide binding oligomerization domain containing 2 · module 014 +
+- [[NOG]] — noggin · module 144 +
+- [[NOL10]] — nucleolar protein 10 · module 033 +
+- [[NOL11]] — nucleolar protein 11 · module 001 +
+- [[NOL3]] — nucleolar protein 3 · module 144 +
+- [[NOL4]] — nucleolar protein 4 · module 108 +
+- [[NOL4L]] — nucleolar protein 4 like · module 100 +
+- [[NOL6]] — nucleolar protein 6 · module 001 +
+- [[NOL7]] — nucleolar protein 7 · module 012 +
+- [[NOL8]] — nucleolar protein 8 · module 011 +
+- [[NOL9]] — nucleolar protein 9 · module 005 +
+- [[NOLC1]] — nucleolar and coiled-body phosphoprotein 1 · module 005 +
+- [[NOM1]] — nucleolar protein with MIF4G domain 1 · module 005 +
+- [[NOMO1]] — NODAL modulator 1 · module 050 +
+- [[NOMO2]] — NODAL modulator 2 · module 042 +
+- [[NOMO3]] — NODAL modulator 3 · module 050 +
+- [[NONO]] — non-POU domain containing octamer binding · module 025 +
+- [[NOP10]] — NOP10 ribonucleoprotein · module 054 +
+- [[NOP14]] — NOP14 nucleolar protein · module 001 +
+- [[NOP14-AS1]] — NOP14 antisense RNA 1 · module 101 +
+- [[NOP16]] — NOP16 nucleolar protein · module 005 +
+- [[NOP2]] — NOP2 nucleolar protein · module 005 +
+- [[NOP53]] — NOP53 ribosome biogenesis factor · module 043 +
+- [[NOP56]] — NOP56 ribonucleoprotein · module 005 +
+- [[NOP58]] — NOP58 ribonucleoprotein · module 040 +
+- [[NOP9]] — NOP9 nucleolar protein · module 127 +
+- [[NOPCHAP1]] — NOP protein chaperone 1 · module 062 +
+- [[NORAD]] — non-coding RNA activated by DNA damage · module 025 +
+- [[NOS1]] — nitric oxide synthase 1 · module 165 +
+- [[NOS1AP]] — nitric oxide synthase 1 adaptor protein · module 083 -
+- [[NOS3]] — nitric oxide synthase 3 · module 158 +
+- [[NOSIP]] — nitric oxide synthase interacting protein · module 025 -
+- [[NOSTRIN]] — nitric oxide synthase trafficking · module 073 +
+- [[NOTCH1]] — notch receptor 1 · module 002 +
+- [[NOTCH2]] — notch receptor 2 · module 226 +
+- [[NOTCH2NLA]] — notch 2 N-terminal like A · module 226 +
+- [[NOTCH2NLB]] — notch 2 N-terminal like B · module 226 +
+- [[NOTCH2NLC]] — notch 2 N-terminal like C · module 226 +
+- [[NOTCH2NLR]] — notch 2 N-terminal like R · module 052 -
+- [[NOTCH3]] — notch receptor 3 · module 047 +
+- [[NOTUM]] — notum, palmitoleoyl-protein carboxylesterase · module 027 +
+- [[NOVA1]] — NOVA alternative splicing regulator 1 · module 019 +
+- [[NOVA2]] — NOVA alternative splicing regulator 2 · module 082 +
+- [[NOXA1]] — NADPH oxidase activator 1 · module 031 +
+- [[NOXRED1]] — NADP dependent oxidoreductase domain containing 1 · module 037 +
+- [[NPAS1]] — neuronal PAS domain protein 1 · module 047 +
+- [[NPAS2]] — neuronal PAS domain protein 2 · module 174 +
+- [[NPAS3]] — neuronal PAS domain protein 3 · module 010 +
+- [[NPAT]] — nuclear protein, coactivator of histone transcription · module 006 +
+- [[NPC1]] — NPC intracellular cholesterol transporter 1 · module 034 +
+- [[NPC2]] — NPC intracellular cholesterol transporter 2 · module 024 +
+- [[NPDC1]] — neural proliferation, differentiation and control 1 · module 002 +
+- [[NPEPL1]] — aminopeptidase like 1 · module 126 +
+- [[NPEPPS]] — aminopeptidase puromycin sensitive · module 169 +
+- [[NPEPPSP1]] — NPEPPS pseudogene 1 · module 020 +
+- [[NPFFR2]] — neuropeptide FF receptor 2 · module 009 +
+- [[NPHP1]] — nephrocystin 1 · module 017 +
+- [[NPHP3]] — nephrocystin 3 · module 020 -
+- [[NPHP3-ACAD11]] — NPHP3-ACAD11 readthrough (NMD candidate) · module 037 +
+- [[NPHP4]] — nephrocystin 4 · module 085 +
+- [[NPHS1]] — NPHS1 adhesion molecule, nephrin · module 181 +
+- [[NPIPA1]] — nuclear pore complex interacting protein family member A1 · module 002 +
+- [[NPIPB11]] — nuclear pore complex interacting protein family member B11 · module 005 +
+- [[NPIPB12]] — nuclear pore complex interacting protein family member B12 · module 005 +
+- [[NPIPB14P]] — nuclear pore complex interacting protein family member B14, pseudogene · module 056 +
+- [[NPIPB2]] — nuclear pore complex interacting protein family member B2 · module 035 +
+- [[NPIPB4]] — nuclear pore complex interacting protein family member B4 · module 065 -
+- [[NPIPB5]] — nuclear pore complex interacting protein family member B5 · module 065 -
+- [[NPIPP1]] — nuclear pore complex interacting protein pseudogene 1 · module 029 -
+- [[NPL]] — N-acetylneuraminate pyruvate lyase · module 125 +
+- [[NPLOC4]] — NPL4 homolog, ubiquitin recognition factor · module 036 +
+- [[NPM1]] — nucleophosmin 1 · module 043 +
+- [[NPM3]] — nucleophosmin/nucleoplasmin 3 · module 033 +
+- [[NPNT]] — nephronectin · module 044 +
+- [[NPPB]] — natriuretic peptide B · module 180 +
+- [[NPR2]] — natriuretic peptide receptor 2 · module 181 +
+- [[NPR3]] — natriuretic peptide receptor 3 · module 104 +
+- [[NPRL2]] — NPR2 like, GATOR1 complex subunit · module 040 +
+- [[NPRL3]] — NPR3 like, GATOR1 complex subunit · module 018 +
+- [[NPSR1]] — neuropeptide S receptor 1 · module 073 +
+- [[NPSR1-AS1]] — NPSR1 antisense RNA 1 · module 055 +
+- [[NPTN]] — neuroplastin · module 011 -
+- [[NPTX1]] — neuronal pentraxin 1 · module 112 +
+- [[NPTX2]] — neuronal pentraxin 2 · module 165 +
+- [[NPTXR]] — neuronal pentraxin receptor · module 050 +
+- [[NPW]] — neuropeptide W · module 021 +
+- [[NQO1]] — NAD(P)H quinone dehydrogenase 1 · module 017 -
+- [[NQO1-DT]] — NQO1 divergent transcript · module 026 +
+- [[NQO2]] — N-ribosyldihydronicotinamide:quinone dehydrogenase 2 · module 072 +
+- [[NR0B1]] — nuclear receptor subfamily 0 group B member 1 · module 061 +
+- [[NR1D1]] — nuclear receptor subfamily 1 group D member 1 · module 014 +
+- [[NR1D2]] — nuclear receptor subfamily 1 group D member 2 · module 069 +
+- [[NR1H2]] — nuclear receptor subfamily 1 group H member 2 · module 145 +
+- [[NR1H3]] — nuclear receptor subfamily 1 group H member 3 · module 023 +
+- [[NR1H4]] — nuclear receptor subfamily 1 group H member 4 · module 009 +
+- [[NR2C1]] — nuclear receptor subfamily 2 group C member 1 · module 010 -
+- [[NR2C2]] — nuclear receptor subfamily 2 group C member 2 · module 015 +
+- [[NR2C2AP]] — nuclear receptor 2C2 associated protein · module 005 +
+- [[NR2E3]] — nuclear receptor subfamily 2 group E member 3 · module 193 +
+- [[NR2F1]] — nuclear receptor subfamily 2 group F member 1 · module 152 +
+- [[NR2F1-AS1]] — NR2F1 regulatory antisense RNA 1 · module 202 +
+- [[NR2F2]] — nuclear receptor subfamily 2 group F member 2 · module 144 +
+- [[NR2F2-AS1]] — NR2F2 antisense RNA 1 · module 144 +
+- [[NR2F6]] — nuclear receptor subfamily 2 group F member 6 · module 054 +
+- [[NR3C1]] — nuclear receptor subfamily 3 group C member 1 · module 014 +
+- [[NR3C2]] — nuclear receptor subfamily 3 group C member 2 · module 044 +
+- [[NR4A1]] — nuclear receptor subfamily 4 group A member 1 · module 109 +
+- [[NR4A2]] — nuclear receptor subfamily 4 group A member 2 · module 223 +
+- [[NR4A3]] — nuclear receptor subfamily 4 group A member 3 · module 223 +
+- [[NR5A2]] — nuclear receptor subfamily 5 group A member 2 · module 128 +
+- [[NR6A1]] — nuclear receptor subfamily 6 group A member 1 · module 216 +
+- [[NRARP]] — NOTCH regulated ankyrin repeat protein · module 162 +
+- [[NRAS]] — NRAS proto-oncogene, GTPase · module 025 +
+- [[NRBF2]] — nuclear receptor binding factor 2 · module 012 +
+- [[NRBP1]] — nuclear receptor binding protein 1 · module 001 -
+- [[NRBP2]] — nuclear receptor binding protein 2 · module 002 +
+- [[NRCAM]] — neuronal cell adhesion molecule · module 019 +
+- [[NRDC]] — nardilysin convertase · module 051 +
+- [[NRDE2]] — NRDE-2, necessary for RNA interference, domain containing · module 064 +
+- [[NREP]] — neuronal regeneration related protein · module 152 +
+- [[NRF1]] — nuclear respiratory factor 1 · module 018 +
+- [[NRG1]] — neuregulin 1 · module 019 +
+- [[NRG2]] — neuregulin 2 · module 176 +
+- [[NRG3]] — neuregulin 3 · module 087 +
+- [[NRG4]] — neuregulin 4 · module 019 +
+- [[NRIP1]] — nuclear receptor interacting protein 1 · module 016 +
+- [[NRIP3]] — nuclear receptor interacting protein 3 · module 081 +
+- [[NRIR]] — negative regulator of interferon response · module 032 +
+- [[NRK]] — Nik related kinase · module 066 +
+- [[NRL]] — neural retina leucine zipper · module 035 +
+- [[NRM]] — nurim · module 067 +
+- [[NRN1]] — neuritin 1 · module 103 +
+- [[NRP1]] — neuropilin 1 · module 092 +
+- [[NRP2]] — neuropilin 2 · module 066 +
+- [[NRSN2]] — neurensin 2 · module 002 +
+- [[NRSN2-AS1]] — NRSN2 antisense RNA 1 · module 133 +
+- [[NRTN]] — neurturin · module 100 +
+- [[NRXN1]] — neurexin 1 · module 009 +
+- [[NRXN3]] — neurexin 3 · module 019 +
+- [[NSA2]] — NSA2 ribosome biogenesis factor · module 043 +
+- [[NSD1]] — nuclear receptor binding SET domain protein 1 · module 194 +
+- [[NSD2]] — nuclear receptor binding SET domain protein 2 · module 067 +
+- [[NSD3]] — nuclear receptor binding SET domain protein 3 · module 130 +
+- [[NSDHL]] — NAD(P) dependent 3-beta-hydroxysteroid dehydrogenase NSDHL · module 086 +
+- [[NSF]] — N-ethylmaleimide sensitive factor, vesicle fusing ATPase · module 134 +
+- [[NSFL1C]] — NSFL1 cofactor · module 064 +
+- [[NSFP1]] — N-ethylmaleimide-sensitive factor pseudogene 1 · module 054 +
+- [[NSL1]] — NSL1 component of MIS12 kinetochore complex · module 017 +
+- [[NSMAF]] — neutral sphingomyelinase activation associated factor · module 018 +
+- [[NSMCE1]] — NSE1 component of SMC5/6 complex · module 028 +
+- [[NSMCE1-DT]] — NSMCE1 divergent transcript · module 023 +
+- [[NSMCE2]] — NSE2 SUMO ligase component of SMC5/6 complex · module 185 +
+- [[NSMCE3]] — NSE3 component of SMC5/6 complex · module 011 +
+- [[NSMCE4A]] — NSE4A component of SMC5/6 complex · module 006 +
+- [[NSMF]] — NMDA receptor synaptonuclear signaling and neuronal migration factor · module 002 +
+- [[NSRP1]] — nuclear speckle splicing regulatory protein 1 · module 011 +
+- [[NSUN2]] — NOP2/Sun RNA methyltransferase 2 · module 033 +
+- [[NSUN3]] — NOP2/Sun RNA methyltransferase 3 · module 051 +
+- [[NSUN4]] — NOP2/Sun RNA methyltransferase 4 · module 156 +
+- [[NSUN5]] — NOP2/Sun RNA methyltransferase 5 · module 012 +
+- [[NSUN5P1]] — NSUN5 pseudogene 1 · module 168 +
+- [[NSUN5P1-1]] · module 024 +
+- [[NSUN5P2-1]] · module 024 +
+- [[NSUN6]] — NOP2/Sun RNA methyltransferase 6 · module 030 -
+- [[NSUN7]] — NOP2/Sun RNA methyltransferase family member 7 · module 008 +
+- [[NT5C]] — 5', 3'-nucleotidase, cytosolic · module 011 +
+- [[NT5C2]] — 5'-nucleotidase, cytosolic II · module 008 +
+- [[NT5C3A]] — 5'-nucleotidase, cytosolic IIIA · module 070 +
+- [[NT5C3B]] — 5'-nucleotidase, cytosolic IIIB · module 221 +
+- [[NT5DC1]] — 5'-nucleotidase domain containing 1 · module 160 -
+- [[NT5DC2]] — 5'-nucleotidase domain containing 2 · module 042 +
+- [[NT5DC3]] — 5'-nucleotidase domain containing 3 · module 077 +
+- [[NT5E]] — 5'-nucleotidase ecto · module 147 +
+- [[NT5M]] — 5',3'-nucleotidase, mitochondrial · module 018 +
+- [[NTAN1]] — N-terminal asparagine amidase · module 030 +
+- [[NTAQ1]] — N-terminal glutamine amidase 1 · module 199 +
+- [[NTF3]] — neurotrophin 3 · module 013 +
+- [[NTHL1]] — nth like DNA glycosylase 1 · module 058 +
+- [[NTM]] — neurotrimin · module 013 +
+- [[NTMT1]] — N-terminal Xaa-Pro-Lys N-methyltransferase 1 · module 162 +
+- [[NTN1]] — netrin 1 · module 062 +
+- [[NTN4]] — netrin 4 · module 155 +
+- [[NTNG1]] — netrin G1 · module 013 +
+- [[NTNG2]] — netrin G2 · module 013 +
+- [[NTPCR]] — nucleoside-triphosphatase, cancer-related · module 220 +
+- [[NTRK1]] — neurotrophic receptor tyrosine kinase 1 · module 047 +
+- [[NTRK2]] — neurotrophic receptor tyrosine kinase 2 · module 087 +
+- [[NTRK3]] — neurotrophic receptor tyrosine kinase 3 · module 061 +
+- [[NTS]] — neurotensin · module 104 +
+- [[NTSR1]] — neurotensin receptor 1 · module 034 +
+- [[NUAK1]] — NUAK family kinase 1 · module 014 +
+- [[NUAK2]] — NUAK family kinase 2 · module 014 +
+- [[NUB1]] — negative regulator of ubiquitin like proteins 1 · module 070 +
+- [[NUBP1]] — NUBP iron-sulfur cluster assembly factor 1, cytosolic · module 051 +
+- [[NUBP2]] — NUBP iron-sulfur cluster assembly factor 2, cytosolic · module 003 +
+- [[NUBPL]] — NUBP iron-sulfur cluster assembly factor, mitochondrial · module 001 +
+- [[NUCB1]] — nucleobindin 1 · module 050 +
+- [[NUCB2]] — nucleobindin 2 · module 042 +
+- [[NUCKS1]] — nuclear casein kinase and cyclin dependent kinase substrate 1 · module 022 +
+- [[NUDC]] — nuclear distribution C, dynein complex regulator · module 004 +
+- [[NUDCD1]] — NudC domain containing 1 · module 004 +
+- [[NUDCD2]] — NudC domain containing 2 · module 012 +
+- [[NUDCD3]] — NudC domain containing 3 · module 033 +
+- [[NUDT1]] — nudix hydrolase 1 · module 067 +
+- [[NUDT11]] — nudix hydrolase 11 · module 054 +
+- [[NUDT12]] — nudix hydrolase 12 · module 028 +
+- [[NUDT13]] — nudix hydrolase 13 · module 015 +
+- [[NUDT14]] — nudix hydrolase 14 · module 059 +
+- [[NUDT15]] — nudix hydrolase 15 · module 006 +
+- [[NUDT16]] — nudix hydrolase 16 · module 094 +
+- [[NUDT16-DT]] — NUDT16 divergent transcript · module 015 +
+- [[NUDT16L1]] — nudix hydrolase 16 like 1 · module 024 +
+- [[NUDT19]] — nudix hydrolase 19 · module 001 +
+- [[NUDT2]] — nudix hydrolase 2 · module 030 +
+- [[NUDT21]] — nudix hydrolase 21 · module 057 +
+- [[NUDT22]] — nudix hydrolase 22 · module 003 +
+- [[NUDT3]] — nudix hydrolase 3 · module 018 +
+- [[NUDT4]] — nudix hydrolase 4 · module 029 -
+- [[NUDT5]] — nudix hydrolase 5 · module 004 +
+- [[NUDT6]] — nudix hydrolase 6 · module 016 +
+- [[NUDT7]] — nudix hydrolase 7 · module 045 +
+- [[NUDT8]] — nudix hydrolase 8 · module 024 +
+- [[NUDT9]] — nudix hydrolase 9 · module 064 +
+- [[NUF2]] — NUF2 component of NDC80 kinetochore complex · module 067 +
+- [[NUFIP1]] — nuclear FMR1 interacting protein 1 · module 033 +
+- [[NUFIP2]] — nuclear FMR1 interacting protein 2 · module 038 +
+- [[NUMA1]] — nuclear mitotic apparatus protein 1 · module 022 +
+- [[NUMB]] — NUMB endocytic adaptor protein · module 001 -
+- [[NUMBL]] — NUMB like endocytic adaptor protein · module 218 +
+- [[NUP107]] — nucleoporin 107 · module 006 +
+- [[NUP133]] — nucleoporin 133 · module 015 +
+- [[NUP153]] — nucleoporin 153 · module 071 +
+- [[NUP155]] — nucleoporin 155 · module 004 +
+- [[NUP160]] — nucleoporin 160 · module 049 +
+- [[NUP188]] — nucleoporin 188 · module 043 -
+- [[NUP205]] — nucleoporin 205 · module 006 +
+- [[NUP210]] — nucleoporin 210 · module 006 +
+- [[NUP210L]] — nucleoporin 210 like · module 053 +
+- [[NUP214]] — nucleoporin 214 · module 210 +
+- [[NUP35]] — nucleoporin 35 · module 033 +
+- [[NUP37]] — nucleoporin 37 · module 022 +
+- [[NUP42]] — nucleoporin 42 · module 004 +
+- [[NUP43]] — nucleoporin 43 · module 006 +
+- [[NUP50]] — nucleoporin 50 · module 071 +
+- [[NUP50-DT]] — NUP50 divergent transcript · module 017 -
+- [[NUP54]] — nucleoporin 54 · module 065 +
+- [[NUP58]] — nucleoporin 58 · module 105 +
+- [[NUP62]] — nucleoporin 62 · module 016 +
+- [[NUP62CL]] — nucleoporin 62 C-terminal like · module 083 -
+- [[NUP85]] — nucleoporin 85 · module 071 +
+- [[NUP88]] — nucleoporin 88 · module 071 +
+- [[NUP93]] — nucleoporin 93 · module 036 +
+- [[NUP98]] — nucleoporin 98 and 96 precursor · module 022 +
+- [[NUPR1]] — nuclear protein 1, transcriptional regulator · module 063 +
+- [[NUS1]] — NUS1 dehydrodolichyl diphosphate synthase subunit · module 056 +
+- [[NUSAP1]] — nucleolar and spindle associated protein 1 · module 022 +
+- [[NUTF2]] — nuclear transport factor 2 · module 011 -
+- [[NUTM2A-AS1]] — NUTM2A antisense RNA 1 · module 005 +
+- [[NUTM2B-AS1]] — NUTM2B antisense RNA 1 · module 005 +
+- [[NUTM2E]] — NUT family member 2E · module 035 +
+- [[NVL]] — nuclear VCP like · module 012 +
+- [[NXF1]] — nuclear RNA export factor 1 · module 093 +
+- [[NXN]] — nucleoredoxin · module 160 +
+- [[NXPE3]] — neurexophilin and PC-esterase domain family member 3 · module 057 +
+- [[NXPH1]] — neurexophilin 1 · module 019 +
+- [[NXPH4]] — neurexophilin 4 · module 099 +
+- [[NXT1]] — nuclear transport factor 2 like export factor 1 · module 054 +
+- [[NXT2]] — nuclear transport factor 2 like export factor 2 · module 003 -
+- [[NYAP2]] — neuronal tyrosine-phosphorylated phosphoinositide-3-kinase adaptor 2 · module 087 +

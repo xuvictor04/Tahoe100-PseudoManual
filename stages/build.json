@@ -1,0 +1,22 @@
+{
+ "stage": "build",
+ "version": 3,
+ "finished": "2026-11-07 19:57:35",
+ "info": {
+  "G": 62713,
+  "groups": 14,
+  "cells": 95624334,
+  "profiles": 84815,
+  "well_position_source": "barcode field 1 (Parse round-1 well; numbered row-major A1=1 ... H12=96)",
+  "limit_files": 0,
+  "how": "local files",
+  "data": "C:\\tahoe\\Tahoe-100M",
+  "n_files": 3388,
+  "n_files_expected": 3388,
+  "partial": false,
+  "options": {
+   "layout": null,
+   "limit_files": 0
+  }
+ }
+}

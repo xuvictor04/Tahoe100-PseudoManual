@@ -1,0 +1,26 @@
+moa_fine,n_drugs,drugs,n_drugs_flagged_dose,n_drugs_no_trustworthy_dose,n_pairs,mean_cos_within,mean_cos_to_other_classes,auroc_within_vs_other
+MEK inhibitor,5,"Binimetinib, Cobimetinib, TAK-733, Trametinib ⚠, Trametinib (DMSO_TF solvate)",1,0,9,0.505413711856485,0.007783017922570414,0.7894603174603174
+Glucocorticoid receptor agonist,5,"Betamethasone dipropionate, Budesonide, Dexamethasone, Methylprednisolone succinate, Triamcinolone",0,0,10,0.36650375401474283,-0.012455641029782806,0.7485714285714286
+Androgen receptor antagonist,4,"Apalutamide, Bicalutamide, Darolutamide, Flutamide",0,0,6,0.3436531285383771,0.058675721434726436,0.7196969696969697
+Sonic inhibitor,3,"Glasdegib ⚠, Sonidegib, Vismodegib",1,1,3,0.16976683669656922,0.035329733951457054,0.7049591964846202
+HDAC inhibitor,4,"Belinostat ⚠, Carbamazepine, Panobinostat ⚠, Tucidinostat",2,0,6,0.25591646864991596,0.011377713475393299,0.6946022727272727
+GSK3 inhibitor,4,"9-ING-41, AZD2858 ⚠, CP21R7, LY2090314",1,0,6,0.1561629871086714,0.046819585989077116,0.618844696969697
+MTOR inhibitor,7,"AZD-8055, Everolimus, LY-2584702 (tosylate salt) ⚠, Rapamycin, Sapanisertib, Temsirolimus, Torkinib ⚠",2,0,21,0.18771447376611222,0.04287102243397805,0.6152333765876292
+DNA methyltransferase inhibitor,4,"5-Azacytidine, Decitabine, Procainamide (hydrochloride), γ-Oryzanol",0,0,6,0.12505169029009497,0.03425753066392004,0.5911458333333334
+Other MAPK inhibitor,11,"BI-78D3, Bentamapimod, ERK5-IN-2, LJI308, MK-8353, NG25 ⚠, OTS514, PF-06260933, PH-797804, Ralimetinib dimesylate, Temuterkib",1,0,55,0.08658938949932181,-2.9373324972986792e-05,0.5861900337424812
+Proteasome inhibitor,3,"Bortezomib ⚠, Ixazomib, Ixazomib citrate ⚠",2,0,3,0.2928818474981626,0.01736445223635396,0.5794099183929693
+Multi-TK inhibitor,10,"Cabozantinib (S-malate), Crizotinib (hydrochloride), Pexidartinib (hydrochloride), Ponatinib, Regorafenib, Sulfatinib, Sunitinib ⚠, Vandetanib, c-Kit-IN-1, crizotinib",1,0,45,0.12052801750646519,0.010522864939895083,0.5674771241830066
+DNA synthesis/repair inhibitor,27,"5-Fluorouracil, AZD-7648, Altretamine, Amsacrine, Bendamustine, Busulfan, Clofarabine, Cytarabine ⚠, Cytarabine (hydrochloride) ⚠, Doxorubicin (hydrochloride) ⚠, Epirubicin (hydrochloride) ⚠, Gemcitabine",8,0,349,0.07039021695735008,0.008182856589631329,0.5619819118704824
+RAS inhibitor,4,"Adagrasib, BI-3406, Lonafarnib ⚠, RMC-6236",1,0,6,0.15039244170173668,0.021359479210710405,0.5549242424242424
+Microtubule inhibitor,7,"Docetaxel ⚠, Docetaxel (Trihydrate), Mebendazole, Paclitaxel, Tubulin inhibitor 6, Vinblastine (sulfate), vincristine",1,0,20,0.07981430093142032,0.02282673644137321,0.5493393889347646
+EGFR/ERBB inhibitor,12,"Afatinib, Almonertinib (hydrochloride), Almonertinib (mesylate), Capmatinib, Erlotinib, Gefitinib, Lapatinib ditosylate, Neratinib, Neratinib (maleate) ⚠, Osimertinib (mesylate), Simotinib ⚠, Tucatinib",2,0,64,0.05544916745349025,0.011035402035282228,0.5438600570436508
+Glucose transporter inhibitor,4,"Canagliflozin, Canagliflozin (hemihydrate), Dapagliflozin, Dapagliflozin ((2S)-1,2-propanediol, hydrate)",0,0,4,0.12727055596058512,0.061892703422923655,0.5319602272727273
+Other TK inhibitor,15,"Asciminib, Entrectinib, Erdafitinib, Ferulic acid, Flumatinib (mesylate), Fostamatinib (disodium hexahydrate) ⚠, Futibatinib, Infigratinib, Larotrectinib, Larotrectinib sulfate ⚠, Pemigatinib, Pralsetinib",2,2,104,0.0350033045021302,0.00661593055894106,0.5317948717948718
+JAK/STAT inhibitor,6,"Artesunate ⚠, Balsalazide (sodium hydrate), Fedratinib (hydrochloride hydrate), Filgotinib, Tofacitinib, Tofacitinib (citrate)",1,0,14,0.036280039496793016,-0.004541471231415703,0.5276409414340448
+PI3K/AKT inhibitor,6,"Alpelisib, BAY1125976, Bimiralisib, Capivasertib, GSK1059615, Ipatasertib",0,0,15,0.0319559876894601,0.002685479417907257,0.527522349936143
+Cyclooxygenase inhibitor,13,"Aspirin, Celecoxib, Gallic acid, Gallic acid (hydrate), Meloxicam, Naproxen, Nimesulide ⚠, Oxaprozin, Piroxicam, Salicylic acid, Sodium Salicylate, Tolmetin",1,1,77,0.05486959527436679,0.029156070953167246,0.5193190043489445
+Protein synthesis inhibitor,6,"4EGI-1 ⚠, ETC-206, Harringtonine ⚠, Homoharringtonine ⚠, SBI-0640756, Tomivosertib",3,0,15,0.022057805564765887,-0.004561969448666073,0.49169859514687103
+RAF inhibitor,3,"Dabrafenib, Encorafenib, Vemurafenib",0,0,3,-0.010461016288769312,-0.018491618519620483,0.4795982423101067
+Adrenoceptor agonist,8,"Bisoprolol (hemifumarate), Brimonidine, Clonidine (hydrochloride), Dexmedetomidine, Indacaterol (maleate), Norepinephrine (hydrochloride), Phenylephrine (hydrochloride), Vilanterol",0,0,28,-0.05503749831603565,6.25340821059242e-05,0.4550197259136213
+Retinoic receptor agonist,4,"Bexarotene, Peretinoin, Retinoic acid, Tazarotene",0,0,6,-0.04356411401556476,0.0023967755507236,0.4405776515151515
+CDK inhibitor,5,"AT7519, Abemaciclib, Dinaciclib ⚠, Ribociclib ⚠, palbociclib ⚠",3,1,10,-0.0408229442503068,0.000745691675655377,0.4353142857142857

@@ -1,0 +1,151 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes T 2
+
+141 genes. Back to [[Genes by letter]].
+
+- [[TSPYL5]] — TSPY like 5 · module 016 +
+- [[TSR1]] — TSR1 ribosome maturation factor · module 005 +
+- [[TSR2]] — TSR2 ribosome maturation factor · module 135 +
+- [[TSR3]] — TSR3 ribosome maturation factor · module 012 +
+- [[TSSC4]] — tumor suppressing subtransferable candidate 4 · module 007 +
+- [[TSSK3]] — testis specific serine kinase 3 · module 015 +
+- [[TST]] — thiosulfate sulfurtransferase · module 024 +
+- [[TSTD1]] — thiosulfate sulfurtransferase like domain containing 1 · module 058 +
+- [[TSTD2]] — thiosulfate sulfurtransferase like domain containing 2 · module 148 +
+- [[TSTD3]] — thiosulfate sulfurtransferase like domain containing 3, pseudogene · module 046 +
+- [[TTBK2]] — tau tubulin kinase 2 · module 017 +
+- [[TTC1]] — tetratricopeptide repeat domain 1 · module 064 +
+- [[TTC12]] — tetratricopeptide repeat domain 12 · module 051 +
+- [[TTC13]] — tetratricopeptide repeat domain 13 · module 018 +
+- [[TTC14]] — tetratricopeptide repeat domain 14 · module 057 +
+- [[TTC17]] — tetratricopeptide repeat domain 17 · module 213 +
+- [[TTC19]] — tetratricopeptide repeat domain 19 · module 077 +
+- [[TTC21A]] — tetratricopeptide repeat domain 21A · module 004 -
+- [[TTC21B]] — tetratricopeptide repeat domain 21B · module 065 +
+- [[TTC22]] — tetratricopeptide repeat domain 22 · module 008 +
+- [[TTC23]] — tetratricopeptide repeat domain 23 · module 017 +
+- [[TTC23L]] — tetratricopeptide repeat domain 23 like · module 053 +
+- [[TTC26]] — intraflagellar transport 56 · module 017 +
+- [[TTC27]] — tetratricopeptide repeat domain 27 · module 001 +
+- [[TTC28]] — tetratricopeptide repeat domain 28 · module 207 -
+- [[TTC28-AS1]] — TTC28 antisense RNA 1 · module 037 +
+- [[TTC3]] — tetratricopeptide repeat domain 3 · module 056 +
+- [[TTC30A]] — intraflagellar transport 70A · module 016 +
+- [[TTC31]] — tetratricopeptide repeat domain 31 · module 127 +
+- [[TTC32]] — tetratricopeptide repeat domain 32 · module 023 +
+- [[TTC33]] — tetratricopeptide repeat domain 33 · module 039 +
+- [[TTC36]] — tetratricopeptide repeat domain 36 · module 047 +
+- [[TTC36-AS1]] — TTC36 and KMT2A antisense RNA 1 · module 021 +
+- [[TTC38]] — tetratricopeptide repeat domain 38 · module 017 +
+- [[TTC39A]] — tetratricopeptide repeat domain 39A · module 008 +
+- [[TTC39B]] — tetratricopeptide repeat domain 39B · module 063 +
+- [[TTC39C]] — tetratricopeptide repeat domain 39C · module 143 +
+- [[TTC3P1]] — tetratricopeptide repeat domain 3 pseudogene 1 · module 045 +
+- [[TTC4]] — tetratricopeptide repeat domain 4 · module 007 +
+- [[TTC41P]] — tetratricopeptide repeat domain 41, pseudogene · module 026 +
+- [[TTC5]] — tetratricopeptide repeat domain 5 · module 017 +
+- [[TTC6]] — tetratricopeptide repeat domain 6 · module 068 +
+- [[TTC7A]] — tetratricopeptide repeat domain 7A · module 002 +
+- [[TTC7B]] — tetratricopeptide repeat domain 7B · module 036 +
+- [[TTC8]] — tetratricopeptide repeat domain 8 · module 028 +
+- [[TTC9]] — tetratricopeptide repeat domain 9 · module 031 +
+- [[TTC9C]] — tetratricopeptide repeat domain 9C · module 178 +
+- [[TTF1]] — transcription termination factor 1 · module 149 +
+- [[TTF2]] — transcription termination factor 2 · module 006 +
+- [[TTI1]] — TELO2 interacting protein 1 · module 071 +
+- [[TTI2]] — TELO2 interacting protein 2 · module 149 +
+- [[TTK]] — TTK protein kinase · module 067 +
+- [[TTL]] — tubulin tyrosine ligase · module 059 -
+- [[TTLL1]] — TTL family tubulin polyglutamylase complex subunit L1 · module 017 +
+- [[TTLL11]] — tubulin tyrosine ligase like 11 · module 052 +
+- [[TTLL12]] — tubulin tyrosine ligase like 12 · module 050 +
+- [[TTLL13]] — tubulin tyrosine ligase like 13 · module 038 +
+- [[TTLL3]] — tubulin tyrosine ligase like 3 · module 038 +
+- [[TTLL4]] — tubulin tyrosine ligase like 4 · module 026 -
+- [[TTLL5]] — tubulin tyrosine ligase like 5 · module 068 -
+- [[TTLL7]] — tubulin tyrosine ligase like 7 · module 030 +
+- [[TTN]] — titin · module 075 +
+- [[TTN-AS1]] — TTN antisense RNA 1 · module 039 +
+- [[TTPA]] — alpha tocopherol transfer protein · module 176 +
+- [[TTPAL]] — alpha tocopherol transfer protein like · module 016 +
+- [[TTTY10]] — testis expressed transcript, Y-linked 10 · module 019 +
+- [[TTTY14]] — testis expressed transcript, Y-linked 14 · module 133 +
+- [[TTYH2]] — tweety family member 2 · module 154 +
+- [[TTYH3]] — tweety family member 3 · module 002 +
+- [[TUB]] — TUB bipartite transcription factor · module 176 +
+- [[TUBA1A]] — tubulin alpha 1a · module 208 +
+- [[TUBA1B]] — tubulin alpha 1b · module 006 +
+- [[TUBA1C]] — tubulin alpha 1c · module 171 -
+- [[TUBA4A]] — tubulin alpha 4a · module 060 +
+- [[TUBA8]] — tubulin alpha 8 · module 047 +
+- [[TUBB]] — tubulin beta class I · module 006 +
+- [[TUBB2A]] — tubulin beta 2A class IIa · module 123 +
+- [[TUBB2B]] — tubulin beta 2B class IIb · module 123 +
+- [[TUBB3]] — tubulin beta 3 class III · module 093 +
+- [[TUBB4B]] — tubulin beta 4B class IVb · module 171 -
+- [[TUBB6]] — tubulin beta 6 class V · module 110 +
+- [[TUBD1]] — tubulin delta 1 · module 054 +
+- [[TUBE1]] — tubulin epsilon 1 · module 063 +
+- [[TUBG1]] — tubulin gamma 1 · module 006 +
+- [[TUBG2]] — tubulin gamma 2 · module 083 -
+- [[TUBGCP2]] — tubulin gamma complex component 2 · module 030 +
+- [[TUBGCP3]] — tubulin gamma complex component 3 · module 006 +
+- [[TUBGCP4]] — tubulin gamma complex component 4 · module 018 +
+- [[TUBGCP5]] — tubulin gamma complex component 5 · module 144 +
+- [[TUBGCP6]] — tubulin gamma complex component 6 · module 002 +
+- [[TUFM]] — Tu translation elongation factor, mitochondrial · module 012 -
+- [[TUFT1]] — tuftelin 1 · module 044 +
+- [[TUG1]] — taurine up-regulated 1 · module 003 -
+- [[TULP3]] — TUB like protein 3 · module 040 +
+- [[TULP4]] — TUB like protein 4 · module 143 +
+- [[TUSC2]] — tumor suppressor 2, mitochondrial calcium regulator · module 003 +
+- [[TUSC3]] — tumor suppressor candidate 3 · module 004 +
+- [[TUT1]] — terminal uridylyl transferase 1, U6 snRNA-specific · module 170 +
+- [[TUT4]] — terminal uridylyl transferase 4 · module 054 +
+- [[TUT7]] — terminal uridylyl transferase 7 · module 182 -
+- [[TVP23B]] — trans-golgi network vesicle protein 23 homolog B · module 041 +
+- [[TVP23C]] — trans-golgi network vesicle protein 23 homolog C · module 056 +
+- [[TVP23C-CDRT4]] — TVP23C-CDRT4 readthrough · module 056 +
+- [[TWF1]] — twinfilin actin binding protein 1 · module 025 +
+- [[TWF2]] — twinfilin actin binding protein 2 · module 124 -
+- [[TWIST1]] — twist family bHLH transcription factor 1 · module 104 +
+- [[TWIST2]] — twist family bHLH transcription factor 2 · module 013 +
+- [[TWNK]] — twinkle mtDNA helicase · module 005 +
+- [[TWSG1]] — twisted gastrulation BMP signaling modulator 1 · module 011 -
+- [[TXK]] — TXK tyrosine kinase · module 039 +
+- [[TXLNA]] — taxilin alpha · module 059 -
+- [[TXLNG]] — taxilin gamma · module 005 +
+- [[TXLNGY]] — taxilin gamma Y-linked (pseudogene) · module 005 +
+- [[TXLNGY-1]] · module 001 +
+- [[TXN]] — thioredoxin · module 060 +
+- [[TXN2]] — thioredoxin 2 · module 212 +
+- [[TXNDC11]] — thioredoxin domain containing 11 · module 056 +
+- [[TXNDC12]] — thioredoxin domain containing 12 · module 063 +
+- [[TXNDC15]] — thioredoxin domain containing 15 · module 216 +
+- [[TXNDC16]] — thioredoxin domain containing 16 · module 069 +
+- [[TXNDC17]] — thioredoxin domain containing 17 · module 003 +
+- [[TXNDC5]] — thioredoxin domain containing 5 · module 020 +
+- [[TXNDC9]] — thioredoxin domain containing 9 · module 064 +
+- [[TXNIP]] — thioredoxin interacting protein · module 123 +
+- [[TXNL1]] — thioredoxin like 1 · module 072 +
+- [[TXNL4A]] — thioredoxin like 4A · module 026 -
+- [[TXNL4B]] — thioredoxin like 4B · module 041 +
+- [[TXNRD1]] — thioredoxin reductase 1 · module 117 +
+- [[TXNRD2]] — thioredoxin reductase 2 · module 088 +
+- [[TXNRD3]] — thioredoxin reductase 3 · module 001 +
+- [[TYK2]] — tyrosine kinase 2 · module 060 -
+- [[TYMP]] — thymidine phosphorylase · module 032 +
+- [[TYMS]] — thymidylate synthetase · module 006 +
+- [[TYMSOS]] — TYMS opposite strand RNA · module 062 +
+- [[TYR]] — tyrosinase · module 087 +
+- [[TYRO3]] — TYRO3 protein tyrosine kinase · module 018 +
+- [[TYSND1]] — trypsin like peroxisomal matrix peptidase 1 · module 010 +
+- [[TYW1]] — tRNA-yW synthesizing protein 1 homolog · module 036 +
+- [[TYW1B]] — tRNA-yW synthesizing protein 1 homolog B · module 215 +
+- [[TYW3]] — tRNA-yW synthesizing protein 3 homolog · module 064 +
+- [[TYW5]] — tRNA-yW synthesizing protein 5 · module 028 +

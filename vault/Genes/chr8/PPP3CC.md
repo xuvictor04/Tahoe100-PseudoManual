@@ -1,0 +1,255 @@
+---
+symbol: "PPP3CC"
+type: "gene"
+col: 4235
+ensembl_id: "ENSG00000120910"
+name: "protein phosphatase 3 catalytic subunit gamma"
+location: "8p21.3"
+module: 24
+arm: "+"
+pooled_cpm: 75.83
+n_lines_expressing: 49
+n_dd_up: 3
+n_dd_down: 16
+n_dd_up_clean: 1
+n_dd_down_clean: 8
+in_vector_space: true
+direction_upstream: 2
+direction_downstream: 0
+tags: ["gene", "module/024"]
+generated_by: "tahoemap"
+---
+
+# PPP3CC
+
+*protein phosphatase 3 catalytic subunit gamma* — 8p21.3
+
+## At a glance
+
+> [!summary] In this data
+> Pooled over the cell lines (median), raised significantly by 3 drug-doses (2 with an alert ⚠); the strongest is [[TAK-901 (drug)]] 5 µM: 2.23× (z +8.4, q 4e-14, up in 29 of 48 measured lines).
+> In single lines (per-line |z| ≥ 8.4, all drug-doses: 4 here, 2 with an alert ⚠; `tables/drug_line_top.parquet`), these raise it: [[TAK-901 (drug)]] 5 µM in 8 lines (HS-578T 8.38×, RPMI-7951 10.4×, HOP62 15.1×, hTERT-HPNE 9.54×, …); [[Homoharringtonine (drug)]] 5 µM in 2 lines (A498 2.38×, hTERT-HPNE 2.28×; ⚠ cell-cycle shift, would explain all of this change); [[Homoharringtonine (drug)]] 0.5 µM in 1 line (A498 2.97×; ⚠ cell-cycle shift, explains ~4% of this change); [[PH-797804 (drug)]] 5 µM in 1 line (HS-578T 4.13×).
+> Pooled over the cell lines (median), lowered significantly by 16 drug-doses (8 with an alert ⚠); the strongest is [[Dinaciclib (drug)]] 0.5 µM: 0.353× (z -20.7, q 0e+00, down in 43 of 46 measured lines) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change. The strongest without an alert is [[Panobinostat (drug)]] 5 µM: 0.363× (z -20.2, q 0e+00, down in 46 of 47 measured lines).
+> Its strongest partners by |cos| (96 of its 100 nearest are replicated: the same sign with fdr ≤ 0.10 in two random halves of the compounds; 5 carry an alert, ⚠ + the reason: not replicated, same locus, or the partner in the vector space only through flagged drug-doses): it moves with [[LACTB]] (+0.59, fdr 5e-05), [[RAB32]] (+0.57, fdr 4e-05), [[SLC35E3]] (+0.54, fdr 2e-05); moves opposite to [[F2RL1]] (-0.50, fdr 4e-05), [[ATP7A]] (-0.48, fdr 3e-05), [[VPS37B]] (-0.45, fdr 1e-04).
+> It sits in the **+** arm of [[Module 024]] (Aerobic respiration and respiratory electron transport).
+> Probable direction (from the cell lines, not proof of direct regulation): 2 arrows point to it, the strongest [[TOP2A]] → it (grade B ⚠); none goes from it. See Direction (probable) below.
+
+## Drugs that raise it
+
+*Pooled over the cell lines (median). Every drug-dose with |z| ≥ 3 or q < 0.10, strongest first: 5 in all, 2 with an alert ⚠. 3 of them raise it significantly (**bold**: q < 0.10, ≥ 1.2×), 2 with an alert ⚠. ⚠ = an artifact flag on the drug-dose or on this gene: the change may come from cell death, a drop in transcription, a shift in the cell-cycle mix, a plate that does not reproduce or a well-position problem rather than from regulation of this gene; it is shown, not left out. `tables/drug_effects.parquet` col == 4235.*
+
+In single lines (per-line |z| ≥ 8.4, all drug-doses: 4 here, 2 with an alert ⚠; `tables/drug_line_top.parquet`), these raise it: [[TAK-901 (drug)]] 5 µM in 8 lines (HS-578T 8.38×, RPMI-7951 10.4×, HOP62 15.1×, hTERT-HPNE 9.54×, …); [[Homoharringtonine (drug)]] 5 µM in 2 lines (A498 2.38×, hTERT-HPNE 2.28×; ⚠ cell-cycle shift, would explain all of this change); [[Homoharringtonine (drug)]] 0.5 µM in 1 line (A498 2.97×; ⚠ cell-cycle shift, explains ~4% of this change); [[PH-797804 (drug)]] 5 µM in 1 line (HS-578T 4.13×).
+
+| Drug-dose | Alert | Fold | z | q | Lines up / measured | Dose pattern | Caveats |
+|---|---|---|---|---|---|---|---|
+| [[TAK-901 (drug)]] 5 µM |  | **2.23×** | +8.4 | 4e-14 | 29/48 (HS-578T, RPMI-7951, …) | top dose only | plate-row cell shift; cell-cycle shift (explains ~0% here); composition shift; noisy plate (z scaled) |
+| [[Vinblastine (sulfate) (drug)]] 5 µM |  | 1.19× | +4.8 | 4e-04 | 20/48 (NCI-H1573, CFPAC-1, …) | rises with dose |  |
+| [[Pitavastatin (Calcium) (drug)]] 5 µM | ⚠ cell-cycle shift, explains ~34% of this change | **1.23×** | +4.0 | 0.013 | 18/46 (H4, RPMI-7951, …) | rises with dose |  |
+| [[Pitavastatin (Calcium) (drug)]] 0.5 µM |  | 1.20× | +3.6 | 0.045 | 20/46 (H4, RPMI-7951, …) | rises with dose | low cells (technical?) |
+| [[Lonafarnib (drug)]] 5 µM | ⚠ toxic | **1.40×** | +3.5 | 0.050 | 16/35 (HS-578T, HT-29, …) | top dose only | noisy plate (z scaled) |
+
+## Drugs that lower it
+
+*Pooled over the cell lines (median). Every drug-dose with |z| ≥ 3 or q < 0.10, strongest first: 24 in all, 9 with an alert ⚠; shown: the 15 strongest and the 8 next strongest without an alert. 16 of them lower it significantly (**bold**: q < 0.10, ≥ 1.2×), 8 with an alert ⚠. ⚠ as above. `tables/drug_effects.parquet` col == 4235.*
+
+| Drug-dose | Alert | Fold | z | q | Lines down / measured | Dose pattern | Caveats |
+|---|---|---|---|---|---|---|---|
+| [[Dinaciclib (drug)]] 0.5 µM | ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change | **0.353×** | -20.7 | 0e+00 | 43/46 (A-172, HCT15, …) | all doses, stronger at high dose | composition shift |
+| [[Panobinostat (drug)]] 5 µM |  | **0.363×** | -20.2 | 0e+00 | 46/47 (A-172, HS-578T, …) | all doses, stronger at high dose | cell-cycle shift (explains ~23% here) |
+| [[Panobinostat (drug)]] 0.5 µM |  | **0.368×** | -19.9 | 0e+00 | 46/47 (A-172, HS-578T, …) | all doses, stronger at high dose | cell-cycle shift (explains ~20% here) |
+| [[Dinaciclib (drug)]] 5 µM | ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change | **0.386×** | -18.2 | 0e+00 | 35/42 (H4, A-172, …) | all doses, stronger at high dose | composition shift |
+| [[Belinostat (drug)]] 5 µM | ⚠ cell-cycle shift, explains ~30% of this change | **0.496×** | -14.0 | 3e-42 | 42/47 (A-172, A498, …) | rises with dose |  |
+| [[Dinaciclib (drug)]] 0.05 µM | ⚠ toxic; transcription drop; cell-cycle shift, explains ~31% of this change | **0.527×** | -11.8 | 4e-30 | 36/44 (NCI-H2347, C-33 A, …) | all doses, stronger at high dose | composition shift |
+| [[Idarubicin (hydrochloride) (drug)]] 5 µM |  | **0.684×** | -10.7 | 9e-25 | 36/48 (A-172, AsPC-1, …) | top dose only | cell-cycle shift (explains ~21% here) |
+| [[Docetaxel (drug)]] 0.05 µM | ⚠ transcription drop; cell-cycle shift, explains ~26% of this change | **0.703×** | -7.0 | 2e-10 | 35/46 (SW 900, A-172, …) | inconsistent across doses | low cells (technical?) |
+| [[Mitoxantrone (dihydrochloride) (drug)]] 5 µM |  | **0.783×** | -6.9 | 4e-10 | 29/47 (A-172, SW1417, …) | top dose only |  |
+| [[Panobinostat (drug)]] 0.05 µM | ⚠ cell-cycle shift, explains ~24% of this change | **0.728×** | -6.3 | 2e-08 | 30/47 (HS-578T, A-172, …) | all doses, stronger at high dose |  |
+| [[Auranofin (drug)]] 5 µM |  | **0.798×** | -4.5 | 4e-04 | 24/47 (HS-578T, A-172, …) | top dose only |  |
+| [[Darinaparsin (drug)]] 5 µM | ⚠ cell-cycle shift, explains ~49% of this change | 0.854× | -4.4 | 4e-04 | 16/47 (J82, A549, …) | top dose only |  |
+| [[NG25 (drug)]] 5 µM |  | **0.676×** | -4.1 | 0.002 | 22/46 (HS-578T, RPMI-7951, …) | inconsistent across doses | cell-cycle shift (explains ~7% here); noisy plate (z scaled) |
+| [[Doxorubicin (hydrochloride) (drug)]] 5 µM | ⚠ cell-cycle shift, explains ~68% of this change | **0.815×** | -3.9 | 0.004 | 22/47 (SNU-423, H4, …) | top dose only |  |
+| [[Tucidinostat (drug)]] 5 µM |  | 0.872× | -3.8 | 0.005 | 19/47 (A-172, LOX-IMVI, …) | top dose only |  |
+| [[Retinoic acid (drug)]] 0.05 µM |  | **0.826×** | -3.8 | 0.005 | 22/47 (Hs 766T, A549, …) | inconsistent across doses |  |
+| [[AZD-7648 (drug)]] 5 µM |  | **0.732×** | -3.3 | 0.036 | 16/46 (A498, H4, …) | top dose only | noisy plate (z scaled) |
+| [[Filgotinib (drug)]] 5 µM |  | 0.850× | -3.2 | 0.037 | 14/47 (NCI-H1792, SK-MEL-2, …) | top dose only |  |
+| [[Carbamazepine (drug)]] 5 µM |  | 0.856× | -3.1 | 0.054 | 6/46 (NCI-H460, LOX-IMVI, …) | top dose only |  |
+| [[Larotrectinib (drug)]] 5 µM |  | 0.896× | -3.1 | 0.054 | 4/47 (SW 900, SW 1271, …) | inconsistent across doses |  |
+| [[Palmatine (chloride) (drug)]] 0.05 µM |  | 0.858× | -3.0 | 0.062 | 9/48 (SW 900, HOP62, …) | inconsistent across doses |  |
+| [[Larotrectinib (drug)]] 0.05 µM |  | 0.860× | -3.0 | 0.062 | 11/48 (Hs 766T, A-172, …) | inconsistent across doses |  |
+| [[Berbamine (drug)]] 0.05 µM |  | 0.860× | -3.0 | 0.062 | 11/47 (SW 1271, Panc 03.27, …) | inconsistent across doses |  |
+
+*`cell-cycle shift`: the drug-dose moved its cells into or out of S or G2/M. Its alert says how much of this gene's change that shift would explain (`cc_share`), from the gene's own slopes on the S-phase and G2/M modules (`tables/genes.parquet`: -0.35 per unit of S-phase module lfc, -0.07 per unit of G2/M module lfc). Fitted slopes are attenuated by noise, so the rule multiplies them by 2: a row keeps the alert when the shift would then explain 50% of the change or more, or leave less than a 1.2× change unexplained (an alert's ~N% is the share at the fitted slopes). `cell-cycle shift (explains ~N% here)` = the shift explains only about N% of this change, and even with the slopes multiplied by 2 less than 50%, so for this gene it is no artifact and carries no alert.*
+
+## In which cell lines
+
+*`tables/line_effects.parquet` col == 4235. CPM = the line's own level (n.m. = not measured: the line does not express it, or below 0.25 × its pooled level, where its reads are mostly ambient RNA; no per-line values). Up / down = drug-doses moving it ≥ 1.5× at per-line |z| ≥ 8.4 (calibrated on this run, `tables/info.json`; about 0.0492 such calls per gene and line are expected by chance over the 1,026 clean drug-doses), all of them; in brackets how many of those carry an alert (⚠: an artifact flag on the drug-dose or on this gene). The strongest of them is shown, with its alert, and after it the strongest without an alert when that is another one. Most responsive lines first.*
+
+| Line | TP53 | CPM | Up | Down | Strongest up | Strongest down |
+|---|---|---|---|---|---|---|
+| [[A-172 (line)]] | wt | 187 | 0 | 14 (9 ⚠) | — | [[Panobinostat (drug)]] 5 µM 0.116× (z -26.4) |
+| [[HS-578T (line)]] | alt | 281 | 2 | 8 (4 ⚠) | [[TAK-901 (drug)]] 5 µM 8.38× (z +14.2) | [[Panobinostat (drug)]] 0.5 µM 0.176× (z -22.1) |
+| [[NCI-H1792 (line)]] | alt | 152 | 1 | 8 (5 ⚠) | [[TAK-901 (drug)]] 5 µM 5.15× (z +9.2) | [[Panobinostat (drug)]] 5 µM 0.186× (z -18.1) |
+| [[RPMI-7951 (line)]] | alt | 172 | 1 | 8 (4 ⚠) | [[TAK-901 (drug)]] 5 µM 10.4× (z +13.1) | [[Panobinostat (drug)]] 5 µM 0.271× (z -14.0) |
+| [[A498 (line)]] | wt | 142 | 2 (2 ⚠) | 6 (4 ⚠) | [[Homoharringtonine (drug)]] 5 µM 2.38× (z +16.3) ⚠ cell-cycle shift, would explain all of this change | [[Panobinostat (drug)]] 5 µM 0.202× (z -21.2) |
+| [[A549 (line)]] | wt | 99.2 | 0 | 7 (4 ⚠) | — | [[Dinaciclib (drug)]] 5 µM 0.177× (z -18.9) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change · without an alert: [[Panobinostat (drug)]] 0.5 µM 0.198× (z -18.3) |
+| [[HOP62 (line)]] | alt | 78.1 | 1 | 6 (3 ⚠) | [[TAK-901 (drug)]] 5 µM 15.1× (z +11.8) | [[Panobinostat (drug)]] 5 µM 0.173× (z -14.6) |
+| [[hTERT-HPNE (line)]] | wt | 145 | 2 (1 ⚠) | 5 (3 ⚠) | [[TAK-901 (drug)]] 5 µM 9.54× (z +10.0) | [[Dinaciclib (drug)]] 0.5 µM 0.124× (z -17.6) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change · without an alert: [[Panobinostat (drug)]] 5 µM 0.169× (z -15.0) |
+| [[J82 (line)]] | alt | 70.8 | 1 | 6 (3 ⚠) | [[TAK-901 (drug)]] 5 µM 5.70× (z +9.1) | [[Panobinostat (drug)]] 5 µM 0.226× (z -14.9) |
+| [[LOX-IMVI (line)]] | wt | 67.4 | 0 | 7 (4 ⚠) | — | [[Panobinostat (drug)]] 5 µM 0.273× (z -14.4) |
+| [[NCI-H2030 (line)]] | alt | 91.2 | 0 | 6 (4 ⚠) | — | [[Dinaciclib (drug)]] 5 µM 0.285× (z -14.8) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change · without an alert: [[Panobinostat (drug)]] 5 µM 0.364× (z -12.4) |
+| [[NCI-H2347 (line)]] | alt | 65.0 | 0 | 6 (3 ⚠) | — | [[Dinaciclib (drug)]] 0.05 µM 0.183× (z -17.5) ⚠ toxic; transcription drop; cell-cycle shift, explains ~31% of this change · without an alert: [[Panobinostat (drug)]] 0.5 µM 0.294× (z -13.6) |
+| [[SNU-423 (line)]] | alt | 77.7 | 0 | 6 (4 ⚠) | — | [[Dinaciclib (drug)]] 5 µM 0.141× (z -16.9) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change · without an alert: [[Panobinostat (drug)]] 0.5 µM 0.194× (z -14.8) |
+| [[AsPC-1 (line)]] | alt | 90.3 | 0 | 5 (2 ⚠) | — | [[Dinaciclib (drug)]] 5 µM 0.212× (z -15.3) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change · without an alert: [[Idarubicin (hydrochloride) (drug)]] 5 µM 0.362× (z -14.7) |
+| [[Hs 766T (line)]] | wt | 100 | 0 | 5 (2 ⚠) | — | [[Dinaciclib (drug)]] 0.5 µM 0.205× (z -16.6) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change · without an alert: [[Panobinostat (drug)]] 5 µM 0.313× (z -12.2) |
+| [[MIA PaCa-2 (line)]] | alt | 94.1 | 0 | 5 (3 ⚠) | — | [[Panobinostat (drug)]] 5 µM 0.310× (z -13.4) |
+| [[SK-MEL-2 (line)]] | alt | 93.5 | 0 | 5 (2 ⚠) | — | [[Dinaciclib (drug)]] 0.5 µM 0.349× (z -9.9) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change · without an alert: [[Auranofin (drug)]] 5 µM 0.392× (z -8.8) |
+| [[SW480 (line)]] | alt | 65.8 | 0 | 5 (3 ⚠) | — | [[Dinaciclib (drug)]] 5 µM 0.258× (z -15.9) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change · without an alert: [[Panobinostat (drug)]] 0.5 µM 0.326× (z -13.7) |
+| [[H4 (line)]] | wt | 104 | 1 | 3 (2 ⚠) | [[TAK-901 (drug)]] 5 µM 6.85× (z +8.5) | [[Dinaciclib (drug)]] 5 µM 0.0394× (z -26.3) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change · without an alert: [[Panobinostat (drug)]] 5 µM 0.302× (z -10.1) |
+| [[SW 900 (line)]] | alt | 72.1 | 0 | 4 (2 ⚠) | — | [[Panobinostat (drug)]] 0.5 µM 0.211× (z -13.6) |
+| [[C32 (line)]] | wt | 61.2 | 0 | 3 (1 ⚠) | — | [[Dinaciclib (drug)]] 0.5 µM 0.245× (z -12.8) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change · without an alert: [[Panobinostat (drug)]] 5 µM 0.304× (z -10.8) |
+| [[NCI-H460 (line)]] | wt | 54.6 | 0 | 3 (2 ⚠) | — | [[Dinaciclib (drug)]] 5 µM 0.190× (z -17.2) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change · without an alert: [[Panobinostat (drug)]] 0.5 µM 0.431× (z -9.1) |
+| [[A-427 (line)]] | wt | 61.0 | 0 | 2 (2 ⚠) | — | [[Dinaciclib (drug)]] 5 µM 0.143× (z -19.8) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change |
+| [[AN3 CA (line)]] | alt | 79.9 | 0 | 2 (2 ⚠) | — | [[Belinostat (drug)]] 0.5 µM 0.0459× (z -18.2) ⚠ cell-cycle shift, explains ~76% of this change |
+| [[CFPAC-1 (line)]] | alt | 36.4 | 0 | 2 | — | [[Panobinostat (drug)]] 5 µM 0.331× (z -10.3) |
+| [[HCT15 (line)]] | alt | 59.5 | 0 | 2 (2 ⚠) | — | [[Dinaciclib (drug)]] 0.5 µM 0.0824× (z -18.9) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change |
+| [[HEC-1-A (line)]] | alt | 56.8 | 0 | 2 (2 ⚠) | — | [[Dinaciclib (drug)]] 0.05 µM 0.292× (z -12.8) ⚠ toxic; transcription drop; cell-cycle shift, explains ~31% of this change |
+| [[Panc 03.27 (line)]] | alt | 41.2 | 0 | 2 (1 ⚠) | — | [[Panobinostat (drug)]] 0.5 µM 0.305× (z -10.0) |
+| [[SHP-77 (line)]] | alt | 92.5 | 0 | 2 (1 ⚠) | — | [[Dinaciclib (drug)]] 0.5 µM 0.351× (z -11.2) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change · without an alert: [[Panobinostat (drug)]] 5 µM 0.383× (z -10.2) |
+| [[SW1417 (line)]] | alt | 24.5 | 0 | 2 (1 ⚠) | — | [[Dinaciclib (drug)]] 5 µM 0.211× (z -12.5) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change · without an alert: [[Mitoxantrone (dihydrochloride) (drug)]] 5 µM 0.413× (z -10.4) |
+| [[C-33 A (line)]] | alt | 63.7 | 0 | 1 (1 ⚠) | — | [[Dinaciclib (drug)]] 0.05 µM 0.129× (z -15.9) ⚠ toxic; transcription drop; cell-cycle shift, explains ~31% of this change |
+| [[CHP-212 (line)]] | wt | 64.7 | 0 | 1 (1 ⚠) | — | [[Dinaciclib (drug)]] 0.05 µM 0.134× (z -9.0) ⚠ toxic; transcription drop; cell-cycle shift, explains ~31% of this change |
+| [[HepG2_C3A (line)]] | wt | 55.1 | 0 | 1 (1 ⚠) | — | [[Dinaciclib (drug)]] 0.05 µM 0.168× (z -12.3) ⚠ toxic; transcription drop; cell-cycle shift, explains ~31% of this change |
+| [[LoVo (line)]] | wt | 58.3 | 0 | 1 | — | [[Panobinostat (drug)]] 0.5 µM 0.368× (z -11.3) |
+| [[NCI-H1573 (line)]] | alt | 29.4 | 1 | 0 | [[TAK-901 (drug)]] 5 µM 7.24× (z +9.5) | — |
+| [[NCI-H23 (line)]] | alt | 46.5 | 0 | 1 (1 ⚠) | — | [[Homoharringtonine (drug)]] 5 µM 0.302× (z -14.9) ⚠ cell-cycle shift, would explain all of this change |
+| [[SNU-1 (line)]] | wt | 58.5 | 0 | 1 | — | [[Panobinostat (drug)]] 0.5 µM 0.297× (z -8.9) |
+| [[SW48 (line)]] | wt | 51.4 | 0 | 1 (1 ⚠) | — | [[Dinaciclib (drug)]] 0.5 µM 0.206× (z -10.5) ⚠ toxic; transcription drop; cell-cycle shift, explains ~28% of this change |
+| [[BT-474 (line)]] | alt | 28.2 | 0 | 0 | — | — |
+| [[COLO 205 (line)]] | alt | 22.8 | 0 | 0 | — | — |
+| [[HT-29 (line)]] | alt | 28.4 | 0 | 0 | — | — |
+| [[KATO III (line)]] | alt | 40.5 | 0 | 0 | — | — |
+| [[LS 180 (line)]] | wt | 51.4 | 0 | 0 | — | — |
+| [[NCI-H2122 (line)]] | alt | 73.3 | 0 | 0 | — | — |
+| [[NCI-H596 (line)]] | alt | 77.5 | 0 | 0 | — | — |
+| [[NCI-H661 (line)]] | alt | 45.2 | 0 | 0 | — | — |
+| [[PANC-1 (line)]] | alt | 34.7 | 0 | 0 | — | — |
+| [[RKO (line)]] | wt | 7.70 n.m. | — | — | — | — |
+| [[SW 1088 (line)]] | alt | 137 | 0 | 0 | — | — |
+| [[SW 1271 (line)]] | alt | 32.7 | 0 | 0 | — | — |
+
+## Genes that move with it
+
+*Strongest of its 100 nearest partners by |cos| (`relations/gene_relations.parquet` col_a == 4235), and any of the 12 strongest without an alert below them; halves = cos in the spaces fitted on two random halves of the compounds (a hash split of the compound names). Evidence: `both halves` = replicated: the same sign in both, |cos| ≥ 0.2 in each and fdr ≤ 0.10; ⚠ `one half` = strong in one of the two random halves only — not replicated, no error estimate; ⚠ `not reproduced` = neither. Other alerts: ⚠ same locus / read-through risk (neighbours on the genome can correlate for that reason alone), and `GENE ⚠` = the partner is in the vector space only through flagged drug-doses (all its evidence carries an artifact flag for it). A partner with an alert is shown in its place, not left out. A correlation across drugs and lines, not evidence that one gene regulates the other.*
+
+*82 of its nearest partners move with it, 4 of them with an alert (⚠; 3 not replicated); shown: the 12 strongest.*
+
+| Gene | cos | Halves | Evidence | fdr | Notes |
+|---|---|---|---|---|---|
+| [[LACTB]] | +0.59 | +0.40 / +0.56 | both halves | 5e-05 |  |
+| [[RAB32]] | +0.57 | +0.43 / +0.55 | both halves | 4e-05 |  |
+| [[SLC35E3]] | +0.54 | +0.48 / +0.48 | both halves | 2e-05 |  |
+| [[DIPK1A]] | +0.54 | +0.62 / +0.44 | both halves | 3e-05 |  |
+| [[PDCD5]] | +0.54 | +0.44 / +0.51 | both halves | 3e-05 |  |
+| [[NBPF12]] | +0.53 | +0.50 / +0.48 | both halves | 2e-05 |  |
+| [[BCAS4]] | +0.52 | +0.54 / +0.43 | both halves | 3e-05 |  |
+| [[FSD1L]] | +0.52 | +0.50 / +0.52 | both halves | 1e-05 |  |
+| [[TBC1D12]] | +0.51 | +0.60 / +0.43 | both halves | 3e-05 |  |
+| [[PLPP1]] | +0.51 | +0.42 / +0.43 | both halves | 4e-05 |  |
+| [[MIR193BHG]] | +0.50 | +0.55 / +0.41 | both halves | 4e-05 |  |
+| [[LONRF1]] | +0.50 | +0.50 / +0.43 | both halves | 3e-05 |  |
+
+## Genes that move opposite
+
+*18 of its nearest partners move opposite, 1 of them with an alert (⚠; 1 not replicated); shown: the 12 strongest and the 1 next strongest without an alert.*
+
+| Gene | cos | Halves | Evidence | fdr | Notes |
+|---|---|---|---|---|---|
+| [[F2RL1]] | -0.50 | -0.41 / -0.45 | both halves | 4e-05 |  |
+| [[ATP7A]] | -0.48 | -0.45 / -0.45 | both halves | 3e-05 |  |
+| [[VPS37B]] | -0.45 | -0.33 / -0.36 | both halves | 1e-04 |  |
+| [[DNAH1]] | -0.44 | -0.47 / -0.43 | both halves | 3e-05 |  |
+| [[ITPRID2]] | -0.44 | -0.27 / -0.36 | both halves | 3e-04 |  |
+| [[NORAD]] | -0.44 | -0.37 / -0.35 | both halves | 1e-04 |  |
+| [[CCN2]] | -0.43 | -0.46 / -0.42 | both halves | 4e-05 |  |
+| [[ITGB1]] | -0.43 | -0.17 / -0.36 | ⚠ not reproduced | 0.001 |  |
+| [[SYAP1]] | -0.43 | -0.36 / -0.45 | both halves | 1e-04 |  |
+| [[CLTC]] | -0.43 | -0.30 / -0.38 | both halves | 2e-04 |  |
+| [[EIF4EBP2]] | -0.42 | -0.43 / -0.34 | both halves | 1e-04 |  |
+| [[HNRNPA2B1]] | -0.42 | -0.45 / -0.44 | both halves | 3e-05 |  |
+| [[TNFRSF21]] | -0.42 | -0.36 / -0.39 | both halves | 1e-04 |  |
+
+## Direction (probable)
+
+*Arrows SOURCE → TARGET of the direction stage (`direction/edges.parquet`), each from a test (q < 0.10 in its family of tests: over the whole table, or for a lead - grade C - within its own group) of a recorded mutation, a natural knockout (lines that do not express a gene), compounds that target a gene, or a gene's natural level. A probable direction, from the screen's cell lines: not proof of direct regulation. Grades: A strong, B read its alerts, C a glimpse; ⚠ = a reason for doubt, shown in place. How to read them, and this run's controls: [[Probable direction]].*
+
+### Upstream of this gene
+
+*2 arrows, 2 of them with an alert ⚠; grade A 0, B 1, C 1.*
+
+| Source | Grade | Direction (probable) | Evidence | Effect | q | Alerts |
+|---|---|---|---|---|---|---|
+| [[TOP2A]] | B | TOP2A activity raises PPP3CC's level | compounds that target TOP2A: 3 of 5 lower it (Doxorubicin, Idarubicin, Mitoxantrone) | 60% of the class's compounds vs 3.4% of all compounds | 0.095 | ⚠ off-target possible; 3 compounds; artifact flags |
+| [[FSD1L]] | C | FSD1L activity strengthens PPP3CC's drug response | lines that do not express FSD1L (3) vs lines expressing it (45) | the lines without FSD1L respond 0.42× as strongly (z diff +3.68); strongest at Idarubicin (hydrochloride) 5 µM: 1.00x vs 0.63x (z diff +5.5) | 0.026 | ⚠ few lines (3 vs 47); across organs; co-absent genes; co-occurs with CTNNB1; also absent: DPF1, PPP2R3A, NKAIN1; maybe low, not absent; target measured in part of the lines; artifact flags |
+
+### Downstream of this gene
+
+None: no arrow goes from this gene (to a gene, or to the cells under a drug-dose).
+
+## Where it sits
+
+- **Module**: [[Module 024]] — Aerobic respiration and respiratory electron transport; 179 genes; this gene is in the **+** arm (projection on the module's main direction 0.407). Its + and − arms move opposite to each other under the same drugs (mean cos between them -0.29).
+- **Nodal map** (x, y) = (19.3, -8.7); signed map (-16.6, 3.0). **Vector** length 81.6, 19.4% of its response variance represented; |z| ≥ 3 in 1,110 contexts (`embed/genes.parquet`).
+
+**Predicted by the vector space**: the drug-doses whose vectors predict the largest rise and fall (gene vector · drug-dose vector, in z units), next to the observed z (`atlas/effects/DD_z.npy`): the 5 strongest predictions over all drug-doses and the 5 strongest of those without an artifact flag, together. ⚠ = an artifact flag on the drug-dose (or on this gene, where `tables/drug_effects.parquet` has the pair): its observed z may come from what the drug-dose did to the cells.
+
+|  | Drug-dose | Alert | Predicted z | Observed z |
+|---|---|---|---|---|
+| rise | [[Topotecan (hydrochloride) (drug)]] 5 µM | ⚠ toxic; cell-cycle shift | +5.1 | -2.5 |
+|  | [[Homoharringtonine (drug)]] 5 µM | ⚠ cell-cycle shift, would explain all of this change | +3.1 | -2.3 |
+|  | [[Vinblastine (sulfate) (drug)]] 5 µM |  | +2.9 | +4.8 |
+|  | [[Trametinib (DMSO_TF solvate) (drug)]] 0.5 µM |  | +2.5 | +0.9 |
+|  | [[Trametinib (drug)]] 5 µM | ⚠ cell-cycle shift | +2.5 | +2.6 |
+|  | [[Radotinib (drug)]] 5 µM |  | +2.2 | +0.7 |
+|  | [[Cobimetinib (drug)]] 5 µM |  | +2.2 | +2.9 |
+|  | [[Verteporfin (drug)]] 5 µM |  | +2.2 | +2.3 |
+| fall | [[NG25 (drug)]] 5 µM |  | -2.7 | -4.1 |
+|  | [[Megestrol (drug)]] 0.05 µM | ⚠ cell-cycle shift, explains ~47% of this change | -2.0 | -3.8 |
+|  | [[Digitoxin (drug)]] 0.5 µM | ⚠ cell-cycle shift | -2.0 | +1.8 |
+|  | [[Panobinostat (drug)]] 0.5 µM |  | -2.0 | -19.9 |
+|  | [[Auranofin (drug)]] 5 µM |  | -1.9 | -4.5 |
+|  | [[Busulfan (drug)]] 0.05 µM |  | -1.8 | -2.6 |
+|  | [[Filgotinib (drug)]] 5 µM |  | -1.7 | -3.2 |
+|  | [[(R)-Verapamil (hydrochloride) (drug)]] 0.05 µM |  | -1.7 | -1.8 |
+|  | [[Larotrectinib (drug)]] 0.05 µM |  | -1.7 | -3.0 |
+
+## What is on record
+
+|  |  |
+|---|---|
+| Name | protein phosphatase 3 catalytic subunit gamma |
+| Locus type | gene with protein product (protein-coding gene) |
+| Location | 8p21.3 — chr8:22,440,819-22,541,142 (+) |
+| Ensembl biotype | protein_coding |
+| Also known as | CALNA3, PP2Bgamma |
+| Gene groups (HGNC) | Protein phosphatase catalytic subunits; Calcineurin subunits |
+| Reactome | 10 pathways, smallest: Activation of BAD and translocation to mitochondria; DARPP-32 events; Activation of BH3-only proteins |
+| Matched by | ensembl_id |
+
+**Function**, from UniProt [P48454](https://www.uniprot.org/uniprotkb/P48454) (Serine/threonine-protein phosphatase 2B catalytic subunit gamma isoform):
+
+> Calcium-dependent, calmodulin-stimulated protein phosphatase which plays an essential role in the transduction of intracellular Ca(2+)-mediated signals. Dephosphorylates and activates transcription factor NFATC1. Dephosphorylates and inactivates transcription factor ELK1. Dephosphorylates DARPP32.
+
+**Summary**, from NCBI Gene [5533](https://www.ncbi.nlm.nih.gov/gene/5533):
+
+> Calcineurin is a calcium-dependent, calmodulin-stimulated protein phosphatase involved in the downstream regulation of dopaminergic signal transduction. Calcineurin is composed of a regulatory subunit and a catalytic subunit. The protein encoded by this gene represents one of the regulatory subunits that has been found for calcineurin. Three transcript variants encoding different isoforms have been found for this gene. [provided by RefSeq, Sep 2011]
+
+**Accessions** — [HGNC:9316](https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:9316) · Entrez [5533](https://www.ncbi.nlm.nih.gov/gene/5533) · UniProt [P48454](https://www.uniprot.org/uniprotkb/P48454) · Ensembl [ENSG00000120910](https://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000120910)
+
+## Data
+
+Gene col 4235: `tables/genes.parquet`, `tables/line_effects.parquet` (50 rows) and `tables/drug_line_top.parquet` (col == 4235); `tables/drug_effects.parquet` (29 rows, flagged included); `relations/gene_relations.parquet` (col_a == 4235, 100 rows); `atlas/effects/DD_lfc|DD_z|DD_qup|DD_qdn.npy` [:, 4235]; `tensor/DDL_lfc|DDL_z.npy` [4235]; `embed/gene_vectors.npy` [4235]; `graph/nodes.parquet`; `direction/edges.parquet` (source_col == 4235 or target_col == 4235). Every well: [[PPP3CC — plates]].
+
+## Sources
+
+Generated by `tahoemap vault` (v4) from the tables of the run; do not edit this note, it is rebuilt on every run. No written note yet: write `tahoemap/vault_seed/genes/PPP3CC.md` and rerun `tahoe vault`.
+Registry text: `reference/annotations.parquet` (HGNC, Ensembl GRCh38, UniProt, NCBI Gene; download dates in `reference/sources.json`). Paths are relative to the run folder.

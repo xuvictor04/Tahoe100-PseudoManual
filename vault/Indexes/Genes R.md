@@ -1,0 +1,843 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes R
+
+833 genes. Back to [[Genes by letter]].
+
+- [[R3HCC1]] — R3H domain and coiled-coil containing 1 · module 012 +
+- [[R3HCC1L]] — R3H domain and coiled-coil containing 1 like · module 003 +
+- [[R3HDM1]] — R3H domain containing 1 · module 018 +
+- [[R3HDM2]] — R3H domain containing 2 · module 088 +
+- [[R3HDM4]] — R3H domain containing 4 · module 002 +
+- [[RAB10]] — RAB10, member RAS oncogene family · module 049 +
+- [[RAB11A]] — RAB11A, member RAS oncogene family · module 005 -
+- [[RAB11B]] — RAB11B, member RAS oncogene family · module 153 +
+- [[RAB11B-AS1]] — RAB11B antisense RNA 1 · module 095 +
+- [[RAB11FIP1]] — RAB11 family interacting protein 1 · module 194 -
+- [[RAB11FIP2]] — RAB11 family interacting protein 2 · module 029 +
+- [[RAB11FIP3]] — RAB11 family interacting protein 3 · module 025 -
+- [[RAB11FIP4]] — RAB11 family interacting protein 4 · module 008 +
+- [[RAB11FIP5]] — RAB11 family interacting protein 5 · module 180 +
+- [[RAB12]] — RAB12, member RAS oncogene family · module 190 +
+- [[RAB13]] — RAB13, member RAS oncogene family · module 074 +
+- [[RAB14]] — RAB14, member RAS oncogene family · module 029 +
+- [[RAB15]] — RAB15, member RAS oncogene family · module 044 +
+- [[RAB17]] — RAB17, member RAS oncogene family · module 027 +
+- [[RAB18]] — RAB18, member RAS oncogene family · module 030 +
+- [[RAB1A]] — RAB1A, member RAS oncogene family · module 056 +
+- [[RAB1B]] — RAB1B, member RAS oncogene family · module 153 +
+- [[RAB20]] — RAB20, member RAS oncogene family · module 164 +
+- [[RAB21]] — RAB21, member RAS oncogene family · module 035 +
+- [[RAB22A]] — RAB22A, member RAS oncogene family · module 017 -
+- [[RAB23]] — RAB23, member RAS oncogene family · module 025 +
+- [[RAB24]] — RAB24, member RAS oncogene family · module 024 +
+- [[RAB25]] — RAB25, member RAS oncogene family · module 044 +
+- [[RAB27A]] — RAB27A, member RAS oncogene family · module 029 +
+- [[RAB27B]] — RAB27B, member RAS oncogene family · module 019 +
+- [[RAB28]] — RAB28, member RAS oncogene family · module 018 +
+- [[RAB29]] — RAB29, member RAS oncogene family · module 014 +
+- [[RAB2A]] — RAB2A, member RAS oncogene family · module 056 +
+- [[RAB2B]] — RAB2B, member RAS oncogene family · module 004 -
+- [[RAB30]] — RAB30, member RAS oncogene family · module 059 +
+- [[RAB30-DT]] — RAB30 divergent transcript · module 088 +
+- [[RAB31]] — RAB31, member RAS oncogene family · module 066 +
+- [[RAB32]] — RAB32, member RAS oncogene family · module 014 +
+- [[RAB33B]] — RAB33B, member RAS oncogene family · module 041 +
+- [[RAB33B-AS1]] — RAB33B antisense RNA 1 · module 024 +
+- [[RAB34]] — RAB34, member RAS oncogene family · module 095 +
+- [[RAB35]] — RAB35, member RAS oncogene family · module 036 +
+- [[RAB38]] — RAB38, member RAS oncogene family · module 120 +
+- [[RAB39A]] — RAB39A, member RAS oncogene family · module 176 +
+- [[RAB3A]] — RAB3A, member RAS oncogene family · module 124 -
+- [[RAB3B]] — RAB3B, member RAS oncogene family · module 116 +
+- [[RAB3C]] — RAB3C, member RAS oncogene family · module 019 +
+- [[RAB3D]] — RAB3D, member RAS oncogene family · module 045 +
+- [[RAB3GAP1]] — RAB3 GTPase activating protein catalytic subunit 1 · module 169 +
+- [[RAB3GAP2]] — RAB3 GTPase activating non-catalytic protein subunit 2 · module 028 +
+- [[RAB3IP]] — RAB3A interacting protein · module 014 +
+- [[RAB40B]] — RAB40B, member RAS oncogene family · module 085 +
+- [[RAB40C]] — RAB40C, member RAS oncogene family · module 003 +
+- [[RAB43]] — RAB43, member RAS oncogene family · module 142 +
+- [[RAB4A]] — RAB4A, member RAS oncogene family · module 057 +
+- [[RAB4A-AS1]] — RAB4A antisense RNA 1 · module 004 +
+- [[RAB4B]] — RAB4B, member RAS oncogene family · module 037 +
+- [[RAB5A]] — RAB5A, member RAS oncogene family · module 041 +
+- [[RAB5B]] — RAB5B, member RAS oncogene family · module 001 -
+- [[RAB5C]] — RAB5C, member RAS oncogene family · module 050 +
+- [[RAB5IF]] — RAB5 interacting factor · module 036 +
+- [[RAB6A]] — RAB6A, member RAS oncogene family · module 040 +
+- [[RAB6B]] — RAB6B, member RAS oncogene family · module 132 +
+- [[RAB7A]] — RAB7A, member RAS oncogene family · module 053 +
+- [[RAB8A]] — RAB8A, member RAS oncogene family · module 007 +
+- [[RAB8B]] — RAB8B, member RAS oncogene family · module 099 +
+- [[RAB9A]] — RAB9A, member RAS oncogene family · module 059 +
+- [[RABAC1]] — Rab acceptor 1 · module 048 +
+- [[RABEP1]] — rabaptin, RAB GTPase binding effector protein 1 · module 172 +
+- [[RABEP2]] — rabaptin, RAB GTPase binding effector protein 2 · module 052 +
+- [[RABEPK]] — Rab9 effector protein with kelch motifs · module 033 +
+- [[RABGAP1]] — RAB GTPase activating protein 1 · module 059 +
+- [[RABGAP1L]] — RAB GTPase activating protein 1 like · module 211 +
+- [[RABGEF1]] — RAB guanine nucleotide exchange factor 1 · module 041 +
+- [[RABGEF1P1]] — RABGEF1 pseudogene 1 · module 003 +
+- [[RABGEF1P3]] — RABGEF1 pseudogene 3 · module 229 +
+- [[RABGGTA]] — Rab geranylgeranyltransferase subunit alpha · module 096 +
+- [[RABGGTB]] — Rab geranylgeranyltransferase subunit beta · module 004 +
+- [[RABIF]] — RAB interacting factor · module 003 +
+- [[RABL2A]] — RAB, member of RAS oncogene family like 2A · module 015 +
+- [[RABL2B]] — RAB, member of RAS oncogene family like 2B · module 015 +
+- [[RABL3]] — RAB, member of RAS oncogene family like 3 · module 083 +
+- [[RABL6]] — RAB, member RAS oncogene family like 6 · module 158 +
+- [[RAC1]] — Rac family small GTPase 1 · module 111 +
+- [[RAC2]] — Rac family small GTPase 2 · module 084 +
+- [[RAC3]] — Rac family small GTPase 3 · module 058 +
+- [[RACGAP1]] — Rac GTPase activating protein 1 · module 022 +
+- [[RACK1]] — receptor for activated C kinase 1 · module 043 +
+- [[RAD1]] — RAD1 checkpoint DNA exonuclease · module 006 +
+- [[RAD17]] — RAD17 checkpoint clamp loader component · module 017 +
+- [[RAD18]] — RAD18 E3 ubiquitin protein ligase · module 006 +
+- [[RAD21]] — RAD21 cohesin complex component · module 022 +
+- [[RAD23A]] — RAD23 nucleotide excision repair protein A · module 012 +
+- [[RAD23B]] — RAD23 nucleotide excision repair protein B · module 025 +
+- [[RAD50]] — RAD50 double strand break repair protein · module 028 +
+- [[RAD51]] — RAD51 recombinase · module 006 +
+- [[RAD51-AS1]] — RAD51 antisense RNA 1 · module 015 +
+- [[RAD51AP1]] — RAD51 associated protein 1 · module 006 +
+- [[RAD51B]] — RAD51 paralog B · module 200 +
+- [[RAD51C]] — RAD51 paralog C · module 062 +
+- [[RAD51D]] — RAD51 paralog D · module 004 +
+- [[RAD52]] — RAD52 DNA repair protein · module 028 +
+- [[RAD54B]] — RAD54 homolog B · module 071 +
+- [[RAD54L]] — RAD54 like · module 006 +
+- [[RAD54L2]] — RAD54 like 2 · module 001 +
+- [[RAD9A]] — RAD9 checkpoint clamp component A · module 072 +
+- [[RAD9B]] — RAD9 checkpoint clamp component B · module 035 +
+- [[RADIL]] — Rap associating with DIL domain · module 019 +
+- [[RADX]] — RPA1 related single stranded DNA binding protein, X-linked · module 083 -
+- [[RAE1]] — ribonucleic acid export 1 · module 007 +
+- [[RAF1]] — Raf-1 proto-oncogene, serine/threonine kinase · module 046 +
+- [[RAI1]] — retinoic acid induced 1 · module 005 +
+- [[RAI14]] — retinoic acid induced 14 · module 081 +
+- [[RALA]] — RAS like proto-oncogene A · module 003 +
+- [[RALB]] — RAS like proto-oncogene B · module 078 +
+- [[RALBP1]] — ralA binding protein 1 · module 076 +
+- [[RALGAPA1]] — Ral GTPase activating protein catalytic subunit alpha 1 · module 011 +
+- [[RALGAPA2]] — Ral GTPase activating protein catalytic subunit alpha 2 · module 083 -
+- [[RALGAPB]] — Ral GTPase activating protein non-catalytic subunit beta · module 036 +
+- [[RALGDS]] — ral guanine nucleotide dissociation stimulator · module 003 +
+- [[RALGPS1]] — Ral GEF with PH domain and SH3 binding motif 1 · module 159 +
+- [[RALGPS2]] — Ral GEF with PH domain and SH3 binding motif 2 · module 001 -
+- [[RALY]] — RALY heterogeneous nuclear ribonucleoprotein · module 109 +
+- [[RALY-AS1]] — RALY antisense RNA 1 · module 026 +
+- [[RALYL]] — RALY RNA binding protein like · module 009 +
+- [[RAMAC]] — RNA guanine-7 methyltransferase activating subunit · module 119 +
+- [[RAMP1]] — receptor activity modifying protein 1 · module 008 +
+- [[RAN]] — RAN, member RAS oncogene family · module 004 +
+- [[RANBP1]] — RAN binding protein 1 · module 006 +
+- [[RANBP10]] — RAN binding protein 10 · module 003 +
+- [[RANBP17]] — RAN binding protein 17 · module 036 +
+- [[RANBP2]] — RAN binding protein 2 · module 016 +
+- [[RANBP3]] — RAN binding protein 3 · module 153 +
+- [[RANBP6]] — RAN binding protein 6 · module 016 +
+- [[RANBP9]] — RAN binding protein 9 · module 163 +
+- [[RANGAP1]] — Ran GTPase activating protein 1 · module 022 +
+- [[RANGRF]] — RAN guanine nucleotide release factor · module 024 +
+- [[RAP1A]] — RAP1A, member of RAS oncogene family · module 163 +
+- [[RAP1B]] — RAP1B, member of RAS oncogene family · module 101 +
+- [[RAP1GAP]] — RAP1 GTPase activating protein · module 189 +
+- [[RAP1GAP2]] — RAP1 GTPase activating protein 2 · module 034 +
+- [[RAP1GDS1]] — Rap1 GTPase-GDP dissociation stimulator 1 · module 018 +
+- [[RAP2A]] — RAP2A, member of RAS oncogene family · module 099 +
+- [[RAP2B]] — RAP2B, member of RAS oncogene family · module 228 +
+- [[RAP2C]] — RAP2C, member of RAS oncogene family · module 077 -
+- [[RAP2C-AS1]] — RAP2C antisense RNA 1 · module 010 +
+- [[RAPGEF1]] — Rap guanine nucleotide exchange factor 1 · module 001 +
+- [[RAPGEF2]] — Rap guanine nucleotide exchange factor 2 · module 001 -
+- [[RAPGEF3]] — Rap guanine nucleotide exchange factor 3 · module 034 +
+- [[RAPGEF4]] — Rap guanine nucleotide exchange factor 4 · module 026 +
+- [[RAPGEF5]] — Rap guanine nucleotide exchange factor 5 · module 008 +
+- [[RAPGEF6]] — Rap guanine nucleotide exchange factor 6 · module 171 -
+- [[RAPGEFL1]] — Rap guanine nucleotide exchange factor like 1 · module 047 +
+- [[RAPH1]] — Ras association (RalGDS/AF-6) and pleckstrin homology domains 1 · module 101 +
+- [[RAPSN]] — receptor associated protein of the synapse · module 039 +
+- [[RARA]] — retinoic acid receptor alpha · module 206 +
+- [[RARB]] — retinoic acid receptor beta · module 152 +
+- [[RARG]] — retinoic acid receptor gamma · module 014 +
+- [[RARRES1]] — retinoic acid receptor responder 1 · module 070 +
+- [[RARS1]] — arginyl-tRNA synthetase 1 · module 049 +
+- [[RARS2]] — arginyl-tRNA synthetase 2, mitochondrial · module 142 +
+- [[RASA1]] — RAS p21 protein activator 1 · module 034 +
+- [[RASA2]] — RAS p21 protein activator 2 · module 193 +
+- [[RASA3]] — RAS p21 protein activator 3 · module 084 +
+- [[RASA4B]] — RAS p21 protein activator 4B · module 037 +
+- [[RASAL1]] — RAS protein activator like 1 · module 085 +
+- [[RASAL2]] — RAS protein activator like 2 · module 120 +
+- [[RASD1]] — ras related dexamethasone induced 1 · module 109 +
+- [[RASEF]] — RAS and EF-hand domain containing · module 066 +
+- [[RASGEF1A]] — RasGEF domain family member 1A · module 128 +
+- [[RASGEF1B]] — RasGEF domain family member 1B · module 008 +
+- [[RASGEF1C]] — RasGEF domain family member 1C · module 102 +
+- [[RASGRF1]] — Ras protein specific guanine nucleotide releasing factor 1 · module 092 +
+- [[RASGRF2]] — Ras protein specific guanine nucleotide releasing factor 2 · module 092 +
+- [[RASGRP1]] — RAS guanyl releasing protein 1 · module 014 +
+- [[RASGRP3]] — RAS guanyl releasing protein 3 · module 032 +
+- [[RASSF1]] — Ras association domain family member 1 · module 003 +
+- [[RASSF2]] — Ras association domain family member 2 · module 082 +
+- [[RASSF3]] — Ras association domain family member 3 · module 092 +
+- [[RASSF4]] — Ras association domain family member 4 · module 103 +
+- [[RASSF5]] — Ras association domain family member 5 · module 014 +
+- [[RASSF6]] — Ras association domain family member 6 · module 008 +
+- [[RASSF7]] — Ras association domain family member 7 · module 003 +
+- [[RASSF8]] — Ras association domain family member 8 · module 084 +
+- [[RASSF8-AS1]] — RASSF8 antisense RNA 1 · module 080 +
+- [[RAVER1]] — ribonucleoprotein, PTB binding 1 · module 138 +
+- [[RAVER2]] — ribonucleoprotein, PTB binding 2 · module 146 +
+- [[RB1]] — RB transcriptional corepressor 1 · module 146 -
+- [[RB1CC1]] — RB1 inducible coiled-coil 1 · module 069 +
+- [[RBAK]] — RB associated KRAB zinc finger · module 011 +
+- [[RBAK-RBAKDN]] — RBAK-RBAKDN readthrough · module 049 +
+- [[RBBP4]] — RB binding protein 4, chromatin remodeling factor · module 071 +
+- [[RBBP5]] — RB binding protein 5, histone lysine methyltransferase complex subunit · module 041 +
+- [[RBBP6]] — RB binding protein 6, ubiquitin ligase · module 188 +
+- [[RBBP7]] — RB binding protein 7, chromatin remodeling factor · module 006 +
+- [[RBBP8]] — RB binding protein 8, endonuclease · module 006 +
+- [[RBBP9]] — RB binding protein 9, serine hydrolase · module 025 +
+- [[RBCK1]] — RANBP2-type and C3HC4-type zinc finger containing 1 · module 063 +
+- [[RBFA]] — ribosome binding factor A · module 033 +
+- [[RBFOX1]] — RNA binding fox-1 homolog 1 · module 140 +
+- [[RBFOX2]] — RNA binding fox-1 homolog 2 · module 149 +
+- [[RBFOX3]] — RNA binding fox-1 homolog 3 · module 075 +
+- [[RBIS]] — ribosomal biogenesis factor · module 043 +
+- [[RBKS]] — ribokinase · module 159 +
+- [[RBL1]] — RB transcriptional corepressor like 1 · module 006 +
+- [[RBL2]] — RB transcriptional corepressor like 2 · module 057 +
+- [[RBM10]] — RNA binding motif protein 10 · module 051 +
+- [[RBM11]] — RNA binding motif protein 11 · module 115 +
+- [[RBM12]] — RNA binding motif protein 12 · module 003 -
+- [[RBM12B]] — RNA binding motif protein 12B · module 007 +
+- [[RBM14]] — RNA binding motif protein 14 · module 179 +
+- [[RBM14-RBM4]] — RBM14-RBM4 readthrough · module 028 -
+- [[RBM15]] — RNA binding motif protein 15 · module 091 +
+- [[RBM15-AS1]] — RBM15 antisense RNA 1 · module 026 +
+- [[RBM15B]] — RNA binding motif protein 15B · module 007 +
+- [[RBM17]] — RNA binding motif protein 17 · module 004 +
+- [[RBM18]] — RNA binding motif protein 18 · module 017 +
+- [[RBM19]] — RNA binding motif protein 19 · module 005 +
+- [[RBM20]] — RNA binding motif protein 20 · module 009 +
+- [[RBM22]] — RNA binding motif protein 22 · module 007 +
+- [[RBM23]] — RNA binding motif protein 23 · module 051 +
+- [[RBM24]] — RNA binding motif protein 24 · module 066 +
+- [[RBM25]] — RNA binding motif protein 25 · module 012 +
+- [[RBM26]] — RNA binding motif protein 26 · module 213 +
+- [[RBM26-AS1]] — RBM26 antisense RNA 1 · module 010 +
+- [[RBM27]] — RNA binding motif protein 27 · module 169 +
+- [[RBM28]] — RNA binding motif protein 28 · module 001 +
+- [[RBM3]] — RNA binding motif protein 3 · module 023 +
+- [[RBM33]] — RNA binding motif protein 33 · module 130 +
+- [[RBM38]] — RNA binding motif protein 38 · module 215 +
+- [[RBM39]] — RNA binding motif protein 39 · module 023 +
+- [[RBM4]] — RNA binding motif protein 4 · module 096 +
+- [[RBM41]] — RNA binding motif protein 41 · module 064 +
+- [[RBM42]] — RNA binding motif protein 42 · module 007 +
+- [[RBM43]] — RNA binding motif protein 43 · module 032 +
+- [[RBM44]] — RNA binding motif protein 44 · module 037 +
+- [[RBM45]] — RNA binding motif protein 45 · module 001 +
+- [[RBM47]] — RNA binding motif protein 47 · module 008 +
+- [[RBM48]] — RNA binding motif protein 48 · module 023 +
+- [[RBM4B]] — RNA binding motif protein 4B · module 012 +
+- [[RBM5]] — RNA binding motif protein 5 · module 051 +
+- [[RBM6]] — RNA binding motif protein 6 · module 058 +
+- [[RBM7]] — RNA binding motif protein 7 · module 002 -
+- [[RBM8A]] — RNA binding motif protein 8A · module 011 +
+- [[RBMS1]] — RNA binding motif single stranded interacting protein 1 · module 104 +
+- [[RBMS2]] — RNA binding motif single stranded interacting protein 2 · module 120 +
+- [[RBMS3]] — RNA binding motif single stranded interacting protein 3 · module 121 +
+- [[RBMS3-AS3]] — RBMS3 antisense RNA 3 · module 075 +
+- [[RBMX]] — RNA binding motif protein X-linked · module 085 -
+- [[RBMX2]] — RNA binding motif protein X-linked 2 · module 012 +
+- [[RBMXL1]] — RBMX like 1 · module 219 +
+- [[RBP1]] — retinol binding protein 1 · module 073 +
+- [[RBPJ]] — recombination signal binding protein for immunoglobulin kappa J region · module 079 +
+- [[RBPMS]] — RNA binding protein, mRNA processing factor · module 008 +
+- [[RBPMS2]] — RNA binding protein, mRNA processing factor 2 · module 102 +
+- [[RBSN]] — rabenosyn, RAB effector · module 064 +
+- [[RBX1]] — ring-box 1 · module 020 -
+- [[RC3H1]] — ring finger and CCCH-type domains 1 · module 231 +
+- [[RC3H2]] — ring finger and CCCH-type domains 2 · module 068 +
+- [[RCAN1]] — regulator of calcineurin 1 · module 151 +
+- [[RCAN3]] — regulator of calcineurin 3 · module 188 +
+- [[RCBTB1]] — RCC1 and BTB domain containing protein 1 · module 122 +
+- [[RCBTB2]] — RCC1 and BTB domain containing protein 2 · module 137 +
+- [[RCC1]] — regulator of chromosome condensation 1 · module 015 +
+- [[RCC1L]] — RCC1 like · module 064 +
+- [[RCC2]] — regulator of chromosome condensation 2 · module 126 +
+- [[RCCD1]] — RCC1 domain containing 1 · module 067 +
+- [[RCE1]] — Ras converting CAAX endopeptidase 1 · module 024 +
+- [[RCHY1]] — ring finger and CHY zinc finger domain containing 1 · module 198 +
+- [[RCL1]] — RNA terminal phosphate cyclase like 1 · module 033 +
+- [[RCN1]] — reticulocalbin 1 · module 025 +
+- [[RCN2]] — reticulocalbin 2 · module 011 -
+- [[RCN3]] — reticulocalbin 3 · module 056 +
+- [[RCOR1]] — REST corepressor 1 · module 160 +
+- [[RCOR3]] — REST corepressor 3 · module 045 +
+- [[RDH10]] — retinol dehydrogenase 10 · module 019 +
+- [[RDH11]] — retinol dehydrogenase 11 · module 086 +
+- [[RDH13]] — retinol dehydrogenase 13 · module 031 +
+- [[RDH14]] — retinol dehydrogenase 14 · module 011 +
+- [[RDH5]] — retinol dehydrogenase 5 · module 026 +
+- [[RDM1P5]] — RDM1 pseudogene 5 · module 010 +
+- [[RDUR]] — RIG-I dependent antiviral response regulator RNA · module 116 +
+- [[RDX]] — radixin · module 104 +
+- [[REC8]] — REC8 meiotic recombination protein · module 032 +
+- [[RECK]] — reversion inducing cysteine rich protein with kazal motifs · module 030 +
+- [[RECQL]] — RecQ like helicase · module 042 +
+- [[RECQL4]] — RecQ like helicase 4 · module 006 +
+- [[RECQL5]] — RecQ like helicase 5 · module 023 +
+- [[REEP1]] — receptor accessory protein 1 · module 115 +
+- [[REEP2]] — receptor accessory protein 2 · module 100 +
+- [[REEP3]] — receptor accessory protein 3 · module 143 +
+- [[REEP4]] — receptor accessory protein 4 · module 022 +
+- [[REEP5]] — receptor accessory protein 5 · module 214 +
+- [[REG4]] — regenerating family member 4 · module 073 +
+- [[REL]] — REL proto-oncogene, NF-kB subunit · module 014 +
+- [[RELA]] — RELA proto-oncogene, NF-kB subunit · module 189 +
+- [[RELA-DT]] — RELA divergent transcript · module 035 +
+- [[RELB]] — RELB proto-oncogene, NF-kB subunit · module 014 +
+- [[RELCH]] — RAB11 binding and LisH domain, coiled-coil and HEAT repeat containing · module 169 +
+- [[RELL1]] — RELT like 1 · module 064 -
+- [[RELL2]] — RELT like 2 · module 184 +
+- [[RELN]] — reelin · module 165 +
+- [[RELT]] — RELT TNF receptor · module 198 +
+- [[RENO1]] — regulator of early neurogenesis 1 · module 021 +
+- [[REP15]] — RAB15 effector protein · module 047 +
+- [[REPIN1]] — replication initiator 1 · module 016 +
+- [[REPS1]] — RALBP1 associated Eps domain containing 1 · module 065 +
+- [[REPS2]] — RALBP1 associated Eps domain containing 2 · module 069 +
+- [[RER1]] — retention in endoplasmic reticulum sorting receptor 1 · module 052 +
+- [[RERE]] — arginine-glutamic acid dipeptide repeats · module 134 +
+- [[RERG]] — RAS like estrogen regulated growth inhibitor · module 150 +
+- [[RERGL]] — RERG like · module 165 +
+- [[RESF1]] — retroelement silencing factor 1 · module 056 +
+- [[REST]] — RE1 silencing transcription factor · module 028 +
+- [[RET]] — ret proto-oncogene · module 082 +
+- [[RETREG1]] — reticulophagy regulator 1 · module 132 +
+- [[RETREG1-AS1]] — RETREG1 antisense RNA 1 · module 165 +
+- [[RETREG2]] — reticulophagy regulator family member 2 · module 076 +
+- [[RETREG3]] — reticulophagy regulator family member 3 · module 187 +
+- [[RETSAT]] — retinol saturase · module 062 +
+- [[REV1]] — REV1 DNA directed polymerase · module 146 +
+- [[REV3L]] — REV3 like, DNA directed polymerase zeta catalytic subunit · module 062 +
+- [[REX1BD]] — required for excision 1-B domain containing · module 058 +
+- [[REXO1]] — RNA exonuclease 1 homolog · module 204 +
+- [[REXO2]] — RNA exonuclease 2 · module 169 +
+- [[REXO4]] — RNA exonuclease 4 · module 011 +
+- [[REXO5]] — RNA exonuclease 5 · module 091 +
+- [[RFC1]] — replication factor C subunit 1 · module 017 +
+- [[RFC2]] — replication factor C subunit 2 · module 006 +
+- [[RFC3]] — replication factor C subunit 3 · module 006 +
+- [[RFC4]] — replication factor C subunit 4 · module 006 +
+- [[RFC5]] — replication factor C subunit 5 · module 006 +
+- [[RFESD]] — Rieske Fe-S domain containing · module 005 -
+- [[RFFL]] — ring finger and FYVE like domain containing E3 ubiquitin protein ligase · module 011 +
+- [[RFK]] — riboflavin kinase · module 216 +
+- [[RFLNA]] — refilin A · module 232 +
+- [[RFLNB]] — refilin B · module 028 -
+- [[RFNG]] — RFNG O-fucosylpeptide 3-beta-N-acetylglucosaminyltransferase · module 024 +
+- [[RFPL1S]] — RFPL1 antisense RNA 1 · module 128 +
+- [[RFPL3S]] — RFPL3 antisense · module 038 +
+- [[RFT1]] — RFT1 glycolipid translocator homolog · module 018 +
+- [[RFTN1]] — raftlin, lipid raft linker 1 · module 013 +
+- [[RFTN2]] — raftlin family member 2 · module 191 +
+- [[RFWD3]] — ring finger and WD repeat domain 3 · module 071 +
+- [[RFX1]] — regulatory factor X1 · module 095 +
+- [[RFX2]] — regulatory factor X2 · module 079 +
+- [[RFX3]] — regulatory factor X3 · module 030 -
+- [[RFX3-DT]] — RFX3 divergent transcript · module 023 +
+- [[RFX5]] — regulatory factor X5 · module 025 +
+- [[RFX7]] — regulatory factor X7 · module 169 +
+- [[RFX8]] — regulatory factor X8 · module 013 +
+- [[RFXANK]] — regulatory factor X associated ankyrin containing protein · module 024 +
+- [[RFXAP]] — regulatory factor X associated protein · module 188 +
+- [[RGCC]] — regulator of cell cycle · module 027 +
+- [[RGL1]] — ral guanine nucleotide dissociation stimulator like 1 · module 109 +
+- [[RGL2]] — ral guanine nucleotide dissociation stimulator like 2 · module 173 +
+- [[RGL3]] — ral guanine nucleotide dissociation stimulator like 3 · module 003 +
+- [[RGMB]] — repulsive guidance molecule BMP co-receptor b · module 151 +
+- [[RGP1]] — RGP1 partner of RAB6A GEF complex · module 025 -
+- [[RGPD2]] — RANBP2 like and GRIP domain containing 2 · module 070 +
+- [[RGPD8]] — RANBP2 like and GRIP domain containing 8 · module 030 +
+- [[RGS10]] — regulator of G protein signaling 10 · module 077 +
+- [[RGS12]] — regulator of G protein signaling 12 · module 002 +
+- [[RGS14]] — regulator of G protein signaling 14 · module 085 +
+- [[RGS16]] — regulator of G protein signaling 16 · module 061 +
+- [[RGS17]] — regulator of G protein signaling 17 · module 174 +
+- [[RGS19]] — regulator of G protein signaling 19 · module 023 -
+- [[RGS2]] — regulator of G protein signaling 2 · module 235 +
+- [[RGS20]] — regulator of G protein signaling 20 · module 202 +
+- [[RGS3]] — regulator of G protein signaling 3 · module 067 +
+- [[RGS4]] — regulator of G protein signaling 4 · module 116 +
+- [[RGS5]] — regulator of G protein signaling 5 · module 088 +
+- [[RGS6]] — regulator of G protein signaling 6 · module 008 +
+- [[RGS7]] — regulator of G protein signaling 7 · module 061 +
+- [[RGS9]] — regulator of G protein signaling 9 · module 208 +
+- [[RHBDD1]] — rhomboid domain containing 1 · module 018 +
+- [[RHBDD2]] — rhomboid domain containing 2 · module 033 -
+- [[RHBDD3]] — rhomboid domain containing 3 · module 064 +
+- [[RHBDF1]] — rhomboid 5 homolog 1 · module 138 +
+- [[RHBDF2]] — rhomboid 5 homolog 2 · module 084 +
+- [[RHBDL2]] — rhomboid like 2 · module 008 +
+- [[RHBDL3]] — rhomboid like 3 · module 102 +
+- [[RHCE]] — Rh blood group CcEe antigens · module 179 +
+- [[RHCG]] — Rh family C glycoprotein · module 167 +
+- [[RHEB]] — Ras homolog, mTORC1 binding · module 163 +
+- [[RHEBL1]] — RHEB like 1 · module 069 +
+- [[RHEX]] — regulator of hemoglobinization and erythroid cell expansion · module 008 +
+- [[RHNO1]] — RAD9-HUS1-RAD1 interacting nuclear orphan 1 · module 091 +
+- [[RHOA]] — ras homolog family member A · module 111 +
+- [[RHOB]] — ras homolog family member B · module 123 +
+- [[RHOBTB1]] — Rho related BTB domain containing 1 · module 106 +
+- [[RHOBTB2]] — Rho related BTB domain containing 2 · module 097 +
+- [[RHOBTB3]] — Rho related BTB domain containing 3 · module 217 +
+- [[RHOC]] — ras homolog family member C · module 184 +
+- [[RHOD]] — ras homolog family member D · module 020 -
+- [[RHOF]] — ras homolog family member F, filopodia associated · module 034 +
+- [[RHOG]] — ras homolog family member G · module 020 -
+- [[RHOH]] — ras homolog family member H · module 019 +
+- [[RHOJ]] — ras homolog family member J · module 087 +
+- [[RHOQ]] — ras homolog family member Q · module 060 +
+- [[RHOQ-AS1]] — RHOQ antisense RNA 1 · module 021 +
+- [[RHOT1]] — ras homolog family member T1 · module 030 +
+- [[RHOT2]] — ras homolog family member T2 · module 002 +
+- [[RHOU]] — ras homolog family member U · module 123 +
+- [[RHOV]] — ras homolog family member V · module 014 +
+- [[RHOXF1]] — Rhox homeobox family member 1 · module 045 +
+- [[RHOXF1-AS1]] — RHOXF1 antisense RNA 1 · module 027 +
+- [[RHPN1]] — rhophilin Rho GTPase binding protein 1 · module 002 +
+- [[RHPN2]] — rhophilin Rho GTPase binding protein 2 · module 194 -
+- [[RIC1]] — RIC1 partner of RAB6A GEF complex · module 048 +
+- [[RIC8A]] — RIC8 guanine nucleotide exchange factor A · module 002 +
+- [[RIC8B]] — RIC8 guanine nucleotide exchange factor B · module 039 +
+- [[RICTOR]] — RPTOR independent companion of MTOR complex 2 · module 069 +
+- [[RIDA]] — reactive intermediate imine deaminase A · module 017 +
+- [[RIF1]] — replication timing regulatory factor 1 · module 001 +
+- [[RIGI]] — RNA sensor RIG-I · module 032 +
+- [[RILP]] — Rab interacting lysosomal protein · module 059 +
+- [[RILPL1]] — Rab interacting lysosomal protein like 1 · module 018 +
+- [[RILPL2]] — Rab interacting lysosomal protein like 2 · module 040 +
+- [[RIMBP2]] — RIMS binding protein 2 · module 027 +
+- [[RIMKLA]] — ribosomal modification protein rimK like family member A · module 134 +
+- [[RIMKLB]] — ribosomal modification protein rimK like family member B · module 143 +
+- [[RIMOC1]] — RAB7A interacting MON1-CCZ1 complex subunit 1 · module 007 +
+- [[RIMS1]] — regulating synaptic membrane exocytosis 1 · module 019 +
+- [[RIMS2]] — regulating synaptic membrane exocytosis 2 · module 010 +
+- [[RIMS3]] — regulating synaptic membrane exocytosis 3 · module 082 +
+- [[RIN1]] — Ras and Rab interactor 1 · module 084 +
+- [[RIN2]] — Ras and Rab interactor 2 · module 120 +
+- [[RIN3]] — Ras and Rab interactor 3 · module 005 +
+- [[RING1]] — ring finger protein 1 · module 189 +
+- [[RINL]] — Ras and Rab interactor like · module 047 +
+- [[RINT1]] — RAD50 interactor 1 · module 049 +
+- [[RIOK1]] — RIO kinase 1 · module 001 +
+- [[RIOK2]] — RIO kinase 2 · module 012 +
+- [[RIOK3]] — RIO kinase 3 · module 001 -
+- [[RIOX2]] — ribosomal oxygenase 2 · module 001 +
+- [[RIPK1]] — receptor interacting serine/threonine kinase 1 · module 057 -
+- [[RIPK2]] — receptor interacting serine/threonine kinase 2 · module 014 +
+- [[RIPK2-DT]] — palmitic acid regulated anti-inflammatory lncRNA · module 068 +
+- [[RIPK4]] — receptor interacting serine/threonine kinase 4 · module 078 +
+- [[RIPOR1]] — RHO family interacting cell polarization regulator 1 · module 138 +
+- [[RIPOR2]] — RHO family interacting cell polarization regulator 2 · module 098 +
+- [[RIPOR3]] — RIPOR family member 3 · module 021 +
+- [[RIT1]] — Ras like without CAAX 1 · module 135 +
+- [[RIT2]] — Ras like without CAAX 2 · module 009 +
+- [[RITA1]] — RBPJ interacting and tubulin associated 1 · module 033 +
+- [[RLF]] — RLF zinc finger · module 079 +
+- [[RLIM]] — ring finger protein, LIM domain interacting · module 054 -
+- [[RMC1]] — regulator of MON1-CCZ1 · module 189 +
+- [[RMDN1]] — regulator of microtubule dynamics 1 · module 028 +
+- [[RMDN2]] — regulator of microtubule dynamics 2 · module 137 +
+- [[RMDN2-AS1]] — RMDN2 antisense RNA 1 · module 019 +
+- [[RMDN3]] — regulator of microtubule dynamics 3 · module 042 +
+- [[RMEL3]] — enriched in melanoma 3 · module 087 +
+- [[RMI1]] — RecQ mediated genome instability 1 · module 091 +
+- [[RMI2]] — RecQ mediated genome instability 2 · module 071 +
+- [[RMND1]] — required for meiotic nuclear division 1 homolog · module 033 +
+- [[RMND5A]] — required for meiotic nuclear division 5 homolog A · module 232 +
+- [[RMND5B]] — required for meiotic nuclear division 5 homolog B · module 129 +
+- [[RMRP]] — RNA component of mitochondrial RNA processing endoribonuclease · module 157 +
+- [[RMST]] — rhabdomyosarcoma 2 associated transcript · module 027 +
+- [[RN7SKP255]] — RN7SK pseudogene 255
+- [[RN7SKP71]] — RN7SK pseudogene 71
+- [[RN7SL1]] — RNA component of signal recognition particle 7SL1 · module 021 +
+- [[RN7SL2]] — RNA component of signal recognition particle 7SL2 · module 021 +
+- [[RN7SL76P]] — RNA, 7SL, cytoplasmic 76, pseudogene · module 039 +
+- [[RNASE4]] — ribonuclease A family member 4 · module 001 -
+- [[RNASEH1]] — ribonuclease H1 · module 005 +
+- [[RNASEH1-DT]] — RNASEH1 divergent transcript · module 010 +
+- [[RNASEH2A]] — ribonuclease H2 subunit A · module 006 +
+- [[RNASEH2B]] — ribonuclease H2 subunit B · module 018 +
+- [[RNASEH2C]] — ribonuclease H2 subunit C · module 048 +
+- [[RNASEK]] — ribonuclease K · module 024 +
+- [[RNASEL]] — ribonuclease L · module 012 +
+- [[RNASET2]] — ribonuclease T2 · module 164 +
+- [[RND1]] — Rho family GTPase 1 · module 014 +
+- [[RND3]] — Rho family GTPase 3 · module 093 +
+- [[RNF10]] — ring finger protein 10 · module 006 -
+- [[RNF103]] — ring finger protein 103 · module 069 +
+- [[RNF103-CHMP3]] — RNF103-CHMP3 readthrough · module 068 +
+- [[RNF11]] — ring finger protein 11 · module 005 -
+- [[RNF111]] — ring finger protein 111 · module 170 +
+- [[RNF113A]] — ring finger protein 113A · module 012 +
+- [[RNF114]] — ring finger protein 114 · module 003 +
+- [[RNF115]] — ring finger protein 115 · module 095 +
+- [[RNF121]] — ring finger protein 121 · module 142 +
+- [[RNF122]] — ring finger protein 122 · module 079 +
+- [[RNF123]] — ring finger protein 123 · module 002 +
+- [[RNF125]] — ring finger protein 125 · module 018 +
+- [[RNF126]] — ring finger protein 126 · module 134 +
+- [[RNF128]] — ring finger protein 128 · module 055 +
+- [[RNF13]] — ring finger protein 13 · module 169 +
+- [[RNF130]] — ring finger protein 130 · module 132 +
+- [[RNF135]] — ring finger protein 135 · module 046 +
+- [[RNF138]] — ring finger protein 138 · module 182 +
+- [[RNF139]] — ring finger protein 139 · module 119 +
+- [[RNF139-DT]] — RNF139 divergent transcript · module 179 +
+- [[RNF14]] — ring finger protein 14 · module 160 -
+- [[RNF141]] — ring finger protein 141 · module 017 +
+- [[RNF144A]] — ring finger protein 144A · module 104 +
+- [[RNF144B]] — ring finger protein 144B · module 014 +
+- [[RNF145]] — ring finger protein 145 · module 065 +
+- [[RNF146]] — ring finger protein 146 · module 046 +
+- [[RNF149]] — ring finger protein 149 · module 054 +
+- [[RNF150]] — ring finger protein 150 · module 094 +
+- [[RNF152]] — ring finger protein 152 · module 013 +
+- [[RNF157]] — ring finger protein 157 · module 176 +
+- [[RNF165]] — arkadia (RNF111) C-terminal like ring finger ubiquitin ligase 2C · module 152 +
+- [[RNF166]] — ring finger protein 166 · module 012 +
+- [[RNF167]] — ring finger protein 167 · module 025 +
+- [[RNF168]] — ring finger protein 168 · module 135 -
+- [[RNF169]] — ring finger protein 169 · module 011 +
+- [[RNF17]] — ring finger protein 17 · module 177 +
+- [[RNF170]] — ring finger protein 170 · module 015 +
+- [[RNF175]] — ring finger protein 175 · module 104 +
+- [[RNF180]] — ring finger protein 180 · module 016 +
+- [[RNF181]] — ring finger protein 181 · module 003 +
+- [[RNF182]] — ring finger protein 182 · module 084 +
+- [[RNF183]] — ring finger protein 183 · module 008 +
+- [[RNF185]] — ring finger protein 185 · module 041 +
+- [[RNF187]] — ring finger protein 187 · module 063 +
+- [[RNF19A]] — ring finger protein 19A, RBR E3 ubiquitin protein ligase · module 033 -
+- [[RNF19B]] — ring finger protein 19B · module 059 +
+- [[RNF2]] — ring finger protein 2 · module 188 +
+- [[RNF20]] — ring finger protein 20 · module 017 +
+- [[RNF207]] — ring finger protein 207 · module 003 -
+- [[RNF212]] — ring finger protein 212 · module 128 +
+- [[RNF213]] — ring finger protein 213 · module 032 +
+- [[RNF213-AS1]] — RNF213 antisense RNA 1 · module 205 +
+- [[RNF214]] — ring finger protein 214 · module 028 +
+- [[RNF215]] — ring finger protein 215 · module 015 +
+- [[RNF216]] — ring finger protein 216 · module 036 +
+- [[RNF216P1]] — ring finger protein 216 pseudogene 1 · module 030 +
+- [[RNF217]] — ring finger protein 217 · module 152 +
+- [[RNF217-AS1]] — RNF217 antisense RNA 1 · module 015 +
+- [[RNF220]] — ring finger protein 220 · module 128 +
+- [[RNF223]] — ring finger protein 223 · module 123 +
+- [[RNF24]] — ring finger protein 24 · module 079 +
+- [[RNF25]] — ring finger protein 25 · module 007 +
+- [[RNF26]] — ring finger protein 26 · module 022 +
+- [[RNF31]] — ring finger protein 31 · module 142 +
+- [[RNF32]] — ring finger protein 32 · module 010 +
+- [[RNF32-AS1]] — RNF32 antisense RNA 1 · module 047 +
+- [[RNF32-DT]] — RNF32 divergent transcript · module 023 +
+- [[RNF34]] — ring finger protein 34 · module 129 +
+- [[RNF38]] — ring finger protein 38 · module 163 +
+- [[RNF39]] — ring finger protein 39 · module 008 +
+- [[RNF4]] — ring finger protein 4 · module 168 +
+- [[RNF40]] — ring finger protein 40 · module 127 +
+- [[RNF41]] — ring finger protein 41 · module 030 +
+- [[RNF43]] — ring finger protein 43 · module 055 +
+- [[RNF44]] — ring finger protein 44 · module 138 +
+- [[RNF5]] — ring finger protein 5 · module 069 +
+- [[RNF6]] — ring finger protein 6 · module 135 +
+- [[RNF7]] — ring finger protein 7 · module 024 +
+- [[RNF8]] — ring finger protein 8 · module 107 +
+- [[RNFT1]] — ring finger protein, transmembrane 1 · module 094 +
+- [[RNFT2]] — ring finger protein, transmembrane 2 · module 023 -
+- [[RNGTT]] — RNA guanylyltransferase and 5'-phosphatase · module 069 +
+- [[RNH1]] — ribonuclease/angiogenin inhibitor 1 · module 148 +
+- [[RNLS]] — renalase, FAD dependent amine oxidase · module 010 +
+- [[RNMT]] — RNA guanine-7 methyltransferase · module 105 +
+- [[RNPC3]] — RNA binding region (RNP1, RRM) containing 3 · module 089 +
+- [[RNPC3-DT]] — RNPC3 divergent transcript · module 035 +
+- [[RNPEP]] — arginyl aminopeptidase · module 190 +
+- [[RNPEPL1]] — arginyl aminopeptidase like 1 · module 024 +
+- [[RNPS1]] — RNA binding protein with serine rich domain 1 · module 033 +
+- [[RNU4-2]] — RNA, U4 small nuclear 2
+- [[RO60]] — Ro60, Y RNA binding protein · module 033 -
+- [[ROBO1]] — roundabout guidance receptor 1 · module 009 +
+- [[ROBO2]] — roundabout guidance receptor 2 · module 027 +
+- [[ROBO3]] — roundabout guidance receptor 3 · module 125 +
+- [[ROBO4]] — roundabout guidance receptor 4 · module 116 +
+- [[ROCK1]] — Rho associated coiled-coil containing protein kinase 1 · module 012 +
+- [[ROCK2]] — Rho associated coiled-coil containing protein kinase 2 · module 179 -
+- [[ROGDI]] — rogdi atypical leucine zipper · module 017 +
+- [[ROMO1]] — reactive oxygen species modulator 1 · module 048 +
+- [[ROPN1L]] — rhophilin associated tail protein 1 like · module 038 +
+- [[ROR1]] — ROR family WNT receptor 1 · module 174 +
+- [[ROR1-AS1]] — ROR1 antisense RNA 1 · module 125 +
+- [[ROR2]] — ROR family WNT receptor 2 · module 115 +
+- [[RORA]] — RAR related orphan receptor A · module 079 +
+- [[RORA-AS1]] — RORA antisense RNA 1 · module 026 +
+- [[RORB]] — RAR related orphan receptor B · module 009 +
+- [[RORC]] — RAR related orphan receptor C · module 008 +
+- [[ROS1]] — ROS proto-oncogene 1, receptor tyrosine kinase · module 066 +
+- [[RP1]] — RP1 axonemal microtubule associated · module 010 +
+- [[RP2]] — RP2 activator of ARL3 GTPase · module 146 -
+- [[RP9]] — RP9 pre-mRNA splicing factor · module 012 +
+- [[RP9P]] — RP9 pseudogene · module 003 +
+- [[RPA1]] — replication protein A1 · module 057 +
+- [[RPA2]] — replication protein A2 · module 006 +
+- [[RPA3]] — replication protein A3 · module 048 +
+- [[RPAIN]] — RPA interacting protein · module 024 +
+- [[RPAP1]] — RNA polymerase II associated protein 1 · module 114 +
+- [[RPAP2]] — RNA polymerase II associated protein 2 · module 028 +
+- [[RPAP3]] — RNA polymerase II associated protein 3 · module 017 +
+- [[RPAP3-DT]] — RPAP3 divergent transcript · module 035 +
+- [[RPE]] — ribulose-5-phosphate-3-epimerase · module 004 +
+- [[RPF1]] — ribosome production factor 1 homolog · module 011 +
+- [[RPF2]] — ribosome production factor 2 homolog · module 001 +
+- [[RPGR]] — retinitis pigmentosa GTPase regulator · module 097 +
+- [[RPGRIP1L]] — RPGRIP1 like · module 049 +
+- [[RPH3AL]] — rabphilin 3A like (without C2 domains) · module 031 +
+- [[RPIA]] — ribose 5-phosphate isomerase A · module 168 +
+- [[RPL10]] — ribosomal protein L10 · module 020 +
+- [[RPL10A]] — ribosomal protein L10a · module 043 +
+- [[RPL11]] — ribosomal protein L11 · module 043 +
+- [[RPL12]] — ribosomal protein L12 · module 043 +
+- [[RPL13]] — ribosomal protein L13 · module 043 +
+- [[RPL13A]] — ribosomal protein L13a · module 043 +
+- [[RPL13AP7]] — ribosomal protein L13a pseudogene 7
+- [[RPL14]] — ribosomal protein L14 · module 043 +
+- [[RPL15]] — ribosomal protein L15 · module 131 +
+- [[RPL17]] — ribosomal protein L17 · module 043 +
+- [[RPL17P50]] — ribosomal protein L17 pseudogene 50
+- [[RPL18]] — ribosomal protein L18 · module 043 +
+- [[RPL18A]] — ribosomal protein L18a · module 020 +
+- [[RPL19]] — ribosomal protein L19 · module 043 +
+- [[RPL21]] — ribosomal protein L21 · module 043 +
+- [[RPL22]] — ribosomal protein L22 · module 043 +
+- [[RPL22L1]] — ribosomal protein L22 like 1 · module 054 +
+- [[RPL23]] — ribosomal protein L23 · module 043 +
+- [[RPL23A]] — ribosomal protein L23a · module 043 +
+- [[RPL23AP49]] — ribosomal protein L23a pseudogene 49
+- [[RPL23AP53]] — ribosomal protein L23a pseudogene 53
+- [[RPL23AP7-1]]
+- [[RPL23AP82]] — ribosomal protein L23a pseudogene 82
+- [[RPL24]] — ribosomal protein L24 · module 043 +
+- [[RPL26]] — ribosomal protein L26 · module 043 +
+- [[RPL26L1]] — ribosomal protein L26 like 1 · module 007 +
+- [[RPL27]] — ribosomal protein L27 · module 043 +
+- [[RPL27A]] — ribosomal protein L27a · module 043 +
+- [[RPL28]] — ribosomal protein L28 · module 131 +
+- [[RPL29]] — ribosomal protein L29 · module 043 +
+- [[RPL3]] — ribosomal protein L3 · module 020 +
+- [[RPL30]] — ribosomal protein L30 · module 043 +
+- [[RPL31]] — ribosomal protein L31 · module 043 +
+- [[RPL31P46]] — ribosomal protein L31 pseudogene 46
+- [[RPL32]] — ribosomal protein L32 · module 131 +
+- [[RPL32P3]] — ribosomal protein L32 pseudogene 3
+- [[RPL34]] — ribosomal protein L34 · module 043 +
+- [[RPL34-DT]] — RPL34 divergent transcript · module 037 +
+- [[RPL35]] — ribosomal protein L35 · module 043 +
+- [[RPL35A]] — ribosomal protein L35a · module 043 +
+- [[RPL36]] — ribosomal protein L36 · module 043 +
+- [[RPL36A]] — ribosomal protein L36a · module 131 +
+- [[RPL36AL]] — ribosomal protein L36a like · module 024 +
+- [[RPL37]] — ribosomal protein L37 · module 043 +
+- [[RPL37A]] — ribosomal protein L37a · module 043 +
+- [[RPL38]] — ribosomal protein L38 · module 131 +
+- [[RPL39]] — ribosomal protein L39 · module 043 +
+- [[RPL39L]] — ribosomal protein L39 like · module 022 +
+- [[RPL39P5]] — ribosomal protein L39 pseudogene 5
+- [[RPL4]] — ribosomal protein L4 · module 020 +
+- [[RPL41]] — ribosomal protein L41 · module 021 +
+- [[RPL5]] — ribosomal protein L5 · module 043 +
+- [[RPL6]] — ribosomal protein L6 · module 020 +
+- [[RPL7]] — ribosomal protein L7 · module 043 +
+- [[RPL7A]] — ribosomal protein L7a · module 131 +
+- [[RPL7L1]] — ribosomal protein L7 like 1 · module 011 +
+- [[RPL8]] — ribosomal protein L8 · module 131 +
+- [[RPL9]] — ribosomal protein L9 · module 043 +
+- [[RPLP0]] — ribosomal protein lateral stalk subunit P0 · module 043 +
+- [[RPLP0P2]] — ribosomal protein lateral stalk subunit P0 pseudogene 2 · module 125 +
+- [[RPLP1]] — ribosomal protein lateral stalk subunit P1 · module 043 +
+- [[RPLP2]] — ribosomal protein lateral stalk subunit P2 · module 131 +
+- [[RPN1]] — ribophorin I · module 020 +
+- [[RPN2]] — ribophorin II · module 042 +
+- [[RPP14]] — ribonuclease P/MRP subunit p14 · module 156 +
+- [[RPP21]] — ribonuclease P subunit p21 · module 024 +
+- [[RPP25]] — ribonuclease P/MRP subunit p25 · module 007 +
+- [[RPP25L]] — ribonuclease P/MRP subunit p25 like · module 011 +
+- [[RPP30]] — ribonuclease P/MRP subunit p30 · module 057 +
+- [[RPP38]] — ribonuclease P/MRP subunit p38 · module 011 +
+- [[RPP40]] — ribonuclease P/MRP subunit p40 · module 033 +
+- [[RPRD1A]] — regulation of nuclear pre-mRNA domain containing 1A · module 004 +
+- [[RPRD1B]] — regulation of nuclear pre-mRNA domain containing 1B · module 046 +
+- [[RPRD2]] — regulation of nuclear pre-mRNA domain containing 2 · module 184 -
+- [[RPS10]] — ribosomal protein S10 · module 131 +
+- [[RPS10-NUDT3]] — RPS10-NUDT3 readthrough · module 015 +
+- [[RPS10P7]] — ribosomal protein S10 pseudogene 7
+- [[RPS11]] — ribosomal protein S11 · module 131 +
+- [[RPS12]] — ribosomal protein S12 · module 043 +
+- [[RPS13]] — ribosomal protein S13 · module 131 +
+- [[RPS14]] — ribosomal protein S14 · module 043 +
+- [[RPS15]] — ribosomal protein S15 · module 131 +
+- [[RPS15A]] — ribosomal protein S15a · module 043 +
+- [[RPS16]] — ribosomal protein S16 · module 131 +
+- [[RPS17]] — ribosomal protein S17 · module 043 +
+- [[RPS18]] — ribosomal protein S18 · module 020 +
+- [[RPS18P9]] — ribosomal protein S18 pseudogene 9
+- [[RPS19]] — ribosomal protein S19 · module 043 +
+- [[RPS19BP1]] — ribosomal protein S19 binding protein 1
+- [[RPS2]] — ribosomal protein S2 · module 043 +
+- [[RPS20]] — ribosomal protein S20 · module 043 +
+- [[RPS21]] — ribosomal protein S21 · module 131 +
+- [[RPS23]] — ribosomal protein S23 · module 131 +
+- [[RPS24]] — ribosomal protein S24 · module 131 +
+- [[RPS25]] — ribosomal protein S25 · module 131 +
+- [[RPS26]] — ribosomal protein S26 · module 043 +
+- [[RPS27]] — ribosomal protein S27 · module 043 +
+- [[RPS27A]] — ribosomal protein S27a · module 043 +
+- [[RPS27AP16]] — RPS27A pseudogene 16
+- [[RPS27L]] — ribosomal protein S27 like · module 062 +
+- [[RPS28]] — ribosomal protein S28 · module 043 +
+- [[RPS29]] — ribosomal protein S29 · module 131 +
+- [[RPS2P5]] — ribosomal protein S2 pseudogene 5
+- [[RPS3]] — ribosomal protein S3 · module 043 +
+- [[RPS3A]] — ribosomal protein S3A · module 020 +
+- [[RPS4X]] — ribosomal protein S4 X-linked · module 043 +
+- [[RPS4Y1]] — ribosomal protein S4 Y-linked 1 · module 125 +
+- [[RPS5]] — ribosomal protein S5 · module 043 +
+- [[RPS6]] — ribosomal protein S6 · module 043 +
+- [[RPS6KA1]] — ribosomal protein S6 kinase A1 · module 100 +
+- [[RPS6KA2]] — ribosomal protein S6 kinase A2 · module 097 +
+- [[RPS6KA3]] — ribosomal protein S6 kinase A3 · module 112 +
+- [[RPS6KA4]] — ribosomal protein S6 kinase A4 · module 002 +
+- [[RPS6KA5]] — ribosomal protein S6 kinase A5 · module 076 +
+- [[RPS6KA6]] — ribosomal protein S6 kinase A6 · module 052 -
+- [[RPS6KB1]] — ribosomal protein S6 kinase B1 · module 069 +
+- [[RPS6KB2]] — ribosomal protein S6 kinase B2 · module 002 +
+- [[RPS6KC1]] — ribosomal protein S6 kinase C1 · module 056 +
+- [[RPS7]] — ribosomal protein S7 · module 043 +
+- [[RPS8]] — ribosomal protein S8 · module 043 +
+- [[RPS9]] — ribosomal protein S9 · module 043 +
+- [[RPSA]] — ribosomal protein SA · module 020 +
+- [[RPSAP52]] — ribosomal protein SA pseudogene 52 · module 147 +
+- [[RPSAP58]] — ribosomal protein SA 2 · module 006 +
+- [[RPTOR]] — regulatory associated protein of MTOR complex 1 · module 005 +
+- [[RPUSD1]] — RNA pseudouridine synthase domain containing 1 · module 058 +
+- [[RPUSD2]] — RNA pseudouridine synthase domain containing 2 · module 119 +
+- [[RPUSD3]] — RNA pseudouridine synthase D3 · module 001 +
+- [[RPUSD4]] — RNA pseudouridine synthase D4 · module 018 +
+- [[RRAD]] — RRAD, Ras related glycolysis inhibitor and calcium channel regulator · module 014 +
+- [[RRAGA]] — Ras related GTP binding A · module 016 +
+- [[RRAGB]] — Ras related GTP binding B · module 122 +
+- [[RRAGC]] — Ras related GTP binding C · module 059 +
+- [[RRAGC-DT]] — RRAGC divergent transcript · module 023 +
+- [[RRAGD]] — Ras related GTP binding D · module 045 +
+- [[RRAS]] — RAS related · module 192 +
+- [[RRAS2]] — RAS related 2 · module 163 +
+- [[RRBP1]] — ribosome binding protein 1 · module 056 +
+- [[RREB1]] — ras responsive element binding protein 1 · module 204 +
+- [[RRH]] — retinal pigment epithelium-derived rhodopsin homolog · module 037 +
+- [[RRM1]] — ribonucleotide reductase catalytic subunit M1 · module 006 +
+- [[RRM2]] — ribonucleotide reductase regulatory subunit M2 · module 006 +
+- [[RRM2B]] — ribonucleotide reductase regulatory TP53 inducible subunit M2B · module 062 +
+- [[RRN3]] — RNA polymerase I transcription factor RRN3 · module 007 +
+- [[RRN3P1]] — RRN3 pseudogene 1 · module 001 +
+- [[RRP1]] — ribosomal RNA processing 1 · module 005 +
+- [[RRP12]] — ribosomal RNA processing 12 homolog · module 038 +
+- [[RRP15]] — ribosomal RNA processing 15 homolog · module 001 +
+- [[RRP1B]] — ribosomal RNA processing 1B · module 033 +
+- [[RRP36]] — ribosomal RNA processing 36 · module 007 +
+- [[RRP7A]] — ribosomal RNA processing 7 homolog A · module 005 +
+- [[RRP7BP]] — ribosomal RNA processing 7 homolog B, pseudogene · module 033 +
+- [[RRP7BP-1]] · module 005 +
+- [[RRP8]] — ribosomal RNA processing 8 · module 011 +
+- [[RRP9]] — ribosomal RNA processing 9, U3 small nucleolar RNA binding protein · module 001 +
+- [[RRS1]] — regulator of ribosome synthesis 1 · module 001 +
+- [[RSAD1]] — radical S-adenosyl methionine domain containing 1 · module 026 -
+- [[RSAD2]] — radical S-adenosyl methionine domain containing 2 · module 032 +
+- [[RSBN1]] — round spermatid basic protein 1 · module 144 +
+- [[RSBN1L]] — round spermatid basic protein 1 like · module 145 +
+- [[RSC1A1]] · module 003 -
+- [[RSF1]] — remodeling and spacing factor 1 · module 074 +
+- [[RSKR]] — ribosomal protein S6 kinase related · module 038 +
+- [[RSL1D1]] — ribosomal L1 domain containing 1 · module 001 +
+- [[RSL1D1-DT]] — RSL1D1 divergent transcript · module 021 +
+- [[RSL24D1]] — ribosomal L24 domain containing 1 · module 063 +
+- [[RSPH1]] — radial spoke head component 1 · module 044 +
+- [[RSPH3]] — radial spoke head 3 · module 020 -
+- [[RSPH9]] — radial spoke head component 9 · module 037 +
+- [[RSPO3]] — R-spondin 3 · module 019 +
+- [[RSPRY1]] — ring finger and SPRY domain containing 1 · module 011 +
+- [[RSRC1]] — arginine and serine rich coiled-coil 1 · module 185 +
+- [[RSRC2]] — arginine and serine rich coiled-coil 2 · module 012 +
+- [[RSRP1]] — arginine and serine rich protein 1 · module 004 -
+- [[RSU1]] — Ras suppressor protein 1 · module 111 +
+- [[RTCA]] — RNA 3'-terminal phosphate cyclase · module 171 +
+- [[RTCA-AS1]] — RTCA antisense RNA 1 · module 035 +
+- [[RTCB]] — RNA 2',3'-cyclic phosphate and 5'-OH ligase · module 049 +
+- [[RTEL1]] — regulator of telomere elongation helicase 1 · module 004 +
+- [[RTF1]] — RTF1 homolog, Paf1/RNA polymerase II complex component · module 118 +
+- [[RTF2]] — replication termination factor 2 · module 210 +
+- [[RTKN]] — rhotekin · module 005 +
+- [[RTKN2]] — rhotekin 2 · module 067 +
+- [[RTL10]] — retrotransposon Gag like 10 · module 003 +
+- [[RTL6]] — retrotransposon Gag like 6 · module 016 +
+- [[RTL8A]] — retrotransposon Gag like 8A · module 054 +
+- [[RTL8C]] — retrotransposon Gag like 8C · module 050 +
+- [[RTN1]] — reticulon 1 · module 019 +
+- [[RTN2]] — reticulon 2 · module 192 +
+- [[RTN3]] — reticulon 3 · module 011 -
+- [[RTN4]] — reticulon 4 · module 136 +
+- [[RTN4IP1]] — reticulon 4 interacting protein 1 · module 004 +
+- [[RTN4R]] — reticulon 4 receptor · module 002 +
+- [[RTN4RL1]] — reticulon 4 receptor like 1 · module 098 +
+- [[RTN4RL2]] — reticulon 4 receptor like 2 · module 014 +
+- [[RTRAF]] — RNA transcription, translation and transport factor · module 056 +
+- [[RTTN]] — rotatin · module 006 +
+- [[RUBCN]] — rubicon autophagy regulator · module 002 +
+- [[RUBCNL]] — rubicon like autophagy enhancer · module 196 +
+- [[RUFY1]] — RUN and FYVE domain containing 1 · module 028 +
+- [[RUFY2]] — RUN and FYVE domain containing 2 · module 030 +
+- [[RUFY3]] — RUN and FYVE domain containing 3 · module 124 +
+- [[RUNDC1]] — RUN domain containing 1 · module 144 +
+- [[RUNDC3A-AS1]] — RUNDC3A antisense RNA 1 · module 053 +
+- [[RUNDC3B]] — RUN domain containing 3B · module 191 +
+- [[RUNX1]] — RUNX family transcription factor 1 · module 112 +
+- [[RUNX1T1]] — RUNX1 partner transcriptional co-repressor 1 · module 009 +
+- [[RUNX2]] — RUNX family transcription factor 2 · module 167 +
+- [[RUNX3]] — RUNX family transcription factor 3 · module 013 +
+- [[RUSC1]] — RUN and SH3 domain containing 1 · module 002 +
+- [[RUSC1-AS1]] — RUSC1 antisense RNA 1 · module 035 +
+- [[RUSC2]] — RUN and SH3 domain containing 2 · module 018 +
+- [[RUSF1]] — RUS family member 1 · module 049 +
+- [[RUVBL1]] — RuvB like AAA ATPase 1 · module 004 +
+- [[RUVBL2]] — RuvB like AAA ATPase 2 · module 060 +
+- [[RWDD1]] — RWD domain containing 1 · module 030 +
+- [[RWDD2A]] — RWD domain containing 2A · module 049 +
+- [[RWDD2B]] — RWD domain containing 2B · module 068 +
+- [[RWDD3]] — RWD domain containing 3 · module 198 +
+- [[RWDD4]] — RWD domain containing 4 · module 175 +
+- [[RXRA]] — retinoid X receptor alpha · module 003 +
+- [[RXRB]] — retinoid X receptor beta · module 138 +
+- [[RXYLT1]] — ribitol xylosyltransferase 1 · module 124 +
+- [[RYBP]] — RING1 and YY1 binding protein · module 079 +
+- [[RYK]] — receptor like tyrosine kinase · module 182 +
+- [[RYR1]] — ryanodine receptor 1 · module 021 +
+- [[RYR2]] — ryanodine receptor 2 · module 075 +
+- [[RYR3]] — ryanodine receptor 3 · module 165 +

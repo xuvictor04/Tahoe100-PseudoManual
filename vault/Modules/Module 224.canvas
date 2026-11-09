@@ -1,0 +1,31 @@
+{
+"nodes": [
+{"id": "legend", "type": "text", "x": -40, "y": -260, "width": 560, "height": 200, "text": "**Module 224** — hypoxia\n\n9 genes at their nodal-map positions. A single-armed module: every gene is + (green). Edge label + = move together, − = opposite."},
+{"id": "g6026", "type": "file", "file": "Genes/chr11/SYTL2.md", "x": 2000, "y": 1610, "width": 180, "height": 50, "color": "4"},
+{"id": "g565", "type": "file", "file": "Genes/chr12/LIMA1.md", "x": 0, "y": 560, "width": 180, "height": 50, "color": "4"},
+{"id": "g7009", "type": "file", "file": "Genes/chr5/PLK2.md", "x": 1400, "y": 1610, "width": 180, "height": 50, "color": "4"},
+{"id": "g11258", "type": "file", "file": "Genes/chr8/EXT1.md", "x": 3000, "y": 0, "width": 180, "height": 50, "color": "4"},
+{"id": "g15864", "type": "file", "file": "Genes/chr17/DUSP14.md", "x": 0, "y": 490, "width": 180, "height": 50, "color": "4"},
+{"id": "g4885", "type": "file", "file": "Genes/chr7/CPA4.md", "x": 2000, "y": 1540, "width": 180, "height": 50, "color": "4"},
+{"id": "g7477", "type": "file", "file": "Genes/chr4/NOCT.md", "x": 800, "y": 210, "width": 180, "height": 50, "color": "4"},
+{"id": "g3703", "type": "file", "file": "Genes/chr2/FHL2.md", "x": 2000, "y": 1120, "width": 180, "height": 50, "color": "4"},
+{"id": "g10825", "type": "file", "file": "Genes/chr17/CAVIN1.md", "x": 200, "y": 420, "width": 180, "height": 50, "color": "4"}
+],
+"edges": [
+{"id": "e565_3703", "fromNode": "g565", "toNode": "g3703", "label": "+"},
+{"id": "e565_6026", "fromNode": "g565", "toNode": "g6026", "label": "+"},
+{"id": "e565_7009", "fromNode": "g565", "toNode": "g7009", "label": "+"},
+{"id": "e565_10825", "fromNode": "g565", "toNode": "g10825", "label": "+"},
+{"id": "e565_11258", "fromNode": "g565", "toNode": "g11258", "label": "+"},
+{"id": "e565_15864", "fromNode": "g565", "toNode": "g15864", "label": "+"},
+{"id": "e3703_11258", "fromNode": "g3703", "toNode": "g11258", "label": "+"},
+{"id": "e4885_6026", "fromNode": "g4885", "toNode": "g6026", "label": "+"},
+{"id": "e4885_11258", "fromNode": "g4885", "toNode": "g11258", "label": "+"},
+{"id": "e6026_7009", "fromNode": "g6026", "toNode": "g7009", "label": "+"},
+{"id": "e6026_11258", "fromNode": "g6026", "toNode": "g11258", "label": "+"},
+{"id": "e6026_15864", "fromNode": "g6026", "toNode": "g15864", "label": "+"},
+{"id": "e7009_7477", "fromNode": "g7009", "toNode": "g7477", "label": "+"},
+{"id": "e7009_15864", "fromNode": "g7009", "toNode": "g15864", "label": "+"},
+{"id": "e10825_15864", "fromNode": "g10825", "toNode": "g15864", "label": "+"}
+]
+}

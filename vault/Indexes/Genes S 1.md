@@ -1,0 +1,1010 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes S 1
+
+1,000 genes. Back to [[Genes by letter]].
+
+- [[S100A1]] — S100 calcium binding protein A1 · module 008 +
+- [[S100A10]] — S100 calcium binding protein A10 · module 036 -
+- [[S100A11]] — S100 calcium binding protein A11 · module 101 +
+- [[S100A13]] — S100 calcium binding protein A13 · module 021 +
+- [[S100A14]] — S100 calcium binding protein A14 · module 031 +
+- [[S100A16]] — S100 calcium binding protein A16 · module 034 +
+- [[S100A2]] — S100 calcium binding protein A2 · module 101 +
+- [[S100A3]] — S100 calcium binding protein A3 · module 014 +
+- [[S100A4]] — S100 calcium binding protein A4 · module 014 +
+- [[S100A6]] — S100 calcium binding protein A6 · module 101 +
+- [[S100A8]] — S100 calcium binding protein A8 · module 155 +
+- [[S100A9]] — S100 calcium binding protein A9 · module 155 +
+- [[S100P]] — S100 calcium binding protein P · module 031 +
+- [[S100PBP]] — S100P binding protein · module 071 +
+- [[S1PR2]] — sphingosine-1-phosphate receptor 2 · module 013 +
+- [[S1PR3]] — sphingosine-1-phosphate receptor 3 · module 120 +
+- [[SAA1]] — serum amyloid A1 · module 139 +
+- [[SAA2]] — serum amyloid A2 · module 139 +
+- [[SAA2-SAA4]] — SAA2-SAA4 readthrough · module 139 +
+- [[SAA4]] — serum amyloid A4, constitutive · module 139 +
+- [[SAAL1]] — serum amyloid A like 1 · module 017 +
+- [[SAC3D1]] — SAC3 domain containing 1 · module 054 +
+- [[SACM1L]] — SAC1 like phosphatidylinositide phosphatase · module 171 +
+- [[SACS]] — sacsin molecular chaperone · module 004 +
+- [[SAE1]] — SUMO1 activating enzyme subunit 1 · module 006 +
+- [[SAFB]] — scaffold attachment factor B · module 184 -
+- [[SAFB2]] — scaffold attachment factor B2 · module 041 +
+- [[SALL1]] — spalt like transcription factor 1 · module 202 +
+- [[SALL4]] — spalt like transcription factor 4 · module 019 +
+- [[SAMD1]] — sterile alpha motif domain containing 1 · module 067 +
+- [[SAMD10]] — sterile alpha motif domain containing 10 · module 054 -
+- [[SAMD11]] — sterile alpha motif domain containing 11 · module 010 +
+- [[SAMD12]] — sterile alpha motif domain containing 12 · module 008 +
+- [[SAMD12-AS1]] — SAMD12 antisense RNA 1 · module 008 +
+- [[SAMD14]] — sterile alpha motif domain containing 14 · module 053 +
+- [[SAMD3]] — sterile alpha motif domain containing 3 · module 013 +
+- [[SAMD4A]] — sterile alpha motif domain containing 4A · module 202 +
+- [[SAMD4A-AS1]] — SAMD4A antisense RNA 1 · module 021 +
+- [[SAMD4B]] — sterile alpha motif domain containing 4B · module 002 +
+- [[SAMD5]] — sterile alpha motif domain containing 5 · module 155 +
+- [[SAMD8]] — sterile alpha motif domain containing 8 · module 003 +
+- [[SAMD9]] — sterile alpha motif domain containing 9 · module 032 +
+- [[SAMD9L]] — sterile alpha motif domain containing 9 like · module 032 +
+- [[SAMHD1]] — SAM and HD domain containing deoxynucleoside triphosphate triphosphohydrolase 1 · module 032 +
+- [[SAMM50]] — SAMM50 sorting and assembly machinery component · module 171 +
+- [[SAMMSON]] — survival associated mitochondrial melanoma specific oncogenic non-coding RNA · module 087 +
+- [[SAMSN1]] — SAM domain, SH3 domain and nuclear localization signals 1 · module 098 +
+- [[SANBR]] — SANT and BTB domain regulator of CSR · module 072 +
+- [[SAP130]] — Sin3A associated protein 130 · module 142 +
+- [[SAP18]] — Sin3A associated protein 18 · module 012 +
+- [[SAP30]] — Sin3A associated protein 30 · module 079 +
+- [[SAP30-DT]] — SAP30 divergent transcript · module 079 +
+- [[SAP30BP]] — SAP30 binding protein · module 038 +
+- [[SAP30L]] — SAP30 like · module 145 +
+- [[SAP30L-AS1]] — SAP30L and GALNT10 antisense RNA 1 · module 015 +
+- [[SAPCD1]] — suppressor APC domain containing 1 · module 006 +
+- [[SAPCD2]] — suppressor APC domain containing 2 · module 022 +
+- [[SAR1A]] — secretion associated Ras related GTPase 1A · module 042 +
+- [[SAR1B]] — secretion associated Ras related GTPase 1B · module 042 +
+- [[SARAF]] — store-operated calcium entry associated regulatory factor · module 076 +
+- [[SARDH]] — sarcosine dehydrogenase · module 013 +
+- [[SARM1]] — sterile alpha and TIR motif containing 1 · module 026 +
+- [[SARNP]] — SAP domain containing ribonucleoprotein · module 220 +
+- [[SARS1]] — seryl-tRNA synthetase 1 · module 063 +
+- [[SARS2]] — seryl-tRNA synthetase 2, mitochondrial · module 004 +
+- [[SART1]] — spliceosome associated factor 1, recruiter of U4/U6.U5 tri-snRNP · module 052 +
+- [[SART3]] — spliceosome associated factor 3, U4/U6 recycling protein · module 007 +
+- [[SASH1]] — SAM and SH3 domain containing 1 · module 084 +
+- [[SASS6]] — SAS-6 centriolar assembly protein · module 071 +
+- [[SAT1]] — spermidine/spermine N1-acetyltransferase 1 · module 153 +
+- [[SAT2]] — spermidine/spermine N1-acetyltransferase family member 2 · module 059 +
+- [[SATB1]] — SATB homeobox 1 · module 026 +
+- [[SATB1-AS1]] — SATB1 antisense RNA 1 · module 026 +
+- [[SATB2]] — SATB homeobox 2 · module 057 -
+- [[SATB2-AS1]] — SATB2 antisense RNA 1 · module 201 +
+- [[SAV1]] — salvador family WW domain containing protein 1 · module 014 +
+- [[SAXO1]] — stabilizer of axonemal microtubules 1 · module 026 +
+- [[SAYSD1]] — SAYSVFN motif domain containing 1 · module 016 +
+- [[SBDS]] — SBDS ribosome maturation factor · module 054 -
+- [[SBDSP1]] — SBDS pseudogene 1 · module 025 +
+- [[SBDSP1-1]] · module 007 +
+- [[SBF1]] — SET binding factor 1 · module 002 +
+- [[SBF2]] — SET binding factor 2 · module 137 -
+- [[SBF2-AS1]] — SBF2 antisense RNA 1 · module 023 +
+- [[SBK1]] — SH3 domain binding kinase 1 · module 115 +
+- [[SBNO1]] — strawberry notch homolog 1 · module 011 -
+- [[SBNO2]] — strawberry notch homolog 2 · module 014 +
+- [[SC5D]] — sterol-C5-desaturase · module 086 +
+- [[SCAF1]] — SR-related CTD associated factor 1 · module 173 +
+- [[SCAF11]] — SR-related CTD associated factor 11 · module 028 +
+- [[SCAF4]] — SR-related CTD associated factor 4 · module 163 +
+- [[SCAF8]] — SR-related CTD associated factor 8 · module 051 +
+- [[SCAI]] — suppressor of cancer cell invasion · module 030 +
+- [[SCAMP1]] — secretory carrier membrane protein 1 · module 076 +
+- [[SCAMP1-AS1]] — SCAMP1 antisense RNA 1 · module 032 +
+- [[SCAMP2]] — secretory carrier membrane protein 2 · module 024 +
+- [[SCAMP3]] — secretory carrier membrane protein 3 · module 024 +
+- [[SCAMP4]] — secretory carrier membrane protein 4 · module 172 +
+- [[SCAMP5]] — secretory carrier membrane protein 5 · module 021 +
+- [[SCAND1]] — SCAN domain containing 1 · module 011 +
+- [[SCAND2P]] — SCAN domain containing 2 pseudogene · module 103 +
+- [[SCAP]] — SREBF chaperone · module 033 +
+- [[SCAPER]] — S-phase cyclin A associated protein in the ER · module 185 +
+- [[SCARA3]] — scavenger receptor class A member 3 · module 006 +
+- [[SCARA5]] — scavenger receptor class A member 5 · module 019 +
+- [[SCARB1]] — scavenger receptor class B member 1 · module 016 -
+- [[SCARB2]] — scavenger receptor class B member 2 · module 029 +
+- [[SCARF1]] — scavenger receptor class F member 1 · module 181 +
+- [[SCARF2]] — scavenger receptor class F member 2 · module 047 +
+- [[SCART1]] — scavenger receptor family member expressed on T cells 1 · module 094 +
+- [[SCAT1]] — S-phase cancer associated transcript 1 · module 034 +
+- [[SCCPDH]] — saccharopine dehydrogenase (putative) · module 025 +
+- [[SCD]] — stearoyl-CoA desaturase · module 086 +
+- [[SCD5]] — stearoyl-CoA desaturase 5 · module 115 +
+- [[SCEL]] — sciellin · module 034 +
+- [[SCFD1]] — sec1 family domain containing 1 · module 041 +
+- [[SCFD2]] — sec1 family domain containing 2 · module 033 +
+- [[SCG2]] — secretogranin II · module 009 +
+- [[SCG3]] — secretogranin III · module 061 +
+- [[SCG5]] — secretogranin V · module 022 +
+- [[SCGB2B2]] — secretoglobin family 2B member 2 · module 010 +
+- [[SCHIP1]] — schwannomin interacting protein 1 · module 151 +
+- [[SCHLAP1]] — SWI/SNF complex antagonist associated with prostate cancer 1 · module 140 +
+- [[SCIN]] — scinderin · module 008 +
+- [[SCIRT]] — stem cell inhibitory RNA transcript · module 037 +
+- [[SCLT1]] — sodium channel and clathrin linker 1 · module 022 +
+- [[SCLY]] — selenocysteine lyase · module 005 +
+- [[SCMH1]] — Scm polycomb group protein homolog 1 · module 001 +
+- [[SCML1]] — Scm polycomb group protein like 1 · module 170 -
+- [[SCML2]] — Scm polycomb group protein like 2 · module 067 +
+- [[SCN1A-AS1]] — SCN1A and SCN9A antisense RNA 1 · module 140 +
+- [[SCN1B]] — sodium voltage-gated channel beta subunit 1 · module 047 +
+- [[SCN2A]] — sodium voltage-gated channel alpha subunit 2 · module 009 +
+- [[SCN3A]] — sodium voltage-gated channel alpha subunit 3 · module 009 +
+- [[SCN5A]] — sodium voltage-gated channel alpha subunit 5 · module 027 +
+- [[SCN8A]] — sodium voltage-gated channel alpha subunit 8 · module 082 +
+- [[SCN9A]] — sodium voltage-gated channel alpha subunit 9 · module 009 +
+- [[SCNM1]] — sodium channel modifier 1 · module 118 +
+- [[SCNN1A]] — sodium channel epithelial 1 subunit alpha · module 027 +
+- [[SCO1]] — synthesis of cytochrome C oxidase 1 · module 001 +
+- [[SCO2]] — synthesis of cytochrome C oxidase 2 · module 032 +
+- [[SCOC]] — short coiled-coil protein · module 017 +
+- [[SCP2]] — sterol carrier protein 2 · module 029 +
+- [[SCPEP1]] — serine carboxypeptidase 1 · module 045 +
+- [[SCRIB]] — scribble planar cell polarity protein · module 127 +
+- [[SCRN1]] — secernin 1 · module 054 -
+- [[SCRN2]] — secernin 2 · module 058 +
+- [[SCRN3]] — secernin 3 · module 028 +
+- [[SCUBE1]] — signal peptide, CUB domain and EGF like domain containing 1 · module 019 +
+- [[SCUBE2]] — signal peptide, CUB domain and EGF like domain containing 2 · module 039 +
+- [[SCUBE3]] — signal peptide, CUB domain and EGF like domain containing 3 · module 013 +
+- [[SCYL1]] — SCY1 like pseudokinase 1 · module 003 +
+- [[SCYL2]] — SCY1 like pseudokinase 2 · module 146 -
+- [[SCYL3]] — SCY1 like pseudokinase 3 · module 023 +
+- [[SDAD1]] — SDA1 domain containing 1 · module 005 +
+- [[SDAD1P1]] — SDA1 domain containing 1 pseudogene 1 · module 079 +
+- [[SDC1]] — syndecan 1 · module 028 -
+- [[SDC2]] — syndecan 2 · module 013 +
+- [[SDC3]] — syndecan 3 · module 132 +
+- [[SDC4]] — syndecan 4 · module 141 +
+- [[SDCBP]] — syndecan binding protein · module 036 -
+- [[SDCBP2]] — syndecan binding protein 2 · module 031 +
+- [[SDCBP2-AS1]] — SDCBP2 antisense RNA 1 · module 088 +
+- [[SDCCAG8]] — SHH signaling and ciliogenesis regulator SDCCAG8 · module 110 +
+- [[SDE2]] — spliceosome associated SDE2 · module 041 +
+- [[SDF2]] — stromal cell derived factor 2 · module 212 +
+- [[SDF2L1]] — stromal cell derived factor 2 like 1 · module 040 +
+- [[SDF4]] — stromal cell derived factor 4 · module 050 +
+- [[SDHA]] — succinate dehydrogenase complex flavoprotein subunit A · module 168 +
+- [[SDHAF1]] — succinate dehydrogenase complex assembly factor 1 · module 054 +
+- [[SDHAF2]] — succinate dehydrogenase complex assembly factor 2 · module 156 +
+- [[SDHAF3]] — succinate dehydrogenase complex assembly factor 3 · module 065 +
+- [[SDHAF4]] — succinate dehydrogenase complex assembly factor 4 · module 015 +
+- [[SDHAP1]] — SDHA pseudogene 1 · module 040 +
+- [[SDHAP1-1]] · module 040 +
+- [[SDHAP2]] — SDHA pseudogene 2 · module 003 +
+- [[SDHAP3]] — SDHA pseudogene 3 · module 001 +
+- [[SDHAP4]] — SDHA pseudogene 4 · module 168 +
+- [[SDHAP4-1]] · module 142 +
+- [[SDHB]] — succinate dehydrogenase complex iron sulfur subunit B · module 057 +
+- [[SDHC]] — succinate dehydrogenase complex subunit C · module 156 +
+- [[SDHD]] — succinate dehydrogenase complex subunit D · module 020 +
+- [[SDK1]] — sidekick cell adhesion molecule 1 · module 113 +
+- [[SDK2]] — sidekick cell adhesion molecule 2 · module 102 +
+- [[SDR16C5]] — short chain dehydrogenase/reductase family 16C member 5 · module 031 +
+- [[SDR39U1]] — short chain dehydrogenase/reductase family 39U member 1 · module 096 +
+- [[SDSL]] — serine dehydratase like · module 094 +
+- [[SEC11A]] — SEC11 homolog A, signal peptidase complex subunit · module 168 +
+- [[SEC11C]] — SEC11 homolog C, signal peptidase complex subunit · module 049 +
+- [[SEC13]] — SEC13 homolog, nuclear pore and COPII component · module 056 +
+- [[SEC14L1]] — SEC14 like lipid binding 1 · module 059 -
+- [[SEC14L2]] — SEC14 like lipid binding 2 · module 097 +
+- [[SEC14L4]] — SEC14 like lipid binding 4 · module 128 +
+- [[SEC16A]] — SEC16 homolog A, endoplasmic reticulum export factor · module 052 +
+- [[SEC16B]] — SEC16 homolog B, endoplasmic reticulum export factor · module 008 +
+- [[SEC1P]] — fucosyltransferase 2B, pseudogene · module 053 +
+- [[SEC22A]] — SEC22 homolog A, vesicle trafficking protein · module 041 +
+- [[SEC22B]] — SEC22 homolog B, vesicle trafficking protein · module 056 +
+- [[SEC22C]] — SEC22 homolog C, vesicle trafficking protein · module 025 +
+- [[SEC23A]] — SEC23 homolog A, COPII component · module 056 +
+- [[SEC23B]] — SEC23 homolog B, COPII component · module 049 +
+- [[SEC23IP]] — SEC23 interacting protein · module 041 +
+- [[SEC24A]] — SEC24 homolog A, COPII component · module 056 +
+- [[SEC24B]] — SEC24 homolog B, COPII component · module 169 +
+- [[SEC24B-AS1]] — SEC24B antisense RNA 1 · module 015 +
+- [[SEC24C]] — SEC24 homolog C, COPII component · module 042 +
+- [[SEC24D]] — SEC24 homolog D, COPII component · module 056 +
+- [[SEC31A]] — SEC31 homolog A, COPII component · module 056 +
+- [[SEC31B]] — SEC31 homolog B, COPII component · module 105 +
+- [[SEC61A1]] — SEC61 translocon subunit alpha 1 · module 042 +
+- [[SEC61A2]] — SEC61 translocon subunit alpha 2 · module 219 +
+- [[SEC61B]] — SEC61 translocon subunit beta · module 049 +
+- [[SEC61G]] — SEC61 translocon subunit gamma · module 048 +
+- [[SEC62]] — SEC62 preprotein translocation factor · module 012 +
+- [[SEC63]] — SEC63 protein translocation regulator · module 042 +
+- [[SECISBP2]] — SECIS binding protein 2 · module 083 +
+- [[SECISBP2L]] — SECIS binding protein 2 like · module 005 -
+- [[SECTM1]] — secreted and transmembrane 1 · module 139 +
+- [[SEH1L]] — SEH1 like nucleoporin · module 018 +
+- [[SEL1L]] — SEL1L adaptor subunit of SYVN1 ubiquitin ligase · module 042 +
+- [[SEL1L3]] — SEL1L family member 3 · module 117 +
+- [[SELENOF]] — selenoprotein F · module 029 +
+- [[SELENOH]] — selenoprotein H · module 024 +
+- [[SELENOI]] — selenoprotein I · module 126 +
+- [[SELENOK]] — selenoprotein K · module 004 -
+- [[SELENOM]] — selenoprotein M · module 024 +
+- [[SELENON]] — selenoprotein N · module 050 +
+- [[SELENOO]] — selenoprotein O · module 003 +
+- [[SELENOP]] — selenoprotein P · module 008 +
+- [[SELENOS]] — selenoprotein S · module 049 +
+- [[SELENOT]] — selenoprotein T · module 077 -
+- [[SELENOW]] — selenoprotein W · module 001 -
+- [[SELPLG]] — selectin P ligand · module 039 +
+- [[SEM1]] — SEM1 26S proteasome subunit · module 021 +
+- [[SEMA3A]] — semaphorin 3A · module 081 +
+- [[SEMA3B]] — semaphorin 3B · module 031 +
+- [[SEMA3C]] — semaphorin 3C · module 066 +
+- [[SEMA3D]] — semaphorin 3D · module 019 +
+- [[SEMA3E]] — semaphorin 3E · module 009 +
+- [[SEMA3F]] — semaphorin 3F · module 161 +
+- [[SEMA4A]] — semaphorin 4A · module 053 +
+- [[SEMA4B]] — semaphorin 4B · module 154 +
+- [[SEMA4C]] — semaphorin 4C · module 029 -
+- [[SEMA4D]] — semaphorin 4D · module 115 +
+- [[SEMA4F]] — ssemaphorin 4F · module 159 +
+- [[SEMA4G]] — semaphorin 4G · module 055 +
+- [[SEMA5A]] — semaphorin 5A · module 013 +
+- [[SEMA6A]] — semaphorin 6A · module 009 +
+- [[SEMA6A-AS1]] — SEMA6A antisense RNA 1 · module 026 +
+- [[SEMA6B]] — semaphorin 6B · module 100 +
+- [[SEMA6C]] — semaphorin 6C · module 076 +
+- [[SEMA6D]] — semaphorin 6D · module 090 +
+- [[SEMA7A]] — semaphorin 7A (JohnMiltonHagen blood group) · module 034 +
+- [[SENP1]] — SUMO specific peptidase 1 · module 016 +
+- [[SENP2]] — SUMO specific peptidase 2 · module 041 +
+- [[SENP3]] — SUMO specific peptidase 3 · module 005 +
+- [[SENP5]] — SUMO specific peptidase 5 · module 052 +
+- [[SENP6]] — SUMO specific peptidase 6 · module 051 +
+- [[SENP7]] — SUMO specific peptidase 7 · module 064 +
+- [[SENP8]] — SUMO peptidase family member, NEDD8 specific · module 015 +
+- [[SEPHS1]] — selenophosphate synthetase 1 · module 029 +
+- [[SEPHS2]] — selenophosphate synthetase 2 · module 007 +
+- [[SEPSECS]] — Sep (O-phosphoserine) tRNA:Sec (selenocysteine) tRNA synthase · module 028 +
+- [[SEPTIN1]] — septin 1 · module 021 +
+- [[SEPTIN10]] — septin 10 · module 078 +
+- [[SEPTIN11]] — septin 11 · module 054 -
+- [[SEPTIN2]] — septin 2 · module 007 -
+- [[SEPTIN3]] — septin 3 · module 176 +
+- [[SEPTIN5]] — septin 5 · module 132 +
+- [[SEPTIN6]] — septin 6 · module 085 +
+- [[SEPTIN7]] — septin 7 · module 182 +
+- [[SEPTIN7-DT]] — SEPTIN7 divergent transcript · module 023 +
+- [[SEPTIN7P13]] — septin 7 pseudogene 13 · module 042 +
+- [[SEPTIN7P14]] — septin 7 pseudogene 14 · module 042 +
+- [[SEPTIN7P2]] — septin 7 pseudogene 2 · module 049 +
+- [[SEPTIN8]] — septin 8 · module 054 -
+- [[SEPTIN9]] — septin 9 · module 101 +
+- [[SEPTIN9-DT]] — SEPTIN9 divergent transcript · module 073 +
+- [[SERAC1]] — serine active site containing 1 · module 159 +
+- [[SERBP1]] — SERPINE1 mRNA binding protein 1 · module 004 +
+- [[SERF2]] — small EDRK-rich factor 2 · module 048 +
+- [[SERGEF]] — secretion regulating guanine nucleotide exchange factor · module 134 +
+- [[SERINC1]] — serine incorporator 1 · module 069 +
+- [[SERINC2]] — serine incorporator 2 · module 034 +
+- [[SERINC3]] — serine incorporator 3 · module 069 +
+- [[SERINC5]] — serine incorporator 5 · module 011 -
+- [[SERP1]] — stress associated endoplasmic reticulum protein 1 · module 049 +
+- [[SERPINA1]] — serpin family A member 1 · module 155 +
+- [[SERPINA3]] — serpin family A member 3 · module 139 +
+- [[SERPINA5]] — serpin family A member 5 · module 097 +
+- [[SERPINB1]] — serpin family B member 1 · module 034 +
+- [[SERPINB11]] — serpin family B member 11 · module 019 +
+- [[SERPINB2]] — serpin family B member 2 · module 019 +
+- [[SERPINB3]] — serpin family B member 3 · module 155 +
+- [[SERPINB4]] — serpin family B member 4 · module 155 +
+- [[SERPINB5]] — serpin family B member 5 · module 073 +
+- [[SERPINB6]] — serpin family B member 6 · module 148 +
+- [[SERPINB7]] — serpin family B member 7 · module 014 +
+- [[SERPINB8]] — serpin family B member 8 · module 101 +
+- [[SERPINB9]] — serpin family B member 9 · module 101 +
+- [[SERPINB9P1]] — serpin family B member 9 pseudogene 1 · module 080 +
+- [[SERPIND1]] — serpin family D member 1 · module 019 +
+- [[SERPINE1]] — serpin family E member 1 · module 113 +
+- [[SERPINE2]] — serpin family E member 2 · module 081 +
+- [[SERPINF1]] — serpin family F member 1 · module 027 +
+- [[SERPINH1]] — serpin family H member 1 · module 060 +
+- [[SERPINI1]] — serpin family I member 1 · module 027 +
+- [[SERTAD1]] — SERTA domain containing 1 · module 020 -
+- [[SERTAD2]] — SERTA domain containing 2 · module 123 +
+- [[SERTAD3]] — SERTA domain containing 3 · module 041 +
+- [[SERTAD4]] — SERTA domain containing 4 · module 120 +
+- [[SESN1]] — sestrin 1 · module 062 +
+- [[SESN2]] — sestrin 2 · module 063 +
+- [[SESN3]] — sestrin 3 · module 009 +
+- [[SESTD1]] — SEC14 and spectrin domain containing 1 · module 163 +
+- [[SET]] — SET nuclear proto-oncogene · module 018 +
+- [[SETBP1]] — SET binding protein 1 · module 013 +
+- [[SETD1A]] — SET domain containing 1A, histone lysine methyltransferase · module 036 +
+- [[SETD1B]] — SET domain containing 1B, histone lysine methyltransferase · module 046 +
+- [[SETD2]] — SET domain containing 2, histone lysine methyltransferase · module 051 +
+- [[SETD3]] — SET domain containing 3, actin N3(tau)-histidine methyltransferase · module 016 -
+- [[SETD4]] — SET domain containing 4 · module 001 +
+- [[SETD5]] — SET domain containing 5 · module 003 +
+- [[SETD6]] — SET domain containing 6, protein lysine methyltransferase · module 005 +
+- [[SETD7]] — SET domain containing 7, histone lysine methyltransferase · module 029 +
+- [[SETD9]] — SET domain containing 9 · module 035 +
+- [[SETDB1]] — SET domain bifurcated histone lysine methyltransferase 1 · module 114 +
+- [[SETDB2]] — SET domain bifurcated histone lysine methyltransferase 2 · module 036 -
+- [[SETMAR]] — SET and mariner transposase domain methyltransferase · module 001 +
+- [[SETX]] — senataxin · module 182 -
+- [[SEZ6L2]] — seizure related 6 homolog like 2 · module 003 +
+- [[SF1]] — splicing factor 1 · module 003 -
+- [[SF3A1]] — splicing factor 3a subunit 1 · module 153 +
+- [[SF3A2]] — splicing factor 3a subunit 2 · module 107 +
+- [[SF3A3]] — splicing factor 3a subunit 3 · module 001 +
+- [[SF3B1]] — splicing factor 3b subunit 1 · module 028 +
+- [[SF3B2]] — splicing factor 3b subunit 2 · module 041 +
+- [[SF3B3]] — splicing factor 3b subunit 3 · module 001 +
+- [[SF3B4]] — splicing factor 3b subunit 4 · module 153 +
+- [[SF3B5]] — splicing factor 3b subunit 5 · module 054 +
+- [[SF3B6]] — splicing factor 3b subunit 6 · module 043 +
+- [[SFI1]] — SFI1 centrin binding protein · module 016 -
+- [[SFMBT1]] — Scm like with four mbt domains 1 · module 018 +
+- [[SFMBT2]] — Scm like with four mbt domains 2 · module 152 +
+- [[SFN]] — stratifin · module 034 +
+- [[SFPQ]] — splicing factor proline and glutamine rich · module 003 -
+- [[SFR1]] — SWI5 dependent homologous recombination repair protein 1 · module 158 +
+- [[SFRP1]] — secreted frizzled related protein 1 · module 013 +
+- [[SFRP4]] — secreted frizzled related protein 4 · module 140 +
+- [[SFSWAP]] — splicing factor SWAP · module 011 +
+- [[SFT2D1]] — SFT2 domain containing 1
+- [[SFT2D2]] — SFT2 domain containing 2 · module 025 +
+- [[SFT2D3]] — SFT2 domain containing 3 · module 007 +
+- [[SFTA1P]] — surfactant associated 1, lncRNA · module 120 +
+- [[SFTA3-1]] · module 009 +
+- [[SFTPA2]] — surfactant protein A2 · module 008 +
+- [[SFXN1]] — sideroflexin 1 · module 105 +
+- [[SFXN2]] — sideroflexin 2 · module 040 +
+- [[SFXN3]] — sideroflexin 3 · module 137 -
+- [[SFXN4]] — sideroflexin 4 · module 018 +
+- [[SFXN5]] — sideroflexin 5 · module 047 +
+- [[SGCB]] — sarcoglycan beta · module 025 +
+- [[SGCD]] — sarcoglycan delta · module 166 +
+- [[SGCE]] — sarcoglycan epsilon · module 045 +
+- [[SGCZ]] — sarcoglycan zeta · module 061 +
+- [[SGF29]] — SAGA complex associated factor 29 · module 046 +
+- [[SGIP1]] — SH3GL interacting endocytic adaptor 1 · module 019 +
+- [[SGK1]] — serum/glucocorticoid regulated kinase 1 · module 113 +
+- [[SGK2]] — serum/glucocorticoid regulated kinase 2 · module 026 +
+- [[SGK3]] — serum/glucocorticoid regulated kinase family member 3 · module 040 +
+- [[SGMS1]] — sphingomyelin synthase 1 · module 143 +
+- [[SGMS2]] — sphingomyelin synthase 2 · module 109 +
+- [[SGO1]] — shugoshin 1 · module 022 +
+- [[SGO1-AS1]] — SGO1 antisense RNA 1 · module 026 +
+- [[SGO2]] — shugoshin 2 · module 022 +
+- [[SGPL1]] — sphingosine-1-phosphate lyase 1 · module 025 +
+- [[SGPP1]] — sphingosine-1-phosphate phosphatase 1 · module 163 +
+- [[SGPP2]] — sphingosine-1-phosphate phosphatase 2 · module 106 +
+- [[SGSH]] — N-sulfoglucosamine sulfohydrolase · module 138 +
+- [[SGSM1]] — small G protein signaling modulator 1 · module 115 +
+- [[SGSM2]] — small G protein signaling modulator 2 · module 126 +
+- [[SGSM3]] — small G protein signaling modulator 3 · module 040 +
+- [[SGSM3-AS1]] — SGSM3 antisense RNA 1 · module 047 +
+- [[SGTA]] — small glutamine rich tetratricopeptide repeat co-chaperone alpha · module 002 +
+- [[SGTB]] — small glutamine rich tetratricopeptide repeat co-chaperone beta · module 040 +
+- [[SH2B1]] — SH2B adaptor protein 1 · module 157 +
+- [[SH2B2]] — SH2B adaptor protein 2 · module 085 +
+- [[SH2B3]] — SH2B adaptor protein 3 · module 084 +
+- [[SH2D2A]] — SH2 domain containing 2A · module 081 +
+- [[SH2D3A]] — SH2 domain containing 3A · module 141 +
+- [[SH2D4A]] — SH2 domain containing 4A · module 008 +
+- [[SH2D4B]] — SH2 domain containing 4B · module 047 +
+- [[SH3BGR]] — SH3 domain binding glutamate rich protein · module 037 +
+- [[SH3BGRL]] — SH3 domain binding glutamate rich protein like · module 029 +
+- [[SH3BGRL2]] — SH3 domain binding glutamate rich protein like 2 · module 044 +
+- [[SH3BGRL3]] — SH3 domain binding glutamate rich protein like 3 · module 184 +
+- [[SH3BP1]] — SH3 domain binding protein 1 · module 161 +
+- [[SH3BP2]] — SH3 domain binding protein 2 · module 002 +
+- [[SH3BP4]] — SH3 domain binding protein 4 · module 036 +
+- [[SH3BP5]] — SH3 domain binding protein 5 · module 030 +
+- [[SH3BP5-AS1]] — SH3BP5 antisense RNA 1 · module 039 +
+- [[SH3BP5L]] — SH3 binding domain protein 5 like · module 142 +
+- [[SH3D19]] — SH3 domain containing 19 · module 143 +
+- [[SH3D21]] — manchette microtubule inner protein 1 · module 180 +
+- [[SH3GL1]] — SH3 domain containing GRB2 like 1, endophilin A2 · module 003 +
+- [[SH3GL2]] — SH3 domain containing GRB2 like 2, endophilin A1 · module 061 +
+- [[SH3GL3]] — SH3 domain containing GRB2 like 3, endophilin A3 · module 134 +
+- [[SH3GLB1]] — SH3 domain containing GRB2 like, endophilin B1 · module 005 -
+- [[SH3GLB2]] — SH3 domain containing GRB2 like, endophilin B2 · module 002 +
+- [[SH3KBP1]] — SH3 domain containing kinase binding protein 1 · module 136 +
+- [[SH3PXD2A]] — SH3 and PX domains 2A · module 084 +
+- [[SH3PXD2B]] — SH3 and PX domains 2B · module 095 -
+- [[SH3RF1]] — SH3 domain containing ring finger 1 · module 120 +
+- [[SH3RF2]] — SH3 domain containing ring finger 2 · module 123 +
+- [[SH3RF3]] — SH3 domain containing ring finger 3 · module 097 +
+- [[SH3TC1]] — SH3 domain and tetratricopeptide repeats 1 · module 098 +
+- [[SH3TC2]] — SH3 domain and tetratricopeptide repeats 2 · module 195 +
+- [[SH3TC2-DT]] — SH3TC2 divergent transcript · module 195 +
+- [[SH3YL1]] — SH3 and SYLF domain containing 1 · module 063 +
+- [[SHANK1]] — SH3 and multiple ankyrin repeat domains 1 · module 013 +
+- [[SHANK2]] — SH3 and multiple ankyrin repeat domains 2 · module 193 +
+- [[SHANK3]] — SH3 and multiple ankyrin repeat domains 3 · module 132 +
+- [[SHARPIN]] — SHANK associated RH domain interactor · module 030 +
+- [[SHB]] — SH2 domain containing adaptor protein B · module 081 +
+- [[SHC1]] — SHC adaptor protein 1 · module 050 +
+- [[SHC2]] — SHC adaptor protein 2 · module 123 +
+- [[SHC3]] — SHC adaptor protein 3 · module 092 +
+- [[SHC4]] — SHC adaptor protein 4 · module 084 +
+- [[SHCBP1]] — SHC binding and spindle associated 1 · module 022 +
+- [[SHF]] — Src homology 2 domain containing F · module 161 +
+- [[SHFL]] — shiftless antiviral inhibitor of ribosomal frameshifting · module 032 +
+- [[SHH]] — sonic hedgehog signaling molecule · module 162 +
+- [[SHISA4]] — shisa family member 4 · module 130 +
+- [[SHISA5]] — shisa family member 5 · module 032 +
+- [[SHISA9]] — shisa family member 9 · module 027 +
+- [[SHISAL1]] — shisa like 1 · module 014 +
+- [[SHKBP1]] — SH3KBP1 binding protein 1 · module 002 +
+- [[SHLD1]] — shieldin complex subunit 1 · module 064 +
+- [[SHLD2]] — shieldin complex subunit 2 · module 005 +
+- [[SHMT1]] — serine hydroxymethyltransferase 1 · module 006 +
+- [[SHMT2]] — serine hydroxymethyltransferase 2 · module 063 +
+- [[SHOC1]] — shortage in chiasmata 1 · module 021 +
+- [[SHOC2]] — SHOC2 leucine rich repeat scaffold protein · module 004 -
+- [[SHOX2]] — SHOX homeobox 2 · module 046 +
+- [[SHPK]] — sedoheptulokinase · module 052 +
+- [[SHPRH]] — SNF2 histone linker PHD RING helicase · module 213 +
+- [[SHQ1]] — SHQ1, H/ACA ribonucleoprotein assembly factor · module 040 +
+- [[SHROOM1]] — shroom family member 1 · module 011 +
+- [[SHROOM2]] — shroom family member 2 · module 097 +
+- [[SHROOM3]] — shroom family member 3 · module 008 +
+- [[SHROOM4]] — shroom family member 4 · module 087 +
+- [[SHTN1]] — shootin 1 · module 048 -
+- [[SIAE]] — sialic acid acetylesterase · module 050 +
+- [[SIAH1]] — siah E3 ubiquitin protein ligase 1 · module 046 +
+- [[SIAH2]] — siah E3 ubiquitin protein ligase 2 · module 056 +
+- [[SIAH2-AS1]] — SIAH2 and CLRN1 antisense RNA 1 · module 026 +
+- [[SIDT1]] — SID1 transmembrane family member 1 · module 008 +
+- [[SIDT2]] — SID1 transmembrane family member 2 · module 038 +
+- [[SIGIRR]] — single Ig and TIR domain containing · module 034 +
+- [[SIGLEC15]] — sialic acid binding Ig like lectin 15 · module 013 +
+- [[SIGMAR1]] — sigma receptor chaperone 1 · module 020 +
+- [[SIK2]] — salt inducible kinase 2 · module 223 +
+- [[SIK3]] — SIK family kinase 3 · module 065 -
+- [[SIKE1]] — suppressor of IKBKE 1 · module 049 +
+- [[SIL1]] — SIL1 nucleotide exchange factor · module 049 +
+- [[SIM1]] — SIM bHLH transcription factor 1 · module 009 +
+- [[SIM2]] — SIM bHLH transcription factor 2 · module 046 +
+- [[SIMC1]] — SUMO interacting motifs containing 1 · module 036 +
+- [[SIN3A]] — SIN3 transcription regulator family member A · module 022 +
+- [[SIN3B]] — SIN3 transcription regulator family member B · module 002 +
+- [[SINHCAF]] — SIN3-HDAC complex associated factor · module 056 +
+- [[SIPA1]] — signal-induced proliferation-associated 1 · module 023 -
+- [[SIPA1L1]] — signal induced proliferation associated 1 like 1 · module 005 +
+- [[SIPA1L2]] — signal induced proliferation associated 1 like 2 · module 167 +
+- [[SIPA1L3]] — signal induced proliferation associated 1 like 3 · module 013 +
+- [[SIRLNT]] — SIRT1 regulating lncRNA tumor promoter · module 019 +
+- [[SIRPA]] — signal regulatory protein alpha · module 005 +
+- [[SIRT1]] — sirtuin 1 · module 069 +
+- [[SIRT2]] — sirtuin 2 · module 004 -
+- [[SIRT3]] — sirtuin 3 · module 011 +
+- [[SIRT5]] — sirtuin 5 · module 010 +
+- [[SIRT6]] — sirtuin 6 · module 020 -
+- [[SIRT7]] — sirtuin 7 · module 003 +
+- [[SIVA1]] — SIVA1 apoptosis inducing factor · module 003 +
+- [[SIX1]] — SIX homeobox 1 · module 070 +
+- [[SIX4]] — SIX homeobox 4 · module 046 +
+- [[SIX5]] — SIX homeobox 5 · module 080 +
+- [[SKA1]] — spindle and kinetochore associated complex subunit 1 · module 022 +
+- [[SKA2]] — spindle and kinetochore associated complex subunit 2 · module 022 +
+- [[SKA3]] — spindle and kinetochore associated complex subunit 3 · module 022 +
+- [[SKAP1]] — src kinase associated phosphoprotein 1 · module 055 +
+- [[SKAP2]] — src kinase associated phosphoprotein 2 · module 005 -
+- [[SKI]] — SKI proto-oncogene · module 195 +
+- [[SKIC2]] — SKI2 subunit of superkiller complex · module 002 +
+- [[SKIC3]] — SKI3 subunit of superkiller complex · module 017 +
+- [[SKIC8]] — SKI8 subunit of superkiller complex · module 049 +
+- [[SKIL]] — SKI like proto-oncogene · module 030 -
+- [[SKP1]] — S-phase kinase associated protein 1 · module 093 +
+- [[SKP2]] — S-phase kinase associated protein 2 · module 057 +
+- [[SLAIN1]] — SLAIN family member 1 · module 009 +
+- [[SLAIN2]] — SLAIN family member 2 · module 025 +
+- [[SLAMF7]] — SLAM family member 7 · module 125 +
+- [[SLBP]] — stem-loop histone mRNA binding protein · module 006 +
+- [[SLC10A3]] — solute carrier family 10 member 3 · module 052 +
+- [[SLC10A7]] — solute carrier family 10 member 7 · module 072 +
+- [[SLC11A2]] — solute carrier family 11 member 2 · module 045 +
+- [[SLC12A2]] — solute carrier family 12 member 2 · module 044 +
+- [[SLC12A2-DT]] — SLC12A2 divergent transcript · module 001 +
+- [[SLC12A4]] — solute carrier family 12 member 4 · module 101 +
+- [[SLC12A6]] — solute carrier family 12 member 6 · module 034 +
+- [[SLC12A7]] — solute carrier family 12 member 7 · module 014 +
+- [[SLC12A8]] — solute carrier family 12 member 8 · module 004 +
+- [[SLC12A9]] — solute carrier family 12 member 9 · module 015 +
+- [[SLC13A3]] — solute carrier family 13 member 3 · module 023 +
+- [[SLC13A4]] — solute carrier family 13 member 4 · module 021 +
+- [[SLC14A1]] — solute carrier family 14 member 1 (Kidd blood group) · module 034 +
+- [[SLC14A2]] — solute carrier family 14 member 2 · module 166 +
+- [[SLC15A1]] — solute carrier family 15 member 1 · module 008 +
+- [[SLC15A2]] — solute carrier family 15 member 2 · module 049 +
+- [[SLC15A3]] — solute carrier family 15 member 3 · module 032 +
+- [[SLC15A4]] — solute carrier family 15 member 4 · module 030 +
+- [[SLC15A5]] — solute carrier family 15 member 5 · module 019 +
+- [[SLC16A1]] — solute carrier family 16 member 1 · module 093 +
+- [[SLC16A1-AS1]] — SLC16A1 antisense RNA 1 · module 124 +
+- [[SLC16A10]] — solute carrier family 16 member 10 · module 115 +
+- [[SLC16A13]] — solute carrier family 16 member 13 · module 021 +
+- [[SLC16A14]] — solute carrier family 16 member 14 · module 094 +
+- [[SLC16A2]] — solute carrier family 16 member 2 · module 066 +
+- [[SLC16A3]] — solute carrier family 16 member 3 · module 113 +
+- [[SLC16A4]] — solute carrier family 16 member 4 · module 019 +
+- [[SLC16A4-AS1]] · module 015 +
+- [[SLC16A5]] — solute carrier family 16 member 5 · module 031 +
+- [[SLC16A6]] — solute carrier family 16 member 6 · module 092 +
+- [[SLC16A7]] — solute carrier family 16 member 7 · module 167 +
+- [[SLC16A9]] — solute carrier family 16 member 9 · module 068 +
+- [[SLC17A5]] — solute carrier family 17 member 5 · module 056 +
+- [[SLC17A7]] — solute carrier family 17 member 7 · module 001 -
+- [[SLC17A9]] — solute carrier family 17 member 9 · module 002 +
+- [[SLC18B1]] — solute carrier family 18 member B1 · module 190 +
+- [[SLC19A1]] — solute carrier family 19 member 1 · module 004 +
+- [[SLC19A2]] — solute carrier family 19 member 2 · module 106 +
+- [[SLC19A3]] — solute carrier family 19 member 3 · module 019 +
+- [[SLC1A1]] — solute carrier family 1 member 1 · module 049 +
+- [[SLC1A2]] — solute carrier family 1 member 2 · module 061 +
+- [[SLC1A3]] — solute carrier family 1 member 3 · module 104 +
+- [[SLC1A4]] — solute carrier family 1 member 4 · module 063 +
+- [[SLC1A5]] — solute carrier family 1 member 5 · module 063 +
+- [[SLC20A1]] — solute carrier family 20 member 1 · module 174 +
+- [[SLC20A2]] — solute carrier family 20 member 2 · module 030 -
+- [[SLC22A1]] — solute carrier family 22 member 1 · module 039 +
+- [[SLC22A13]] — solute carrier family 22 member 13 · module 039 +
+- [[SLC22A14]] — solute carrier family 22 member 14 · module 039 +
+- [[SLC22A15]] — solute carrier family 22 member 15 · module 063 +
+- [[SLC22A17]] — solute carrier family 22 member 17 · module 082 +
+- [[SLC22A18]] — solute carrier family 67 member 1 · module 030 +
+- [[SLC22A20P]] — solute carrier family 22 member 20, pseudogene · module 038 +
+- [[SLC22A23]] — solute carrier family 22 member 23 · module 081 +
+- [[SLC22A3]] — solute carrier family 22 member 3 · module 073 +
+- [[SLC22A4]] — solute carrier family 22 member 4 · module 078 +
+- [[SLC22A5]] — solute carrier family 22 member 5 · module 013 +
+- [[SLC23A1]] — solute carrier family 23 member 1 · module 021 +
+- [[SLC23A2]] — solute carrier family 23 member 2 · module 159 +
+- [[SLC23A3]] — solute carrier family 23 member 3 · module 038 +
+- [[SLC24A1]] — solute carrier family 24 member 1 · module 051 +
+- [[SLC24A3]] — solute carrier family 24 member 3 · module 027 +
+- [[SLC25A1]] — solute carrier family 25 member 1 · module 086 +
+- [[SLC25A10]] — solute carrier family 25 member 10 · module 036 +
+- [[SLC25A11]] — solute carrier family 25 member 11 · module 058 +
+- [[SLC25A12]] — solute carrier family 25 member 12 · module 017 +
+- [[SLC25A13]] — solute carrier family 25 member 13 · module 143 +
+- [[SLC25A14]] — solute carrier family 25 member 14 · module 205 +
+- [[SLC25A15]] — solute carrier family 25 member 15 · module 018 +
+- [[SLC25A16]] — solute carrier family 25 member 16 · module 052 +
+- [[SLC25A17]] — solute carrier family 25 member 17 · module 089 +
+- [[SLC25A19]] — solute carrier family 25 member 19 · module 005 +
+- [[SLC25A20]] — solute carrier family 25 member 20 · module 030 +
+- [[SLC25A21]] — solute carrier family 25 member 21 · module 137 +
+- [[SLC25A22]] — solute carrier family 25 member 22 · module 002 +
+- [[SLC25A23]] — solute carrier family 25 member 23 · module 045 +
+- [[SLC25A24]] — solute carrier family 25 member 24 · module 024 -
+- [[SLC25A24P1]] — SLC25A24 pseudogene 1 · module 027 +
+- [[SLC25A25]] — solute carrier family 25 member 25 · module 160 +
+- [[SLC25A25-AS1]] — SLC25A25 antisense RNA 1 · module 027 +
+- [[SLC25A26]] — solute carrier family 25 member 26 · module 185 +
+- [[SLC25A27]] — solute carrier family 25 member 27 · module 047 +
+- [[SLC25A28]] — solute carrier family 25 member 28 · module 032 +
+- [[SLC25A29]] — solute carrier family 25 member 29 · module 003 +
+- [[SLC25A3]] — solute carrier family 25 member 3 · module 043 +
+- [[SLC25A30]] — solute carrier family 25 member 30 · module 182 +
+- [[SLC25A32]] — solute carrier family 25 member 32 · module 049 +
+- [[SLC25A33]] — solute carrier family 25 member 33 · module 077 +
+- [[SLC25A36]] — solute carrier family 25 member 36 · module 079 +
+- [[SLC25A37]] — solute carrier family 25 member 37 · module 025 -
+- [[SLC25A38]] — solute carrier family 25 member 38 · module 107 +
+- [[SLC25A39]] — solute carrier family 25 member 39 · module 050 +
+- [[SLC25A4]] — solute carrier family 25 member 4 · module 024 +
+- [[SLC25A40]] — solute carrier family 25 member 40 · module 067 +
+- [[SLC25A42]] — solute carrier family 25 member 42 · module 056 +
+- [[SLC25A43]] — solute carrier family 25 member 43 · module 017 +
+- [[SLC25A44]] — solute carrier family 25 member 44 · module 052 +
+- [[SLC25A45]] — solute carrier family 25 member 45 · module 141 +
+- [[SLC25A46]] — solute carrier family 25 member 46 · module 028 +
+- [[SLC25A48]] — solute carrier family 25 member 48 · module 140 +
+- [[SLC25A5]] — solute carrier family 25 member 5 · module 043 +
+- [[SLC25A51]] — solute carrier family 25 member 51 · module 081 +
+- [[SLC25A53]] — solute carrier family 25 member 53 · module 015 +
+- [[SLC25A6]] — solute carrier family 25 member 6 · module 043 +
+- [[SLC26A11]] — solute carrier family 26 member 11 · module 122 +
+- [[SLC26A2]] — solute carrier family 26 member 2 · module 098 +
+- [[SLC26A4]] — solute carrier family 26 member 4 · module 053 +
+- [[SLC26A5]] — solute carrier family 26 member 5 · module 021 +
+- [[SLC26A6]] — solute carrier family 26 member 6 · module 180 +
+- [[SLC26A7]] — solute carrier family 26 member 7 · module 026 +
+- [[SLC27A1]] — solute carrier family 27 member 1 · module 085 +
+- [[SLC27A2]] — solute carrier family 27 member 2 · module 055 +
+- [[SLC27A3]] — solute carrier family 27 member 3 · module 080 +
+- [[SLC27A4]] — solute carrier family 27 member 4 · module 002 +
+- [[SLC27A5]] — solute carrier family 27 member 5 · module 036 +
+- [[SLC27A6]] — solute carrier family 27 member 6 · module 140 +
+- [[SLC28A2-AS1]] — SLC28A2 antisense RNA 1 · module 015 +
+- [[SLC28A3]] — solute carrier family 28 member 3 · module 008 +
+- [[SLC29A1]] — solute carrier family 29 member 1 (Augustine blood group) · module 023 -
+- [[SLC29A2]] — solute carrier family 29 member 2 · module 018 +
+- [[SLC29A3]] — solute carrier family 29 member 3 · module 115 +
+- [[SLC29A4]] — solute carrier family 29 member 4 · module 100 +
+- [[SLC2A1]] — solute carrier family 2 member 1 · module 099 +
+- [[SLC2A1-DT]] — SLC2A1 divergent transcript · module 105 +
+- [[SLC2A10]] — solute carrier family 2 member 10 · module 019 +
+- [[SLC2A11]] — solute carrier family 2 member 11 · module 051 +
+- [[SLC2A12]] — solute carrier family 2 member 12 · module 008 +
+- [[SLC2A13]] — solute carrier family 2 member 13 · module 088 -
+- [[SLC2A14]] — solute carrier family 2 member 14 · module 053 +
+- [[SLC2A3]] — solute carrier family 2 member 3 · module 134 +
+- [[SLC2A4RG]] — SLC2A4 regulator · module 094 +
+- [[SLC2A6]] — solute carrier family 2 member 6 · module 014 +
+- [[SLC2A8]] — solute carrier family 2 member 8 · module 002 +
+- [[SLC2A9]] — solute carrier family 2 member 9 · module 047 +
+- [[SLC30A1]] — solute carrier family 30 member 1 · module 007 +
+- [[SLC30A10]] — solute carrier family 30 member 10 · module 027 +
+- [[SLC30A4]] — solute carrier family 30 member 4 · module 014 +
+- [[SLC30A5]] — solute carrier family 30 member 5 · module 049 +
+- [[SLC30A6]] — solute carrier family 30 member 6 · module 142 +
+- [[SLC30A7]] — solute carrier family 30 member 7 · module 182 -
+- [[SLC30A9]] — solute carrier family 30 member 9 · module 148 +
+- [[SLC31A1]] — solute carrier family 31 member 1 · module 056 +
+- [[SLC31A2]] — solute carrier family 31 member 2 · module 016 +
+- [[SLC33A1]] — solute carrier family 33 member 1 · module 049 +
+- [[SLC34A2]] — solute carrier family 34 member 2 · module 008 +
+- [[SLC35A1]] — solute carrier family 35 member A1 · module 065 +
+- [[SLC35A2]] — solute carrier family 35 member A2 · module 056 +
+- [[SLC35A3]] — solute carrier family 35 member A3 · module 057 +
+- [[SLC35A4]] — solute carrier family 35 member A4 · module 016 +
+- [[SLC35A5]] — solute carrier family 35 member A5 · module 003 -
+- [[SLC35B1]] — solute carrier family 35 member B1 · module 049 +
+- [[SLC35B2]] — solute carrier family 35 member B2 · module 135 -
+- [[SLC35B3]] — solute carrier family 35 member B3 · module 023 +
+- [[SLC35B4]] — solute carrier family 35 member B4 · module 004 +
+- [[SLC35C1]] — solute carrier family 35 member C1 · module 036 +
+- [[SLC35C2]] — solute carrier family 35 member H1 · module 182 -
+- [[SLC35D1]] — solute carrier family 35 member D1 · module 186 +
+- [[SLC35D2]] — solute carrier family 35 member D2 · module 015 +
+- [[SLC35E1]] — solute carrier family 35 member E1 · module 040 +
+- [[SLC35E2B]] — solute carrier family 35 member E2B · module 046 +
+- [[SLC35E3]] — solute carrier family 35 member E3 · module 144 +
+- [[SLC35E4]] — solute carrier family 35 member E4 · module 034 +
+- [[SLC35F1]] — solute carrier family 35 member F1 · module 061 +
+- [[SLC35F2]] — solute carrier family 35 member F2 · module 001 +
+- [[SLC35F3]] — solute carrier family 35 member F3 · module 193 +
+- [[SLC35F4]] — solute carrier family 35 member F4 · module 090 +
+- [[SLC35F5]] — solute carrier family 35 member F5 · module 004 -
+- [[SLC35F6]] — solute carrier family 35 member F6 · module 024 -
+- [[SLC35G1]] — solute carrier family 35 member G1 · module 018 +
+- [[SLC35G2]] — solute carrier family 35 member G2 · module 007 +
+- [[SLC36A1]] — solute carrier family 36 member 1 · module 065 -
+- [[SLC36A4]] — solute carrier family 36 member 4 · module 088 +
+- [[SLC37A1]] — solute carrier family 37 member 1 · module 008 +
+- [[SLC37A2]] — solute carrier family 37 member 2 · module 092 +
+- [[SLC37A3]] — solute carrier family 37 member 3 · module 040 +
+- [[SLC37A4]] — solute carrier family 37 member 4 · module 058 +
+- [[SLC38A1]] — solute carrier family 38 member 1 · module 133 +
+- [[SLC38A10]] — solute carrier family 38 member 10 · module 052 +
+- [[SLC38A2]] — solute carrier family 38 member 2 · module 113 +
+- [[SLC38A4]] — solute carrier family 38 member 4 · module 102 +
+- [[SLC38A4-AS1]] — SLC38A4 antisense RNA 1 · module 010 +
+- [[SLC38A5]] — solute carrier family 38 member 5 · module 004 +
+- [[SLC38A6]] — solute carrier family 38 member 6 · module 064 +
+- [[SLC38A7]] — solute carrier family 38 member 7 · module 172 +
+- [[SLC38A9]] — solute carrier family 38 member 9 · module 015 +
+- [[SLC39A1]] — solute carrier family 39 member 1 · module 014 +
+- [[SLC39A10]] — solute carrier family 39 member 10 · module 003 -
+- [[SLC39A11]] — solute carrier family 39 member 11 · module 211 +
+- [[SLC39A13]] — solute carrier family 39 member 13 · module 002 +
+- [[SLC39A14]] — solute carrier family 39 member 14 · module 106 +
+- [[SLC39A3]] — solute carrier family 39 member 3 · module 058 +
+- [[SLC39A4]] — solute carrier family 39 member 4 · module 058 +
+- [[SLC39A6]] — solute carrier family 39 member 6 · module 029 +
+- [[SLC39A7]] — solute carrier family 39 member 7 · module 042 +
+- [[SLC39A8]] — solute carrier family 39 member 8 · module 106 +
+- [[SLC39A9]] — solute carrier family 39 member 9 · module 056 +
+- [[SLC3A1]] — solute carrier family 3 member 1 · module 021 +
+- [[SLC3A2]] — solute carrier family 3 member 2 · module 133 +
+- [[SLC40A1]] — solute carrier family 40 member 1 · module 044 +
+- [[SLC41A1]] — solute carrier family 41 member 1 · module 004 -
+- [[SLC41A2]] — solute carrier family 41 member 2 · module 014 +
+- [[SLC41A3]] — solute carrier family 41 member 3 · module 002 +
+- [[SLC43A1]] — solute carrier family 43 member 1 · module 176 +
+- [[SLC43A2]] — solute carrier family 43 member 2 · module 094 +
+- [[SLC43A3]] — solute carrier family 43 member 3 · module 112 +
+- [[SLC44A1]] — solute carrier family 44 member 1 · module 106 +
+- [[SLC44A2]] — solute carrier family 44 member 2 (CTL2 blood group) · module 094 +
+- [[SLC44A3]] — solute carrier family 44 member 3 · module 008 +
+- [[SLC44A3-AS1]] — SLC44A3 antisense RNA 1 · module 008 +
+- [[SLC44A4]] — solute carrier family 44 member 4 · module 008 +
+- [[SLC44A5]] — solute carrier family 44 member 5 · module 027 +
+- [[SLC45A1]] — solute carrier family 45 member 1 · module 113 +
+- [[SLC45A3]] — solute carrier family 45 member 3 · module 158 +
+- [[SLC45A4]] — solute carrier family 45 member 4 · module 159 +
+- [[SLC46A1]] — solute carrier family 46 member 1 · module 033 +
+- [[SLC46A3]] — solute carrier family 46 member 3 · module 081 +
+- [[SLC47A1]] — solute carrier family 47 member 1 · module 102 +
+- [[SLC48A1]] — solute carrier family 48 member 1 · module 004 +
+- [[SLC49A4]] — solute carrier family 49 member 4 · module 232 +
+- [[SLC4A10]] — solute carrier family 4 member 10 · module 053 +
+- [[SLC4A11]] — solute carrier family 4 member 11 · module 019 +
+- [[SLC4A1AP]] — solute carrier family 4 member 1 adaptor protein · module 012 +
+- [[SLC4A2]] — solute carrier family 4 member 2 · module 138 +
+- [[SLC4A3]] — solute carrier family 4 member 3 · module 132 +
+- [[SLC4A4]] — solute carrier family 4 member 4 · module 008 +
+- [[SLC4A5]] — solute carrier family 4 member 5 · module 039 +
+- [[SLC4A7]] — solute carrier family 4 member 7 · module 110 +
+- [[SLC4A8]] — solute carrier family 4 member 8 · module 115 +
+- [[SLC50A1]] — solute carrier family 50 member 1 · module 014 +
+- [[SLC51A]] — solute carrier family 51 member A · module 021 +
+- [[SLC52A2]] — solute carrier family 52 member 2 · module 003 +
+- [[SLC52A3]] — solute carrier family 52 member 3 · module 055 +
+- [[SLC5A1]] — solute carrier family 5 member 1 · module 055 +
+- [[SLC5A11]] — solute carrier family 5 member 11 · module 039 +
+- [[SLC5A3]] — solute carrier family 5 member 3 · module 001 -
+- [[SLC5A4-AS1]] — SLC5A4 antisense RNA 1 · module 146 +
+- [[SLC5A6]] — solute carrier family 5 member 6 · module 001 +
+- [[SLC66A1]] — solute carrier family 66 member 1 · module 007 +
+- [[SLC66A1L]] — solute carrier family 66 member 1 like, pseudogene · module 082 +
+- [[SLC66A2]] — solute carrier family 66 member 2 · module 160 +
+- [[SLC66A3]] — solute carrier family 66 member 3 · module 030 +
+- [[SLC6A11]] — solute carrier family 6 member 11 · module 128 +
+- [[SLC6A13]] — solute carrier family 6 member 13 · module 039 +
+- [[SLC6A14]] — solute carrier family 6 member 14 · module 055 +
+- [[SLC6A15]] — solute carrier family 6 member 15 · module 009 +
+- [[SLC6A16]] — solute carrier family 6 member 16 · module 026 +
+- [[SLC6A17]] — solute carrier family 6 member 17 · module 082 +
+- [[SLC6A20]] — solute carrier family 6 member 20 · module 073 +
+- [[SLC6A6]] — solute carrier family 6 member 6 · module 099 +
+- [[SLC6A7]] — solute carrier family 6 member 7 · module 014 +
+- [[SLC6A8]] — solute carrier family 6 member 8 · module 001 -
+- [[SLC6A9]] — solute carrier family 6 member 9 · module 133 +
+- [[SLC7A1]] — solute carrier family 7 member 1 · module 063 +
+- [[SLC7A11]] — solute carrier family 7 member 11 · module 117 +
+- [[SLC7A11-AS1]] — SLC7A11 antisense RNA 1 · module 165 +
+- [[SLC7A2]] — solute carrier family 7 member 2 · module 104 +
+- [[SLC7A5]] — solute carrier family 7 member 5 · module 063 +
+- [[SLC7A6]] — solute carrier family 7 member 6 · module 036 +
+- [[SLC7A6OS]] — solute carrier family 7 member 6 opposite strand · module 114 +
+- [[SLC7A7]] — solute carrier family 7 member 7 · module 090 +
+- [[SLC7A8]] — solute carrier family 7 member 8 · module 090 +
+- [[SLC7A9]] — solute carrier family 7 member 9 · module 039 +
+- [[SLC8A1]] — solute carrier family 8 member A1 · module 013 +
+- [[SLC8A1-AS1]] — SLC8A1 antisense RNA 1 · module 165 +
+- [[SLC8A2]] — solute carrier family 8 member A2 · module 053 +
+- [[SLC8B1]] — solute carrier family 8 member B1 · module 192 +
+- [[SLC9A1]] — solute carrier family 9 member A1 · module 093 +
+- [[SLC9A2]] — solute carrier family 9 member A2 · module 073 +
+- [[SLC9A3]] — solute carrier family 9 member A3 · module 007 +
+- [[SLC9A3-AS1]] — SLC9A3 antisense RNA 1 · module 157 +
+- [[SLC9A3R1]] — NHERF family PDZ scaffold protein 1 · module 162 +
+- [[SLC9A3R2]] — NHERF family PDZ scaffold protein 2 · module 189 +
+- [[SLC9A5]] — solute carrier family 9 member A5 · module 038 +
+- [[SLC9A6]] — solute carrier family 9 member A6 · module 030 +
+- [[SLC9A7]] — solute carrier family 9 member A7 · module 084 +
+- [[SLC9A8]] — solute carrier family 9 member A8 · module 068 +
+- [[SLC9A9]] — solute carrier family 9 member A9 · module 090 +
+- [[SLC9B1]] — solute carrier family 9 member B1 · module 023 +
+- [[SLC9B2]] — solute carrier family 9 member B2 · module 005 +
+- [[SLC9C1]] — solute carrier family 9 member C1 · module 075 +
+- [[SLCO1B1]] — solute carrier organic anion transporter family member 1B1 · module 026 +
+- [[SLCO1B3]] — solute carrier organic anion transporter family member 1B3 · module 073 +
+- [[SLCO1B3-SLCO1B7]] — SLCO1B3-SLCO1B7 readthrough · module 073 +
+- [[SLCO1C1]] — solute carrier organic anion transporter family member 1C1 · module 019 +
+- [[SLCO2A1]] — solute carrier organic anion transporter family member 2A1 · module 098 +
+- [[SLCO2B1]] — solute carrier organic anion transporter family member 2B1 · module 061 +
+- [[SLCO3A1]] — solute carrier organic anion transporter family member 3A1 · module 014 +
+- [[SLCO4A1]] — solute carrier organic anion transporter family member 4A1 · module 195 +
+- [[SLCO5A1]] — solute carrier organic anion transporter family member 5A1 · module 014 +
+- [[SLCO6A1]] — solute carrier organic anion transporter family member 6A1 · module 027 +
+- [[SLF1]] — SMC5/6 complex localization factor 1 · module 071 +
+- [[SLF2]] — SMC5/6 complex localization factor 2 · module 057 -
+- [[SLFN11]] — schlafen family member 11 · module 152 +
+- [[SLFN12]] — schlafen family member 12 · module 070 +
+- [[SLFN13]] — schlafen family member 13 · module 006 +
+- [[SLFN5]] — schlafen family member 5 · module 032 +
+- [[SLFNL1-AS1]] — SLFNL1 antisense RNA 1 · module 005 +
+- [[SLIRP]] — SRA stem-loop interacting RNA binding protein · module 054 +
+- [[SLIT1]] — slit guidance ligand 1 · module 075 +
+- [[SLIT2]] — slit guidance ligand 2 · module 183 +
+- [[SLIT3]] — slit guidance ligand 3 · module 013 +
+- [[SLITRK4]] — SLIT and NTRK like family member 4 · module 019 +
+- [[SLITRK5]] — SLIT and NTRK like family member 5 · module 019 +
+- [[SLITRK6]] — SLIT and NTRK like family member 6 · module 009 +
+- [[SLK]] — STE20 like kinase · module 179 -
+- [[SLMAP]] — sarcolemma associated protein · module 054 +
+- [[SLPI]] — secretory leukocyte peptidase inhibitor · module 139 +
+- [[SLTM]] — SAFB like transcription modulator · module 051 +
+- [[SLU7]] — spliceosome associated SLU7 · module 074 +
+- [[SLX4]] — SLX4 structure-specific endonuclease subunit · module 022 +
+- [[SLX4IP]] — SLX4 interacting protein · module 001 +
+- [[SLX9]] — SLX9 ribosome biogenesis factor · module 033 +
+- [[SMAD1]] — SMAD family member 1 · module 011 +
+- [[SMAD2]] — SMAD family member 2 · module 041 -
+- [[SMAD3]] — SMAD family member 3 · module 078 +
+- [[SMAD4]] — SMAD family member 4 · module 069 +
+- [[SMAD5]] — SMAD family member 5 · module 186 +
+- [[SMAD6]] — SMAD family member 6 · module 029 +
+- [[SMAD7]] — SMAD family member 7 · module 014 +
+- [[SMAD9]] — SMAD family member 9 · module 103 +
+- [[SMAGP]] — small cell adhesion glycoprotein · module 018 +
+- [[SMAP1]] — small ArfGAP 1 · module 180 +
+- [[SMAP2]] — small ArfGAP2 · module 164 +
+- [[SMARCA1]] — SNF2 related chromatin remodeling ATPase 1 · module 077 -
+- [[SMARCA2]] — SWI/SNF related BAF chromatin remodeling complex subunit ATPase 2 · module 130 +
+- [[SMARCA4]] — SWI/SNF related BAF chromatin remodeling complex subunit ATPase 4 · module 004 +
+- [[SMARCA5]] — SNF2 related chromatin remodeling ATPase 5 · module 051 +
+- [[SMARCAD1]] — SNF2 related chromatin remodeling ATPase with DExD box 1 · module 001 +
+- [[SMARCAL1]] — SNF2 related chromatin remodeling annealing helicase 1 · module 007 +
+- [[SMARCB1]] — SWI/SNF related BAF chromatin remodeling complex subunit B1 · module 051 +
+- [[SMARCC1]] — SWI/SNF related BAF chromatin remodeling complex subunit C1 · module 004 +
+- [[SMARCC2]] — SWI/SNF related BAF chromatin remodeling complex subunit C2 · module 025 +
+- [[SMARCD1]] — SWI/SNF related BAF chromatin remodeling complex subunit D1 · module 153 +
+- [[SMARCD2]] — SWI/SNF related BAF chromatin remodeling complex subunit D2 · module 011 -
+- [[SMARCD3]] — SWI/SNF related BAF chromatin remodeling complex subunit D3 · module 100 +
+- [[SMARCE1]] — SWI/SNF related BAF chromatin remodeling complex subunit E1 · module 028 +
+- [[SMBD1P]] — somatomedin B domain containing 1, pseudogene · module 038 +
+- [[SMC1A]] — structural maintenance of chromosomes 1A · module 006 +
+- [[SMC1B]] — structural maintenance of chromosomes 1B · module 091 +
+- [[SMC2]] — structural maintenance of chromosomes 2 · module 022 +
+- [[SMC3]] — structural maintenance of chromosomes 3 · module 022 +
+- [[SMC4]] — structural maintenance of chromosomes 4 · module 022 +
+- [[SMC5]] — structural maintenance of chromosomes 5 · module 199 +
+- [[SMC5-DT]] · module 035 +
+- [[SMC6]] — structural maintenance of chromosomes 6 · module 179 -
+- [[SMCHD1]] — structural maintenance of chromosomes flexible hinge domain containing 1 · module 022 +
+- [[SMCO2]] — single-pass membrane protein with coiled-coil domains 2 · module 039 +
+- [[SMCO4]] — single-pass membrane protein with coiled-coil domains 4 · module 049 +
+- [[SMCR8]] — SMCR8-C9orf72 complex subunit · module 007 +
+- [[SMDT1]] — single-pass membrane protein with aspartate rich tail 1 · module 074 +
+- [[SMG1]] — SMG1 nonsense mediated mRNA decay associated PI3K related kinase · module 111 +
+- [[SMG1-DT]] — SMG1 divergent transcript · module 035 +
+- [[SMG1P1]] — SMG1 pseudogene 1 · module 020 +
+- [[SMG1P2]] — SMG1 pseudogene 2 · module 077 +
+- [[SMG1P3]] — SMG1 pseudogene 3 · module 012 -
+- [[SMG1P5]] — SMG1 pseudogene 5 · module 016 -
+- [[SMG1P6]] — SMG1 pseudogene 6 · module 005 +
+- [[SMG1P7]] — SMG1 pseudogene 7 · module 037 +
+- [[SMG5]] — SMG5 nonsense mediated mRNA decay factor · module 036 +
+- [[SMG6]] — SMG6 nonsense mediated mRNA decay factor · module 003 +
+- [[SMG7]] — SMG7 nonsense mediated mRNA decay factor · module 025 +
+- [[SMG8]] — SMG8 nonsense mediated mRNA decay factor · module 007 +
+- [[SMG9]] — SMG9 nonsense mediated mRNA decay factor · module 029 -
+- [[SMIM10]] — small integral membrane protein 10 · module 045 +
+- [[SMIM10L1]] — small integral membrane protein 10 like 1 · module 007 +
+- [[SMIM12]] — small integral membrane protein 12 · module 015 +
+- [[SMIM13]] — small integral membrane protein 13 · module 018 +
+- [[SMIM14]] — small integral membrane protein 14 · module 069 +
+- [[SMIM15]] — small integral membrane protein 15 · module 007 +
+- [[SMIM15-AS1]] — SMIM15 antisense RNA 1 · module 083 +
+- [[SMIM19]] — small integral membrane protein 19 · module 010 +
+- [[SMIM2-AS1]] — SMIM2 antisense RNA 1 · module 008 +
+- [[SMIM20]] — small integral membrane protein 20 · module 063 +
+- [[SMIM26]] — small integral membrane protein 26 · module 024 +
+- [[SMIM27]] — transition zone microprotein 1 · module 024 +
+- [[SMIM29]] — small integral membrane protein 29 · module 020 -
+- [[SMIM3]] — small integral membrane protein 3 · module 054 +
+- [[SMIM30]] — small integral membrane protein 30 · module 024 +
+- [[SMIM31]] — small integral membrane protein 31 · module 008 +
+- [[SMIM4]] — ubiquinol-cytochrome c reductase complex assembly factor 5 · module 023 +
+- [[SMIM41]] — small integral membrane protein 41 · module 047 +
+- [[SMIM7]] — small integral membrane protein 7 · module 036 +
+- [[SMIM8]] — small integral membrane protein 8 · module 129 +
+- [[SMN1]] — survival of motor neuron 1, telomeric · module 049 +
+- [[SMN2]] — survival of motor neuron 2, centromeric · module 089 +
+- [[SMNDC1]] — survival motor neuron domain containing 1 · module 011 +
+- [[SMO]] — smoothened, frizzled class receptor · module 102 +
+- [[SMOC1]] — SPARC related modular calcium binding 1 · module 019 +
+- [[SMOC2]] — SPARC related modular calcium binding 2 · module 027 +
+- [[SMOX]] — spermine oxidase · module 136 +
+- [[SMPD1]] — sphingomyelin phosphodiesterase 1 · module 050 +
+- [[SMPD2]] — sphingomyelin phosphodiesterase 2 · module 014 +
+- [[SMPD3]] — sphingomyelin phosphodiesterase 3 · module 165 +
+- [[SMPD4]] — sphingomyelin phosphodiesterase 4 · module 071 +
+- [[SMPD4BP]] — sphingomyelin phosphodiesterase 4B, pseudogene · module 071 +
+- [[SMPDL3A]] — sphingomyelin phosphodiesterase acid like 3A · module 171 +
+- [[SMPDL3B]] — sphingomyelin phosphodiesterase acid like 3B · module 044 +
+- [[SMS]] — spermine synthase · module 154 +
+- [[SMTN]] — smoothelin · module 081 +
+- [[SMU1]] — SMU1 DNA replication regulator and spliceosomal factor · module 025 +
+- [[SMUG1]] — single-strand-selective monofunctional uracil-DNA glycosylase 1 · module 015 +
+- [[SMURF1]] — SMAD specific E3 ubiquitin protein ligase 1 · module 160 +
+- [[SMURF2]] — SMAD specific E3 ubiquitin protein ligase 2 · module 120 +
+- [[SMYD2]] — SET and MYND domain containing 2 · module 105 +
+- [[SMYD3]] — SET and MYND domain containing 3 · module 023 -
+- [[SMYD4]] — SET and MYND domain containing 4 · module 003 +
+- [[SMYD5]] — SMYD family member 5 · module 001 +
+- [[SNAI1]] — snail family transcriptional repressor 1 · module 093 +
+- [[SNAI2]] — snail family transcriptional repressor 2 · module 098 +
+- [[SNAI3-AS1]] — SNAI3 antisense RNA 1 · module 086 +
+- [[SNAP23]] — synaptosome associated protein 23 · module 025 +
+- [[SNAP25]] — synaptosome associated protein 25 · module 152 +
+- [[SNAP25-AS1]] — SNAP25 antisense RNA 1 · module 021 +
+- [[SNAP29]] — synaptosome associated protein 29 · module 041 +
+- [[SNAP47]] — synaptosome associated protein 47 · module 127 +
+- [[SNAP91]] — synaptosome associated protein 91 · module 061 +
+- [[SNAPC1]] — small nuclear RNA activating complex polypeptide 1 · module 079 +
+- [[SNAPC2]] — small nuclear RNA activating complex polypeptide 2 · module 003 +
+- [[SNAPC3]] — small nuclear RNA activating complex polypeptide 3 · module 164 +
+- [[SNAPC4]] — small nuclear RNA activating complex polypeptide 4 · module 001 +
+- [[SNAPC5]] — small nuclear RNA activating complex polypeptide 5 · module 083 +
+- [[SNAPIN]] — SNAP associated protein · module 012 +
+- [[SNCA]] — synuclein alpha · module 019 +
+- [[SNCAIP]] — synuclein alpha interacting protein · module 009 +
+- [[SNCG]] — synuclein gamma · module 106 +
+- [[SND1]] — staphylococcal nuclease and tudor domain containing 1 · module 042 +
+- [[SNED1]] — sushi, nidogen and EGF like domains 1 · module 097 +
+- [[SNED1-AS1]] — SNED1 antisense RNA 1 · module 037 +
+- [[SNF8]] — SNF8 subunit of ESCRT-II · module 052 +
+- [[SNHG1]] — small nucleolar RNA host gene 1 · module 020 -
+- [[SNHG10]] — small nucleolar RNA host gene 10 · module 015 +
+- [[SNHG11]] — small nucleolar RNA host gene 11 · module 012 +
+- [[SNHG12]] — small nucleolar RNA host gene 12 · module 020 -
+- [[SNHG14]] — small nucleolar RNA host gene 14 · module 026 +
+- [[SNHG15]] — small nucleolar RNA host gene 15 · module 033 +
+- [[SNHG16]] — small nucleolar RNA host gene 16 · module 033 +
+- [[SNHG17]] — small nucleolar RNA host gene 17 · module 033 +
+- [[SNHG18]] — small nucleolar RNA host gene 18 · module 040 +
+- [[SNHG19]] — small nucleolar RNA host gene 19 · module 024 +
+- [[SNHG21]] — small nucleolar RNA host gene 21 · module 179 +
+- [[SNHG22]] — small nucleolar RNA host gene 22 · module 126 +
+- [[SNHG25]] — small nucleolar RNA host gene 25 · module 131 +
+- [[SNHG26]] — small nucleolar RNA host gene 26 · module 001 +
+- [[SNHG29]] — small nucleolar RNA host gene 29 · module 043 +
+- [[SNHG30]] — small nucleolar RNA host gene 30 · module 168 +
+- [[SNHG31]] — small nucleolar RNA host gene 31 · module 026 +
+- [[SNHG32]] — small nucleolar RNA host gene 32 · module 020 -
+- [[SNHG6]] — small nucleolar RNA host gene 6 · module 043 +
+- [[SNHG7]] — small nucleolar RNA host gene 7 · module 024 +
+- [[SNHG8]] — small nucleolar RNA host gene 8 · module 020 -
+- [[SNHG9]] — small nucleolar RNA host gene 9 · module 024 +
+- [[SNIP1]] — Smad nuclear interacting protein 1 · module 041 +
+- [[SNN]] — stannin · module 148 -
+- [[SNORC]] — secondary ossification center associated regulator of chondrocyte maturation
+- [[SNPH]] — syntaphilin · module 132 +
+- [[SNRK]] — SNF related kinase · module 034 +
+- [[SNRNP200]] — small nuclear ribonucleoprotein U5 subunit 200 · module 127 +
+- [[SNRNP25]] — small nuclear ribonucleoprotein U11/U12 subunit 25 · module 058 +
+- [[SNRNP27]] — small nuclear ribonucleoprotein U4/U6.U5 subunit 27 · module 012 +
+- [[SNRNP35]] — small nuclear ribonucleoprotein U11/U12 subunit 35 · module 114 +
+- [[SNRNP40]] — small nuclear ribonucleoprotein U5 subunit 40 · module 006 +
+- [[SNRNP48]] — small nuclear ribonucleoprotein U11/U12 subunit 48 · module 030 +
+- [[SNRNP70]] — small nuclear ribonucleoprotein U1 subunit 70 · module 033 +
+- [[SNRPA]] — small nuclear ribonucleoprotein polypeptide A · module 006 +
+- [[SNRPA1]] — small nuclear ribonucleoprotein polypeptide A' · module 182 +
+- [[SNRPB]] — small nuclear ribonucleoprotein polypeptides B and B1 · module 071 +
+- [[SNRPB2]] — small nuclear ribonucleoprotein polypeptide B2 · module 012 +
+- [[SNRPC]] — small nuclear ribonucleoprotein polypeptide C · module 057 +
+- [[SNRPD1]] — small nuclear ribonucleoprotein D1 polypeptide · module 004 +
+- [[SNRPD2]] — small nuclear ribonucleoprotein D2 polypeptide · module 131 +
+- [[SNRPD3]] — small nuclear ribonucleoprotein D3 polypeptide · module 036 +
+- [[SNRPE]] — small nuclear ribonucleoprotein polypeptide E · module 004 +
+- [[SNRPF]] — small nuclear ribonucleoprotein polypeptide F · module 004 +
+- [[SNRPG]] — small nuclear ribonucleoprotein polypeptide G · module 029 +
+- [[SNRPN]] — small nuclear ribonucleoprotein polypeptide N · module 045 +
+- [[SNTA1]] — syntrophin alpha 1 · module 030 +
+- [[SNTB1]] — syntrophin beta 1 · module 055 +
+- [[SNTB2]] — syntrophin beta 2 · module 017 -
+- [[SNTG1]] — syntrophin gamma 1 · module 009 +
+- [[SNTG2]] — syntrophin gamma 2 · module 061 +
+- [[SNU13]] — small nuclear ribonucleoprotein 13 · module 054 +
+- [[SNUPN]] — snurportin 1 · module 020 +
+- [[SNW1]] — SNW domain containing 1 · module 012 +
+- [[SNX1]] — sorting nexin 1 · module 045 +
+- [[SNX10]] — sorting nexin 10 · module 132 +
+- [[SNX11]] — sorting nexin 11 · module 017 +
+- [[SNX12]] — sorting nexin 12 · module 051 +
+- [[SNX13]] — sorting nexin 13 · module 072 +
+- [[SNX14]] — sorting nexin 14 · module 134 +
+- [[SNX15]] — sorting nexin 15 · module 017 +
+- [[SNX16]] — sorting nexin 16 · module 199 +
+- [[SNX17]] — sorting nexin 17 · module 025 +
+- [[SNX18]] — sorting nexin 18 · module 017 +
+- [[SNX19]] — sorting nexin 19 · module 005 +
+- [[SNX2]] — sorting nexin 2 · module 045 +
+- [[SNX21]] — sorting nexin family member 21 · module 007 +
+- [[SNX24]] — sorting nexin 24 · module 018 +

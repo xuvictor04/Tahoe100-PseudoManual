@@ -1,0 +1,18 @@
+{
+"nodes": [
+{"id": "legend", "type": "text", "x": -40, "y": -260, "width": 560, "height": 200, "text": "**Module 234**\n\n5 genes at their nodal-map positions. A single-armed module: every gene is + (green). Edge label + = move together, − = opposite."},
+{"id": "g4351", "type": "file", "file": "Genes/chr7/HERPUD2.md", "x": 1400, "y": 70, "width": 180, "height": 50, "color": "4"},
+{"id": "g8262", "type": "file", "file": "Genes/chr1/GPBP1L1.md", "x": 1200, "y": 70, "width": 180, "height": 50, "color": "4"},
+{"id": "g7873", "type": "file", "file": "Genes/chr6/CDK19.md", "x": 1400, "y": 0, "width": 180, "height": 50, "color": "4"},
+{"id": "g1972", "type": "file", "file": "Genes/chr14/SOS2.md", "x": 0, "y": 3010, "width": 180, "height": 50, "color": "4"},
+{"id": "g8042", "type": "file", "file": "Genes/chr5/FCHO2.md", "x": 1800, "y": 140, "width": 180, "height": 50, "color": "4"}
+],
+"edges": [
+{"id": "e1972_4351", "fromNode": "g1972", "toNode": "g4351", "label": "+"},
+{"id": "e4351_7873", "fromNode": "g4351", "toNode": "g7873", "label": "+"},
+{"id": "e4351_8042", "fromNode": "g4351", "toNode": "g8042", "label": "+"},
+{"id": "e4351_8262", "fromNode": "g4351", "toNode": "g8262", "label": "+"},
+{"id": "e7873_8262", "fromNode": "g7873", "toNode": "g8262", "label": "+"},
+{"id": "e8042_8262", "fromNode": "g8042", "toNode": "g8262", "label": "+"}
+]
+}

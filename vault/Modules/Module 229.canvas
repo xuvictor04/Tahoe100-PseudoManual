@@ -1,0 +1,20 @@
+{
+"nodes": [
+{"id": "legend", "type": "text", "x": -40, "y": -260, "width": 560, "height": 200, "text": "**Module 229**\n\n6 genes at their nodal-map positions. A single-armed module: every gene is + (green). Edge label + = move together, − = opposite."},
+{"id": "g6958", "type": "file", "file": "Genes/chr3/TM4SF19.md", "x": 2600, "y": 1960, "width": 180, "height": 50, "color": "4"},
+{"id": "g13392", "type": "file", "file": "Genes/chr7/RABGEF1P3.md", "x": 2600, "y": 2170, "width": 180, "height": 50, "color": "4"},
+{"id": "g15779", "type": "file", "file": "Genes/chr3/TM4SF19-DYNLT2B.md", "x": 2600, "y": 1820, "width": 180, "height": 50, "color": "4"},
+{"id": "g7206", "type": "file", "file": "Genes/chr8/ATP6V0D2.md", "x": 2600, "y": 2030, "width": 180, "height": 50, "color": "4"},
+{"id": "g3522", "type": "file", "file": "Genes/chr3/ARMC8.md", "x": 800, "y": 0, "width": 180, "height": 50, "color": "4"},
+{"id": "g18", "type": "file", "file": "Genes/chr7/MYH16.md", "x": 0, "y": 3010, "width": 180, "height": 50, "color": "4"}
+],
+"edges": [
+{"id": "e18_13392", "fromNode": "g18", "toNode": "g13392", "label": "+"},
+{"id": "e3522_13392", "fromNode": "g3522", "toNode": "g13392", "label": "-"},
+{"id": "e6958_7206", "fromNode": "g6958", "toNode": "g7206", "label": "+"},
+{"id": "e6958_13392", "fromNode": "g6958", "toNode": "g13392", "label": "+"},
+{"id": "e6958_15779", "fromNode": "g6958", "toNode": "g15779", "label": "+"},
+{"id": "e7206_13392", "fromNode": "g7206", "toNode": "g13392", "label": "+"},
+{"id": "e7206_15779", "fromNode": "g7206", "toNode": "g15779", "label": "+"}
+]
+}

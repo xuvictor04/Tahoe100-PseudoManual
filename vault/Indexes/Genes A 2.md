@@ -1,0 +1,120 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes A 2
+
+110 genes. Back to [[Genes by letter]].
+
+- [[ATP13A3]] — ATPase 13A3 · module 078 +
+- [[ATP13A3-DT]] — ATP13A3 divergent transcript · module 101 +
+- [[ATP1A1]] — ATPase Na+/K+ transporting subunit alpha 1 · module 097 +
+- [[ATP1A1-AS1]] — ATP1A1 antisense RNA 1 · module 010 +
+- [[ATP1A3]] — ATPase Na+/K+ transporting subunit alpha 3 · module 176 +
+- [[ATP1B1]] — ATPase Na+/K+ transporting subunit beta 1 · module 008 +
+- [[ATP1B3]] — ATPase Na+/K+ transporting subunit beta 3 · module 007 -
+- [[ATP23]] — ATP23 metallopeptidase and ATP synthase assembly factor homolog · module 014 +
+- [[ATP2A1]] — ATPase sarcoplasmic/endoplasmic reticulum Ca2+ transporting 1 · module 038 +
+- [[ATP2A2]] — ATPase sarcoplasmic/endoplasmic reticulum Ca2+ transporting 2 · module 020 +
+- [[ATP2A3]] — ATPase sarcoplasmic/endoplasmic reticulum Ca2+ transporting 3 · module 161 +
+- [[ATP2B1]] — ATPase plasma membrane Ca2+ transporting 1 · module 081 +
+- [[ATP2B4]] — ATPase plasma membrane Ca2+ transporting 4 · module 113 +
+- [[ATP2C1]] — ATPase secretory pathway Ca2+ transporting 1 · module 060 +
+- [[ATP2C2]] — ATPase secretory pathway Ca2+ transporting 2 · module 031 +
+- [[ATP2C2-AS1]] — ATP2C2 antisense RNA 1 · module 101 +
+- [[ATP5F1A]] — ATP synthase F1 subunit alpha · module 029 +
+- [[ATP5F1B]] — ATP synthase F1 subunit beta · module 029 +
+- [[ATP5F1C]] — ATP synthase F1 subunit gamma · module 057 +
+- [[ATP5F1D]] — ATP synthase F1 subunit delta · module 058 +
+- [[ATP5F1E]] — ATP synthase F1 subunit epsilon · module 048 +
+- [[ATP5IF1]] — ATP synthase inhibitory factor subunit 1 · module 048 +
+- [[ATP5MC1]] — ATP synthase membrane subunit c locus 1 · module 058 +
+- [[ATP5MC2]] — ATP synthase membrane subunit c locus 2 · module 043 +
+- [[ATP5MC3]] — ATP synthase membrane subunit c locus 3 · module 058 +
+- [[ATP5ME]] — ATP synthase membrane subunit e · module 048 +
+- [[ATP5MF]] — ATP synthase membrane subunit f · module 048 +
+- [[ATP5MG]] — ATP synthase membrane subunit g · module 131 +
+- [[ATP5MJ]] — ATP synthase membrane subunit j · module 048 +
+- [[ATP5MK]] — ATP synthase membrane subunit k · module 048 +
+- [[ATP5PB]] — ATP synthase peripheral stalk-membrane subunit b · module 028 +
+- [[ATP5PD]] — ATP synthase peripheral stalk subunit d · module 048 +
+- [[ATP5PF]] — ATP synthase peripheral stalk subunit F6 · module 048 +
+- [[ATP5PO]] — ATP synthase peripheral stalk subunit OSCP · module 024 +
+- [[ATP6AP1]] — ATPase H+ transporting accessory protein 1 · module 050 +
+- [[ATP6AP1L]] — ATPase H+ transporting accessory protein 1 like (pseudogene) · module 010 +
+- [[ATP6AP2]] — ATPase H+ transporting accessory protein 2 · module 042 +
+- [[ATP6V0A1]] — ATPase H+ transporting V0 subunit a1 · module 125 +
+- [[ATP6V0A2]] — ATPase H+ transporting V0 subunit a2 · module 036 +
+- [[ATP6V0A4]] — ATPase H+ transporting V0 subunit a4 · module 090 +
+- [[ATP6V0B]] — ATPase H+ transporting V0 subunit b · module 024 +
+- [[ATP6V0C]] — ATPase H+ transporting V0 subunit c · module 059 +
+- [[ATP6V0D1]] — ATPase H+ transporting V0 subunit d1 · module 059 +
+- [[ATP6V0D1-DT]] — ATP6V0D1 divergent transcript · module 035 +
+- [[ATP6V0D2]] — ATPase H+ transporting V0 subunit d2 · module 229 +
+- [[ATP6V0E1]] — ATPase H+ transporting V0 subunit e1 · module 024 +
+- [[ATP6V0E2]] — ATPase H+ transporting V0 subunit e2 · module 045 +
+- [[ATP6V1A]] — ATPase H+ transporting V1 subunit A · module 045 +
+- [[ATP6V1B2]] — ATPase H+ transporting V1 subunit B2 · module 045 +
+- [[ATP6V1C1]] — ATPase H+ transporting V1 subunit C1 · module 122 +
+- [[ATP6V1C2]] — ATPase H+ transporting V1 subunit C2 · module 021 +
+- [[ATP6V1D]] — ATPase H+ transporting V1 subunit D · module 146 -
+- [[ATP6V1E1]] — ATPase H+ transporting V1 subunit E1 · module 118 +
+- [[ATP6V1E2]] — ATPase H+ transporting V1 subunit E2 · module 010 +
+- [[ATP6V1F]] — ATPase H+ transporting V1 subunit F · module 024 +
+- [[ATP6V1G1]] — ATPase H+ transporting V1 subunit G1 · module 006 -
+- [[ATP6V1H]] — ATPase H+ transporting V1 subunit H · module 122 +
+- [[ATP7A]] — ATPase copper transporting alpha · module 015 -
+- [[ATP7B]] — ATPase copper transporting beta · module 077 +
+- [[ATP8A1]] — ATPase phospholipid transporting 8A1 · module 045 +
+- [[ATP8A2]] — ATPase phospholipid transporting 8A2 · module 165 +
+- [[ATP8B1]] — ATPase phospholipid transporting 8B1 · module 044 +
+- [[ATP8B2]] — ATPase phospholipid transporting 8B2 · module 208 +
+- [[ATP8B3]] — ATPase phospholipid transporting 8B3 · module 067 +
+- [[ATP8B4]] — ATPase phospholipid transporting 8B4 (putative) · module 140 +
+- [[ATP8B5P-1]] · module 047 +
+- [[ATP9A]] — ATPase phospholipid transporting 9A · module 232 +
+- [[ATP9B]] — ATPase phospholipid transporting 9B · module 005 +
+- [[ATPAF1]] — ATP synthase mitochondrial F1 complex assembly factor 1 · module 175 +
+- [[ATPAF2]] — ATP synthase mitochondrial F1 complex assembly factor 2 · module 030 +
+- [[ATPSCKMT]] — ATP synthase c subunit lysine N-methyltransferase · module 060 +
+- [[ATR]] — ATR checkpoint kinase · module 005 +
+- [[ATRAID]] — all-trans retinoic acid induced differentiation factor · module 029 +
+- [[ATRIP]] — ATR interacting protein · module 032 +
+- [[ATRN]] — attractin · module 134 +
+- [[ATRNL1]] — attractin like 1 · module 009 +
+- [[ATRX]] — ATRX chromatin remodeler · module 051 +
+- [[ATXN1]] — ataxin 1 · module 175 +
+- [[ATXN1-AS1]] — ATXN1 antisense RNA 1 · module 010 +
+- [[ATXN10]] — ataxin 10 · module 001 +
+- [[ATXN1L]] — ataxin 1 like · module 035 +
+- [[ATXN2]] — ataxin 2 · module 074 +
+- [[ATXN2L]] — ataxin 2 like · module 126 +
+- [[ATXN3]] — ataxin 3 · module 187 +
+- [[ATXN7]] — ataxin 7 · module 095 +
+- [[ATXN7L1]] — ataxin 7 like 1 · module 143 +
+- [[ATXN7L2]] — ataxin 7 like 2 · module 096 +
+- [[ATXN7L3]] — ataxin 7 like 3 · module 002 +
+- [[ATXN7L3-AS1]] — ATXN7L3 antisense RNA 1 · module 035 +
+- [[ATXN7L3B]] — ataxin 7 like 3B · module 016 +
+- [[AUH]] — AU RNA binding methylglutaconyl-CoA hydratase · module 076 +
+- [[AUNIP]] — aurora kinase A and ninein interacting protein · module 006 +
+- [[AUP1]] — AUP1 lipid droplet regulating VLDL assembly factor · module 007 +
+- [[AURKA]] — aurora kinase A · module 022 +
+- [[AURKAIP1]] — aurora kinase A interacting protein 1 · module 054 +
+- [[AURKB]] — aurora kinase B · module 067 +
+- [[AUTS2]] — activator of transcription and developmental regulator AUTS2 · module 009 +
+- [[AVEN]] — apoptosis and caspase activation inhibitor · module 124 +
+- [[AVIL]] — advillin · module 038 +
+- [[AVL9]] — AVL9 cell migration associated · module 036 +
+- [[AVPI1]] — arginine vasopressin induced 1 · module 079 +
+- [[AXDND1]] — axonemal dynein light chain domain containing 1 · module 053 +
+- [[AXIN1]] — axin 1 · module 002 +
+- [[AXIN2]] — axin 2 · module 027 +
+- [[AXL]] — AXL receptor tyrosine kinase · module 116 +
+- [[AZGP1]] — alpha-2-glycoprotein 1, zinc-binding · module 044 +
+- [[AZI2]] — 5-azacytidine induced 2 · module 028 +
+- [[AZIN1]] — antizyme inhibitor 1 · module 025 +
+- [[AZIN2]] — antizyme inhibitor 2 · module 088 -
+- [[AZU1]] — azurocidin 1 · module 053 +

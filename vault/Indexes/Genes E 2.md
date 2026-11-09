@@ -1,0 +1,1004 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes E 2
+
+994 genes. Back to [[Genes by letter]].
+
+- [[ENSG00000265334]]
+- [[ENSG00000265408]]
+- [[ENSG00000265496]]
+- [[ENSG00000265542]]
+- [[ENSG00000265554]]
+- [[ENSG00000265784]]
+- [[ENSG00000265943]]
+- [[ENSG00000265980]]
+- [[ENSG00000265987]]
+- [[ENSG00000265994]]
+- [[ENSG00000266049]]
+- [[ENSG00000266076]]
+- [[ENSG00000266086]]
+- [[ENSG00000266088]]
+- [[ENSG00000266302]]
+- [[ENSG00000266313]] — long independently transcribed non-coding RNA 3146
+- [[ENSG00000266385]]
+- [[ENSG00000266450]]
+- [[ENSG00000266573]]
+- [[ENSG00000266578]]
+- [[ENSG00000266602]]
+- [[ENSG00000266865]]
+- [[ENSG00000266869]]
+- [[ENSG00000266877]]
+- [[ENSG00000266908]]
+- [[ENSG00000266931]]
+- [[ENSG00000266953]]
+- [[ENSG00000266957]]
+- [[ENSG00000266976]] — endogenous retrovirus group E member 5
+- [[ENSG00000266978]] — lncRNA inflammatory and mucous response associated, antisense to ICAM1
+- [[ENSG00000266994]]
+- [[ENSG00000267009]]
+- [[ENSG00000267022]]
+- [[ENSG00000267047]]
+- [[ENSG00000267053]] — cyclin dependent kinase inhibitor 2A regulated lncRNA
+- [[ENSG00000267127]]
+- [[ENSG00000267131]]
+- [[ENSG00000267168]]
+- [[ENSG00000267174]] — TSPAN16 antisense RNA 1
+- [[ENSG00000267175]]
+- [[ENSG00000267179]]
+- [[ENSG00000267248]]
+- [[ENSG00000267284]]
+- [[ENSG00000267317]] — APC2 antisense RNA 1
+- [[ENSG00000267318]]
+- [[ENSG00000267327]] — long independently transcribed non-coding RNA 3092
+- [[ENSG00000267375]] — ACTN4 antisense RNA 1
+- [[ENSG00000267383]]
+- [[ENSG00000267405]]
+- [[ENSG00000267436]] — MFSD12 antisense RNA 1
+- [[ENSG00000267458]]
+- [[ENSG00000267476]]
+- [[ENSG00000267523]]
+- [[ENSG00000267561]]
+- [[ENSG00000267581]]
+- [[ENSG00000267645]] — POLR2J3-UPK3BL2 readthrough
+- [[ENSG00000267686]] — long independently transcribed non-coding RNA 3111
+- [[ENSG00000267698]]
+- [[ENSG00000267699]]
+- [[ENSG00000267737]]
+- [[ENSG00000267740]]
+- [[ENSG00000267748]]
+- [[ENSG00000267765]] — CNTNAP1 antisense RNA 1
+- [[ENSG00000267787]]
+- [[ENSG00000267881]]
+- [[ENSG00000267892]]
+- [[ENSG00000267922]]
+- [[ENSG00000268119]]
+- [[ENSG00000268163]]
+- [[ENSG00000268173]]
+- [[ENSG00000268205]] — lncRNA Wnt/beta-catenin associated regulator
+- [[ENSG00000268279]]
+- [[ENSG00000268403]] — ZNF143 antisense RNA 1
+- [[ENSG00000268465]]
+- [[ENSG00000268533]]
+- [[ENSG00000268575]]
+- [[ENSG00000268750]]
+- [[ENSG00000268797]]
+- [[ENSG00000268833]]
+- [[ENSG00000268870]]
+- [[ENSG00000269026]]
+- [[ENSG00000269069]]
+- [[ENSG00000269179]]
+- [[ENSG00000269237]]
+- [[ENSG00000269318]]
+- [[ENSG00000269476]]
+- [[ENSG00000269547]]
+- [[ENSG00000269635]]
+- [[ENSG00000269729]]
+- [[ENSG00000269749]]
+- [[ENSG00000269755]]
+- [[ENSG00000269807]]
+- [[ENSG00000269825]]
+- [[ENSG00000269967]]
+- [[ENSG00000269968]] — GAPDH antisense RNA 1
+- [[ENSG00000269973]]
+- [[ENSG00000270019]]
+- [[ENSG00000270055]]
+- [[ENSG00000270066]]
+- [[ENSG00000270087]]
+- [[ENSG00000270149]]
+- [[ENSG00000270240]] — CCL5 regulatory antisense RNA 1
+- [[ENSG00000270265]]
+- [[ENSG00000270299]]
+- [[ENSG00000270571]] — TACR1 antisense RNA 1
+- [[ENSG00000270792]]
+- [[ENSG00000270871]]
+- [[ENSG00000271204]]
+- [[ENSG00000271254]]
+- [[ENSG00000271533]]
+- [[ENSG00000271554]]
+- [[ENSG00000271590]]
+- [[ENSG00000271727]] — EXOC2 antisense RNA 2
+- [[ENSG00000271774]]
+- [[ENSG00000271793]]
+- [[ENSG00000271860]] — MIR2113 host gene
+- [[ENSG00000271862]]
+- [[ENSG00000271933]]
+- [[ENSG00000271945]]
+- [[ENSG00000271955]]
+- [[ENSG00000272009]]
+- [[ENSG00000272046]]
+- [[ENSG00000272104]]
+- [[ENSG00000272162]]
+- [[ENSG00000272297]]
+- [[ENSG00000272305]]
+- [[ENSG00000272316]]
+- [[ENSG00000272335]]
+- [[ENSG00000272368]]
+- [[ENSG00000272369]]
+- [[ENSG00000272405]]
+- [[ENSG00000272410]]
+- [[ENSG00000272438]]
+- [[ENSG00000272558]]
+- [[ENSG00000272622]]
+- [[ENSG00000272647]]
+- [[ENSG00000272657]]
+- [[ENSG00000272688]]
+- [[ENSG00000272763]] — long independently transcribed non-coding RNA 3057
+- [[ENSG00000272772]]
+- [[ENSG00000272800]]
+- [[ENSG00000272822]]
+- [[ENSG00000272831]]
+- [[ENSG00000272840]]
+- [[ENSG00000272916]]
+- [[ENSG00000272977]]
+- [[ENSG00000272980]]
+- [[ENSG00000273014]]
+- [[ENSG00000273088]]
+- [[ENSG00000273118]]
+- [[ENSG00000273149]]
+- [[ENSG00000273156]]
+- [[ENSG00000273184]]
+- [[ENSG00000273217]]
+- [[ENSG00000273230]]
+- [[ENSG00000273269]]
+- [[ENSG00000273270]] — long independently transcribed non-coding RNA 3072
+- [[ENSG00000273295]]
+- [[ENSG00000273297]] — long independently transcribed non-coding RNA 3060
+- [[ENSG00000273319]]
+- [[ENSG00000273329]]
+- [[ENSG00000273345]]
+- [[ENSG00000273398]]
+- [[ENSG00000273448]]
+- [[ENSG00000273489]]
+- [[ENSG00000273507]]
+- [[ENSG00000273674]] — AP4E1 divergent transcript
+- [[ENSG00000273734]]
+- [[ENSG00000273748]]
+- [[ENSG00000273763]]
+- [[ENSG00000273784]]
+- [[ENSG00000273828]]
+- [[ENSG00000274015]]
+- [[ENSG00000274213]]
+- [[ENSG00000274265]] — ferroptosis inhibiting SLC7A11 regulator
+- [[ENSG00000274322]]
+- [[ENSG00000274422]]
+- [[ENSG00000274471]]
+- [[ENSG00000274561]]
+- [[ENSG00000274949]]
+- [[ENSG00000275016]]
+- [[ENSG00000275119]]
+- [[ENSG00000275120]] — ZSCAN2 antisense RNA 1
+- [[ENSG00000275216]]
+- [[ENSG00000275234]] — DENND1C antisense RNA 1
+- [[ENSG00000275443]]
+- [[ENSG00000275464]]
+- [[ENSG00000275481]]
+- [[ENSG00000275649]]
+- [[ENSG00000275674]]
+- [[ENSG00000275734]]
+- [[ENSG00000275740]] — RBM27-POU4F3 readthrough
+- [[ENSG00000275895]]
+- [[ENSG00000275993]]
+- [[ENSG00000276150]]
+- [[ENSG00000276256]]
+- [[ENSG00000276418]]
+- [[ENSG00000276529]]
+- [[ENSG00000276850]]
+- [[ENSG00000276900]] — AMN1 antisense RNA 1
+- [[ENSG00000277007]]
+- [[ENSG00000277611]]
+- [[ENSG00000277693]]
+- [[ENSG00000277757]]
+- [[ENSG00000277938]]
+- [[ENSG00000278202]] — GOLGA6L9 overlapping transcript 1
+- [[ENSG00000278266]]
+- [[ENSG00000278276]]
+- [[ENSG00000278384]]
+- [[ENSG00000278390]] — KBTBD6 divergent transcript
+- [[ENSG00000278419]]
+- [[ENSG00000278730]]
+- [[ENSG00000278819]]
+- [[ENSG00000278996]]
+- [[ENSG00000279088]]
+- [[ENSG00000279145]]
+- [[ENSG00000279159]]
+- [[ENSG00000279207]]
+- [[ENSG00000279277]]
+- [[ENSG00000279289]]
+- [[ENSG00000279320]]
+- [[ENSG00000279453]]
+- [[ENSG00000279501]]
+- [[ENSG00000279529]]
+- [[ENSG00000279598]]
+- [[ENSG00000279608]]
+- [[ENSG00000279712]]
+- [[ENSG00000279806]]
+- [[ENSG00000279821]]
+- [[ENSG00000279838]]
+- [[ENSG00000279983]]
+- [[ENSG00000280007]]
+- [[ENSG00000280046]]
+- [[ENSG00000280047]]
+- [[ENSG00000280069]]
+- [[ENSG00000280077]]
+- [[ENSG00000280114]]
+- [[ENSG00000280128]]
+- [[ENSG00000280241]] — DCHS2 antisense RNA 1
+- [[ENSG00000280441]]
+- [[ENSG00000280561]]
+- [[ENSG00000280571]]
+- [[ENSG00000280607]]
+- [[ENSG00000280778]]
+- [[ENSG00000280878]]
+- [[ENSG00000281016]]
+- [[ENSG00000281021]]
+- [[ENSG00000281039]]
+- [[ENSG00000281091]]
+- [[ENSG00000281383]]
+- [[ENSG00000281566]] — long independently transcribed non-coding RNA 3077
+- [[ENSG00000281593]]
+- [[ENSG00000281883]]
+- [[ENSG00000282218]]
+- [[ENSG00000282278]]
+- [[ENSG00000282381]]
+- [[ENSG00000282440]]
+- [[ENSG00000282556]]
+- [[ENSG00000282849]]
+- [[ENSG00000282917]] — CORIN and NFXL1 antisense RNA 1
+- [[ENSG00000282943]] — PSG11, PSG2 and PSG5 antisense RNA 1
+- [[ENSG00000282988]]
+- [[ENSG00000283098]]
+- [[ENSG00000283103]]
+- [[ENSG00000283128]]
+- [[ENSG00000283201]]
+- [[ENSG00000283208]]
+- [[ENSG00000283217]]
+- [[ENSG00000283235]]
+- [[ENSG00000283240]]
+- [[ENSG00000283294]]
+- [[ENSG00000283321]]
+- [[ENSG00000283352]] — LINC00680-GUSBP4 readthrough, transcribed pseudogene
+- [[ENSG00000283360]]
+- [[ENSG00000283380]]
+- [[ENSG00000283411]]
+- [[ENSG00000283415]]
+- [[ENSG00000283445]]
+- [[ENSG00000283480]]
+- [[ENSG00000283491]]
+- [[ENSG00000283511]] — sperm microtubule inner protein 1B, pseudogene
+- [[ENSG00000283515]]
+- [[ENSG00000283573]]
+- [[ENSG00000283580]]
+- [[ENSG00000283633]]
+- [[ENSG00000283674]]
+- [[ENSG00000283696]]
+- [[ENSG00000283761]]
+- [[ENSG00000283765]]
+- [[ENSG00000283782]]
+- [[ENSG00000283959]]
+- [[ENSG00000283977]]
+- [[ENSG00000283982]]
+- [[ENSG00000284052]]
+- [[ENSG00000284116]]
+- [[ENSG00000284292]]
+- [[ENSG00000284418]] — long independently transcribed non-coding RNA 3142
+- [[ENSG00000284461]]
+- [[ENSG00000284512]]
+- [[ENSG00000284523]]
+- [[ENSG00000284526]]
+- [[ENSG00000284624]]
+- [[ENSG00000284634]]
+- [[ENSG00000284644]]
+- [[ENSG00000284685]]
+- [[ENSG00000284686]]
+- [[ENSG00000284691]]
+- [[ENSG00000284697]]
+- [[ENSG00000284707]]
+- [[ENSG00000284716]]
+- [[ENSG00000284738]]
+- [[ENSG00000284762]]
+- [[ENSG00000284772]]
+- [[ENSG00000284773]]
+- [[ENSG00000284879]] — NK cell activity associated lncRNA 1
+- [[ENSG00000284906]]
+- [[ENSG00000284946]]
+- [[ENSG00000284952]]
+- [[ENSG00000284956]]
+- [[ENSG00000284959]] — TSHR antisense RNA 1
+- [[ENSG00000284966]]
+- [[ENSG00000284969]]
+- [[ENSG00000285000]]
+- [[ENSG00000285016]]
+- [[ENSG00000285043]]
+- [[ENSG00000285080]]
+- [[ENSG00000285082]]
+- [[ENSG00000285090]]
+- [[ENSG00000285130]]
+- [[ENSG00000285155]]
+- [[ENSG00000285184]] — VPS45 antisense RNA 1
+- [[ENSG00000285190]] — CCNH antisense RNA 1
+- [[ENSG00000285216]] — SLC35B3 antisense RNA 1
+- [[ENSG00000285218]]
+- [[ENSG00000285238]]
+- [[ENSG00000285253]]
+- [[ENSG00000285257]]
+- [[ENSG00000285269]]
+- [[ENSG00000285280]] — RSG2 antisense RNA 1
+- [[ENSG00000285329]]
+- [[ENSG00000285330]]
+- [[ENSG00000285367]] — SALL1 antisense RNA 1
+- [[ENSG00000285382]]
+- [[ENSG00000285404]]
+- [[ENSG00000285458]]
+- [[ENSG00000285471]]
+- [[ENSG00000285517]]
+- [[ENSG00000285534]]
+- [[ENSG00000285542]]
+- [[ENSG00000285558]]
+- [[ENSG00000285565]]
+- [[ENSG00000285572]]
+- [[ENSG00000285579]]
+- [[ENSG00000285589]]
+- [[ENSG00000285596]]
+- [[ENSG00000285608]]
+- [[ENSG00000285635]]
+- [[ENSG00000285650]]
+- [[ENSG00000285658]]
+- [[ENSG00000285664]] — GNPNAT1 divergent transcript
+- [[ENSG00000285667]]
+- [[ENSG00000285669]]
+- [[ENSG00000285677]]
+- [[ENSG00000285679]]
+- [[ENSG00000285688]]
+- [[ENSG00000285692]] — ATF7 antisense RNA 2
+- [[ENSG00000285693]]
+- [[ENSG00000285696]]
+- [[ENSG00000285708]]
+- [[ENSG00000285710]]
+- [[ENSG00000285713]]
+- [[ENSG00000285725]]
+- [[ENSG00000285728]]
+- [[ENSG00000285733]]
+- [[ENSG00000285743]]
+- [[ENSG00000285744]] — metabolism induced tumor activator 1
+- [[ENSG00000285751]]
+- [[ENSG00000285755]] — long independently transcribed non-coding RNA 3171
+- [[ENSG00000285756]]
+- [[ENSG00000285796]]
+- [[ENSG00000285804]] — MAP1B antisense RNA 1
+- [[ENSG00000285816]]
+- [[ENSG00000285822]]
+- [[ENSG00000285827]]
+- [[ENSG00000285834]]
+- [[ENSG00000285835]]
+- [[ENSG00000285837]]
+- [[ENSG00000285845]]
+- [[ENSG00000285851]]
+- [[ENSG00000285859]]
+- [[ENSG00000285867]]
+- [[ENSG00000285868]]
+- [[ENSG00000285877]]
+- [[ENSG00000285879]]
+- [[ENSG00000285889]]
+- [[ENSG00000285897]]
+- [[ENSG00000285901]]
+- [[ENSG00000285906]]
+- [[ENSG00000285909]]
+- [[ENSG00000285920]]
+- [[ENSG00000285932]]
+- [[ENSG00000285939]]
+- [[ENSG00000285942]]
+- [[ENSG00000285953]]
+- [[ENSG00000285976]]
+- [[ENSG00000285982]]
+- [[ENSG00000285999]]
+- [[ENSG00000286001]]
+- [[ENSG00000286010]]
+- [[ENSG00000286016]]
+- [[ENSG00000286026]]
+- [[ENSG00000286033]]
+- [[ENSG00000286034]]
+- [[ENSG00000286035]]
+- [[ENSG00000286044]]
+- [[ENSG00000286046]] — long independently transcribed non-coding RNA 3215
+- [[ENSG00000286048]] — ITGA2 antisense RNA 2
+- [[ENSG00000286058]]
+- [[ENSG00000286074]] — NUP54 divergent transcript
+- [[ENSG00000286076]]
+- [[ENSG00000286098]]
+- [[ENSG00000286099]]
+- [[ENSG00000286125]]
+- [[ENSG00000286129]]
+- [[ENSG00000286132]]
+- [[ENSG00000286133]]
+- [[ENSG00000286134]]
+- [[ENSG00000286136]]
+- [[ENSG00000286138]]
+- [[ENSG00000286145]]
+- [[ENSG00000286153]] — RUNX1 antisense RNA 1
+- [[ENSG00000286162]] — interferon stimulated noncoding RNA 1
+- [[ENSG00000286163]]
+- [[ENSG00000286185]]
+- [[ENSG00000286215]] — vimentin 2, pseudogene
+- [[ENSG00000286221]]
+- [[ENSG00000286230]]
+- [[ENSG00000286235]]
+- [[ENSG00000286239]]
+- [[ENSG00000286242]]
+- [[ENSG00000286251]]
+- [[ENSG00000286263]]
+- [[ENSG00000286277]]
+- [[ENSG00000286319]]
+- [[ENSG00000286329]]
+- [[ENSG00000286366]]
+- [[ENSG00000286369]]
+- [[ENSG00000286379]]
+- [[ENSG00000286385]]
+- [[ENSG00000286415]]
+- [[ENSG00000286416]]
+- [[ENSG00000286458]]
+- [[ENSG00000286480]]
+- [[ENSG00000286481]]
+- [[ENSG00000286511]]
+- [[ENSG00000286523]]
+- [[ENSG00000286533]]
+- [[ENSG00000286536]]
+- [[ENSG00000286540]]
+- [[ENSG00000286546]]
+- [[ENSG00000286563]] — long independently transcribed non-coding RNA 3240
+- [[ENSG00000286608]]
+- [[ENSG00000286619]] — PM20D1 antisense RNA 1
+- [[ENSG00000286652]]
+- [[ENSG00000286677]]
+- [[ENSG00000286681]]
+- [[ENSG00000286724]]
+- [[ENSG00000286736]]
+- [[ENSG00000286739]]
+- [[ENSG00000286753]] — ICE1 divergent transcript
+- [[ENSG00000286782]]
+- [[ENSG00000286786]]
+- [[ENSG00000286787]]
+- [[ENSG00000286797]]
+- [[ENSG00000286803]]
+- [[ENSG00000286808]]
+- [[ENSG00000286828]]
+- [[ENSG00000286830]]
+- [[ENSG00000286846]]
+- [[ENSG00000286850]]
+- [[ENSG00000286853]]
+- [[ENSG00000286856]]
+- [[ENSG00000286861]]
+- [[ENSG00000286863]]
+- [[ENSG00000286883]]
+- [[ENSG00000286895]]
+- [[ENSG00000286952]]
+- [[ENSG00000286964]]
+- [[ENSG00000287001]]
+- [[ENSG00000287003]]
+- [[ENSG00000287022]]
+- [[ENSG00000287023]]
+- [[ENSG00000287032]]
+- [[ENSG00000287042]]
+- [[ENSG00000287044]]
+- [[ENSG00000287045]]
+- [[ENSG00000287069]]
+- [[ENSG00000287086]]
+- [[ENSG00000287093]]
+- [[ENSG00000287100]]
+- [[ENSG00000287124]]
+- [[ENSG00000287127]]
+- [[ENSG00000287129]]
+- [[ENSG00000287149]]
+- [[ENSG00000287158]] — long independently transcribed non-coding RNA 3214
+- [[ENSG00000287172]]
+- [[ENSG00000287176]]
+- [[ENSG00000287180]] — ARB2A antisense RNA 1
+- [[ENSG00000287188]] — ANXA10 antisense RNA 1
+- [[ENSG00000287211]]
+- [[ENSG00000287226]]
+- [[ENSG00000287231]]
+- [[ENSG00000287249]]
+- [[ENSG00000287263]]
+- [[ENSG00000287264]]
+- [[ENSG00000287277]]
+- [[ENSG00000287291]]
+- [[ENSG00000287292]] — NR3C2 divergent transcript
+- [[ENSG00000287299]]
+- [[ENSG00000287306]]
+- [[ENSG00000287335]]
+- [[ENSG00000287348]]
+- [[ENSG00000287351]] — ANKRD11 antisense RNA 1
+- [[ENSG00000287352]]
+- [[ENSG00000287378]]
+- [[ENSG00000287390]]
+- [[ENSG00000287400]]
+- [[ENSG00000287426]]
+- [[ENSG00000287460]]
+- [[ENSG00000287474]]
+- [[ENSG00000287507]]
+- [[ENSG00000287530]]
+- [[ENSG00000287544]]
+- [[ENSG00000287555]]
+- [[ENSG00000287562]]
+- [[ENSG00000287598]]
+- [[ENSG00000287608]]
+- [[ENSG00000287621]]
+- [[ENSG00000287622]]
+- [[ENSG00000287625]]
+- [[ENSG00000287683]]
+- [[ENSG00000287691]]
+- [[ENSG00000287712]]
+- [[ENSG00000287721]]
+- [[ENSG00000287725]]
+- [[ENSG00000287778]] — HS3ST1 antisense RNA 1
+- [[ENSG00000287856]]
+- [[ENSG00000287861]]
+- [[ENSG00000287862]]
+- [[ENSG00000287917]]
+- [[ENSG00000287923]]
+- [[ENSG00000287925]]
+- [[ENSG00000287929]]
+- [[ENSG00000287934]]
+- [[ENSG00000287943]]
+- [[ENSG00000287975]]
+- [[ENSG00000287976]]
+- [[ENSG00000288000]]
+- [[ENSG00000288016]]
+- [[ENSG00000288018]]
+- [[ENSG00000288025]] — SCRG1 antisense RNA 1
+- [[ENSG00000288033]]
+- [[ENSG00000288044]]
+- [[ENSG00000288061]]
+- [[ENSG00000288075]]
+- [[ENSG00000288087]]
+- [[ENSG00000288093]]
+- [[ENSG00000288098]]
+- [[ENSG00000288107]]
+- [[ENSG00000288271]]
+- [[ENSG00000288520]]
+- [[ENSG00000288528]]
+- [[ENSG00000288542]]
+- [[ENSG00000288545]]
+- [[ENSG00000288573]]
+- [[ENSG00000288583]]
+- [[ENSG00000288587]]
+- [[ENSG00000288591]]
+- [[ENSG00000288597]]
+- [[ENSG00000288605]]
+- [[ENSG00000288612]]
+- [[ENSG00000288632]]
+- [[ENSG00000288643]]
+- [[ENSG00000288656]]
+- [[ENSG00000288670]]
+- [[ENSG00000288674]]
+- [[ENSG00000288681]]
+- [[ENSG00000288684]]
+- [[ENSG00000288695]]
+- [[ENSG00000288700]]
+- [[ENSG00000288710]]
+- [[ENSG00000288714]]
+- [[ENSG00000288720]]
+- [[ENSG00000288721]]
+- [[ENSG00000288723]]
+- [[ENSG00000288725]]
+- [[ENSG00000288755]]
+- [[ENSG00000288818]]
+- [[ENSG00000288828]]
+- [[ENSG00000288829]]
+- [[ENSG00000288880]]
+- [[ENSG00000288891]]
+- [[ENSG00000288894]]
+- [[ENSG00000288898]]
+- [[ENSG00000288899]]
+- [[ENSG00000288902]]
+- [[ENSG00000288951]]
+- [[ENSG00000288973]]
+- [[ENSG00000288993]]
+- [[ENSG00000289007]] — long independently transcribed non-coding RNA 3112
+- [[ENSG00000289046]]
+- [[ENSG00000289047]] — long independently transcribed non-coding RNA 3219
+- [[ENSG00000289084]]
+- [[ENSG00000289100]]
+- [[ENSG00000289106]]
+- [[ENSG00000289115]]
+- [[ENSG00000289130]]
+- [[ENSG00000289145]]
+- [[ENSG00000289153]]
+- [[ENSG00000289156]] — PPP3R1 and CNRIP1 antisense RNA 1
+- [[ENSG00000289161]]
+- [[ENSG00000289177]]
+- [[ENSG00000289194]]
+- [[ENSG00000289228]]
+- [[ENSG00000289254]]
+- [[ENSG00000289293]]
+- [[ENSG00000289309]]
+- [[ENSG00000289318]]
+- [[ENSG00000289346]]
+- [[ENSG00000289349]]
+- [[ENSG00000289357]]
+- [[ENSG00000289376]]
+- [[ENSG00000289384]]
+- [[ENSG00000289405]] — MIR30D and MIR30B host gene
+- [[ENSG00000289410]]
+- [[ENSG00000289418]]
+- [[ENSG00000289421]] — DIP2A divergent transcript
+- [[ENSG00000289469]]
+- [[ENSG00000289474]]
+- [[ENSG00000289476]]
+- [[ENSG00000289516]]
+- [[ENSG00000289517]]
+- [[ENSG00000289526]]
+- [[ENSG00000289530]]
+- [[ENSG00000289586]] — SEPTIN11 divergent transcript
+- [[ENSG00000289600]]
+- [[ENSG00000289605]]
+- [[ENSG00000289609]]
+- [[ENSG00000289694]]
+- [[ENSG00000289720]]
+- [[ENSG00000289726]]
+- [[ENSG00000289727]]
+- [[ENSG00000289728]]
+- [[ENSG00000289809]]
+- [[ENSG00000289839]]
+- [[ENSG00000289850]]
+- [[ENSG00000289862]]
+- [[ENSG00000289872]]
+- [[ENSG00000289873]]
+- [[ENSG00000289884]]
+- [[ENSG00000289901]]
+- [[ENSG00000289911]]
+- [[ENSG00000289915]]
+- [[ENSG00000289942]]
+- [[ENSG00000289956]]
+- [[ENSG00000289985]] — triple negative breast cancer promoting lncRNA 1
+- [[ENSG00000289986]]
+- [[ENSG00000289997]]
+- [[ENSG00000290003]]
+- [[ENSG00000290008]]
+- [[ENSG00000290032]]
+- [[ENSG00000290046]]
+- [[ENSG00000290048]]
+- [[ENSG00000290073]]
+- [[ENSG00000290146]]
+- [[ENSG00000290180]]
+- [[ENSG00000290183]]
+- [[ENSG00000290199]]
+- [[ENSG00000290226]]
+- [[ENSG00000290241]]
+- [[ENSG00000290399]]
+- [[ENSG00000290450]]
+- [[ENSG00000290457]]
+- [[ENSG00000290476]]
+- [[ENSG00000290514]]
+- [[ENSG00000290523]]
+- [[ENSG00000290531]] — TSPAN11 antisense RNA 1
+- [[ENSG00000290535]]
+- [[ENSG00000290548]]
+- [[ENSG00000290549]]
+- [[ENSG00000290551]]
+- [[ENSG00000290569]]
+- [[ENSG00000290574]]
+- [[ENSG00000290588]]
+- [[ENSG00000290591]]
+- [[ENSG00000290660]]
+- [[ENSG00000290683]]
+- [[ENSG00000290709]]
+- [[ENSG00000290729]]
+- [[ENSG00000290762]]
+- [[ENSG00000290791]]
+- [[ENSG00000290792]]
+- [[ENSG00000290808]]
+- [[ENSG00000290812]]
+- [[ENSG00000290823]]
+- [[ENSG00000290832]]
+- [[ENSG00000290835]]
+- [[ENSG00000290846]]
+- [[ENSG00000290876]]
+- [[ENSG00000290888]]
+- [[ENSG00000290890]]
+- [[ENSG00000290921]]
+- [[ENSG00000290924]]
+- [[ENSG00000290927]]
+- [[ENSG00000290928]]
+- [[ENSG00000290931]]
+- [[ENSG00000290948]]
+- [[ENSG00000290951]]
+- [[ENSG00000290957]]
+- [[ENSG00000290989]]
+- [[ENSG00000290993]]
+- [[ENSG00000291003]]
+- [[ENSG00000291006]]
+- [[ENSG00000291025]]
+- [[ENSG00000291032]]
+- [[ENSG00000291034]]
+- [[ENSG00000291042]]
+- [[ENSG00000291046]]
+- [[ENSG00000291054]]
+- [[ENSG00000291055]]
+- [[ENSG00000291061]]
+- [[ENSG00000291063]]
+- [[ENSG00000291065]]
+- [[ENSG00000291066]]
+- [[ENSG00000291067]]
+- [[ENSG00000291068]]
+- [[ENSG00000291073]]
+- [[ENSG00000291075]]
+- [[ENSG00000291078]]
+- [[ENSG00000291079]]
+- [[ENSG00000291100]]
+- [[ENSG00000291101]]
+- [[ENSG00000291105]]
+- [[ENSG00000291107]]
+- [[ENSG00000291112]]
+- [[ENSG00000291113]]
+- [[ENSG00000291117]]
+- [[ENSG00000291130]]
+- [[ENSG00000291136]]
+- [[ENSG00000291138]]
+- [[ENSG00000291142]]
+- [[ENSG00000291143]]
+- [[ENSG00000291144]]
+- [[ENSG00000291147]]
+- [[ENSG00000291149]]
+- [[ENSG00000291156]]
+- [[ENSG00000291159]] — hormone disturbance in PCOS associated regulator of RBPMS
+- [[ENSG00000291171]]
+- [[ENSG00000291174]]
+- [[ENSG00000291175]]
+- [[ENSG00000291176]]
+- [[ENSG00000291177]]
+- [[ENSG00000291178]]
+- [[ENSG00000291185]]
+- [[ENSG00000291188]]
+- [[ENSG00000291189]]
+- [[ENSG00000291201]]
+- [[ENSG00000291202]]
+- [[ENSG00000291203]]
+- [[ENSG00000291207]]
+- [[ENSG00000291208]]
+- [[ENSG00000291210]]
+- [[ENSG00000291214]]
+- [[ENSG00000291224]]
+- [[ENSG00000291228]]
+- [[ENSG00000291258]]
+- [[ENSG00000291259]]
+- [[ENSG00000291265]]
+- [[ENSG00000291272]]
+- [[ENSG00000291283]]
+- [[ENSG00000291299]]
+- [[ENTHD1]] — ENTH domain containing 1 · module 125 +
+- [[ENTPD1]] — ectonucleoside triphosphate diphosphohydrolase 1 · module 090 +
+- [[ENTPD1-AS1]] — ENTPD1 antisense RNA 1 · module 004 +
+- [[ENTPD2]] — ectonucleoside triphosphate diphosphohydrolase 2 · module 044 +
+- [[ENTPD3-AS1]] — ENTPD3, EIF1B and MYRIP antisense RNA 1 · module 023 +
+- [[ENTPD4]] — ectonucleoside triphosphate diphosphohydrolase 4 · module 051 -
+- [[ENTPD5]] — ectonucleoside triphosphate diphosphohydrolase 5 · module 036 +
+- [[ENTPD6]] — ectonucleoside triphosphate diphosphohydrolase 6 · module 004 +
+- [[ENTPD7]] — ectonucleoside triphosphate diphosphohydrolase 7 · module 049 +
+- [[ENTR1]] — endosome associated trafficking regulator 1 · module 005 +
+- [[ENTREP1]] — endosomal transmembrane epsin interactor 1 · module 061 +
+- [[ENTREP2]] — endosomal transmembrane epsin interactor 2 · module 115 +
+- [[ENTREP3]] — endosomal transmembrane epsin interactor 3 · module 050 +
+- [[ENY2]] — ENY2 transcription and export complex 2 subunit · module 069 +
+- [[EOGT]] — EGF domain specific O-linked N-acetylglucosamine transferase · module 038 +
+- [[EOGT-DT]] — EOGT divergent transcript · module 021 +
+- [[EOLA1]] — endothelium and lymphocyte associated ASCH domain 1 · module 103 +
+- [[EOLA2]] — endothelium and lymphocyte associated ASCH domain 2 · module 020 +
+- [[EOLA2-DT]] — EOLA2 divergent transcript · module 026 +
+- [[EP300]] — EP300 lysine acetyltransferase · module 095 +
+- [[EP400]] — E1A binding protein p400 · module 036 +
+- [[EP400P1]] — EP400 pseudogene 1 · module 052 +
+- [[EPAS1]] — endothelial PAS domain protein 1 · module 113 +
+- [[EPB41]] — erythrocyte membrane protein band 4.1 · module 147 +
+- [[EPB41L1]] — erythrocyte membrane protein band 4.1 like 1 · module 031 +
+- [[EPB41L2]] — erythrocyte membrane protein band 4.1 like 2 · module 172 +
+- [[EPB41L3]] — erythrocyte membrane protein band 4.1 like 3 · module 019 +
+- [[EPB41L4A]] — erythrocyte membrane protein band 4.1 like 4A · module 115 +
+- [[EPB41L4A-AS1]] — EPB41L4A antisense RNA 1 · module 020 -
+- [[EPB41L4B]] — erythrocyte membrane protein band 4.1 like 4B · module 204 +
+- [[EPB41L5]] — erythrocyte membrane protein band 4.1 like 5 · module 107 +
+- [[EPC1]] — enhancer of polycomb 1 · module 051 +
+- [[EPC2]] — enhancer of polycomb 2 · module 051 +
+- [[EPCAM]] — epithelial cell adhesion molecule · module 044 +
+- [[EPCAM-DT]] — EPCAM divergent transcript · module 008 +
+- [[EPDR1]] — ependymin related 1 · module 072 +
+- [[EPG5]] — ectopic P-granules 5 autophagy tethering factor · module 076 +
+- [[EPGN]] — epithelial mitogen · module 019 +
+- [[EPHA1]] — EPH receptor A1 · module 031 +
+- [[EPHA1-AS1]] — EPHA1 antisense RNA 1 · module 053 +
+- [[EPHA10]] — EPH receptor A10 · module 128 +
+- [[EPHA2]] — EPH receptor A2 · module 141 +
+- [[EPHA2-AS1]] — EPHA2 antisense RNA 1 · module 141 +
+- [[EPHA3]] — EPH receptor A3 · module 152 +
+- [[EPHA4]] — EPH receptor A4 · module 235 +
+- [[EPHA5]] — EPH receptor A5 · module 009 +
+- [[EPHA5-AS1]] — EPHA5 antisense RNA 1 · module 009 +
+- [[EPHA6]] — EPH receptor A6 · module 009 +
+- [[EPHA7]] — EPH receptor A7 · module 009 +
+- [[EPHB1]] — EPH receptor B1 · module 061 +
+- [[EPHB2]] — EPH receptor B2 · module 228 +
+- [[EPHB3]] — EPH receptor B3 · module 162 +
+- [[EPHB4]] — EPH receptor B4 · module 077 +
+- [[EPHB6]] — EPH receptor B6 · module 034 +
+- [[EPHX1]] — epoxide hydrolase 1 · module 026 +
+- [[EPHX2]] — epoxide hydrolase 2 · module 045 +
+- [[EPHX3]] — epoxide hydrolase 3 · module 047 +
+- [[EPHX4]] — epoxide hydrolase 4 · module 027 +
+- [[EPIC1]] — epigenetically induced MYC interacting lncRNA 1 · module 105 +
+- [[EPM2A]] — EPM2A glucan phosphatase, laforin · module 124 +
+- [[EPM2A-DT]] — EPM2A divergent transcript · module 023 +
+- [[EPM2AIP1]] — EPM2A interacting protein 1 · module 021 +
+- [[EPN1]] — epsin 1 · module 002 +
+- [[EPN2]] — epsin 2 · module 154 +
+- [[EPOP]] — elongin BC and polycomb repressive complex 2 associated protein · module 057 -
+- [[EPOR]] — erythropoietin receptor · module 136 +
+- [[EPPK1]] — epiplakin 1 · module 015 -
+- [[EPRS1]] — glutamyl-prolyl-tRNA synthetase 1 · module 063 +
+- [[EPS15]] — epidermal growth factor receptor pathway substrate 15 · module 159 +
+- [[EPS15-AS1]] — EPS15 antisense RNA 1 · module 035 +
+- [[EPS15L1]] — epidermal growth factor receptor pathway substrate 15 like 1 · module 072 +
+- [[EPS8]] — EGFR pathway substrate 8, signaling adaptor · module 106 +
+- [[EPS8L1]] — EPS8 signaling adaptor L1 · module 031 +
+- [[EPS8L2]] — EPS8 signaling adaptor L2 · module 031 +
+- [[EPS8L3]] — EPS8 signaling adaptor L3 · module 055 +
+- [[EPSTI1]] — epithelial stromal interaction 1 · module 032 +
+- [[ERAL1]] — Era like 12S mitochondrial rRNA chaperone 1 · module 007 +
+- [[ERAP1]] — endoplasmic reticulum aminopeptidase 1 · module 025 +
+- [[ERAP2]] — endoplasmic reticulum aminopeptidase 2 · module 032 +
+- [[ERBB2]] — erb-b2 receptor tyrosine kinase 2 · module 027 +
+- [[ERBB3]] — erb-b2 receptor tyrosine kinase 3 · module 008 +
+- [[ERBB4]] — erb-b2 receptor tyrosine kinase 4 · module 009 +
+- [[ERBIN]] — erbb2 interacting protein · module 143 +
+- [[ERC1]] — ELKS/RAB6-interacting/CAST family member 1 · module 211 +
+- [[ERC2]] — ELKS/RAB6-interacting/CAST family member 2 · module 061 +
+- [[ERCC1]] — ERCC excision repair 1, endonuclease non-catalytic subunit · module 109 +
+- [[ERCC2]] — ERCC excision repair 2, TFIIH core complex helicase subunit · module 002 +
+- [[ERCC3]] — ERCC excision repair 3, TFIIH core complex helicase subunit · module 036 +
+- [[ERCC4]] — ERCC excision repair 4, endonuclease catalytic subunit · module 011 +
+- [[ERCC5]] — ERCC excision repair 5, endonuclease · module 041 +
+- [[ERCC6]] — ERCC excision repair 6, chromatin remodeling factor · module 011 +
+- [[ERCC6L]] — ERCC excision repair 6 like DNA helicase · module 022 +
+- [[ERCC6L2]] — ERCC excision repair 6 like 2 · module 030 -
+- [[ERCC6L2-AS1]] — ERCC6L2 antisense RNA 1 · module 023 +
+- [[ERCC8]] — ERCC excision repair 8, CSA ubiquitin ligase complex subunit · module 004 +
+- [[EREG]] — epiregulin · module 113 +
+- [[ERF]] — ETS2 repressor factor · module 057 -
+- [[ERFL]] — ETS repressor factor like · module 038 +
+- [[ERG]] — ETS transcription factor ERG · module 073 +
+- [[ERG28]] — ergosterol biosynthesis 28 homolog · module 086 +
+- [[ERGIC1]] — endoplasmic reticulum-golgi intermediate compartment 1 · module 097 +
+- [[ERGIC2]] — ERGIC and golgi 2 · module 233 +
+- [[ERGIC3]] — ERGIC and golgi 3 · module 030 +
+- [[ERH]] — ERH mRNA splicing and mitosis factor · module 004 +
+- [[ERI1]] — exoribonuclease 1 · module 006 +
+- [[ERI2]] — ERI1 exoribonuclease family member 2 · module 039 +
+- [[ERI3]] — ERI1 exoribonuclease family member 3 · module 036 +
+- [[ERICH1]] — glutamate rich 1 · module 172 +
+- [[ERICH2]] — glutamate rich 2 · module 063 +
+- [[ERICH2-DT]] — ERICH2 divergent transcript · module 015 +
+- [[ERICH6-AS1]] — ERICH6 antisense RNA 1 · module 010 +
+- [[ERLEC1]] — endoplasmic reticulum lectin 1 · module 056 +
+- [[ERLIN1]] — ER lipid raft associated 1 · module 006 +
+- [[ERLIN2]] — ER lipid raft associated 2 · module 025 +
+- [[ERMAP]] — erythroblast membrane associated protein (Scianna blood group) · module 023 +
+- [[ERMARD]] — ER membrane associated RNA degradation · module 028 +
+- [[ERMP1]] — endoplasmic reticulum metallopeptidase 1 · module 029 +
+- [[ERN1]] — endoplasmic reticulum to nucleus signaling 1 · module 081 +
+- [[ERO1A]] — endoplasmic reticulum oxidoreductase 1 alpha · module 099 +
+- [[ERO1B]] — endoplasmic reticulum oxidoreductase 1 beta · module 004 -
+- [[ERP29]] — endoplasmic reticulum protein 29 · module 045 +
+- [[ERP44]] — endoplasmic reticulum protein 44 · module 042 +
+- [[ERRFI1]] — ERBB receptor feedback inhibitor 1 · module 113 +
+- [[ERRFI1-DT]] — ERRFI1 divergent transcript · module 101 +
+- [[ERVK13-1]] — endogenous retrovirus group K13 member 1 · module 015 +
+- [[ERVK3-1]] — endogenous retrovirus group K3 member 1 · module 020 -
+- [[ESAM]] — endothelial cell adhesion molecule · module 034 +
+- [[ESCO1]] — establishment of sister chromatid cohesion N-acetyltransferase 1 · module 041 +
+- [[ESCO2]] — establishment of sister chromatid cohesion N-acetyltransferase 2 · module 091 +
+- [[ESD]] — esterase D · module 017 +
+- [[ESF1]] — ESF1 nucleolar pre-rRNA processing protein · module 011 +
+- [[ESM1]] — endothelial cell specific molecule 1 · module 019 +
+- [[ESPL1]] — extra spindle pole bodies like 1, separase · module 091 +
+- [[ESPN]] — espin · module 100 +
+- [[ESR1]] — estrogen receptor 1 · module 166 +
+- [[ESR2]] — estrogen receptor 2 · module 026 +
+- [[ESRP1]] — epithelial splicing regulatory protein 1 · module 008 +
+- [[ESRP2]] — epithelial splicing regulatory protein 2 · module 031 +
+- [[ESRRA]] — estrogen related receptor alpha · module 028 -
+- [[ESRRB]] — estrogen related receptor beta · module 026 +
+- [[ESRRG]] — estrogen related receptor gamma · module 009 +
+- [[ESS2]] — ess-2 spliceosome associated protein · module 107 +
+- [[ESYT1]] — extended synaptotagmin 1 · module 002 +
+- [[ESYT2]] — extended synaptotagmin 2 · module 106 +
+- [[ESYT3]] — extended synaptotagmin 3 · module 082 +
+- [[ETAA1]] — ETAA1 activator of ATR kinase · module 011 +
+- [[ETF1]] — eukaryotic translation termination factor 1 · module 198 +
+- [[ETFA]] — electron transfer flavoprotein subunit alpha · module 024 -
+- [[ETFB]] — electron transfer flavoprotein subunit beta · module 048 +
+- [[ETFBKMT]] — electron transfer flavoprotein subunit beta lysine methyltransferase · module 021 +
+- [[ETFDH]] — electron transfer flavoprotein dehydrogenase · module 040 +
+- [[ETFRF1]] — electron transfer flavoprotein regulatory factor 1 · module 068 +
+- [[ETHE1]] — ETHE1 persulfide dioxygenase · module 154 +
+- [[ETNK1]] — ethanolamine kinase 1 · module 033 -
+- [[ETNK2]] — ethanolamine kinase 2 · module 082 +
+- [[ETS1]] — ETS proto-oncogene 1, transcription factor · module 116 +
+- [[ETS2]] — ETS proto-oncogene 2, transcription factor · module 123 +
+- [[ETV1]] — ETS variant transcription factor 1 · module 092 +
+- [[ETV3]] — ETS variant transcription factor 3 · module 109 +
+- [[ETV4]] — ETS variant transcription factor 4 · module 092 +
+- [[ETV5]] — ETS variant transcription factor 5 · module 174 +
+- [[ETV6]] — ETS variant transcription factor 6 · module 070 +
+- [[ETV7]] — ETS variant transcription factor 7 · module 032 +
+- [[EVA1A]] — eva-1 homolog A, regulator of programmed cell death · module 013 +
+- [[EVA1A-AS]] — EVA1A antisense RNA · module 034 +
+- [[EVA1C]] — eva-1 homolog C · module 097 +
+- [[EVC]] — EvC ciliary complex subunit 1 · module 013 +
+- [[EVC2]] — EvC ciliary complex subunit 2 · module 013 +
+- [[EVI2B]] — ecotropic viral integration site 2B · module 021 +
+- [[EVI5]] — ecotropic viral integration site 5 · module 077 +
+- [[EVI5L]] — ecotropic viral integration site 5 like · module 052 +
+- [[EVL]] — Enah/Vasp-like · module 010 -
+- [[EVPL]] — envoplakin · module 027 +
+- [[EWSR1]] — EWS RNA binding protein 1 · module 003 -
+- [[EXD2]] — exonuclease 3'-5' domain containing 2 · module 065 +
+- [[EXD3]] — exonuclease 3'-5' domain containing 3 · module 037 +
+- [[EXO1]] — exonuclease 1 · module 006 +
+- [[EXO5]] — exonuclease 5 · module 001 +
+- [[EXO5-DT]] — EXO5 divergent transcript · module 129 +
+- [[EXOC1]] — exocyst complex component 1 · module 005 -
+- [[EXOC2]] — exocyst complex component 2 · module 036 +
+- [[EXOC3]] — exocyst complex component 3 · module 127 +
+- [[EXOC3-AS1]] — EXOC3 antisense RNA 1 · module 007 +
+- [[EXOC4]] — exocyst complex component 4 · module 200 +
+- [[EXOC5]] — exocyst complex component 5 · module 025 +
+- [[EXOC6]] — exocyst complex component 6 · module 169 +
+- [[EXOC6B]] — exocyst complex component 6B · module 211 +
+- [[EXOC7]] — exocyst complex component 7 · module 215 +
+- [[EXOC8]] — exocyst complex component 8 · module 007 +
+- [[EXOG]] — exo/endonuclease G · module 004 +
+- [[EXOSC1]] — exosome component 1 · module 003 +
+- [[EXOSC10]] — exosome component 10 · module 153 +
+- [[EXOSC2]] — exosome component 2 · module 001 +
+- [[EXOSC3]] — exosome component 3 · module 083 +
+- [[EXOSC4]] — exosome component 4 · module 007 +
+- [[EXOSC5]] — exosome component 5 · module 033 +
+- [[EXOSC6]] — exosome component 6 · module 088 +
+- [[EXOSC7]] — exosome component 7 · module 005 +
+- [[EXOSC8]] — exosome component 8 · module 028 +
+- [[EXOSC9]] — exosome component 9 · module 017 +
+- [[EXPH5]] — exophilin 5 · module 008 +
+- [[EXT1]] — exostosin glycosyltransferase 1 · module 224 +
+- [[EXT2]] — exostosin glycosyltransferase 2 · module 036 +
+- [[EXTL2]] — exostosin like glycosyltransferase 2 · module 092 +
+- [[EXTL3]] — exostosin like glycosyltransferase 3 · module 159 +
+- [[EYA1]] — EYA transcriptional coactivator and phosphatase 1 · module 152 +
+- [[EYA2]] — EYA transcriptional coactivator and phosphatase 2 · module 019 +
+- [[EYA3]] — EYA transcriptional coactivator and phosphatase 3 · module 178 +
+- [[EYA4]] — EYA transcriptional coactivator and phosphatase 4 · module 066 +
+- [[EYS]] — EGF-like photoreceptor maintenance factor · module 075 +
+- [[EZH1]] — enhancer of zeste 1 polycomb repressive complex 2 subunit · module 187 +
+- [[EZH2]] — enhancer of zeste 2 polycomb repressive complex 2 subunit · module 006 +
+- [[EZR]] — ezrin · module 031 +

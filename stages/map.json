@@ -1,0 +1,43 @@
+{
+ "stage": "map",
+ "version": 6,
+ "finished": "2026-11-09 11:10:38",
+ "info": {
+  "version": 6,
+  "file": "C:\\tahoe\\out\\map\\gene_map.html",
+  "bytes": 20488973,
+  "mb": 20.49,
+  "genes_on_map": 15076,
+  "genes_searchable": 16643,
+  "genes_with_partners": 15076,
+  "graph_edges": 179308,
+  "graph_edges_bytes": 1434472,
+  "modules": 235,
+  "module_labels_from": "validation",
+  "reference": true,
+  "partners": 15,
+  "drugs": 8,
+  "lines": 5,
+  "literature_verdicts": 0,
+  "review": null,
+  "spread_layouts": true,
+  "tour_dims": 64,
+  "tour_bytes": 1286488,
+  "flag_texts": 1986,
+  "direction": true,
+  "direction_rows": 96784,
+  "direction_rows_stage": 98577,
+  "direction_rows_no_page_gene": 0,
+  "direction_bytes": 5167342,
+  "shortened": [
+   "the direction readings of the grade C rows",
+   "every direction reading",
+   "the function snippets to 80 characters",
+   "the function snippets to 60 characters and the line lists to 3",
+   "the function snippets to 40 characters and the line lists to 2",
+   "the direction alerts' full wording (their short labels stay)",
+   "the cells rows beyond the 8 of a gene's list (counted there)"
+  ],
+  "minutes": 0.2
+ }
+}

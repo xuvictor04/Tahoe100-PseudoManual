@@ -1,0 +1,341 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes B
+
+331 genes. Back to [[Genes by letter]].
+
+- [[B2M]] — beta-2-microglobulin · module 070 +
+- [[B3GALNT1]] — beta-1,3-N-acetylgalactosaminyltransferase 1 (Globoside blood group) · module 018 +
+- [[B3GALNT2]] — beta-1,3-N-acetylgalactosaminyltransferase 2 · module 052 -
+- [[B3GALT1]] — beta-1,3-galactosyltransferase 1 · module 009 +
+- [[B3GALT1-AS1]] — B3GALT1 antisense RNA 1 · module 039 +
+- [[B3GALT5]] — beta-1,3-galactosyltransferase 5 · module 008 +
+- [[B3GALT6]] — beta-1,3-galactosyltransferase 6 · module 007 +
+- [[B3GALT9]] — beta-1,3-galactosyltransferase 9 · module 016 +
+- [[B3GAT1-DT]] — B3GAT1 divergent transcript · module 027 +
+- [[B3GAT3]] — beta-1,3-glucuronyltransferase 3 · module 003 +
+- [[B3GLCT]] — beta 3-glucosyltransferase · module 003 -
+- [[B3GNT2]] — UDP-GlcNAc:betaGal beta-1,3-N-acetylglucosaminyltransferase 2 · module 031 +
+- [[B3GNT3]] — UDP-GlcNAc:betaGal beta-1,3-N-acetylglucosaminyltransferase 3 · module 031 +
+- [[B3GNT4]] — UDP-GlcNAc:betaGal beta-1,3-N-acetylglucosaminyltransferase 4 · module 103 +
+- [[B3GNT5]] — UDP-GlcNAc:betaGal beta-1,3-N-acetylglucosaminyltransferase 5 · module 098 +
+- [[B3GNT7]] — UDP-GlcNAc:betaGal beta-1,3-N-acetylglucosaminyltransferase 7 · module 008 +
+- [[B3GNT9]] — UDP-GlcNAc:betaGal beta-1,3-N-acetylglucosaminyltransferase 9 · module 013 +
+- [[B3GNTL1]] — queuosine-tRNA galactosyltransferase · module 001 +
+- [[B4GALNT1]] — beta-1,4-N-acetyl-galactosaminyltransferase 1 · module 060 +
+- [[B4GALNT3]] — beta-1,4-N-acetyl-galactosaminyltransferase 3 · module 031 +
+- [[B4GALNT4]] — beta-1,4-N-acetyl-galactosaminyltransferase 4 · module 132 +
+- [[B4GALT1]] — beta-1,4-galactosyltransferase 1 · module 106 +
+- [[B4GALT2]] — beta-1,4-galactosyltransferase 2 · module 036 +
+- [[B4GALT3]] — beta-1,4-galactosyltransferase 3 · module 002 +
+- [[B4GALT4]] — beta-1,4-galactosyltransferase 4 · module 049 +
+- [[B4GALT5]] — beta-1,4-galactosyltransferase 5 · module 008 +
+- [[B4GALT6]] — beta-1,4-galactosyltransferase 6 · module 092 +
+- [[B4GALT7]] — beta-1,4-galactosyltransferase 7 · module 052 +
+- [[B4GAT1]] — beta-1,4-glucuronyltransferase 1 · module 030 +
+- [[B4GAT1-DT]] — B4GAT1 divergent transcript · module 010 +
+- [[B9D1]] — B9 domain containing 1 · module 114 +
+- [[B9D2]] — B9 domain containing 2 · module 095 +
+- [[BAALC]] — BAALC binder of MAP3K1 and KLF4 · module 013 +
+- [[BAALC-AS1]] — BAALC antisense RNA 1 · module 026 +
+- [[BAAT]] — bile acid-CoA:amino acid N-acyltransferase · module 039 +
+- [[BABAM1]] — BRISC and BRCA1 A complex member 1 · module 072 +
+- [[BABAM2]] — BRISC and BRCA1 A complex member 2 · module 200 +
+- [[BACE1]] — beta-secretase 1 · module 050 +
+- [[BACE1-AS]] — BACE1 antisense RNA · module 048 -
+- [[BACE2]] — beta-secretase 2 · module 034 +
+- [[BACH1]] — BACH transcriptional regulator 1 · module 151 +
+- [[BACH2]] — BACH transcriptional regulator 2 · module 206 +
+- [[BAD]] — BCL2 associated agonist of cell death · module 017 +
+- [[BAG1]] — BAG cochaperone 1 · module 008 +
+- [[BAG2]] — BAG cochaperone 2 · module 135 +
+- [[BAG3]] — BAG cochaperone 3 · module 060 +
+- [[BAG4]] — BAG cochaperone 4 · module 030 +
+- [[BAG5]] — BAG cochaperone 5 · module 036 +
+- [[BAG6]] — BAG cochaperone 6 · module 153 +
+- [[BAGE2]] — BAGE family member 2 (pseudogene) · module 177 +
+- [[BAHCC1]] — BAH domain and coiled-coil containing 1 · module 014 +
+- [[BAHD1]] — bromo adjacent homology domain containing 1 · module 003 +
+- [[BAIAP2]] — BAR/IMD domain containing adaptor protein 2 · module 129 +
+- [[BAIAP2-DT]] — BAIAP2 divergent transcript · module 028 -
+- [[BAIAP2L1]] — BAR/IMD domain containing adaptor protein 2 like 1 · module 141 +
+- [[BAIAP2L2]] — BAR/IMD domain containing adaptor protein 2 like 2 · module 073 +
+- [[BAIAP3]] — BAI1 associated protein 3 · module 161 +
+- [[BAK1]] — BCL2 antagonist/killer 1 · module 023 -
+- [[BAMBI]] — BMP and activin membrane bound inhibitor · module 027 +
+- [[BANF1]] — barrier to autointegration nuclear assembly factor 1 · module 029 +
+- [[BANK1]] — B cell scaffold protein with ankyrin repeats 1 · module 027 +
+- [[BANP]] — BTG3 associated nuclear protein · module 017 -
+- [[BAP1]] — BRCA1 associated deubiquitinase 1 · module 127 +
+- [[BARD1]] — BRCA1 associated RING domain 1 · module 067 +
+- [[BARX1]] — BARX homeobox 1 · module 019 +
+- [[BARX2]] — BARX homeobox 2 · module 008 +
+- [[BASP1]] — brain abundant membrane attached signal protein 1 · module 014 +
+- [[BASP1-AS1]] — BASP1 antisense RNA 1 · module 019 +
+- [[BATF]] — basic leucine zipper ATF-like transcription factor · module 098 +
+- [[BATF2]] — basic leucine zipper ATF-like transcription factor 2 · module 032 +
+- [[BAX]] — BCL2 associated X, apoptosis regulator · module 062 +
+- [[BAZ1A]] — bromodomain adjacent to zinc finger domain 1A · module 057 -
+- [[BAZ1B]] — bromodomain adjacent to zinc finger domain 1B · module 051 +
+- [[BAZ2A]] — bromodomain adjacent to zinc finger domain 2A · module 074 +
+- [[BAZ2B]] — bromodomain adjacent to zinc finger domain 2B · module 077 -
+- [[BBC3]] — BCL2 binding component 3 · module 059 +
+- [[BBIP1]] — BBSome interacting protein 1 · module 004 -
+- [[BBLN]] — bublin coiled coil protein · module 048 +
+- [[BBOF1]] — basal body orientation factor 1 · module 041 +
+- [[BBOX1-AS1]] — BBOX1 antisense RNA 1 · module 010 +
+- [[BBS1]] — Bardet-Biedl syndrome 1 · module 064 +
+- [[BBS10]] — Bardet-Biedl syndrome 10 · module 016 +
+- [[BBS2]] — Bardet-Biedl syndrome 2 · module 065 +
+- [[BBS4]] — Bardet-Biedl syndrome 4 · module 187 +
+- [[BBS5]] — Bardet-Biedl syndrome 5 · module 017 +
+- [[BBS7]] — Bardet-Biedl syndrome 7 · module 065 +
+- [[BBS9]] — Bardet-Biedl syndrome 9 · module 076 +
+- [[BBX]] — BBX high mobility group box domain containing · module 231 +
+- [[BCAM]] — basal cell adhesion molecule (Lutheran blood group) · module 002 +
+- [[BCAN-AS1]] — BCAN antisense RNA 1 · module 158 +
+- [[BCAN-AS2]] — BCAN antisense RNA 2 · module 158 +
+- [[BCAP29]] — B cell receptor associated protein 29 · module 118 -
+- [[BCAP31]] — B cell receptor associated protein 31 · module 012 -
+- [[BCAR1]] — BCAR1 scaffold protein, Cas family member · module 029 -
+- [[BCAR3]] — BCAR3 adaptor protein, NSP family member · module 147 +
+- [[BCAR3-AS1]] — BCAR3 antisense RNA 1 · module 055 +
+- [[BCAS1]] — brain enriched myelin associated protein 1 · module 008 +
+- [[BCAS2]] — BCAS2 pre-mRNA processing factor · module 012 +
+- [[BCAS3]] — BCAS3 microtubule associated cell migration factor · module 074 +
+- [[BCAS4]] — breast carcinoma amplified sequence 4 · module 030 +
+- [[BCAT1]] — branched chain amino acid transaminase 1 · module 063 +
+- [[BCAT2]] — branched chain amino acid transaminase 2 · module 029 -
+- [[BCCIP]] — BRCA2 and CDKN1A interacting protein · module 004 +
+- [[BCDIN3D]] — BCDIN3 domain containing RNA methyltransferase · module 010 +
+- [[BCHE]] — butyrylcholinesterase · module 019 +
+- [[BCKDHA]] — branched chain keto acid dehydrogenase E1 subunit alpha · module 144 +
+- [[BCKDHB]] — branched chain keto acid dehydrogenase E1 subunit beta · module 099 +
+- [[BCKDK]] — branched chain keto acid dehydrogenase kinase · module 050 +
+- [[BCL10]] — BCL10 immune signaling adaptor · module 158 +
+- [[BCL10-AS1]] — BCL10 antisense RNA 1 · module 080 +
+- [[BCL11A]] — BCL11 transcription factor A · module 009 +
+- [[BCL11B]] — BCL11 transcription factor B · module 013 +
+- [[BCL2]] — BCL2 apoptosis regulator · module 005 +
+- [[BCL2A1]] — BCL2 related protein A1 · module 081 +
+- [[BCL2L1]] — BCL2 like 1 · module 147 +
+- [[BCL2L1-AS1]] — BCL2L1 antisense RNA 1 · module 141 +
+- [[BCL2L11]] — BCL2 like 11 · module 059 +
+- [[BCL2L12]] — BCL2 like 12 · module 109 +
+- [[BCL2L13]] — BCL2 like 13 · module 088 +
+- [[BCL2L14]] — BCL2 like 14 · module 044 +
+- [[BCL2L15]] — BCL2 like 15 · module 008 +
+- [[BCL2L2]] — BCL2 like 2 · module 126 +
+- [[BCL2L2-PABPN1]] — BCL2L2-PABPN1 readthrough · module 015 +
+- [[BCL3]] — BCL3 transcription coactivator · module 014 +
+- [[BCL6]] — BCL6 transcription repressor · module 139 +
+- [[BCL7A]] — BAF chromatin remodeling complex subunit BCL7A · module 127 +
+- [[BCL7B]] — BAF chromatin remodeling complex subunit BCL7B · module 096 +
+- [[BCL7C]] — BAF chromatin remodeling complex subunit BCL7C · module 002 +
+- [[BCL9]] — BCL9 transcription coactivator · module 183 +
+- [[BCL9L]] — BCL9 like · module 014 +
+- [[BCLAF1]] — BCL2 associated transcription factor 1 · module 003 -
+- [[BCLAF3]] — BCLAF1 and THRAP3 family member 3 · module 227 +
+- [[BCO2]] — beta-carotene oxygenase 2 · module 037 +
+- [[BCOR]] — BCL6 corepressor · module 014 +
+- [[BCORL1]] — BCL6 corepressor like 1 · module 162 +
+- [[BCR]] — BCR activator of RhoGEF and GTPase · module 077 +
+- [[BCS1L]] — BCS1 ubiquinol-cytochrome c reductase complex chaperone · module 001 +
+- [[BDH1]] — 3-hydroxybutyrate dehydrogenase 1 · module 014 +
+- [[BDH2]] — 3-hydroxybutyrate dehydrogenase 2 · module 028 +
+- [[BDKRB2]] — bradykinin receptor B2 · module 014 +
+- [[BDNF]] — brain derived neurotrophic factor · module 019 +
+- [[BDNF-AS]] — BDNF antisense RNA · module 010 +
+- [[BDP1]] — BDP1 general transcription factor IIIB subunit · module 012 +
+- [[BEAN1]] — brain expressed associated with NEDD4 1 · module 034 +
+- [[BECN1]] — beclin 1 · module 035 +
+- [[BEGAIN]] — brain enriched guanylate kinase associated · module 110 +
+- [[BEND3]] — BEN domain containing 3 · module 005 +
+- [[BEND6]] — BEN domain containing 6 · module 010 +
+- [[BEND7]] — BEN domain containing 7 · module 222 +
+- [[BEST1]] — bestrophin 1 · module 021 +
+- [[BET1]] — Bet1 golgi vesicular membrane trafficking protein · module 037 +
+- [[BET1L]] — Bet1 golgi vesicular membrane trafficking protein like · module 052 +
+- [[BEX2]] — brain expressed X-linked 2 · module 063 +
+- [[BEX3]] — brain expressed X-linked 3 · module 045 +
+- [[BEX4]] — brain expressed X-linked 4 · module 074 +
+- [[BFAR]] — bifunctional apoptosis regulator · module 119 +
+- [[BFSP1]] — beaded filament structural protein 1 · module 080 +
+- [[BHLHE40]] — basic helix-loop-helix family member e40 · module 014 +
+- [[BHLHE40-AS1]] — BHLHE40 antisense RNA 1 · module 080 +
+- [[BHLHE41]] — basic helix-loop-helix family member e41 · module 014 +
+- [[BHMT2]] — betaine--homocysteine S-methyltransferase 2 · module 009 +
+- [[BICC1]] — BicC family RNA binding protein 1 · module 167 +
+- [[BICD1]] — BICD cargo adaptor 1 · module 004 +
+- [[BICD2]] — BICD cargo adaptor 2 · module 077 +
+- [[BICDL1]] — BICD family like cargo adaptor 1 · module 034 +
+- [[BICDL2]] — BICD family like cargo adaptor 2 · module 031 +
+- [[BICRA]] — BRD4 interacting chromatin remodeling complex associated protein · module 036 +
+- [[BICRAL]] — BICRA like chromatin remodeling complex associated protein · module 023 +
+- [[BID]] — BH3 interacting domain death agonist · module 014 +
+- [[BIK]] — BCL2 interacting killer · module 162 +
+- [[BIN1]] — bridging integrator 1 · module 098 +
+- [[BIN3]] — bridging integrator 3 · module 212 +
+- [[BIRC2]] — baculoviral IAP repeat containing 2 · module 014 +
+- [[BIRC3]] — baculoviral IAP repeat containing 3 · module 139 +
+- [[BIRC5]] — baculoviral IAP repeat containing 5 · module 022 +
+- [[BIRC6]] — baculoviral IAP repeat containing 6 · module 040 +
+- [[BIRC6-AS2-1]] · module 021 +
+- [[BIVM]] — basic, immunoglobulin-like variable motif containing · module 175 +
+- [[BLACAT1]] — BLACAT1 overlapping LEMD1 locus · module 031 +
+- [[BLCAP]] — BLCAP apoptosis inducing factor · module 052 +
+- [[BLM]] — BLM RecQ like helicase · module 006 +
+- [[BLMH]] — bleomycin hydrolase · module 057 +
+- [[BLOC1S1]] — biogenesis of lysosomal organelles complex 1 subunit 1 · module 048 +
+- [[BLOC1S2]] — biogenesis of lysosomal organelles complex 1 subunit 2 · module 062 +
+- [[BLOC1S3]] — biogenesis of lysosomal organelles complex 1 subunit 3 · module 007 +
+- [[BLOC1S4]] — biogenesis of lysosomal organelles complex 1 subunit 4 · module 007 +
+- [[BLOC1S5]] — biogenesis of lysosomal organelles complex 1 subunit 5 · module 017 +
+- [[BLOC1S5-TXNDC5]] — BLOC1S5-TXNDC5 readthrough (NMD candidate) · module 207 +
+- [[BLOC1S6]] — biogenesis of lysosomal organelles complex 1 subunit 6 · module 122 +
+- [[BLTP1]] — bridge-like lipid transfer protein family member 1 · module 057 +
+- [[BLTP2]] — bridge-like lipid transfer protein family member 2 · module 050 +
+- [[BLTP3A]] — bridge-like lipid transfer protein family member 3A · module 133 +
+- [[BLTP3B]] — bridge-like lipid transfer protein family member 3B · module 064 +
+- [[BLVRA]] — biliverdin reductase A · module 159 +
+- [[BLVRB]] — biliverdin reductase B · module 003 +
+- [[BLZF1]] — basic leucine zipper nuclear factor 1 · module 041 +
+- [[BLZF2P]] — basic leucine zipper nuclear factor 2, pseudogene · module 047 +
+- [[BMAL1]] — basic helix-loop-helix ARNT like 1 · module 033 -
+- [[BMAL2]] — basic helix-loop-helix ARNT like 2 · module 116 +
+- [[BMAL2-AS1]] — BMAL2 antisense RNA 1 · module 021 +
+- [[BMERB1]] — bMERB domain containing 1 · module 136 +
+- [[BMF]] — Bcl2 modifying factor · module 059 +
+- [[BMI1]] — BMI1 proto-oncogene, polycomb ring finger · module 028 +
+- [[BMP1]] — bone morphogenetic protein 1 · module 062 +
+- [[BMP10]] — bone morphogenetic protein 10 · module 102 +
+- [[BMP2]] — bone morphogenetic protein 2 · module 228 +
+- [[BMP2K]] — BMP2 inducible kinase · module 193 +
+- [[BMP4]] — bone morphogenetic protein 4 · module 055 +
+- [[BMP5]] — bone morphogenetic protein 5 · module 009 +
+- [[BMP6]] — bone morphogenetic protein 6 · module 193 +
+- [[BMP7]] — bone morphogenetic protein 7 · module 027 +
+- [[BMP8A]] — bone morphogenetic protein 8a · module 047 +
+- [[BMP8B]] — bone morphogenetic protein 8b · module 082 +
+- [[BMPER]] — BMP binding endothelial regulator · module 019 +
+- [[BMPR1A]] — bone morphogenetic protein receptor type 1A · module 186 +
+- [[BMPR1B]] — bone morphogenetic protein receptor type 1B · module 202 +
+- [[BMPR2]] — bone morphogenetic protein receptor type 2 · module 231 +
+- [[BMS1]] — BMS1 ribosome biogenesis factor · module 001 +
+- [[BMS1P1]] — BMS1 pseudogene 1 · module 025 -
+- [[BMS1P1-1]] · module 028 +
+- [[BMS1P2]] — BMS1 pseudogene 2 · module 153 +
+- [[BMS1P20]] — BMS1 pseudogene 20 · module 025 +
+- [[BMS1P23]] — BMS1 pseudogene 23 · module 024 -
+- [[BMS1P4]] — BMS1 pseudogene 4 · module 114 +
+- [[BMS1P4-1]] · module 114 +
+- [[BMT2]] — S-adenosylmethionine sensor upstream of mTORC1 · module 099 +
+- [[BNC1]] — basonuclin zinc finger protein 1 · module 013 +
+- [[BNC2]] — basonuclin zinc finger protein 2 · module 121 +
+- [[BNIP1]] — BCL2 interacting protein 1 · module 012 +
+- [[BNIP2]] — BCL2 interacting protein 2 · module 007 +
+- [[BNIP3]] — BCL2 interacting protein 3 · module 099 +
+- [[BNIP3L]] — BCL2 interacting protein 3 like · module 079 +
+- [[BNIPL]] — BCL2 interacting protein like · module 037 +
+- [[BOC]] — BOC cell adhesion associated, oncogene regulated · module 013 +
+- [[BOD1]] — biorientation of chromosomes in cell division 1 · module 122 +
+- [[BOD1L1]] — biorientation of chromosomes in cell division 1 like 1 · module 074 +
+- [[BOK]] — BCL2 family apoptosis regulator BOK · module 005 +
+- [[BOLA1]] — bolA family member 1 · module 080 +
+- [[BOLA3]] — bolA family member 3 · module 138 +
+- [[BOLA3-DT]] — BOLA3 divergent transcript · module 128 +
+- [[BOP1]] — BOP1 ribosomal biogenesis factor · module 004 +
+- [[BORA]] — BORA aurora kinase A activator · module 022 +
+- [[BORCS5]] — BLOC-1 related complex subunit 5 · module 077 +
+- [[BORCS7]] — BLOC-1 related complex subunit 7 · module 023 +
+- [[BORCS7-ASMT]] — BORCS7-ASMT readthrough (NMD candidate) · module 015 +
+- [[BORCS8]] — BLOC-1 related complex subunit 8 · module 007 +
+- [[BPGM]] — bisphosphoglycerate mutase · module 093 +
+- [[BPHL]] — biphenyl hydrolase like · module 096 +
+- [[BPNT1]] — 3'(2'), 5'-bisphosphate nucleotidase 1 · module 017 +
+- [[BPNT2]] — 3'(2'), 5'-bisphosphate nucleotidase 2 · module 020 +
+- [[BPTF]] — bromodomain PHD finger transcription factor · module 051 +
+- [[BRAF]] — B-Raf proto-oncogene, serine/threonine kinase · module 051 +
+- [[BRAP]] — BRCA1 associated protein · module 149 +
+- [[BRAT1]] — BRCA1 associated ATM activator 1 · module 026 -
+- [[BRCA1]] — BRCA1 DNA repair associated · module 006 +
+- [[BRCA2]] — BRCA2 DNA repair associated · module 091 +
+- [[BRCC3]] — BRCA1/BRCA2-containing complex subunit 3 · module 025 +
+- [[BRD1]] — bromodomain containing 1 · module 046 +
+- [[BRD2]] — bromodomain containing 2 · module 093 +
+- [[BRD3]] — bromodomain containing 3 · module 145 +
+- [[BRD3OS]] — BRD3 opposite strand · module 050 +
+- [[BRD4]] — bromodomain containing 4 · module 173 +
+- [[BRD7]] — bromodomain containing 7 · module 037 +
+- [[BRD8]] — bromodomain containing 8 · module 022 +
+- [[BRD9]] — bromodomain containing 9 · module 005 +
+- [[BRF1]] — BRF1 general transcription factor IIIB subunit · module 077 +
+- [[BRF2]] — BRF2 general transcription factor IIIB subunit · module 012 +
+- [[BRI3]] — brain protein I3 · module 024 +
+- [[BRI3BP]] — BRI3 binding protein · module 006 +
+- [[BRINP3]] — BMP/retinoic acid inducible neural specific 3 · module 009 +
+- [[BRIP1]] — BRCA1 interacting DNA helicase 1 · module 006 +
+- [[BRIX1]] — biogenesis of ribosomes BRX1 · module 001 +
+- [[BRK1]] — BRICK1 subunit of SCAR/WAVE actin nucleating complex · module 105 +
+- [[BRME1]] — break repair meiotic recombinase recruitment factor 1 · module 006 +
+- [[BRMS1]] — BRMS1 transcriptional repressor and anoikis regulator · module 107 +
+- [[BRMS1L]] — BRMS1 like transcriptional repressor · module 062 +
+- [[BROX]] — BRO1 domain and CAAX motif containing · module 130 +
+- [[BRPF1]] — bromodomain and PHD finger containing 1 · module 119 +
+- [[BRPF3]] — bromodomain and PHD finger containing 3 · module 173 +
+- [[BRPF3-AS1]] — BRPF3 antisense RNA 1 · module 015 +
+- [[BRSK1]] — BR serine/threonine kinase 1 · module 103 +
+- [[BRSK2]] — BR serine/threonine kinase 2 · module 132 +
+- [[BRWD1]] — bromodomain and WD repeat domain containing 1 · module 074 +
+- [[BRWD3]] — bromodomain and WD repeat domain containing 3 · module 079 +
+- [[BSCL2]] — BSCL2 lipid droplet biogenesis associated, seipin · module 212 +
+- [[BSDC1]] — BSD domain containing 1 · module 187 +
+- [[BSG]] — basigin (Ok blood group) · module 050 +
+- [[BSN]] — bassoon presynaptic cytomatrix protein · module 209 +
+- [[BSPRY]] — B-box and SPRY domain containing · module 008 +
+- [[BST2]] — bone marrow stromal cell antigen 2 · module 032 +
+- [[BTAF1]] — B-TFIID TATA-box binding protein associated factor 1 · module 105 +
+- [[BTBD1]] — BTB domain containing 1 · module 025 +
+- [[BTBD10]] — BTB domain containing 10 · module 101 +
+- [[BTBD16]] — BTB domain containing 16 · module 047 +
+- [[BTBD19]] — BTB domain containing 19 · module 109 +
+- [[BTBD2]] — BTB domain containing 2 · module 129 +
+- [[BTBD3]] — BTB domain containing 3 · module 026 -
+- [[BTBD6]] — BTB domain containing 6 · module 024 +
+- [[BTBD7]] — BTB domain containing 7 · module 024 +
+- [[BTBD8]] — BTB domain containing 8 · module 076 +
+- [[BTBD9]] — BTB domain containing 9 · module 056 +
+- [[BTC]] — betacellulin · module 032 +
+- [[BTD]] — biotinidase · module 093 +
+- [[BTF3]] — basic transcription factor 3 · module 043 +
+- [[BTF3L4]] — basic transcription factor 3 like 4 · module 033 +
+- [[BTG1]] — BTG anti-proliferation factor 1 · module 020 -
+- [[BTG1-DT]] — BTG1 divergent transcript · module 021 +
+- [[BTG2]] — BTG anti-proliferation factor 2 · module 062 +
+- [[BTG3]] — BTG anti-proliferation factor 3 · module 014 +
+- [[BTG3-AS1]] — BTG3 antisense RNA 1 · module 039 +
+- [[BTN2A1]] — butyrophilin subfamily 2 member A1 · module 094 +
+- [[BTN2A2]] — butyrophilin subfamily 2 member A2 · module 014 +
+- [[BTN2A3P]] — butyrophilin subfamily 2 member A3, pseudogene · module 094 +
+- [[BTN2A3P-1]] · module 094 +
+- [[BTN3A1]] — butyrophilin subfamily 3 member A1 · module 070 +
+- [[BTN3A2]] — butyrophilin subfamily 3 member A2 · module 070 +
+- [[BTN3A3]] — butyrophilin subfamily 3 member A3 · module 032 +
+- [[BTNL12P]] — butyrophilin like 12, pseudogene · module 021 +
+- [[BTNL9]] — butyrophilin like 9 · module 176 +
+- [[BTRC]] — beta-transducin repeat containing E3 ubiquitin protein ligase · module 040 +
+- [[BUB1]] — BUB1 mitotic checkpoint serine/threonine kinase · module 022 +
+- [[BUB1B]] — BUB1 mitotic checkpoint serine/threonine kinase B · module 022 +
+- [[BUB3]] — BUB3 mitotic checkpoint protein · module 022 +
+- [[BUD13]] — BUD13 spliceosome associated protein · module 017 +
+- [[BUD23]] — BUD23 rRNA methyltransferase and ribosome maturation factor · module 016 -
+- [[BUD31]] — BUD31 spliceosome associated protein · module 041 +
+- [[BVES]] — popeye domain cAMP effector 1 · module 082 +
+- [[BVES-AS1]] — POPDC1 antisense RNA 1 · module 102 +
+- [[BYSL]] — bystin like · module 001 +
+- [[BZW1]] — basic leucine zipper and W2 domains 1 · module 078 +
+- [[BZW2]] — basic leucine zipper and W2 domains 2 · module 093 +

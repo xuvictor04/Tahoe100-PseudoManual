@@ -1,0 +1,30 @@
+{
+"nodes": [
+{"id": "legend", "type": "text", "x": -40, "y": -260, "width": 560, "height": 200, "text": "**Module 228**\n\n8 genes at their nodal-map positions. A single-armed module: every gene is + (green). Edge label + = move together, − = opposite."},
+{"id": "g4676", "type": "file", "file": "Genes/chr20/BMP2.md", "x": 0, "y": 560, "width": 180, "height": 50, "color": "4"},
+{"id": "g11947", "type": "file", "file": "Genes/chr17/DNAH17.md", "x": 200, "y": 0, "width": 180, "height": 50, "color": "4"},
+{"id": "g10842", "type": "file", "file": "Genes/chr1/PGBD5.md", "x": 400, "y": 3010, "width": 180, "height": 50, "color": "4"},
+{"id": "g9808", "type": "file", "file": "Genes/chr8/COL22A1.md", "x": 1400, "y": 1610, "width": 180, "height": 50, "color": "4"},
+{"id": "g5430", "type": "file", "file": "Genes/chr1/EPHB2.md", "x": 0, "y": 210, "width": 180, "height": 50, "color": "4"},
+{"id": "g11363", "type": "file", "file": "Genes/chr10/CAMK1D.md", "x": 0, "y": 490, "width": 180, "height": 50, "color": "4"},
+{"id": "g13152", "type": "file", "file": "Genes/chr5/ITGA1.md", "x": 0, "y": 140, "width": 180, "height": 50, "color": "4"},
+{"id": "g11190", "type": "file", "file": "Genes/chr3/RAP2B.md", "x": 200, "y": 560, "width": 180, "height": 50, "color": "4"}
+],
+"edges": [
+{"id": "e4676_5430", "fromNode": "g4676", "toNode": "g5430", "label": "+"},
+{"id": "e4676_10842", "fromNode": "g4676", "toNode": "g10842", "label": "+"},
+{"id": "e4676_11190", "fromNode": "g4676", "toNode": "g11190", "label": "+"},
+{"id": "e4676_11363", "fromNode": "g4676", "toNode": "g11363", "label": "+"},
+{"id": "e4676_11947", "fromNode": "g4676", "toNode": "g11947", "label": "+"},
+{"id": "e4676_13152", "fromNode": "g4676", "toNode": "g13152", "label": "+"},
+{"id": "e5430_10842", "fromNode": "g5430", "toNode": "g10842", "label": "+"},
+{"id": "e5430_11363", "fromNode": "g5430", "toNode": "g11363", "label": "+"},
+{"id": "e5430_11947", "fromNode": "g5430", "toNode": "g11947", "label": "+"},
+{"id": "e5430_13152", "fromNode": "g5430", "toNode": "g13152", "label": "+"},
+{"id": "e9808_10842", "fromNode": "g9808", "toNode": "g10842", "label": "+"},
+{"id": "e9808_11947", "fromNode": "g9808", "toNode": "g11947", "label": "+"},
+{"id": "e10842_11190", "fromNode": "g10842", "toNode": "g11190", "label": "+"},
+{"id": "e10842_11363", "fromNode": "g10842", "toNode": "g11363", "label": "+"},
+{"id": "e11947_13152", "fromNode": "g11947", "toNode": "g13152", "label": "+"}
+]
+}

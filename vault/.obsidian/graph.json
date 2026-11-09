@@ -1,0 +1,32 @@
+{
+  "collapse-filter": false,
+  "search": "-path:\"Indexes\" -path:\"Plates\" -path:\"Cell lines\" -file:\"— plates\" -file:\"Home\" -file:\"How to read this vault\"",
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": true,
+  "showOrphans": false,
+  "colorGroups": [
+    {
+      "query": "path:\"Drugs\"",
+      "color": {
+        "a": 1,
+        "rgb": 14725458
+      }
+    },
+    {
+      "query": "path:\"Modules\"",
+      "color": {
+        "a": 1,
+        "rgb": 5431378
+      }
+    },
+    {
+      "query": "path:\"Concepts\"",
+      "color": {
+        "a": 1,
+        "rgb": 11621088
+      }
+    }
+  ],
+  "scale": 0.5
+}

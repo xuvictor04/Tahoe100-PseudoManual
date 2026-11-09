@@ -1,0 +1,46 @@
+{
+ "stage": "tensor",
+ "version": 2,
+ "finished": "2026-11-07 20:04:35",
+ "info": {
+  "version": 2,
+  "genes": 16643,
+  "wells": 1329,
+  "drugdoses": 1132,
+  "lines": 50,
+  "plates": [
+   "plate1",
+   "plate2",
+   "plate3",
+   "plate4",
+   "plate5",
+   "plate6",
+   "plate7",
+   "plate8",
+   "plate9",
+   "plate10",
+   "plate11",
+   "plate12",
+   "plate13",
+   "plate14"
+  ],
+  "R_dtype": "float32",
+  "layout": "gene-major: R[g, w, l], DDL_*[g, d, l]",
+  "min_cells": 30,
+  "unreliable_plates": [
+   "plate13"
+  ],
+  "amb_frac": 0.25,
+  "e_min": 2.0,
+  "n_measured_line_gene_pairs": 727482,
+  "n_ambient_line_gene_pairs": 82148,
+  "n_low_count_values": 43276313,
+  "check_W1_max_diff": 0.0,
+  "check_W2_max_diff": 0.0,
+  "minutes": 3.04,
+  "options": {
+   "tensor_dtype": "float32",
+   "no_well_tensor": false
+  }
+ }
+}

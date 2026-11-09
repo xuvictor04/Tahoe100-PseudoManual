@@ -1,0 +1,31 @@
+{
+ "stage": "vault",
+ "version": 4,
+ "finished": "2026-11-09 11:10:25",
+ "info": {
+  "version": 4,
+  "notes": 34281,
+  "gene_notes": 16643,
+  "drug_notes": 379,
+  "line_notes": 50,
+  "plate_notes": 14,
+  "module_notes": 235,
+  "concept_notes": 10,
+  "fragments_spliced": 98,
+  "fragments_marked_earlier_study": 40,
+  "fragments_available": 105,
+  "written": 18973,
+  "literature_notes": 0,
+  "literature_partner_cells": 0,
+  "direction_arrows": 98577,
+  "review": null,
+  "unchanged": 15308,
+  "stale_removed": 2762,
+  "mb": 729.5,
+  "gene_note_kb_median": 23.5,
+  "gene_note_kb_max": 39.3,
+  "plates_note_kb_median": 19.9,
+  "plates_note_kb_max": 22.6,
+  "minutes": 2.63
+ }
+}

@@ -1,0 +1,104 @@
+{
+ "version": 4,
+ "genes": 16643,
+ "drugdoses": 1132,
+ "lines": 50,
+ "wells": 1329,
+ "chunk": 552,
+ "rows": {
+  "genes": 16643,
+  "drug_effects": 539607,
+  "drug_effects_clean": 353937,
+  "line_effects": 832150,
+  "drug_line_top": 367475,
+  "drugdoses": 1132,
+  "drugs": 379,
+  "lines": 50,
+  "plates": 14,
+  "wells": 1329
+ },
+ "tp53_source": "metadata",
+ "tp53_counts": {
+  "altered": 33,
+  "wild type": 17
+ },
+ "genes_with_clean_inducer": 15574,
+ "genes_with_clean_repressor": 13872,
+ "n_measured_line_gene_pairs": 727482,
+ "cell_cycle_rule": {
+  "flag": "cell-cycle shift",
+  "gene_level_text": "cell-cycle shift (explains ~{pct}% here)",
+  "safety_factor": 2.0,
+  "share_max": 0.5,
+  "lfc_floor": 0.2630344058337938,
+  "modules": [
+   "S_PHASE",
+   "G2M_PHASE"
+  ],
+  "drugdoses_flagged": 54,
+  "drugdoses_cc_only": 46,
+  "drugdoses_fitted": 1062,
+  "genes_with_slopes": 16643,
+  "significant_at_cc_only": 193346,
+  "cleared_at_cc_only": 135718,
+  "cleared_at_cc_only_x1": 165641,
+  "significant_at_flagged": 268828,
+  "cleared_at_flagged": 187548,
+  "module_genes": {
+   "S_PHASE": {
+    "genes": 43,
+    "significant_at_cc": 1168,
+    "cleared": 130,
+    "median_slope_S": 1.0248383283615112,
+    "median_slope_G2M": -0.002410497982054949
+   },
+   "G2M_PHASE": {
+    "genes": 54,
+    "significant_at_cc": 1448,
+    "cleared": 186,
+    "median_slope_S": 0.022044189274311066,
+    "median_slope_G2M": 0.9814914464950562
+   }
+  }
+ },
+ "line_z_threshold": 8.45,
+ "line_fold_min": 0.5849625007211562,
+ "line_z_expected_chance": 0.0492311807920378,
+ "line_z_expected_chance_all": 0.05431744313507485,
+ "line_z_method": "smallest |z| on a 0.05 grid, >= 4, with P(|per-line z| >= t) x (clean drug-doses of the typical gene, 1026) <= 0.05; null = per-line z of (gene, clean drug-dose) pairs with pooled |z| < 2 in 3000 evenly spaced genes (116,644,003 values); both directions counted",
+ "line_z_n_clean_drugdoses": 1026,
+ "line_z_null_values": 116644003,
+ "line_z_null_genes": 3000,
+ "line_z_null_tail": {
+  "2": 0.044701946657300505,
+  "3": 0.009916986473792399,
+  "4": 0.0030098504078259385,
+  "5": 0.0010458574539832966,
+  "6": 0.00039499673206517096,
+  "8": 6.870477516105135e-05,
+  "10": 1.631459784520598e-05
+ },
+ "line_z_null_tail_up": {
+  "2": 0.012483916554201249,
+  "3": 0.0011991786667335138,
+  "4": 0.00024160693456310822,
+  "5": 8.638249494918312e-05,
+  "6": 3.9033296893968907e-05,
+  "8": 1.0424882280488951e-05,
+  "10": 3.755015163531382e-06
+ },
+ "line_z_null_tail_down": {
+  "2": 0.03221803010309926,
+  "3": 0.008717807807058884,
+  "4": 0.0027682434732628305,
+  "5": 0.0009594749590341134,
+  "6": 0.00035596343517120207,
+  "8": 5.827989288056241e-05,
+  "10": 1.25595826816746e-05
+ },
+ "lines_up_chance_rate": 0.012483916554201249,
+ "lines_down_chance_rate": 0.03221803010309926,
+ "lines_up_rule": "descriptive: per-line z >= 2 and fold >= 1.2 (drug_effects n_lines_up)",
+ "undocumented_columns": [],
+ "minutes": 1.1
+}

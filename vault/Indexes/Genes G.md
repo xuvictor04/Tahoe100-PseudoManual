@@ -1,0 +1,581 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes G
+
+571 genes. Back to [[Genes by letter]].
+
+- [[G0S2]] — G0/G1 switch 2 · module 112 +
+- [[G2E3]] — G2/M-phase specific E3 ubiquitin protein ligase · module 022 +
+- [[G2E3-AS1]] — G2E3 antisense RNA 1 · module 090 +
+- [[G3BP1]] — G3BP stress granule assembly factor 1 · module 004 +
+- [[G3BP2]] — G3BP stress granule assembly factor 2 · module 042 +
+- [[G6PC3]] — glucose-6-phosphatase catalytic subunit 3 · module 029 +
+- [[G6PD]] — glucose-6-phosphate dehydrogenase · module 020 +
+- [[GAA]] — alpha glucosidase · module 050 +
+- [[GAB1]] — GRB2 associated binding protein 1 · module 145 +
+- [[GAB2]] — GRB2 associated binding protein 2 · module 115 +
+- [[GAB3]] — GRB2 associated binding protein 3 · module 104 +
+- [[GABARAP]] — GABA type A receptor-associated protein · module 059 +
+- [[GABARAPL1]] — GABA type A receptor associated protein like 1 · module 187 +
+- [[GABARAPL2]] — GABA type A receptor associated protein like 2 · module 024 +
+- [[GABBR1]] — gamma-aminobutyric acid type B receptor subunit 1 · module 057 -
+- [[GABBR2]] — gamma-aminobutyric acid type B receptor subunit 2 · module 019 +
+- [[GABPA]] — GA binding protein transcription factor subunit alpha · module 015 +
+- [[GABPB1]] — GA binding protein transcription factor subunit beta 1 · module 124 +
+- [[GABPB1-AS1]] — GABPB1 antisense RNA 1 · module 124 +
+- [[GABPB2]] — GA binding protein transcription factor subunit beta 2 · module 088 +
+- [[GABRA2]] — gamma-aminobutyric acid type A receptor subunit alpha2 · module 009 +
+- [[GABRA3]] — gamma-aminobutyric acid type A receptor subunit alpha3 · module 108 +
+- [[GABRB3]] — gamma-aminobutyric acid type A receptor subunit beta3 · module 102 +
+- [[GABRE]] — gamma-aminobutyric acid type A receptor subunit epsilon · module 019 +
+- [[GABRG2]] — gamma-aminobutyric acid type A receptor subunit gamma2 · module 027 +
+- [[GABRG3]] — gamma-aminobutyric acid type A receptor subunit gamma3 · module 140 +
+- [[GABRP]] — gamma-aminobutyric acid type A receptor subunit pi · module 008 +
+- [[GABRR2]] — gamma-aminobutyric acid type A receptor subunit rho2 · module 039 +
+- [[GAD1]] — glutamate decarboxylase 1 · module 004 -
+- [[GADD45A]] — growth arrest and DNA damage inducible alpha · module 029 -
+- [[GADD45B]] — growth arrest and DNA damage inducible beta · module 113 +
+- [[GADD45GIP1]] — GADD45G interacting protein 1 · module 024 +
+- [[GAK]] — cyclin G associated kinase · module 052 +
+- [[GAL]] — galanin and GMAP prepropeptide · module 152 +
+- [[GAL3ST1]] — galactose-3-O-sulfotransferase 1 · module 038 +
+- [[GAL3ST2]] — galactose-3-O-sulfotransferase 2 · module 047 +
+- [[GALC]] — galactosylceramidase · module 003 -
+- [[GALE]] — UDP-galactose-4-epimerase · module 141 +
+- [[GALK1]] — galactokinase 1 · module 113 +
+- [[GALK2]] — galactokinase 2 · module 118 +
+- [[GALM]] — galactose mutarotase · module 044 +
+- [[GALNS]] — galactosamine (N-acetyl)-6-sulfatase · module 002 +
+- [[GALNT1]] — polypeptide N-acetylgalactosaminyltransferase 1 · module 078 +
+- [[GALNT10]] — polypeptide N-acetylgalactosaminyltransferase 10 · module 207 -
+- [[GALNT11]] — polypeptide N-acetylgalactosaminyltransferase 11 · module 030 +
+- [[GALNT12]] — polypeptide N-acetylgalactosaminyltransferase 12 · module 154 +
+- [[GALNT13]] — polypeptide N-acetylgalactosaminyltransferase 13 · module 009 +
+- [[GALNT14]] — polypeptide N-acetylgalactosaminyltransferase 14 · module 018 +
+- [[GALNT16]] — polypeptide N-acetylgalactosaminyltransferase 16 · module 019 +
+- [[GALNT17]] — polypeptide N-acetylgalactosaminyltransferase 17 · module 140 +
+- [[GALNT18]] — polypeptide N-acetylgalactosaminyltransferase 18 · module 084 +
+- [[GALNT2]] — polypeptide N-acetylgalactosaminyltransferase 2 · module 020 +
+- [[GALNT3]] — polypeptide N-acetylgalactosaminyltransferase 3 · module 031 +
+- [[GALNT4]] — polypeptide N-acetylgalactosaminyltransferase 4 · module 016 +
+- [[GALNT5]] — polypeptide N-acetylgalactosaminyltransferase 5 · module 073 +
+- [[GALNT6]] — polypeptide N-acetylgalactosaminyltransferase 6 · module 116 +
+- [[GALNT7]] — polypeptide N-acetylgalactosaminyltransferase 7 · module 025 +
+- [[GALNT7-DT]] — GALNT7 divergent transcript · module 023 +
+- [[GALNT8]] — polypeptide N-acetylgalactosaminyltransferase 8 · module 047 +
+- [[GALNT9]] — polypeptide N-acetylgalactosaminyltransferase 9 · module 075 +
+- [[GALNTL6]] — polypeptide N-acetylgalactosaminyltransferase like 6 · module 140 +
+- [[GALT]] — galactose-1-phosphate uridylyltransferase · module 014 +
+- [[GAMT]] — guanidinoacetate N-methyltransferase · module 045 +
+- [[GAN]] — gigaxonin · module 180 +
+- [[GANAB]] — glucosidase II alpha subunit · module 050 +
+- [[GANC]] — glucosidase alpha, neutral C · module 010 +
+- [[GAP43]] — growth associated protein 43 · module 009 +
+- [[GAPDH]] — glyceraldehyde-3-phosphate dehydrogenase · module 099 +
+- [[GAPLINC]] — gastric adenocarcinoma associated, positive CD44 regulator, long intergenic non-coding RNA · module 035 +
+- [[GAPVD1]] — GTPase activating protein and VPS9 domains 1 · module 169 +
+- [[GAR1]] — GAR1 ribonucleoprotein · module 001 +
+- [[GAREM1]] — GRB2 associated regulator of MAPK1 subtype 1 · module 106 +
+- [[GARIN1A]] — golgi associated RAB2 interactor 1A · module 039 +
+- [[GARIN1B]] — golgi associated RAB2 interactor 1B · module 039 +
+- [[GARNL3]] — GTPase activating Rap/RanGAP domain like 3 · module 018 +
+- [[GARRE1]] — granule associated Rac and RHOG effector 1 · module 145 +
+- [[GARS1]] — glycyl-tRNA synthetase 1 · module 063 +
+- [[GARS1-DT]] — GARS1 divergent transcript · module 015 +
+- [[GART]] — phosphoribosylglycinamide formyltransferase, phosphoribosylglycinamide synthetase, phosphoribosylaminoimidazole synthetase · module 018 +
+- [[GAS2]] — growth arrest specific 2 · module 010 +
+- [[GAS2L1]] — growth arrest specific 2 like 1 · module 085 +
+- [[GAS2L3]] — growth arrest specific 2 like 3 · module 022 +
+- [[GAS5]] — growth arrest specific 5 · module 131 +
+- [[GAS6]] — growth arrest specific 6 · module 126 +
+- [[GAS6-AS1]] — GAS6 antisense RNA 1 · module 062 +
+- [[GAS7]] — growth arrest specific 7 · module 087 +
+- [[GAS8]] — dynein regulatory complex subunit 4 · module 064 +
+- [[GASAL1]] — growth arrest associated lncRNA 1 · module 080 +
+- [[GASK1B]] — golgi associated kinase 1B · module 019 +
+- [[GASK1B-AS1]] — GASK1B antisense RNA 1 · module 019 +
+- [[GATA2]] — GATA binding protein 2 · module 004 -
+- [[GATA2-AS1]] — GATA2 antisense RNA 1 · module 046 +
+- [[GATA3]] — GATA binding protein 3 · module 068 +
+- [[GATA4]] — GATA binding protein 4 · module 146 +
+- [[GATA6]] — GATA binding protein 6 · module 014 +
+- [[GATAD1]] — GATA zinc finger domain containing 1 · module 020 -
+- [[GATAD2A]] — GATA zinc finger domain containing 2A · module 045 -
+- [[GATAD2B]] — GATA zinc finger domain containing 2B · module 145 +
+- [[GATB]] — glutamyl-tRNA amidotransferase subunit B · module 001 +
+- [[GATC]] — glutamyl-tRNA amidotransferase subunit C · module 124 +
+- [[GATD1]] — glutamine amidotransferase class 1 domain containing 1 · module 018 +
+- [[GATD1-DT]] — GATD1 divergent transcript · module 015 +
+- [[GATM]] — glycine amidinotransferase · module 014 +
+- [[GBA1]] — glucosylceramidase beta 1 · module 122 +
+- [[GBA2]] — glucosylceramidase beta 2 · module 174 +
+- [[GBE1]] — 1,4-alpha-glucan branching enzyme 1 · module 099 +
+- [[GBF1]] — golgi brefeldin A resistant guanine nucleotide exchange factor 1 · module 056 +
+- [[GBP1]] — guanylate binding protein 1 · module 070 +
+- [[GBP2]] — guanylate binding protein 2 · module 070 +
+- [[GBP3]] — guanylate binding protein 3 · module 032 +
+- [[GBP4]] — guanylate binding protein 4 · module 070 +
+- [[GBP5]] — guanylate binding protein 5 · module 032 +
+- [[GBX1]] — gastrulation brain homeobox 1 · module 110 +
+- [[GBX2-AS1]] — GBX2 and ASB18 antisense RNA 1 · module 005 +
+- [[GCA]] — grancalcin · module 032 +
+- [[GCAT]] — glycine C-acetyltransferase · module 004 -
+- [[GCAWKR]] — gastric cancer associated WDR5 and KAT2A binding lncRNA · module 010 +
+- [[GCC1]] — GRIP and coiled-coil domain containing 1 · module 007 +
+- [[GCC2]] — GRIP and coiled-coil domain containing 2 · module 074 +
+- [[GCC2-AS1]] — GCC2 antisense RNA 1 · module 021 +
+- [[GCDH]] — glutaryl-CoA dehydrogenase · module 029 -
+- [[GCFC2]] — GC-rich sequence DNA-binding factor 2 · module 001 +
+- [[GCG]] — glucagon · module 128 +
+- [[GCH1]] — GTP cyclohydrolase 1 · module 093 +
+- [[GCHFR]] — GTP cyclohydrolase I feedback regulator · module 058 +
+- [[GCKR]] — glucokinase regulator · module 081 +
+- [[GCLC]] — glutamate-cysteine ligase catalytic subunit · module 117 +
+- [[GCLM]] — glutamate-cysteine ligase modifier subunit · module 117 +
+- [[GCN1]] — GCN1 activator of EIF2AK4 · module 033 +
+- [[GCNA]] — germ cell nuclear acidic peptidase · module 039 +
+- [[GCNT1]] — glucosaminyl (N-acetyl) transferase 1 · module 106 +
+- [[GCNT2]] — glucosaminyl (N-acetyl) transferase 2 (I blood group) · module 117 +
+- [[GCNT3]] — glucosaminyl (N-acetyl) transferase 3, mucin type · module 008 +
+- [[GCNT4]] — glucosaminyl (N-acetyl) transferase 4 · module 080 +
+- [[GCNT7]] — glucosaminyl (N-acetyl) transferase family member 7 · module 021 +
+- [[GCOM1]] — GCOM1, MYZAP-POLR2M combined locus · module 057 +
+- [[GCSH]] — glycine cleavage system protein H · module 188 +
+- [[GDA]] — guanine deaminase · module 019 +
+- [[GDAP1]] — ganglioside induced differentiation associated protein 1 · module 016 +
+- [[GDAP2]] — ganglioside induced differentiation associated protein 2 · module 142 +
+- [[GDE1]] — glycerophosphodiester phosphodiesterase 1 · module 124 -
+- [[GDF1]] — growth differentiation factor 1 · module 053 +
+- [[GDF11]] — growth differentiation factor 11 · module 015 -
+- [[GDF15]] — growth differentiation factor 15 · module 062 +
+- [[GDI1]] — GDP dissociation inhibitor 1 · module 002 +
+- [[GDI2]] — GDP dissociation inhibitor 2 · module 042 +
+- [[GDNF]] — glial cell derived neurotrophic factor · module 013 +
+- [[GDNF-AS1]] — GDNF antisense RNA 1 · module 013 +
+- [[GDPD1]] — glycerophosphodiester phosphodiesterase domain containing 1 · module 190 +
+- [[GDPD3]] — glycerophosphodiester phosphodiesterase domain containing 3 · module 030 +
+- [[GDPD4]] — glycerophosphodiester phosphodiesterase domain containing 4 · module 021 +
+- [[GDPD5]] — glycerophosphodiester phosphodiesterase domain containing 5 · module 034 +
+- [[GDPGP1]] — GDP-D-glucose phosphorylase 1 · module 034 +
+- [[GEM]] — GTP binding protein overexpressed in skeletal muscle · module 112 +
+- [[GEMIN2]] — gem nuclear organelle associated protein 2 · module 017 +
+- [[GEMIN4]] — gem nuclear organelle associated protein 4 · module 005 +
+- [[GEMIN5]] — gem nuclear organelle associated protein 5 · module 033 +
+- [[GEMIN6]] — gem nuclear organelle associated protein 6 · module 007 +
+- [[GEMIN7-AS1]] — GEMIN7 antisense RNA 1 · module 021 +
+- [[GEMIN8]] — gem nuclear organelle associated protein 8 · module 012 +
+- [[GEN1]] — GEN1 structure-specific endonuclease · module 091 +
+- [[GET1]] — guided entry of tail-anchored proteins factor 1 · module 030 +
+- [[GET1-SH3BGR]] — GET1-SH3BGR readthrough · module 037 +
+- [[GET3]] — guided entry of tail-anchored proteins factor 3, ATPase · module 122 +
+- [[GET4]] — guided entry of tail-anchored proteins factor 4 · module 157 +
+- [[GFER]] — growth factor, augmenter of liver regeneration · module 012 +
+- [[GFM1]] — G elongation factor mitochondrial 1 · module 004 +
+- [[GFM2]] — GTP dependent ribosome recycling factor mitochondrial GFM2 · module 025 +
+- [[GFOD1]] — Gfo/Idh/MocA-like oxidoreductase domain containing 1 · module 034 +
+- [[GFOD2]] — Gfo/Idh/MocA-like oxidoreductase domain containing 2 · module 077 +
+- [[GFPT1]] — glutamine--fructose-6-phosphate transaminase 1 · module 056 +
+- [[GFPT2]] — glutamine--fructose-6-phosphate transaminase 2 · module 013 +
+- [[GFRA1]] — GDNF family receptor alpha 1 · module 066 +
+- [[GFUS]] — GDP-L-fucose synthase · module 012 +
+- [[GGA1]] — golgi associated, gamma adaptin ear containing, ARF binding protein 1 · module 085 +
+- [[GGA2]] — golgi associated, gamma adaptin ear containing, ARF binding protein 2 · module 164 +
+- [[GGA3]] — golgi associated, gamma adaptin ear containing, ARF binding protein 3 · module 114 +
+- [[GGACT]] — gamma-glutamylamine cyclotransferase · module 001 +
+- [[GGCT]] — gamma-glutamylcyclotransferase · module 006 +
+- [[GGCX]] — gamma-glutamyl carboxylase · module 042 +
+- [[GGH]] — gamma-glutamyl hydrolase · module 067 +
+- [[GGNBP2]] — gametogenetin binding protein 2 · module 020 -
+- [[GGPS1]] — geranylgeranyl diphosphate synthase 1 · module 095 +
+- [[GGT1]] — gamma-glutamyltransferase 1 · module 053 +
+- [[GGT7]] — gamma-glutamyltransferase 7 · module 020 -
+- [[GHDC]] — GH3 domain containing · module 157 +
+- [[GHITM]] — growth hormone inducible transmembrane protein · module 133 +
+- [[GHR]] — growth hormone receptor · module 104 +
+- [[GHRLOS]] — ghrelin opposite strand/antisense RNA · module 047 +
+- [[GID4]] — GID complex subunit 4 homolog · module 003 +
+- [[GID8]] — GID complex subunit 8 homolog · module 130 +
+- [[GIGYF1]] — GRB10 interacting GYF protein 1 · module 138 +
+- [[GIGYF2]] — GRB10 interacting GYF protein 2 · module 028 +
+- [[GIHCG]] — GIHCG inhibitor of miR-200b/200a/429 expression · module 059 +
+- [[GIN1]] — gypsy retrotransposon integrase 1 · module 028 +
+- [[GINM1]] — glycosylated integral membrane protein 1 · module 030 +
+- [[GINS1]] — GINS complex subunit 1 · module 006 +
+- [[GINS2]] — GINS complex subunit 2 · module 006 +
+- [[GINS3]] — GINS complex subunit 3 · module 006 +
+- [[GINS4]] — GINS complex subunit 4 · module 006 +
+- [[GIPC1]] — GIPC PDZ domain containing family member 1 · module 085 +
+- [[GIPC2]] — GIPC PDZ domain containing family member 2 · module 023 +
+- [[GIPR]] — gastric inhibitory polypeptide receptor · module 208 +
+- [[GIT1]] — GIT ArfGAP 1 · module 002 +
+- [[GIT2]] — GIT ArfGAP 2 · module 030 +
+- [[GJA1]] — gap junction protein alpha 1 · module 019 +
+- [[GJA3]] — gap junction protein alpha 3 · module 132 +
+- [[GJB1]] — gap junction protein beta 1 · module 027 +
+- [[GJB2]] — gap junction protein beta 2 · module 109 +
+- [[GJB3]] — gap junction protein beta 3 · module 034 +
+- [[GJC1]] — gap junction protein gamma 1 · module 116 +
+- [[GK]] — glycerol kinase · module 227 +
+- [[GK5]] — glycerol kinase 5 · module 175 +
+- [[GKAP1]] — G kinase anchoring protein 1 · module 222 +
+- [[GLA]] — galactosidase alpha · module 060 +
+- [[GLB1]] — galactosidase beta 1 · module 050 +
+- [[GLB1L2]] — galactosidase beta 1 like 2 · module 176 +
+- [[GLCCI1]] — glucocorticoid induced 1 · module 018 -
+- [[GLCE]] — glucuronic acid epimerase · module 088 -
+- [[GLDC]] — glycine decarboxylase · module 087 +
+- [[GLDN]] — gliomedin · module 027 +
+- [[GLE1]] — GLE1 RNA export mediator · module 207 +
+- [[GLG1]] — golgi glycoprotein 1 · module 042 +
+- [[GLI2]] — GLI family zinc finger 2 · module 195 +
+- [[GLI3]] — GLI family zinc finger 3 · module 121 +
+- [[GLI4]] — GLI family zinc finger 4 · module 096 +
+- [[GLIPR1]] — GLI pathogenesis related 1 · module 066 +
+- [[GLIPR1-AS1]] — GLIPR1 antisense RNA 1 · module 083 +
+- [[GLIPR2]] — GLI pathogenesis related 2 · module 115 +
+- [[GLIS1]] — GLIS family zinc finger 1 · module 013 +
+- [[GLIS2]] — GLIS family zinc finger 2 · module 004 -
+- [[GLIS3]] — GLIS family zinc finger 3 · module 013 +
+- [[GLMN]] — glomulin · module 018 +
+- [[GLMP]] — glycosylated lysosomal membrane protein · module 122 +
+- [[GLO1]] — glyoxalase I · module 004 +
+- [[GLOD4]] — glyoxalase domain containing 4 · module 028 +
+- [[GLP2R]] — glucagon like peptide 2 receptor · module 019 +
+- [[GLRA3]] — glycine receptor alpha 3 · module 090 +
+- [[GLRB]] — glycine receptor beta · module 019 +
+- [[GLRX]] — glutaredoxin · module 113 +
+- [[GLRX2]] — glutaredoxin 2 · module 011 +
+- [[GLRX3]] — glutaredoxin 3 · module 018 +
+- [[GLRX5]] — glutaredoxin 5 · module 003 +
+- [[GLS]] — glutaminase · module 119 +
+- [[GLS2]] — glutaminase 2 · module 062 +
+- [[GLT8D1]] — glycosyltransferase 8 domain containing 1 · module 040 +
+- [[GLTP]] — glycolipid transfer protein · module 003 +
+- [[GLUD1]] — glutamate dehydrogenase 1 · module 011 -
+- [[GLUD1P3]] — glutamate dehydrogenase 1 pseudogene 3 · module 015 +
+- [[GLUL]] — glutamate-ammonia ligase · module 098 +
+- [[GLYATL2]] — glycine-N-acyltransferase like 2 · module 013 +
+- [[GLYR1]] — glyoxylate reductase 1 homolog · module 052 +
+- [[GM2A]] — ganglioside GM2 activator · module 050 +
+- [[GMCL1]] — germ cell-less 1, spermatogenesis associated · module 040 +
+- [[GMDS]] — GDP-mannose 4,6-dehydratase · module 023 -
+- [[GMDS-DT]] — GMDS divergent transcript · module 010 +
+- [[GMEB1]] — glucocorticoid modulatory element binding protein 1 · module 156 +
+- [[GMEB2]] — glucocorticoid modulatory element binding protein 2 · module 114 +
+- [[GMFB]] — glia maturation factor beta · module 025 +
+- [[GMFG]] — glia maturation factor gamma · module 021 +
+- [[GMIP]] — GEM interacting protein · module 110 +
+- [[GMNN]] — geminin DNA replication inhibitor · module 067 +
+- [[GMPPA]] — GDP-mannose pyrophosphorylase A · module 049 +
+- [[GMPPB]] — GDP-mannose pyrophosphorylase B · module 052 +
+- [[GMPR]] — guanosine monophosphate reductase · module 032 +
+- [[GMPR2]] — guanosine monophosphate reductase 2 · module 076 +
+- [[GMPS]] — guanosine monophosphate synthase · module 006 +
+- [[GNA11]] — G protein subunit alpha 11 · module 002 +
+- [[GNA12]] — G protein subunit alpha 12 · module 077 +
+- [[GNA13]] — G protein subunit alpha 13 · module 065 +
+- [[GNA14]] — G protein subunit alpha 14 · module 044 +
+- [[GNA15]] — G protein subunit alpha 15 · module 034 +
+- [[GNAI1]] — G protein subunit alpha i1 · module 182 +
+- [[GNAI2]] — G protein subunit alpha i2 · module 085 +
+- [[GNAI3]] — G protein subunit alpha i3 · module 212 +
+- [[GNAL]] — G protein subunit alpha L · module 102 +
+- [[GNAO1]] — G protein subunit alpha o1 · module 082 +
+- [[GNAQ]] — G protein subunit alpha q · module 018 +
+- [[GNAS]] — GNAS complex locus · module 001 -
+- [[GNAS-AS1]] — GNAS antisense RNA 1 · module 040 +
+- [[GNAT3]] — G protein subunit alpha transducin 3 · module 027 +
+- [[GNAZ]] — G protein subunit alpha z · module 132 +
+- [[GNB1]] — G protein subunit beta 1 · module 111 +
+- [[GNB1L]] — G protein subunit beta 1 like · module 068 -
+- [[GNB2]] — G protein subunit beta 2 · module 003 +
+- [[GNB4]] — G protein subunit beta 4 · module 055 +
+- [[GNB5]] — G protein subunit beta 5 · module 132 +
+- [[GNE]] — glucosamine (UDP-N-acetyl)-2-epimerase/N-acetylmannosamine kinase · module 040 +
+- [[GNG10]] — G protein subunit gamma 10 · module 029 +
+- [[GNG11]] — G protein subunit gamma 11 · module 019 +
+- [[GNG12]] — G protein subunit gamma 12 · module 111 +
+- [[GNG12-AS1]] — GNG12, DIRAS3 and WLS antisense RNA 1 · module 085 -
+- [[GNG2]] — G protein subunit gamma 2 · module 094 +
+- [[GNG4]] — G protein subunit gamma 4 · module 101 +
+- [[GNG5]] — G protein subunit gamma 5 · module 025 -
+- [[GNG7]] — G protein subunit gamma 7 · module 191 +
+- [[GNGT1]] — G protein subunit gamma transducin 1 · module 117 +
+- [[GNL1]] — G protein nucleolar 1 · module 109 +
+- [[GNL2]] — G protein nucleolar 2 · module 052 +
+- [[GNL3]] — G protein nucleolar 3 · module 033 +
+- [[GNL3L]] — G protein nucleolar 3 like · module 005 +
+- [[GNPAT]] — glyceronephosphate O-acyltransferase · module 198 +
+- [[GNPDA1]] — glucosamine-6-phosphate deaminase 1 · module 124 +
+- [[GNPDA2]] — glucosamine-6-phosphate deaminase 2 · module 057 +
+- [[GNPNAT1]] — glucosamine-phosphate N-acetyltransferase 1 · module 211 +
+- [[GNPTAB]] — N-acetylglucosamine-1-phosphate transferase subunits alpha and beta · module 188 +
+- [[GNPTG]] — N-acetylglucosamine-1-phosphate transferase subunit gamma · module 122 +
+- [[GNRH1]] — gonadotropin releasing hormone 1 · module 016 -
+- [[GNS]] — glucosamine (N-acetyl)-6-sulfatase · module 029 +
+- [[GOLGA1]] — golgin A1 · module 028 +
+- [[GOLGA2]] — golgin A2 · module 041 +
+- [[GOLGA2P5]] — GOLGA2 pseudogene 5 · module 027 +
+- [[GOLGA2P5-1]] · module 046 +
+- [[GOLGA3]] — golgin A3 · module 052 +
+- [[GOLGA4]] — golgin A4 · module 041 +
+- [[GOLGA5]] — golgin A5 · module 041 +
+- [[GOLGA6L9]] — golgin A6 family like 9 · module 180 +
+- [[GOLGA7]] — golgin A7 · module 074 +
+- [[GOLGA7B]] — golgin A7 family member B · module 158 +
+- [[GOLGA7B-DT]] — GOLGA7B divergent transcript · module 092 +
+- [[GOLGA8A]] — golgin A8 family member A · module 021 +
+- [[GOLGA8B]] — golgin A8 family member B · module 021 +
+- [[GOLGA8N]] — golgin A8 family member N · module 015 +
+- [[GOLGB1]] — golgin B1 · module 074 +
+- [[GOLIM4]] — golgi integral membrane protein 4 · module 114 +
+- [[GOLM1]] — golgi membrane protein 1 · module 029 +
+- [[GOLM2]] — golgi membrane protein 2 · module 012 -
+- [[GOLPH3]] — golgi phosphoprotein 3 · module 049 +
+- [[GOLPH3L]] — golgi phosphoprotein 3 like · module 041 +
+- [[GOLT1A]] — golgi transport 1A · module 158 +
+- [[GOLT1B]] — golgi transport 1B · module 056 +
+- [[GON4L]] — gon-4 like · module 052 +
+- [[GON7]] — GON7 subunit of KEOPS complex · module 012 +
+- [[GOPC]] — golgi associated PDZ and coiled-coil motif containing · module 016 +
+- [[GORAB]] — golgin, RAB6 interacting · module 012 +
+- [[GORASP1]] — golgi reassembly stacking protein 1 · module 011 +
+- [[GORASP2]] — golgi reassembly stacking protein 2 · module 049 +
+- [[GOSR1]] — golgi SNAP receptor complex member 1 · module 114 +
+- [[GOSR2]] — golgi SNAP receptor complex member 2 · module 052 +
+- [[GOT1]] — glutamic-oxaloacetic transaminase 1 · module 063 +
+- [[GOT1-DT]] — GOT1 divergent transcript · module 015 +
+- [[GOT2]] — glutamic-oxaloacetic transaminase 2 · module 004 +
+- [[GP6]] — glycoprotein VI platelet · module 053 +
+- [[GP6-AS1]] — GP6 antisense RNA 1 · module 212 +
+- [[GPA33]] — glycoprotein A33 · module 044 +
+- [[GPAA1]] — glycosylphosphatidylinositol anchor attachment 1 · module 020 +
+- [[GPALPP1]] — GPALPP motifs containing 1 · module 015 +
+- [[GPAM]] — glycerol-3-phosphate acyltransferase, mitochondrial · module 033 +
+- [[GPANK1]] — G-patch domain and ankyrin repeats 1 · module 011 +
+- [[GPAT3]] — glycerol-3-phosphate acyltransferase 3 · module 136 +
+- [[GPAT4]] — glycerol-3-phosphate acyltransferase 4 · module 002 +
+- [[GPAT4-AS1]] — GPAT4 and GINS4 antisense RNA 1 · module 035 +
+- [[GPATCH1]] — G-patch domain containing 1 · module 012 +
+- [[GPATCH11]] — G-patch domain containing 11 · module 017 +
+- [[GPATCH2]] — G-patch domain containing 2 · module 026 +
+- [[GPATCH2L]] — G-patch domain containing 2 like · module 101 +
+- [[GPATCH3]] — G-patch domain containing 3 · module 172 +
+- [[GPATCH4]] — G-patch domain containing 4 (gene/pseudogene) · module 001 +
+- [[GPATCH8]] — G-patch domain containing 8 · module 051 +
+- [[GPBP1]] — GC-rich promoter binding protein 1 · module 231 +
+- [[GPBP1L1]] — GC-rich promoter binding protein 1 like 1 · module 234 +
+- [[GPC1]] — glypican 1 · module 050 +
+- [[GPC3]] — glypican 3 · module 082 +
+- [[GPC4]] — glypican 4 · module 029 +
+- [[GPC5]] — glypican 5 · module 037 +
+- [[GPC6]] — glypican 6 · module 152 +
+- [[GPCPD1]] — glycerophosphocholine phosphodiesterase 1 · module 094 +
+- [[GPD1L]] — glycerol-3-phosphate dehydrogenase 1 like · module 188 +
+- [[GPD2]] — glycerol-3-phosphate dehydrogenase 2 · module 025 +
+- [[GPHN]] — gephyrin · module 200 +
+- [[GPI]] — glucose-6-phosphate isomerase · module 099 +
+- [[GPKOW]] — G-patch domain and KOW motifs · module 007 +
+- [[GPLD1]] — glycosylphosphatidylinositol specific phospholipase D1 · module 010 +
+- [[GPM6A]] — glycoprotein M6A · module 061 +
+- [[GPM6B]] — glycoprotein M6B · module 102 +
+- [[GPN1]] — GPN-loop GTPase 1 · module 025 +
+- [[GPN2]] — GPN-loop GTPase 2 · module 114 +
+- [[GPN3]] — GPN-loop GTPase 3 · module 003 +
+- [[GPNMB]] — glycoprotein nmb · module 009 +
+- [[GPR107]] — G protein-coupled receptor 107 · module 040 +
+- [[GPR108]] — G protein-coupled receptor 108 · module 014 +
+- [[GPR135]] — G protein-coupled receptor 135 · module 005 +
+- [[GPR137]] — G protein-coupled receptor 137 · module 080 +
+- [[GPR137B]] — G protein-coupled receptor 137B · module 110 +
+- [[GPR137C]] — G protein-coupled receptor 137C · module 026 +
+- [[GPR141]] — G protein-coupled receptor 141 · module 155 +
+- [[GPR143]] — G protein-coupled receptor 143 · module 027 +
+- [[GPR146]] — G protein-coupled receptor 146 · module 144 +
+- [[GPR15]] — G protein-coupled receptor 15 · module 027 +
+- [[GPR153]] — G protein-coupled receptor 153 · module 160 +
+- [[GPR155]] — G protein-coupled receptor 155 · module 164 +
+- [[GPR156]] — G protein-coupled receptor 156 · module 039 +
+- [[GPR157]] — G protein-coupled receptor 157 · module 003 +
+- [[GPR158]] — G protein-coupled receptor 158 · module 061 +
+- [[GPR160]] — G protein-coupled receptor 160 · module 099 +
+- [[GPR161]] — G protein-coupled receptor 161 · module 002 +
+- [[GPR173]] — G protein-coupled receptor 173 · module 013 +
+- [[GPR176]] — G protein-coupled receptor 176 · module 121 +
+- [[GPR180]] — G protein-coupled receptor 180 · module 049 +
+- [[GPR19]] — G protein-coupled receptor 19 · module 071 +
+- [[GPR35]] — G protein-coupled receptor 35 · module 031 +
+- [[GPR37]] — G protein-coupled receptor 37 · module 167 +
+- [[GPR39]] — G protein-coupled receptor 39 · module 120 +
+- [[GPR63]] — G protein-coupled receptor 63 · module 018 +
+- [[GPR68]] — G protein-coupled receptor 68 · module 013 +
+- [[GPR84-AS1]] — GPR84, ZNF385A, ITGA5 and GTSF1 antisense RNA 1 · module 021 +
+- [[GPR87]] — G protein-coupled receptor 87 · module 008 +
+- [[GPR89A]] — golgi pH regulator A · module 142 +
+- [[GPR89B]] — golgi pH regulator B · module 142 +
+- [[GPRASP1]] — G protein-coupled receptor associated sorting protein 1 · module 023 +
+- [[GPRASP3]] — G protein-coupled receptor associated sorting protein family member 3 · module 023 +
+- [[GPRC5A]] — G protein-coupled receptor class C group 5 member A · module 031 +
+- [[GPRC5B]] — G protein-coupled receptor class C group 5 member B · module 147 +
+- [[GPRC5C]] — G protein-coupled receptor class C group 5 member C · module 004 -
+- [[GPRC5D-AS1]] — GPRC5D and HEBP1 antisense RNA 1 · module 039 +
+- [[GPRIN1]] — G protein regulated inducer of neurite outgrowth 1 · module 082 +
+- [[GPRIN2]] — G protein regulated inducer of neurite outgrowth 2 · module 008 +
+- [[GPRIN3]] — GPRIN family member 3 · module 019 +
+- [[GPS1]] — G protein pathway suppressor 1 · module 050 +
+- [[GPS2]] — G protein pathway suppressor 2 · module 012 +
+- [[GPSM1]] — G protein signaling modulator 1 · module 002 +
+- [[GPSM2]] — G protein signaling modulator 2 · module 022 +
+- [[GPSM3]] — G protein signaling modulator 3 · module 196 +
+- [[GPT2]] — glutamic--pyruvic transaminase 2 · module 063 +
+- [[GPX1]] — glutathione peroxidase 1 · module 062 +
+- [[GPX2]] — glutathione peroxidase 2 · module 055 +
+- [[GPX3]] — glutathione peroxidase 3 · module 050 +
+- [[GPX4]] — glutathione peroxidase 4 · module 043 +
+- [[GPX8]] — glutathione peroxidase 8 (putative) · module 030 +
+- [[GRAMD1A]] — GRAM domain containing 1A · module 054 +
+- [[GRAMD1B]] — GRAM domain containing 1B · module 019 +
+- [[GRAMD1C]] — GRAM domain containing 1C · module 135 -
+- [[GRAMD2A]] — GRAM domain containing 2A · module 053 +
+- [[GRAMD2B]] — GRAM domain containing 2B · module 104 +
+- [[GRAMD4]] — GRAM domain containing 4 · module 077 +
+- [[GRB10]] — growth factor receptor bound protein 10 · module 081 +
+- [[GRB14]] — growth factor receptor bound protein 14 · module 188 +
+- [[GRB2]] — growth factor receptor bound protein 2 · module 030 +
+- [[GRB7]] — growth factor receptor bound protein 7 · module 008 +
+- [[GREB1]] — growth regulating estrogen receptor binding 1 · module 075 +
+- [[GREB1L]] — GREB1 like retinoic acid receptor coactivator · module 120 +
+- [[GREM1]] — gremlin 1, DAN family BMP antagonist · module 013 +
+- [[GREM2]] — gremlin 2, DAN family BMP antagonist · module 019 +
+- [[GRHL1]] — grainyhead like transcription factor 1 · module 005 -
+- [[GRHL2]] — grainyhead like transcription factor 2 · module 008 +
+- [[GRHL3]] — grainyhead like transcription factor 3 · module 008 +
+- [[GRHPR]] — glyoxylate and hydroxypyruvate reductase · module 033 +
+- [[GRIA1]] — glutamate ionotropic receptor AMPA type subunit 1 · module 009 +
+- [[GRIA2]] — glutamate ionotropic receptor AMPA type subunit 2 · module 009 +
+- [[GRIA4]] — glutamate ionotropic receptor AMPA type subunit 4 · module 061 +
+- [[GRID1]] — glutamate ionotropic receptor delta type subunit 1 · module 102 +
+- [[GRID2]] — glutamate ionotropic receptor delta type subunit 2 · module 150 +
+- [[GRIK1]] — glutamate ionotropic receptor kainate type subunit 1 · module 009 +
+- [[GRIK2]] — glutamate ionotropic receptor kainate type subunit 2 · module 009 +
+- [[GRIK4]] — glutamate ionotropic receptor kainate type subunit 4 · module 166 +
+- [[GRIK5]] — glutamate ionotropic receptor kainate type subunit 5 · module 053 +
+- [[GRIN2A]] — glutamate ionotropic receptor NMDA type subunit 2A · module 013 +
+- [[GRIN2B]] — glutamate ionotropic receptor NMDA type subunit 2B · module 055 +
+- [[GRIN2C]] — glutamate ionotropic receptor NMDA type subunit 2C · module 062 +
+- [[GRIN2D]] — glutamate ionotropic receptor NMDA type subunit 2D · module 160 +
+- [[GRINA]] — glutamate ionotropic receptor NMDA type subunit associated protein 1 · module 059 +
+- [[GRIP1]] — glutamate receptor interacting protein 1 · module 137 +
+- [[GRIP2]] — glutamate receptor interacting protein 2 · module 061 +
+- [[GRIPAP1]] — GRIP1 associated protein 1 · module 096 +
+- [[GRK2]] — G protein-coupled receptor kinase 2 · module 126 +
+- [[GRK3]] — G protein-coupled receptor kinase 3 · module 037 +
+- [[GRK4]] — G protein-coupled receptor kinase 4 · module 026 +
+- [[GRK5]] — G protein-coupled receptor kinase 5 · module 154 +
+- [[GRK6]] — G protein-coupled receptor kinase 6 · module 002 +
+- [[GRK7]] — G protein-coupled receptor kinase 7 · module 037 +
+- [[GRM7]] — glutamate metabotropic receptor 7 · module 090 +
+- [[GRM8]] — glutamate metabotropic receptor 8 · module 075 +
+- [[GRN]] — granulin precursor · module 050 +
+- [[GRPEL1]] — GrpE like 1, mitochondrial · module 105 +
+- [[GRPEL2]] — GrpE like 2, mitochondrial · module 063 +
+- [[GRSF1]] — G-rich RNA sequence binding factor 1 · module 033 +
+- [[GRTP1]] — growth hormone regulated TBC protein 1 · module 100 +
+- [[GRWD1]] — glutamate rich WD repeat containing 1 · module 005 +
+- [[GSAP]] — gamma-secretase activating protein · module 005 +
+- [[GSDMB]] — gasdermin B · module 040 +
+- [[GSDMC]] — gasdermin C · module 155 +
+- [[GSDMD]] — gasdermin D · module 070 +
+- [[GSDME]] — gasdermin E · module 013 +
+- [[GSE1]] — Gse1 coiled-coil protein · module 014 +
+- [[GSEC]] — G-quadruplex forming sequence containing lncRNA · module 109 +
+- [[GSG1L]] — GSG1 like · module 053 +
+- [[GSG1L2]] — GSG1 like 2 · module 019 +
+- [[GSK3A]] — glycogen synthase kinase 3 alpha · module 157 +
+- [[GSK3B]] — glycogen synthase kinase 3 beta · module 086 +
+- [[GSK3B-DT]] — GSK3B divergent transcript · module 035 +
+- [[GSKIP]] — GSK3B interacting protein · module 034 +
+- [[GSN]] — gelsolin · module 005 -
+- [[GSPT1]] — G1 to S phase transition 1 · module 004 +
+- [[GSPT2]] — G1 to S phase transition 2 · module 011 +
+- [[GSR]] — glutathione-disulfide reductase · module 025 +
+- [[GSS]] — glutathione synthetase · module 016 +
+- [[GSTA4]] — glutathione S-transferase alpha 4 · module 045 +
+- [[GSTCD]] — glutathione S-transferase C-terminal domain containing · module 006 +
+- [[GSTK1]] — glutathione S-transferase kappa 1 · module 029 +
+- [[GSTM2]] — glutathione S-transferase mu 2 · module 050 +
+- [[GSTM3]] — glutathione S-transferase mu 3 · module 093 +
+- [[GSTM4]] — glutathione S-transferase mu 4 · module 045 +
+- [[GSTO1]] — glutathione S-transferase omega 1 · module 110 +
+- [[GSTO2]] — glutathione S-transferase omega 2 · module 001 +
+- [[GSTP1]] — glutathione S-transferase pi 1 · module 048 +
+- [[GSTZ1]] — glutathione S-transferase zeta 1 · module 035 +
+- [[GTDC1]] — queuosine-tRNA mannosyltransferase · module 023 -
+- [[GTF2A1]] — general transcription factor IIA subunit 1 · module 025 +
+- [[GTF2A2]] — general transcription factor IIA subunit 2 · module 048 +
+- [[GTF2B]] — general transcription factor IIB · module 093 +
+- [[GTF2E1]] — general transcription factor IIE subunit 1 · module 007 +
+- [[GTF2E2]] — general transcription factor IIE subunit 2 · module 199 +
+- [[GTF2F1]] — general transcription factor IIF subunit 1 · module 007 +
+- [[GTF2F2]] — general transcription factor IIF subunit 2 · module 004 +
+- [[GTF2H1]] — general transcription factor IIH subunit 1 · module 088 +
+- [[GTF2H2]] — general transcription factor IIH subunit 2 · module 054 +
+- [[GTF2H2B]] — general transcription factor IIH subunit 2B (pseudogene) · module 030 +
+- [[GTF2H2C]] — GTF2H2 family member C · module 017 +
+- [[GTF2H3]] — general transcription factor IIH subunit 3 · module 001 +
+- [[GTF2H4]] — general transcription factor IIH subunit 4 · module 127 +
+- [[GTF2H5]] — general transcription factor IIH subunit 5 · module 012 +
+- [[GTF2I]] — general transcription factor IIi · module 029 +
+- [[GTF2I-AS1]] — GTF2I antisense RNA 1 · module 019 +
+- [[GTF2IP14]] — general transcription factor IIi pseudogene 14 · module 039 +
+- [[GTF2IP4]] — general transcription factor IIi pseudogene 4 · module 204 +
+- [[GTF2IP5]] — general transcription factor IIi pseudogene 5 · module 035 +
+- [[GTF2IP7]] — general transcription factor IIi pseudogene 7 · module 019 +
+- [[GTF2IRD1]] — GTF2I repeat domain containing 1 · module 020 -
+- [[GTF2IRD2]] — GTF2I repeat domain containing 2 · module 023 +
+- [[GTF2IRD2B]] — GTF2I repeat domain containing 2B · module 023 +
+- [[GTF3A]] — general transcription factor IIIA · module 028 +
+- [[GTF3C1]] — general transcription factor IIIC subunit 1 · module 127 +
+- [[GTF3C2]] — general transcription factor IIIC subunit 2 · module 036 +
+- [[GTF3C2-AS2]] — GTF3C2 antisense RNA 2 · module 015 +
+- [[GTF3C3]] — general transcription factor IIIC subunit 3 · module 036 +
+- [[GTF3C4]] — general transcription factor IIIC subunit 4 · module 007 +
+- [[GTF3C5]] — general transcription factor IIIC subunit 5 · module 142 +
+- [[GTF3C6]] — general transcription factor IIIC subunit 6 · module 137 +
+- [[GTPBP1]] — GTP binding protein 1 · module 032 +
+- [[GTPBP10]] — GTP binding protein 10 · module 119 +
+- [[GTPBP2]] — GTP binding protein 2 · module 063 +
+- [[GTPBP3]] — GTP binding protein 3, mitochondrial · module 026 -
+- [[GTPBP4]] — GTP binding protein 4 · module 005 +
+- [[GTPBP6]] — GTP binding protein 6 · module 018 +
+- [[GTPBP8]] — GTP binding protein 8 · module 017 +
+- [[GTSE1]] — G2 and S-phase expressed 1 · module 022 +
+- [[GTSF1]] — gametocyte specific factor 1 · module 009 +
+- [[GUCA1B]] — guanylate cyclase activator 1B · module 037 +
+- [[GUCD1]] — guanylyl cyclase domain containing 1 · module 002 +
+- [[GUCY1A1]] — guanylate cyclase 1 soluble subunit alpha 1 · module 009 +
+- [[GUCY1A2]] — guanylate cyclase 1 soluble subunit alpha 2 · module 026 +
+- [[GUCY1B1]] — guanylate cyclase 1 soluble subunit beta 1 · module 082 +
+- [[GUCY1B2]] — guanylate cyclase 1 soluble subunit beta 2 (pseudogene) · module 010 +
+- [[GUCY2C-AS1]] — GUCY2C antisense RNA 1 · module 010 +
+- [[GUF1]] — GTP binding elongation factor GUF1 · module 001 +
+- [[GUK1]] — guanylate kinase 1 · module 003 +
+- [[GULP1]] — GULP PTB domain containing engulfment adaptor 1 · module 068 +
+- [[GUSB]] — glucuronidase beta · module 006 +
+- [[GUSBP1]] — GUSB pseudogene 1 · module 057 +
+- [[GUSBP1-1]] · module 054 +
+- [[GUSBP11]] — GUSB pseudogene 11 · module 172 +
+- [[GUSBP18]] — GUSB pseudogene 18 · module 083 -
+- [[GUSBP2-1]] · module 017 +
+- [[GVQW3]] — GVQW motif containing 3 · module 163 +
+- [[GXYLT1]] — glucoside xylosyltransferase 1 · module 025 +
+- [[GXYLT2]] — glucoside xylosyltransferase 2 · module 045 +
+- [[GYG1]] — glycogenin 1 · module 068 +
+- [[GYG2]] — glycogenin 2 · module 019 +
+- [[GYPC]] — glycophorin C (Gerbich blood group) · module 013 +
+- [[GYS1]] — glycogen synthase 1 · module 103 +
+- [[GZF1]] — GDNF inducible zinc finger protein 1 · module 007 +

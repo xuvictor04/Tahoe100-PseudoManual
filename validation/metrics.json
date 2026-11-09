@@ -1,0 +1,370 @@
+{
+ "version": 4,
+ "genes_in_space": 15076,
+ "dims": 64,
+ "modules": 235,
+ "random_pairs": 20000,
+ "random_pair_cos_sd": 0.18985393594292085,
+ "control_sets": {
+  "n_sets": 19,
+  "median_auroc_cos": 0.9451852813852814,
+  "median_auroc_abs": 0.9248782795698924,
+  "n_auroc_cos_ge_0.6": 19,
+  "n_p_random_le_0.05": 19,
+  "per_set": {
+   "INTERFERON": {
+    "n_in_space": 25,
+    "mean_cos": 0.8362031851212184,
+    "auroc_cos": 0.9999283333333333,
+    "auroc_abs": 0.9999241666666666,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 32,
+    "top_module_share": 0.92
+   },
+   "DREAM_G2M_DOWN": {
+    "n_in_space": 30,
+    "mean_cos": 0.8054250995318095,
+    "auroc_cos": 0.9993613793103449,
+    "auroc_abs": 0.9991654022988505,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 22,
+    "top_module_share": 0.9333333333333333
+   },
+   "CHOLESTEROL_SYNTHESIS": {
+    "n_in_space": 23,
+    "mean_cos": 0.614169128621991,
+    "auroc_cos": 0.9875709486166008,
+    "auroc_abs": 0.979108695652174,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 86,
+    "top_module_share": 0.9565217391304348
+   },
+   "E2F_G1S": {
+    "n_in_space": 24,
+    "mean_cos": 0.6174628587736599,
+    "auroc_cos": 0.9790693840579711,
+    "auroc_abs": 0.9709108695652174,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 6,
+    "top_module_share": 0.9583333333333334
+   },
+   "NFKB": {
+    "n_in_space": 15,
+    "mean_cos": 0.5042695170357114,
+    "auroc_cos": 0.9768185714285714,
+    "auroc_abs": 0.9613457142857142,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 14,
+    "top_module_share": 0.8
+   },
+   "MAPK_OUTPUT": {
+    "n_in_space": 18,
+    "mean_cos": 0.5462100552760211,
+    "auroc_cos": 0.9722558823529411,
+    "auroc_abs": 0.9513209150326798,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 92,
+    "top_module_share": 0.4444444444444444
+   },
+   "HEAT_SHOCK": {
+    "n_in_space": 14,
+    "mean_cos": 0.47253729910640924,
+    "auroc_cos": 0.9684285714285714,
+    "auroc_abs": 0.9472906593406594,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 60,
+    "top_module_share": 0.9285714285714286
+   },
+   "HYPOXIA": {
+    "n_in_space": 16,
+    "mean_cos": 0.461106014251709,
+    "auroc_cos": 0.9601404166666667,
+    "auroc_abs": 0.9313616666666666,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 99,
+    "top_module_share": 0.4375
+   },
+   "PROTEASOME": {
+    "n_in_space": 31,
+    "mean_cos": 0.454988224732299,
+    "auroc_cos": 0.9568813978494624,
+    "auroc_abs": 0.9248782795698924,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 72,
+    "top_module_share": 0.3548387096774194
+   },
+   "ISR_ATF4": {
+    "n_in_space": 22,
+    "mean_cos": 0.5221459847508054,
+    "auroc_cos": 0.9451852813852814,
+    "auroc_abs": 0.9041794372294373,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 63,
+    "top_module_share": 0.7272727272727273
+   },
+   "UPR_ER": {
+    "n_in_space": 18,
+    "mean_cos": 0.5341311907943558,
+    "auroc_cos": 0.9431049019607843,
+    "auroc_abs": 0.9252071895424837,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 42,
+    "top_module_share": 0.6111111111111112
+   },
+   "SREBP1_LIPOGENESIS": {
+    "n_in_space": 10,
+    "mean_cos": 0.44363797985845144,
+    "auroc_cos": 0.9371366666666666,
+    "auroc_abs": 0.8916877777777777,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 86,
+    "top_module_share": 0.6
+   },
+   "IMMEDIATE_EARLY": {
+    "n_in_space": 20,
+    "mean_cos": 0.4238835643486757,
+    "auroc_cos": 0.9295526315789474,
+    "auroc_abs": 0.8746747368421053,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 109,
+    "top_module_share": 0.45
+   },
+   "RIBOSOME_BIOGENESIS": {
+    "n_in_space": 23,
+    "mean_cos": 0.41941881104346673,
+    "auroc_cos": 0.9108286561264822,
+    "auroc_abs": 0.8577798418972332,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 5,
+    "top_module_share": 0.2608695652173913
+   },
+   "GLUCOCORTICOID": {
+    "n_in_space": 8,
+    "mean_cos": 0.36111690955502646,
+    "auroc_cos": 0.8901928571428571,
+    "auroc_abs": 0.8310571428571428,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 98,
+    "top_module_share": 0.25
+   },
+   "P53_TARGETS_UP": {
+    "n_in_space": 42,
+    "mean_cos": 0.36283593121404967,
+    "auroc_cos": 0.8835418989547038,
+    "auroc_abs": 0.8172219802555168,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 62,
+    "top_module_share": 0.6190476190476191
+   },
+   "NRF2": {
+    "n_in_space": 20,
+    "mean_cos": 0.30028227118187045,
+    "auroc_cos": 0.8483734210526316,
+    "auroc_abs": 0.7646963157894737,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 117,
+    "top_module_share": 0.4
+   },
+   "METALLOTHIONEIN": {
+    "n_in_space": 8,
+    "mean_cos": 0.47019814759758966,
+    "auroc_cos": 0.8352142857142857,
+    "auroc_abs": 0.8532160714285715,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 113,
+    "top_module_share": 0.625
+   },
+   "AHR": {
+    "n_in_space": 5,
+    "mean_cos": 0.2282435428351164,
+    "auroc_cos": 0.81631,
+    "auroc_abs": 0.68183,
+    "p_random_sets_cos": 0.004975124378109453,
+    "top_module": 17,
+    "top_module_share": 0.2
+   }
+  }
+ },
+ "hallmark": {
+  "n_sets": 50,
+  "median_auroc_cos": 0.5648648363958277,
+  "median_auroc_abs": 0.5184943658842848,
+  "n_auroc_cos_ge_0.6": 12,
+  "n_p_random_le_0.05": 47
+ },
+ "reactome": {
+  "n_sets": 2024,
+  "median_auroc_cos": 0.5645316610566611,
+  "median_auroc_abs": 0.5343475355054302,
+  "n_auroc_cos_ge_0.6": 673,
+  "n_p_random_le_0.05": 0
+ },
+ "opposite_pairs": [
+  {
+   "a": "P53_TARGETS_UP",
+   "b": "DREAM_G2M_DOWN",
+   "n_a": 42,
+   "n_b": 30,
+   "mean_cross_cos": -0.15317812272887316,
+   "frac_cross_neg": 0.8896825396825396,
+   "share_same_module": 0.0,
+   "random_same_module": 0.008295323328988259,
+   "share_opposite_arms_in_same_module": NaN,
+   "nodal_centroid_dist": 2.148085923211409,
+   "signed_centroid_dist": 2.0565702511988326
+  },
+  {
+   "a": "ISR_ATF4",
+   "b": "RIBOSOME_BIOGENESIS",
+   "n_a": 22,
+   "n_b": 23,
+   "mean_cross_cos": -0.0006563438400773427,
+   "frac_cross_neg": 0.5138339920948617,
+   "share_same_module": 0.0,
+   "random_same_module": 0.008295323328988259,
+   "share_opposite_arms_in_same_module": NaN,
+   "nodal_centroid_dist": 1.855388682072592,
+   "signed_centroid_dist": 1.4920837651803147
+  }
+ ],
+ "drug_check": {
+  "all": {
+   "drugs": 180,
+   "moa_classes": 25,
+   "pos_pairs": 885,
+   "neg_pairs": 15214,
+   "auroc": 0.5528770334192638,
+   "mean_cos_same_moa": 0.0757950643637611,
+   "mean_cos_other": 0.013406113752564576,
+   "drugs_no_trustworthy_dose": 5,
+   "drugs_flagged_dose": 33,
+   "min_active": 10
+  },
+  "active": {
+   "drugs": 149,
+   "moa_classes": 25,
+   "pos_pairs": 577,
+   "neg_pairs": 10438,
+   "auroc": 0.5802754433789616,
+   "mean_cos_same_moa": 0.10845341527975573,
+   "mean_cos_other": 0.01844151895254065,
+   "drugs_no_trustworthy_dose": 3,
+   "drugs_flagged_dose": 31,
+   "min_active": 10
+  }
+ },
+ "module_labels": {
+  "modules": 235,
+  "labelled": 96,
+  "enrichment_tests": 1109290,
+  "tests_q_lt_0.05": 3194
+ },
+ "novel": {
+  "edges": 2815,
+  "genes_with_novel_edge": 2094,
+  "member_rows": 7884,
+  "member_genes": 2145,
+  "edges_with_alert": 14,
+  "member_genes_with_alert": 43
+ },
+ "genes_in_space_flagged_only": 79,
+ "reference": true,
+ "direction": {
+  "edges": 102590,
+  "rows": 98577,
+  "by_grade": {
+   "A": 25,
+   "B": 56441,
+   "C": 46124
+  },
+  "with_alert": 102590,
+  "positive": {
+   "TP53 (TP53 loss of function (33 lines) vs not recorded (17)) -> p53 targets (response)": {
+    "present": 39,
+    "recovered_right_sign": 22,
+    "wrong_sign": 2,
+    "median_rank": 50.0,
+    "ranks_recovered": [
+     1,
+     2,
+     3,
+     4,
+     7,
+     10,
+     11,
+     15,
+     17,
+     22,
+     23,
+     25,
+     28,
+     32,
+     37,
+     40,
+     50,
+     52,
+     54,
+     69,
+     86,
+     95
+    ]
+   },
+   "TP53 (TP53 loss of function (33 lines) vs not recorded (17)) -> cells under DNA-damaging drugs (sensitivity)": {
+    "edges": 0,
+    "right_sign": 0,
+    "drugdoses_tested": 42
+   },
+   "KEAP1 -> NRF2 targets (baseline)": {
+    "assessable": false
+   }
+  },
+  "expected_false_edges": {
+   "genotype_response": {
+    "edges": 43,
+    "expected_false": 12.8,
+    "expected_false_upper": 20.74
+   },
+   "genotype_response_within_group_only": {
+    "edges": 93,
+    "expected_false": 4.27,
+    "expected_false_upper": 9.76
+   },
+   "genotype_baseline": {
+    "edges": 10,
+    "expected_false": 0.0,
+    "expected_false_upper": 3.2
+   },
+   "genotype_baseline_within_group_only": {
+    "edges": 9,
+    "expected_false": 13.87,
+    "expected_false_upper": 22.05
+   },
+   "genotype_sensitivity": {
+    "edges": 0,
+    "expected_false": 0.0,
+    "expected_false_upper": 3.2
+   },
+   "genotype_sensitivity_within_group_only": {
+    "edges": 1,
+    "expected_false": 1.07,
+    "expected_false_upper": 5.06
+   },
+   "level": {
+    "edges": 1359,
+    "expected_false": 102,
+    "expected_false_upper": 120.24
+   },
+   "level_sensitivity": {
+    "edges": 0,
+    "expected_false": 0,
+    "expected_false_upper": 3.0
+   },
+   "level_sensitivity_within_drugdose_only": {
+    "edges": 514,
+    "expected_false": 37,
+    "expected_false_upper": 48.68
+   }
+  },
+  "synthetic": {}
+ }
+}

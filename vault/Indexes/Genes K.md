@@ -1,0 +1,356 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes K
+
+346 genes. Back to [[Genes by letter]].
+
+- [[KALRN]] — kalirin RhoGEF kinase · module 102 +
+- [[KANK1]] — KN motif and ankyrin repeat domains 1 · module 018 +
+- [[KANK2]] — KN motif and ankyrin repeat domains 2 · module 085 +
+- [[KANK3]] — KN motif and ankyrin repeat domains 3 · module 100 +
+- [[KANSL1]] — KAT8 regulatory NSL complex subunit 1 · module 021 +
+- [[KANSL1L]] — KAT8 regulatory NSL complex subunit 1 like · module 023 +
+- [[KANSL1L-AS1]] — KANSL1L antisense RNA 1 · module 039 +
+- [[KANSL2]] — KAT8 regulatory NSL complex subunit 2 · module 107 +
+- [[KANSL3]] — KAT8 regulatory NSL complex subunit 3 · module 040 +
+- [[KANTR]] — KANTR integral membrane protein · module 085 +
+- [[KARS1]] — lysyl-tRNA synthetase 1 · module 004 +
+- [[KAT14]] — lysine acetyltransferase 14 · module 033 +
+- [[KAT2A]] — lysine acetyltransferase 2A · module 004 +
+- [[KAT2B]] — lysine acetyltransferase 2B · module 005 -
+- [[KAT5]] — lysine acetyltransferase 5 · module 016 +
+- [[KAT6A]] — lysine acetyltransferase 6A · module 052 -
+- [[KAT6B]] — lysine acetyltransferase 6B · module 095 +
+- [[KAT7]] — lysine acetyltransferase 7 · module 025 +
+- [[KAT8]] — lysine acetyltransferase 8 · module 005 +
+- [[KATNA1]] — katanin catalytic subunit A1 · module 004 -
+- [[KATNAL1]] — katanin catalytic subunit A1 like 1 · module 175 +
+- [[KATNAL2]] — katanin catalytic subunit A1 like 2 · module 010 +
+- [[KATNB1]] — katanin regulatory subunit B1 · module 088 -
+- [[KATNBL1]] — katanin regulatory subunit B1 like 1 · module 003 +
+- [[KATNIP]] — katanin interacting protein · module 185 +
+- [[KAZALD1]] — Kazal type serine peptidase inhibitor domain 1 · module 015 +
+- [[KAZN]] — kazrin, periplakin interacting protein · module 037 +
+- [[KBTBD11]] — kelch repeat and BTB domain containing 11 · module 004 +
+- [[KBTBD11-OT1-1]] · module 047 +
+- [[KBTBD12]] — kelch repeat and BTB domain containing 12 · module 055 +
+- [[KBTBD2]] — kelch repeat and BTB domain containing 2 · module 109 +
+- [[KBTBD3]] — kelch repeat and BTB domain containing 3 · module 045 +
+- [[KBTBD4]] — kelch repeat and BTB domain containing 4 · module 118 +
+- [[KBTBD6]] — kelch repeat and BTB domain containing 6 · module 012 +
+- [[KBTBD7]] — kelch repeat and BTB domain containing 7 · module 012 +
+- [[KBTBD8]] — kelch repeat and BTB domain containing 8 · module 110 +
+- [[KC6]] · module 108 +
+- [[KCMF1]] — potassium channel modulatory factor 1 · module 060 +
+- [[KCNAB1]] — potassium voltage-gated channel subfamily A regulatory beta subunit 1 · module 191 +
+- [[KCNAB2]] — potassium voltage-gated channel subfamily A regulatory beta subunit 2 · module 072 +
+- [[KCNB1]] — potassium voltage-gated channel subfamily B member 1 · module 140 +
+- [[KCNB2]] — potassium voltage-gated channel subfamily B member 2 · module 009 +
+- [[KCNC3]] — potassium voltage-gated channel subfamily C member 3 · module 017 -
+- [[KCNC4]] — potassium voltage-gated channel subfamily C member 4 · module 110 +
+- [[KCND2]] — potassium voltage-gated channel subfamily D member 2 · module 009 +
+- [[KCND3]] — potassium voltage-gated channel subfamily D member 3 · module 075 +
+- [[KCNE3]] — potassium voltage-gated channel subfamily E regulatory subunit 3 · module 055 +
+- [[KCNE4]] — potassium voltage-gated channel subfamily E regulatory subunit 4 · module 019 +
+- [[KCNG1]] — potassium voltage-gated channel modifier subfamily G member 1 · module 211 +
+- [[KCNG2]] — potassium voltage-gated channel modifier subfamily G member 2 · module 098 +
+- [[KCNG3]] — potassium voltage-gated channel modifier subfamily G member 3 · module 102 +
+- [[KCNH1]] — potassium voltage-gated channel subfamily H member 1 · module 061 +
+- [[KCNH5]] — potassium voltage-gated channel subfamily H member 5 · module 108 +
+- [[KCNH7]] — potassium voltage-gated channel subfamily H member 7 · module 009 +
+- [[KCNH8]] — potassium voltage-gated channel subfamily H member 8 · module 055 +
+- [[KCNIP1]] — potassium voltage-gated channel interacting protein 1 · module 166 +
+- [[KCNIP2]] — potassium voltage-gated channel interacting protein 2 · module 126 +
+- [[KCNIP3]] — potassium voltage-gated channel interacting protein 3 · module 102 +
+- [[KCNIP4]] — potassium voltage-gated channel interacting protein 4 · module 075 +
+- [[KCNJ14]] — potassium inwardly rectifying channel subfamily J member 14 · module 005 +
+- [[KCNJ6]] — potassium inwardly rectifying channel subfamily J member 6 · module 019 +
+- [[KCNK1]] — potassium two pore domain channel subfamily K member 1 · module 031 +
+- [[KCNK13]] — potassium two pore domain channel subfamily K member 13 · module 082 +
+- [[KCNK15-AS1]] — KCNK15 and WISP2 antisense RNA 1 · module 057 +
+- [[KCNK2]] — potassium two pore domain channel subfamily K member 2 · module 019 +
+- [[KCNK3]] — potassium two pore domain channel subfamily K member 3 · module 013 +
+- [[KCNK5]] — potassium two pore domain channel subfamily K member 5 · module 162 +
+- [[KCNK6]] — potassium two pore domain channel subfamily K member 6 · module 041 +
+- [[KCNMA1]] — potassium calcium-activated channel subfamily M alpha 1 · module 013 +
+- [[KCNMB2]] — potassium calcium-activated channel subfamily M regulatory beta subunit 2 · module 019 +
+- [[KCNMB2-AS1]] — KCNMB2 antisense RNA 1 · module 010 +
+- [[KCNMB3]] — potassium calcium-activated channel subfamily M regulatory beta subunit 3 · module 010 +
+- [[KCNMB4]] — potassium calcium-activated channel subfamily M regulatory beta subunit 4 · module 053 +
+- [[KCNN1]] — potassium calcium-activated channel subfamily N member 1 · module 181 +
+- [[KCNN2]] — potassium calcium-activated channel subfamily N member 2 · module 061 +
+- [[KCNN3]] — potassium calcium-activated channel subfamily N member 3 · module 061 +
+- [[KCNN4]] — potassium calcium-activated channel subfamily N member 4 · module 084 +
+- [[KCNQ1]] — potassium voltage-gated channel subfamily Q member 1 · module 044 +
+- [[KCNQ1OT1]] — KCNQ1 opposite strand/antisense transcript 1 · module 056 +
+- [[KCNQ2]] — potassium voltage-gated channel subfamily Q member 2 · module 128 +
+- [[KCNQ3]] — potassium voltage-gated channel subfamily Q member 3 · module 061 +
+- [[KCNQ4]] — potassium voltage-gated channel subfamily Q member 4 · module 181 +
+- [[KCNQ5]] — potassium voltage-gated channel subfamily Q member 5 · module 110 +
+- [[KCNRG]] — potassium channel regulator · module 023 +
+- [[KCNS3]] — potassium voltage-gated channel modifier subfamily S member 3 · module 082 +
+- [[KCNT2]] — potassium sodium-activated channel subfamily T member 2 · module 121 +
+- [[KCP]] — kielin cysteine rich BMP regulator · module 125 +
+- [[KCTD1]] — potassium channel tetramerization domain containing 1 · module 015 +
+- [[KCTD10]] — potassium channel tetramerization domain containing 10 · module 007 +
+- [[KCTD11]] — potassium channel tetramerization domain containing 11 · module 020 -
+- [[KCTD12]] — potassium channel tetramerization domain containing 12 · module 009 +
+- [[KCTD13]] — potassium channel tetramerization domain containing 13 · module 002 +
+- [[KCTD14]] — potassium channel tetramerization domain containing 14 · module 055 +
+- [[KCTD15]] — potassium channel tetramerization domain containing 15 · module 133 +
+- [[KCTD16]] — potassium channel tetramerization domain containing 16 · module 152 +
+- [[KCTD17]] — potassium channel tetramerization domain containing 17 · module 083 -
+- [[KCTD18]] — potassium channel tetramerization domain containing 18 · module 028 +
+- [[KCTD2]] — potassium channel tetramerization domain containing 2 · module 030 +
+- [[KCTD20]] — potassium channel tetramerization domain containing 20 · module 136 +
+- [[KCTD21]] — potassium channel tetramerization domain containing 21 · module 002 +
+- [[KCTD21-AS1]] — KCTD21 antisense RNA 1 · module 035 +
+- [[KCTD3]] — potassium channel tetramerization domain containing 3 · module 146 +
+- [[KCTD5]] — potassium channel tetramerization domain containing 5 · module 184 +
+- [[KCTD6]] — potassium channel tetramerization domain containing 6 · module 065 +
+- [[KCTD7]] — potassium channel tetramerization domain containing 7 · module 040 +
+- [[KCTD8]] — potassium channel tetramerization domain containing 8 · module 009 +
+- [[KCTD9]] — potassium channel tetramerization domain containing 9 · module 233 +
+- [[KDELR1]] — KDEL endoplasmic reticulum protein retention receptor 1 · module 040 +
+- [[KDELR2]] — KDEL endoplasmic reticulum protein retention receptor 2 · module 056 +
+- [[KDELR3]] — KDEL endoplasmic reticulum protein retention receptor 3 · module 056 +
+- [[KDF1]] — keratinocyte differentiation factor 1 · module 119 +
+- [[KDM1A]] — lysine demethylase 1A · module 182 +
+- [[KDM1B]] — lysine demethylase 1B · module 026 -
+- [[KDM2A]] — lysine demethylase 2A · module 144 +
+- [[KDM2B]] — lysine demethylase 2B · module 103 +
+- [[KDM2B-DT]] — KDM2B divergent transcript · module 105 +
+- [[KDM3A]] — lysine demethylase 3A · module 079 +
+- [[KDM3B]] — lysine demethylase 3B · module 095 +
+- [[KDM4A]] — lysine demethylase 4A · module 063 +
+- [[KDM4A-AS1]] — KDM4A antisense RNA 1 · module 105 +
+- [[KDM4B]] — lysine demethylase 4B · module 079 +
+- [[KDM4C]] — lysine demethylase 4C · module 144 +
+- [[KDM4D]] — lysine demethylase 4D · module 010 +
+- [[KDM5A]] — lysine demethylase 5A · module 074 +
+- [[KDM5B]] — lysine demethylase 5B · module 004 -
+- [[KDM5C]] — lysine demethylase 5C · module 145 +
+- [[KDM5D]] — lysine demethylase 5D · module 177 +
+- [[KDM6A]] — lysine demethylase 6A · module 069 +
+- [[KDM6B]] — lysine demethylase 6B · module 173 +
+- [[KDM7A]] — lysine demethylase 7A · module 184 +
+- [[KDM7A-DT]] — KDM7A divergent transcript · module 101 +
+- [[KDSR]] — 3-ketodihydrosphingosine reductase · module 030 -
+- [[KEAP1]] — kelch like ECH associated protein 1 · module 007 +
+- [[KHDC1]] — KH domain containing 1 · module 015 +
+- [[KHDC1-AS1]] — KHDC1 antisense RNA 1 · module 004 +
+- [[KHDC4]] — KH domain containing 4, pre-mRNA splicing factor · module 179 +
+- [[KHDRBS1]] — KH RNA binding domain containing, signal transduction associated 1 · module 085 +
+- [[KHDRBS2]] — KH RNA binding domain containing, signal transduction associated 2 · module 009 +
+- [[KHDRBS3]] — KH RNA binding domain containing, signal transduction associated 3 · module 154 +
+- [[KHNYN]] — KH and NYN domain containing · module 007 +
+- [[KHSRP]] — KH-type splicing regulatory protein · module 007 +
+- [[KIAA0040]] — KIAA0040 · module 031 +
+- [[KIAA0232]] — KIAA0232 · module 036 +
+- [[KIAA0319]] — KIAA0319 · module 019 +
+- [[KIAA0319L]] — KIAA0319 like · module 041 +
+- [[KIAA0408]] — KIAA0408 · module 016 +
+- [[KIAA0513]] — KIAA0513 · module 049 +
+- [[KIAA0586]] — KIAA0586 · module 022 +
+- [[KIAA0753]] — KIAA0753 · module 023 +
+- [[KIAA0825]] — KIAA0825 · module 010 +
+- [[KIAA0930]] — KIAA0930 · module 002 +
+- [[KIAA1143]] — KIAA1143 · module 118 +
+- [[KIAA1191]] — KIAA1191 · module 029 +
+- [[KIAA1217]] — KIAA1217 · module 112 +
+- [[KIAA1328]] — KIAA1328 · module 085 +
+- [[KIAA1522]] — NHS like 3 · module 031 +
+- [[KIAA1549]] — KIAA1549 · module 018 +
+- [[KIAA1549L]] — KIAA1549 like · module 110 +
+- [[KIAA1586]] — KIAA1586 · module 011 +
+- [[KIAA1614]] — KIAA1614 · module 047 +
+- [[KIAA1671]] — KIAA1671 · module 034 +
+- [[KIAA1958]] — KIAA1958 · module 134 +
+- [[KIAA2012]] — KIAA2012 · module 021 +
+- [[KIAA2013]] — KIAA2013 · module 030 +
+- [[KIAA2026]] — bromodomain containing 10 · module 015 +
+- [[KICS2]] — KICSTOR subunit 2 · module 135 +
+- [[KIDINS220]] — kinase D interacting substrate 220 · module 005 -
+- [[KIF11]] — kinesin family member 11 · module 022 +
+- [[KIF13A]] — kinesin family member 13A · module 092 +
+- [[KIF13B]] — kinesin family member 13B · module 097 +
+- [[KIF14]] — kinesin family member 14 · module 022 +
+- [[KIF15]] — kinesin family member 15 · module 022 +
+- [[KIF16B]] — kinesin family member 16B · module 041 +
+- [[KIF17]] — kinesin family member 17 · module 053 +
+- [[KIF18A]] — kinesin family member 18A · module 022 +
+- [[KIF18B]] — kinesin family member 18B · module 067 +
+- [[KIF1A]] — kinesin family member 1A · module 132 +
+- [[KIF1B]] — kinesin family member 1B · module 060 +
+- [[KIF1C]] — kinesin family member 1C · module 002 +
+- [[KIF20A]] — kinesin family member 20A · module 022 +
+- [[KIF20B]] — kinesin family member 20B · module 022 +
+- [[KIF21A]] — kinesin family member 21A · module 076 +
+- [[KIF21B]] — kinesin family member 21B · module 084 +
+- [[KIF22]] — kinesin family member 22 · module 067 +
+- [[KIF23]] — kinesin family member 23 · module 022 +
+- [[KIF23-AS1]] — KIF23 and PAQR5 antisense RNA 1 · module 120 +
+- [[KIF24]] — kinesin family member 24 · module 091 +
+- [[KIF26A]] — kinesin family member 26A · module 082 +
+- [[KIF26B]] — kinesin family member 26B · module 026 +
+- [[KIF27]] — kinesin family member 27 · module 023 +
+- [[KIF2A]] — kinesin family member 2A · module 018 +
+- [[KIF2C]] — kinesin family member 2C · module 022 +
+- [[KIF3A]] — kinesin family member 3A · module 065 +
+- [[KIF3B]] — kinesin family member 3B · module 012 +
+- [[KIF3C]] — kinesin family member 3C · module 082 +
+- [[KIF4A]] — kinesin family member 4A · module 022 +
+- [[KIF5A]] — kinesin family member 5A · module 082 +
+- [[KIF5B]] — kinesin family member 5B · module 003 -
+- [[KIF5C]] — kinesin family member 5C · module 082 +
+- [[KIF6]] — kinesin family member 6 · module 090 +
+- [[KIF7]] — kinesin family member 7 · module 001 +
+- [[KIF9]] — kinesin family member 9 · module 205 +
+- [[KIF9-AS1]] — KIF9 antisense RNA 1 · module 089 +
+- [[KIFAP3]] — kinesin associated protein 3 · module 017 +
+- [[KIFBP]] — kinesin family binding protein · module 011 +
+- [[KIFC1]] — kinesin family member C1 · module 067 +
+- [[KIFC2]] — kinesin family member C2 · module 002 +
+- [[KIFC3]] — kinesin family member C3 · module 193 +
+- [[KIN]] — Kin17 DNA and RNA binding protein · module 149 +
+- [[KIRREL1]] — kirre like nephrin family adhesion molecule 1 · module 145 +
+- [[KIRREL3]] — kirre like nephrin family adhesion molecule 3 · module 013 +
+- [[KISS1]] — KiSS-1 metastasis suppressor · module 034 +
+- [[KITLG]] — KIT ligand · module 066 +
+- [[KIZ]] — kizuna centrosomal protein · module 076 +
+- [[KIZ-AS1]] — KIZ antisense RNA 1 · module 021 +
+- [[KLC1]] — kinesin light chain 1 · module 002 +
+- [[KLC2]] — kinesin light chain 2 · module 126 +
+- [[KLC3]] — kinesin light chain 3 · module 208 +
+- [[KLC4]] — kinesin light chain 4 · module 041 +
+- [[KLF10]] — KLF transcription factor 10 · module 014 +
+- [[KLF11]] — KLF transcription factor 11 · module 016 +
+- [[KLF12]] — KLF transcription factor 12 · module 193 +
+- [[KLF13]] — KLF transcription factor 13 · module 002 +
+- [[KLF16]] — KLF transcription factor 16 · module 002 +
+- [[KLF2]] — KLF transcription factor 2 · module 123 +
+- [[KLF3]] — KLF transcription factor 3 · module 031 +
+- [[KLF3-AS1]] — KLF3 antisense RNA 1 · module 015 +
+- [[KLF4]] — KLF transcription factor 4 · module 123 +
+- [[KLF5]] — KLF transcription factor 5 · module 031 +
+- [[KLF6]] — KLF transcription factor 6 · module 113 +
+- [[KLF7]] — KLF transcription factor 7 · module 013 +
+- [[KLF8]] — KLF transcription factor 8 · module 008 +
+- [[KLF9]] — KLF transcription factor 9 · module 098 +
+- [[KLHDC1]] — kelch domain containing 1 · module 010 +
+- [[KLHDC10]] — kelch domain containing 10 · module 030 +
+- [[KLHDC2]] — kelch domain containing 2 · module 187 +
+- [[KLHDC3]] — kelch domain containing 3 · module 076 +
+- [[KLHDC4]] — kelch domain containing 4 · module 005 +
+- [[KLHL11]] — kelch like family member 11 · module 153 +
+- [[KLHL12]] — kelch like family member 12 · module 170 +
+- [[KLHL13]] — kelch like family member 13 · module 009 +
+- [[KLHL14]] — kelch like family member 14 · module 010 +
+- [[KLHL15]] — kelch like family member 15 · module 093 +
+- [[KLHL17]] — kelch like family member 17 · module 002 +
+- [[KLHL18]] — kelch like family member 18 · module 036 +
+- [[KLHL2]] — kelch like family member 2 · module 004 +
+- [[KLHL20]] — kelch like family member 20 · module 119 +
+- [[KLHL21]] — kelch like family member 21 · module 101 +
+- [[KLHL22]] — kelch like family member 22 · module 020 -
+- [[KLHL23]] — kelch like family member 23 · module 018 +
+- [[KLHL24]] — kelch like family member 24 · module 069 +
+- [[KLHL25]] — kelch like family member 25 · module 072 +
+- [[KLHL26]] — kelch like family member 26 · module 003 +
+- [[KLHL28]] — kelch like family member 28 · module 041 +
+- [[KLHL29]] — kelch like family member 29 · module 017 -
+- [[KLHL2P1]] — kelch like family member 2 pseudogene 1 · module 008 +
+- [[KLHL3]] — kelch like family member 3 · module 036 -
+- [[KLHL32]] — kelch like family member 32 · module 099 +
+- [[KLHL35]] — kelch like family member 35 · module 012 +
+- [[KLHL36]] — kelch like family member 36 · module 020 -
+- [[KLHL4]] — kelch like family member 4 · module 025 -
+- [[KLHL42]] — kelch like family member 42 · module 137 +
+- [[KLHL5]] — kelch like family member 5 · module 066 +
+- [[KLHL7]] — kelch like family member 7 · module 003 +
+- [[KLHL8]] — kelch like family member 8 · module 010 -
+- [[KLHL9]] — kelch like family member 9 · module 016 +
+- [[KLK10]] — kallikrein related peptidase 10 · module 073 +
+- [[KLK11]] — kallikrein related peptidase 11 · module 073 +
+- [[KLK6]] — kallikrein related peptidase 6 · module 055 +
+- [[KLK7]] — kallikrein related peptidase 7 · module 044 +
+- [[KLKP1-1]] · module 021 +
+- [[KLRA1P]] — killer cell lectin like receptor A1, pseudogene · module 037 +
+- [[KLRC2]] — killer cell lectin like receptor C2 · module 223 +
+- [[KLRC3]] — killer cell lectin like receptor C3 · module 223 +
+- [[KLRC4-KLRK1]] — KLRC4-KLRK1 readthrough · module 223 +
+- [[KLRD1]] — killer cell lectin like receptor D1 · module 037 +
+- [[KLRG1]] — killer cell lectin like receptor G1 · module 009 +
+- [[KLRK1]] — killer cell lectin like receptor K1 · module 223 +
+- [[KLRK1-AS1]] — KLRK1 antisense RNA 1 · module 023 +
+- [[KMO]] — kynurenine 3-monooxygenase · module 014 +
+- [[KMT2A]] — lysine methyltransferase 2A · module 074 +
+- [[KMT2B]] — lysine methyltransferase 2B · module 011 +
+- [[KMT2C]] — lysine methyltransferase 2C · module 005 -
+- [[KMT2D]] — lysine methyltransferase 2D · module 005 +
+- [[KMT2E]] — lysine methyltransferase 2E (inactive) · module 059 +
+- [[KMT2E-AS1]] — KMT2E antisense RNA 1 · module 023 +
+- [[KMT5A]] — lysine methyltransferase 5A · module 022 +
+- [[KMT5B]] — lysine methyltransferase 5B · module 051 +
+- [[KMT5C]] — lysine methyltransferase 5C · module 040 +
+- [[KNDC1]] — kinase non-catalytic C-lobe domain containing 1 · module 100 +
+- [[KNL1]] — kinetochore scaffold 1 · module 022 +
+- [[KNOP1]] — lysine rich nucleolar protein 1 · module 036 +
+- [[KNSTRN]] — kinetochore localized astrin (SPAG5) binding protein · module 022 +
+- [[KNTC1]] — kinetochore associated 1 · module 006 +
+- [[KPNA1]] — karyopherin subunit alpha 1 · module 004 +
+- [[KPNA2]] — karyopherin subunit alpha 2 · module 022 +
+- [[KPNA2P3]] — karyopherin subunit alpha 2 pseudogene 3 · module 034 +
+- [[KPNA3]] — karyopherin subunit alpha 3 · module 018 +
+- [[KPNA4]] — karyopherin subunit alpha 4 · module 045 -
+- [[KPNA5]] — karyopherin subunit alpha 5 · module 017 +
+- [[KPNA6]] — karyopherin subunit alpha 6 · module 118 +
+- [[KPNA7]] — karyopherin subunit alpha 7 · module 031 +
+- [[KPNB1]] — karyopherin subunit beta 1 · module 006 +
+- [[KPNB1-DT]] — KPNB1 divergent transcript · module 015 +
+- [[KPTN]] — kaptin, actin binding protein · module 053 +
+- [[KRAS]] — KRas proto-oncogene, GTPase · module 214 +
+- [[KRBA1]] — KRAB domain containing 3 · module 132 +
+- [[KRBA2]] — KRAB domain containing 2 · module 010 +
+- [[KRBOX4]] — KRAB domain containing 4 · module 197 +
+- [[KRBOX5]] — KRAB domain containing 5 · module 023 +
+- [[KRCC1]] — lysine rich coiled-coil 1 · module 010 +
+- [[KREMEN1]] — kringle containing transmembrane protein 1 · module 100 +
+- [[KREMEN2]] — kringle containing transmembrane protein 2 · module 100 +
+- [[KRI1]] — KRI1 homolog · module 011 +
+- [[KRIT1]] — KRIT1 ankyrin repeat containing · module 114 +
+- [[KRR1]] — KRR1 small subunit processome component · module 085 -
+- [[KRT10]] — keratin 10 · module 024 +
+- [[KRT10-AS1]] — KRT10 antisense RNA 1 · module 011 +
+- [[KRT14]] — keratin 14 · module 031 +
+- [[KRT15]] — keratin 15 · module 034 +
+- [[KRT16]] — keratin 16 · module 031 +
+- [[KRT17]] — keratin 17 · module 123 +
+- [[KRT18]] — keratin 18 · module 031 +
+- [[KRT19]] — keratin 19 · module 031 +
+- [[KRT20]] — keratin 20 · module 044 +
+- [[KRT23]] — keratin 23 · module 008 +
+- [[KRT5]] — keratin 5 · module 027 +
+- [[KRT6A]] — keratin 6A · module 097 +
+- [[KRT7]] — keratin 7 · module 098 +
+- [[KRT8]] — keratin 8 · module 031 +
+- [[KRT80]] — keratin 80 · module 123 +
+- [[KRT81]] — keratin 81 · module 136 +
+- [[KRT86]] — keratin 86 · module 047 +
+- [[KRT8P12]] — keratin 8 pseudogene 12 · module 054 -
+- [[KRTAP5-AS1]] — KRTAP5-1/KRTAP5-2 antisense RNA 1 · module 123 +
+- [[KRTCAP2]] — keratinocyte associated protein 2 · module 024 +
+- [[KRTCAP3]] — keratinocyte associated protein 3 · module 073 +
+- [[KSR1]] — kinase suppressor of ras 1 · module 115 +
+- [[KSR2]] — kinase suppressor of ras 2 · module 027 +
+- [[KTI12]] — KTI12 chromatin associated homolog · module 007 +
+- [[KTN1]] — kinectin 1 · module 179 -
+- [[KTN1-AS1]] — KTN1 antisense RNA 1 · module 005 +
+- [[KXD1]] — KxDL motif containing 1 · module 180 +
+- [[KYAT1]] — kynurenine aminotransferase 1 · module 010 -
+- [[KYAT3]] — kynurenine aminotransferase 3 · module 219 +
+- [[KYNU]] — kynureninase · module 167 +

@@ -1,0 +1,33 @@
+{
+"nodes": [
+{"id": "legend", "type": "text", "x": -40, "y": -260, "width": 560, "height": 200, "text": "**Module 217**\n\n12 genes at their nodal-map positions. A single-armed module: every gene is + (green). Edge label + = move together, − = opposite."},
+{"id": "g9722", "type": "file", "file": "Genes/chr5/ZNF608.md", "x": 2600, "y": 560, "width": 180, "height": 50, "color": "4"},
+{"id": "g7645", "type": "file", "file": "Genes/chr3/MBNL1.md", "x": 2400, "y": 560, "width": 180, "height": 50, "color": "4"},
+{"id": "g9662", "type": "file", "file": "Genes/chr2/CAVIN2.md", "x": 3000, "y": 700, "width": 180, "height": 50, "color": "4"},
+{"id": "g1733", "type": "file", "file": "Genes/chr5/MAP3K1.md", "x": 2600, "y": 490, "width": 180, "height": 50, "color": "4"},
+{"id": "g6049", "type": "file", "file": "Genes/chr11/YAP1.md", "x": 2600, "y": 630, "width": 180, "height": 50, "color": "4"},
+{"id": "g1195", "type": "file", "file": "Genes/chr4/JADE1.md", "x": 0, "y": 0, "width": 180, "height": 50, "color": "4"},
+{"id": "g6454", "type": "file", "file": "Genes/chr16/ZFHX3.md", "x": 2800, "y": 420, "width": 180, "height": 50, "color": "4"},
+{"id": "g8919", "type": "file", "file": "Genes/chr5/RHOBTB3.md", "x": 2800, "y": 560, "width": 180, "height": 50, "color": "4"},
+{"id": "g8537", "type": "file", "file": "Genes/chr1/NFIA.md", "x": 1000, "y": 1890, "width": 180, "height": 50, "color": "4"},
+{"id": "g3013", "type": "file", "file": "Genes/chr17/MMD.md", "x": 2800, "y": 140, "width": 180, "height": 50, "color": "4"},
+{"id": "g168", "type": "file", "file": "Genes/chr7/AASS.md", "x": 2800, "y": 490, "width": 180, "height": 50, "color": "4"},
+{"id": "g7734", "type": "file", "file": "Genes/chr6/CNKSR3.md", "x": 2600, "y": 420, "width": 180, "height": 50, "color": "4"}
+],
+"edges": [
+{"id": "e168_9722", "fromNode": "g168", "toNode": "g9722", "label": "+"},
+{"id": "e1195_6454", "fromNode": "g1195", "toNode": "g6454", "label": "+"},
+{"id": "e1195_9722", "fromNode": "g1195", "toNode": "g9722", "label": "+"},
+{"id": "e1733_3013", "fromNode": "g1733", "toNode": "g3013", "label": "+"},
+{"id": "e1733_6049", "fromNode": "g1733", "toNode": "g6049", "label": "+"},
+{"id": "e1733_9662", "fromNode": "g1733", "toNode": "g9662", "label": "+"},
+{"id": "e1733_9722", "fromNode": "g1733", "toNode": "g9722", "label": "+"},
+{"id": "e3013_6049", "fromNode": "g3013", "toNode": "g6049", "label": "+"},
+{"id": "e6049_9662", "fromNode": "g6049", "toNode": "g9662", "label": "+"},
+{"id": "e6454_7734", "fromNode": "g6454", "toNode": "g7734", "label": "+"},
+{"id": "e7645_8537", "fromNode": "g7645", "toNode": "g8537", "label": "+"},
+{"id": "e7645_8919", "fromNode": "g7645", "toNode": "g8919", "label": "+"},
+{"id": "e8537_9662", "fromNode": "g8537", "toNode": "g9662", "label": "+"},
+{"id": "e8919_9722", "fromNode": "g8919", "toNode": "g9722", "label": "+"}
+]
+}

@@ -1,0 +1,18 @@
+{
+"nodes": [
+{"id": "legend", "type": "text", "x": -40, "y": -260, "width": 560, "height": 200, "text": "**Module 232**\n\n6 genes at their nodal-map positions. A single-armed module: every gene is + (green). Edge label + = move together, − = opposite."},
+{"id": "g7730", "type": "file", "file": "Genes/chr2/RMND5A.md", "x": 800, "y": 2870, "width": 180, "height": 50, "color": "4"},
+{"id": "g15760", "type": "file", "file": "Genes/chr3/LINC02035.md", "x": 1200, "y": 2310, "width": 180, "height": 50, "color": "4"},
+{"id": "g615", "type": "file", "file": "Genes/chr20/ATP9A.md", "x": 0, "y": 0, "width": 180, "height": 50, "color": "4"},
+{"id": "g4318", "type": "file", "file": "Genes/chr13/UBL3.md", "x": 600, "y": 3010, "width": 180, "height": 50, "color": "4"},
+{"id": "g10968", "type": "file", "file": "Genes/chr12/RFLNA.md", "x": 1600, "y": 70, "width": 180, "height": 50, "color": "4"},
+{"id": "g6182", "type": "file", "file": "Genes/chr3/SLC49A4.md", "x": 1200, "y": 630, "width": 180, "height": 50, "color": "4"}
+],
+"edges": [
+{"id": "e615_7730", "fromNode": "g615", "toNode": "g7730", "label": "+"},
+{"id": "e4318_7730", "fromNode": "g4318", "toNode": "g7730", "label": "+"},
+{"id": "e6182_15760", "fromNode": "g6182", "toNode": "g15760", "label": "+"},
+{"id": "e7730_10968", "fromNode": "g7730", "toNode": "g10968", "label": "+"},
+{"id": "e7730_15760", "fromNode": "g7730", "toNode": "g15760", "label": "+"}
+]
+}

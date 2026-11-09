@@ -1,0 +1,20 @@
+{
+"nodes": [
+{"id": "legend", "type": "text", "x": -40, "y": -260, "width": 560, "height": 200, "text": "**Module 233**\n\n6 genes at their nodal-map positions. A single-armed module: every gene is + (green). Edge label + = move together, − = opposite."},
+{"id": "g7637", "type": "file", "file": "Genes/chr5/TRIM36.md", "x": 1200, "y": 0, "width": 180, "height": 50, "color": "4"},
+{"id": "g655", "type": "file", "file": "Genes/chr3/ATP11B.md", "x": 1200, "y": 630, "width": 180, "height": 50, "color": "4"},
+{"id": "g2807", "type": "file", "file": "Genes/chr9/TGFBR1.md", "x": 1000, "y": 0, "width": 180, "height": 50, "color": "4"},
+{"id": "g2492", "type": "file", "file": "Genes/chr8/KCTD9.md", "x": 1000, "y": 630, "width": 180, "height": 50, "color": "4"},
+{"id": "g1509", "type": "file", "file": "Genes/chr12/ERGIC2.md", "x": 1200, "y": -70, "width": 180, "height": 50, "color": "4"},
+{"id": "g10522", "type": "file", "file": "Genes/chr4/FAM241A.md", "x": 0, "y": 3010, "width": 180, "height": 50, "color": "4"}
+],
+"edges": [
+{"id": "e655_2492", "fromNode": "g655", "toNode": "g2492", "label": "+"},
+{"id": "e655_2807", "fromNode": "g655", "toNode": "g2807", "label": "+"},
+{"id": "e655_7637", "fromNode": "g655", "toNode": "g7637", "label": "+"},
+{"id": "e1509_7637", "fromNode": "g1509", "toNode": "g7637", "label": "-"},
+{"id": "e2492_2807", "fromNode": "g2492", "toNode": "g2807", "label": "+"},
+{"id": "e2807_7637", "fromNode": "g2807", "toNode": "g7637", "label": "+"},
+{"id": "e7637_10522", "fromNode": "g7637", "toNode": "g10522", "label": "+"}
+]
+}

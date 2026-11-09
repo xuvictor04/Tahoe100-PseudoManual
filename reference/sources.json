@@ -1,0 +1,121 @@
+{
+ "written": "2026-11-09T16:02:09Z",
+ "cache_dir": "C:\\tahoe\\out\\reference\\downloads",
+ "sources": {
+  "hgnc": {
+   "url": "https://storage.googleapis.com/public-download-files/hgnc/tsv/tsv/hgnc_complete_set.txt",
+   "file": "C:\\tahoe\\out\\reference\\downloads\\hgnc_complete_set.txt",
+   "status": "cached",
+   "date": "2026-11-08T01:06:06Z",
+   "last_modified": "Thu, 05 Nov 2026 13:56:03 GMT",
+   "bytes": 16994064,
+   "n_rows": 45326
+  },
+  "ensembl": {
+   "url": "https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz",
+   "file": "C:\\tahoe\\out\\reference\\downloads\\Homo_sapiens.GRCh38.112.gtf.gz",
+   "status": "downloaded",
+   "date": "2026-11-09T16:01:56Z",
+   "last_modified": "Tue, 20 Feb 2024 07:55:29 GMT",
+   "bytes": 55529204,
+   "n_rows": 63140
+  },
+  "uniprot": {
+   "url": "https://rest.uniprot.org/uniprotkb/stream?format=tsv&fields=accession,reviewed,gene_primary,protein_name,cc_function,xref_hgnc,xref_geneid&query=organism_id:9606%20AND%20reviewed:true",
+   "file": "C:\\tahoe\\out\\reference\\downloads\\uniprot_human_reviewed.tsv",
+   "status": "cached",
+   "date": "2026-11-08T01:07:30Z",
+   "last_modified": "",
+   "bytes": 15486210,
+   "n_rows": 20429
+  },
+  "ncbi": {
+   "url": "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_summary.gz",
+   "file": "C:\\tahoe\\out\\reference\\downloads\\gene_summary.gz",
+   "status": "downloaded",
+   "date": "2026-11-09T16:02:00Z",
+   "last_modified": "Mon, 09 Nov 2026 08:26:49 GMT",
+   "bytes": 23827418,
+   "n_rows": 151703
+  },
+  "reactome": {
+   "url": "https://reactome.org/download/current/ReactomePathways.gmt.zip",
+   "file": "C:\\tahoe\\out\\reference\\downloads\\ReactomePathways.gmt.zip",
+   "status": "cached",
+   "date": "2026-11-08T01:08:41Z",
+   "last_modified": "Mon, 19 Oct 2026 18:46:22 GMT",
+   "bytes": 300128,
+   "n_rows": 2874
+  },
+  "hallmark": {
+   "url": "https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2024.1.Hs/h.all.v2024.1.Hs.symbols.gmt",
+   "file": "C:\\tahoe\\out\\reference\\downloads\\h.all.v2024.1.Hs.symbols.gmt",
+   "status": "cached",
+   "date": "2026-11-08T01:08:41Z",
+   "last_modified": "Fri, 09 Aug 2024 20:58:28 GMT",
+   "bytes": 48690,
+   "n_rows": 50
+  },
+  "string_links": {
+   "url": "https://stringdb-downloads.org/download/protein.links.v12.0/9606.protein.links.v12.0.txt.gz",
+   "file": "C:\\tahoe\\out\\reference\\downloads\\9606.protein.links.v12.0.txt.gz",
+   "status": "cached",
+   "date": "2026-11-08T01:08:54Z",
+   "last_modified": "Tue, 16 May 2023 00:05:31 GMT",
+   "bytes": 83164437,
+   "n_rows": 1858944
+  },
+  "string_info": {
+   "url": "https://stringdb-downloads.org/download/protein.info.v12.0/9606.protein.info.v12.0.txt.gz",
+   "file": "C:\\tahoe\\out\\reference\\downloads\\9606.protein.info.v12.0.txt.gz",
+   "status": "cached",
+   "date": "2026-11-08T01:09:01Z",
+   "last_modified": "Wed, 31 May 2023 11:47:48 GMT",
+   "bytes": 1970090,
+   "n_rows": 19699
+  }
+ },
+ "summary": {
+  "version": 1,
+  "genes": 16643,
+  "offline": false,
+  "cache_dir": "C:\\tahoe\\out\\reference\\downloads",
+  "hgnc_matched": 15231,
+  "matched_by": {
+   "ensembl_id": 15216,
+   "none": 1412,
+   "prev_symbol": 8,
+   "symbol": 6,
+   "alias_symbol": 1
+  },
+  "with_coordinates": 16611,
+  "with_chrom": 16613,
+  "with_uniprot_function": 12278,
+  "with_ncbi_summary": 13566,
+  "gene_sets": {
+   "hallmark": 50,
+   "hgnc_group": 1388,
+   "reactome": 2287
+  },
+  "gene_set_memberships": 121626,
+  "string_pairs": 626218,
+  "string": {
+   "n_links_file": 13715404,
+   "n_links_ge_min": 1858944,
+   "proteins": 19699,
+   "proteins_by_ensembl": 13457,
+   "proteins_by_name": 183
+  },
+  "sources": {
+   "hgnc": "cached",
+   "ensembl": "downloaded",
+   "uniprot": "cached",
+   "ncbi": "downloaded",
+   "reactome": "cached",
+   "hallmark": "cached",
+   "string_links": "cached",
+   "string_info": "cached"
+  },
+  "minutes": 11.95
+ }
+}

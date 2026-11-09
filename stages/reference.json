@@ -1,0 +1,51 @@
+{
+ "stage": "reference",
+ "version": 1,
+ "finished": "2026-11-09 11:02:09",
+ "info": {
+  "version": 1,
+  "genes": 16643,
+  "offline": false,
+  "cache_dir": "C:\\tahoe\\out\\reference\\downloads",
+  "hgnc_matched": 15231,
+  "matched_by": {
+   "ensembl_id": 15216,
+   "none": 1412,
+   "prev_symbol": 8,
+   "symbol": 6,
+   "alias_symbol": 1
+  },
+  "with_coordinates": 16611,
+  "with_chrom": 16613,
+  "with_uniprot_function": 12278,
+  "with_ncbi_summary": 13566,
+  "gene_sets": {
+   "hallmark": 50,
+   "hgnc_group": 1388,
+   "reactome": 2287
+  },
+  "gene_set_memberships": 121626,
+  "string_pairs": 626218,
+  "string": {
+   "n_links_file": 13715404,
+   "n_links_ge_min": 1858944,
+   "proteins": 19699,
+   "proteins_by_ensembl": 13457,
+   "proteins_by_name": 183
+  },
+  "sources": {
+   "hgnc": "cached",
+   "ensembl": "downloaded",
+   "uniprot": "cached",
+   "ncbi": "downloaded",
+   "reactome": "cached",
+   "hallmark": "cached",
+   "string_links": "cached",
+   "string_info": "cached"
+  },
+  "minutes": 11.95,
+  "options": {
+   "offline": false
+  }
+ }
+}

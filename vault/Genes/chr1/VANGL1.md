@@ -1,0 +1,245 @@
+---
+symbol: "VANGL1"
+type: "gene"
+col: 10356
+ensembl_id: "ENSG00000173218"
+name: "VANGL planar cell polarity protein 1"
+location: "1p13.1"
+module: 22
+arm: "+"
+pooled_cpm: 19.51
+n_lines_expressing: 49
+n_dd_up: 2
+n_dd_down: 22
+n_dd_up_clean: 2
+n_dd_down_clean: 17
+in_vector_space: true
+direction_upstream: 1
+direction_downstream: 0
+tags: ["gene", "module/022"]
+generated_by: "tahoemap"
+---
+
+# VANGL1
+
+*VANGL planar cell polarity protein 1* — 1p13.1
+
+## At a glance
+
+> [!summary] In this data
+> Pooled over the cell lines (median), raised significantly by 2 drug-doses (none with an alert); the strongest is [[Peretinoin (drug)]] 5 µM: 1.34× (z +3.8, q 0.051, up in 18 of 47 measured lines).
+> Pooled over the cell lines (median), lowered significantly by 22 drug-doses (5 with an alert ⚠); the strongest is [[Homoharringtonine (drug)]] 5 µM: 0.324× (z -21.3, q 0e+00, down in 42 of 46 measured lines).
+> Its strongest partners by |cos| (100 of its 100 nearest are replicated: the same sign with fdr ≤ 0.10 in two random halves of the compounds; 0 carry an alert, ⚠ + the reason: not replicated, same locus, or the partner in the vector space only through flagged drug-doses): it moves with [[CCNA2]] (+0.61, fdr 7e-06), [[MRTFB]] (+0.58, fdr 1e-05), [[H2AX]] (+0.56, fdr 1e-05); moves opposite to [[ZNF490]] (-0.62, fdr 1e-05), [[HADHB]] (-0.59, fdr 7e-06), [[RSL1D1-DT]] (-0.57, fdr 2e-05).
+> It is in [[Module 022]], a single-armed module (G2/M checkpoint).
+> Probable direction (from the cell lines, not proof of direct regulation): 1 arrow points to it, the strongest [[NEURL1B]] → it (grade B ⚠); none goes from it. See Direction (probable) below.
+
+## Drugs that raise it
+
+*Pooled over the cell lines (median). Every drug-dose with |z| ≥ 3 or q < 0.10, strongest first: 6 in all, none with an alert. 2 of them raise it significantly (**bold**: q < 0.10, ≥ 1.2×), none with an alert. ⚠ = an artifact flag on the drug-dose or on this gene: the change may come from cell death, a drop in transcription, a shift in the cell-cycle mix, a plate that does not reproduce or a well-position problem rather than from regulation of this gene; it is shown, not left out. `tables/drug_effects.parquet` col == 10356.*
+
+| Drug-dose | Alert | Fold | z | q | Lines up / measured | Dose pattern | Caveats |
+|---|---|---|---|---|---|---|---|
+| [[Peretinoin (drug)]] 5 µM |  | **1.34×** | +3.8 | 0.051 | 18/47 (HOP62, NCI-H460, …) | rises with dose |  |
+| [[Filgotinib (drug)]] 5 µM |  | **1.33×** | +3.7 | 0.051 | 7/47 (COLO 205, PANC-1, …) | inconsistent across doses |  |
+| [[Retinoic acid (drug)]] 0.05 µM |  | 1.29× | +3.4 | 0.12 | 17/47 (NCI-H1573, KATO III, …) | inconsistent across doses |  |
+| [[Tucidinostat (drug)]] 5 µM |  | 1.19× | +3.3 | 0.12 | 8/47 (NCI-H23, Hs 766T, …) | top dose only | position effect removed |
+| [[Trifluridine (drug)]] 0.5 µM |  | 1.28× | +3.2 | 0.13 | 12/46 (Panc 03.27, RPMI-7951, …) | inconsistent across doses | cell-cycle shift (explains ~0% here) |
+| [[Ponatinib (drug)]] 5 µM |  | 1.25× | +3.0 | 0.23 | 13/47 (SK-MEL-2, NCI-H2030, …) | rises with dose |  |
+
+## Drugs that lower it
+
+*Pooled over the cell lines (median). Every drug-dose with |z| ≥ 3 or q < 0.10, strongest first: 23 in all, 6 with an alert ⚠; shown: the 15 strongest and the 2 next strongest without an alert. 22 of them lower it significantly (**bold**: q < 0.10, ≥ 1.2×), 5 with an alert ⚠. ⚠ as above. `tables/drug_effects.parquet` col == 10356.*
+
+| Drug-dose | Alert | Fold | z | q | Lines down / measured | Dose pattern | Caveats |
+|---|---|---|---|---|---|---|---|
+| [[Homoharringtonine (drug)]] 5 µM |  | **0.324×** | -21.3 | 0e+00 | 42/46 (A-172, NCI-H460, …) | rises with dose | cell-cycle shift (explains ~0% here); composition shift |
+| [[Harringtonine (drug)]] 5 µM |  | **0.353×** | -13.4 | 3e-38 | 38/46 (NCI-H460, PANC-1, …) | rises with dose | cell-cycle shift (explains ~0% here); composition shift |
+| [[Ouabain (Octahydrate) (drug)]] 5 µM |  | **0.467×** | -10.1 | 7e-22 | 35/47 (NCI-H460, SW480, …) | rises with dose | cell-cycle shift (explains ~0% here); composition shift |
+| [[Digitoxin (drug)]] 5 µM | ⚠ toxic; transcription drop | **0.534×** | -8.4 | 8e-15 | 30/45 (J82, SNU-1, …) | rises with dose | cell-cycle shift (explains ~0% here) |
+| [[Panobinostat (drug)]] 0.5 µM |  | **0.538×** | -8.3 | 2e-14 | 33/47 (LS 180, LoVo, …) | two highest doses | cell-cycle shift (explains ~11% here) |
+| [[Homoharringtonine (drug)]] 0.5 µM |  | **0.553×** | -7.9 | 3e-13 | 26/45 (A-172, LOX-IMVI, …) | rises with dose | cell-cycle shift (explains ~0% here) |
+| [[Idarubicin (hydrochloride) (drug)]] 5 µM |  | **0.711×** | -6.4 | 1e-08 | 29/45 (LS 180, HEC-1-A, …) | top dose only | cell-cycle shift (explains ~14% here) |
+| [[Panobinostat (drug)]] 5 µM |  | **0.619×** | -6.4 | 1e-08 | 28/47 (LS 180, LoVo, …) | two highest doses | cell-cycle shift (explains ~16% here) |
+| [[TAK-901 (drug)]] 5 µM |  | **0.400×** | -6.4 | 1e-08 | 26/46 (LoVo, PANC-1, …) | top dose only | plate-row cell shift; cell-cycle shift (explains ~0% here); composition shift; noisy plate (z scaled) |
+| [[Dinaciclib (drug)]] 0.05 µM | ⚠ toxic; transcription drop | **0.648×** | -5.4 | 5e-06 | 20/34 (NCI-H460, LoVo, …) | all doses, flat | cell-cycle shift (explains ~10% here); composition shift |
+| [[Ixazomib citrate (drug)]] 0.5 µM |  | **0.683×** | -5.1 | 2e-05 | 24/47 (PANC-1, A498, …) | rises with dose |  |
+| [[Ixazomib citrate (drug)]] 5 µM |  | **0.692×** | -4.9 | 4e-05 | 24/47 (PANC-1, LS 180, …) | rises with dose | cell-cycle shift (explains ~20% here) |
+| [[Doxorubicin (hydrochloride) (drug)]] 5 µM |  | **0.683×** | -4.9 | 4e-05 | 21/45 (HEC-1-A, RKO, …) | top dose only | cell-cycle shift (explains ~17% here) |
+| [[Selinexor (drug)]] 0.5 µM |  | **0.694×** | -4.9 | 4e-05 | 24/45 (HT-29, RPMI-7951, …) | all doses, flat | cell-cycle shift (explains ~13% here) |
+| [[Epirubicin (hydrochloride) (drug)]] 5 µM |  | **0.695×** | -4.7 | 1e-04 | 26/47 (HEC-1-A, NCI-H460, …) | top dose only | cell-cycle shift (explains ~14% here) |
+| [[Artesunate (drug)]] 5 µM |  | **0.799×** | -4.2 | 7e-04 | 18/47 (HCT15, SW480, …) | top dose only | cell-cycle shift (explains ~0% here) |
+| [[Bortezomib (drug)]] 0.05 µM |  | **0.721×** | -4.1 | 0.001 | 20/45 (HEC-1-A, A498, …) | all doses, flat | cell-cycle shift (explains ~14% here) |
+
+*`cell-cycle shift`: the drug-dose moved its cells into or out of S or G2/M. Its alert says how much of this gene's change that shift would explain (`cc_share`), from the gene's own slopes on the S-phase and G2/M modules (`tables/genes.parquet`: -0.19 per unit of S-phase module lfc, +0.20 per unit of G2/M module lfc). Fitted slopes are attenuated by noise, so the rule multiplies them by 2: a row keeps the alert when the shift would then explain 50% of the change or more, or leave less than a 1.2× change unexplained (an alert's ~N% is the share at the fitted slopes). `cell-cycle shift (explains ~N% here)` = the shift explains only about N% of this change, and even with the slopes multiplied by 2 less than 50%, so for this gene it is no artifact and carries no alert.*
+
+## In which cell lines
+
+*`tables/line_effects.parquet` col == 10356. CPM = the line's own level (n.m. = not measured: the line does not express it, or below 0.25 × its pooled level, where its reads are mostly ambient RNA; no per-line values). Up / down = drug-doses moving it ≥ 1.5× at per-line |z| ≥ 8.4 (calibrated on this run, `tables/info.json`; about 0.0492 such calls per gene and line are expected by chance over the 1,026 clean drug-doses), all of them; in brackets how many of those carry an alert (⚠: an artifact flag on the drug-dose or on this gene). The strongest of them is shown, with its alert, and after it the strongest without an alert when that is another one. Most responsive lines first.*
+
+| Line | TP53 | CPM | Up | Down | Strongest up | Strongest down |
+|---|---|---|---|---|---|---|
+| [[LS 180 (line)]] | wt | 69.4 | 0 | 12 (5 ⚠) | — | [[Homoharringtonine (drug)]] 5 µM 0.294× (z -15.4) |
+| [[NCI-H460 (line)]] | wt | 19.9 | 0 | 11 (5 ⚠) | — | [[Homoharringtonine (drug)]] 5 µM 0.123× (z -21.5) |
+| [[HEC-1-A (line)]] | alt | 36.5 | 0 | 8 (2 ⚠) | — | [[Homoharringtonine (drug)]] 5 µM 0.316× (z -13.9) |
+| [[LoVo (line)]] | wt | 22.8 | 0 | 6 (2 ⚠) | — | [[Dinaciclib (drug)]] 0.05 µM 0.0993× (z -17.1) ⚠ toxic; transcription drop · without an alert: [[Homoharringtonine (drug)]] 5 µM 0.278× (z -14.5) |
+| [[J82 (line)]] | alt | 20.5 | 0 | 5 (2 ⚠) | — | [[Homoharringtonine (drug)]] 5 µM 0.164× (z -16.5) |
+| [[PANC-1 (line)]] | alt | 14.3 | 0 | 4 | — | [[Homoharringtonine (drug)]] 5 µM 0.188× (z -18.6) |
+| [[A-172 (line)]] | wt | 30.8 | 0 | 3 | — | [[Homoharringtonine (drug)]] 5 µM 0.111× (z -22.0) |
+| [[A549 (line)]] | wt | 14.5 | 0 | 3 (1 ⚠) | — | [[Homoharringtonine (drug)]] 5 µM 0.224× (z -12.3) |
+| [[LOX-IMVI (line)]] | wt | 15.3 | 0 | 3 | — | [[Homoharringtonine (drug)]] 5 µM 0.0866× (z -19.6) |
+| [[NCI-H2030 (line)]] | alt | 19.9 | 0 | 3 (1 ⚠) | — | [[Harringtonine (drug)]] 5 µM 0.207× (z -10.0) |
+| [[NCI-H23 (line)]] | alt | 37.4 | 0 | 3 (1 ⚠) | — | [[Homoharringtonine (drug)]] 5 µM 0.248× (z -14.4) |
+| [[SW1417 (line)]] | alt | 13.1 | 0 | 3 (1 ⚠) | — | [[Dinaciclib (drug)]] 5 µM 0.167× (z -10.3) ⚠ toxic; transcription drop · without an alert: [[Homoharringtonine (drug)]] 5 µM 0.304× (z -10.0) |
+| [[HT-29 (line)]] | alt | 25.4 | 0 | 2 (1 ⚠) | — | [[Dinaciclib (drug)]] 0.05 µM 0.0670× (z -16.3) ⚠ toxic; transcription drop · without an alert: [[Homoharringtonine (drug)]] 5 µM 0.200× (z -14.9) |
+| [[MIA PaCa-2 (line)]] | alt | 21.7 | 0 | 2 (2 ⚠) | — | [[Dinaciclib (drug)]] 0.5 µM 0.258× (z -9.1) ⚠ toxic; transcription drop |
+| [[NCI-H1573 (line)]] | alt | 13.1 | 0 | 2 | — | [[Homoharringtonine (drug)]] 0.5 µM 0.134× (z -10.3) |
+| [[RKO (line)]] | wt | 13.8 | 0 | 2 | — | [[Homoharringtonine (drug)]] 5 µM 0.236× (z -9.6) |
+| [[SK-MEL-2 (line)]] | alt | 40.7 | 0 | 2 | — | [[Homoharringtonine (drug)]] 5 µM 0.243× (z -15.6) |
+| [[SNU-1 (line)]] | wt | 22.3 | 0 | 2 (2 ⚠) | — | [[Digitoxin (drug)]] 5 µM 0.0829× (z -11.9) ⚠ toxic; transcription drop |
+| [[SW48 (line)]] | wt | 22.2 | 0 | 2 | — | [[Homoharringtonine (drug)]] 5 µM 0.0814× (z -16.1) |
+| [[A-427 (line)]] | wt | 16.1 | 0 | 1 | — | [[Homoharringtonine (drug)]] 5 µM 0.137× (z -11.0) |
+| [[A498 (line)]] | wt | 23.4 | 0 | 1 | — | [[Homoharringtonine (drug)]] 5 µM 0.295× (z -13.5) |
+| [[BT-474 (line)]] | alt | 16.3 | 0 | 1 (1 ⚠) | — | [[Niclosamide (olamine) (drug)]] 5 µM 0.178× (z -8.6) ⚠ toxic; cell-cycle shift, would explain all of this change |
+| [[Hs 766T (line)]] | wt | 19.1 | 0 | 1 | — | [[Homoharringtonine (drug)]] 5 µM 0.277× (z -9.9) |
+| [[hTERT-HPNE (line)]] | wt | 8.33 | 0 | 1 (1 ⚠) | — | [[Cytarabine (drug)]] 5 µM 0.0534× (z -9.2) ⚠ cell-cycle shift, explains ~58% of this change |
+| [[SHP-77 (line)]] | alt | 30.7 | 0 | 1 (1 ⚠) | — | [[Digitoxin (drug)]] 5 µM 0.206× (z -11.0) ⚠ toxic; transcription drop |
+| [[SW 900 (line)]] | alt | 15.4 | 0 | 1 | — | [[Homoharringtonine (drug)]] 5 µM 0.270× (z -9.4) |
+| [[SW480 (line)]] | alt | 20.0 | 0 | 1 | — | [[Ouabain (Octahydrate) (drug)]] 5 µM 0.259× (z -11.4) |
+| [[AN3 CA (line)]] | alt | 22.7 | 0 | 0 | — | — |
+| [[AsPC-1 (line)]] | alt | 6.09 | 0 | 0 | — | — |
+| [[C-33 A (line)]] | alt | 19.5 | 0 | 0 | — | — |
+| [[C32 (line)]] | wt | 12.8 | 0 | 0 | — | — |
+| [[CFPAC-1 (line)]] | alt | 4.95 | 0 | 0 | — | — |
+| [[CHP-212 (line)]] | wt | 6.28 | 0 | 0 | — | — |
+| [[COLO 205 (line)]] | alt | 13.5 | 0 | 0 | — | — |
+| [[H4 (line)]] | wt | 11.2 | 0 | 0 | — | — |
+| [[HCT15 (line)]] | alt | 26.1 | 0 | 0 | — | — |
+| [[HepG2_C3A (line)]] | wt | 7.65 | 0 | 0 | — | — |
+| [[HOP62 (line)]] | alt | 10.8 | 0 | 0 | — | — |
+| [[HS-578T (line)]] | alt | 14.6 | 0 | 0 | — | — |
+| [[KATO III (line)]] | alt | 16.2 | 0 | 0 | — | — |
+| [[NCI-H1792 (line)]] | alt | 7.61 | 0 | 0 | — | — |
+| [[NCI-H2122 (line)]] | alt | 11.6 | 0 | 0 | — | — |
+| [[NCI-H2347 (line)]] | alt | 12.5 | 0 | 0 | — | — |
+| [[NCI-H596 (line)]] | alt | 13.1 | 0 | 0 | — | — |
+| [[NCI-H661 (line)]] | alt | 8.92 | 0 | 0 | — | — |
+| [[Panc 03.27 (line)]] | alt | 22.4 | 0 | 0 | — | — |
+| [[RPMI-7951 (line)]] | alt | 13.5 | 0 | 0 | — | — |
+| [[SNU-423 (line)]] | alt | 10.8 | 0 | 0 | — | — |
+| [[SW 1088 (line)]] | alt | 2.53 n.m. | — | — | — | — |
+| [[SW 1271 (line)]] | alt | 16.2 | 0 | 0 | — | — |
+
+## Genes that move with it
+
+*Strongest of its 100 nearest partners by |cos| (`relations/gene_relations.parquet` col_a == 10356), and any of the 12 strongest without an alert below them; halves = cos in the spaces fitted on two random halves of the compounds (a hash split of the compound names). Evidence: `both halves` = replicated: the same sign in both, |cos| ≥ 0.2 in each and fdr ≤ 0.10; ⚠ `one half` = strong in one of the two random halves only — not replicated, no error estimate; ⚠ `not reproduced` = neither. Other alerts: ⚠ same locus / read-through risk (neighbours on the genome can correlate for that reason alone), and `GENE ⚠` = the partner is in the vector space only through flagged drug-doses (all its evidence carries an artifact flag for it). A partner with an alert is shown in its place, not left out. A correlation across drugs and lines, not evidence that one gene regulates the other.*
+
+*77 of its nearest partners move with it, 0 of them with an alert (⚠; 0 not replicated); shown: the 12 strongest.*
+
+| Gene | cos | Halves | Evidence | fdr | Notes |
+|---|---|---|---|---|---|
+| [[CCNA2]] | +0.61 | +0.58 / +0.59 | both halves | 7e-06 |  |
+| [[MRTFB]] | +0.58 | +0.61 / +0.51 | both halves | 1e-05 |  |
+| [[H2AX]] | +0.56 | +0.50 / +0.55 | both halves | 1e-05 | pathway: Signaling by WNT |
+| [[ERCC6L]] | +0.56 | +0.47 / +0.61 | both halves | 2e-05 |  |
+| [[KIF23]] | +0.56 | +0.53 / +0.56 | both halves | 1e-05 |  |
+| [[ICMT]] | +0.56 | +0.71 / +0.43 | both halves | 3e-05 |  |
+| [[SPATA5]] | +0.56 | +0.63 / +0.49 | both halves | 1e-05 |  |
+| [[HASPIN]] | +0.55 | +0.55 / +0.54 | both halves | 1e-05 |  |
+| [[RAN]] | +0.55 | +0.50 / +0.61 | both halves | 1e-05 |  |
+| [[CCT5]] | +0.55 | +0.58 / +0.55 | both halves | 1e-05 |  |
+| [[CEP85]] | +0.55 | +0.55 / +0.53 | both halves | 1e-05 |  |
+| [[ARHGAP11A]] | +0.55 | +0.60 / +0.50 | both halves | 1e-05 | pathway: RHOA GTPase cycle |
+
+## Genes that move opposite
+
+*23 of its nearest partners move opposite, 0 of them with an alert (⚠; 0 not replicated); shown: the 12 strongest.*
+
+| Gene | cos | Halves | Evidence | fdr | Notes |
+|---|---|---|---|---|---|
+| [[ZNF490]] | -0.62 | -0.64 / -0.54 | both halves | 1e-05 |  |
+| [[HADHB]] | -0.59 | -0.61 / -0.58 | both halves | 7e-06 |  |
+| [[RSL1D1-DT]] | -0.57 | -0.63 / -0.47 | both halves | 2e-05 |  |
+| [[TCF25]] | -0.57 | -0.59 / -0.55 | both halves | 1e-05 |  |
+| [[BBOF1]] | -0.55 | -0.54 / -0.51 | both halves | 1e-05 |  |
+| [[EOGT-DT]] | -0.54 | -0.66 / -0.42 | both halves | 4e-05 |  |
+| [[ODR4]] | -0.53 | -0.63 / -0.43 | both halves | 3e-05 |  |
+| [[ABCA5]] | -0.52 | -0.53 / -0.52 | both halves | 1e-05 |  |
+| [[RAB2B]] | -0.51 | -0.51 / -0.55 | both halves | 1e-05 |  |
+| [[RAB13]] | -0.51 | -0.55 / -0.43 | both halves | 3e-05 |  |
+| [[SELENOW]] | -0.51 | -0.56 / -0.39 | both halves | 5e-05 |  |
+| [[FAM161B]] | -0.50 | -0.55 / -0.42 | both halves | 4e-05 |  |
+
+## Direction (probable)
+
+*Arrows SOURCE → TARGET of the direction stage (`direction/edges.parquet`), each from a test (q < 0.10 in its family of tests: over the whole table, or for a lead - grade C - within its own group) of a recorded mutation, a natural knockout (lines that do not express a gene), compounds that target a gene, or a gene's natural level. A probable direction, from the screen's cell lines: not proof of direct regulation. Grades: A strong, B read its alerts, C a glimpse; ⚠ = a reason for doubt, shown in place. How to read them, and this run's controls: [[Probable direction]].*
+
+### Upstream of this gene
+
+*1 arrow, 1 of them with an alert ⚠; grade A 0, B 1, C 0.*
+
+| Source | Grade | Direction (probable) | Evidence | Effect | q | Alerts |
+|---|---|---|---|---|---|---|
+| [[NEURL1B]] | B | NEURL1B activity raises VANGL1's level | lines that do not express NEURL1B (7) vs lines expressing it (43) | 1.81× lower at baseline in the lines without NEURL1B | 0.048 | ⚠ within organs, on part of the lines; also absent: PIMREG, WNT9A, ENSG00000267131 |
+
+### Downstream of this gene
+
+None: no arrow goes from this gene (to a gene, or to the cells under a drug-dose).
+
+## Where it sits
+
+- **Module**: [[Module 022]] — G2/M checkpoint; 185 genes; every member is in the + arm (projection on the module's main direction 0.489). A single-armed module: the two sides of its main direction do not form two opposite arms (mean cos between them -0.26; a − arm needs ≥ 5 genes on its side and a mean cos ≤ -0.2), so all its genes count as +.
+- **Nodal map** (x, y) = (-39.8, -53.7); signed map (-46.0, -45.0). **Vector** length 97.9, 24.0% of its response variance represented; |z| ≥ 3 in 1,055 contexts (`embed/genes.parquet`).
+
+**Predicted by the vector space**: the drug-doses whose vectors predict the largest rise and fall (gene vector · drug-dose vector, in z units), next to the observed z (`atlas/effects/DD_z.npy`): the 5 strongest predictions over all drug-doses and the 5 strongest of those without an artifact flag, together. ⚠ = an artifact flag on the drug-dose (or on this gene, where `tables/drug_effects.parquet` has the pair): its observed z may come from what the drug-dose did to the cells.
+
+|  | Drug-dose | Alert | Predicted z | Observed z |
+|---|---|---|---|---|
+| rise | [[Docetaxel (drug)]] 0.05 µM | ⚠ transcription drop; cell-cycle shift | +4.5 | +2.5 |
+|  | [[Niclosamide (olamine) (drug)]] 5 µM | ⚠ toxic; cell-cycle shift | +3.5 | +0.0 |
+|  | [[Panobinostat (drug)]] 0.05 µM | ⚠ cell-cycle shift | +3.1 | +1.5 |
+|  | [[Daptomycin (drug)]] 0.5 µM | ⚠ unreliable plate only | +3.1 | +2.1 |
+|  | [[Darinaparsin (drug)]] 5 µM | ⚠ cell-cycle shift | +3.1 | +2.8 |
+|  | [[Tucidinostat (drug)]] 5 µM |  | +2.8 | +3.3 |
+|  | [[Peretinoin (drug)]] 5 µM |  | +2.8 | +3.8 |
+|  | [[TAK-901 (drug)]] 0.05 µM |  | +2.6 | +0.9 |
+|  | [[5-Azacytidine (drug)]] 5 µM |  | +2.4 | +1.3 |
+|  | [[Peretinoin (drug)]] 0.5 µM |  | +2.4 | +1.7 |
+| fall | [[Harringtonine (drug)]] 5 µM |  | -4.0 | -13.4 |
+|  | [[Selinexor (drug)]] 0.5 µM |  | -3.6 | -4.9 |
+|  | [[Homoharringtonine (drug)]] 5 µM |  | -3.4 | -21.3 |
+|  | [[Selinexor (drug)]] 0.05 µM | ⚠ cell-cycle shift | -3.2 | -2.3 |
+|  | [[Dinaciclib (drug)]] 0.5 µM | ⚠ toxic; transcription drop | -3.0 | -4.5 |
+|  | [[Lactate (calcium) (drug)]] 0.5 µM |  | -2.1 | -0.8 |
+|  | [[Osimertinib (mesylate) (drug)]] 5 µM |  | -2.0 | -2.7 |
+|  | [[TAK-733 (drug)]] 0.05 µM |  | -1.9 | -2.1 |
+|  | [[Cytarabine (drug)]] 0.05 µM |  | -1.9 | -0.9 |
+|  | [[Bimiralisib (drug)]] 0.05 µM |  | -1.8 | -0.9 |
+
+## What is on record
+
+|  |  |
+|---|---|
+| Name | VANGL planar cell polarity protein 1 |
+| Locus type | gene with protein product (protein-coding gene) |
+| Location | 1p13.1 — chr1:115,641,970-115,698,224 (+) |
+| Ensembl biotype | protein_coding |
+| Also known as | STB2 |
+| Reactome | 25 pathways, smallest: RHOH GTPase cycle; RHOV GTPase cycle; RHOU GTPase cycle |
+| Matched by | ensembl_id |
+
+UniProt [Q8TAA9](https://www.uniprot.org/uniprotkb/Q8TAA9) carries no function annotation.
+
+**Summary**, from NCBI Gene [81839](https://www.ncbi.nlm.nih.gov/gene/81839):
+
+> This gene encodes a member of the tretraspanin family. The encoded protein may be involved in mediating intestinal trefoil factor induced wound healing in the intestinal mucosa. Mutations in this gene are associated with neural tube defects. Alternate splicing results in multiple transcript variants. [provided by RefSeq, Feb 2010]
+
+**Accessions** — [HGNC:15512](https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:15512) · Entrez [81839](https://www.ncbi.nlm.nih.gov/gene/81839) · UniProt [Q8TAA9](https://www.uniprot.org/uniprotkb/Q8TAA9) · Ensembl [ENSG00000173218](https://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000173218)
+
+## Data
+
+Gene col 10356: `tables/genes.parquet`, `tables/line_effects.parquet` (50 rows) and `tables/drug_line_top.parquet` (col == 10356); `tables/drug_effects.parquet` (29 rows, flagged included); `relations/gene_relations.parquet` (col_a == 10356, 100 rows); `atlas/effects/DD_lfc|DD_z|DD_qup|DD_qdn.npy` [:, 10356]; `tensor/DDL_lfc|DDL_z.npy` [10356]; `embed/gene_vectors.npy` [10356]; `graph/nodes.parquet`; `direction/edges.parquet` (source_col == 10356 or target_col == 10356). Every well: [[VANGL1 — plates]].
+
+## Sources
+
+Generated by `tahoemap vault` (v4) from the tables of the run; do not edit this note, it is rebuilt on every run. No written note yet: write `tahoemap/vault_seed/genes/VANGL1.md` and rerun `tahoe vault`.
+Registry text: `reference/annotations.parquet` (HGNC, Ensembl GRCh38, UniProt, NCBI Gene; download dates in `reference/sources.json`). Paths are relative to the run folder.

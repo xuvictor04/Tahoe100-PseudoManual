@@ -1,0 +1,1010 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes T 1
+
+1,000 genes. Back to [[Genes by letter]].
+
+- [[TAB1]] — TGF-beta activated kinase 1 (MAP3K7) binding protein 1 · module 064 +
+- [[TAB2]] — TGF-beta activated kinase 1 (MAP3K7) binding protein 2 · module 028 +
+- [[TAB3]] — TGF-beta activated kinase 1 (MAP3K7) binding protein 3 · module 028 +
+- [[TACC1]] — transforming acidic coiled-coil containing protein 1 · module 179 -
+- [[TACC2]] — transforming acidic coiled-coil containing protein 2 · module 105 +
+- [[TACC3]] — transforming acidic coiled-coil containing protein 3 · module 022 +
+- [[TACO1]] — translational activator of cytochrome c oxidase I · module 007 +
+- [[TACR3-AS1]] — TACR3 antisense RNA 1 · module 075 +
+- [[TACSTD2]] — tumor associated calcium signal transducer 2 · module 008 +
+- [[TADA1]] — transcriptional adaptor 1 · module 146 +
+- [[TADA2A]] — transcriptional adaptor 2A · module 001 +
+- [[TADA2B]] — transcriptional adaptor 2B · module 107 +
+- [[TADA3]] — transcriptional adaptor 3 · module 109 +
+- [[TAF1]] — TATA-box binding protein associated factor 1 · module 011 +
+- [[TAF10]] — TATA-box binding protein associated factor 10 · module 109 +
+- [[TAF11]] — TATA-box binding protein associated factor 11 · module 015 +
+- [[TAF12]] — TATA-box binding protein associated factor 12 · module 049 +
+- [[TAF13]] — TATA-box binding protein associated factor 13 · module 052 +
+- [[TAF15]] — TATA-box binding protein associated factor 15 · module 028 +
+- [[TAF1A]] — TATA-box binding protein associated factor, RNA polymerase I subunit A · module 001 +
+- [[TAF1B]] — TATA-box binding protein associated factor, RNA polymerase I subunit B · module 001 +
+- [[TAF1C]] — TATA-box binding protein associated factor, RNA polymerase I subunit C · module 096 +
+- [[TAF1D]] — TATA-box binding protein associated factor, RNA polymerase I subunit D · module 020 -
+- [[TAF2]] — TATA-box binding protein associated factor 2 · module 204 +
+- [[TAF3]] — TATA-box binding protein associated factor 3 · module 048 +
+- [[TAF4]] — TATA-box binding protein associated factor 4 · module 003 +
+- [[TAF4B]] — TATA-box binding protein associated factor 4b · module 033 +
+- [[TAF5]] — TATA-box binding protein associated factor 5 · module 016 -
+- [[TAF5L]] — TATA-box binding protein associated factor 5 like · module 077 +
+- [[TAF6]] — TATA-box binding protein associated factor 6 · module 127 +
+- [[TAF6L]] — TATA-box binding protein associated factor 6 like · module 036 +
+- [[TAF7]] — TATA-box binding protein associated factor 7 · module 011 +
+- [[TAF8]] — TATA-box binding protein associated factor 8 · module 154 +
+- [[TAF9]] — TATA-box binding protein associated factor 9 · module 077 -
+- [[TAF9B]] — TATA-box binding protein associated factor 9b · module 077 -
+- [[TAFA2]] — TAFA chemokine like family member 2 · module 010 +
+- [[TAFA5]] — TAFA chemokine like family member 5 · module 009 +
+- [[TAFAZZIN]] — tafazzin, phospholipid-lysophospholipid transacylase · module 065 +
+- [[TAGAP-AS1]] — TAGAP antisense RNA 1 · module 015 +
+- [[TAGLN]] — transgelin · module 039 +
+- [[TAGLN2]] — transgelin 2 · module 111 +
+- [[TALAM1]] — TALAM1 transcript, MALAT1 antisense RNA · module 016 -
+- [[TALDO1]] — transaldolase 1 · module 072 +
+- [[TAMM41]] — TAM41 mitochondrial translocator assembly and maintenance homolog · module 033 +
+- [[TANC1]] — tetratricopeptide repeat, ankyrin repeat and coiled-coil containing 1 · module 163 +
+- [[TANC2]] — tetratricopeptide repeat, ankyrin repeat and coiled-coil containing 2 · module 113 +
+- [[TANGO2]] — transport and golgi organization 2 homolog · module 072 +
+- [[TANGO6]] — transport and golgi organization 6 homolog · module 004 +
+- [[TANK]] — TRAF family member associated NFKB activator · module 219 +
+- [[TAOK1]] — TAO kinase 1 · module 194 +
+- [[TAOK2]] — TAO kinase 2 · module 138 +
+- [[TAOK3]] — TAO kinase 3 · module 048 +
+- [[TAP1]] — transporter 1, ATP binding cassette subfamily B member · module 070 +
+- [[TAP2]] — transporter 2, ATP binding cassette subfamily B member · module 032 +
+- [[TAPBP]] — TAP binding protein · module 070 +
+- [[TAPBPL]] — TAP binding protein like · module 068 +
+- [[TAPT1]] — transmembrane anterior posterior transformation 1 · module 130 +
+- [[TAPT1-AS1]] — TAPT1 antisense RNA 1 · module 010 +
+- [[TARBP1]] — tRNA guanosine 2 -O-methyltransferase TARBP1 · module 018 +
+- [[TARBP2]] — TARBP2 subunit of RISC loading complex · module 153 +
+- [[TARDBP]] — TAR DNA binding protein · module 025 +
+- [[TARID]] — TCF21 antisense RNA inducing promoter demethylation · module 019 +
+- [[TARS1]] — threonyl-tRNA synthetase 1 · module 063 +
+- [[TARS2]] — threonyl-tRNA synthetase 2, mitochondrial · module 012 +
+- [[TARS3]] — threonyl-tRNA synthetase 3 · module 056 +
+- [[TAS2R14]] — taste 2 receptor member 14 · module 213 +
+- [[TAS2R30]] — taste 2 receptor member 30 · module 025 +
+- [[TAS2R4]] — taste 2 receptor member 4 · module 023 +
+- [[TASOR]] — transcription activation suppressor · module 088 +
+- [[TASOR2]] — transcription activation suppressor family member 2 · module 005 +
+- [[TASP1]] — taspase 1 · module 185 +
+- [[TATDN1]] — TatD DNase domain containing 1 · module 001 +
+- [[TATDN2]] — TatD DNase domain containing 2 · module 050 +
+- [[TATDN3]] — TatD DNase domain containing 3 · module 094 +
+- [[TAX1BP1]] — Tax1 binding protein 1 · module 069 +
+- [[TAX1BP3]] — Tax1 binding protein 3 · module 003 -
+- [[TBC1D1]] — TBC1 domain family member 1 · module 006 +
+- [[TBC1D10A]] — TBC1 domain family member 10A · module 161 +
+- [[TBC1D10B]] — TBC1 domain family member 10B · module 002 +
+- [[TBC1D12]] — TBC1 domain family member 12 · module 204 +
+- [[TBC1D13]] — TBC1 domain family member 13 · module 209 +
+- [[TBC1D14]] — TBC1 domain family member 14 · module 033 +
+- [[TBC1D15]] — TBC1 domain family member 15 · module 069 +
+- [[TBC1D16]] — TBC1 domain family member 16 · module 097 +
+- [[TBC1D17]] — TBC1 domain family member 17 · module 074 +
+- [[TBC1D19]] — TBC1 domain family member 19 · module 017 +
+- [[TBC1D2]] — TBC1 domain family member 2 · module 160 +
+- [[TBC1D20]] — TBC1 domain family member 20 · module 040 +
+- [[TBC1D22A]] — TBC1 domain family member 22A · module 040 +
+- [[TBC1D22A-DT]] — TBC1D22A divergent RNA CLOCK regulator 1 · module 024 +
+- [[TBC1D22B]] — TBC1 domain family member 22B · module 068 +
+- [[TBC1D23]] — TBC1 domain family member 23 · module 041 +
+- [[TBC1D24]] — TBC1 domain family member 24 · module 002 +
+- [[TBC1D25]] — TBC1 domain family member 25 · module 192 +
+- [[TBC1D2B]] — TBC1 domain family member 2B · module 057 +
+- [[TBC1D30]] — TBC1 domain family member 30 · module 018 +
+- [[TBC1D31]] — TBC1 domain family member 31 · module 006 +
+- [[TBC1D32]] — TBC1 domain family member 32 · module 017 +
+- [[TBC1D4]] — TBC1 domain family member 4 · module 018 +
+- [[TBC1D5]] — TBC1 domain family member 5 · module 200 +
+- [[TBC1D7]] — TBC1 domain family member 7 · module 054 +
+- [[TBC1D8]] — TBC1 domain family member 8 · module 097 +
+- [[TBC1D8B]] — TBC1 domain family member 8B · module 056 +
+- [[TBC1D9]] — TBC1 domain family member 9 · module 014 +
+- [[TBC1D9B]] — TBC1 domain family member 9B · module 103 +
+- [[TBCA]] — tubulin folding cofactor A · module 172 +
+- [[TBCB]] — tubulin folding cofactor B · module 030 +
+- [[TBCC]] — tubulin folding cofactor C · module 011 +
+- [[TBCCD1]] — TBCC domain containing 1 · module 222 +
+- [[TBCD]] — tubulin folding cofactor D · module 011 -
+- [[TBCE]] — tubulin folding cofactor E · module 030 +
+- [[TBCE-1]] · module 023 +
+- [[TBCEL]] — tubulin folding cofactor E like · module 028 +
+- [[TBCK]] — TBC1 domain containing kinase · module 028 +
+- [[TBILA]] — TGF-beta induced lncRNA · module 110 +
+- [[TBK1]] — TANK binding kinase 1 · module 072 +
+- [[TBKBP1]] — TBK1 binding protein 1 · module 138 +
+- [[TBL1X]] — transducin beta like 1 X-linked · module 222 +
+- [[TBL1XR1]] — TBL1X/Y related 1 · module 142 +
+- [[TBL2]] — transducin beta like 2 · module 012 +
+- [[TBL3]] — transducin beta like 3 · module 001 +
+- [[TBP]] — TATA-box binding protein · module 089 +
+- [[TBPL1]] — TATA-box binding protein like 1 · module 004 -
+- [[TBRG1]] — FYRN and FYRC domains INO80 complex interactor 1 · module 029 -
+- [[TBRG4]] — FASTK mitochondrial RNA regulator 4 · module 005 +
+- [[TBX1]] — T-box transcription factor 1 · module 128 +
+- [[TBX15]] — T-box transcription factor 15 · module 088 +
+- [[TBX18]] — T-box transcription factor 18 · module 108 +
+- [[TBX19]] — T-box transcription factor 19 · module 037 +
+- [[TBX2]] — T-box transcription factor 2 · module 019 +
+- [[TBX20]] — T-box transcription factor 20 · module 212 +
+- [[TBX3]] — T-box transcription factor 3 · module 151 +
+- [[TBXAS1]] — thromboxane A synthase 1 · module 098 +
+- [[TBXT]] — T-box transcription factor T · module 019 +
+- [[TC2N]] — tandem C2 domains, nuclear · module 008 +
+- [[TCAF1]] — TRPM8 channel associated factor 1 · module 017 +
+- [[TCAF2]] — TRPM8 channel associated factor 2 · module 105 +
+- [[TCAIM]] — T cell activation inhibitor, mitochondrial · module 062 +
+- [[TCEA1]] — transcription elongation factor A1 · module 063 +
+- [[TCEA2]] — transcription elongation factor A2 · module 021 +
+- [[TCEA3]] — transcription elongation factor A3 · module 044 +
+- [[TCEAL1]] — transcription elongation factor A like 1 · module 035 +
+- [[TCEAL3]] — transcription elongation factor A like 3 · module 059 +
+- [[TCEAL4]] — transcription elongation factor A like 4 · module 068 +
+- [[TCEAL8]] — transcription elongation factor A like 8 · module 012 +
+- [[TCEAL9]] — transcription elongation factor A like 9 · module 012 +
+- [[TCEANC]] — transcription elongation factor A N-terminal and central domain containing · module 012 +
+- [[TCEANC2]] — transcription elongation factor A N-terminal and central domain containing 2 · module 061 +
+- [[TCERG1]] — transcription elongation regulator 1 · module 001 +
+- [[TCF12]] — transcription factor 12 · module 143 +
+- [[TCF19]] — transcription factor 19 · module 006 +
+- [[TCF20]] — transcription factor 20 · module 018 +
+- [[TCF25]] — TCF25 ribosome quality control complex subunit · module 021 +
+- [[TCF3]] — transcription factor 3 · module 002 +
+- [[TCF4]] — transcription factor 4 · module 019 +
+- [[TCF7]] — transcription factor 7 · module 112 +
+- [[TCF7L1]] — transcription factor 7 like 1 · module 128 +
+- [[TCF7L2]] — transcription factor 7 like 2 · module 097 +
+- [[TCFL5]] — transcription factor like 5 · module 002 +
+- [[TCHP]] — trichoplein keratin filament binding · module 001 +
+- [[TCIM]] — transcriptional and immune response regulator · module 167 +
+- [[TCIRG1]] — T cell immune regulator 1, ATPase H+ transporting V0 subunit a3 · module 002 +
+- [[TCN1]] — transcobalamin 1 · module 008 +
+- [[TCN2]] — transcobalamin 2 · module 191 +
+- [[TCOF1]] — treacle ribosome biogenesis factor 1 · module 018 +
+- [[TCP1]] — t-complex 1 · module 060 +
+- [[TCP10L]] — t-complex 10 like · module 139 +
+- [[TCP11L1]] — t-complex 11 like 1 · module 062 +
+- [[TCP11L2]] — t-complex 11 like 2 · module 069 +
+- [[TCTA]] — T cell leukemia translocation altered · module 035 +
+- [[TCTN1]] — tectonic family member 1 · module 064 +
+- [[TCTN2]] — tectonic family member 2 · module 205 +
+- [[TCTN3]] — tectonic family member 3 · module 015 +
+- [[TDG]] — thymine DNA glycosylase · module 089 +
+- [[TDO2]] — tryptophan 2,3-dioxygenase · module 117 +
+- [[TDP1]] — tyrosyl-DNA phosphodiesterase 1 · module 067 +
+- [[TDP2]] — tyrosyl-DNA phosphodiesterase 2 · module 135 +
+- [[TDRD3]] — tudor domain containing 3 · module 137 +
+- [[TDRD7]] — tudor domain containing 7 · module 032 +
+- [[TDRD9]] — tudor domain containing 9 · module 087 +
+- [[TDRKH]] — tudor and KH domain containing · module 208 +
+- [[TDRP]] — testis development related protein · module 162 +
+- [[TEAD1]] — TEA domain transcription factor 1 · module 151 +
+- [[TEAD2]] — TEA domain transcription factor 2 · module 163 +
+- [[TEAD3]] — TEA domain transcription factor 3 · module 100 +
+- [[TEAD4]] — TEA domain transcription factor 4 · module 005 +
+- [[TEC]] — tec protein tyrosine kinase · module 099 +
+- [[TECPR1]] — tectonin beta-propeller repeat containing 1 · module 085 +
+- [[TECPR2]] — tectonin beta-propeller repeat containing 2 · module 038 +
+- [[TECR]] — trans-2,3-enoyl-CoA reductase · module 011 -
+- [[TEDC1]] — tubulin epsilon and delta complex 1 · module 006 +
+- [[TEF]] — TEF transcription factor, PAR bZIP family member · module 014 +
+- [[TEFM]] — transcription elongation factor, mitochondrial · module 089 +
+- [[TEK]] — TEK receptor tyrosine kinase · module 013 +
+- [[TEKT4P2-1]] · module 089 +
+- [[TEKTIP1]] — tektin bundle interacting protein 1 · module 035 +
+- [[TELO2]] — telomere maintenance 2 · module 002 +
+- [[TEN1]] — TEN1 subunit of CST complex · module 051 +
+- [[TENM1]] — teneurin transmembrane protein 1 · module 019 +
+- [[TENM2]] — teneurin transmembrane protein 2 · module 108 +
+- [[TENM3]] — teneurin transmembrane protein 3 · module 009 +
+- [[TENM3-AS1]] — TENM3 antisense RNA 1 · module 202 +
+- [[TENM4]] — teneurin transmembrane protein 4 · module 013 +
+- [[TENT2]] — terminal nucleotidyltransferase 2 · module 178 +
+- [[TENT4A]] — terminal nucleotidyltransferase 4A · module 134 +
+- [[TENT4B]] — terminal nucleotidyltransferase 4B · module 003 +
+- [[TENT5A]] — terminal nucleotidyltransferase 5A · module 070 +
+- [[TENT5C]] — terminal nucleotidyltransferase 5C · module 093 +
+- [[TEP1]] — telomerase associated protein 1 · module 101 +
+- [[TEPSIN]] — TEPSIN adaptor related protein complex 4 accessory protein · module 138 +
+- [[TERB1]] — telomere repeat binding bouquet formation protein 1 · module 039 +
+- [[TERF1]] — telomeric repeat binding factor 1 · module 045 +
+- [[TERF2]] — telomeric repeat binding factor 2 · module 156 +
+- [[TERF2IP]] — TERF2 interacting protein · module 020 -
+- [[TERT]] — telomerase reverse transcriptase · module 006 +
+- [[TES]] — testin LIM domain protein · module 106 +
+- [[TESC]] — tescalcin · module 162 +
+- [[TESK1]] — testis associated actin remodelling kinase 1 · module 002 +
+- [[TESK2]] — testis associated actin remodelling kinase 2 · module 004 -
+- [[TESMIN]] — testis expressed metallothionein like protein · module 023 +
+- [[TET1]] — tet methylcytosine dioxygenase 1 · module 103 +
+- [[TET2]] — tet methylcytosine dioxygenase 2 · module 095 +
+- [[TET3]] — tet methylcytosine dioxygenase 3 · module 056 +
+- [[TEX10]] — testis expressed 10 · module 092 +
+- [[TEX11]] — testis expressed 11 · module 166 +
+- [[TEX14]] — testis expressed 14, intercellular bridge forming factor · module 093 +
+- [[TEX15]] — testis expressed 15, meiosis and synapsis associated · module 082 +
+- [[TEX2]] — testis expressed 2 · module 035 -
+- [[TEX21P]] — testis expressed 21, pseudogene · module 026 +
+- [[TEX22]] — testis expressed 22 · module 083 +
+- [[TEX261]] — testis expressed 261 · module 048 -
+- [[TEX264]] — testis expressed 264, ER-phagy receptor · module 107 +
+- [[TEX29]] — testis expressed 29 · module 037 +
+- [[TEX30]] — testis expressed 30 · module 071 +
+- [[TEX41]] — testis expressed 41 · module 121 +
+- [[TEX9]] — testis expressed 9 · module 028 +
+- [[TF]] — transferrin · module 087 +
+- [[TFAM]] — transcription factor A, mitochondrial · module 001 +
+- [[TFAP2A]] — transcription factor AP-2 alpha · module 068 +
+- [[TFAP2A-AS1]] — TFAP2A antisense RNA 1 · module 035 +
+- [[TFAP2C]] — transcription factor AP-2 gamma · module 097 +
+- [[TFAP2E]] — transcription factor AP-2 epsilon · module 038 +
+- [[TFAP4]] — transcription factor AP-4 · module 001 +
+- [[TFB1M]] — transcription factor B1, mitochondrial · module 134 +
+- [[TFB2M]] — transcription factor B2, mitochondrial · module 040 +
+- [[TFCP2]] — transcription factor CP2 · module 156 +
+- [[TFCP2L1]] — transcription factor CP2 like 1 · module 098 +
+- [[TFDP1]] — transcription factor Dp-1 · module 006 +
+- [[TFDP2]] — transcription factor Dp-2 · module 076 +
+- [[TFE3]] — transcription factor binding to IGHM enhancer 3 · module 096 +
+- [[TFEB]] — transcription factor EB · module 204 +
+- [[TFF1]] — trefoil factor 1 · module 073 +
+- [[TFF2]] — trefoil factor 2 · module 073 +
+- [[TFF3]] — trefoil factor 3 · module 055 +
+- [[TFG]] — trafficking from ER to golgi regulator · module 056 +
+- [[TFIP11]] — tuftelin interacting protein 11 · module 107 +
+- [[TFPI]] — tissue factor pathway inhibitor · module 147 +
+- [[TFPI2]] — tissue factor pathway inhibitor 2 · module 081 +
+- [[TFPT]] — TCF3 fusion partner · module 118 +
+- [[TFR2]] — transferrin receptor 2 · module 132 +
+- [[TFRC]] — transferrin receptor · module 149 +
+- [[TG]] — thyroglobulin · module 053 +
+- [[TGDS]] — TDP-glucose 4,6-dehydratase · module 041 +
+- [[TGFA]] — transforming growth factor alpha · module 034 +
+- [[TGFB1]] — transforming growth factor beta 1 · module 161 +
+- [[TGFB1I1]] — transforming growth factor beta 1 induced transcript 1 · module 013 +
+- [[TGFB2]] — transforming growth factor beta 2 · module 066 +
+- [[TGFB3]] — transforming growth factor beta 3 · module 035 +
+- [[TGFBI]] — transforming growth factor beta induced · module 066 +
+- [[TGFBR1]] — transforming growth factor beta receptor 1 · module 233 +
+- [[TGFBR2]] — transforming growth factor beta receptor 2 · module 097 +
+- [[TGFBR3]] — transforming growth factor beta receptor 3 · module 106 +
+- [[TGFBRAP1]] — transforming growth factor beta receptor associated protein 1 · module 001 +
+- [[TGIF1]] — TGFB induced factor homeobox 1 · module 095 +
+- [[TGIF2]] — TGFB induced factor homeobox 2 · module 123 +
+- [[TGIF2-RAB5IF]] — TGIF2-RAB5IF readthrough · module 181 +
+- [[TGM2]] — transglutaminase 2 · module 174 +
+- [[TGOLN2]] — trans-golgi network protein 2 · module 025 +
+- [[TGS1]] — trimethylguanosine synthase 1 · module 007 +
+- [[THADA]] — THADA armadillo repeat containing · module 001 +
+- [[THAP1]] — THAP domain containing 1 · module 011 +
+- [[THAP10]] — THAP domain containing 10 · module 035 +
+- [[THAP11]] — THAP domain containing 11 · module 007 +
+- [[THAP12]] — THAP domain containing 12 · module 029 +
+- [[THAP2]] — THAP domain containing 2 · module 023 +
+- [[THAP3]] — THAP domain containing 3 · module 012 +
+- [[THAP4]] — THAP domain containing 4 · module 005 +
+- [[THAP5]] — THAP domain containing 5 · module 011 +
+- [[THAP6]] — THAP domain containing 6 · module 011 +
+- [[THAP7]] — THAP domain containing 7 · module 007 +
+- [[THAP8]] — THAP domain containing 8 · module 079 +
+- [[THAP9]] — THAP domain containing 9 · module 077 -
+- [[THBD]] — thrombomodulin · module 034 +
+- [[THBS1]] — thrombospondin 1 · module 066 +
+- [[THBS2]] — thrombospondin 2 · module 013 +
+- [[THBS2-AS1]] — THBS2 antisense RNA 1 · module 035 +
+- [[THBS3]] — thrombospondin 3 · module 153 +
+- [[THBS3-AS1]] — THBS3 antisense RNA 1 · module 139 +
+- [[THBS4]] — thrombospondin 4 · module 010 +
+- [[THBS4-AS1]] — THBS4 antisense RNA 1 · module 026 +
+- [[THEM4]] — thioesterase superfamily member 4 · module 107 +
+- [[THEM6]] — thioesterase superfamily member 6 · module 035 -
+- [[THEMIS2]] — thymocyte selection associated family member 2 · module 167 +
+- [[THG1L]] — tRNA-histidine guanylyltransferase 1 like · module 051 +
+- [[THNSL1]] — threonine synthase like 1 · module 016 +
+- [[THNSL2]] — threonine synthase like 2 · module 010 +
+- [[THOC1]] — THO complex subunit 1 · module 017 +
+- [[THOC2]] — THO complex subunit 2 · module 012 +
+- [[THOC3]] — THO complex subunit 3 · module 040 +
+- [[THOC5]] — THO complex subunit 5 · module 036 +
+- [[THOC6]] — THO complex subunit 6 · module 054 -
+- [[THOC7]] — THO complex subunit 7 · module 088 +
+- [[THOP1]] — thimet oligopeptidase 1 · module 043 -
+- [[THRA]] — thyroid hormone receptor alpha · module 045 +
+- [[THRAP3]] — thyroid hormone receptor associated protein 3 · module 016 +
+- [[THRB]] — thyroid hormone receptor beta · module 008 +
+- [[THSD1]] — thrombospondin type 1 domain containing 1 · module 038 +
+- [[THSD4]] — thrombospondin type 1 domain containing 4 · module 193 +
+- [[THSD4-AS1]] — THSD4 antisense RNA 1 · module 067 +
+- [[THSD7A]] — thrombospondin type 1 domain containing 7A · module 009 +
+- [[THSD7B]] — thrombospondin type 1 domain containing 7B · module 150 +
+- [[THSD8]] — thrombospondin type 1 domain containing 8 · module 091 +
+- [[THUMPD1]] — THUMP domain 1 NAT10 acetyltransferase adaptor · module 011 +
+- [[THUMPD2]] — THUMP domain 2 tRNA and snRNA guanosine methyltransferase · module 016 +
+- [[THUMPD3]] — THUMP domain 3 tRNA guanosine methyltransferase · module 011 +
+- [[THUMPD3-AS1]] — THUMPD3 antisense RNA 1 · module 038 +
+- [[THY1]] — Thy-1 cell surface antigen · module 066 +
+- [[THYN1]] — thymocyte nuclear protein 1 · module 017 +
+- [[TIA1]] — TIA1 cytotoxic granule associated RNA binding protein · module 077 -
+- [[TIAL1]] — TIA1 cytotoxic granule associated RNA binding protein like 1 · module 201 +
+- [[TIAM1]] — TIAM Rac1 associated GEF 1 · module 034 +
+- [[TIAM2]] — TIAM Rac1 associated GEF 2 · module 039 +
+- [[TICAM1]] — TIR domain containing adaptor molecule 1 · module 031 +
+- [[TICAM2]] — TIR domain containing adaptor molecule 2 · module 037 +
+- [[TICAM2-AS1]] — TICAM2 antisense RNA 1 · module 021 +
+- [[TICRR]] — TOPBP1 interacting checkpoint and replication regulator · module 067 +
+- [[TIFA]] — TRAF interacting protein with forkhead associated domain · module 014 +
+- [[TIGAR]] — TP53 induced glycolysis regulatory phosphatase · module 062 +
+- [[TIGD1]] — tigger transposable element derived 1 · module 018 +
+- [[TIGD2]] — tigger transposable element derived 2 · module 016 +
+- [[TIGD6]] — tigger transposable element derived 6 · module 010 +
+- [[TIGD7]] — tigger transposable element derived 7 · module 015 +
+- [[TIMD4]] — T cell immunoglobulin and mucin domain containing 4 · module 008 +
+- [[TIMELESS]] — timeless circadian regulator · module 006 +
+- [[TIMM10]] — translocase of inner mitochondrial membrane 10 · module 054 +
+- [[TIMM10B]] — translocase of inner mitochondrial membrane 10B · module 042 +
+- [[TIMM13]] — translocase of inner mitochondrial membrane 13 · module 054 +
+- [[TIMM17A]] — translocase of inner mitochondrial membrane 17A · module 049 +
+- [[TIMM17B]] — translocase of inner mitochondrial membrane 17B · module 024 +
+- [[TIMM21]] — translocase of inner mitochondrial membrane 21 · module 005 +
+- [[TIMM22]] — translocase of inner mitochondrial membrane 22 · module 007 +
+- [[TIMM23]] — translocase of inner mitochondrial membrane 23 · module 033 +
+- [[TIMM23B]] — translocase of inner mitochondrial membrane 23 homolog B · module 036 +
+- [[TIMM23B-AGAP6]] — TIMM23B-AGAP6 readthrough (NMD candidate) · module 005 +
+- [[TIMM29]] — translocase of inner mitochondrial membrane 29 · module 119 +
+- [[TIMM44]] — translocase of inner mitochondrial membrane 44 · module 133 +
+- [[TIMM50]] — translocase of inner mitochondrial membrane 50 · module 033 +
+- [[TIMM8A]] — translocase of inner mitochondrial membrane 8A · module 033 +
+- [[TIMM8B]] — translocase of inner mitochondrial membrane 8 homolog B · module 007 +
+- [[TIMM9]] — translocase of inner mitochondrial membrane 9 · module 001 +
+- [[TIMMDC1]] — translocase of inner mitochondrial membrane domain containing 1 · module 148 +
+- [[TIMP1]] — TIMP metallopeptidase inhibitor 1 · module 081 +
+- [[TIMP2]] — TIMP metallopeptidase inhibitor 2 · module 050 +
+- [[TIMP3]] — TIMP metallopeptidase inhibitor 3 · module 066 +
+- [[TINAGL1]] — tubulointerstitial nephritis antigen like 1 · module 034 +
+- [[TINCR]] — TINCR ubiquitin domain containing · module 038 +
+- [[TINF2]] — TERF1 interacting nuclear factor 2 · module 002 +
+- [[TIPARP]] — TCDD inducible poly(ADP-ribose) polymerase · module 113 +
+- [[TIPIN]] — TIMELESS interacting protein · module 010 +
+- [[TIPRL]] — TOR signaling pathway regulator · module 050 +
+- [[TIRAP]] — TIR domain containing adaptor protein · module 064 +
+- [[TIRAP-AS1]] — TIRAP antisense RNA 1 · module 015 +
+- [[TJAP1]] — tight junction associated protein 1 · module 170 +
+- [[TJP1]] — tight junction protein 1 · module 164 +
+- [[TJP2]] — tight junction protein 2 · module 031 +
+- [[TJP3]] — tight junction protein 3 · module 044 +
+- [[TK1]] — thymidine kinase 1 · module 006 +
+- [[TK2]] — thymidine kinase 2 · module 095 +
+- [[TKFC]] — triokinase and FMN cyclase · module 096 +
+- [[TKT]] — transketolase · module 086 +
+- [[TLCD1]] — TLC domain containing 1 · module 014 +
+- [[TLCD2]] — TLC domain containing 2 · module 133 +
+- [[TLCD3A]] — TLC domain containing 3A · module 005 +
+- [[TLCD3B]] — TLC domain containing 3B · module 071 +
+- [[TLCD4]] — TLC domain containing 4 · module 186 +
+- [[TLCD4-RWDD3]] — TLCD4-RWDD3 readthrough · module 068 +
+- [[TLCD5]] — TLC domain containing 5 · module 014 +
+- [[TLDC2]] — TBC/LysM-associated domain containing 2 · module 031 +
+- [[TLE1]] — TLE family member 1, transcriptional corepressor · module 106 +
+- [[TLE2]] — TLE family member 2, transcriptional corepressor · module 100 +
+- [[TLE3]] — TLE family member 3, transcriptional corepressor · module 192 +
+- [[TLE4]] — TLE family member 4, transcriptional corepressor · module 093 +
+- [[TLE5]] — TLE family member 5, transcriptional modulator · module 050 +
+- [[TLE6]] — TLE family member 6, subcortical maternal complex member · module 084 +
+- [[TLK1]] — tousled like kinase 1 · module 051 +
+- [[TLK2]] — tousled like kinase 2 · module 046 +
+- [[TLL1]] — tolloid like 1 · module 009 +
+- [[TLL2]] — tolloid like 2 · module 047 +
+- [[TLN1]] — talin 1 · module 020 +
+- [[TLN2]] — talin 2 · module 073 +
+- [[TLNRD1]] — talin rod domain containing 1 · module 017 -
+- [[TLR1]] — toll like receptor 1 · module 117 +
+- [[TLR2]] — toll like receptor 2 · module 098 +
+- [[TLR3]] — toll like receptor 3 · module 070 +
+- [[TLR4]] — toll like receptor 4 · module 151 +
+- [[TLR6]] — toll like receptor 6 · module 117 +
+- [[TM2D1]] — TM2 domain containing 1 · module 089 +
+- [[TM2D2]] — TM2 domain containing 2 · module 007 +
+- [[TM2D3]] — TM2 domain containing 3 · module 024 +
+- [[TM4SF1]] — transmembrane 4 L six family member 1 · module 081 +
+- [[TM4SF1-AS1]] — TM4SF1 antisense RNA 1 · module 112 +
+- [[TM4SF18]] — transmembrane 4 L six family member 18 · module 019 +
+- [[TM4SF19]] — transmembrane 4 L six family member 19 · module 229 +
+- [[TM4SF19-DYNLT2B]] — TM4SF19-DYNLT2B readthrough (NMD candidate) · module 229 +
+- [[TM4SF4]] — transmembrane 4 L six family member 4 · module 044 +
+- [[TM7SF2]] — transmembrane 7 superfamily member 2 · module 059 +
+- [[TM7SF3]] — transmembrane 7 superfamily member 3 · module 065 +
+- [[TM9SF1]] — transmembrane 9 superfamily member 1 · module 042 +
+- [[TM9SF2]] — transmembrane 9 superfamily member 2 · module 042 +
+- [[TM9SF3]] — transmembrane 9 superfamily member 3 · module 020 +
+- [[TM9SF4]] — transmembrane 9 superfamily member 4 · module 156 +
+- [[TM9SF5P]] — transmembrane 9 superfamily member 5, pseudogene · module 026 +
+- [[TMA16]] — translation machinery associated 16 homolog · module 001 +
+- [[TMA7]] — translation machinery associated 7 homolog · module 021 +
+- [[TMBIM1]] — transmembrane BAX inhibitor motif containing 1 · module 031 +
+- [[TMBIM4]] — transmembrane BAX inhibitor motif containing 4 · module 001 +
+- [[TMBIM6]] — transmembrane BAX inhibitor motif containing 6 · module 011 -
+- [[TMC1]] — transmembrane channel like 1 · module 090 +
+- [[TMC3-AS1]] — TMC3 antisense RNA 1 · module 049 +
+- [[TMC4]] — transmembrane channel like 4 · module 008 +
+- [[TMC5]] — transmembrane channel like 5 · module 008 +
+- [[TMC6]] — transmembrane channel like 6 · module 031 +
+- [[TMC7]] — transmembrane channel like 7 · module 034 +
+- [[TMCC1]] — transmembrane and coiled-coil domain family 1 · module 054 +
+- [[TMCC1-DT]] — TMCC1 divergent transcript · module 010 +
+- [[TMCC2]] — transmembrane and coiled-coil domain family 2 · module 100 +
+- [[TMCC3]] — transmembrane and coiled-coil domain family 3 · module 034 +
+- [[TMCO1]] — transmembrane and coiled-coil domains 1 · module 210 +
+- [[TMCO3]] — solute carrier family 9 member D1 · module 037 +
+- [[TMCO4]] — transmembrane and coiled-coil domains 4 · module 137 +
+- [[TMCO6]] — transmembrane and coiled-coil domains 6 · module 033 +
+- [[TMED1]] — transmembrane p24 trafficking protein 1 · module 048 +
+- [[TMED10]] — transmembrane p24 trafficking protein 10 · module 042 +
+- [[TMED2]] — transmembrane p24 trafficking protein 2 · module 042 +
+- [[TMED3]] — transmembrane p24 trafficking protein 3 · module 049 +
+- [[TMED4]] — transmembrane p24 trafficking protein 4 · module 011 -
+- [[TMED5]] — transmembrane p24 trafficking protein 5 · module 042 +
+- [[TMED6]] — transmembrane p24 trafficking protein 6 · module 039 +
+- [[TMED7]] — transmembrane p24 trafficking protein 7 · module 020 +
+- [[TMED7-TICAM2]] — TMED7-TICAM2 readthrough · module 179 +
+- [[TMED8]] — transmembrane p24 trafficking protein family member 8 · module 015 +
+- [[TMED9]] — transmembrane p24 trafficking protein 9 · module 042 +
+- [[TMEFF1]] — transmembrane protein with EGF like and two follistatin like domains 1 · module 181 +
+- [[TMEFF2]] — transmembrane protein with EGF like and two follistatin like domains 2 · module 061 +
+- [[TMEM101]] — transmembrane protein 101 · module 111 +
+- [[TMEM104]] — solute carrier family 38 member 12 · module 052 +
+- [[TMEM106A]] — transmembrane protein 106A · module 004 -
+- [[TMEM106B]] — transmembrane protein 106B · module 025 +
+- [[TMEM106C]] — transmembrane protein 106C · module 006 +
+- [[TMEM107]] — transmembrane protein 107 · module 091 +
+- [[TMEM108]] — transmembrane protein 108 · module 082 +
+- [[TMEM109]] — transmembrane protein 109 · module 006 +
+- [[TMEM11]] — transmembrane protein 11 · module 119 +
+- [[TMEM11-DT]] — TMEM11 divergent transcript · module 015 +
+- [[TMEM115]] — transmembrane protein 115 · module 007 +
+- [[TMEM116]] — transmembrane protein 116 · module 072 +
+- [[TMEM117]] — transmembrane protein 117 · module 124 +
+- [[TMEM120A]] — transmembrane protein 120A · module 003 +
+- [[TMEM120B]] — transmembrane protein 120B · module 077 +
+- [[TMEM123]] — transmembrane protein 123 · module 029 +
+- [[TMEM125]] — transmembrane protein 125 · module 008 +
+- [[TMEM126A]] — transmembrane protein 126A · module 024 +
+- [[TMEM126B]] — transmembrane protein 126B · module 122 +
+- [[TMEM127]] — transmembrane protein 127 · module 007 +
+- [[TMEM128]] — transmembrane protein 128 · module 028 +
+- [[TMEM129]] — transmembrane protein 129, E3 ubiquitin ligase · module 011 +
+- [[TMEM131]] — transmembrane protein 131 · module 194 +
+- [[TMEM131L]] — transmembrane 131 like · module 214 +
+- [[TMEM132A]] — transmembrane protein 132A · module 081 +
+- [[TMEM132B]] — transmembrane protein 132B · module 165 +
+- [[TMEM132D]] — transmembrane protein 132D · module 013 +
+- [[TMEM134]] — transmembrane protein 134 · module 024 +
+- [[TMEM135]] — transmembrane protein 135 · module 086 +
+- [[TMEM138]] — transmembrane protein 138 · module 005 +
+- [[TMEM139]] — transmembrane protein 139 · module 027 +
+- [[TMEM139-AS1]] — TMEM139 antisense RNA 1 · module 010 +
+- [[TMEM140]] — transmembrane protein 140 · module 032 +
+- [[TMEM141]] — transmembrane protein 141 · module 058 +
+- [[TMEM143]] — transmembrane protein 143 · module 175 +
+- [[TMEM144]] — transmembrane protein 144 · module 099 +
+- [[TMEM145]] — transmembrane protein 145 · module 103 +
+- [[TMEM147]] — transmembrane protein 147 · module 058 +
+- [[TMEM147-AS1]] — TMEM147 antisense RNA 1 · module 001 +
+- [[TMEM14A]] — transmembrane protein 14A · module 045 +
+- [[TMEM14B]] — transmembrane protein 14B · module 105 +
+- [[TMEM14C]] — transmembrane protein 14C · module 142 +
+- [[TMEM150A]] — transmembrane protein 150A · module 006 -
+- [[TMEM150C]] — transmembrane protein 150C · module 082 +
+- [[TMEM154]] — transmembrane protein 154 · module 034 +
+- [[TMEM156]] — transmembrane protein 156 · module 147 +
+- [[TMEM158]] — transmembrane protein 158 · module 081 +
+- [[TMEM160]] — transmembrane protein 160 · module 058 +
+- [[TMEM161A]] — transmembrane protein 161A · module 072 +
+- [[TMEM161B]] — transmembrane protein 161B · module 057 +
+- [[TMEM161B-DT]] — TMEM161B divergent transcript · module 037 +
+- [[TMEM163]] — transmembrane protein 163 · module 196 +
+- [[TMEM164]] — transmembrane protein 164 · module 097 +
+- [[TMEM165]] — transmembrane protein 165 · module 049 +
+- [[TMEM167A]] — transmembrane protein 167A · module 042 +
+- [[TMEM167B]] — transmembrane protein 167B · module 041 +
+- [[TMEM168]] — transmembrane protein 168 · module 004 +
+- [[TMEM17]] — transmembrane protein 17 · module 094 +
+- [[TMEM170A]] — transmembrane protein 170A · module 054 +
+- [[TMEM170B]] — transmembrane protein 170B · module 019 +
+- [[TMEM171]] — transmembrane protein 171 · module 034 +
+- [[TMEM175]] — transmembrane protein 175 · module 209 +
+- [[TMEM177]] — transmembrane protein 177 · module 033 +
+- [[TMEM178A]] — transmembrane protein 178A · module 037 +
+- [[TMEM178B]] — transmembrane protein 178B · module 152 +
+- [[TMEM179B]] — transmembrane protein 179B · module 058 +
+- [[TMEM18]] — transmembrane protein 18 · module 051 +
+- [[TMEM181]] — transmembrane protein 181 · module 059 -
+- [[TMEM182]] — transmembrane protein 182 · module 056 +
+- [[TMEM183A]] — transmembrane protein 183A · module 171 +
+- [[TMEM184A]] — transmembrane protein 184A · module 027 +
+- [[TMEM184B]] — transmembrane protein 184B · module 136 +
+- [[TMEM184C]] — transmembrane protein 184C · module 007 +
+- [[TMEM185A]] — transmembrane protein 185A · module 030 +
+- [[TMEM185B]] — transmembrane protein 185B · module 016 +
+- [[TMEM186]] — transmembrane protein 186 · module 015 +
+- [[TMEM187]] — transmembrane protein 187 · module 015 +
+- [[TMEM19]] — fatty acid amide binding transmembrane protein · module 029 +
+- [[TMEM191A-1]] · module 058 +
+- [[TMEM192]] — transmembrane protein 192 · module 124 +
+- [[TMEM198B]] — transmembrane protein 198B (pseudogene) · module 157 +
+- [[TMEM199]] — vacuolar ATPase assembly factor VMA12 · module 007 +
+- [[TMEM200A]] — transmembrane protein 200A · module 013 +
+- [[TMEM201]] — transmembrane protein 201 · module 033 +
+- [[TMEM202-AS1]] — TMEM202 antisense RNA 1 · module 010 +
+- [[TMEM205]] — transmembrane protein 205 · module 024 +
+- [[TMEM208]] — transmembrane protein 208 · module 049 +
+- [[TMEM209]] — transmembrane protein 209 · module 001 +
+- [[TMEM214]] — transmembrane protein 214 · module 042 +
+- [[TMEM216]] — transmembrane protein 216 · module 012 +
+- [[TMEM217]] — transmembrane protein 217 · module 035 +
+- [[TMEM218]] — transmembrane protein 218 · module 146 +
+- [[TMEM219]] — transmembrane protein 219 · module 030 +
+- [[TMEM222]] — transmembrane protein 222 · module 114 +
+- [[TMEM223]] — transmembrane protein 223 · module 089 +
+- [[TMEM225B]] — transmembrane protein 225B · module 037 +
+- [[TMEM229B]] — transmembrane protein 229B · module 087 +
+- [[TMEM230]] — transmembrane protein 230 · module 052 +
+- [[TMEM231]] — transmembrane protein 231 · module 018 +
+- [[TMEM232]] — transmembrane protein 232 · module 010 +
+- [[TMEM234]] — transmembrane protein 234 · module 089 +
+- [[TMEM236]] — transmembrane protein 236 · module 039 +
+- [[TMEM237]] — transmembrane protein 237 · module 025 +
+- [[TMEM241]] — solute carrier family 35 member D4 · module 211 +
+- [[TMEM242]] — transmembrane protein 242 · module 080 +
+- [[TMEM243]] — transmembrane protein 243 · module 049 +
+- [[TMEM245]] — transmembrane protein 245 · module 057 +
+- [[TMEM248]] — transmembrane protein 248 · module 042 +
+- [[TMEM25]] — transmembrane protein 25 · module 047 +
+- [[TMEM250]] — transmembrane protein 250 · module 007 +
+- [[TMEM251]] — lysosomal enzyme trafficking factor · module 162 +
+- [[TMEM254]] — transmembrane protein 254 · module 017 +
+- [[TMEM255B]] — transmembrane protein 255B · module 084 +
+- [[TMEM256]] — transmembrane protein 256 · module 058 +
+- [[TMEM258]] — transmembrane protein 258 · module 024 +
+- [[TMEM259]] — transmembrane protein 259 · module 002 +
+- [[TMEM260]] — transmembrane protein 260 · module 028 +
+- [[TMEM263]] — transmembrane protein 263 · module 056 +
+- [[TMEM265]] — transmembrane protein 265 · module 012 +
+- [[TMEM266]] — transmembrane protein 266 · module 100 +
+- [[TMEM267]] — transmembrane protein 267 · module 015 +
+- [[TMEM268]] — transmembrane protein 268 · module 133 +
+- [[TMEM269]] — transmembrane protein 269 · module 037 +
+- [[TMEM276]] — transmembrane protein 276 · module 058 +
+- [[TMEM30A]] — cell division cycle 50 P4-ATPase accessory subunit A · module 029 +
+- [[TMEM30A-DT]] — TMEM30A divergent transcript · module 035 +
+- [[TMEM30B]] — cell division cycle 50 P4-ATPase accessory subunit B · module 073 +
+- [[TMEM33]] — transmembrane protein 33 · module 004 +
+- [[TMEM35B]] — transmembrane protein 35B · module 068 +
+- [[TMEM38A]] — transmembrane protein 38A · module 003 +
+- [[TMEM38B]] — transmembrane protein 38B · module 045 +
+- [[TMEM39A]] — transmembrane protein 39A · module 056 +
+- [[TMEM39B]] — transmembrane protein 39B · module 103 +
+- [[TMEM40]] — transmembrane protein 40 · module 125 +
+- [[TMEM41A]] — transmembrane protein 41A · module 105 +
+- [[TMEM41B]] — transmembrane protein 41B · module 042 +
+- [[TMEM42]] — transmembrane protein 42 · module 012 +
+- [[TMEM43]] — transmembrane protein 43 · module 054 -
+- [[TMEM44]] — transmembrane protein 44 · module 218 +
+- [[TMEM44-AS1]] — TMEM44 antisense RNA 1 · module 010 +
+- [[TMEM45A]] — transmembrane protein 45A · module 103 +
+- [[TMEM45B]] — transmembrane protein 45B · module 008 +
+- [[TMEM47]] — transmembrane protein 47 · module 066 +
+- [[TMEM50A]] — transmembrane protein 50A · module 145 +
+- [[TMEM50B]] — transmembrane protein 50B · module 040 +
+- [[TMEM51]] — transmembrane protein 51 · module 154 +
+- [[TMEM51-AS1]] — TMEM51 antisense RNA 1 · module 008 +
+- [[TMEM52B]] — transmembrane protein 52B · module 066 +
+- [[TMEM53]] — transmembrane protein 53 · module 086 +
+- [[TMEM54]] — transmembrane protein 54 · module 044 +
+- [[TMEM59]] — transmembrane protein 59 · module 069 +
+- [[TMEM60]] — transmembrane protein 60 · module 020 -
+- [[TMEM62]] — transmembrane protein 62 · module 032 +
+- [[TMEM63A]] — transmembrane protein 63A · module 135 -
+- [[TMEM63B]] — transmembrane protein 63B · module 014 +
+- [[TMEM63C]] — transmembrane protein 63C · module 085 +
+- [[TMEM64]] — transmembrane protein 64 · module 025 +
+- [[TMEM65]] — transmembrane protein 65 · module 099 +
+- [[TMEM67]] — transmembrane protein 67 · module 205 +
+- [[TMEM68]] — transmembrane protein 68 · module 015 +
+- [[TMEM69]] — transmembrane protein 69 · module 010 +
+- [[TMEM70]] — transmembrane protein 70 · module 011 +
+- [[TMEM72-AS1]] — TMEM72 antisense RNA 1 · module 026 +
+- [[TMEM74B]] — transmembrane protein 74B · module 103 +
+- [[TMEM79]] — transmembrane protein 79 · module 089 +
+- [[TMEM80]] — transmembrane protein 80 · module 023 +
+- [[TMEM87A]] — transmembrane protein 87A · module 156 +
+- [[TMEM87B]] — transmembrane protein 87B · module 051 -
+- [[TMEM8B]] — transmembrane protein 8B · module 002 +
+- [[TMEM9]] — transmembrane protein 9 · module 045 +
+- [[TMEM91]] — transmembrane protein 91 · module 023 +
+- [[TMEM92]] — transmembrane protein 92 · module 034 +
+- [[TMEM92-AS1]] — TMEM92 antisense RNA 1 · module 052 +
+- [[TMEM94]] — transmembrane protein 94 · module 178 +
+- [[TMEM97]] — transmembrane protein 97 · module 170 -
+- [[TMEM98]] — transmembrane protein 98 · module 115 +
+- [[TMEM9B]] — TMEM9 domain family member B · module 029 +
+- [[TMEM9B-AS1]] — TMEM9B antisense RNA 1 · module 010 +
+- [[TMF1]] — TATA element modulatory factor 1 · module 041 +
+- [[TMLHE]] — trimethyllysine hydroxylase, epsilon · module 064 +
+- [[TMLHE-AS1]] — TMLHE antisense RNA 1 · module 035 +
+- [[TMOD1]] — tropomodulin 1 · module 208 +
+- [[TMOD2]] — tropomodulin 2 · module 132 +
+- [[TMOD3]] — tropomodulin 3 · module 111 +
+- [[TMPO]] — thymopoietin · module 022 +
+- [[TMPRSS15]] — transmembrane serine protease 15 · module 009 +
+- [[TMPRSS2]] — transmembrane serine protease 2 · module 008 +
+- [[TMPRSS3]] — transmembrane serine protease 3 · module 008 +
+- [[TMPRSS4]] — transmembrane serine protease 4 · module 031 +
+- [[TMPRSS5]] — transmembrane serine protease 5 · module 014 +
+- [[TMPRSS9]] — transmembrane serine protease 9 · module 053 +
+- [[TMSB10]] — thymosin beta 10 · module 048 +
+- [[TMSB15B]] — thymosin beta 15B · module 033 +
+- [[TMSB4X]] — thymosin beta 4 X-linked · module 007 -
+- [[TMTC1]] — transmembrane O-mannosyltransferase targeting cadherins 1 · module 104 +
+- [[TMTC2]] — transmembrane O-mannosyltransferase targeting cadherins 2 · module 127 +
+- [[TMTC3]] — transmembrane O-mannosyltransferase targeting cadherins 3 · module 025 +
+- [[TMTC4]] — transmembrane O-mannosyltransferase targeting cadherins 4 · module 018 +
+- [[TMUB1]] — transmembrane and ubiquitin like domain containing 1 · module 030 +
+- [[TMUB2]] — transmembrane and ubiquitin like domain containing 2 · module 118 +
+- [[TMX1]] — thioredoxin related transmembrane protein 1 · module 029 +
+- [[TMX2]] — thioredoxin related transmembrane protein 2 · module 005 +
+- [[TMX3]] — thioredoxin related transmembrane protein 3 · module 004 +
+- [[TMX4]] — thioredoxin related transmembrane protein 4 · module 003 -
+- [[TNC]] — tenascin C · module 087 +
+- [[TNFAIP1]] — TNF alpha induced protein 1 · module 116 +
+- [[TNFAIP2]] — TNF alpha induced protein 2 · module 014 +
+- [[TNFAIP3]] — TNF alpha induced protein 3 · module 014 +
+- [[TNFAIP6]] — TNF alpha induced protein 6 · module 014 +
+- [[TNFAIP8]] — TNF alpha induced protein 8 · module 141 +
+- [[TNFAIP8L1]] — TNF alpha induced protein 8 like 1 · module 085 +
+- [[TNFRSF10A]] — TNF receptor superfamily member 10a · module 110 +
+- [[TNFRSF10A-DT]] — TNFRSF10A divergent transcript · module 024 +
+- [[TNFRSF10B]] — TNF receptor superfamily member 10b · module 063 +
+- [[TNFRSF10C]] — TNF receptor superfamily member 10c · module 020 -
+- [[TNFRSF10D]] — TNF receptor superfamily member 10d · module 105 +
+- [[TNFRSF11A]] — TNF receptor superfamily member 11a · module 154 +
+- [[TNFRSF11B]] — TNF receptor superfamily member 11b · module 019 +
+- [[TNFRSF12A]] — TNF receptor superfamily member 12A · module 151 +
+- [[TNFRSF14]] — TNF receptor superfamily member 14 · module 014 +
+- [[TNFRSF14-AS1]] — TNFRSF14 antisense RNA 1 · module 055 +
+- [[TNFRSF19]] — TNF receptor superfamily member 19 · module 019 +
+- [[TNFRSF1A]] — TNF receptor superfamily member 1A · module 106 +
+- [[TNFRSF1B]] — TNF receptor superfamily member 1B · module 014 +
+- [[TNFRSF21]] — TNF receptor superfamily member 21 · module 008 +
+- [[TNFRSF25]] — TNF receptor superfamily member 25 · module 034 +
+- [[TNFRSF6B]] — TNF receptor superfamily member 6b · module 034 +
+- [[TNFRSF9]] — TNF receptor superfamily member 9 · module 014 +
+- [[TNFSF10]] — TNF superfamily member 10 · module 070 +
+- [[TNFSF12]] — TNF superfamily member 12 · module 021 +
+- [[TNFSF13B]] — TNF superfamily member 13b · module 037 +
+- [[TNFSF14]] — TNF superfamily member 14 · module 139 +
+- [[TNFSF15]] — TNF superfamily member 15 · module 055 +
+- [[TNFSF9]] — TNF superfamily member 9 · module 093 +
+- [[TNIK]] — TRAF2 and NCK interacting kinase · module 046 -
+- [[TNIP1]] — TNFAIP3 interacting protein 1 · module 014 +
+- [[TNIP2]] — TNFAIP3 interacting protein 2 · module 020 -
+- [[TNIP3]] — TNFAIP3 interacting protein 3 · module 167 +
+- [[TNK1]] — tyrosine kinase non receptor 1 · module 011 +
+- [[TNK2]] — tyrosine kinase non receptor 2 · module 002 +
+- [[TNKS]] — tankyrase · module 076 +
+- [[TNKS1BP1]] — CCR4-NOT transcription complex subunit 12 · module 014 +
+- [[TNKS2]] — tankyrase 2 · module 069 +
+- [[TNNI3]] — troponin I3, cardiac type · module 085 +
+- [[TNNI3K]] — TNNI3 interacting kinase · module 037 +
+- [[TNNT1]] — troponin T1, slow skeletal type · module 208 +
+- [[TNNT2]] — troponin T2, cardiac type · module 047 +
+- [[TNPO1]] — transportin 1 · module 025 +
+- [[TNPO2]] — transportin 2 · module 046 +
+- [[TNPO3]] — transportin 3 · module 142 +
+- [[TNRC18]] — trinucleotide repeat containing 18 · module 017 -
+- [[TNRC6A]] — trinucleotide repeat containing adaptor 6A · module 146 +
+- [[TNRC6B]] — trinucleotide repeat containing adaptor 6B · module 225 +
+- [[TNRC6C]] — trinucleotide repeat containing adaptor 6C · module 025 -
+- [[TNS1]] — tensin 1 · module 013 +
+- [[TNS2]] — tensin 2 · module 098 +
+- [[TNS2-AS1]] — TNS2 antisense RNA 1 · module 021 +
+- [[TNS3]] — tensin 3 · module 034 +
+- [[TNS4]] — tensin 4 · module 031 +
+- [[TNXB]] — tenascin XB · module 037 +
+- [[TOB1]] — transducer of ERBB2, 1 · module 059 +
+- [[TOB2]] — transducer of ERBB2, 2 · module 093 +
+- [[TOE1]] — target of EGR1, exonuclease · module 007 +
+- [[TOGARAM1]] — TOG array regulator of axonemal microtubules 1 · module 011 +
+- [[TOLLIP]] — toll interacting protein · module 059 +
+- [[TOM1]] — target of myb1 membrane trafficking protein · module 059 +
+- [[TOM1L1]] — target of myb1 like 1 membrane trafficking protein · module 063 +
+- [[TOM1L2]] — target of myb1 like 2 membrane trafficking protein · module 069 +
+- [[TOMM20]] — translocase of outer mitochondrial membrane 20 · module 043 +
+- [[TOMM20L-DT]] — TOMM20L divergent transcript · module 021 +
+- [[TOMM22]] — translocase of outer mitochondrial membrane 22 · module 054 +
+- [[TOMM34]] — translocase of outer mitochondrial membrane 34 · module 147 +
+- [[TOMM40]] — translocase of outer mitochondrial membrane 40 · module 036 +
+- [[TOMM40L]] — translocase of outer mitochondrial membrane 40 like · module 004 +
+- [[TOMM5]] — translocase of outer mitochondrial membrane 5 · module 054 +
+- [[TOMM7]] — translocase of outer mitochondrial membrane 7 · module 043 +
+- [[TOMM70]] — translocase of outer mitochondrial membrane 70 · module 040 +
+- [[TONSL]] — tonsoku like, DNA repair protein · module 006 +
+- [[TOP1]] — DNA topoisomerase I · module 098 +
+- [[TOP1MT]] — DNA topoisomerase I mitochondrial · module 018 +
+- [[TOP2A]] — DNA topoisomerase II alpha · module 022 +
+- [[TOP2B]] — DNA topoisomerase II beta · module 003 -
+- [[TOP3A]] — DNA topoisomerase III alpha · module 071 +
+- [[TOP3B]] — DNA topoisomerase III beta · module 127 +
+- [[TOPBP1]] — DNA topoisomerase II binding protein 1 · module 071 +
+- [[TOPORS]] — TOP1 binding arginine/serine rich protein, E3 ubiquitin ligase · module 011 +
+- [[TOR1A]] — torsin family 1 member A · module 005 +
+- [[TOR1AIP1]] — torsin 1A interacting protein 1 · module 051 +
+- [[TOR1AIP2]] — torsin 1A interacting protein 2 · module 007 +
+- [[TOR1B]] — torsin family 1 member B · module 051 -
+- [[TOR3A]] — torsin family 3 member A · module 005 +
+- [[TOR4A]] — torsin family 4 member A · module 034 +
+- [[TOX]] — thymocyte selection associated high mobility group box · module 009 +
+- [[TOX2]] — TOX high mobility group box family member 2 · module 097 +
+- [[TOX3]] — TOX high mobility group box family member 3 · module 008 +
+- [[TOX4]] — TOX high mobility group box family member 4 · module 018 -
+- [[TP53]] — tumor protein p53 · module 023 +
+- [[TP53BP1]] — tumor protein p53 binding protein 1 · module 064 +
+- [[TP53BP2]] — tumor protein p53 binding protein 2 · module 014 +
+- [[TP53I11]] — tumor protein p53 inducible protein 11 · module 050 +
+- [[TP53I13]] — tumor protein p53 inducible protein 13 · module 002 +
+- [[TP53I3]] — tumor protein p53 inducible protein 3 · module 062 +
+- [[TP53INP1]] — tumor protein p53 inducible nuclear protein 1 · module 062 +
+- [[TP53INP2]] — tumor protein p53 inducible nuclear protein 2 · module 059 +
+- [[TP53RK]] — TP53 regulating kinase · module 011 +
+- [[TP53TG1]] — TP53 target 1 · module 045 +
+- [[TP53TG5]] — TP53 target 5 · module 021 +
+- [[TP63]] — tumor protein p63 · module 009 +
+- [[TP73]] — tumor protein p73 · module 006 +
+- [[TP73-AS1]] — Gfo/Idh/MocA-like oxidoreductase domain containing 3, pseudogene · module 007 +
+- [[TPBG]] — trophoblast glycoprotein · module 081 +
+- [[TPCN1]] — two pore segment channel 1 · module 106 +
+- [[TPCN2]] — two pore segment channel 2 · module 002 +
+- [[TPD52]] — tumor protein D52 · module 099 +
+- [[TPD52L1]] — TPD52 like 1 · module 190 +
+- [[TPD52L2]] — TPD52 like 2 · module 002 +
+- [[TPGS1]] — tubulin polyglutamylase complex subunit 1 · module 007 +
+- [[TPGS2]] — tubulin polyglutamylase complex subunit 2 · module 011 -
+- [[TPI1]] — triosephosphate isomerase 1 · module 099 +
+- [[TPK1]] — thiamin pyrophosphokinase 1 · module 005 +
+- [[TPM1]] — tropomyosin 1 · module 197 +
+- [[TPM2]] — tropomyosin 2 · module 004 -
+- [[TPM3]] — tropomyosin 3 · module 078 +
+- [[TPM4]] — tropomyosin 4 · module 111 +
+- [[TPMT]] — thiopurine S-methyltransferase · module 010 -
+- [[TPP1]] — tripeptidyl peptidase 1 · module 122 +
+- [[TPP2]] — tripeptidyl peptidase 2 · module 042 +
+- [[TPPP]] — tubulin polymerization promoting protein · module 015 -
+- [[TPR]] — translocated promoter region, nuclear basket protein · module 017 +
+- [[TPRA1]] — transmembrane protein adipocyte associated 1 · module 130 +
+- [[TPRG1]] — tumor protein p63 regulated 1 · module 010 +
+- [[TPRG1L]] — tumor protein p63 regulated 1 like · module 076 +
+- [[TPRKB]] — TP53RK binding protein · module 210 +
+- [[TPRN]] — taperin · module 119 +
+- [[TPRXL]] — tetrapeptide repeat homeobox like (pseudogene) · module 055 +
+- [[TPST1]] — tyrosylprotein sulfotransferase 1 · module 083 -
+- [[TPST2]] — tyrosylprotein sulfotransferase 2 · module 002 +
+- [[TPT1]] — tumor protein, translationally-controlled 1 · module 131 +
+- [[TPT1-AS1]] — TPT1 antisense RNA 1 · module 037 +
+- [[TPTE]] — transmembrane phosphatase with tensin homology · module 177 +
+- [[TPTE2]] — transmembrane phosphoinositide 3-phosphatase and tensin homolog 2 · module 026 +
+- [[TPTE2P5]] — TPTE2 pseudogene 5 · module 047 +
+- [[TPTE2P6]] — TPTE2 pseudogene 6 · module 075 +
+- [[TPTEP1-1]] · module 073 +
+- [[TPTEP2-CSNK1E]] — TPTEP2-CSNK1E readthrough · module 028 -
+- [[TPX2]] — TPX2 microtubule nucleation factor · module 022 +
+- [[TRA2A]] — transformer 2 alpha homolog · module 059 +
+- [[TRA2B]] — transformer 2 beta homolog · module 109 +
+- [[TRABD]] — TraB domain containing · module 002 +
+- [[TRABD2A]] — TraB domain containing 2A · module 073 +
+- [[TRABD2B]] — TraB domain containing 2B · module 005 +
+- [[TRADD]] — TNFRSF1A associated via death domain · module 003 +
+- [[TRAF1]] — TNF receptor associated factor 1 · module 112 +
+- [[TRAF2]] — TNF receptor associated factor 2 · module 022 +
+- [[TRAF3]] — TNF receptor associated factor 3 · module 001 +
+- [[TRAF3IP1]] — intraflagellar transport 54 · module 036 +
+- [[TRAF3IP2]] — TRAF3 interacting protein 2 · module 094 +
+- [[TRAF3IP2-AS1]] — TRAF3IP2 antisense RNA 1 · module 046 +
+- [[TRAF4]] — TNF receptor associated factor 4 · module 014 +
+- [[TRAF5]] — TNF receptor associated factor 5 · module 018 +
+- [[TRAF6]] — TNF receptor associated factor 6 · module 030 +
+- [[TRAF7]] — TNF receptor associated factor 7 · module 002 +
+- [[TRAFD1]] — TRAF-type zinc finger domain containing 1 · module 070 +
+- [[TRAIP]] — TRAF interacting protein · module 071 +
+- [[TRAK1]] — trafficking kinesin protein 1 · module 023 -
+- [[TRAK2]] — trafficking kinesin protein 2 · module 065 +
+- [[TRAM1]] — translocation associated membrane protein 1 · module 042 +
+- [[TRAM2]] — translocation associated membrane protein 2 · module 104 +
+- [[TRAM2-AS1]] — TRAM2 antisense RNA 1 · module 010 +
+- [[TRANK1]] — tetratricopeptide repeat and ankyrin repeat containing 1 · module 070 +
+- [[TRAP1]] — TNF receptor associated protein 1 · module 018 +
+- [[TRAPPC1]] — trafficking protein particle complex subunit 1 · module 003 +
+- [[TRAPPC10]] — trafficking protein particle complex subunit 10 · module 036 +
+- [[TRAPPC11]] — trafficking protein particle complex subunit 11 · module 017 +
+- [[TRAPPC12]] — trafficking protein particle complex subunit 12 · module 005 +
+- [[TRAPPC13]] — trafficking protein particle complex subunit 13 · module 015 +
+- [[TRAPPC2]] — trafficking protein particle complex subunit 2 · module 183 +
+- [[TRAPPC2B]] — trafficking protein particle complex subunit 2B · module 149 +
+- [[TRAPPC2L]] — trafficking protein particle complex subunit 2L · module 122 +
+- [[TRAPPC3]] — trafficking protein particle complex subunit 3 · module 007 +
+- [[TRAPPC4]] — trafficking protein particle complex subunit 4 · module 003 +
+- [[TRAPPC5]] — trafficking protein particle complex subunit 5 · module 024 +
+- [[TRAPPC6A]] — trafficking protein particle complex subunit 6A · module 024 +
+- [[TRAPPC6B]] — trafficking protein particle complex subunit 6B · module 068 +
+- [[TRAPPC8]] — trafficking protein particle complex subunit 8 · module 194 +
+- [[TRAPPC9]] — trafficking protein particle complex subunit 9 · module 036 +
+- [[TRBC2]] — T cell receptor beta constant 2 · module 092 +
+- [[TRD-AS1]] — TRD antisense RNA 1 · module 075 +
+- [[TRDMT1]] — tRNA aspartic acid methyltransferase 1 · module 003 -
+- [[TREM1]] — triggering receptor expressed on myeloid cells 1 · module 113 +
+- [[TRERF1]] — transcriptional regulating factor 1 · module 045 +
+- [[TREX2]] — three prime repair exonuclease 2 · module 036 +
+- [[TRHDE]] — thyrotropin releasing hormone degrading enzyme · module 202 +
+- [[TRIAP1]] — TP53 regulated inhibitor of apoptosis 1 · module 062 +
+- [[TRIB1]] — tribbles pseudokinase 1 · module 109 +
+- [[TRIB2]] — tribbles pseudokinase 2 · module 092 +
+- [[TRIB3]] — tribbles pseudokinase 3 · module 063 +
+- [[TRIM11]] — tripartite motif containing 11 · module 003 +
+- [[TRIM13]] — tripartite motif containing 13 · module 114 +
+- [[TRIM14]] — tripartite motif containing 14 · module 032 +
+- [[TRIM15]] — tripartite motif containing 15 · module 162 +
+- [[TRIM16]] — tripartite motif containing 16 · module 117 +
+- [[TRIM16L]] — tripartite motif containing 16 like (pseudogene) · module 117 +
+- [[TRIM16L-1]] · module 117 +
+- [[TRIM2]] — tripartite motif containing 2 · module 008 +
+- [[TRIM21]] — tripartite motif containing 21 · module 032 +
+- [[TRIM22]] — tripartite motif containing 22 · module 032 +
+- [[TRIM23]] — tripartite motif containing 23 · module 074 +
+- [[TRIM24]] — tripartite motif containing 24 · module 004 -
+- [[TRIM25]] — tripartite motif containing 25 · module 032 +
+- [[TRIM26]] — tripartite motif containing 26 · module 032 +
+- [[TRIM27]] — tripartite motif containing 27 · module 033 +
+- [[TRIM28]] — tripartite motif containing 28 · module 138 +
+- [[TRIM29]] — tripartite motif containing 29 · module 106 +
+- [[TRIM3]] — tripartite motif containing 3 · module 056 +
+- [[TRIM31]] — tripartite motif containing 31 · module 008 +
+- [[TRIM32]] — tripartite motif containing 32 · module 017 +
+- [[TRIM33]] — tripartite motif containing 33 · module 204 +
+- [[TRIM34]] — tripartite motif containing 34 · module 032 +
+- [[TRIM35]] — tripartite motif containing 35 · module 077 +
+- [[TRIM36]] — tripartite motif containing 36 · module 233 +
+- [[TRIM37]] — tripartite motif containing 37 · module 015 -
+- [[TRIM38]] — tripartite motif containing 38 · module 032 +
+- [[TRIM39]] — tripartite motif containing 39 · module 038 +
+- [[TRIM4]] — tripartite motif containing 4 · module 149 +
+- [[TRIM41]] — tripartite motif containing 41 · module 138 +
+- [[TRIM44]] — TRIM family member 44 · module 001 +
+- [[TRIM47]] — tripartite motif containing 47 · module 011 +
+- [[TRIM5]] — tripartite motif containing 5 · module 070 +
+- [[TRIM52]] — tripartite motif containing 52 · module 042 +
+- [[TRIM52-AS1]] — TRIM52 antisense RNA 1 · module 024 +
+- [[TRIM55]] — tripartite motif containing 55 · module 066 +
+- [[TRIM56]] — tripartite motif containing 56 · module 032 +
+- [[TRIM58]] — tripartite motif containing 58 · module 066 +
+- [[TRIM59]] — tripartite motif containing 59 · module 039 +
+- [[TRIM6]] — tripartite motif containing 6 · module 009 +
+- [[TRIM62]] — tripartite motif containing 62 · module 003 +
+- [[TRIM65]] — tripartite motif containing 65 · module 005 +
+- [[TRIM66]] — tripartite motif containing 66 · module 124 +
+- [[TRIM68]] — tripartite motif containing 68 · module 016 +
+- [[TRIM69]] — tripartite motif containing 69 · module 032 +
+- [[TRIM7]] — tripartite motif containing 7 · module 015 +
+- [[TRIM7-AS2]] — TRIM7 antisense RNA 2 · module 024 +
+- [[TRIM72]] — tripartite motif containing 72 · module 038 +
+- [[TRIM8]] — tripartite motif containing 8 · module 173 +
+- [[TRIM9]] — tripartite motif containing 9 · module 152 +
+- [[TRIML2]] — tripartite motif family like 2 · module 125 +
+- [[TRIO]] — trio Rho guanine nucleotide exchange factor · module 116 +
+- [[TRIOBP]] — TRIO and F-actin binding protein · module 136 +
+- [[TRIP10]] — thyroid hormone receptor interactor 10 · module 031 +
+- [[TRIP11]] — thyroid hormone receptor interactor 11 · module 028 +
+- [[TRIP12]] — thyroid hormone receptor interactor 12 · module 003 -
+- [[TRIP13]] — thyroid hormone receptor interactor 13 · module 006 +
+- [[TRIP4]] — thyroid hormone receptor interactor 4 · module 012 +
+- [[TRIP6]] — thyroid hormone receptor interactor 6 · module 068 +
+- [[TRIQK]] — triple QxxK/R motif containing · module 056 +
+- [[TRIR]] — telomerase RNA component interacting RNase · module 011 +
+- [[TRIT1]] — tRNA isopentenyltransferase 1 · module 017 +
+- [[TRMO]] — tRNA methyltransferase O · module 051 +
+- [[TRMT1]] — tRNA methyltransferase 1 · module 005 +
+- [[TRMT10A]] — tRNA methyltransferase 10A · module 083 +
+- [[TRMT10B]] — tRNA methyltransferase 10B · module 028 +
+- [[TRMT10C]] — tRNA methyltransferase 10C, mitochondrial RNase P subunit · module 007 +
+- [[TRMT11]] — tRNA methyltransferase 11 · module 004 +
+- [[TRMT112]] — tRNA methyltransferase activator subunit 11-2 · module 131 +
+- [[TRMT12]] — tRNA wybutosine-synthesizing protein 2 · module 005 +
+- [[TRMT13]] — tRNA methyltransferase 13 · module 088 +
+- [[TRMT1L]] — tRNA methyltransferase 1L · module 028 +
+- [[TRMT2A]] — tRNA methyltransferase 2A · module 107 +
+- [[TRMT2B]] — tRNA methyltransferase 2B · module 014 +
+- [[TRMT44]] — tRNA methyltransferase 44 homolog · module 210 +
+- [[TRMT5]] — tRNA methyltransferase 5 · module 007 +
+- [[TRMT6]] — tRNA methyltransferase 6 non-catalytic subunit · module 005 +
+- [[TRMT61A]] — tRNA methyltransferase 61A · module 001 +
+- [[TRMT61B]] — tRNA methyltransferase 61B · module 001 +
+- [[TRMU]] — tRNA mitochondrial 2-thiouridylase · module 164 +
+- [[TRNAU1AP]] — tRNA selenocysteine 1 associated protein 1 · module 004 -
+- [[TRNP1]] — TMF1 regulated nuclear protein 1 · module 141 +
+- [[TRNT1]] — tRNA nucleotidyl transferase 1 · module 005 +
+- [[TROAP]] — trophinin associated protein · module 022 +
+- [[TRPA1]] — transient receptor potential cation channel subfamily A member 1 · module 019 +
+- [[TRPC1]] — transient receptor potential cation channel subfamily C member 1 · module 023 +
+- [[TRPC4]] — transient receptor potential cation channel subfamily C member 4 · module 121 +
+- [[TRPC4AP]] — transient receptor potential cation channel subfamily C member 4 associated protein · module 131 +
+- [[TRPC6]] — transient receptor potential cation channel subfamily C member 6 · module 140 +
+- [[TRPM2]] — transient receptor potential cation channel subfamily M member 2 · module 150 +
+- [[TRPM2-AS]] — TRPM2 antisense RNA · module 027 +
+- [[TRPM3]] — transient receptor potential cation channel subfamily M member 3 · module 075 +
+- [[TRPM4]] — transient receptor potential cation channel subfamily M member 4 · module 094 +
+- [[TRPM7]] — transient receptor potential cation channel subfamily M member 7 · module 059 +
+- [[TRPM8]] — transient receptor potential cation channel subfamily M member 8 · module 087 +
+- [[TRPS1]] — transcriptional repressor GATA binding 1 · module 121 +
+- [[TRPT1]] — tRNA phosphotransferase 1 · module 003 +
+- [[TRPV1]] — transient receptor potential cation channel subfamily V member 1 · module 038 +
+- [[TRPV2]] — transient receptor potential cation channel subfamily V member 2 · module 078 +
+- [[TRPV3]] — transient receptor potential cation channel subfamily V member 3 · module 101 +
+- [[TRPV4]] — transient receptor potential cation channel subfamily V member 4 · module 027 +
+- [[TRRAP]] — transformation/transcription domain associated protein · module 036 +
+- [[TRUB1]] — TruB pseudouridine synthase family member 1 · module 028 +
+- [[TRUB2]] — TruB pseudouridine synthase family member 2 · module 001 +
+- [[TSBP1-AS1]] — TSBP1 and BTNL2 antisense RNA 1 · module 015 +
+- [[TSC1]] — TSC complex subunit 1 · module 122 +
+- [[TSC2]] — TSC complex subunit 2 · module 030 +
+- [[TSC22D1]] — TSC22 domain family member 1 · module 057 -
+- [[TSC22D2]] — TSC22 domain family member 2 · module 031 +
+- [[TSC22D3]] — TSC22 domain family member 3 · module 106 +
+- [[TSC22D4]] — TSC22 domain family member 4 · module 004 -
+- [[TSEN15]] — tRNA splicing endonuclease subunit 15 · module 063 +
+- [[TSEN2]] — tRNA splicing endonuclease subunit 2 · module 004 +
+- [[TSEN34]] — tRNA splicing endonuclease subunit 34 · module 003 +
+- [[TSEN54]] — tRNA splicing endonuclease subunit 54 · module 077 +
+- [[TSFM]] — Ts translation elongation factor, mitochondrial · module 168 +
+- [[TSG101]] — tumor susceptibility 101 · module 170 +
+- [[TSGA10]] — testis specific 10 · module 010 +
+- [[TSHZ1]] — teashirt zinc finger homeobox 1 · module 201 +
+- [[TSHZ2]] — teashirt zinc finger homeobox 2 · module 009 +
+- [[TSHZ3]] — teashirt zinc finger homeobox 3 · module 013 +
+- [[TSHZ3-AS1]] — TSHZ3 antisense RNA 1 · module 013 +
+- [[TSKU]] — tsukushi, small leucine rich proteoglycan · module 020 +
+- [[TSN]] — translin · module 020 +
+- [[TSNARE1]] — t-SNARE domain containing 1 · module 033 +
+- [[TSNAX]] — translin associated factor X · module 065 +
+- [[TSNAX-DISC1]] — TSNAX-DISC1 readthrough (NMD candidate) · module 037 +
+- [[TSPAN1]] — tetraspanin 1 · module 044 +
+- [[TSPAN12]] — tetraspanin 12 · module 009 +
+- [[TSPAN13]] — tetraspanin 13 · module 042 +
+- [[TSPAN14]] — tetraspanin 14 · module 100 +
+- [[TSPAN15]] — tetraspanin 15 · module 014 +
+- [[TSPAN17]] — tetraspanin 17 · module 002 +
+- [[TSPAN2]] — tetraspanin 2 · module 014 +
+- [[TSPAN3]] — tetraspanin 3 · module 012 -
+- [[TSPAN31]] — tetraspanin 31 · module 077 -
+- [[TSPAN33]] — tetraspanin 33 · module 115 +
+- [[TSPAN4]] — tetraspanin 4 · module 078 +
+- [[TSPAN5]] — tetraspanin 5 · module 084 +
+- [[TSPAN6]] — tetraspanin 6 · module 029 +
+- [[TSPAN7]] — tetraspanin 7 · module 045 +
+- [[TSPAN8]] — tetraspanin 8 · module 044 +
+- [[TSPAN9]] — tetraspanin 9 · module 084 +
+- [[TSPEAR]] — thrombospondin type laminin G domain and EAR repeats · module 090 +
+- [[TSPO]] — translocator protein · module 003 +
+- [[TSPOAP1]] — TSPO associated protein 1 · module 055 +
+- [[TSPOAP1-AS1]] — TSPOAP1, SUPT4H1 and RNF43 antisense RNA 1 · module 021 +
+- [[TSPYL1]] — TSPY like 1 · module 007 +
+- [[TSPYL2]] — TSPY like 2 · module 041 +
+- [[TSPYL4]] — TSPY like 4 · module 010 +

@@ -1,0 +1,283 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes U
+
+273 genes. Back to [[Genes by letter]].
+
+- [[U2AF1]] — U2 small nuclear RNA auxiliary factor 1 · module 052 +
+- [[U2AF1L4]] — U2 small nuclear RNA auxiliary factor 1 like 4 · module 012 +
+- [[U2AF2]] — U2 small nuclear RNA auxiliary factor 2 · module 126 +
+- [[U2SURP]] — U2 snRNP associated SURP domain containing · module 001 +
+- [[UACA]] — uveal autoantigen with coiled-coil domains and ankyrin repeats · module 161 +
+- [[UAP1]] — UDP-N-acetylglucosamine pyrophosphorylase 1 · module 052 +
+- [[UAP1L1]] — UDP-N-acetylglucosamine pyrophosphorylase 1 like 1 · module 059 +
+- [[UBA1]] — ubiquitin like modifier activating enzyme 1 · module 096 +
+- [[UBA2]] — ubiquitin like modifier activating enzyme 2 · module 033 +
+- [[UBA3]] — ubiquitin like modifier activating enzyme 3 · module 198 +
+- [[UBA5]] — ubiquitin like modifier activating enzyme 5 · module 065 +
+- [[UBA52]] — ubiquitin A-52 residue ribosomal protein fusion product 1 · module 043 +
+- [[UBA6]] — ubiquitin like modifier activating enzyme 6 · module 154 +
+- [[UBA6-DT]] — UBA6 divergent transcript · module 026 +
+- [[UBA7]] — ubiquitin like modifier activating enzyme 7 · module 032 +
+- [[UBAC1]] — UBA domain containing 1 · module 057 +
+- [[UBAC2]] — UBA domain containing 2 · module 036 +
+- [[UBALD1]] — UBA like domain containing 1 · module 145 +
+- [[UBALD2]] — UBA like domain containing 2 · module 022 +
+- [[UBAP1]] — ubiquitin associated protein 1 · module 020 -
+- [[UBAP1L]] — ubiquitin associated protein 1 like · module 037 +
+- [[UBAP2]] — ubiquitin associated protein 2 · module 093 +
+- [[UBAP2L]] — ubiquitin associated protein 2 like · module 173 +
+- [[UBASH3B]] — ubiquitin associated and SH3 domain containing B · module 151 +
+- [[UBB]] — ubiquitin B · module 060 +
+- [[UBBP4-1]] · module 009 +
+- [[UBC]] — ubiquitin C · module 012 +
+- [[UBE2A]] — ubiquitin conjugating enzyme E2 A · module 054 -
+- [[UBE2B]] — ubiquitin conjugating enzyme E2 B · module 074 +
+- [[UBE2C]] — ubiquitin conjugating enzyme E2 C · module 022 +
+- [[UBE2CP5]] — ubiquitin conjugating enzyme E2 C pseudogene 5 · module 038 +
+- [[UBE2D1]] — ubiquitin conjugating enzyme E2 D1 · module 093 +
+- [[UBE2D2]] — ubiquitin conjugating enzyme E2 D2 · module 003 +
+- [[UBE2D3]] — ubiquitin conjugating enzyme E2 D3 · module 023 +
+- [[UBE2D3-AS1]] — UBE2D3 antisense RNA 1 · module 083 +
+- [[UBE2D4]] — ubiquitin conjugating enzyme E2 D4 · module 001 +
+- [[UBE2E1]] — ubiquitin conjugating enzyme E2 E1 · module 098 +
+- [[UBE2E2]] — ubiquitin conjugating enzyme E2 E2 · module 113 +
+- [[UBE2E3]] — ubiquitin conjugating enzyme E2 E3 · module 041 -
+- [[UBE2F]] — ubiquitin conjugating enzyme E2 F (putative) · module 002 +
+- [[UBE2F-SCLY]] — UBE2F-SCLY readthrough (NMD candidate) · module 038 +
+- [[UBE2G1]] — ubiquitin conjugating enzyme E2 G1 · module 163 +
+- [[UBE2G2]] — ubiquitin conjugating enzyme E2 G2 · module 018 +
+- [[UBE2H]] — ubiquitin conjugating enzyme E2 H · module 031 +
+- [[UBE2I]] — ubiquitin conjugating enzyme E2 I · module 078 +
+- [[UBE2J1]] — ubiquitin conjugating enzyme E2 J1 · module 049 +
+- [[UBE2J2]] — ubiquitin conjugating enzyme E2 J2 · module 156 +
+- [[UBE2K]] — ubiquitin conjugating enzyme E2 K · module 018 +
+- [[UBE2L3]] — ubiquitin conjugating enzyme E2 L3 · module 036 +
+- [[UBE2L6]] — ubiquitin conjugating enzyme E2 L6 · module 032 +
+- [[UBE2M]] — ubiquitin conjugating enzyme E2 M · module 072 +
+- [[UBE2N]] — ubiquitin conjugating enzyme E2 N · module 074 +
+- [[UBE2O]] — ubiquitin conjugating enzyme E2 O · module 164 +
+- [[UBE2Q1]] — ubiquitin conjugating enzyme E2 Q1 · module 007 +
+- [[UBE2Q2]] — ubiquitin conjugating enzyme E2 Q2 · module 190 +
+- [[UBE2Q2P1]] — UBE2Q2 pseudogene 1 · module 221 +
+- [[UBE2Q2P1-1]] · module 203 +
+- [[UBE2Q2P13]] — UBE2Q2 pseudogene 13 · module 013 +
+- [[UBE2Q2P2]] — UBE2Q2 pseudogene 2 · module 099 +
+- [[UBE2Q2P2-1]] · module 159 +
+- [[UBE2QL1]] — ubiquitin conjugating enzyme E2 QL1 · module 155 +
+- [[UBE2R2]] — ubiquitin conjugating enzyme E2 R2 · module 003 +
+- [[UBE2R2-AS1]] — UBE2R2 antisense RNA 1 · module 026 +
+- [[UBE2S]] — ubiquitin conjugating enzyme E2 S · module 022 +
+- [[UBE2T]] — ubiquitin conjugating enzyme E2 T · module 067 +
+- [[UBE2V1]] — ubiquitin conjugating enzyme E2 V1 · module 025 +
+- [[UBE2V2]] — ubiquitin conjugating enzyme E2 V2 · module 028 +
+- [[UBE2W]] — ubiquitin conjugating enzyme E2 W · module 172 +
+- [[UBE2Z]] — ubiquitin conjugating enzyme E2 Z · module 070 +
+- [[UBE3A]] — ubiquitin protein ligase E3A · module 051 +
+- [[UBE3B]] — ubiquitin protein ligase E3B · module 148 +
+- [[UBE3C]] — ubiquitin protein ligase E3C · module 018 +
+- [[UBE3D]] — ubiquitin protein ligase E3D · module 033 +
+- [[UBE4A]] — ubiquitination factor E4A · module 210 +
+- [[UBE4B]] — ubiquitination factor E4B · module 072 +
+- [[UBFD1]] — ubiquitin family domain containing 1 · module 025 +
+- [[UBIAD1]] — UbiA prenyltransferase domain containing 1 · module 005 +
+- [[UBL3]] — ubiquitin like 3 · module 232 +
+- [[UBL4A]] — ubiquitin like 4A · module 033 +
+- [[UBL5]] — ubiquitin like 5 · module 048 +
+- [[UBL7]] — ubiquitin like 7 · module 074 +
+- [[UBL7-DT]] — UBL7 divergent transcript · module 071 +
+- [[UBLCP1]] — ubiquitin like domain containing CTD phosphatase 1 · module 028 +
+- [[UBN1]] — ubinuclein 1 · module 020 -
+- [[UBN2]] — ubinuclein 2 · module 069 +
+- [[UBOX5]] — U-box domain containing 5 · module 142 +
+- [[UBOX5-AS1]] — UBOX5 antisense RNA 1 · module 021 +
+- [[UBP1]] — upstream binding protein 1 · module 163 +
+- [[UBQLN1]] — ubiquilin 1 · module 025 +
+- [[UBQLN2]] — ubiquilin 2 · module 016 +
+- [[UBQLN4]] — ubiquilin 4 · module 126 +
+- [[UBR1]] — ubiquitin protein ligase E3 component n-recognin 1 · module 012 +
+- [[UBR2]] — ubiquitin protein ligase E3 component n-recognin 2 · module 187 +
+- [[UBR3]] — ubiquitin protein ligase E3 component n-recognin 3 · module 072 +
+- [[UBR4]] — ubiquitin protein ligase E3 component n-recognin 4 · module 198 +
+- [[UBR5]] — ubiquitin protein ligase E3 component n-recognin 5 · module 130 +
+- [[UBR5-DT]] — UBR5 divergent transcript · module 014 +
+- [[UBR7]] — ubiquitin protein ligase E3 component n-recognin 7 · module 006 +
+- [[UBTD1]] — ubiquitin domain containing 1 · module 003 +
+- [[UBTD2]] — ubiquitin domain containing 2 · module 154 +
+- [[UBTF]] — upstream binding transcription factor · module 137 +
+- [[UBXN1]] — UBX domain protein 1 · module 074 +
+- [[UBXN11]] — UBX domain protein 11 · module 031 +
+- [[UBXN2A]] — UBX domain protein 2A · module 046 +
+- [[UBXN2B]] — UBX domain protein 2B · module 017 +
+- [[UBXN4]] — UBX domain protein 4 · module 064 +
+- [[UBXN6]] — UBX domain protein 6 · module 076 +
+- [[UBXN7]] — UBX domain protein 7 · module 069 +
+- [[UBXN8]] — UBX domain protein 8 · module 035 +
+- [[UCA1]] — urothelial cancer associated 1 · module 008 +
+- [[UCHL1]] — ubiquitin C-terminal hydrolase L1 · module 117 +
+- [[UCHL3]] — ubiquitin C-terminal hydrolase L3 · module 184 +
+- [[UCHL5]] — ubiquitin C-terminal hydrolase L5 · module 215 +
+- [[UCK1]] — uridine-cytidine kinase 1 · module 107 +
+- [[UCK2]] — uridine-cytidine kinase 2 · module 018 +
+- [[UCKL1]] — uridine-cytidine kinase 1 like 1 · module 002 +
+- [[UCKL1-AS1]] — UCKL1 antisense RNA 1 · module 047 +
+- [[UCP2]] — uncoupling protein 2 · module 029 +
+- [[UEVLD]] — UEV and lactate/malate dehyrogenase domains · module 194 +
+- [[UFC1]] — ubiquitin-fold modifier conjugating enzyme 1 · module 023 +
+- [[UFD1]] — ubiquitin recognition factor in ER associated degradation 1 · module 072 +
+- [[UFL1]] — UFM1 specific ligase 1 · module 041 +
+- [[UFL1-AS1]] — UFL1 antisense RNA 1 · module 010 +
+- [[UFM1]] — ubiquitin fold modifier 1 · module 056 +
+- [[UFSP2]] — UFM1 specific peptidase 2 · module 041 +
+- [[UGCG]] — UDP-glucose ceramide glucosyltransferase · module 167 +
+- [[UGDH]] — UDP-glucose 6-dehydrogenase · module 038 +
+- [[UGDH-AS1]] — UGDH antisense RNA 1 · module 023 +
+- [[UGGT1]] — UDP-glucose glycoprotein glucosyltransferase 1 · module 020 +
+- [[UGGT2]] — UDP-glucose glycoprotein glucosyltransferase 2 · module 059 -
+- [[UGP2]] — UDP-glucose pyrophosphorylase 2 · module 106 +
+- [[UGT1A1]] — UDP glucuronosyltransferase family 1 member A1 · module 044 +
+- [[UGT1A6]] — UDP glucuronosyltransferase family 1 member A6 · module 044 +
+- [[UGT1A8]] — UDP glucuronosyltransferase family 1 member A8 · module 044 +
+- [[UGT1A9]] — UDP glucuronosyltransferase family 1 member A9 · module 044 +
+- [[UGT2B7]] — UDP glucuronosyltransferase family 2 member B7 · module 062 +
+- [[UGT8]] — UDP glycosyltransferase 8 · module 055 +
+- [[UHMK1]] — U2AF homology motif kinase 1 · module 025 +
+- [[UHRF1]] — ubiquitin like with PHD and ring finger domains 1 · module 006 +
+- [[UHRF2]] — ubiquitin like with PHD and ring finger domains 2 · module 084 +
+- [[UIMC1]] — ubiquitin interaction motif containing 1 · module 018 +
+- [[ULBP1]] — UL16 binding protein 1 · module 063 +
+- [[ULBP2]] — UL16 binding protein 2 · module 003 +
+- [[ULBP3]] — UL16 binding protein 3 · module 015 -
+- [[ULK1]] — unc-51 like autophagy activating kinase 1 · module 145 +
+- [[ULK2]] — unc-51 like autophagy activating kinase 2 · module 001 +
+- [[ULK3]] — unc-51 like kinase 3 · module 002 +
+- [[ULK4]] — unc-51 like kinase 4 · module 185 +
+- [[UMAD1]] — UBAP1-MVB12-associated (UMA) domain containing 1 · module 024 +
+- [[UMPS]] — uridine monophosphate synthetase · module 001 +
+- [[UNC119]] — unc-119 lipid binding chaperone · module 030 +
+- [[UNC119B]] — unc-119 lipid binding chaperone B · module 046 +
+- [[UNC13A]] — unc-13 homolog A · module 034 +
+- [[UNC13B]] — unc-13 homolog B · module 159 +
+- [[UNC13D]] — unc-13 homolog D · module 031 +
+- [[UNC45A]] — unc-45 myosin chaperone A · module 030 +
+- [[UNC50]] — unc-50 inner nuclear membrane RNA binding protein · module 015 +
+- [[UNC5A]] — unc-5 netrin receptor A · module 031 +
+- [[UNC5B]] — unc-5 netrin receptor B · module 161 +
+- [[UNC5C]] — unc-5 netrin receptor C · module 009 +
+- [[UNC5CL]] — unc-5 family C-terminal like · module 008 +
+- [[UNC5D]] — unc-5 netrin receptor D · module 019 +
+- [[UNC79]] — unc-79 subunit of NALCN channel complex · module 026 +
+- [[UNC80]] — unc-80 subunit of NALCN channel complex · module 009 +
+- [[UNC93B1]] — unc-93B1 regulator of TLR signaling · module 032 +
+- [[UNG]] — uracil DNA glycosylase · module 006 +
+- [[UNK]] — unk zinc finger · module 095 +
+- [[UNKL]] — unk like zinc finger · module 064 +
+- [[UPF1]] — UPF1 RNA helicase and ATPase · module 036 +
+- [[UPF2]] — UPF2 regulator of nonsense mediated mRNA decay · module 074 +
+- [[UPF3A]] — UPF3A regulator of nonsense mediated mRNA decay · module 088 +
+- [[UPF3B]] — UPF3B regulator of nonsense mediated mRNA decay · module 020 -
+- [[UPK1A-AS1]] — UPK1A antisense RNA 1 · module 103 +
+- [[UPK1B]] — uroplakin 1B · module 019 +
+- [[UPK2]] — uroplakin 2 · module 035 +
+- [[UPP1]] — uridine phosphorylase 1 · module 125 +
+- [[UPP2]] — uridine phosphorylase 2 · module 015 +
+- [[UPRT]] — uracil phosphoribosyltransferase homolog · module 105 +
+- [[UQCC1]] — ubiquinol-cytochrome c reductase complex assembly factor 1 · module 089 +
+- [[UQCC2]] — ubiquinol-cytochrome c reductase complex assembly factor 2 · module 004 +
+- [[UQCC3]] — ubiquinol-cytochrome c reductase complex assembly factor 3 · module 024 +
+- [[UQCR10]] — ubiquinol-cytochrome c reductase, complex III subunit X · module 048 +
+- [[UQCR11]] — ubiquinol-cytochrome c reductase, complex III subunit XI · module 048 +
+- [[UQCRB]] — ubiquinol-cytochrome c reductase binding protein · module 043 +
+- [[UQCRC1]] — ubiquinol-cytochrome c reductase core protein 1 · module 029 +
+- [[UQCRC2]] — ubiquinol-cytochrome c reductase core protein 2 · module 207 +
+- [[UQCRFS1]] — ubiquinol-cytochrome c reductase, Rieske iron-sulfur polypeptide 1 · module 011 +
+- [[UQCRH]] — ubiquinol-cytochrome c reductase hinge protein · module 043 +
+- [[UQCRQ]] — ubiquinol-cytochrome c reductase complex III subunit VII · module 048 +
+- [[URB1]] — URB1 ribosome biogenesis factor · module 018 +
+- [[URB2]] — URB2 ribosome biogenesis homolog · module 005 +
+- [[URGCP]] — upregulator of cell proliferation · module 011 +
+- [[URI1]] — URI1 prefoldin like chaperone · module 040 +
+- [[URM1]] — ubiquitin related modifier 1 · module 015 +
+- [[UROD]] — uroporphyrinogen decarboxylase · module 007 +
+- [[UROS]] — uroporphyrinogen III synthase · module 096 +
+- [[USB1]] — U6 snRNA biogenesis phosphodiesterase 1 · module 199 +
+- [[USE1]] — unconventional SNARE in the ER 1 · module 038 +
+- [[USF1]] — upstream transcription factor 1 · module 020 +
+- [[USF2]] — upstream transcription factor 2, c-fos interacting · module 050 +
+- [[USF3]] — upstream transcription factor family member 3 · module 118 +
+- [[USH1C]] — USH1 protein network component harmonin · module 055 +
+- [[USH2A]] — usherin · module 140 +
+- [[USO1]] — USO1 vesicle transport factor · module 042 +
+- [[USP1]] — ubiquitin specific peptidase 1 · module 091 +
+- [[USP10]] — ubiquitin specific peptidase 10 · module 033 +
+- [[USP11]] — ubiquitin specific peptidase 11 · module 159 +
+- [[USP12]] — ubiquitin specific peptidase 12 · module 014 +
+- [[USP13]] — ubiquitin specific peptidase 13 · module 143 +
+- [[USP14]] — ubiquitin specific peptidase 14 · module 004 +
+- [[USP15]] — ubiquitin specific peptidase 15 · module 001 -
+- [[USP16]] — ubiquitin specific peptidase 16 · module 051 +
+- [[USP18]] — ubiquitin specific peptidase 18 · module 032 +
+- [[USP19]] — ubiquitin specific peptidase 19 · module 138 +
+- [[USP2]] — ubiquitin specific peptidase 2 · module 083 -
+- [[USP2-AS1]] — USP2 antisense RNA 1 · module 018 +
+- [[USP20]] — ubiquitin specific peptidase 20 · module 052 +
+- [[USP21]] — ubiquitin specific peptidase 21 · module 153 +
+- [[USP22]] — ubiquitin specific peptidase 22 · module 153 +
+- [[USP24]] — ubiquitin specific peptidase 24 · module 001 +
+- [[USP25]] — ubiquitin specific peptidase 25 · module 216 +
+- [[USP27X]] — ubiquitin specific peptidase 27 X-linked · module 011 +
+- [[USP28]] — ubiquitin specific peptidase 28 · module 164 +
+- [[USP3]] — ubiquitin specific peptidase 3 · module 204 +
+- [[USP3-AS1]] — USP3 antisense RNA 1 · module 039 +
+- [[USP30]] — ubiquitin specific peptidase 30 · module 183 +
+- [[USP31]] — ubiquitin specific peptidase 31 · module 018 +
+- [[USP32]] — ubiquitin specific peptidase 32 · module 120 +
+- [[USP33]] — ubiquitin specific peptidase 33 · module 045 +
+- [[USP34]] — ubiquitin specific peptidase 34 · module 065 -
+- [[USP34-DT]] — USP34 divergent transcript · module 035 +
+- [[USP35]] — ubiquitin specific peptidase 35 · module 030 +
+- [[USP36]] — ubiquitin specific peptidase 36 · module 038 +
+- [[USP37]] — ubiquitin specific peptidase 37 · module 164 +
+- [[USP38]] — ubiquitin specific peptidase 38 · module 215 +
+- [[USP38-DT]] — USP38 divergent transcript · module 010 +
+- [[USP39]] — ubiquitin specific peptidase 39 · module 025 +
+- [[USP4]] — ubiquitin specific peptidase 4 · module 129 +
+- [[USP40]] — ubiquitin specific peptidase 40 · module 088 +
+- [[USP42]] — ubiquitin specific peptidase 42 · module 054 +
+- [[USP43]] — ubiquitin specific peptidase 43 · module 014 +
+- [[USP45]] — ubiquitin specific peptidase 45 · module 018 +
+- [[USP46]] — ubiquitin specific peptidase 46 · module 018 +
+- [[USP47]] — ubiquitin specific peptidase 47 · module 064 +
+- [[USP48]] — ubiquitin specific peptidase 48 · module 057 +
+- [[USP49]] — ubiquitin specific peptidase 49 · module 037 +
+- [[USP5]] — ubiquitin specific peptidase 5 · module 025 +
+- [[USP50]] — ubiquitin specific peptidase 50 · module 039 +
+- [[USP53]] — ubiquitin specific peptidase 53 · module 031 +
+- [[USP54]] — ubiquitin specific peptidase 54 · module 044 +
+- [[USP6NL]] — USP6 N-terminal like · module 008 +
+- [[USP7]] — ubiquitin specific peptidase 7 · module 003 -
+- [[USP8]] — ubiquitin specific peptidase 8 · module 012 +
+- [[USP9X]] — ubiquitin specific peptidase 9 X-linked · module 015 -
+- [[USP9Y]] — ubiquitin specific peptidase 9 Y-linked · module 177 +
+- [[USPL1]] — ubiquitin specific peptidase like 1 · module 179 +
+- [[UST]] — uronyl 2-sulfotransferase · module 068 +
+- [[UTP11]] — UTP11 small subunit processome component · module 004 +
+- [[UTP14A]] — UTP14A small subunit processome component · module 001 +
+- [[UTP15]] — UTP15 small subunit processome component · module 001 +
+- [[UTP18]] — UTP18 small subunit processome component · module 033 +
+- [[UTP20]] — UTP20 small subunit processome component · module 001 +
+- [[UTP23]] — UTP23 small subunit processome component · module 011 +
+- [[UTP25]] — UTP25 small subunit processome component · module 001 +
+- [[UTP3]] — UTP3 small subunit processome component · module 011 +
+- [[UTP4]] — UTP4 small subunit processome component · module 005 +
+- [[UTP6]] — UTP6 small subunit processome component · module 049 +
+- [[UTRN]] — utrophin · module 003 -
+- [[UTY]] — ubiquitously transcribed tetratricopeptide repeat containing, Y-linked · module 177 +
+- [[UVRAG]] — UV radiation resistance associated · module 014 +
+- [[UVSSA]] — UV stimulated scaffold protein A · module 052 +
+- [[UXS1]] — UDP-glucuronate decarboxylase 1 · module 078 +
+- [[UXT]] — ubiquitously expressed prefoldin like chaperone · module 024 +

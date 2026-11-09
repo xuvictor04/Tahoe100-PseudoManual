@@ -1,0 +1,465 @@
+===== tahoemap run --data C:\tahoe\Tahoe-100M --out C:\tahoe\out started 2026-11-07 19:44:33 | Python 3.13.17 | Windows-11-10.0.26200-SP0 =====
+[19:44:33] Keeping the computer awake while tahoemap run runs (Windows)
+[19:44:33] Plan: build -> effects -> tensor -> tables -> embed -> reference -> relations -> graph -> validate -> vault -> map   (build: not run yet)
+[19:44:33] ===== stage build =====
+[19:44:33] Indexing parquet files (one-time, reads only file footers) ...
+[19:45:37]   found: expression=3388, pseudobulk=1026, gene=1, sample=1, cell_line=1, drug=1, per_cell_metadata=1, other=0, unreadable=0
+[19:45:37] Finding the plate of each of 3388 files ...
+[19:45:37] 3388 files on 14 plates -> one group per plate, 5 at a time (~2.6 GB each)
+[19:46:08]     plate13: 25/287 files, 705,600 cells, ~5 min left
+[19:46:08]     plate8: 25/302 files, 705,625 cells, ~5 min left
+[19:46:09]     plate10: 25/274 files, 705,625 cells, ~4 min left
+[19:46:10]     plate2: 25/272 files, 705,600 cells, ~5 min left
+[19:46:12]     plate12: 25/361 files, 705,600 cells, ~7 min left
+[19:46:33]     plate13: 50/287 files, 1,411,200 cells, ~4 min left
+[19:46:33]     plate8: 50/302 files, 1,411,250 cells, ~4 min left
+[19:46:33]     plate10: 50/274 files, 1,411,233 cells, ~4 min left
+[19:46:39]     plate2: 50/272 files, 1,411,200 cells, ~4 min left
+[19:46:39]     plate12: 50/361 files, 1,411,200 cells, ~6 min left
+[19:46:57]     plate10: 75/274 files, 2,116,833 cells, ~3 min left
+[19:46:58]     plate13: 75/287 files, 2,116,800 cells, ~4 min left
+[19:46:58]     plate8: 75/302 files, 2,116,875 cells, ~4 min left
+[19:47:05]     plate2: 75/272 files, 2,116,800 cells, ~4 min left
+[19:47:06]     plate12: 75/361 files, 2,116,800 cells, ~5 min left
+[19:47:22]     plate10: 100/274 files, 2,822,433 cells, ~3 min left
+[19:47:22]     plate13: 100/287 files, 2,822,400 cells, ~3 min left
+[19:47:24]     plate8: 100/302 files, 2,822,500 cells, ~3 min left
+[19:47:32]     plate2: 100/272 files, 2,822,400 cells, ~3 min left
+[19:47:33]     plate12: 100/361 files, 2,822,400 cells, ~5 min left
+[19:47:47]     plate10: 125/274 files, 3,528,033 cells, ~2 min left
+[19:47:47]     plate13: 125/287 files, 3,528,000 cells, ~3 min left
+[19:47:49]     plate8: 125/302 files, 3,528,125 cells, ~3 min left
+[19:47:59]     plate2: 125/272 files, 3,528,000 cells, ~3 min left
+[19:48:00]     plate12: 125/361 files, 3,528,000 cells, ~4 min left
+[19:48:11]     plate10: 150/274 files, 4,233,633 cells, ~2 min left
+[19:48:13]     plate13: 150/287 files, 4,233,600 cells, ~2 min left
+[19:48:15]     plate8: 150/302 files, 4,233,750 cells, ~3 min left
+[19:48:25]     plate2: 150/272 files, 4,233,600 cells, ~2 min left
+[19:48:27]     plate12: 150/361 files, 4,233,600 cells, ~4 min left
+[19:48:37]     plate10: 175/274 files, 4,939,233 cells, ~2 min left
+[19:48:38]     plate13: 175/287 files, 4,939,200 cells, ~2 min left
+[19:48:40]     plate8: 175/302 files, 4,939,375 cells, ~2 min left
+[19:48:52]     plate2: 175/272 files, 4,939,200 cells, ~2 min left
+[19:48:53]     plate12: 175/361 files, 4,939,200 cells, ~3 min left
+[19:49:02]     plate10: 200/274 files, 5,644,833 cells, ~1 min left
+[19:49:03]     plate13: 200/287 files, 5,644,800 cells, ~1 min left
+[19:49:06]     plate8: 200/302 files, 5,645,000 cells, ~2 min left
+[19:49:18]     plate12: 200/361 files, 5,644,800 cells, ~3 min left
+[19:49:20]     plate2: 200/272 files, 5,644,800 cells, ~1 min left
+[19:49:27]     plate10: 225/274 files, 6,350,433 cells, ~1 min left
+[19:49:29]     plate13: 225/287 files, 6,350,400 cells, ~1 min left
+[19:49:31]     plate8: 225/302 files, 6,350,625 cells, ~1 min left
+[19:49:46]     plate12: 225/361 files, 6,350,400 cells, ~2 min left
+[19:49:48]     plate2: 225/272 files, 6,350,400 cells, ~1 min left
+[19:49:52]     plate10: 250/274 files, 7,056,033 cells, ~0 min left
+[19:49:54]     plate13: 250/287 files, 7,056,000 cells, ~1 min left
+[19:49:58]     plate8: 250/302 files, 7,056,250 cells, ~1 min left
+[19:50:11]     plate12: 250/361 files, 7,056,000 cells, ~2 min left
+[19:50:14]     plate2: 250/272 files, 7,056,000 cells, ~0 min left
+[19:50:18]   plate10 done (1/14 plates, 4.6 min)
+[19:50:20]     plate13: 275/287 files, 7,761,600 cells, ~0 min left
+[19:50:23]     plate8: 275/302 files, 7,761,875 cells, ~0 min left
+[19:50:34]   plate13 done (2/14 plates, 4.9 min)
+[19:50:36]     plate12: 275/361 files, 7,761,600 cells, ~2 min left
+[19:50:41]   plate2 done (3/14 plates, 5.0 min)
+[19:50:46]     plate6: 25/258 files, 705,625 cells, ~4 min left
+[19:50:48]     plate8: 300/302 files, 8,467,500 cells, ~0 min left
+[19:50:52]   plate8 done (4/14 plates, 5.2 min)
+[19:50:58]     plate11: 25/250 files, 705,600 cells, ~4 min left
+[19:51:01]     plate12: 300/361 files, 8,467,200 cells, ~1 min left
+[19:51:04]     plate4: 25/237 files, 705,625 cells, ~3 min left
+[19:51:14]     plate6: 50/258 files, 1,411,250 cells, ~4 min left
+[19:51:17]     plate14: 25/220 files, 705,600 cells, ~3 min left
+[19:51:21]     plate11: 50/250 files, 1,411,200 cells, ~3 min left
+[19:51:26]     plate12: 325/361 files, 9,172,800 cells, ~1 min left
+[19:51:27]     plate4: 50/237 files, 1,411,250 cells, ~3 min left
+[19:51:41]     plate14: 50/220 files, 1,411,200 cells, ~3 min left
+[19:51:42]     plate6: 75/258 files, 2,116,875 cells, ~3 min left
+[19:51:45]     plate11: 75/250 files, 2,116,800 cells, ~3 min left
+[19:51:51]     plate4: 75/237 files, 2,116,875 cells, ~3 min left
+[19:51:51]     plate12: 350/361 files, 9,878,400 cells, ~0 min left
+[19:52:06]   plate12 done (5/14 plates, 6.4 min)
+[19:52:06]     plate14: 75/220 files, 2,116,800 cells, ~2 min left
+[19:52:09]     plate11: 100/250 files, 2,822,400 cells, ~2 min left
+[19:52:11]     plate6: 100/258 files, 2,822,500 cells, ~3 min left
+[19:52:16]     plate4: 100/237 files, 2,822,500 cells, ~2 min left
+[19:52:30]     plate5: 25/210 files, 705,625 cells, ~3 min left
+[19:52:32]     plate14: 100/220 files, 2,822,400 cells, ~2 min left
+[19:52:33]     plate11: 125/250 files, 3,528,000 cells, ~2 min left
+[19:52:39]     plate6: 125/258 files, 3,528,125 cells, ~3 min left
+[19:52:41]     plate4: 125/237 files, 3,528,125 cells, ~2 min left
+[19:52:55]     plate5: 50/210 files, 1,411,250 cells, ~3 min left
+[19:52:57]     plate11: 150/250 files, 4,233,600 cells, ~2 min left
+[19:52:57]     plate14: 125/220 files, 3,528,000 cells, ~2 min left
+[19:53:07]     plate4: 150/237 files, 4,233,750 cells, ~1 min left
+[19:53:08]     plate6: 150/258 files, 4,233,750 cells, ~2 min left
+[19:53:20]     plate5: 75/210 files, 2,116,875 cells, ~2 min left
+[19:53:21]     plate11: 175/250 files, 4,939,200 cells, ~1 min left
+[19:53:22]     plate14: 150/220 files, 4,233,600 cells, ~1 min left
+[19:53:34]     plate4: 175/237 files, 4,939,375 cells, ~1 min left
+[19:53:36]     plate6: 175/258 files, 4,939,375 cells, ~2 min left
+[19:53:45]     plate11: 200/250 files, 5,644,800 cells, ~1 min left
+[19:53:45]     plate5: 100/210 files, 2,822,500 cells, ~2 min left
+[19:53:48]     plate14: 175/220 files, 4,939,200 cells, ~1 min left
+[19:53:59]     plate4: 200/237 files, 5,645,000 cells, ~1 min left
+[19:54:05]     plate6: 200/258 files, 5,645,000 cells, ~1 min left
+[19:54:10]     plate11: 225/250 files, 6,350,400 cells, ~0 min left
+[19:54:10]     plate5: 125/210 files, 3,528,125 cells, ~1 min left
+[19:54:15]     plate14: 200/220 files, 5,644,800 cells, ~0 min left
+[19:54:24]     plate4: 225/237 files, 6,350,625 cells, ~0 min left
+[19:54:33]     plate11: 250/250 files, 7,056,000 cells, ~0 min left
+[19:54:34]     plate6: 225/258 files, 6,350,625 cells, ~1 min left
+[19:54:34]   plate11 done (6/14 plates, 8.9 min)
+[19:54:35]     plate5: 150/210 files, 4,233,750 cells, ~1 min left
+[19:54:45]   plate14 done (7/14 plates, 9.1 min)
+[19:54:46]   plate4 done (8/14 plates, 9.1 min)
+[19:54:57]     plate5: 175/210 files, 4,939,375 cells, ~1 min left
+[19:54:57]     plate9: 25/197 files, 705,625 cells, ~3 min left
+[19:55:02]     plate6: 250/258 files, 7,056,250 cells, ~0 min left
+[19:55:09]     plate7: 25/185 files, 705,625 cells, ~3 min left
+[19:55:10]     plate1: 25/188 files, 705,600 cells, ~3 min left
+[19:55:14]   plate6 done (9/14 plates, 9.6 min)
+[19:55:20]     plate9: 50/197 files, 1,411,250 cells, ~2 min left
+[19:55:21]     plate5: 200/210 files, 5,645,000 cells, ~0 min left
+[19:55:33]     plate7: 50/185 files, 1,411,250 cells, ~2 min left
+[19:55:34]     plate1: 50/188 files, 1,411,200 cells, ~2 min left
+[19:55:34]   plate5 done (10/14 plates, 9.9 min)
+[19:55:37]     plate3: 25/147 files, 705,600 cells, ~2 min left
+[19:55:43]     plate9: 75/197 files, 2,116,875 cells, ~2 min left
+[19:55:54]     plate7: 75/185 files, 2,116,875 cells, ~2 min left
+[19:55:56]     plate1: 75/188 files, 2,116,800 cells, ~2 min left
+[19:55:58]     plate3: 50/147 files, 1,411,200 cells, ~1 min left
+[19:56:04]     plate9: 100/197 files, 2,822,500 cells, ~1 min left
+[19:56:15]     plate7: 100/185 files, 2,822,500 cells, ~1 min left
+[19:56:18]     plate3: 75/147 files, 2,116,800 cells, ~1 min left
+[19:56:19]     plate1: 100/188 files, 2,822,400 cells, ~1 min left
+[19:56:25]     plate9: 125/197 files, 3,528,125 cells, ~1 min left
+[19:56:35]     plate7: 125/185 files, 3,528,125 cells, ~1 min left
+[19:56:39]     plate3: 100/147 files, 2,822,400 cells, ~1 min left
+[19:56:41]     plate1: 125/188 files, 3,528,000 cells, ~1 min left
+[19:56:47]     plate9: 150/197 files, 4,233,750 cells, ~1 min left
+[19:56:56]     plate7: 150/185 files, 4,233,750 cells, ~1 min left
+[19:57:00]     plate3: 125/147 files, 3,528,000 cells, ~0 min left
+[19:57:03]     plate1: 150/188 files, 4,233,600 cells, ~1 min left
+[19:57:09]     plate9: 175/197 files, 4,939,375 cells, ~0 min left
+[19:57:17]     plate7: 175/185 files, 4,939,375 cells, ~0 min left
+[19:57:21]   plate3 done (11/14 plates, 11.7 min)
+[19:57:24]     plate1: 175/188 files, 4,939,200 cells, ~0 min left
+[19:57:27]   plate7 done (12/14 plates, 11.8 min)
+[19:57:30]   plate9 done (13/14 plates, 11.8 min)
+[19:57:35]   plate1 done (14/14 plates, 11.9 min)
+[19:57:35] Build done: 95,624,334 cells in 84,815 well x line profiles, 1344 wells (local files); well positions from barcode field 1 (Parse round-1 well; numbered row-major A1=1 ... H12=96) (median purity 1.000)
+[19:57:35] ===== stage effects =====
+[19:57:35] Pass 1: gene levels per cell line (50 lines, 84,233 profiles) ...
+[19:58:22]   16,643 genes at >= 2 CPM (of 62,713 tokens) + modules S_PHASE, G2M_PHASE, PROTEASOME
+[19:58:23] Pass 2: corrected effects plate by plate (composition shift per profile from 9,890 genes per line at >= 10 CPM) ...
+[19:58:29]   plate1: 86 wells; median composition shift +0.001 (largest |shift| 0.07)
+[19:58:36]   plate2: 92 wells; median composition shift +0.002 (largest |shift| 0.07)
+[19:58:44]   plate3: 96 wells; median composition shift +0.006 (largest |shift| 0.66)
+[19:58:51]   plate4: 96 wells; median composition shift +0.001 (largest |shift| 0.13)
+[19:58:58]   plate5: 96 wells; median composition shift +0.001 (largest |shift| 0.15)
+[19:59:07]   plate6: 96 wells; median composition shift -0.001 (largest |shift| 0.33)
+[19:59:15]   plate7: 96 wells; median composition shift +0.002 (largest |shift| 0.24)
+[19:59:22]   plate8: 96 wells; median composition shift +0.002 (largest |shift| 0.36)
+[19:59:30]   plate9: 96 wells; median composition shift -0.001 (largest |shift| 0.28)
+[19:59:37]   plate10: 96 wells; median composition shift -0.002 (largest |shift| 0.09)
+[19:59:45]   plate11: 96 wells; median composition shift +0.003 (largest |shift| 0.19)
+[19:59:52]   plate12: 96 wells; median composition shift +0.000 (largest |shift| 0.31)
+[19:59:59]   plate13: 96 wells; median composition shift +0.002 (largest |shift| 0.06)
+[20:00:06]   plate14: 95 wells; median composition shift +0.000 (largest |shift| 0.32)
+[20:00:06] Unreliable plates (kept out of pooled drug-doses, centres and plate-factor peers): plate13
+[20:00:06] Well-position correction, pass 1 (leave-drug-out: all other drugs at the same position) ...
+[20:00:08]   pass 2: clean donors only (|pass-1 z| < 3 for that gene) ...
+[20:00:09]   gene-specific plate factors: 19,479 group x gene values widened beyond their group (own spread ratio > 1.3 x the group factor)
+[20:00:09]   plate factors (z widened on noisy plates): plate2 0.5 1.40x, plate3 5 1.91x; wells with no position correction (< 3 other-drug wells at the position): 15 drug wells; correction uncertain for 0.01% of drug-well x gene values
+[20:00:09] Growth (relative abundance) ...
+[20:00:09] Per drug and dose ...
+[20:00:10] FDR within each gene ...
+[20:00:13]   drug-doses flagged: toxic 19, low cells (technical?) 31, plate-row cell shift 56, composition shift 8, noisy plate (z scaled) 178, unreliable plate only 45, position not correctable 3, wells disagree 0
+[20:00:13] Pass 3: how strongly each cell line shows each drug's consensus response ...
+[20:01:33] Effects done: 16,643 genes x 1,132 drug-doses x 50 lines -> C:\tahoe\out\atlas\effects
+[20:01:33] ===== stage tensor =====
+[20:01:33] Tensor: 16,643 genes x 1,329 wells x 50 lines (drug-doses: 1,132); min cells 30, unreliable plates: plate13
+[20:01:33]   ambient-only (line, gene) pairs: 82,148 of 809,630 the atlas counts as expressed (line level < 0.25 x the gene's pooled CPM) -> NaN; profiles with < 2 expected counts -> NaN
+[20:01:33]   position effect: re-deriving the atlas's two-pass leave-drug-out correction from W1 ...
+[20:01:35]     check: W1 - eff vs the saved W2: max |difference| 0.00e+00
+[20:01:42]   plate1: 86 wells written (reproduces W1: max diff 0.0e+00)
+[20:01:50]   plate2: 92 wells written (reproduces W1: max diff 0.0e+00)
+[20:01:58]   plate3: 96 wells written (reproduces W1: max diff 0.0e+00)
+[20:02:06]   plate4: 96 wells written (reproduces W1: max diff 0.0e+00)
+[20:02:14]   plate5: 96 wells written (reproduces W1: max diff 0.0e+00)
+[20:02:23]   plate6: 96 wells written (reproduces W1: max diff 0.0e+00)
+[20:02:32]   plate7: 96 wells written (reproduces W1: max diff 0.0e+00)
+[20:02:40]   plate8: 96 wells written (reproduces W1: max diff 0.0e+00)
+[20:02:48]   plate9: 96 wells written (reproduces W1: max diff 0.0e+00)
+[20:02:57]   plate10: 96 wells written (reproduces W1: max diff 0.0e+00)
+[20:03:05]   plate11: 96 wells written (reproduces W1: max diff 0.0e+00)
+[20:03:13]   plate12: 96 wells written (reproduces W1: max diff 0.0e+00)
+[20:03:21]   plate13: 96 wells written (reproduces W1: max diff 0.0e+00)
+[20:03:28]   plate14: 95 wells written (reproduces W1: max diff 0.0e+00)
+[20:03:29]   per-line centre and scale, z, and drug-dose pooling (gene chunks) ...
+[20:03:31]     genes 0-384 of 16,643 (2.0 min)
+[20:03:45]     genes 3,840-4,224 of 16,643 (2.2 min)
+[20:04:00]     genes 7,680-8,064 of 16,643 (2.5 min)
+[20:04:15]     genes 11,520-11,904 of 16,643 (2.7 min)
+[20:04:30]     genes 15,360-15,744 of 16,643 (3.0 min)
+[20:04:35] Tensor done: 16,643 genes x 1,132 drug-doses x 50 lines -> C:\tahoe\out\tensor (3.04 min)
+[20:04:35]   stage tensor finished in 3.0 min
+[20:04:35] ===== stage tables =====
+[20:04:35] Tables: 16,643 genes x 1,132 drug-doses x 50 lines (1,329 wells)
+[20:04:35]   pooled: 260,535 significant gene x drug-dose increases, 192,541 decreases; 1,016 of 1,132 drug-doses without an artifact flag
+[20:04:40]   per-line |z| cut: 8.4 (expected chance passes per gene x line over the 1016 clean drug-doses: 0.04900646575870408; null P(|z| >= 3) = 0.00988350918558132, P(|z| >= 4) = 0.0029931683677644214)
+[20:04:40]   drug_effects: 539,607 gene x drug-dose rows (|z| >= 3 or q < 0.1); per-line tensor in chunks of 552 genes ...
+[20:04:42]     genes 0-552 of 16,643 (0.1 min; drug_effects rows 19,797)
+[20:04:54]     genes 5,520-6,072 of 16,643 (0.3 min; drug_effects rows 209,111)
+[20:05:07]     genes 11,040-11,592 of 16,643 (0.5 min; drug_effects rows 392,956)
+[20:05:18]     genes 16,560-16,643 of 16,643 (0.7 min; drug_effects rows 539,607)
+[20:05:19]   rows: genes 16,643, drug_effects 539,607, drug_effects_clean 215,473, line_effects 832,150, drug_line_top 93,684, drugdoses 1,132, drugs 379, lines 50, plates 14, wells 1,329
+[20:05:20] Tables done -> C:\tahoe\out\tables (0.74 min)
+[20:05:20]   stage tables finished in 0.7 min
+[20:05:20] ===== stage embed =====
+[20:05:27] Embed: 968 active trustworthy drug-doses (of 1,132; 387 of them active only in single lines) x 50 lines as contexts
+[20:05:30]   14,927 responsive genes of 16,643 (|z| >= 3 in >= 5 contexts, and a significant clean pooled drug-dose (14,641 genes) or per-line |z| >= 8.4 in >= 2 lines of one drug-dose (13,882)); 184 reached the count without either; 46,527 contexts with data
+[20:05:52]   broad components removed: 1, 2, 3; space: 64 dimensions holding 23.3% of the remaining variance
+[20:05:56]   half 1: 23,124 contexts, broad removed: 1, 2, 3
+[20:06:00]   half 2: 23,403 contexts, broad removed: 1, 2, 3
+[20:06:01] Embed done: 14,927 genes in 64 dimensions from 46,527 contexts (0.68 min)
+[20:06:01]   stage embed finished in 0.7 min
+[20:06:01] ===== stage reference =====
+[20:06:01] Reference: 16,643 genes (16,643 with an Ensembl id); cache C:\tahoe\out\reference\downloads
+[20:06:01]   sizes of the 8 file(s) to download:
+[20:06:02]     hgnc               17.0 MB  https://storage.googleapis.com/public-download-files/hgnc/tsv/tsv/hgnc_complete_set.txt
+[20:06:02]     ensembl       size unknown  https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz
+[20:06:02]     uniprot       size unknown  https://rest.uniprot.org/uniprotkb/stream?format=tsv&fields=accession,reviewed,gene_primary,protein_  (streamed query: no size)
+[20:06:03]     ncbi          size unknown  https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_summary.gz
+[20:06:03]     reactome            300 kB  https://reactome.org/download/current/ReactomePathways.gmt.zip
+[20:06:03]     hallmark             49 kB  https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2024.1.Hs/h.all.v2024.1.Hs.symbols.gmt
+[20:06:04]     string_links       83.2 MB  https://stringdb-downloads.org/download/protein.links.v12.0/9606.protein.links.v12.0.txt.gz
+[20:06:04]     string_info         2.0 MB  https://stringdb-downloads.org/download/protein.info.v12.0/9606.protein.info.v12.0.txt.gz
+[20:06:04]     total 102.5 MB + unknown
+[20:06:04]   hgnc: downloading https://storage.googleapis.com/public-download-files/hgnc/tsv/tsv/hgnc_complete_set.txt (17.0 MB)
+[20:06:06]   hgnc: 17.0 MB in 2 s
+[20:06:06]   ensembl: downloading https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz (size unknown)
+[20:06:06]     ensembl: URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1032)>; retry 1/3 in 10 s
+[20:06:17]     ensembl: URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1032)>; retry 2/3 in 20 s
+[20:06:37]     ensembl: URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1032)>; retry 3/3 in 40 s
+[20:07:17]   ensembl: download FAILED (URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1032)>); continuing without it
+[20:07:17]   uniprot: downloading https://rest.uniprot.org/uniprotkb/stream?format=tsv&fields=accession,reviewed,gene_primary,protein_name,cc_function,xref_hgnc,xref_geneid&query=organism_id:9606%20AND%20reviewed:true (size unknown)
+[20:07:30]   uniprot: 15.5 MB in 13 s
+[20:07:30]   ncbi: downloading https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_summary.gz (size unknown)
+[20:07:30]     ncbi: URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1032)>; retry 1/3 in 10 s
+[20:07:40]     ncbi: URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1032)>; retry 2/3 in 20 s
+[20:08:00]     ncbi: URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1032)>; retry 3/3 in 40 s
+[20:08:41]   ncbi: download FAILED (URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1032)>); continuing without it
+[20:08:41]   reactome: downloading https://reactome.org/download/current/ReactomePathways.gmt.zip (300 kB)
+[20:08:41]   reactome: 300 kB in 0 s
+[20:08:41]   hallmark: downloading https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2024.1.Hs/h.all.v2024.1.Hs.symbols.gmt (49 kB)
+[20:08:41]   hallmark: 49 kB in 0 s
+[20:08:41]   string_links: downloading https://stringdb-downloads.org/download/protein.links.v12.0/9606.protein.links.v12.0.txt.gz (83.2 MB)
+[20:08:50]       52 MB of 83 (9 s)
+[20:08:54]   string_links: 83.2 MB in 14 s
+[20:08:54]   string_info: downloading https://stringdb-downloads.org/download/protein.info.v12.0/9606.protein.info.v12.0.txt.gz (2.0 MB)
+[20:09:01]   string_info: 2.0 MB in 7 s
+[20:09:02]   HGNC: 45,326 approved records; 15,231 of 16,643 genes matched (91.5%; of genes with a symbol 99.3%): ensembl_id 15,216, symbol 6, prev_symbol 8, alias_symbol 1
+[20:09:03]   UniProt: 20,429 reviewed entries; 13,628 Tahoe genes have one (12,278 with FUNCTION text)
+[20:09:03]   hallmark: 50 sets; 50 with 3-1000 Tahoe genes (6,354 memberships, 3,690 genes)
+[20:09:03]   reactome: 2,874 sets; 2,287 with 3-1000 Tahoe genes (97,201 memberships, 8,227 genes)
+[20:09:04]   HGNC gene groups: 1,388 with 3-1000 Tahoe genes (18,071 memberships)
+[20:09:05]   STRING: 13,715,404 links, 1,858,944 with score >= 400; proteins on genes 0 by Ensembl id + 13,505 by name of 19,699; 623,438 gene pairs over 13,475 genes
+[20:09:05] Reference done: 15,231/16,643 genes matched to HGNC, 121,626 set memberships, 623,438 STRING pairs -> C:\tahoe\out\reference (3.06 min)
+[20:09:05]   stage reference finished in 3.1 min
+[20:09:05] ===== stage relations =====
+[20:09:05] Relations: 14,927 genes, top 100 partners each
+[20:09:20]   novel candidates not assessed: missing ensembl (run 'tahoe run --from reference' with network access)
+[20:09:21] Relations done: 737,970 reproducible pairs (both halves), 0 novel candidates (0.26 min)
+[20:09:21]   stage relations finished in 0.3 min
+[20:09:21] ===== stage graph =====
+[20:09:21] Graph: 14,927 genes
+[20:09:25]   233 modules of >= 5 genes (Louvain on 177,264 edges, 35 large or loose modules split again); 8 genes unassigned
+[20:09:42]   nodal map laid out (0.4 min)
+[20:10:00]   signed map laid out (0.7 min)
+[20:10:04] Graph done: 233 modules, 177,264 edges (0.72 min)
+[20:10:05]   stage graph finished in 0.7 min
+[20:10:05] ===== stage validate =====
+[20:10:05] Validate: 14,927 genes in the space, 233 modules
+[20:10:05]   gene sets: 19 control, 2073 Hallmark / Reactome with >= 5 genes in the space
+[20:10:16]   2092 sets scored (0.2 min)
+[20:10:16]   opposite P53_TARGETS_UP/DREAM_G2M_DOWN: cross cos -0.15, same module 0%, nodal map 2.14 vs signed 2.00 spreads
+[20:10:16]   opposite ISR_ATF4/RIBOSOME_BIOGENESIS: cross cos -0.00, same module 0%, nodal map 1.53 vs signed 1.37 spreads
+[20:10:19]   enrichment: 1,112,944 tests, 3,149 at q < 0.05; 91 of 233 modules labelled
+[20:10:19]   drug check: AUROC same moa_fine 0.55 (885 pairs); active drugs 0.58
+[20:10:19]   novel: 0 edges, 2,233 module members
+[20:10:19] Validate done: report in C:\tahoe\out\validation\report.md (0.24 min)
+[20:10:19]   stage validate finished in 0.2 min
+[20:10:19] ===== stage vault =====
+[20:10:19] Vault: building the Obsidian vault
+[20:10:20]   vault: indexes loaded (0.2 s)
+[20:10:20]   vault: gene tables indexed (0.8 s; 539,607 drug-effect rows, 1,492,700 relation rows)
+[20:10:29]   vault: 2,000 / 16,643 genes (8 s)
+[20:10:36]   vault: 4,000 / 16,643 genes (15 s)
+[20:10:43]   vault: 6,000 / 16,643 genes (22 s)
+[20:10:51]   vault: 8,000 / 16,643 genes (30 s)
+[20:10:58]   vault: 10,000 / 16,643 genes (37 s)
+[20:11:05]   vault: 12,000 / 16,643 genes (45 s)
+[20:11:13]   vault: 14,000 / 16,643 genes (52 s)
+[20:11:20]   vault: 16,000 / 16,643 genes (59 s)
+[20:11:22]   vault: 16,643 gene notes and plates notes (61 s)
+[20:11:25] Vault done: 34,276 notes (561.6 MB; gene notes median 13.5 KB, max 21.8 KB; plates notes max 22.6 KB), 98 written gene sections spliced (105 fragments), 0 stale notes removed (1.09 min)
+[20:11:25]   stage vault finished in 1.1 min
+[20:11:25] ===== stage map =====
+[20:11:25] Map: 14,927 genes on the map, 1,716 more searchable
+[20:11:25]   reference: 15,232 names, 12,278 function snippets
+[20:11:26]   relations: 223,905 partner rows for 14,927 genes, 471 shared pathways
+[20:11:26]   graph edges: 177,264 between map genes (176,945 both halves, 319 one half)
+[20:11:26]   drug-doses: 215,473 clean rows -> top 8 up / down per gene
+[20:11:26]   cell lines: 727,482 gene x line rows -> up to 5 lines per gene
+[20:11:26] Map done: C:\tahoe\out\map\gene_map.html (10.78 MB, 14,927 genes on the map, 0.02 min)
+[20:11:26]   stage map finished in 0.0 min
+[20:11:26] Run done in 26.9 min. Vault: C:\tahoe\out\vault  map: C:\tahoe\out\map\gene_map.html
+
+===== tahoemap run --data C:\tahoe\Tahoe-100M --out C:\tahoe\out started 2026-11-09 10:48:21 | Python 3.13.17 | Windows-11-10.0.26200-SP0 =====
+[10:48:21] Keeping the computer awake while tahoemap run runs (Windows)
+[10:48:21] Plan: tables -> embed -> reference -> relations -> graph -> direction -> validate -> vault -> map   (tables: its method changed)
+[10:48:21] ===== stage tables =====
+[10:48:21] Tables: 16,643 genes x 1,132 drug-doses x 50 lines (1,329 wells)
+[10:48:22]   pooled: 260,535 significant gene x drug-dose increases, 192,541 decreases; 1,016 of 1,132 drug-doses without an artifact flag
+[10:48:22]   cell-cycle shift: 54 drug-doses flagged, 46 with no other artifact flag; slopes on the S / G2M modules fitted over 1,062 drug-doses (doubled for the rule); of 193,346 significant changes at the latter the shift is not the explanation of 135,718 (clean for that gene; with the fitted slopes as they are: 165,641)
+[10:48:22]     check: S_PHASE module genes (43): 1,168 significant changes at cell-cycle-flagged drug-doses, 130 of them cleared
+[10:48:22]     check: G2M_PHASE module genes (54): 1,448 significant changes at cell-cycle-flagged drug-doses, 186 of them cleared
+[10:48:28]   per-line |z| cut: 8.45 (expected chance passes per gene x line over the 1026 clean drug-doses: 0.0492311807920378; null P(|z| >= 3) = 0.009916986473792399, P(|z| >= 4) = 0.0030098504078259385)
+[10:48:28]   drug_effects: 539,607 gene x drug-dose rows (|z| >= 3 or q < 0.1); per-line tensor in chunks of 552 genes ...
+[10:48:30]     genes 0-552 of 16,643 (0.2 min; drug_effects rows 19,797)
+[10:48:49]     genes 5,520-6,072 of 16,643 (0.5 min; drug_effects rows 209,111)
+[10:49:08]     genes 11,040-11,592 of 16,643 (0.8 min; drug_effects rows 392,956)
+[10:49:25]     genes 16,560-16,643 of 16,643 (1.1 min; drug_effects rows 539,607)
+[10:49:27]   rows: genes 16,643, drug_effects 539,607, drug_effects_clean 353,937, line_effects 832,150, drug_line_top 367,475, drugdoses 1,132, drugs 379, lines 50, plates 14, wells 1,329
+[10:49:27] Tables done -> C:\tahoe\out\tables (1.1 min)
+[10:49:27]   stage tables finished in 1.1 min
+[10:49:27] ===== stage embed =====
+[10:49:34] Embed: 968 active trustworthy drug-doses (of 1,132; 387 of them active only in single lines) x 50 lines as contexts
+[10:49:38]   15,076 responsive genes of 16,643 (|z| >= 3 in >= 5 contexts, and a significant pooled drug-dose (15,076 genes; 14,988 with a clean one) or per-line |z| >= 8.45 in >= 2 lines of one drug-dose (13,849)); 79 of them only through drug-doses that carry an alert for them, pooled and per line (marked); 0 reached the count without either; 46,527 contexts with data
+[10:50:02]   broad components removed: 1, 2, 3; space: 64 dimensions holding 23.2% of the remaining variance
+[10:50:07]   half 1: 23,124 contexts, broad removed: 1, 2, 3
+[10:50:11]   half 2: 23,403 contexts, broad removed: 1, 2, 3
+[10:50:12]   46 technically untrustworthy drug-doses left out of the fit (listed in info.json; their vectors are still projected)
+[10:50:12] Embed done: 15,076 genes in 64 dimensions from 46,527 contexts (0.74 min)
+[10:50:12]   stage embed finished in 0.7 min
+[10:50:12] ===== stage reference =====
+[10:50:12] Reference: 16,643 genes (16,643 with an Ensembl id); cache C:\tahoe\out\reference\downloads
+[10:50:12]   sizes of the 2 file(s) to download:
+[10:50:13]     ensembl            55.5 MB  https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz
+[10:50:13]     ncbi               23.8 MB  https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_summary.gz
+[10:50:13]     total 79.4 MB
+[10:50:13]   hgnc: cached (17.0 MB, 2026-11-08)
+[10:50:13]   ensembl: downloading https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz (55.5 MB)
+[11:01:07]       52 MB of 56 (655 s)
+[11:01:56]   ensembl: 55.5 MB in 703 s
+[11:01:56]   uniprot: cached (15.5 MB, 2026-11-08)
+[11:01:56]   ncbi: downloading https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_summary.gz (23.8 MB)
+[11:02:00]   ncbi: 23.8 MB in 5 s
+[11:02:00]   reactome: cached (300 kB, 2026-11-08)
+[11:02:00]   hallmark: cached (49 kB, 2026-11-08)
+[11:02:00]   string_links: cached (83.2 MB, 2026-11-08)
+[11:02:00]   string_info: cached (2.0 MB, 2026-11-08)
+[11:02:01]   HGNC: 45,326 approved records; 15,231 of 16,643 genes matched (91.5%; of genes with a symbol 99.3%): ensembl_id 15,216, symbol 6, prev_symbol 8, alias_symbol 1
+[11:02:01]   Ensembl GTF: reading gene rows (streaming; cached as parquet after the first run) ...
+[11:02:04]   Ensembl: 63,140 genes in the GTF; coordinates for 16,611 of 16,643 Tahoe genes (99.8%)
+[11:02:05]   UniProt: 20,429 reviewed entries; 13,628 Tahoe genes have one (12,278 with FUNCTION text)
+[11:02:06]   NCBI: 151,703 human summaries; 13,566 Tahoe genes have one
+[11:02:07]   hallmark: 50 sets; 50 with 3-1000 Tahoe genes (6,354 memberships, 3,690 genes)
+[11:02:07]   reactome: 2,874 sets; 2,287 with 3-1000 Tahoe genes (97,201 memberships, 8,227 genes)
+[11:02:07]   HGNC gene groups: 1,388 with 3-1000 Tahoe genes (18,071 memberships)
+[11:02:09]   STRING: 13,715,404 links, 1,858,944 with score >= 400; proteins on genes 13,457 by Ensembl id + 183 by name of 19,699; 626,218 gene pairs over 13,559 genes
+[11:02:09] Reference done: 15,231/16,643 genes matched to HGNC, 121,626 set memberships, 626,218 STRING pairs -> C:\tahoe\out\reference (11.95 min)
+[11:02:09]   stage reference finished in 12.0 min
+[11:02:09] ===== stage relations =====
+[11:02:09] Relations: 15,076 genes, top 100 partners each
+[11:02:27] Relations done: 745,357 reproducible pairs (both halves), 2,815 novel candidates (0.29 min)
+[11:02:27]   stage relations finished in 0.3 min
+[11:02:27] ===== stage graph =====
+[11:02:27] Graph: 15,076 genes
+[11:02:32]   235 modules of >= 5 genes (Louvain on 179,308 edges, 35 large or loose modules split again); 3 genes unassigned
+[11:02:52]   nodal map laid out (0.4 min)
+[11:03:14]   signed map laid out (0.8 min)
+[11:04:08]   spread layouts: 235 modules on the nodal map (a module gene's 5 nearest module genes in another module: 51.8% on the t-SNE layout, 0.1% spread), 295 module arms on the signed map (51.3% -> 0.2%)
+[11:04:08]   genes without a module, mean |cos| to their 5 nearest module genes: 0.302 on the t-SNE layout, 0.194 spread (signed map, mean cos: 0.323 -> 0.225)
+[11:04:13] Graph done: 235 modules, 179,308 edges (1.77 min)
+[11:04:13]   stage graph finished in 1.8 min
+[11:04:13] ===== stage direction =====
+[11:04:14] Direction: 16,643 genes x 1,132 drug-doses x 50 lines; cell-line genetics: C:\tahoe\Tahoe-100M\metadata\cell_line_metadata.parquet
+[11:04:14]   streaming the per-line tensor: 16,643 genes in chunks of 1472 (K = 10 drug-doses per gene; 125,750 reference values)
+[11:04:15]     genes 0-1,472 of 16,643 (0.0 min)
+[11:04:21]     genes 16,192-16,643 of 16,643 (0.1 min)
+[11:04:21]   global-sensitivity correction of the 166,430 (gene, drug-dose) responses: 165,529 against the drug-dose's other responsive genes, 856 line-wide only, 45 none; line-wide responsiveness used (668 drug-doses of 307 compounds; SD 0.24 across lines, split-half r 0.99); 16,643 genes with usable lines
+[11:04:21]   genotype groups: 64 (driver genes recorded in >= 3 lines, LoF / GoF / any)
+[11:05:17]     tested in 1.1 min
+[11:05:23]   negative controls: 60 random pseudo-groups of the real groups' sizes ...
+[11:06:09]     APC loss of function (7 lines) vs not recorded (40): edges response 4 (+1 within the group only), baseline 0 (+0), sensitivity 0 (+0) (across organs)
+[11:06:09]     APC altered (any record) (10 lines) vs not recorded (40): edges response 5 (+2 within the group only), baseline 0 (+0), sensitivity 0 (+0) (across organs)
+[11:06:09]     ARID1A altered (any record) (15 lines) vs not recorded (35): edges response 0 (+0 within the group only), baseline 0 (+0), sensitivity 0 (+1)
+[11:06:09]     BRCA2 loss of function (7 lines) vs not recorded (41): edges response 1 (+0 within the group only), baseline 0 (+0), sensitivity 0 (+0)
+[11:06:09]     CDKN2B loss of function (13 lines) vs not recorded (37): edges response 1 (+3 within the group only), baseline 3 (+0), sensitivity 0 (+0)
+[11:06:09]     FBXW7 loss of function (5 lines) vs not recorded (45): edges response 0 (+0 within the group only), baseline 0 (+1), sensitivity 0 (+0)
+[11:06:09]     HNF1A loss of function (6 lines) vs not recorded (44): edges response 1 (+0 within the group only), baseline 0 (+0), sensitivity 0 (+0) (across organs)
+[11:06:09]     KMT2D altered (any record) (15 lines) vs not recorded (35): edges response 1 (+0 within the group only), baseline 0 (+0), sensitivity 0 (+0)
+[11:06:09]     NRAS gain of function (7 lines) vs not recorded (43): edges response 0 (+0 within the group only), baseline 0 (+2), sensitivity 0 (+0)
+[11:06:09]     POLE altered (any record) (8 lines) vs not recorded (42): edges response 1 (+0 within the group only), baseline 0 (+0), sensitivity 0 (+0)
+[11:06:09]     RB1 loss of function (3 lines) vs not recorded (46): edges response 0 (+2 within the group only), baseline 0 (+1), sensitivity 0 (+0) (across organs)
+[11:06:09]     RB1 altered (any record) (4 lines) vs not recorded (46): edges response 2 (+0 within the group only), baseline 0 (+0), sensitivity 0 (+0) (across organs)
+[11:06:09]     SETD1B altered (any record) (11 lines) vs not recorded (39): edges response 1 (+0 within the group only), baseline 0 (+0), sensitivity 0 (+0)
+[11:06:09]     TERT gain of function (8 lines) vs not recorded (39): edges response 1 (+4 within the group only), baseline 0 (+0), sensitivity 0 (+0) (across organs)
+[11:06:09]     TP53 loss of function (33 lines) vs not recorded (17): edges response 25 (+81 within the group only), baseline 8 (+5), sensitivity 0 (+0)
+[11:06:09]     (49 of 64 groups without an edge; q over every group of a kind: response 934,629 tests, baseline 1,065,152 tests, sensitivity 71,316 tests)
+[11:06:09]     (1.9 min so far)
+[11:06:09]   expression-null groups: 5791 line sets (5939 genes); 365 drug-doses with line-to-line differences in cell numbers (chi-square p < 0.05)
+[11:07:11]     expression-null tests done (3.0 min so far)
+[11:07:24]   level: 1,992,533 directed related pairs, 1359 edges (3.2 min so far)
+[11:07:27]   level_sensitivity: 5,758,605 (gene, drug-dose) tests, 0 edges over the table, 514 within their drug-dose only
+[11:07:29] Direction done -> C:\tahoe\out\direction (3.26 min; 102,590 edges)
+[11:07:29]   stage direction finished in 3.3 min
+[11:07:29] ===== stage validate =====
+[11:07:29] Validate: 15,076 genes in the space, 235 modules
+[11:07:29]   gene sets: 19 control, 2074 Hallmark / Reactome with >= 5 genes in the space
+[11:07:41]   2093 sets scored (0.2 min)
+[11:07:41]   opposite P53_TARGETS_UP/DREAM_G2M_DOWN: cross cos -0.15, same module 0%, nodal map 2.15 vs signed 2.06 spreads
+[11:07:41]   opposite ISR_ATF4/RIBOSOME_BIOGENESIS: cross cos -0.00, same module 0%, nodal map 1.86 vs signed 1.49 spreads
+[11:07:45]   enrichment: 1,109,290 tests, 3,194 at q < 0.05; 96 of 235 modules labelled
+[11:07:45]   drug check: AUROC same moa_fine 0.55 (885 pairs); active drugs 0.58
+[11:07:45]   novel: 2,815 edges, 2,145 module members
+[11:07:47] Validate done: report in C:\tahoe\out\validation\report.md (0.3 min)
+[11:07:47]   stage validate finished in 0.3 min
+[11:07:47] ===== stage vault =====
+[11:07:47] Vault: building the Obsidian vault
+[11:07:48]   vault: indexes loaded (0.2 s)
+[11:07:49]   vault: gene tables indexed (1.0 s; 539,607 drug-effect rows, 1,507,600 relation rows)
+[11:07:52]   vault: direction arrows loaded (98,577 arrows from 102,590 edges)
+[11:08:10]   vault: 2,000 / 16,643 genes (18 s)
+[11:08:29]   vault: 4,000 / 16,643 genes (37 s)
+[11:08:46]   vault: 6,000 / 16,643 genes (54 s)
+[11:09:03]   vault: 8,000 / 16,643 genes (71 s)
+[11:09:20]   vault: 10,000 / 16,643 genes (88 s)
+[11:09:38]   vault: 12,000 / 16,643 genes (106 s)
+[11:09:55]   vault: 14,000 / 16,643 genes (123 s)
+[11:10:08]   vault: 16,000 / 16,643 genes (136 s)
+[11:10:11]   vault: 16,643 gene notes and plates notes (139 s)
+[11:10:25] Vault done: 34,281 notes (729.5 MB; gene notes median 23.5 KB, max 39.3 KB; plates notes max 22.6 KB), 98 written gene sections spliced (105 fragments), 2762 stale notes removed (2.63 min)
+[11:10:25]   stage vault finished in 2.6 min
+[11:10:25] ===== stage map =====
+[11:10:26] Map: 15,076 genes on the map, 1,567 more searchable
+[11:10:26]   reference: 15,232 names, 13,580 function snippets
+[11:10:27]   relations: 229,946 partner rows for 15,076 genes, 476 shared pathways
+[11:10:27]   graph edges: 179,308 between map genes (178,969 both halves, 339 one half)
+[11:10:27]   drug-doses: 539,607 rows (185,670 with an artifact flag) -> the 8 strongest up / down per gene, plus unflagged ones of the first 8 beyond them
+[11:10:28]   cell lines: 727,482 gene x line rows -> up to 5 lines per gene (counts over all drug-doses, flagged ones counted apart; 23,833 shown lines whose strongest drug-dose carries an alert also name their strongest without one)
+[11:10:28]   tour: 15,076 genes x 64 dimensions (0.96 MB as int8)
+[11:10:33]   direction: 98,577 of the stage's 98,577 display rows touch a gene of the page (0 do not: their source is no measured gene and their target none of the page's genes)
+[11:10:34]   page is 31.8 MB: shortening the direction readings of the grade C rows
+[11:10:35]   page is 31.3 MB: shortening every direction reading
+[11:10:35]   page is 30.5 MB: shortening the function snippets to 80 characters
+[11:10:36]   page is 30.2 MB: shortening the function snippets to 60 characters and the line lists to 3
+[11:10:36]   page is 28.1 MB: shortening the function snippets to 40 characters and the line lists to 2
+[11:10:36]   page is 27.3 MB: shortening the direction alerts' full wording (their short labels stay)
+[11:10:37]   page is 20.6 MB: shortening the cells rows beyond the 8 of a gene's list (counted there)
+[11:10:38] Map done: C:\tahoe\out\map\gene_map.html (20.49 MB, 15,076 genes on the map, 0.2 min)
+[11:10:38]   stage map finished in 0.2 min
+[11:10:38] Run done in 22.3 min. Vault: C:\tahoe\out\vault  map: C:\tahoe\out\map\gene_map.html

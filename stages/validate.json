@@ -1,0 +1,25 @@
+{
+ "stage": "validate",
+ "version": 4,
+ "finished": "2026-11-09 11:07:47",
+ "info": {
+  "version": 4,
+  "genes": 15076,
+  "sets": {
+   "control": 19,
+   "reference": 2074,
+   "synthetic": 0
+  },
+  "modules": 235,
+  "modules_labelled": 96,
+  "control_median_auroc_cos": 0.9451852813852814,
+  "drug_moa_auroc": 0.5528770334192638,
+  "novel_edges": 2815,
+  "novel_member_genes": 2145,
+  "novel_edges_with_alert": 14,
+  "novel_member_genes_with_alert": 43,
+  "genes_in_space_flagged_only": 79,
+  "truth": false,
+  "minutes": 0.3
+ }
+}

@@ -1,0 +1,143 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes W
+
+133 genes. Back to [[Genes by letter]].
+
+- [[WAC]] — WW domain containing adaptor with coiled-coil · module 130 +
+- [[WAC-AS1]] — WAC antisense RNA 1 · module 068 +
+- [[WAKMAR2]] — wound and keratinocyte migration associated lncRNA 2 · module 080 +
+- [[WAPL]] — WAPL cohesin release factor · module 007 +
+- [[WARS1]] — tryptophanyl-tRNA synthetase 1 · module 133 +
+- [[WARS2]] — tryptophanyl tRNA synthetase 2, mitochondrial · module 051 +
+- [[WARS2-AS1]] — WARS2 antisense RNA 1 · module 088 +
+- [[WASF1]] — WASP family member 1 · module 030 +
+- [[WASF2]] — WASP family member 2 · module 076 +
+- [[WASF3]] — WASP family member 3 · module 095 -
+- [[WASH2P-1]] · module 015 +
+- [[WASH8P]] — WAS protein family homolog 8, pseudogene · module 153 +
+- [[WASH9P]] — WAS protein family homolog 9, pseudogene · module 153 +
+- [[WASHC1]] — WASH complex subunit 1 · module 029 -
+- [[WASHC2A]] — WASH complex subunit 2A · module 122 +
+- [[WASHC2C]] — WASH complex subunit 2C · module 122 +
+- [[WASHC3]] — WASH complex subunit 3 · module 028 +
+- [[WASHC4]] — WASH complex subunit 4 · module 011 +
+- [[WASHC5]] — WASH complex subunit 5 · module 122 +
+- [[WASL]] — WASP like actin nucleation promoting factor · module 004 -
+- [[WASL-DT]] — WASL divergent transcript · module 021 +
+- [[WBP1]] — WW domain binding protein 1 · module 069 +
+- [[WBP11]] — WW domain binding protein 11 · module 160 -
+- [[WBP1L]] — WW domain binding protein 1 like · module 118 +
+- [[WBP2]] — WW domain binding protein 2 · module 074 +
+- [[WBP2NL]] — WBP2 N-terminal like · module 012 +
+- [[WBP4]] — WW domain binding protein 4 · module 020 -
+- [[WDCP]] — WD repeat and coiled coil containing · module 016 +
+- [[WDFY1]] — WD repeat and FYVE domain containing 1 · module 030 +
+- [[WDFY2]] — WD repeat and FYVE domain containing 2 · module 077 +
+- [[WDFY3]] — WD repeat and FYVE domain containing 3 · module 046 +
+- [[WDHD1]] — WD repeat and HMG-box DNA binding protein 1 · module 006 +
+- [[WDPCP]] — WD repeat containing planar cell polarity effector · module 022 +
+- [[WDR1]] — WD repeat domain 1 · module 111 +
+- [[WDR11]] — WD repeat domain 11 · module 017 +
+- [[WDR12]] — WD repeat domain 12 · module 018 +
+- [[WDR13]] — WD repeat domain 13 · module 035 +
+- [[WDR17]] — WD repeat domain 17 · module 082 +
+- [[WDR18]] — WD repeat domain 18 · module 001 +
+- [[WDR19]] — WD repeat domain 19 · module 074 +
+- [[WDR20]] — WD repeat domain 20 · module 015 +
+- [[WDR24]] — WD repeat domain 24 · module 107 +
+- [[WDR25]] — WD repeat domain 25 · module 049 +
+- [[WDR26]] — WD repeat domain 26 · module 182 -
+- [[WDR27]] — WD repeat domain 27 · module 005 +
+- [[WDR3]] — WD repeat domain 3 · module 033 +
+- [[WDR31]] — WD repeat domain 31 · module 010 +
+- [[WDR33]] — WD repeat domain 33 · module 088 +
+- [[WDR35]] — WD repeat domain 35 · module 001 +
+- [[WDR36]] — WD repeat domain 36 · module 033 +
+- [[WDR37]] — WD repeat domain 37 · module 212 +
+- [[WDR4]] — WDR4 tRNA N7-guanosine methyltransferase non-catalytic subunit · module 005 +
+- [[WDR41]] — WD repeat domain 41 · module 065 +
+- [[WDR43]] — WD repeat domain 43 · module 033 +
+- [[WDR44]] — WD repeat domain 44 · module 003 +
+- [[WDR45]] — WD repeat domain 45 · module 035 +
+- [[WDR45B]] — WD repeat domain 45B · module 164 +
+- [[WDR46]] — WD repeat domain 46 · module 001 +
+- [[WDR47]] — WD repeat domain 47 · module 093 +
+- [[WDR48]] — WD repeat domain 48 · module 074 +
+- [[WDR49]] — WD repeat domain 49 · module 037 +
+- [[WDR5]] — WD repeat domain 5 · module 199 +
+- [[WDR53]] — WD repeat domain 53 · module 119 +
+- [[WDR54]] — WD repeat domain 54 · module 079 +
+- [[WDR55]] — WD repeat domain 55 · module 002 +
+- [[WDR59]] — WD repeat domain 59 · module 077 +
+- [[WDR5B]] — WD repeat domain 5B · module 010 +
+- [[WDR5B-DT]] — WDR5B divergent transcript · module 038 +
+- [[WDR6]] — WD repeat domain 6 · module 096 +
+- [[WDR62]] — WD repeat domain 62 · module 067 +
+- [[WDR7]] — WD repeat domain 7 · module 230 +
+- [[WDR70]] — WD repeat domain 70 · module 230 +
+- [[WDR72]] — WD repeat domain 72 · module 019 +
+- [[WDR73]] — WD repeat domain 73 · module 089 +
+- [[WDR74]] — WD repeat domain 74 · module 083 +
+- [[WDR75]] — WD repeat domain 75 · module 001 +
+- [[WDR76]] — WD repeat domain 76 · module 006 +
+- [[WDR77]] — WD repeat domain 77 · module 004 +
+- [[WDR81]] — WD repeat domain 81 · module 172 +
+- [[WDR82]] — WD repeat domain 82 · module 016 +
+- [[WDR83]] — WD repeat domain 83 · module 107 +
+- [[WDR83OS]] — WD repeat domain 83 opposite strand · module 024 +
+- [[WDR89]] — WD repeat domain 89 · module 170 +
+- [[WDR90]] — WD repeat domain 90 · module 006 +
+- [[WDR91]] — WD repeat domain 91 · module 046 +
+- [[WDSUB1]] — WD repeat, sterile alpha motif and U-box domain containing 1 · module 045 +
+- [[WDTC1]] — WD and tetratricopeptide repeats 1 · module 145 +
+- [[WEE1]] — WEE1 G2 checkpoint kinase · module 022 +
+- [[WFDC10B]] — WAP four-disulfide core domain 10B · module 013 +
+- [[WFDC2]] — WAP four-disulfide core domain 2 · module 008 +
+- [[WFDC3]] — WAP four-disulfide core domain 3 · module 013 +
+- [[WFS1]] — wolframin ER transmembrane glycoprotein · module 159 +
+- [[WHAMM]] — WASP homolog associated with actin, golgi membranes and microtubules · module 020 -
+- [[WHAMMP1]] — WHAMM pseudogene 1 · module 175 +
+- [[WHAMMP2]] — WHAMM pseudogene 2 · module 186 +
+- [[WHAMMP3]] — WHAMM pseudogene 3 · module 046 +
+- [[WHRN]] — whirlin · module 161 +
+- [[WIPF1]] — WAS/WASL interacting protein family member 1 · module 013 +
+- [[WIPF2]] — WAS/WASL interacting protein family member 2 · module 003 +
+- [[WIPF3]] — WAS/WASL interacting protein family member 3 · module 061 +
+- [[WIPI1]] — WD repeat domain, phosphoinositide interacting 1 · module 056 +
+- [[WIPI2]] — WD repeat domain, phosphoinositide interacting 2 · module 076 +
+- [[WIZ]] — WIZ zinc finger · module 096 +
+- [[WLS]] — Wnt ligand secretion mediator · module 003 -
+- [[WNK1]] — WNK lysine deficient protein kinase 1 · module 003 -
+- [[WNK2]] — WNK lysine deficient protein kinase 2 · module 018 +
+- [[WNK3]] — WNK lysine deficient protein kinase 3 · module 103 +
+- [[WNK4]] — WNK lysine deficient protein kinase 4 · module 038 +
+- [[WNT2B]] — Wnt family member 2B · module 038 +
+- [[WNT3]] — Wnt family member 3 · module 035 +
+- [[WNT5A]] — Wnt family member 5A · module 013 +
+- [[WNT5B]] — Wnt family member 5B · module 013 +
+- [[WNT7A]] — Wnt family member 7A · module 034 +
+- [[WNT7B]] — Wnt family member 7B · module 034 +
+- [[WNT9A]] — Wnt family member 9A · module 101 +
+- [[WRAP53]] — WD repeat containing antisense to TP53 · module 105 +
+- [[WRAP73]] — WD repeat containing, antisense to TP73 · module 026 -
+- [[WRN]] — WRN RecQ like helicase · module 036 +
+- [[WRNIP1]] — WRN helicase interacting protein 1 · module 050 +
+- [[WSB1]] — WD repeat and SOCS box containing 1 · module 144 +
+- [[WSB2]] — WD repeat and SOCS box containing 2 · module 065 -
+- [[WSCD1]] — WSC domain sialate O sulfotransferase 1 · module 034 +
+- [[WT1]] — WT1 transcription factor · module 110 +
+- [[WT1-AS]] — WT1 antisense RNA · module 110 +
+- [[WTAP]] — WT1 associated protein · module 014 +
+- [[WTIP]] — WT1 interacting protein · module 038 +
+- [[WWC1]] — WW and C2 domain containing 1 · module 123 +
+- [[WWC2]] — WW and C2 domain containing 2 · module 143 +
+- [[WWC3]] — WWC family member 3 · module 143 +
+- [[WWOX]] — WW domain containing oxidoreductase · module 200 +
+- [[WWP1]] — WW domain containing E3 ubiquitin protein ligase 1 · module 190 +
+- [[WWP2]] — WW domain containing E3 ubiquitin protein ligase 2 · module 172 +
+- [[WWTR1]] — WW domain containing transcription regulator 1 · module 084 +

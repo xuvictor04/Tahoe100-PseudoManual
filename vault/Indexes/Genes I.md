@@ -1,0 +1,371 @@
+---
+type: "index"
+tags: ["index"]
+generated_by: "tahoemap"
+---
+
+# Genes I
+
+361 genes. Back to [[Genes by letter]].
+
+- [[IAH1]] — isoamyl acetate hydrolyzing esterase 1 (putative) · module 221 +
+- [[IARS1]] — isoleucyl-tRNA synthetase 1 · module 063 +
+- [[IARS2]] — isoleucyl-tRNA synthetase 2, mitochondrial · module 057 +
+- [[IBA57]] — iron-sulfur cluster assembly factor IBA57 · module 023 +
+- [[IBTK]] — inhibitor of Bruton tyrosine kinase · module 049 +
+- [[ICA1]] — islet cell autoantigen 1 · module 008 +
+- [[ICA1L]] — islet cell autoantigen 1 like · module 023 +
+- [[ICAM1]] — intercellular adhesion molecule 1 · module 014 +
+- [[ICAM2]] — intercellular adhesion molecule 2 · module 158 +
+- [[ICAM3]] — intercellular adhesion molecule 3 · module 040 +
+- [[ICAM5]] — intercellular adhesion molecule 5 · module 103 +
+- [[ICE1]] — interactor of little elongation complex ELL subunit 1 · module 059 -
+- [[ICE2]] — interactor of little elongation complex ELL subunit 2 · module 001 +
+- [[ICMT]] — isoprenylcysteine carboxyl methyltransferase · module 020 +
+- [[ID1]] — inhibitor of DNA binding 1 · module 113 +
+- [[ID2]] — inhibitor of DNA binding 2 · module 059 +
+- [[ID2-AS1]] — ID2 antisense RNA 1 · module 010 +
+- [[ID3]] — inhibitor of DNA binding 3 · module 011 +
+- [[ID4]] — inhibitor of DNA binding 4 · module 223 +
+- [[IDE]] — insulin degrading enzyme · module 004 +
+- [[IDH1]] — isocitrate dehydrogenase (NADP(+)) 1 · module 063 +
+- [[IDH2]] — isocitrate dehydrogenase (NADP(+)) 2 · module 040 +
+- [[IDH3A]] — isocitrate dehydrogenase (NAD(+)) 3 catalytic subunit alpha · module 020 +
+- [[IDH3B]] — isocitrate dehydrogenase (NAD(+)) 3 non-catalytic subunit beta · module 007 +
+- [[IDH3G]] — isocitrate dehydrogenase (NAD(+)) 3 non-catalytic subunit gamma · module 002 +
+- [[IDI1]] — isopentenyl-diphosphate delta isomerase 1 · module 086 +
+- [[IDI2-AS1]] — IDI2 antisense RNA 1 · module 038 +
+- [[IDNK]] — IDNK gluconokinase · module 010 +
+- [[IDO1]] — indoleamine 2,3-dioxygenase 1 · module 070 +
+- [[IDS]] — iduronate 2-sulfatase · module 050 +
+- [[IDUA]] — alpha-L-iduronidase · module 096 +
+- [[IER2]] — immediate early response 2 · module 109 +
+- [[IER3]] — immediate early response 3 · module 112 +
+- [[IER3IP1]] — immediate early response 3 interacting protein 1 · module 040 +
+- [[IER5]] — immediate early response 5 · module 020 -
+- [[IER5L]] — immediate early response 5 like · module 004 -
+- [[IFFO2]] — intermediate filament family orphan 2 · module 154 +
+- [[IFI16]] — interferon gamma inducible protein 16 · module 032 +
+- [[IFI27]] — interferon alpha inducible protein 27 · module 032 +
+- [[IFI27L1]] — interferon alpha inducible protein 27 like 1 · module 040 +
+- [[IFI27L2]] — interferon alpha inducible protein 27 like 2 · module 024 +
+- [[IFI30]] — IFI30 lysosomal thiol reductase · module 070 +
+- [[IFI35]] — interferon induced protein 35 · module 032 +
+- [[IFI44]] — interferon induced protein 44 · module 032 +
+- [[IFI44L]] — interferon induced protein 44 like · module 032 +
+- [[IFI6]] — interferon alpha inducible protein 6 · module 032 +
+- [[IFIH1]] — interferon induced with helicase C domain 1 · module 032 +
+- [[IFIT1]] — interferon induced protein with tetratricopeptide repeats 1 · module 032 +
+- [[IFIT2]] — interferon induced protein with tetratricopeptide repeats 2 · module 032 +
+- [[IFIT3]] — interferon induced protein with tetratricopeptide repeats 3 · module 032 +
+- [[IFIT5]] — interferon induced protein with tetratricopeptide repeats 5 · module 032 +
+- [[IFITM1]] — interferon induced transmembrane protein 1 · module 032 +
+- [[IFITM10]] — interferon induced transmembrane protein 10 · module 096 +
+- [[IFITM2]] — interferon induced transmembrane protein 2 · module 032 +
+- [[IFITM3]] — interferon induced transmembrane protein 3 · module 032 +
+- [[IFNAR1]] — interferon alpha and beta receptor subunit 1 · module 068 +
+- [[IFNAR2]] — interferon alpha and beta receptor subunit 2 · module 014 +
+- [[IFNGR1]] — interferon gamma receptor 1 · module 106 +
+- [[IFNGR2]] — interferon gamma receptor 2 · module 014 +
+- [[IFNLR1]] — interferon lambda receptor 1 · module 031 +
+- [[IFRD1]] — interferon related developmental regulator 1 · module 093 +
+- [[IFRD2]] — interferon related developmental regulator 2 · module 001 +
+- [[IFT122]] — intraflagellar transport 122 · module 067 +
+- [[IFT140]] — intraflagellar transport 140 · module 017 -
+- [[IFT172]] — intraflagellar transport 172 · module 017 +
+- [[IFT20]] — intraflagellar transport 20 · module 040 +
+- [[IFT22]] — intraflagellar transport 22 · module 017 +
+- [[IFT27]] — intraflagellar transport 27 · module 069 +
+- [[IFT43]] — intraflagellar transport 43 · module 185 +
+- [[IFT46]] — intraflagellar transport 46 · module 028 +
+- [[IFT52]] — intraflagellar transport 52 · module 030 +
+- [[IFT57]] — intraflagellar transport 57 · module 014 +
+- [[IFT74]] — intraflagellar transport 74 · module 028 +
+- [[IFT80]] — intraflagellar transport 80 · module 003 -
+- [[IFT81]] — intraflagellar transport 81 · module 028 +
+- [[IFT88]] — intraflagellar transport 88 · module 064 +
+- [[IFTAP]] — intraflagellar transport associated protein · module 017 +
+- [[IGBP1]] — immunoglobulin binding protein 1 · module 118 +
+- [[IGDCC4]] — immunoglobulin superfamily DCC subclass member 4 · module 013 +
+- [[IGF1R]] — insulin like growth factor 1 receptor · module 225 +
+- [[IGF2]] — insulin like growth factor 2 · module 050 +
+- [[IGF2BP1]] — insulin like growth factor 2 mRNA binding protein 1 · module 095 +
+- [[IGF2BP2]] — insulin like growth factor 2 mRNA binding protein 2 · module 120 +
+- [[IGF2BP2-AS1]] — IGF2BP2 antisense RNA 1 · module 021 +
+- [[IGF2BP3]] — insulin like growth factor 2 mRNA binding protein 3 · module 030 -
+- [[IGF2R]] — insulin like growth factor 2 receptor · module 122 +
+- [[IGFBP1]] — insulin like growth factor binding protein 1 · module 008 +
+- [[IGFBP2]] — insulin like growth factor binding protein 2 · module 058 +
+- [[IGFBP3]] — insulin like growth factor binding protein 3 · module 013 +
+- [[IGFBP4]] — insulin like growth factor binding protein 4 · module 097 +
+- [[IGFBP5]] — insulin like growth factor binding protein 5 · module 066 +
+- [[IGFBP6]] — insulin like growth factor binding protein 6 · module 013 +
+- [[IGFBP7]] — insulin like growth factor binding protein 7 · module 013 +
+- [[IGFL2]] — IGF like family member 2 · module 073 +
+- [[IGFL2-AS1]] — IGFL2 antisense RNA 1 · module 008 +
+- [[IGFL4]] — IGF like family member 4 · module 027 +
+- [[IGFN1]] — immunoglobulin like and fibronectin type III domain containing 1 · module 125 +
+- [[IGHMBP2]] — immunoglobulin mu DNA binding protein 2 · module 064 +
+- [[IGIP]] — IgA inducing protein · module 020 -
+- [[IGSF1]] — immunoglobulin superfamily member 1 · module 019 +
+- [[IGSF11]] — immunoglobulin superfamily member 11 · module 026 +
+- [[IGSF3]] — immunoglobulin superfamily member 3 · module 100 +
+- [[IGSF8]] — immunoglobulin superfamily member 8 · module 088 -
+- [[IGSF9]] — immunoglobulin superfamily member 9 · module 031 +
+- [[IGSF9B]] — immunoglobulin superfamily member 9B · module 195 +
+- [[IHO1]] — interactor of HORMAD1 1 · module 108 +
+- [[IK]] — IK cytokine · module 074 +
+- [[IKBIP]] — IKBKB interacting protein · module 040 +
+- [[IKBKB]] — inhibitor of nuclear factor kappa B kinase subunit beta · module 014 +
+- [[IKBKE]] — inhibitor of nuclear factor kappa B kinase subunit epsilon · module 014 +
+- [[IKBKG]] — inhibitor of nuclear factor kappa B kinase regulatory subunit gamma · module 127 +
+- [[IKZF2]] — IKAROS family zinc finger 2 · module 008 +
+- [[IKZF3]] — IKAROS family zinc finger 3 · module 001 +
+- [[IKZF4]] — IKAROS family zinc finger 4 · module 038 +
+- [[IKZF5]] — IKAROS family zinc finger 5 · module 187 +
+- [[IL10RB]] — interleukin 10 receptor subunit beta · module 020 -
+- [[IL11]] — interleukin 11 · module 013 +
+- [[IL11RA]] — interleukin 11 receptor subunit alpha · module 157 +
+- [[IL12RB2]] — interleukin 12 receptor subunit beta 2 · module 053 +
+- [[IL13RA1]] — interleukin 13 receptor subunit alpha 1 · module 029 +
+- [[IL13RA2]] — interleukin 13 receptor subunit alpha 2 · module 081 +
+- [[IL15]] — interleukin 15 · module 014 +
+- [[IL15RA]] — interleukin 15 receptor subunit alpha · module 070 +
+- [[IL17RA]] — interleukin 17 receptor A · module 003 +
+- [[IL17RB]] — interleukin 17 receptor B · module 027 +
+- [[IL17RC]] — interleukin 17 receptor C · module 040 +
+- [[IL17RD]] — interleukin 17 receptor D · module 030 +
+- [[IL17RE]] — interleukin 17 receptor E · module 008 +
+- [[IL18]] — interleukin 18 · module 123 +
+- [[IL18BP]] — interleukin 18 binding protein · module 020 +
+- [[IL18R1]] — interleukin 18 receptor 1 · module 104 +
+- [[IL19]] — interleukin 19 · module 196 +
+- [[IL1A]] — interleukin 1 alpha · module 112 +
+- [[IL1B]] — interleukin 1 beta · module 081 +
+- [[IL1R1]] — interleukin 1 receptor type 1 · module 104 +
+- [[IL1R2]] — interleukin 1 receptor type 2 · module 073 +
+- [[IL1RAP]] — interleukin 1 receptor accessory protein · module 084 +
+- [[IL1RAPL1]] — interleukin 1 receptor accessory protein like 1 · module 013 +
+- [[IL1RAPL2]] — interleukin 1 receptor accessory protein like 2 · module 090 +
+- [[IL1RL1]] — interleukin 33 receptor · module 101 +
+- [[IL1RN]] — interleukin 1 receptor antagonist · module 031 +
+- [[IL20RA]] — interleukin 20 receptor subunit alpha · module 055 +
+- [[IL20RB]] — interleukin 20 receptor subunit beta · module 047 +
+- [[IL22RA1]] — interleukin 22 receptor subunit alpha 1 · module 008 +
+- [[IL23A]] — interleukin 23 subunit alpha · module 112 +
+- [[IL27RA]] — interleukin 27 receptor subunit alpha · module 111 +
+- [[IL2RG]] — interleukin 2 receptor subunit gamma · module 073 +
+- [[IL31RA]] — interleukin 31 receptor A · module 116 +
+- [[IL32]] — interleukin 32 · module 014 +
+- [[IL33]] — interleukin 33 · module 081 +
+- [[IL34]] — interleukin 34 · module 181 +
+- [[IL3RA]] — interleukin 3 receptor subunit alpha · module 061 +
+- [[IL4I1]] — interleukin 4 induced 1 · module 016 +
+- [[IL4R]] — interleukin 4 receptor · module 219 +
+- [[IL6]] — interleukin 6 · module 014 +
+- [[IL6R]] — interleukin 6 receptor · module 113 +
+- [[IL6ST]] — interleukin 6 cytokine family signal transducer · module 003 -
+- [[IL7]] — interleukin 7 · module 070 +
+- [[IL7R]] — interleukin 7 receptor · module 202 +
+- [[IL9RP3]] — IL9R pseudogene 3 · module 036 +
+- [[ILDR1]] — immunoglobulin like domain containing receptor 1 · module 027 +
+- [[ILDR2]] — immunoglobulin like domain containing receptor 2 · module 044 +
+- [[ILF2]] — interleukin enhancer binding factor 2 · module 020 +
+- [[ILF3]] — interleukin enhancer binding factor 3 · module 003 -
+- [[ILF3-DT]] — ILF3 divergent transcript · module 024 +
+- [[ILK]] — integrin linked kinase · module 005 -
+- [[ILKAP]] — ILK associated serine/threonine phosphatase · module 163 +
+- [[ILRUN]] — inflammation and lipid regulator with UBA-like and NBR1-like domains · module 011 -
+- [[ILVBL]] — 2-hydroxyacyl-CoA lyase 2 · module 017 +
+- [[IMMP1L]] — inner mitochondrial membrane peptidase subunit 1 · module 017 +
+- [[IMMP2L]] — inner mitochondrial membrane peptidase subunit 2 · module 200 +
+- [[IMMT]] — inner membrane mitochondrial protein · module 006 +
+- [[IMP3]] — IMP U3 small nucleolar ribonucleoprotein 3 · module 054 +
+- [[IMP4]] — IMP U3 small nucleolar ribonucleoprotein 4 · module 001 +
+- [[IMPA1]] — inositol monophosphatase 1 · module 005 -
+- [[IMPA1P1]] — inositol monophosphatase 1 pseudogene 1 · module 039 +
+- [[IMPA2]] — inositol monophosphatase 2 · module 011 -
+- [[IMPACT]] — impact RWD domain protein · module 001 +
+- [[IMPDH1]] — inosine monophosphate dehydrogenase 1 · module 077 +
+- [[IMPDH2]] — inosine monophosphate dehydrogenase 2 · module 035 -
+- [[IMPG2]] — interphotoreceptor matrix proteoglycan 2 · module 039 +
+- [[INA]] — internexin neuronal intermediate filament protein alpha · module 009 +
+- [[INAFM1]] — InaF motif containing 1 · module 020 -
+- [[INAFM2]] — InaF motif containing 2 · module 011 +
+- [[INAVA]] — innate immunity activator · module 008 +
+- [[INCENP]] — inner centromere protein · module 022 +
+- [[INF2]] — inverted formin 2 · module 002 +
+- [[ING1]] — inhibitor of growth family member 1 · module 004 -
+- [[ING2]] — inhibitor of growth family member 2 · module 020 -
+- [[ING2-DT]] — ING2 divergent transcript · module 015 +
+- [[ING3]] — inhibitor of growth family member 3 · module 051 +
+- [[ING4]] — inhibitor of growth family member 4 · module 041 +
+- [[ING5]] — inhibitor of growth family member 5 · module 038 +
+- [[INHA]] — inhibin subunit alpha · module 015 +
+- [[INHBA]] — inhibin subunit beta A · module 112 +
+- [[INHBB]] — inhibin subunit beta B · module 100 +
+- [[INIP]] — INTS3 and NABP interacting protein · module 017 +
+- [[INKA2]] — inka box actin regulator 2 · module 062 +
+- [[INO80]] — INO80 complex ATPase subunit · module 051 +
+- [[INO80B]] — INO80 complex subunit B · module 069 +
+- [[INO80C]] — INO80 complex subunit C · module 109 +
+- [[INO80D]] — INO80 complex subunit D · module 095 +
+- [[INO80E]] — INO80 complex subunit E · module 005 +
+- [[INPP1]] — inositol polyphosphate-1-phosphatase · module 073 +
+- [[INPP4A]] — inositol polyphosphate-4-phosphatase type I A · module 159 +
+- [[INPP4B]] — inositol polyphosphate-4-phosphatase type II B · module 008 +
+- [[INPP5A]] — inositol polyphosphate-5-phosphatase A · module 136 +
+- [[INPP5B]] — inositol polyphosphate-5-phosphatase B · module 030 +
+- [[INPP5D]] — inositol polyphosphate-5-phosphatase D · module 055 +
+- [[INPP5E]] — inositol polyphosphate-5-phosphatase E · module 002 +
+- [[INPP5F]] — inositol polyphosphate-5-phosphatase F · module 088 -
+- [[INPP5K]] — inositol polyphosphate-5-phosphatase K · module 076 +
+- [[INPPL1]] — inositol polyphosphate phosphatase like 1 · module 126 +
+- [[INSIG1]] — insulin induced gene 1 · module 086 +
+- [[INSIG2]] — insulin induced gene 2 · module 099 +
+- [[INSR]] — insulin receptor · module 069 +
+- [[INSYN2A]] — inhibitory synaptic factor 2A · module 062 +
+- [[INSYN2B]] — inhibitory synaptic factor family member 2B · module 013 +
+- [[INTS1]] — integrator complex subunit 1 · module 002 +
+- [[INTS10]] — integrator complex subunit 10 · module 040 +
+- [[INTS11]] — integrator complex subunit 11 · module 002 +
+- [[INTS12]] — integrator complex subunit 12 · module 028 +
+- [[INTS13]] — integrator complex subunit 13 · module 134 +
+- [[INTS14]] — integrator complex subunit 14 · module 011 +
+- [[INTS15]] — integrator complex subunit 15 · module 002 +
+- [[INTS2]] — integrator complex subunit 2 · module 148 +
+- [[INTS3]] — integrator complex subunit 3 · module 127 +
+- [[INTS4]] — integrator complex subunit 4 · module 212 +
+- [[INTS4P1]] — integrator complex subunit 4 pseudogene 1 · module 037 +
+- [[INTS5]] — integrator complex subunit 5 · module 007 +
+- [[INTS6]] — integrator complex subunit 6 · module 038 +
+- [[INTS6-AS1]] — INTS6 antisense RNA 1 · module 026 +
+- [[INTS6L]] — integrator complex subunit 6 like · module 004 -
+- [[INTS7]] — integrator complex subunit 7 · module 004 +
+- [[INTS8]] — integrator complex subunit 8 · module 015 +
+- [[INTS9]] — integrator complex subunit 9 · module 169 +
+- [[INTU]] — inturned planar cell polarity protein · module 064 +
+- [[INVS]] — inversin · module 185 +
+- [[IP6K1]] — inositol hexakisphosphate kinase 1 · module 149 +
+- [[IP6K2]] — inositol hexakisphosphate kinase 2 · module 118 +
+- [[IPCEF1]] — interaction protein for cytohesin exchange factors 1 · module 150 +
+- [[IPMK]] — inositol polyphosphate multikinase · module 144 +
+- [[IPO11]] — importin 11 · module 185 +
+- [[IPO13]] — importin 13 · module 002 +
+- [[IPO4]] — importin 4 · module 004 +
+- [[IPO5]] — importin 5 · module 020 +
+- [[IPO7]] — importin 7 · module 004 +
+- [[IPO8]] — importin 8 · module 025 +
+- [[IPO9]] — importin 9 · module 006 +
+- [[IPO9-AS1]] — IPO9 antisense RNA 1 · module 080 +
+- [[IPP]] — kelch like family member 27 · module 064 +
+- [[IPPK]] — inositol-pentakisphosphate 2-kinase
+- [[IQANK1]] — IQ motif and ankyrin repeat containing 1 · module 031 +
+- [[IQCA1]] — dynein regulatory complex subunit 11 · module 013 +
+- [[IQCB1]] — IQ motif containing B1 · module 040 +
+- [[IQCD]] — dynein regulatory complex subunit 10 · module 001 -
+- [[IQCE]] — IQ motif containing E · module 050 +
+- [[IQCG]] — dynein regulatory complex subunit 9 · module 054 -
+- [[IQCH]] — IQ motif containing H · module 004 +
+- [[IQCH-AS1]] — IQCH antisense RNA 1 · module 010 +
+- [[IQCJ]] — IQ motif containing J · module 037 +
+- [[IQCJ-SCHIP1]] — IQCJ-SCHIP1 readthrough · module 151 +
+- [[IQCK]] — IQ motif containing K · module 089 +
+- [[IQCM]] — IQ motif containing M · module 019 +
+- [[IQCN]] — IQ motif containing N · module 093 +
+- [[IQGAP1]] — IQ motif containing GTPase activating protein 1 · module 111 +
+- [[IQGAP2]] — IQ motif containing GTPase activating protein 2 · module 055 +
+- [[IQGAP3]] — IQ motif containing GTPase activating protein 3 · module 067 +
+- [[IQSEC1]] — IQ motif and Sec7 domain ArfGEF 1 · module 195 +
+- [[IQSEC2]] — IQ motif and Sec7 domain ArfGEF 2 · module 030 +
+- [[IQUB]] — IQ motif and ubiquitin domain containing · module 037 +
+- [[IRAG1-AS1]] — IRAG1 antisense RNA 1 · module 053 +
+- [[IRAG2]] — inositol 1,4,5-triphosphate receptor associated 2 · module 014 +
+- [[IRAK1]] — interleukin 1 receptor associated kinase 1 · module 018 +
+- [[IRAK1BP1]] — interleukin 1 receptor associated kinase 1 binding protein 1 · module 017 +
+- [[IRAK2]] — interleukin 1 receptor associated kinase 2 · module 112 +
+- [[IRAK3]] — interleukin 1 receptor associated kinase 3 · module 104 +
+- [[IRAK4]] — interleukin 1 receptor associated kinase 4 · module 085 -
+- [[IREB2]] — iron responsive element binding protein 2 · module 089 +
+- [[IRF1]] — interferon regulatory factor 1 · module 014 +
+- [[IRF2]] — interferon regulatory factor 2 · module 014 +
+- [[IRF2BP1]] — interferon regulatory factor 2 binding protein 1 · module 016 +
+- [[IRF2BP2]] — interferon regulatory factor 2 binding protein 2 · module 123 +
+- [[IRF2BPL]] — interferon regulatory factor 2 binding protein like · module 014 +
+- [[IRF3]] — interferon regulatory factor 3 · module 080 +
+- [[IRF4]] — interferon regulatory factor 4 · module 061 +
+- [[IRF6]] — interferon regulatory factor 6 · module 031 +
+- [[IRF7]] — interferon regulatory factor 7 · module 070 +
+- [[IRF9]] — interferon regulatory factor 9 · module 032 +
+- [[IRGQ]] — immunity related GTPase Q · module 157 +
+- [[IRS1]] — insulin receptor substrate 1 · module 001 +
+- [[IRS2]] — insulin receptor substrate 2 · module 113 +
+- [[IRX2]] — iroquois homeobox 2 · module 020 -
+- [[IRX3]] — iroquois homeobox 3 · module 113 +
+- [[IRX5]] — iroquois homeobox 5 · module 020 -
+- [[ISCA1]] — iron-sulfur cluster assembly 1 · module 105 +
+- [[ISCA2]] — iron-sulfur cluster assembly 2 · module 024 +
+- [[ISCU]] — iron-sulfur cluster assembly enzyme · module 062 +
+- [[ISG15]] — ISG15 ubiquitin like modifier · module 070 +
+- [[ISG20]] — interferon stimulated exonuclease gene 20 · module 070 +
+- [[ISG20L2]] — interferon stimulated exonuclease gene 20 like 2 · module 149 +
+- [[ISM1]] — isthmin 1 · module 061 +
+- [[ISM2]] — isthmin 2 · module 103 +
+- [[ISOC1]] — isochorismatase domain containing 1 · module 052 -
+- [[ISOC2]] — isochorismatase domain containing 2 · module 040 +
+- [[IST1]] — IST1 factor associated with ESCRT-III · module 059 +
+- [[ISY1]] — ISY1 spliceosome associated protein · module 041 +
+- [[ISY1-RAB43]] — ISY1-RAB43 readthrough · module 038 +
+- [[ISYNA1]] — inositol-3-phosphate synthase 1 · module 138 +
+- [[ITCH]] — itchy E3 ubiquitin protein ligase · module 170 +
+- [[ITFG1]] — integrin alpha FG-GAP repeat containing 1 · module 046 +
+- [[ITFG2]] — integrin alpha FG-GAP repeat containing 2 · module 114 +
+- [[ITFG2-AS1]] — ITFG2 antisense RNA 1 · module 023 +
+- [[ITGA1]] — integrin subunit alpha 1 · module 228 +
+- [[ITGA10]] — integrin subunit alpha 10 · module 098 +
+- [[ITGA11]] — integrin subunit alpha 11 · module 013 +
+- [[ITGA2]] — integrin subunit alpha 2 · module 081 +
+- [[ITGA2-AS1]] — ITGA2 antisense RNA 1 · module 101 +
+- [[ITGA2B]] — integrin subunit alpha 2b · module 038 +
+- [[ITGA3]] — integrin subunit alpha 3 · module 078 +
+- [[ITGA4]] — integrin subunit alpha 4 · module 066 +
+- [[ITGA5]] — integrin subunit alpha 5 · module 097 +
+- [[ITGA6]] — integrin subunit alpha 6 · module 034 +
+- [[ITGA7]] — integrin subunit alpha 7 · module 100 +
+- [[ITGA8]] — integrin subunit alpha 8 · module 104 +
+- [[ITGA9]] — integrin subunit alpha 9 · module 053 +
+- [[ITGA9-AS1]] — ITGA9 antisense RNA 1 · module 046 +
+- [[ITGAE]] — integrin subunit alpha E · module 021 +
+- [[ITGAV]] — integrin subunit alpha V · module 197 +
+- [[ITGB1]] — integrin subunit beta 1 · module 078 +
+- [[ITGB1-DT]] — ITGB1 divergent transcript · module 116 +
+- [[ITGB1BP1]] — integrin subunit beta 1 binding protein 1 · module 002 +
+- [[ITGB2]] — integrin subunit beta 2 · module 010 +
+- [[ITGB3]] — integrin subunit beta 3 · module 013 +
+- [[ITGB3BP]] — integrin subunit beta 3 binding protein · module 071 +
+- [[ITGB4]] — integrin subunit beta 4 · module 031 +
+- [[ITGB5]] — integrin subunit beta 5 · module 174 +
+- [[ITGB6]] — integrin subunit beta 6 · module 008 +
+- [[ITGB8]] — integrin subunit beta 8 · module 143 +
+- [[ITGBL1]] — integrin subunit beta like 1 · module 121 +
+- [[ITIH2]] — inter-alpha-trypsin inhibitor heavy chain 2 · module 008 +
+- [[ITIH5]] — inter-alpha-trypsin inhibitor heavy chain 5 · module 008 +
+- [[ITM2B]] — integral membrane protein 2B · module 029 +
+- [[ITM2C]] — integral membrane protein 2C · module 050 +
+- [[ITPA]] — inosine triphosphatase · module 124 +
+- [[ITPK1]] — inositol-tetrakisphosphate 1-kinase · module 031 +
+- [[ITPKA]] — inositol-trisphosphate 3-kinase A · module 063 +
+- [[ITPKB]] — inositol-trisphosphate 3-kinase B · module 189 +
+- [[ITPKC]] — inositol-trisphosphate 3-kinase C · module 031 +
+- [[ITPR1]] — inositol 1,4,5-trisphosphate receptor type 1 · module 013 +
+- [[ITPR2]] — inositol 1,4,5-trisphosphate receptor type 2 · module 183 +
+- [[ITPR2-AS1]] — SSPN antisense RNA 1 · module 039 +
+- [[ITPR3]] — inositol 1,4,5-trisphosphate receptor type 3 · module 078 +
+- [[ITPRID2]] — ITPR interacting domain containing 2 · module 034 +
+- [[ITPRIP]] — inositol 1,4,5-trisphosphate receptor interacting protein · module 174 +
+- [[ITPRIPL2]] — ITPRIP like 2 · module 088 +
+- [[ITSN1]] — intersectin 1 · module 001 -
+- [[ITSN2]] — intersectin 2 · module 020 -
+- [[IVD]] — isovaleryl-CoA dehydrogenase · module 067 +
+- [[IVNS1ABP]] — influenza virus NS1A binding protein · module 012 -
+- [[IWS1]] — interacts with SUPT6H, CTD assembly factor 1 · module 012 +

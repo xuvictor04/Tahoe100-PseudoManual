@@ -1,0 +1,277 @@
+{
+ "stage": "direction",
+ "version": 2,
+ "finished": "2026-11-09 11:07:29",
+ "info": {
+  "version": 2,
+  "genes": 16643,
+  "drugdoses": 1132,
+  "lines": 50,
+  "k_drugdoses": 10,
+  "chunk": 1472,
+  "permutations": 200,
+  "permutations_null_groups": 200,
+  "cell_line_genetics": "C:\\tahoe\\Tahoe-100M\\metadata\\cell_line_metadata.parquet",
+  "lines_with_genetics_record": 50,
+  "organs_from": "lines.csv",
+  "lines_with_organ": 50,
+  "groups_tested": {
+   "genotype": 64,
+   "expression_null_line_sets": 5791,
+   "expression_null_line_sets_across_organs": 293,
+   "expression_null_genes": 5939,
+   "expression_null_genes_across_organs": 322,
+   "expression_null_line_sets_not_tested_partners": 88,
+   "expression_null_genes_not_tested_partners": 97,
+   "pseudo_controls": 60
+  },
+  "global_sensitivity_correction": {
+   "drug_specific": 165529,
+   "line_wide": 856,
+   "none": 45,
+   "line_wide_from_drugdoses": 668,
+   "line_wide_check": {
+    "drugdoses": 668,
+    "compounds": 307,
+    "sd": 0.2381,
+    "split_half_r": 0.9937,
+    "used": true,
+    "why": "668 drug-doses of 307 compounds; SD 0.24 across lines, split-half r 0.99"
+   }
+  },
+  "tests": {
+   "genotype": {
+    "response": 934629,
+    "baseline": 1065152,
+    "sensitivity": 71316
+   },
+   "genotype_p_cut": {
+    "response": 4.499997750001125e-06,
+    "baseline": 4.99999750000125e-07,
+    "sensitivity": 1.4022098827752538e-06
+   },
+   "expression_null": {
+    "response_within_organs": 571998,
+    "response_across_organs": 19342,
+    "baseline_within_organs": 647046,
+    "baseline_across_organs": 26399,
+    "sensitivity_within_organs": 2000200,
+    "sensitivity_across_organs": 106945
+   },
+   "level_pairs": 1992533,
+   "level_sensitivity": 5758605,
+   "drug_target": 3370032
+  },
+  "null_tail": {
+   "response": {
+    "values": 2540300,
+    "tail_from": 6.466,
+    "tail_shape": 0.0,
+    "tail_scale": 0.7089
+   },
+   "baseline": {
+    "values": 2540500,
+    "tail_from": 3.698,
+    "tail_shape": 0.0256,
+    "tail_scale": 0.2417
+   },
+   "sensitivity": {
+    "values": 2886500,
+    "tail_from": 3.686,
+    "tail_shape": 0.0,
+    "tail_scale": 0.2331
+   }
+  },
+  "level_calibration": {
+   "level": {
+    "values": 200000,
+    "lambda": 1.0,
+    "share_p_below_0.01": 0.00937,
+    "share_p_below_0.001": 0.00094
+   },
+   "level_sensitivity": {
+    "values": 0,
+    "lambda": 1.0
+   }
+  },
+  "variable_drugdoses": 365,
+  "level_covariates": [
+   "intercept",
+   "organ Lung",
+   "organ Bowel",
+   "organ Pancreas",
+   "organ Skin",
+   "organ CNS/Brain",
+   "organ Uterus",
+   "organ Esophagus/Stomach",
+   "organ Breast",
+   "organ Liver",
+   "PC1",
+   "PC2",
+   "PC3"
+  ],
+  "relations": true,
+  "edges": 102590,
+  "edges_by_kind_and_grade": {
+   "genotype_response": {
+    "A": 17,
+    "B": 13,
+    "C": 106
+   },
+   "genotype_baseline": {
+    "A": 8,
+    "B": 2,
+    "C": 9
+   },
+   "genotype_sensitivity": {
+    "A": 0,
+    "B": 0,
+    "C": 1
+   },
+   "null_response": {
+    "A": 0,
+    "B": 2026,
+    "C": 150
+   },
+   "null_baseline": {
+    "A": 0,
+    "B": 38332,
+    "C": 42174
+   },
+   "null_sensitivity": {
+    "A": 0,
+    "B": 4194,
+    "C": 1811
+   },
+   "drug_target": {
+    "A": 0,
+    "B": 11874,
+    "C": 0
+   },
+   "level": {
+    "A": 0,
+    "B": 0,
+    "C": 1359
+   },
+   "level_sensitivity": {
+    "A": 0,
+    "B": 0,
+    "C": 514
+   }
+  },
+  "edges_by_kind": {
+   "genotype_response": 136,
+   "genotype_baseline": 19,
+   "genotype_sensitivity": 1,
+   "null_response": 2176,
+   "null_baseline": 80506,
+   "null_sensitivity": 6005,
+   "drug_target": 11874,
+   "level": 1359,
+   "level_sensitivity": 514
+  },
+  "false_positive_rate": {
+   "response": {
+    "pseudo_edges_mean_per_group": 0.2,
+    "real_edges_mean_per_group": 0.6719,
+    "pseudo_edges_per_tested": 1.3448467154920739e-05,
+    "pseudo_share_groups_with_any_edge": 0.1833,
+    "pseudo_within_group_edges_mean_per_group": 0.2667,
+    "real_within_group_edges_mean_per_group": 2.125,
+    "real_groups": 64,
+    "expected_false_edges": 12.8,
+    "expected_false_edges_within_group": 17.07,
+    "edges": 136,
+    "edges_table_wide": 43,
+    "pseudo_at_or_above_real": false
+   },
+   "baseline": {
+    "pseudo_edges_mean_per_group": 0.0,
+    "real_edges_mean_per_group": 0.1719,
+    "pseudo_edges_per_tested": 0.0,
+    "pseudo_share_groups_with_any_edge": 0.0,
+    "pseudo_within_group_edges_mean_per_group": 0.2167,
+    "real_within_group_edges_mean_per_group": 0.3125,
+    "real_groups": 64,
+    "expected_false_edges": 0.0,
+    "expected_false_edges_within_group": 13.87,
+    "edges": 19,
+    "edges_table_wide": 10,
+    "pseudo_at_or_above_real": false
+   },
+   "sensitivity": {
+    "pseudo_edges_mean_per_group": 0.0,
+    "real_edges_mean_per_group": 0.0,
+    "pseudo_edges_per_tested": 0.0,
+    "pseudo_share_groups_with_any_edge": 0.0,
+    "pseudo_within_group_edges_mean_per_group": 0.0167,
+    "real_within_group_edges_mean_per_group": 0.0156,
+    "real_groups": 64,
+    "expected_false_edges": 0.0,
+    "expected_false_edges_within_group": 1.07,
+    "edges": 1,
+    "edges_table_wide": 0,
+    "pseudo_at_or_above_real": false
+   }
+  },
+  "expected_false_edges": {
+   "genotype_response": {
+    "edges": 43,
+    "expected_false": 12.8,
+    "expected_false_upper": 20.74,
+    "how": "edges significant over the table (q < 0.10, grades A/B): pseudo-group edges per group at the real BH cut x the real groups (12 edges in 60 pseudo-groups)"
+   },
+   "genotype_response_within_group_only": {
+    "edges": 93,
+    "expected_false": 4.27,
+    "expected_false_upper": 9.76,
+    "how": "edges significant only within their group (grade C): pseudo-group within-group edges per group x the real groups, minus the table-wide ones (4 edges in 60 pseudo-groups)"
+   },
+   "genotype_baseline": {
+    "edges": 10,
+    "expected_false": 0.0,
+    "expected_false_upper": 3.2,
+    "how": "edges significant over the table (q < 0.10, grades A/B): pseudo-group edges per group at the real BH cut x the real groups (0 edges in 60 pseudo-groups)"
+   },
+   "genotype_baseline_within_group_only": {
+    "edges": 9,
+    "expected_false": 13.87,
+    "expected_false_upper": 22.05,
+    "how": "edges significant only within their group (grade C): pseudo-group within-group edges per group x the real groups, minus the table-wide ones (13 edges in 60 pseudo-groups)"
+   },
+   "genotype_sensitivity": {
+    "edges": 0,
+    "expected_false": 0.0,
+    "expected_false_upper": 3.2,
+    "how": "edges significant over the table (q < 0.10, grades A/B): pseudo-group edges per group at the real BH cut x the real groups (0 edges in 60 pseudo-groups)"
+   },
+   "genotype_sensitivity_within_group_only": {
+    "edges": 1,
+    "expected_false": 1.07,
+    "expected_false_upper": 5.06,
+    "how": "edges significant only within their group (grade C): pseudo-group within-group edges per group x the real groups, minus the table-wide ones (1 edges in 60 pseudo-groups)"
+   },
+   "level": {
+    "edges": 1359,
+    "expected_false": 102,
+    "expected_false_upper": 120.24,
+    "how": "the same tests with every gene's level permuted over its lines (one permutation), at the real BH cut"
+   },
+   "level_sensitivity": {
+    "edges": 0,
+    "expected_false": 0,
+    "expected_false_upper": 3.0,
+    "how": "the same tests with every gene's level permuted over its lines (one permutation), at the real BH cut"
+   },
+   "level_sensitivity_within_drugdose_only": {
+    "edges": 514,
+    "expected_false": 37,
+    "expected_false_upper": 48.68,
+    "how": "edges significant only among the genes tested for their drug-dose: the same count with the levels permuted (one permutation)"
+   }
+  },
+  "minutes": 3.26,
+  "peak_rss_mb": 1702.9,
+  "peak_rss_how": "this stage's largest resident size, sampled every 0.2 s"
+ }
+}
