@@ -37,7 +37,7 @@ import pyarrow.parquet as _pq
 
 from . import atlas_core as A
 from . import tlib as T
-from .common import log, mark_output, note_children
+from .common import log, mark_output, note_children, urlopen
 
 REPO = "https://huggingface.co/datasets/tahoebio/Tahoe-100M/resolve/main/"
 API = "https://huggingface.co/api/datasets/tahoebio/Tahoe-100M/tree/main/data"
@@ -72,11 +72,10 @@ def fetch(url, dest, tries=6):
 
 def list_files():
     """Names of the expression files, from the Hugging Face API (paged); fallback: the known 3,388-file naming."""
-    import urllib.request
     names, url = [], API
     try:
         while url:
-            with urllib.request.urlopen(url, timeout=60) as resp:
+            with urlopen(url, 60) as resp:
                 names += [d["path"] for d in json.load(resp) if d.get("path", "").endswith(".parquet")]
                 link = resp.headers.get("Link", "")
             m = re.search(r'<([^>]+)>;\s*rel="next"', link)
@@ -101,7 +100,7 @@ class RangeFile:
     def _get(self, rng):
         import urllib.request
         req = urllib.request.Request(self.url, headers={"Range": rng})
-        with urllib.request.urlopen(req, timeout=120) as r:
+        with urlopen(req, 120) as r:
             data = r.read()
             cr = r.headers.get("Content-Range", "")
         total = int(cr.rsplit("/", 1)[1]) if "/" in cr else len(data)

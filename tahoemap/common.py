@@ -241,6 +241,72 @@ def read_text_file(path):
     return raw.decode("utf-8-sig")
 
 
+# ----------------------------------------------------------------------------- HTTPS
+# Windows: Python checks a server's certificate against a snapshot of the Windows certificate stores, and Windows adds
+# a root certificate to them only when one of its own programs first needs it. So a site whose root that PC has not
+# met yet (Go Daddy's, for ftp.ensembl.org and ftp.ncbi.nlm.nih.gov) fails in Python with CERTIFICATE_VERIFY_FAILED
+# ("self-signed certificate in certificate chain") while a browser or curl.exe opens it. truststore hands the check to
+# Windows itself, which fetches such a root (and trusts what the PC trusts: also a root an antivirus or a company
+# network installed to inspect HTTPS).
+CERT_HINT = ("the server's certificate could not be verified: on Windows install truststore "
+             "(python -m pip install truststore) so that Windows checks it; on a network that inspects HTTPS, the "
+             "inspecting certificate must be trusted by this computer")
+_SSL = {}
+
+
+def https_context():
+    """The SSL context for this package's downloads: on Windows truststore's (the package, else the copy pip ships
+    with), which verifies with Windows' own certificate check; elsewhere, or without it, None (Python's default)."""
+    if "ctx" not in _SSL:
+        ctx = None
+        if os.name == "nt":
+            import importlib
+            import ssl
+            for mod in ("truststore", "pip._vendor.truststore"):
+                try:
+                    ctx = importlib.import_module(mod).SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+                    break
+                except Exception:  # noqa: BLE001  (not installed, or too old a Python for it)
+                    continue
+        _SSL["ctx"] = ctx
+    return _SSL["ctx"]
+
+
+def _cert_failure(e):
+    import ssl
+    return isinstance(e, ssl.SSLCertVerificationError) or isinstance(getattr(e, "reason", None),
+                                                                     ssl.SSLCertVerificationError)
+
+
+def urlopen(req, timeout):
+    """urllib.request.urlopen with https_context(). A certificate that fails verification is tried once more against
+    certifi's list of roots (what browsers trust; when certifi is installed), before the error is raised."""
+    import urllib.request
+    try:
+        return urllib.request.urlopen(req, timeout=timeout, context=https_context())
+    except OSError as e:                                   # urllib.error.URLError is an OSError
+        if not _cert_failure(e):
+            raise
+        try:
+            import ssl
+
+            import certifi
+            ctx = ssl.create_default_context(cafile=certifi.where())
+        except Exception:  # noqa: BLE001
+            raise e from None
+        try:
+            return urllib.request.urlopen(req, timeout=timeout, context=ctx)
+        except OSError as e2:
+            if _cert_failure(e2):
+                raise e from None                          # the first error, with its own message
+            raise
+
+
+def describe_url_error(e):
+    """An exception of a download as text, with CERT_HINT for a certificate that could not be verified."""
+    return f"{type(e).__name__}: {e}" + (f" ({CERT_HINT})" if _cert_failure(e) else "")
+
+
 # ----------------------------------------------------------------------------- links, git
 def is_link(path):
     """A symbolic link or (Windows) a directory junction. os.path.islink is False for a junction - what

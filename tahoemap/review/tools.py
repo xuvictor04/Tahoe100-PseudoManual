@@ -48,6 +48,7 @@ import xml.etree.ElementTree as ET
 from collections import Counter
 from dataclasses import dataclass, field
 
+from ..common import urlopen
 from . import review_dir
 
 ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
@@ -247,7 +248,7 @@ def http_get(ctx, service, url, params, max_age_days=None, cache=True):
         try:
             req = urllib.request.Request(full, headers={"User-Agent": ctx.http.user_agent,
                                                         "Accept": "application/json, text/xml;q=0.9, */*;q=0.5"})
-            with urllib.request.urlopen(req, timeout=ctx.http.timeout) as r:
+            with urlopen(req, ctx.http.timeout) as r:
                 body = r.read().decode("utf-8", "replace")
             if service == "ncbi" and "API rate limit exceeded" in body[:500]:
                 last = "NCBI rate limit exceeded"

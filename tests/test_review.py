@@ -80,6 +80,7 @@ sys.path.insert(0, REPO)
 import pandas as pd  # noqa: E402
 
 from tahoemap import cli  # noqa: E402
+from tahoemap.common import find_git, git_out  # noqa: E402
 from tahoemap.review import dossier as D  # noqa: E402
 from tahoemap.review import fake as F  # noqa: E402
 from tahoemap.review import keys as K  # noqa: E402
@@ -520,7 +521,8 @@ def all_keys_dead(view, ents, work):
           res2.exit_code == 0 and set(st2.values()) == {"done"} and len(ledger(view)) == 5
           and a["entity_id"] not in {x["entity"] for x in after} and {x["key"] for x in after} == {KEY3[-4:]},
           f"exit {res2.exit_code}; {st2}; entities sent: {sorted({x['entity'] for x in after})}")
-    check(c, "warns that the keys file is readable by others", "can be read by other users" in printed)
+    if os.name != "nt":                    # (the keys-file permission check is POSIX only: file modes)
+        check(c, "warns that the keys file is readable by others", "can be read by other users" in printed)
     os.remove(kf)
     reset(view, c)
     # a terminal: a new key typed at the prompt continues the same run; Enter pauses
@@ -699,14 +701,15 @@ def duplicate(view, work, out):
           and copied == notes, f"{rec['files']}; {rec['bytes']['hard_linked'] / 1e6:.0f} MB shared, "
                                f"{rec['bytes']['copied'] / 1e6:.0f} MB copied")
     rec2 = json.load(open(os.path.join(dest, "duplicated_from.json"), encoding="utf-8"))
-    head = subprocess.run(["git", "-C", REPO, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+    git = find_git()                       # (on PATH, $TAHOE_GIT, or a MinGit next to the repository)
+    head = git_out(git, REPO, "rev-parse", "HEAD")
     stamps = sorted(os.path.basename(f)[:-5] for f in glob.glob(os.path.join(out, "stages", "*.json")))
     check(c, "duplicated_from.json: source, date, code commit, stage stamps",
           rec2["source"] == os.path.abspath(out) and rec2["date"] and rec2["code"]["commit"] == head
           and set(rec2["stages"]) == set(stamps) and len(stamps) >= 5,
           {k: rec2.get(k) for k in ("date",)} | {"stages": sorted(rec2["stages"])})
-    clone_head = subprocess.run(["git", "-C", repo, "rev-parse", "HEAD"], capture_output=True, text=True)
-    check(c, "--repo: the code repository cloned", clone_head.stdout.strip() == head
+    clone_head = git_out(git, repo, "rev-parse", "HEAD")
+    check(c, "--repo: the code repository cloned", head is not None and clone_head == head
           and (rec2.get("repo_clone") or {}).get("commit") == head, rec2.get("repo_clone"))
     res, _fk = run(dest, {}, kinds="line", limit=1, dry_run=True)
     check(c, "the copy works on its own (a dry run writes into the copy, not the source)",
@@ -2782,7 +2785,7 @@ def key_prompt_ctrl_c(view, ents):
         import threading
         seen["main"] = threading.current_thread() is threading.main_thread()
         try:
-            os.kill(os.getpid(), S.SIGINT)
+            S.raise_signal(S.SIGINT)               # (Ctrl-C; os.kill(own pid) would end the process on Windows)
             t1 = time.time() + 5
             while time.time() < t1:                    # a getpass waiting for input
                 time.sleep(0.05)

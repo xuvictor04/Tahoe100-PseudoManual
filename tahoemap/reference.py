@@ -57,7 +57,8 @@ import zipfile
 import numpy as np
 import pandas as pd
 
-from .common import folder, log, read_effects_index, replace_file, stamp_stage, write_json, write_parquet
+from .common import (_cert_failure, describe_url_error, folder, log, read_effects_index, replace_file, stamp_stage,
+                     urlopen, write_json, write_parquet)
 
 VERSION = 1
 
@@ -122,7 +123,9 @@ def _retry(fn, tries, what):
             if ra.isdigit():
                 wait = min(300, max(wait, int(ra)))
         except (urllib.error.URLError, OSError, http.client.HTTPException, ValueError) as e:
-            err = f"{type(e).__name__}: {e}"
+            err = describe_url_error(e)
+            if _cert_failure(e):
+                break                       # not transient: the same certificate fails on every try
         if k + 1 < tries:
             log(f"    {what}: {err}; retry {k + 1}/{tries - 1} in {wait} s")
             time.sleep(wait)
@@ -134,7 +137,7 @@ def _probe(url, timeout=20):
     for method, extra in (("HEAD", {}), ("GET", {"Range": "bytes=0-0"})):
         try:
             req = urllib.request.Request(url, method=method, headers={"User-Agent": UA, **extra})
-            with urllib.request.urlopen(req, timeout=timeout) as r:
+            with urlopen(req, timeout) as r:
                 lm = r.headers.get("Last-Modified", "") or ""
                 if method == "HEAD":
                     cl = r.headers.get("Content-Length", "") or ""
@@ -153,7 +156,7 @@ def _stream_to(url, tmp, timeout):
     """One GET of url into tmp; checks the length against Content-Length and that it is not an HTML error page."""
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     n, step, t0 = 0, 50 << 20, time.time()
-    with urllib.request.urlopen(req, timeout=timeout) as r, open(tmp, "wb") as fh:
+    with urlopen(req, timeout) as r, open(tmp, "wb") as fh:
         cl = r.headers.get("Content-Length", "") or ""
         lm = r.headers.get("Last-Modified", "") or ""
         nxt = step
@@ -186,7 +189,7 @@ def _uniprot_paged(url, tmp, timeout, tries):
         while url:
             def get(u=url):
                 req = urllib.request.Request(u, headers={"User-Agent": UA})
-                with urllib.request.urlopen(req, timeout=timeout) as r:
+                with urlopen(req, timeout) as r:
                     return r.read().decode("utf-8"), dict(r.headers)
             res, err = _retry(get, tries, f"uniprot page {n_pages + 1}")
             if res is None:

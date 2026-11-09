@@ -32,6 +32,8 @@ std handles that are not the console - and checks what tahoemap does then:
              skips a signal the system lacks); the test harness copies (hard links) where it cannot make symlinks
   query      a closed pipe that Windows reports as EINVAL ends a look-up quietly; the FULL TABLES row of DDL_*.npy
              keeps its ' / DDL_z.npy' out of the path (ntpath.relpath)
+  https      downloads are verified by Windows itself (truststore), a certificate failure is tried once against
+             certifi's roots and is not retried by the reference stage, and its message says what to do
 
 Prints PASS / FAIL per check; exit code 1 if anything fails.
 """
@@ -643,6 +645,66 @@ def query(work):
           row.strip())
 
 
+# ----------------------------------------------------------------------------- https (the PC's Ensembl / NCBI failure)
+@case
+def https(work):
+    c = "https"
+    import ssl
+    import urllib.error
+    import urllib.request
+    from tahoemap import reference as RF
+
+    class FakeTS:                       # truststore: SSLContext(protocol) -> a context
+        made = []
+
+        @staticmethod
+        def SSLContext(proto):
+            FakeTS.made.append(proto)
+            return "ts-context"
+    C._SSL.clear()
+    with windows(), patched(sys, modules={**sys.modules, "truststore": FakeTS}):
+        ctx = C.https_context()
+    C._SSL.clear()
+    posix = C.https_context()
+    C._SSL.clear()
+    check(c, "Windows: downloads are verified by Windows itself (truststore's SSLContext); POSIX: Python's default",
+          ctx == "ts-context" and FakeTS.made == [ssl.PROTOCOL_TLS_CLIENT] and posix is None, (ctx, posix))
+
+    bad = urllib.error.URLError(ssl.SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify "
+                                                                "failed: self-signed certificate in certificate chain"))
+    seen = []
+
+    def opener(ok_with_certifi):
+        def fn(req, timeout=None, context=None):
+            seen.append(context)
+            if context is not None and ok_with_certifi:
+                return "response"
+            raise bad
+        return fn
+    with patched(urllib.request, urlopen=opener(True)):
+        r1 = C.urlopen("https://ftp.ncbi.nlm.nih.gov/x", 5)
+    n1 = len(seen)
+    with patched(urllib.request, urlopen=opener(False)):
+        try:
+            C.urlopen("https://ftp.ensembl.org/x", 5)
+            r2 = "no error"
+        except urllib.error.URLError as e:
+            r2 = e
+    check(c, "a certificate that fails verification is tried once against certifi's roots; when that fails too, the "
+          "first error is raised", r1 == "response" and n1 == 2 and r2 is bad and len(seen) == 4, (r1, n1, r2))
+
+    calls = []
+
+    def fails():
+        calls.append(1)
+        raise bad
+    with patched(RF.time, sleep=lambda s: calls.append(("sleep", s))):
+        res, err = RF._retry(fails, 4, "ensembl")
+    check(c, "reference: a certificate failure is not retried (it fails the same way each time) and its message says "
+          "what to do", res is None and calls == [1] and "truststore" in err and "CERTIFICATE_VERIFY_FAILED" in err,
+          err[:160])
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workdir", default=None, help="scratch folder (default: a temporary one, removed after)")
@@ -654,7 +716,7 @@ def main():
     work = tempfile.mkdtemp(prefix="tahoemap_win_", dir=a.workdir)
     t0 = time.time()
     try:
-        for fn in (files, stream_build, pipeline_lock, git, links, keys, signals, review_bits, query):
+        for fn in (files, stream_build, pipeline_lock, git, links, keys, signals, review_bits, query, https):
             d = os.path.join(work, fn.__name__)
             os.makedirs(d)
             fn(d)
