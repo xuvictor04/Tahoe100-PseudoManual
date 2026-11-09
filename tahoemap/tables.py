@@ -80,7 +80,7 @@ from . import tlib as T
 from .common import log, read_effects_index, replace_file, stamp_stage, write_json, write_parquet
 from .tensor import AMB_FRAC, measured_mask
 
-VERSION = 2
+VERSION = 3                         # 3: a cell-cycle shift blocks a gene only when it explains its change
 
 LFC_MIN = A.LFC_MIN                 # log2(1.2): smallest change the atlas counts
 Q_CUT = A.Q_CUT                     # 0.10: the atlas FDR cut
@@ -97,6 +97,10 @@ DEPLETE_Z = -3.0                    # lines.n_dd_depleted: relative-abundance z 
 ABUNDANCE_UNTRUSTED = ("unreliable plate only", "position not correctable", "wells disagree")   # flags that make a
                                     # drug-dose's cell counts untrustworthy (toxic etc. are what depletion means)
 MIN_SD_DD = 10                      # response_sd needs >= this many measured clean drug-doses
+CC_FLAG = "cell-cycle shift"        # the drug-dose flag (atlas_core.flags_for) that cell_cycle_beyond() refines
+CC_BEYOND = "cell-cycle shift (explains < half here)"   # its gene-level form when the shift does not explain the change
+CC_SHARE = 0.5                      # ... = the shift's predicted part is < this share of the gene's change
+CC_HUBER = 2.5                      # cell-cycle slopes: Huber weights beyond this many robust SDs of the residuals
 MAX_LINES_LISTED = 12               # lines_up / lines_down: at most this many names
 TOP_CELLS = 15                      # drug_line_top: (drug-dose, line) cells per gene and direction
 TOP_GENES = 15                      # drugdoses top_up / top_down
@@ -138,23 +142,84 @@ def dose_shape_codes(V, thr=2.0):
     return np.select(conds, list(range(7)), 7).astype(np.int8)
 
 
-def flag_strings(base, d, posunc, poseff, pscale):
+def flag_strings(base, d, posunc, poseff, pscale, beyond=None):
     """Per (drug-dose d, gene) item: atlas_core.gene_flags(base[d], posunc, poseff, pscale=pscale) and whether it is
-    clean (no artifact flag). gene_flags only thresholds its inputs, so each distinct (d, noisy, uncertain, removed)
-    combination is formatted once."""
+    clean (no artifact flag). beyond (bool per item, see cell_cycle_beyond): the drug-dose's 'cell-cycle shift' does
+    not explain this gene's change, so for this gene it reads CC_BEYOND, which is no artifact flag. gene_flags only
+    thresholds its inputs, so each distinct (d, beyond, noisy, uncertain, removed) combination is formatted once."""
     d = np.asarray(d, dtype=np.int64)
     if d.size == 0:
         return np.array([], dtype=object), np.array([], dtype=bool)
     posunc = np.asarray(posunc, dtype=bool)
     poseff = np.asarray(poseff, dtype=np.float64)
     pscale = np.asarray(pscale, dtype=np.float64)
+    bey = np.zeros(d.size, dtype=bool) if beyond is None else np.asarray(beyond, dtype=bool)
     noisy = np.isfinite(pscale) & (pscale > A.PLATE_SCALE_FLAG)
     moved = np.isfinite(poseff) & (np.abs(poseff) > 0.2)
-    key = d * 8 + noisy * 4 + posunc * 2 + moved
+    key = d * 16 + bey * 8 + noisy * 4 + posunc * 2 + moved
     _, first, inv = np.unique(key, return_index=True, return_inverse=True)
-    strs = [A.gene_flags(base[d[i]], bool(posunc[i]), float(poseff[i]), pscale=float(pscale[i])) for i in first]
+    strs = []
+    for i in first:
+        f = A.gene_flags(base[d[i]], bool(posunc[i]), float(poseff[i]), pscale=float(pscale[i]))
+        if bey[i]:
+            f = "; ".join(CC_BEYOND if x == CC_FLAG else x for x in f.split("; "))
+        strs.append(f)
     clean = np.array([not A.has_artifact(s) for s in strs], dtype=bool)
     return np.array(strs, dtype=object)[inv.ravel()], clean[inv.ravel()]
+
+
+def cell_cycle_beyond(lfc, s_lfc, g_lfc, dd_flags, chunk=4096):
+    """The drug-doses whose only artifact flag is 'cell-cycle shift' (cc_only, per drug-dose) and, per (drug-dose,
+    gene), whether that shift does not explain the gene's change (beyond).
+
+    The flag is a property of the drug-dose: its cells moved into or out of S or G2/M (the S_PHASE / G2M_PHASE
+    modules' pooled lfc). A gene's change then may only reflect the new mix of cell-cycle phases - for genes that go
+    with the cell cycle. How much a gene goes with it is measured on the data: per gene, a robust regression (Huber
+    weights, one reweighting) over the drug-doses without any other artifact flag of its pooled lfc on the two
+    modules' lfc, lfc ~ a + bS * S + bG * G. The shift explains bS * S + bG * G of the gene's change at a flagged
+    drug-dose; the change goes beyond it when the rest keeps the sign and is at least half of the change and at least
+    the 1.2x floor (|rest| >= max(CC_SHARE x |lfc|, log2 1.2)). Returns cc_only, beyond (Dn x genes), the slopes
+    (bS, bG) and the number of drug-doses fitted."""
+    Dn, gK = lfc.shape
+    toks = [set(str(f or "").split("; ")) for f in dd_flags]
+    arts = [t & set(A.ARTIFACT_FLAGS) for t in toks]
+    cc_only = np.array([a == {CC_FLAG} for a in arts], dtype=bool)
+    S = np.asarray(s_lfc, dtype=np.float64)
+    G = np.asarray(g_lfc, dtype=np.float64)
+    fit = np.array([not a or a == {CC_FLAG} for a in arts], dtype=bool) & np.isfinite(S) & np.isfinite(G)
+    beyond = np.zeros((Dn, gK), dtype=bool)
+    bS = np.full(gK, np.nan, dtype=np.float32)
+    bG = np.full(gK, np.nan, dtype=np.float32)
+    if fit.sum() < 20 or not cc_only.any():
+        return cc_only, beyond, bS, bG, int(fit.sum())
+    X = np.column_stack([np.ones(int(fit.sum())), S[fit], G[fit]])          # n x 3
+    XX = (X[:, :, None] * X[:, None, :]).reshape(len(X), 9)                   # n x 9: the products x_i x_j
+    for g0 in range(0, gK, chunk):
+        g1 = min(gK, g0 + chunk)
+        Y = np.asarray(lfc[fit, g0:g1], dtype=np.float64)                     # n x c
+        W = np.isfinite(Y).astype(np.float64)
+        Y = np.where(W > 0, Y, 0.0)
+        for _ in range(2):                                                    # OLS, then one Huber reweighting
+            A_ = (W.T @ XX).reshape(-1, 3, 3) + np.eye(3)[None] * 1e-9          # c x 3 x 3: X' W X per gene
+            B = np.linalg.solve(A_, ((W * Y).T @ X)[..., None])[..., 0]        # c x 3
+            R = Y - X @ B.T
+            Rm = np.where(W > 0, np.abs(R), np.nan)
+            with np.errstate(all="ignore"):
+                sc = 1.4826 * np.nanmedian(Rm, axis=0)
+                sc = np.where(np.isfinite(sc) & (sc > 0), sc, 1.0)
+                hub = np.minimum(1.0, CC_HUBER * sc[None, :] / np.maximum(np.abs(R), 1e-12))
+            W = (W > 0) * hub
+        bS[g0:g1], bG[g0:g1] = B[:, 1], B[:, 2]
+        cc = np.flatnonzero(cc_only & np.isfinite(S) & np.isfinite(G))
+        if cc.size:
+            L_ = np.asarray(lfc[cc, g0:g1], dtype=np.float64)
+            pred = S[cc, None] * B[None, :, 1] + G[cc, None] * B[None, :, 2]
+            rest = L_ - pred
+            with np.errstate(invalid="ignore"):
+                ok = (np.isfinite(L_) & (np.sign(rest) == np.sign(L_))
+                      & (np.abs(rest) >= np.maximum(CC_SHARE * np.abs(L_), LFC_MIN)))
+            beyond[cc, g0:g1] = ok
+    return cc_only, beyond, bS, bG, int(fit.sum())
 
 
 # ----------------------------------------------------------------------------- helpers
@@ -461,10 +526,19 @@ def _run(out, chunk, mem_gb, t0):
     ps = _dd_gene_scale(wells, fxd, Dn, gK)
     sig_up = (qu < Q_CUT) & (lfc >= LFC_MIN)
     sig_dn = (qd < Q_CUT) & (lfc <= -LFC_MIN)
-    clean = ~art_dd[:, None] & ~pu                              # drug-dose flags + this gene's position flag
+    s_col, g_col = (f"{m}_lfc" for m in ("S_PHASE", "G2M_PHASE"))
+    nanv = np.full(Dn, np.nan)
+    cc_only, beyond, cc_bS, cc_bG, cc_fit = cell_cycle_beyond(
+        lfc, dd[s_col].to_numpy(dtype=np.float64) if s_col in dd else nanv,
+        dd[g_col].to_numpy(dtype=np.float64) if g_col in dd else nanv, dd_flags)
+    clean = (~art_dd[:, None] | beyond) & ~pu                  # drug-dose flags + this gene's position flag
     finz = np.isfinite(z)
+    n_cc_sig = int(((sig_up | sig_dn) & beyond & ~pu).sum())
     log(f"  pooled: {int(sig_up.sum()):,} significant gene x drug-dose increases, {int(sig_dn.sum()):,} decreases; "
         f"{int((~art_dd).sum()):,} of {Dn:,} drug-doses without an artifact flag")
+    log(f"  cell-cycle shift: {int(cc_only.sum()):,} drug-doses have it as their only artifact flag; at "
+        f"{n_cc_sig:,} significant gene x drug-dose changes the shift explains < {CC_SHARE:g} of the change "
+        f"(slopes on the S / G2M modules fitted over {cc_fit:,} drug-doses): clean for that gene")
 
     # ---- dose patterns per (drug, gene), both signs
     P_up = np.zeros((len(drugs), gK), dtype=np.int8)
@@ -530,7 +604,8 @@ def _run(out, chunk, mem_gb, t0):
              f"{prefix}_z": np.where(ok, z[bb, cols], np.nan).astype(np.float32),
              f"{prefix}_q": np.where(ok, q[bb, cols], np.nan).astype(np.float32)}
         fl = np.full(gK, None, dtype=object)
-        fl[ok] = flag_strings(dd_flags, b[ok], pu[b[ok], cols[ok]], pe[b[ok], cols[ok]], ps[b[ok], cols[ok]])[0]
+        fl[ok] = flag_strings(dd_flags, b[ok], pu[b[ok], cols[ok]], pe[b[ok], cols[ok]], ps[b[ok], cols[ok]],
+                              beyond[b[ok], cols[ok]])[0]
         v[f"{prefix}_flags"] = fl
         return v
 
@@ -588,7 +663,7 @@ def _run(out, chunk, mem_gb, t0):
             gi, di = np.nonzero(keep[:, g0:g1].T)
             if gi.size:
                 g = g0 + gi
-                fl, cl_s = flag_strings(dd_flags, di, pu[di, g], pe[di, g], ps[di, g])
+                fl, cl_s = flag_strings(dd_flags, di, pu[di, g], pe[di, g], ps[di, g], beyond[di, g])
                 mismatch += int((cl_s != clean[di, g]).sum())
                 Zs = Z[gi, di]
                 order = np.lexsort((-z[di, g], g))
@@ -653,6 +728,8 @@ def _run(out, chunk, mem_gb, t0):
         gtab[f"{prefix}_pattern"] = np.where(b >= 0, _PAT[P[drug_of_dd[np.maximum(b, 0)], cols]], None)
     gtab["up_specificity_z_gap"] = up_gap
     gtab["down_specificity_z_gap"] = dn_gap
+    gtab["cc_slope_S"] = cc_bS
+    gtab["cc_slope_G2M"] = cc_bG
     write_parquet(gtab, os.path.join(od, "genes.parquet"))
 
     # ---- line_effects.parquet
@@ -803,7 +880,10 @@ def _run(out, chunk, mem_gb, t0):
                                              & (gtab["best_clean_up_fold"] >= 2 ** LFC_MIN)).sum()),
             "genes_with_clean_repressor": int(((gtab["best_clean_down_q"] < Q_CUT)
                                                & (gtab["best_clean_down_fold"] <= 2 ** -LFC_MIN)).sum()),
-            "n_measured_line_gene_pairs": int(measured.sum()), **cal,
+            "n_measured_line_gene_pairs": int(measured.sum()),
+            "cell_cycle_rule": {"flag": CC_FLAG, "gene_level_text": CC_BEYOND, "share": CC_SHARE,
+                                "drugdoses_cc_only": int(cc_only.sum()), "drugdoses_fitted": cc_fit,
+                                "significant_changes_beyond": n_cc_sig}, **cal,
             "undocumented_columns": undocumented, "minutes": round((time.time() - t0) / 60, 2)}
     write_json(info, os.path.join(od, "info.json"))
     log("  rows: " + ", ".join(f"{k} {v:,}" for k, v in info["rows"].items()))
