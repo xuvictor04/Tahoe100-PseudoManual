@@ -6,7 +6,10 @@
 1. Makes (or reuses) a synthetic download with make_synthetic_tahoe.py: 7 plates (one unreliable mixed-dose plate),
    18 real cell lines, 94 real drugs, 1,200 genes, planted drug effects, gene modules (including pairs of modules
    that move in opposite directions), and every artifact the method corrects (ground_truth.json says what).
-2. Runs `python -m tahoemap run` on it (offline: the reference stage needs the network and is skipped).
+2. Runs `python -m tahoemap run` on it (offline: the reference stage needs the network and is skipped), in
+   --workdir/out_seedN. An output made from other synthetic data (an older generator) is removed first: the build
+   keeps a plate it has summed before while the plate's file list is unchanged, and the synthetic files keep their
+   names when the data are made again, so it would sum the old counts even with --redo (see fresh_out).
 3. Checks each stage against the planted truth. Every check prints PASS / FAIL / WARN with its numbers; the exit
    code is 1 if anything FAILs. Thresholds are set inside what seed 0 (the default) gives, so a FAIL there means a
    regression. Other seeds draw other data, and with 18 lines a few planted effects sit near what can be detected:
@@ -18,6 +21,7 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -52,12 +56,45 @@ def ensure_data(work, seed, regen):
         h.update(open(f, "rb").read().replace(b"\r\n", b"\n"))
     key = f"{h.hexdigest()}-{seed}"
     stamp = os.path.join(data, "generator.key")
-    if regen or not (os.path.exists(stamp) and open(stamp, encoding="utf-8").read() == key):
+    made = regen or not (os.path.exists(stamp) and open(stamp, encoding="utf-8").read() == key)
+    if made:
         print(f"Generating synthetic data (seed {seed}) in {data} ...", flush=True)
         subprocess.run([sys.executable, gen, data, "--seed", str(seed)], check=True)
         with open(stamp, "w", encoding="utf-8") as fh:
             fh.write(key)
-    return data
+    return data, key, made
+
+
+# what a tahoemap output folder holds (fresh_out removes a folder only if it looks like one)
+OUTPUT_MARKS = ("atlas", "stages", "run.log", "pipeline_console.log")
+
+
+def fresh_out(out, key, made):
+    """Make sure the output folder was made from these data (generator key `key`), else remove it first.
+
+    The build keeps a plate it has summed before when the plate's file list is unchanged (atlas_core._build_group,
+    verbatim: how a stopped build resumes), even with --redo. The synthetic files keep their names when the data are
+    made again (a new generator draws the same cells into the same 39 files), so an output from earlier data would
+    keep the old counts while ground_truth.json describes the new ones: the plants a newer generator adds would be
+    missing. So the key of the data an output was made from is kept next to it (OUT.data.key, outside the folder the
+    pipeline and the export own); an output without it, with another key, or older than data made now is removed."""
+    stamp = out + ".data.key"
+    old = open(stamp, encoding="utf-8").read() if os.path.exists(stamp) else None
+    if os.path.isdir(out) and os.listdir(out) and (made or old != key):
+        if not any(os.path.exists(os.path.join(out, m)) for m in OUTPUT_MARKS):
+            sys.exit(f"{out} is not a tahoemap output (none of {', '.join(OUTPUT_MARKS)} in it); it is left as it is. "
+                     "Give another --workdir.")
+        why = "the data were made again" if made else ("it was made from other synthetic data" if old else
+                                                       "its synthetic data are not recorded")
+        print(f"Removing the earlier output {out} ({why}): the build would reuse its plates.", flush=True)
+        try:
+            shutil.rmtree(out)
+        except OSError as e:
+            sys.exit(f"Could not remove {out} ({type(e).__name__}: {e}). Close what has a file of it open, or "
+                     "remove it yourself, and run again.")
+    os.makedirs(out, exist_ok=True)
+    with open(stamp, "w", encoding="utf-8") as fh:
+        fh.write(key)
 
 
 def run_pipeline(data, out, extra=()):
@@ -83,9 +120,9 @@ def main():
     ap.add_argument("--reuse", action="store_true", help="do not rerun the pipeline if its output exists")
     a = ap.parse_args()
     os.makedirs(a.workdir, exist_ok=True)
-    data = ensure_data(a.workdir, a.seed, a.regen)
+    data, key, made = ensure_data(a.workdir, a.seed, a.regen)
     out = os.path.join(a.workdir, f"out_seed{a.seed}")
-    os.makedirs(out, exist_ok=True)
+    fresh_out(out, key, made)
     if not (a.reuse and os.path.exists(os.path.join(out, "stages", "map.json"))):
         rc = run_pipeline(data, out, ("--redo",))
         check("run", "pipeline finishes", lambda: (rc == 0, f"exit code {rc}"))

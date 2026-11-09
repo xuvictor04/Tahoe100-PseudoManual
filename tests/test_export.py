@@ -18,7 +18,9 @@ OUT) refused, also with other letter case on a case-insensitive system; a non-em
 --force: unchanged files kept, files the source no longer has removed, the user's own files (a .git folder, notes)
 left alone, a file in the way that the manifest does not list stops it before anything is copied; --with-effects; a
 live pipeline lock refused; the command line (python -m tahoemap export ...) and its next steps; and, when git is
-installed, a commit of DEST that stores a CRLF file byte for byte with core.autocrlf=true.
+found (as the pipeline finds it: $TAHOE_GIT, PATH, or on Windows Git for Windows or a MinGit next to the
+repository), a commit of DEST that stores a CRLF file byte for byte with core.autocrlf=true. DIR/export_test is
+removed before and after (--keep keeps it), the commit's read-only git objects included.
 
 Prints PASS / FAIL per check; exit code 1 if anything fails.
 """
@@ -29,6 +31,7 @@ import json
 import os
 import shutil
 import socket
+import stat
 import subprocess
 import sys
 import tempfile
@@ -41,6 +44,7 @@ DEFAULT_WORKDIR = "/tmp/tahoemap_test" if os.name != "nt" else os.path.join(temp
 sys.path.insert(0, REPO)
 
 from tahoemap import export as X  # noqa: E402
+from tahoemap.common import find_git  # noqa: E402
 
 RESULTS = []
 
@@ -125,10 +129,34 @@ REVIEW = ["review/reviews/gene/TP53.json", "review/notes/gene/TP53.md", "review/
           "review/review.log"]
 
 
+def _writable_again(_fn, path, _exc):
+    """rmtree's error handler: make a read-only file writable and remove it again. git marks its object files
+    read-only and Windows does not delete such a file: rmtree(ignore_errors=True) would leave DEST's .git behind,
+    and the next run's export into it would be refused (a non-empty DEST)."""
+    try:
+        os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
+        if os.path.isdir(path) and not os.path.islink(path):
+            os.rmdir(path)
+        else:
+            os.unlink(path)
+    except OSError:
+        pass
+
+
+def rm_tree(path):
+    """Remove a folder of this test, read-only files included; True when it is gone."""
+    if os.path.isdir(path) and not os.path.islink(path):
+        kw = {"onexc": _writable_again} if sys.version_info >= (3, 12) else {"onerror": _writable_again}
+        shutil.rmtree(path, **kw)
+    return not os.path.lexists(path)
+
+
 def make_copy(src, work):
     """OUT for the test: the finished output without its big arrays, plus the files an export must leave alone."""
     base = os.path.join(work, "export_test")
-    shutil.rmtree(base, ignore_errors=True)
+    if not rm_tree(base):
+        sys.exit(f"test_export.py: could not remove {base} (left by an earlier run): close what has a file of it "
+                 "open, or remove it yourself, and run again")
     out = os.path.join(base, "out")
 
     def ignore(d, names):
@@ -372,9 +400,10 @@ def command_line(base, out):
 
 @case
 def git_commit(dest):
-    git = shutil.which("git")
-    if not git:
-        check("git", "(git not installed: the commit check is skipped)", True)
+    git = find_git()             # as `tahoe` finds it: $TAHOE_GIT, PATH, then Git for Windows / a MinGit next to
+    if not git:                  # the repository (the PC's git is such a MinGit, not on PATH)
+        check("git", "(git not found: on PATH, $TAHOE_GIT, or a MinGit next to the repository; the commit check is "
+              "skipped)", True)
         return
     env = dict(os.environ, GIT_CONFIG_NOSYSTEM="1", HOME=os.path.dirname(dest))
     g = [git, "-c", "user.name=tahoemap test", "-c", "user.email=test@example.invalid", "-c", "core.autocrlf=true",
@@ -420,7 +449,8 @@ def main():
     cli_dest = command_line(base, out)
     git_commit(cli_dest or os.path.join(base, "dest_cli"))
     if not a.keep:
-        shutil.rmtree(base, ignore_errors=True)
+        check("cleanup", "DEST copies and their git repository removed (read-only git objects too)", rm_tree(base),
+              base)
     n_fail = sum(1 for r in RESULTS if r[2] == "FAIL")
     print(f"\n{len(RESULTS)} checks, {n_fail} failed ({time.time() - t0:.0f} s)")
     sys.exit(1 if n_fail else 0)

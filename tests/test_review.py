@@ -7,7 +7,9 @@ Needs a finished tahoemap output folder (tables, relations, graph ...): --out, e
 in --workdir/out_seed0 (default $TAHOE_TEST_DIR, else /tmp/tahoemap_test; on Windows tahoemap_test in the temp
 folder). That folder is only read: every case works in DIR/review_view, whose entries are symbolic links to the
 output's own entries (hard links or copies where this account may not make symbolic links: Windows without Developer
-Mode) next to a fresh review/ folder.
+Mode) next to a fresh review/ folder. The folders the test makes in DIR (WORK_ENTRIES) are removed before the cases
+(what an earlier or stopped run left) and after them (--keep keeps review_view), read-only files included (a git
+clone's objects, which Windows does not delete otherwise).
 
 Every request goes through the real Anthropic SDK (client.beta.messages.stream, answered with server-sent events)
 to tahoemap/review/fake.py, an httpx2 mock transport that answers from a script and checks each request as the API
@@ -66,6 +68,7 @@ import pathlib
 import re
 import shutil
 import socket
+import stat
 import subprocess
 import sys
 import tempfile
@@ -183,6 +186,58 @@ def make_view(src, work):
         if e != "review":
             link_entry(os.path.join(src, e), os.path.join(view, e))
     return view
+
+
+# what this test makes in --workdir (and nothing else there is removed): the views, the duplicate case's folders,
+# the literature caches, the ledger and lock cases' folders, the keys file
+WORK_ENTRIES = ("review_view", "review_view_no_direction", "splice_view", "lit_view", "retracted_view", "r5_view",
+                "dup_out", "dup_repo", "dup_src", "dup_dest", "elsewhere", "lit_ctx", "lit_ctx_down", "ledger_cut",
+                "lock_out", "keys.txt")
+
+
+def _writable_again(_fn, path, _exc):
+    """rmtree's error handler: make a read-only file (git marks its object files so) writable, and remove it again.
+    Windows does not delete a read-only file, and rmtree(ignore_errors=True) then leaves it without a word: the
+    duplicate case's git clone (dup_repo) stayed behind and stopped the next run ('exists and is not empty')."""
+    try:
+        os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
+        if os.path.isdir(path) and not os.path.islink(path):
+            os.rmdir(path)
+        else:
+            os.unlink(path)
+    except OSError:
+        pass
+
+
+def rm_tree(path):
+    """Remove a folder (or a link or a file) of this test, read-only files included; True when it is gone. A link is
+    removed, never what it points to."""
+    if not os.path.lexists(path):
+        return True
+    if os.path.islink(path) or not os.path.isdir(path):
+        try:
+            os.unlink(path)
+        except OSError as e:
+            _writable_again(os.unlink, path, e)
+    else:
+        kw = {"onexc": _writable_again} if sys.version_info >= (3, 12) else {"onerror": _writable_again}
+        shutil.rmtree(path, **kw)
+    return not os.path.lexists(path)
+
+
+def clean_work(work, src, keep=()):
+    """Remove WORK_ENTRIES from the work folder (but never the output under test, nor a folder holding it); returns
+    what could not be removed."""
+    real = os.path.normcase(os.path.realpath(src))
+    left = []
+    for e in WORK_ENTRIES:
+        p = os.path.join(work, e)
+        rp = os.path.normcase(os.path.realpath(p))
+        if e in keep or real == rp or real.startswith(rp.rstrip(os.sep) + os.sep):
+            continue
+        if not rm_tree(p):
+            left.append(p)
+    return left
 
 
 def scan_for_keys(root):
@@ -689,7 +744,7 @@ def duplicate(view, work, out):
     c = "duplicate"
     dest, repo = os.path.join(work, "dup_out"), os.path.join(work, "dup_repo")
     for p in (dest, repo):
-        shutil.rmtree(p, ignore_errors=True)
+        rm_tree(p)
     had_review = os.path.exists(os.path.join(out, "review"))
     with contextlib.redirect_stdout(io.StringIO()):
         rec = cli.duplicate(out, dest, repo)
@@ -718,12 +773,13 @@ def duplicate(view, work, out):
     check(c, "the copy works on its own (a dry run writes into the copy, not the source)",
           res.counts.get("dry_run") == 1 and os.path.exists(os.path.join(dest, "review", "dry_run", "summary.json"))
           and os.path.exists(os.path.join(out, "review")) == had_review, res.message)
-    for p in (dest, repo):
-        shutil.rmtree(p, ignore_errors=True)
+    gone = [os.path.basename(p) for p in (dest, repo) if rm_tree(p)]
+    check(c, "the copy and the clone removed (the clone's read-only git objects too)", len(gone) == 2,
+          f"removed {gone}")
     # a small output with the awkward cases: a temporary file, a symbolic link, a destination in use
     src, dest = os.path.join(work, "dup_src"), os.path.join(work, "dup_dest")
     for p in (src, dest):
-        shutil.rmtree(p, ignore_errors=True)
+        rm_tree(p)
     for d in ("stages", "tensor", "atlas", os.path.join("vault", "genes")):
         os.makedirs(os.path.join(src, d))
     shutil.copy(glob.glob(os.path.join(out, "stages", "*.json"))[0], os.path.join(src, "stages"))
@@ -754,7 +810,7 @@ def duplicate(view, work, out):
         refused = True
     check(c, "refuses a destination that is not empty", refused)
     for p in (src, dest, os.path.join(work, "elsewhere")):
-        shutil.rmtree(p, ignore_errors=True)
+        rm_tree(p)
 
 
 @case
@@ -3688,6 +3744,10 @@ def main():
                  "or give --out)")
     work = os.path.abspath(a.workdir)
     os.makedirs(work, exist_ok=True)
+    left = clean_work(work, src)                     # what an earlier (or stopped) run left
+    if left:
+        sys.exit(f"test_review.py: could not remove {left} (left by an earlier run): close what has a file of it "
+                 "open, or remove it yourself, and run again")
     tee = Tee(sys.stdout)
     sys.stdout = tee
     t0 = time.time()
@@ -3750,8 +3810,6 @@ def main():
     projection_settings(view, ents)
     stop_foreground(view, ents)
     windows_file_locks(view, ents)
-    for d in ("lit_ctx", "lit_ctx_down"):
-        shutil.rmtree(os.path.join(work, d), ignore_errors=True)
     sys.stdout = tee.real
     printed = tee.buf.getvalue()
     leaked = [s[-4:] for s in SECRETS if s in printed]
@@ -3759,8 +3817,10 @@ def main():
           leaked else f"keys ending {leaked}")
     check("keys", "files scanned for keys", SCANNED["files"] > 50, f"{SCANNED['files']} files, "
           f"{SCANNED['bytes'] / 1e6:.1f} MB")
-    if not a.keep:
-        shutil.rmtree(view, ignore_errors=True)
+    left = clean_work(work, src, keep=("review_view",) if a.keep else ())
+    there = sorted(e for e in WORK_ENTRIES if os.path.lexists(os.path.join(work, e)))
+    check("cleanup", "the test's own folders removed from the work folder (nothing left to stop the next run)",
+          not left and there == (["review_view"] if a.keep else []), f"left: {left or there or 'nothing'}")
     n_fail = sum(1 for r in RESULTS if r[2] == "FAIL")
     print(f"\ntest_review.py: {len(RESULTS)} checks, {n_fail} failed, {time.time() - t0:.0f} s")
     return 1 if n_fail else 0
