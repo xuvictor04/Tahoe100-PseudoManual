@@ -7,7 +7,13 @@ drug-doses x lines). Answering "select a gene: which drugs raise it, in which li
 the matrices, the index tables, the flag rules and the significance rules at once. This stage does that join once,
 genome-wide, and writes plain parquet tables keyed by gene col / drug-dose row (dd) / line, with symbols, drug names,
 doses, flags and cell-line names spelled out. Every number is taken from, or is a simple summary of, the atlas and
-tensor values; the one thing estimated here is the per-line |z| cut (below).
+tensor values; the two things estimated here are the per-line |z| cut and each gene's cell-cycle slopes (below).
+
+Flagged values are kept. Every table lists flagged drug-doses in their ranked place, with their flags and clean =
+False, so that readers can show them with an alert; ranked lists that are capped (drug_line_top) keep the strongest
+over all drug-doses and also the strongest clean ones that would fall outside them. Only estimates leave
+artifact-flagged drug-doses out: the per-line |z| calibration (a null), response_sd (a typical spread) and the
+cell-cycle slopes.
 
 Pooled vs per line. The pooled values are the atlas's median over the cell lines, so a response that only a minority
 of the measured lines show (fewer than about half: e.g. a p53 response in the TP53-wild-type lines only) does not
@@ -36,19 +42,35 @@ used wells; per-line values (tensor DDL_lfc, DDL_z) skip the median over lines. 
 
 Rules reused verbatim from the atlas: significance (up = q_up < 0.10 and lfc >= log2 1.2; down symmetric), the flag
 strings (drug-dose flags + atlas_core.gene_flags per gene), "clean" = no atlas_core.ARTIFACT_FLAGS flag (for a gene:
-the drug-dose's flags plus 'position correction uncertain' for that gene), dose patterns (atlas_core.dose_shape, here
-vectorised by dose_shape_codes and checked against it), noise-class RNAs (atlas_core.NOISE_RNA_RE) and salt forms
-(tlib.salt_base).
+the drug-dose's flags plus 'position correction uncertain' for that gene; atlas_core.has_artifact), dose patterns
+(atlas_core.dose_shape, here vectorised by dose_shape_codes and checked against it), noise-class RNAs
+(atlas_core.NOISE_RNA_RE) and salt forms (tlib.salt_base). One refinement: the cell-cycle shift.
+
+Cell-cycle shift. The atlas flags a drug-dose 'cell-cycle shift' when its S_PHASE or G2M_PHASE module moved: its cells
+moved into or out of S or G2/M. Whether that explains one gene's change depends on how much the gene goes with the
+cycle, which is measured here (cell_cycle_share): per gene, a robust regression of its pooled lfc on the two modules'
+pooled lfc (lfc ~ a + bS x S + bG x G) over the drug-doses without another artifact flag. At every drug-dose with the
+flag the shift predicts bS x S + bG x G, and cc_share = |that| / |lfc| when it has the sign of the change (else 0,
+at most 1). Fitted slopes are attenuated by measurement noise, so the rule doubles them (CC_SAFETY = 2): the shift
+is not the explanation when 2 x cc_share < 0.5 and the change left after the doubled prediction is at least the 1.2x
+floor; then the gene's flags read 'cell-cycle shift (explains ~N% here)', which is no artifact flag, while the plain
+token 'cell-cycle shift' (an artifact flag) stays everywhere else. Other artifact flags of a drug-dose still apply.
+Real-data example: TRIM72 (slopes bS +0.50, bG +0.47) is raised 12.2x by idarubicin 5 uM, of which the shift would
+explain ~4% (cleared), while panobinostat 0.5 uM (~87%) stays flagged; classic cycle genes (PCNA, CCNE2 bS ~ +1.5;
+TOP2A, CCNB1 bG ~ +1.4) keep the flag at a real shift.
 
 Outputs in OUT/tables/ (README.md there documents every column, its units and its baseline):
     genes.parquet          one row per gene: level, counts of drug-doses up / down, best drug-dose up / down (any and
-                           clean), specificity (z gap to the next compound), correlation with the S / G2M modules
-    drug_effects.parquet   gene x drug-dose rows with |z| >= 3 or q_up / q_down < 0.1: pooled fold change, z, q,
-                           flags, how many / which lines move, dose pattern
+                           clean), specificity (z gap to the next compound), correlation with the S / G2M modules,
+                           cell-cycle slopes (cc_slope_S / cc_slope_G2M)
+    drug_effects.parquet   gene x drug-dose rows with |z| >= 3 or q_up / q_down < 0.1, flagged ones included: pooled
+                           fold change, z, q, flags, clean, how many / which lines move, dose pattern, cc_share
     line_effects.parquet   gene x line: baseline level, whether the line expresses it, spread of the line's
-                           responses, clean drug-doses moving the gene >= 1.5x at per-line |z| >= t (calibrated, >= 4),
-                           strongest of them up / down in that line
-    drug_line_top.parquet  per gene: the 15 strongest (drug-dose, line) cells up and down (clean, per-line |z| >= t)
+                           responses, drug-doses moving the gene >= 1.5x at per-line |z| >= t (calibrated, >= 4) and
+                           the strongest of them up / down in that line, over the clean drug-doses and (*_all, with
+                           the flags) over all drug-doses
+    drug_line_top.parquet  per gene: the 15 strongest (drug-dose, line) cells up and down over all drug-doses (with
+                           flags and clean), plus any of the 15 strongest clean ones beyond them (per-line |z| >= t)
     drugdoses.parquet      drugdose.csv + dd, salt_base, top 15 significant genes up / down
     drugs.parquet          per drug: doses, significant genes by dose, best dose, lowest active dose, flags, signature
                            similarity between doses
@@ -56,7 +78,8 @@ Outputs in OUT/tables/ (README.md there documents every column, its units and it
                            response strength
     plates.parquet         per plate: wells, doses, reliability, plate factor, DMSO and failed wells, cells per well
     wells.parquet          wells.csv + total UMI per well (per-gene counts stay in tensor/well_counts.npy)
-    info.json              row counts and the per-line |z| calibration (line_z_threshold, line_fold_min, ...)
+    info.json              row counts, the per-line |z| calibration (line_z_threshold, line_fold_min, ...) and the
+                           cell-cycle rule's counts (cell_cycle_rule)
 
 Memory: the pooled drug-dose x gene matrices are held in memory (~75 MB each at full scale); the per-line tensor
 (~1.9 GB per array in float16) is read in gene chunks sized by mem_gb, and drug_effects.parquet is streamed to disk
@@ -697,7 +720,8 @@ def _run(out, chunk, mem_gb, t0):
     def best_cols(prefix, b, q):
         ok = b >= 0
         bb = np.maximum(b, 0)
-        v = {f"{prefix}_dd": b.astype(np.int32), f"{prefix}_drug": _pick(dd_drug, b), f"{prefix}_dose": _pick(dd_dose, b),
+        v = {f"{prefix}_dd": b.astype(np.int32), f"{prefix}_drug": _pick(dd_drug, b),
+             f"{prefix}_dose": _pick(dd_dose, b),
              f"{prefix}_fold": np.where(ok, 2.0 ** lfc[bb, cols], np.nan).astype(np.float32),
              f"{prefix}_z": np.where(ok, z[bb, cols], np.nan).astype(np.float32),
              f"{prefix}_q": np.where(ok, q[bb, cols], np.nan).astype(np.float32)}
@@ -823,7 +847,8 @@ def _run(out, chunk, mem_gb, t0):
                 del F, passz, sZ, idc, vlc, new
             del Z, X, meas
             if (g0 // chunk) % 10 == 0 or g1 == gK:
-                log(f"    genes {g0:,}-{g1:,} of {gK:,} ({(time.time() - t0) / 60:.1f} min; drug_effects rows {n_fx:,})")
+                log(f"    genes {g0:,}-{g1:,} of {gK:,} ({(time.time() - t0) / 60:.1f} min; drug_effects rows "
+                    f"{n_fx:,})")
     finally:
         writer.close()
     replace_file(fx_path + ".tmp", fx_path)
@@ -1037,28 +1062,36 @@ _DD_COLS = {
 _BEST = {"dd": "drug-dose row (-1 = none)", "drug": "drug", "dose": "dose key (uM)",
          "fold": "pooled fold change (linear; 2**lfc; " + _FC + ")", "z": "pooled z (DD_z)",
          "q": "BH q-value of the atlas in that direction (q_up for up, q_down for down; within the gene over all "
-              "drug-doses)", "flags": "drug-dose flags + this gene's flags (atlas_core.gene_flags), '; '-joined"}
+              "drug-doses)", "flags": "drug-dose flags + this gene's flags (atlas_core.gene_flags), '; '-joined; "
+              "'cell-cycle shift (explains ~N% here)' where the drug-dose's shift is not the explanation of this "
+              "gene's change (no artifact flag; see 'Cell-cycle shift')"}
 
 
 def _gene_docs():
     d = {"col": "gene column: row key of genes.csv and column of every gene matrix (0 .. genes-1). Key genes by col",
          "symbol": "gene symbol (can repeat between columns)", "label": "unique label: the symbol, or 'SYM (ENSG...)' "
          "for repeated symbols", "ensembl_id": "Ensembl gene id from the Tahoe gene metadata (joined on token; '' when "
-         "missing)", "token": "Tahoe gene token id", "pooled_cpm": "level over all wells and lines (counts per million)",
+         "missing)", "token": "Tahoe gene token id",
+         "pooled_cpm": "level over all wells and lines (counts per million)",
          "median_line_cpm": "median over cell lines of the line's level (CPM)", "n_lines_expressing":
          "lines that truly express the gene (line_effects 'expressed', tensor/line_measured.npy): level >= 25% of the "
          "median line's (the atlas's expr_mask) AND >= 25% of the gene's pooled level (otherwise the line reads only "
          "ambient RNA); atlas/effects/genes.csv keeps the atlas's count", "noise_rna": "True for noise-class "
          "RNAs (atlas NOISE_RNA_RE on the symbol: 7SK, snoRNA, snRNA, mitochondrial, ribosomal-protein pseudogenes, "
          "replication histones, ENSG-only names): read their drug responses with care",
-         "corr_with_S": "Pearson r over all drug wells (pairwise complete) of the gene's corrected well effect (W2) with "
-         "the S-phase module's: near 1 = the gene moves with the S-phase share of cells", "corr_with_G2M":
+         "corr_with_S": "Pearson r over all drug wells (pairwise complete) of the gene's corrected well effect (W2) "
+         "with the S-phase module's: near 1 = the gene moves with the S-phase share of cells", "corr_with_G2M":
          "the same with the G2/M module", "n_dd_up": "drug-doses that raise the gene significantly (q_up < 0.10 and "
          "fold >= 1.2)", "n_dd_down": "drug-doses that lower it significantly (q_down < 0.10 and fold <= 1/1.2)",
          "n_dd_up_clean": "n_dd_up among clean drug-doses (no artifact flag for this gene)", "n_dd_down_clean":
          "n_dd_down among clean drug-doses", "up_specificity_z_gap": "best clean z up minus the best clean z up of any "
          "OTHER compound (salt forms merged): large = one compound stands out; NaN with < 2 compounds",
-         "down_specificity_z_gap": "the same for decreases (in units of -z)"}
+         "down_specificity_z_gap": "the same for decreases (in units of -z)",
+         "cc_slope_S": "the gene's slope bS on the S-phase module's pooled log2 fold change (robust regression of its "
+         "pooled lfc on the S_PHASE and G2M_PHASE modules' pooled lfc over the drug-doses without another artifact "
+         "flag; see 'Cell-cycle shift'): how much of a cell-cycle shift reaches the gene (~1: it moves like the "
+         "module; ~0: unaffected); NaN with < 20 fitted drug-doses",
+         "cc_slope_G2M": "the same slope bG on the G2/M module's pooled log2 fold change"}
     for pre, what in (("best_up", "highest pooled z over all drug-doses (flagged ones included; may be "
                                   "non-significant: check q)"),
                       ("best_down", "lowest pooled z over all drug-doses (flagged ones included)"),
@@ -1079,8 +1112,11 @@ def _gene_docs():
 DOCS = {
     "genes.parquet": ("One row per gene (gene columns of atlas/effects/genes.csv; the S_PHASE, G2M_PHASE and "
                       "PROTEASOME module columns are not here). 'Clean' = the drug-dose's flags plus this gene's "
-                      "flags hold none of: toxic, transcription drop, cell-cycle shift, unreliable plate only, "
-                      "position not correctable, position correction uncertain, wells disagree.", _gene_docs()),
+                      "flags hold none of: toxic, transcription drop, cell-cycle shift (only where the shift is the "
+                      "explanation of this gene's change: see 'Cell-cycle shift'), unreliable plate only, position "
+                      "not correctable, position correction uncertain, wells disagree. n_dd_up / n_dd_down and "
+                      "best_up_* / best_down_* count and rank every drug-dose (flagged ones included: their flags "
+                      "are in best_*_flags); the *_clean columns the clean ones only.", _gene_docs()),
     "drug_effects.parquet": (
         "Fold change relative to each drug: one row per gene x drug-dose with |pooled z| >= 3 or q_up < 0.10 or "
         "q_down < 0.10 (sorted by col, then z from high to low). Pooled = over the cell lines (median per well, mean "
@@ -1094,22 +1130,33 @@ DOCS = {
          "the robust z of the corrected well effect, divided by the gene's plate factor)", "q_up": "BH q-value for an "
          "increase (within the gene, over all drug-doses)", "q_down": "BH q-value for a decrease",
          "flags": "drug-dose flags + this gene's flags ('noisy plate (z scaled)' from its own plate factor, 'position "
-         "correction uncertain', 'position effect removed'), '; '-joined, the exact strings of the atlas",
-         "clean": "True when flags hold no artifact flag (see genes.parquet)", "n_lines_measured": "lines with a "
+         "correction uncertain', 'position effect removed'), '; '-joined, the exact strings of the atlas, except that "
+         "a drug-dose's 'cell-cycle shift' reads 'cell-cycle shift (explains ~N% here)' where the shift is not the "
+         "explanation of this gene's change (N = round(100 x cc_share); no artifact flag)",
+         "clean": "True when flags hold no artifact flag (atlas_core.has_artifact; see genes.parquet). Rows that are "
+         "not clean are kept: read them with their flags", "n_lines_measured": "lines with a "
          "per-line value (truly expressing the gene, enough cells in the wells, >= 2 expected counts)", "n_lines_up":
          "lines with per-line z >= 2 and fold >= 1.2: where the pooled effect shows up (descriptive; at z >= 2 a "
          "line also passes by chance, at the rate lines_up_chance_rate of tables/info.json)", "n_lines_down":
          "lines with per-line z <= -2 and fold <= 1/1.2 (descriptive, as n_lines_up)", "lines_up":
          "cell names of those lines, strongest per-line z first, at most 12, ', '-joined", "lines_down":
-         "cell names of the lines counted in n_lines_down, most negative per-line z first, at most 12", "pattern_up": "how the increase behaves over the drug's "
+         "cell names of the lines counted in n_lines_down, most negative per-line z first, at most 12",
+         "pattern_up": "how the increase behaves over the drug's "
          "doses (atlas dose_shape over the pooled z by ascending dose; the same for every dose of the drug): none / "
          "single dose / all doses, stronger at high dose / all doses, flat / top dose only / rises with dose / two "
-         "highest doses / inconsistent across doses", "pattern_down": "the same for the decrease (z negated)"}),
+         "highest doses / inconsistent across doses", "pattern_down": "the same for the decrease (z negated)",
+         "cc_share": "at a drug-dose whose flags include 'cell-cycle shift': the share of this gene's change that the "
+         "shift would explain, |bS x S + bG x G| / |lfc| with the gene's slopes as fitted (genes.parquet "
+         "cc_slope_S, cc_slope_G2M) and the drug-dose's S_PHASE_lfc / G2M_PHASE_lfc; 0 when that predicted part "
+         "goes the other way; at most 1. NaN for drug-doses without the flag (or genes without slopes). The flag "
+         "stays an artifact flag unless 2 x cc_share < 0.5 and |lfc| x (1 - 2 x cc_share) >= log2 1.2 (see "
+         "'Cell-cycle shift')"}),
     "line_effects.parquet": (
         "Fold change relative to each cell line: one row per gene x cell line (all genes x all lines). Counts and "
-        "bests use the clean drug-doses for the gene and the per-line tensor values (DDL_z, DDL_lfc): a per-line "
-        "fold change is the mean over the drug-dose's used wells of that line's " + _FC + "; per-line z = Stouffer "
-        "over those wells of (value - line centre) / line scale / plate factor.",
+        "bests without a suffix use the clean drug-doses for the gene, those ending in '_all' every drug-dose "
+        "(flagged ones included, with their flags in best_*_flags_all); both use the per-line tensor values "
+        "(DDL_z, DDL_lfc): a per-line fold change is the mean over the drug-dose's used wells of that line's " + _FC
+        + "; per-line z = Stouffer over those wells of (value - line centre) / line scale / plate factor.",
         {"col": "gene column", "symbol": "gene symbol", "line": "line index (row of lines.parquet / atlas lines.csv, "
          "last axis of the tensor)", "cell_line_id": "Cellosaurus id", "cell_name": "cell line name",
          "baseline_cpm": "the line's level of the gene over all its wells (CPM; atlas line_cpm)", "expressed":
@@ -1126,17 +1173,40 @@ DOCS = {
          "its per-line z", "best_down_dd": "the drug-dose counted in n_dd_down with the lowest per-line z (-1 = "
          "none passes)", "best_down_drug":
          "its drug", "best_down_dose": "its dose key (uM)", "best_down_lfc": "its per-line log2 fold change",
-         "best_down_z": "its per-line z"}),
+         "best_down_z": "its per-line z",
+         "n_dd_up_all": "n_dd_up over all drug-doses (flagged ones included). Chance passes grow with the number of "
+         "drug-doses: line_z_expected_chance_all of tables/info.json",
+         "n_dd_down_all": "n_dd_down over all drug-doses (flagged ones included)",
+         "best_up_dd_all": "the drug-dose counted in n_dd_up_all with the highest per-line z in this line, flagged or "
+         "not (-1 = none passes); equal to best_up_dd when that one is clean",
+         "best_up_drug_all": "its drug", "best_up_dose_all": "its dose key (uM)",
+         "best_up_lfc_all": "its per-line log2 fold change", "best_up_z_all": "its per-line z",
+         "best_up_flags_all": "its flags for this gene (as drug_effects flags; null = none passes)",
+         "best_up_clean_all": "True when those flags hold no artifact flag (False when none passes)",
+         "best_up_cc_share_all": "its cc_share for this gene (as drug_effects; NaN without the cell-cycle flag)",
+         "best_down_dd_all": "the drug-dose counted in n_dd_down_all with the lowest per-line z in this line, flagged "
+         "or not (-1 = none passes)", "best_down_drug_all": "its drug", "best_down_dose_all": "its dose key (uM)",
+         "best_down_lfc_all": "its per-line log2 fold change", "best_down_z_all": "its per-line z",
+         "best_down_flags_all": "its flags for this gene (null = none passes)",
+         "best_down_clean_all": "True when those flags hold no artifact flag (False when none passes)",
+         "best_down_cc_share_all": "its cc_share for this gene (NaN without the cell-cycle flag)"}),
     "drug_line_top.parquet": (
-        "Per gene, the 15 strongest (drug-dose, cell line) cells up and the 15 strongest down among the clean "
-        "drug-doses for the gene with per-line |z| >= line_z_threshold (calibrated; tables/info.json; no fold "
-        "condition), fewer when fewer qualify. Responses confined to a few lines, which the pooled tables miss, show "
-        "up here.",
-        {"col": "gene column", "symbol": "gene symbol", "direction": "up / down", "rank": "1 = strongest per-line z "
-         "in that direction", "dd": _DD_COLS["dd"], "drug": _DD_COLS["drug"], "dose": _DD_COLS["dose"],
+        "Per gene and direction, the 15 strongest (drug-dose, cell line) cells over ALL drug-doses (flagged ones "
+        "included, with their flags) with per-line |z| >= line_z_threshold (calibrated; tables/info.json; no fold "
+        "condition), plus any of the 15 strongest among the clean drug-doses for the gene that fall outside them, "
+        "so that flagged cells never push the clean ones out: at most 30 rows per gene and direction, fewer when "
+        "fewer qualify. Responses confined to a few lines, which the pooled tables miss, show up here.",
+        {"col": "gene column", "symbol": "gene symbol", "direction": "up / down", "rank": "rank of the cell's "
+         "per-line z in that direction among all the gene's qualifying cells, flagged or not (1 = strongest; a clean "
+         "cell kept beyond the 15 strongest has its rank over all, > 15)", "dd": _DD_COLS["dd"],
+         "drug": _DD_COLS["drug"], "dose": _DD_COLS["dose"],
          "line": "line index", "cell_name": "cell line name", "lfc": "per-line " + _FC + " (DDL_lfc)",
          "z": "per-line z (DDL_z)", "pooled_lfc": "the drug-dose's pooled log2 fold change for the gene (DD_lfc)",
-         "pooled_z": "the drug-dose's pooled z (DD_z)"}),
+         "pooled_z": "the drug-dose's pooled z (DD_z)",
+         "flags": "the drug-dose's flags for this gene (as drug_effects flags)",
+         "clean": "True when flags hold no artifact flag; False = read the cell with its flags",
+         "cc_share": "the share of the gene's pooled change the drug-dose's cell-cycle shift would explain (as "
+         "drug_effects; NaN without the flag)"}),
     "drugdoses.parquet": (
         "atlas/effects/drugdose.csv (one row per drug and dose) plus dd, salt_base, top_up and top_down.",
         {"dd": _DD_COLS["dd"], "drug": _DD_COLS["drug"], "dose": _DD_COLS["dose"], "salt_base": _DD_COLS["salt_base"],
@@ -1257,7 +1327,9 @@ def _calibration_text(cal):
         f"{_fmt_p(tail.get('6'))}. t is the smallest value >= {LINE_Z_FLOOR:g} at which the expected number of "
         f"chance passes per (gene, line) over the {cal.get('line_z_n_clean_drugdoses', '?')} clean drug-doses is <= "
         f"{LINE_CHANCE_MAX:g}; at t it is {_fmt_p(cal.get('line_z_expected_chance'))} "
-        "(`line_z_expected_chance`). The 'lines up / down' of drug_effects and genes.parquet (per-line z >= 2 and "
+        "(`line_z_expected_chance`; over all drug-doses, as line_effects' *_all counts: "
+        f"{_fmt_p(cal.get('line_z_expected_chance_all'))}, `line_z_expected_chance_all`). The 'lines up / down' of "
+        "drug_effects and genes.parquet (per-line z >= 2 and "
         "fold >= 1.2, given a pooled call) are descriptive: they say where the pooled effect shows up, and a line "
         f"with no effect reaches z >= 2 at a rate of {_fmt_p(cal.get('lines_up_chance_rate'))} and z <= -2 at "
         f"{_fmt_p(cal.get('lines_down_chance_rate'))} (`lines_up_chance_rate`, `lines_down_chance_rate`; the "
@@ -1270,9 +1342,49 @@ def _calibration_text(cal):
         "does not make is not detected here.", ""]
 
 
-def readme(tables, cal=None):
+def _cell_cycle_text(cc):
+    """The 'Cell-cycle shift' paragraph of README.md, with this run's numbers (cc = _cc_summary)."""
+    cc = cc or {}
+    k = CC_SAFETY
+
+    def n(key):
+        v = cc.get(key)
+        return f"{v:,}" if isinstance(v, int) else "?"
+    mods = "; ".join(f"{m}: {v['cleared']:,} of {v['significant_at_cc']:,} ({v['genes']} genes)"
+                     for m, v in (cc.get("module_genes") or {}).items()) or "modules.json not found"
+    return [
+        "**Cell-cycle shift** (decided per gene): the atlas flags a drug-dose 'cell-cycle shift' when its cells moved "
+        "into or out of S or G2/M (the S_PHASE or G2M_PHASE module's pooled log2 fold change beyond 0.5, or beyond "
+        "0.25 at |z| >= 4). That is a property of the drug-dose; whether it explains a given gene's change depends on "
+        "how much the gene goes with the cell cycle, and that is measured here: per gene, a robust regression (OLS, "
+        f"then one Huber reweighting at {CC_HUBER:g} robust SDs) of its pooled lfc on the two modules' pooled lfc, "
+        f"lfc ~ a + bS x S + bG x G, over the {n('drugdoses_fitted')} drug-doses with no other artifact flag "
+        f"(genes.parquet cc_slope_S / cc_slope_G2M; >= {CC_MIN_FIT} drug-doses with a value for the gene). At a "
+        "flagged drug-dose the shift predicts bS x S + bG x G of the gene's change, and `cc_share` (drug_effects, "
+        "drug_line_top) is that part's share of the observed change (0 when it points the other way). Fitted slopes "
+        "are attenuated by measurement noise (the modules' lfc are measured with error too), so the rule doubles "
+        f"them to be safe: the plain artifact flag 'cell-cycle shift' stays unless {k:g} x cc_share < "
+        f"{CC_SHARE_MAX:g} and the change left after the doubled prediction, |lfc| x (1 - {k:g} x cc_share), is at "
+        "least the 1.2x floor; then the gene's flags read 'cell-cycle shift (explains ~N% here)', which is no "
+        "artifact flag, and the value is clean unless another flag says otherwise (other artifact flags of the "
+        f"drug-dose still apply). This run: {n('drugdoses_flagged')} drug-doses carry the flag, "
+        f"{n('drugdoses_cc_only')} of them no other artifact flag; there the rule clears {n('cleared_at_cc_only')} of "
+        f"{n('significant_at_cc_only')} significant changes ({n('cleared_at_cc_only_x1')} with the slopes as "
+        "fitted). Check, the genes of the atlas's cell-cycle modules at every flagged drug-dose (the shift is what "
+        f"moves them, so few should be cleared): significant changes cleared {mods}.", "",
+        "Example from the full Tahoe-100M run: TRIM72 (MG53) has slopes bS +0.50, bG +0.47. Idarubicin 5 uM raises "
+        "it 12.2x (z +15.9, in 37 of 37 lines) and its cell-cycle shift would explain ~4% of that; homoharringtonine "
+        "5 uM ~18%, 0.5 uM ~8%; epirubicin 5 uM ~14%: all cleared (clean). At panobinostat 0.5 uM (~87%) and TAK-901 "
+        "5 uM (~75%) the flag stays. Classic cell-cycle genes have large slopes (PCNA bS +1.50, CCNE2 bS +1.55, "
+        "TOP2A bG +1.51, CCNB1 bG +1.38), so at a real shift the flag stays for them. Over the 46 drug-doses whose "
+        "only artifact flag is the shift, the rule clears 131,683 of 193,346 significant changes (163,786 with the "
+        "slopes as fitted).", ""]
+
+
+def readme(tables, cal=None, cc=None):
     """README.md text for the written tables ({file: [columns]}) and the columns lacking a description; cal = the
-    per-line |z| calibration (calibrate_line_z) whose numbers the text quotes."""
+    per-line |z| calibration (calibrate_line_z) and cc = the cell-cycle rule's counts (_cc_summary), whose numbers
+    the text quotes."""
     missing = []
     out = ["# tables/ - the fold-change tables", "",
            "Written by `tahoemap tables` (tahoemap/tables.py). Keys: `col` = gene column (0 .. genes-1, the order of "
@@ -1288,11 +1400,15 @@ def readme(tables, cal=None):
            "halved). z is a robust z (median / 1.4826 MAD of the drug wells), widened on noisy plates.", "",
            f"**Significant** (as the atlas): q_up < {Q_CUT:g} and fold >= 1.2 (up), q_down < {Q_CUT:g} and fold <= "
            "1/1.2 (down); q = Benjamini-Hochberg within each gene over all drug-doses. **Clean** = no artifact flag "
-           "(" + ", ".join(A.ARTIFACT_FLAGS) + ") in the drug-dose's flags plus the gene's own flags. Soft caveats "
+           "(" + ", ".join(A.ARTIFACT_FLAGS) + ") in the drug-dose's flags plus the gene's own flags (a cell-cycle "
+           "shift counts only where it is the explanation of the gene's change: see below). Soft caveats "
            "that do not make a value unclean: low cells (technical?), plate-row cell shift, composition shift, noisy "
-           "plate (z scaled), position effect removed.", "",
+           "plate (z scaled), position effect removed. **Flagged values are kept**: every table lists flagged "
+           "drug-doses in their ranked place with their flags (and `clean` = False); only estimates (the per-line "
+           "|z| calibration, response_sd, the cell-cycle slopes) leave artifact-flagged drug-doses out.", "",
            "Missing values: NaN / null = not measured (line not expressing, too few cells or counts) or no "
-           "candidate; -1 in an index or count column = none / not measured.", ""] + _calibration_text(cal)
+           "candidate; -1 in an index or count column = none / not measured.", ""] + _calibration_text(cal) \
+        + _cell_cycle_text(cc)
     for name, cols in tables.items():
         intro, docs = DOCS[name]
         out += [f"## {name}", "", intro, "", "| column | meaning |", "|---|---|"]

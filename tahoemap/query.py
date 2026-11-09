@@ -1,11 +1,10 @@
 """query - the look-ups of a finished run, answered as plain text (no colours, 80-120 columns, aligned tables).
 
-    tahoe gene SYMBOL     what the gene is (reference annotation, module and arm of the nodal map), the clean
-                          drug-doses that raise it and lower it (pooled over the cell lines: fold, z, q, lines that
-                          move / lines measured, dose pattern, soft caveats), the flagged drug-doses apart with their
-                          flags, the cell lines where clean drug-doses move it most (with each line's strongest
-                          drug-dose), the genes that move with it and opposite to it (cos, evidence, fdr, locus /
-                          read-through / known / novel), and where the full tables are
+    tahoe gene SYMBOL     what the gene is (reference annotation, module and arm of the nodal map), the drug-doses
+                          that raise it and lower it (pooled over the cell lines: fold, z, q, lines that move / lines
+                          measured, dose pattern, alert, soft caveats), the cell lines where drug-doses move it most
+                          (with each line's strongest drug-dose), the genes that move with it and opposite to it (cos,
+                          evidence, fdr, locus / read-through / known / novel), and where the full tables are
     tahoe drug NAME       targets and mechanism; per dose: wells, flags, genes up / down, top genes up / down; the
                           drugs with the most similar vector, the modules it moves, the lines it depletes and the
                           lines that show its response most. NAME is case-insensitive; a salt form can be left out
@@ -13,24 +12,39 @@
     tahoe line NAME       organ, drivers, TP53 status; genes specifically high (and low) at baseline; drug-doses
                           that deplete it; its strongest responses. NAME = cell name or Cellosaurus id
     tahoe pair A B        the two genes' cosine, its two compound halves, evidence, fdr, known / novel flags and
-                          genomic distance; the clean drug-doses that move both (same / opposite direction); how far
-                          the two agree inside each cell line
+                          genomic distance; the drug-doses that move both (same / opposite direction); how far the
+                          two agree inside each cell line
     tahoe module N        size, arms, label (validation stage), top genes per arm, top drug-doses up / down and the
                           lines where it responds most
 
+Alerts, not removal. An item with a reason for doubt - an artifact flag of the drug-dose for that gene (toxic,
+transcription drop, cell-cycle shift where it explains the change, unreliable plate only, position not correctable,
+position correction uncertain, wells disagree), a relation seen in one random half of the compounds only or in
+neither, two partners next to each other on the genome (locus, read-through), a gene outside the vector space or in it
+only through flagged drug-doses, a noise-class RNA or a level that is only ambient RNA, a drug vector from few
+significant genes or a flagged dose - stays in its ranked place with an alert: ALERT ('⚠') and the reason in plain
+words (for a cell-cycle shift, the share of this change it would explain: tables cc_share). Counts say how many items
+there are in all and how many carry an alert. A list capped at N shows the N strongest overall and also any of the N
+strongest without an alert that would fall outside them, all in rank order (_capped), so flagged items never push
+clean ones out of view. Estimates (correlations, the module's main drug-doses for 'follows') may still leave flagged
+drug-doses out; where they do, the text says so.
+
 Nothing is computed afresh that a stage already wrote: the look-ups read OUT/tables, OUT/embed, OUT/relations,
 OUT/graph, OUT/reference and OUT/validation (each optional where the answer can do without it; a missing stage is
-named with the command that makes it), plus a few columns of the atlas matrices (atlas/effects DD_z, DD_lfc,
-DD_posunc, DD_A, DD_Az, DD_beta, line_cpm, expr_mask), tensor/line_measured.npy, and two genes' rows of
-tensor/DDL_lfc for `pair`. Every read is a filtered parquet read or a memory-mapped slice: one look-up stays well
-under 1 GB at full scale. Unknown names get close matches (difflib). Nothing is written.
+named with the command that makes it; a column an older stage version did not write is done without), plus a few
+columns of the atlas matrices (atlas/effects DD_z, DD_lfc, DD_posunc, DD_A, DD_Az, DD_beta, line_cpm, expr_mask),
+tensor/line_measured.npy, and two genes' rows of tensor/DDL_lfc for `pair`. Every read is a filtered
+parquet read or a memory-mapped slice: one look-up stays well under 1 GB at full scale. Unknown names get close matches
+(difflib). Nothing is written.
 
 An answer states the stages' own rules, never more: per-line counts and 'strongest' use the per-line |z| cut the
 tables stage calibrated (tables/info.json, with the expected chance calls); 'both' halves = same sign with fdr <=
 0.10 in two random halves of the compounds, 'one' = strong in one random half only (not replicated, no error
 estimate); NOVEL only when relations/info.json says novelty could be assessed (else which sources were missing); a
 gene outside the vector space gets the embed stage's rule with its counts (embed/info.json); a module's arms are
-called opposite only when graph/modules.parquet says so (arms_opposite); pooled = median over the cell lines.
+called opposite only when graph/modules.parquet says so (arms_opposite); pooled = median over the cell lines; the
+gene-level flags of a drug-dose (the cell-cycle rule included) are the tables stage's (tables.cc_rule where `pair`
+needs them for a drug-dose that drug_effects does not list).
 """
 
 import difflib
@@ -48,6 +62,7 @@ import numpy as np
 import pandas as pd
 
 from . import atlas_core as A
+from . import tables as TB
 from . import tlib as T
 from .common import read_effects_index, safe_filename
 from .relations import REPRO_FDR             # evidence 'both halves' needs fdr <= this
@@ -63,6 +78,9 @@ SHORT_POOLED = 3            # gene: fewer clean significant pooled drug-doses th
 SPECIFIC_MIN_CPM = 10.0     # line: genes specifically high need at least this level in the line
 UNTRUSTED = ("unreliable plate only", "position not correctable", "wells disagree")   # embed's rule
 _TAG = re.compile(r"^\s*\[[^\]]{1,80}\]:\s*")    # UniProt isoform tag before a FUNCTION text ('[Isoform 2]: ')
+ALERT = "\u26a0"            # the alert sign: an item kept in its place although there is a reason to doubt it
+ALERT_ASCII = "!"           # what it becomes on a console that cannot show it (_emit; one character, so that
+                            # tables stay aligned)
 
 # the file whose presence says a stage has run (look-ups must not depend on stage stamps: an output folder can be
 # assembled from finished stage folders)
@@ -216,6 +234,73 @@ def _artifacts(flags):
     return "; ".join(f for f in fl if f in A.ARTIFACT_FLAGS)
 
 
+CC_WORDS = {"full": "cell-cycle shift, explains ~{p}% of this change", "table": "cell-cycle shift, explains ~{p}%",
+            "short": "cell cycle ~{p}%"}       # the cell-cycle alert with the share of the change it would explain
+
+
+def _alert(flags, cc_share=None, words="full"):
+    """The reason for an item's alert in plain words: its artifact flags ('' = no alert); a cell-cycle shift with the
+    share of this change it would explain (tables cc_share). words: 'full' (sentences), 'table' (an alert column),
+    'short' (narrow side-by-side tables: 'cell cycle ~87%', 'position uncertain')."""
+    out = []
+    for f in str(flags or "").split("; "):
+        if f not in A.ARTIFACT_FLAGS:
+            continue
+        if f == TB.CC_FLAG:
+            sh = _num(cc_share)
+            f = CC_WORDS[words].format(p=int(round(100 * sh))) if np.isfinite(sh) else \
+                ("cell cycle" if words == "short" else TB.CC_FLAG)
+        elif words == "short" and f == "position correction uncertain":
+            f = "position uncertain"
+        out.append(f)
+    return "; ".join(out)
+
+
+def _alert_cell(flags, cc_share=None, words="table", none=""):
+    """An alert column's cell: ALERT + the reason, or `none`."""
+    a = _alert(flags, cc_share, words)
+    return f"{ALERT} {a}" if a else none
+
+
+def _caveats(flags):
+    """The flags that are no artifact flag: soft caveats, and a cell-cycle shift that is not the explanation."""
+    return "; ".join(f for f in str(flags or "").split("; ") if f and f not in A.ARTIFACT_FLAGS)
+
+
+def _flags_shown(flags, cc_share=None, none="-"):
+    """A flags cell: the alert first (ALERT + artifact flags in plain words), then the soft caveats."""
+    a, c = _alert(flags, cc_share, "table"), _caveats(flags)
+    if a:
+        return f"{ALERT} {a}" + (f"; {c}" if c else "")
+    return c or none
+
+
+def _capped(n, top, ok):
+    """Positions to show of a ranked list of n items (strongest first) capped at top: the top strongest overall plus
+    any of the top strongest without an alert (ok True) that would fall outside them, in rank order. Flagged items
+    thus never push clean ones out of view."""
+    ok = np.asarray(ok, dtype=bool)[:n]
+    keep = np.arange(n) < top
+    keep[np.flatnonzero(ok)[:top]] = True
+    return np.flatnonzero(keep)
+
+
+def _more(n, shown, n_alert_rest, what="", opt=" (--top)"):
+    """'... k more[ what] (j of them with an alert)' for the items a capped list leaves out ('' when none)."""
+    k = n - shown
+    if k <= 0:
+        return ""
+    return (f"  ... {k} more" + (f" {what}" if what else "") + (f" ({n_alert_rest} of them with an alert)"
+                                                                 if n_alert_rest else "") + opt)
+
+
+def _n_alert(n, n_alert, what=""):
+    """'N[ what], k of them with an alert' - the counts of a list ('0[ what]' for an empty one)."""
+    if n == 1 and what.endswith("s") and not what.endswith("ss"):
+        what = what[:-1]
+    return f"{n}{' ' + what if what else ''}" + (f", {n_alert} of them with an alert ({ALERT})" if n else "")
+
+
 def _norm(s):
     return re.sub(r"[^a-z0-9]", "", str(s).lower())
 
@@ -362,6 +447,18 @@ class Out:
             bad = np.array([any(u in f.split("; ") for u in UNTRUSTED) for f in dd["flags"]])
             return (dd["n_sig_genes"].to_numpy() >= self.embed_info().get("min_active", 10)) & ~bad
         return self._cached("active", load)
+
+    def flagged_only(self):
+        """Gene cols in the vector space only through significant pooled drug-doses that carry an alert (embed
+        genes.parquet evidence_flagged_only; empty when an older embed stage did not write it)."""
+        def load():
+            if not self.has("embed/genes.parquet"):
+                return frozenset()
+            eg = self.pq("embed/genes.parquet", columns=["col", "evidence_flagged_only"])
+            if "evidence_flagged_only" not in eg:
+                return frozenset()
+            return frozenset(int(c) for c in eg.loc[eg["evidence_flagged_only"].fillna(False).astype(bool), "col"])
+        return self._cached("flagged_only", load)
 
     def embed_info(self):
         def load():
@@ -594,12 +691,14 @@ def resolve_line(o, name):
 
 # ----------------------------------------------------------------------------- shared pieces
 def _rel_flags(r, novel_ok=True):
+    """A relation's flags; a reason to doubt that the two genes are linked in function (one locus: shared chromatin
+    or read-through can make neighbours correlate) carries ALERT."""
     f = []
     if bool(r.get("locus", False)):
         d = _num(r.get("distance_bp"))
-        f.append("locus" + (f" {d / 1000:.0f} kb" if np.isfinite(d) else ""))
+        f.append(f"{ALERT} locus" + (f" {d / 1000:.0f} kb" if np.isfinite(d) else ""))
     if bool(r.get("readthrough_risk", False)):
-        f.append("readthrough?")
+        f.append(f"{ALERT} readthrough?")
     if novel_ok and bool(r.get("novel_candidate", False)):
         f.append("NOVEL")
     known = []
@@ -655,8 +754,10 @@ def _not_in_space(o, c):
     if n < need:
         return txt + f"; the space needs {need}"
     lz = _num(ei.get("line_z_responsive"))
-    txt += (f"; that count (>= {need}) is not enough on its own: the space also needs a significant clean pooled "
-            f"drug-dose (q < {Q_CUT:g}, >= 1.2x)" +
+    # an embed stage that writes evidence_flagged_only counts flagged significant drug-doses too (with an alert)
+    kind = "pooled drug-dose, flagged or not" if "evidence_flagged_only" in eg else "clean pooled drug-dose"
+    txt += (f"; that count (>= {need}) is not enough on its own: the space also needs a significant {kind} "
+            f"(q < {Q_CUT:g}, >= 1.2x)" +
             (f" or a per-line |z| >= {lz:.1f} in >= 2 lines of one trustworthy drug-dose" if np.isfinite(lz) else "")
             + ", and it has neither")
     if np.isfinite(_num(ei.get("null_rate"))):
@@ -666,25 +767,39 @@ def _not_in_space(o, c):
     return txt
 
 
+def _partner_alert(o, x):
+    """True when a partner row carries an alert: not replicated in both random halves, or the partner is in the
+    vector space only through flagged drug-doses."""
+    return _text(x.get("evidence")) != "both halves" or int(x["col_b"]) in o.flagged_only()
+
+
 def _partner_rows(o, rel, top, sign):
+    """The partner table of one side (cos > 0 or < 0), strongest |cos| first, capped as _capped; returns (rows, the
+    side's partners, how many of them carry an alert)."""
     r = rel[rel["cos"] > 0].sort_values("cos", ascending=False) if sign > 0 else \
         rel[rel["cos"] < 0].sort_values("cos")
+    r = r.reset_index(drop=True)
+    ok = np.array([not _partner_alert(o, x) for _, x in r.iterrows()], dtype=bool)
+    fo = o.flagged_only()
     rows = []
-    for _, x in r.head(top).iterrows():
+    for i in _capped(len(r), top, ok):
+        x = r.iloc[i]
         cb = int(x["col_b"])
-        rows.append([o.genes().at[cb, "label"] if cb in o.genes().index else _text(x["symbol_b"]),
+        ev = _text(x.get("evidence"))
+        rows.append([(o.genes().at[cb, "label"] if cb in o.genes().index else _text(x["symbol_b"]))
+                     + (f" {ALERT}" if cb in fo else ""),
                      _cos(x["cos"]), f"{_cos(x.get('cos_half1'))}/{_cos(x.get('cos_half2'))}",
-                     EVIDENCE_SHORT.get(_text(x.get("evidence")), _text(x.get("evidence"))), _q(x.get("fdr")),
+                     EVIDENCE_SHORT.get(ev, f"{ALERT} {ev}" if ev and ev != "both halves" else ev), _q(x.get("fdr")),
                      _gene_module(o, cb), _rel_flags(x, o.novelty()[0]),
                      o.ann_name(cb)])
-    return rows, len(r)
+    return rows, len(r), int((~ok).sum())
 
 
 REL_COLS = ["col_a", "col_b", "symbol_b", "rank", "cos", "cos_half1", "cos_half2", "evidence", "fdr", "locus",
             "distance_bp", "readthrough_risk", "shared_gene_group", "shared_pathway", "string_score", "known",
             "novel_candidate"]
 PARTNER_HEAD = ["gene", "cos", "halves 1/2", "repro", "fdr", "module", "flags", "name"]
-EVIDENCE_SHORT = {"both halves": "both", "one half": "one", "not reproduced": "no"}
+EVIDENCE_SHORT = {"both halves": "both", "one half": f"{ALERT} one half", "not reproduced": f"{ALERT} not repro"}
 
 
 def _where(o, P, tb):
@@ -707,26 +822,36 @@ def _vault_note(o, folder_name, label):
 
 
 def _single_lines(o, c, direction, k=3):
-    """The single-line view of a gene: the clean drug-doses that pass the calibrated per-line cut in the most lines
-    (tables/drug_line_top.parquet), as one sentence ('' when none)."""
+    """The single-line view of a gene: the drug-doses that pass the calibrated per-line cut in the most lines
+    (tables/drug_line_top.parquet; flagged ones in their place with their alert, capped as _capped), as one sentence
+    ('' when none). An older tables stage listed clean drug-doses only."""
     if not o.has("tables/drug_line_top.parquet"):
         return ""
     t = o.pq("tables/drug_line_top.parquet", filters=[("col", "==", int(c))],
-             columns=["col", "direction", "dd", "drug", "dose", "cell_name", "lfc", "z"])
+             columns=["col", "direction", "dd", "drug", "dose", "cell_name", "lfc", "z", "flags", "clean", "cc_share"])
     t = t[t["direction"].astype(str) == direction]
     if not len(t):
         return ""
-    t = t.assign(az=t["z"].abs()).sort_values("az", ascending=False)
+    older = "clean" not in t
+    t = t.assign(az=t["z"].abs(), clean=True if older else t["clean"].astype(bool))
+    t = t.sort_values("az", ascending=False)
     g = t.groupby("dd", sort=False)
-    order = sorted(g.groups, key=lambda d: (-len(g.groups[d]), -float(g.get_group(d)["az"].max()), d))[:k]
+    order = sorted(g.groups, key=lambda d: (-len(g.groups[d]), -float(g.get_group(d)["az"].max()), d))
+    okd = [bool(g.get_group(d)["clean"].iloc[0]) for d in order]
     parts = []
-    for d in order:
-        x = g.get_group(d)
+    for i in _capped(len(order), k, okd):
+        x = g.get_group(order[i])
+        r0 = x.iloc[0]
+        al = "" if okd[i] else _alert(r0.get("flags"), r0.get("cc_share"))
         cells = ", ".join(f"{_text(r['cell_name'])} {_fold(2 ** _num(r['lfc']))}" for _, r in x.head(4).iterrows())
-        parts.append(f"{T.salt_base(_text(x.iloc[0]['drug']))} {_text(x.iloc[0]['dose'])} uM in {len(x)} line"
-                     f"{'s' if len(x) != 1 else ''} ({cells}{', ...' if len(x) > 4 else ''})")
+        parts.append(f"{T.salt_base(_text(r0['drug']))} {_text(r0['dose'])} uM" + (f" ({ALERT} {al})" if al else "")
+                     + f" in {len(x)} line{'s' if len(x) != 1 else ''} ({cells}{', ...' if len(x) > 4 else ''})")
+    n_al = sum(not v for v in okd)
+    what = (_n_alert(len(order), n_al, "drug-doses") if not older else
+            f"{len(order)} clean drug-doses; an older tables stage left flagged ones out")
     return (f"in single lines, at per-line |z| >= {o.line_cut()[0]:.1f} ({o.line_cut_note()}; "
-            "tables/drug_line_top): " + ("raised by " if direction == "up" else "lowered by ") + "; ".join(parts))
+            f"tables/drug_line_top, {what}): " + ("raised by " if direction == "up" else "lowered by ")
+            + "; ".join(parts))
 
 
 # ----------------------------------------------------------------------------- gene
@@ -777,12 +902,12 @@ def gene_report(o, c, top, how=""):
            f"{_int(gr.get('n_lines_expressing'))} of {len(o.lines())} lines")
     P += _wrap(lvl, 2, 4)
     if "n_dd_up_clean" in gr:
+        nu, nd, nuc, ndc = (int(gr[k]) for k in ("n_dd_up", "n_dd_down", "n_dd_up_clean", "n_dd_down_clean"))
         P += _wrap(f"significant drug-doses (q < {Q_CUT:g} and fold >= {2 ** LFC_MIN:.1f}x or <= "
-                   f"1/{2 ** LFC_MIN:.1f}): {int(gr['n_dd_up_clean'])} clean raise it, "
-                   f"{int(gr['n_dd_down_clean'])} clean lower it ({int(gr['n_dd_up'])} / "
-                   f"{int(gr['n_dd_down'])} with the flagged ones)", 2, 4)
+                   f"1/{2 ** LFC_MIN:.1f}): {nu} raise it ({nu - nuc} of them with an alert {ALERT}: an artifact "
+                   f"flag for this gene), {nd} lower it ({nd - ndc} with an alert)", 2, 4)
     if bool(gr.get("noise_rna", False)):
-        P.append("  NOTE: noise-class RNA (snoRNA / mitochondrial / pseudogene / ...): read its responses with care")
+        P.append(f"  {ALERT} noise-class RNA (snoRNA / mitochondrial / pseudogene / ...): read its responses with care")
     for k, nm in (("corr_with_S", "S-phase"), ("corr_with_G2M", "G2/M")):
         r = _num(gr.get(k))
         if np.isfinite(r) and abs(r) >= 0.5:
@@ -793,7 +918,7 @@ def gene_report(o, c, top, how=""):
     if not o.ran("embed"):
         P += _wrap(o.missing_note("embed", "vector space, module and arm"), 2, 4)
     elif why:
-        P += _wrap(f"vector space / nodal map: not included - {why}", 2, 4)
+        P += _wrap(f"{ALERT} vector space / nodal map: not included - {why}", 2, 4)
     elif nd is not None and c in nd.index:
         m, arm = int(nd.at[c, "module"]), _text(nd.at[c, "arm"])
         if m > 0:
@@ -821,90 +946,126 @@ def gene_report(o, c, top, how=""):
             P.append("  nodal map: in the vector space, not in a module (module 0)")
     elif nd is None:
         P.append("  " + o.missing_note("graph", "module and arm"))
+    if not why and c in o.flagged_only():
+        P += _wrap(f"{ALERT} in the vector space only through significant drug-doses that carry an alert (artifact "
+                   "flags for this gene; embed evidence_flagged_only): its partners and module may reflect the "
+                   "artifact", 2, 4)
 
     # drug-doses
     cols = ["dd", "drug", "dose", "lfc", "fold", "z", "q_up", "q_down", "flags", "clean", "n_lines_measured",
-            "n_lines_up", "n_lines_down", "pattern_up", "pattern_down"]
+            "n_lines_up", "n_lines_down", "pattern_up", "pattern_down", "cc_share"]
     de = o.pq("tables/drug_effects.parquet", columns=cols, filters=[("col", "==", int(c))])
     de["flags"] = de["flags"].fillna("").astype(str)
     de["clean"] = de["clean"].astype(bool)
+    if "cc_share" not in de:                     # an older tables stage
+        de["cc_share"] = np.nan
     for sign, word in ((1, "RAISED BY"), (-1, "LOWERED BY")):
-        sub = de[de["clean"] & (np.sign(de["z"]) == sign)].sort_values("z", ascending=(sign < 0))
+        sub = de[np.sign(de["z"]) == sign].sort_values("z", ascending=(sign < 0)).reset_index(drop=True)
         qc = "q_up" if sign > 0 else "q_down"
-        sig = (sub[qc] < Q_CUT) & (sign * sub["lfc"] >= LFC_MIN)
-        _title(P, f"{word} - clean drug-doses, pooled over the cell lines (median)",
-               f"{len(sub)} with |z| >= 3 or q < {Q_CUT:g}, {int(sig.sum())} significant (*); a response in fewer "
-               "than about half of the measured lines does not reach the pooled data")
-        one = _single_lines(o, c, "up" if sign > 0 else "down") if int(sig.sum()) < SHORT_POOLED else ""
+        sig = ((sub[qc] < Q_CUT) & (sign * sub["lfc"] >= LFC_MIN)).to_numpy()
+        ok = sub["clean"].to_numpy()
+        _title(P, f"{word} - every drug-dose, pooled over the cell lines (median); {ALERT} = an artifact flag for "
+                  "this gene, kept in its ranked place",
+               f"{_n_alert(len(sub), int((~ok).sum()), f'with |z| >= 3 or q < {Q_CUT:g}')}; {int(sig.sum())} "
+               f"significant (*), {int((sig & ok).sum())} of them without an alert; a response in fewer than about "
+               "half of the measured lines does not reach the pooled data")
+        one = _single_lines(o, c, "up" if sign > 0 else "down") if int((sig & ok).sum()) < SHORT_POOLED else ""
         if not len(sub):
             P.append("  none")
             P += _wrap(one, 2, 4) if one else []
             continue
+        show = _capped(len(sub), top, ok)
         rows = []
-        for (_, r), s in zip(sub.head(top).iterrows(), sig.head(top)):
+        for i in show:
+            r = sub.iloc[i]
             nl = r["n_lines_up"] if sign > 0 else r["n_lines_down"]
-            rows.append([r["drug"], r["dose"], _fold(r["fold"]), _z(r["z"]), _q(r[qc]) + ("*" if s else " "),
-                         f"{int(nl)}/{int(r['n_lines_measured'])}", _text(r["pattern_up" if sign > 0 else
-                                                                                 "pattern_down"]),
-                         r["flags"] or "-"])
-        P += _table(["drug", "uM", "fold", "z", "q", "lines", "dose pattern", "caveats"], rows,
-                    "lrrrrrll", flex=(0, 6, 7), mins={0: 14, 6: 12, 7: 10})
-        if len(sub) > top:
-            P.append(f"  ... {len(sub) - top} more (--top)")
+            rows.append([str(i + 1), r["drug"], r["dose"], _fold(r["fold"]), _z(r["z"]),
+                         _q(r[qc]) + ("*" if sig[i] else " "), f"{int(nl)}/{int(r['n_lines_measured'])}",
+                         "" if ok[i] else _alert_cell(r["flags"], r["cc_share"], none=f"{ALERT} flagged"),
+                         _text(r["pattern_up" if sign > 0 else "pattern_down"]), _caveats(r["flags"]) or "-"])
+        if ok[show].all():                       # no alert among the rows shown: no alert column
+            P += _table(["#", "drug", "uM", "fold", "z", "q", "lines", "dose pattern", "caveats"],
+                        [r_[:7] + r_[8:] for r_ in rows], "rlrrrrrll", flex=(1, 7, 8), mins={1: 14, 7: 12, 8: 10})
+        else:
+            P += _table(["#", "drug", "uM", "fold", "z", "q", "lines", "alert", "dose pattern", "caveats"], rows,
+                        "rlrrrrrlll", flex=(1, 8, 9), mins={1: 14, 8: 12, 9: 10}, drop=(8,))
+        more = _more(len(sub), len(show), int((~ok).sum()) - int((~ok[show]).sum()))
+        if more:
+            P.append(more)
+        if len(show) > top:
+            P += _wrap(f"rows beyond #{top}: the strongest without an alert, shown so that flagged drug-doses do not "
+                       "push them out", 2, 4)
         P += _wrap(one, 2, 4) if one else []
-    fl = de[~de["clean"]].copy()
-    fl["az"] = fl["z"].abs()
-    fl = fl.sort_values("az", ascending=False)
-    _title(P, "FLAGGED drug-doses - artifact flags, read with care",
-           f"{len(fl)} rows; their change may come from the artifact")
-    if len(fl):
-        rows = []
-        for _, r in fl.head(top).iterrows():
-            up = r["z"] > 0
-            rows.append(["up" if up else "down", r["drug"], r["dose"], _fold(r["fold"]), _z(r["z"]),
-                         _q(r["q_up"] if up else r["q_down"]),
-                         f"{int(r['n_lines_up'] if up else r['n_lines_down'])}/{int(r['n_lines_measured'])}",
-                         r["flags"]])
-        P += _table(["", "drug", "uM", "fold", "z", "q", "lines", "flags"], rows, "llrrrrrl", flex=(1, 7),
-                    mins={1: 14, 7: 20})
-        if len(fl) > top:
-            P.append(f"  ... {len(fl) - top} more")
-    else:
-        P.append("  none")
 
     # lines
     le = o.pq("tables/line_effects.parquet", filters=[("col", "==", int(c))])
     ln = o.lines()
     organ = dict(zip(ln["line"], ln["Organ"].fillna("").astype(str))) if "Organ" in ln else {}
     t_line = o.line_cut()[0]
-    _title(P, f"IN WHICH CELL LINES - number of clean drug-doses moving it >= 1.5x at per-line |z| >= {t_line:.1f}",
-           f"the cut is {o.line_cut_note()}; and the strongest of them in the line (salt form left out): per-line "
-           "fold change vs the same line's plate median, per-line z; - = none")
+    has_all = "n_dd_up_all" in le                # older tables: the clean drug-doses only
+    sfx = "_all" if has_all else ""
+    _title(P, f"IN WHICH CELL LINES - number of drug-doses moving it >= 1.5x at per-line |z| >= {t_line:.1f}, and "
+              "the strongest of them in the line",
+           f"the cut is {o.line_cut_note()}; flagged drug-doses are counted and shown in their place, {ALERT} = an "
+           "artifact flag for this gene (reasons below); per-line fold change vs the same line's plate median, "
+           "per-line z; salt form left out; - = none" + ("" if has_all else
+                                                       "; an older tables stage counted clean drug-doses only"))
     if len(le):
         le = le.copy()
-        le["n"] = le["n_dd_up"].fillna(0) + le["n_dd_down"].fillna(0)
-        le["mz"] = np.fmax(le["best_up_z"].abs(), le["best_down_z"].abs())
+        le["n"] = le[f"n_dd_up{sfx}"].fillna(0) + le[f"n_dd_down{sfx}"].fillna(0)
+        le["n_clean"] = le["n_dd_up"].fillna(0) + le["n_dd_down"].fillna(0)
+        le["mz"] = np.fmax(le[f"best_up_z{sfx}"].abs(), le[f"best_down_z{sfx}"].abs())
         expd = le[le["expressed"].astype(bool)].sort_values(["n", "mz"], ascending=[False, False])
-        rows = []
+        rows, legend, n_extra = [], {}, 0
+
+        def best(r, k, s_):
+            """(cell text, fold, z, alert) of the strongest drug-dose of a line in direction k ('' when none)."""
+            if not s_ * _num(r.get(f"best_{k}_z{sfx}")) >= t_line:
+                return None
+            al = "" if not has_all or bool(r.get(f"best_{k}_clean_all")) else \
+                _alert(r.get(f"best_{k}_flags_all"), r.get(f"best_{k}_cc_share_all"))
+            nm = f"{T.salt_base(_text(r[f'best_{k}_drug{sfx}']))} {_text(r[f'best_{k}_dose{sfx}'])}"
+            if al:
+                legend.setdefault(nm, al)
+            return ((f"{ALERT} " if al else "") + nm, _fold(2 ** _num(r[f"best_{k}_lfc{sfx}"])),
+                    _z(r[f"best_{k}_z{sfx}"]), al)
+
+        def count(r, k):
+            n, nc = (np.nan_to_num(_num(r.get(x))) for x in (f"n_dd_{k}{sfx}", f"n_dd_{k}"))
+            return f"{int(n)}" + (f" ({int(n - nc)}{ALERT})" if has_all and n > nc else "")
+
         for _, r in expd.head(top).iterrows():
             row = [_text(r["cell_name"]) or _text(r["cell_line_id"]), organ.get(int(r["line"]), ""),
-                   _f(r["baseline_cpm"], "{:,.0f}"), _int(r["n_dd_up"]), _int(r["n_dd_down"])]
-            for k, sign in (("up", 1), ("down", -1)):
-                if sign * _num(r[f"best_{k}_z"]) >= t_line:
-                    row += [f"{T.salt_base(_text(r[f'best_{k}_drug']))} {_text(r[f'best_{k}_dose'])}",
-                            _fold(2 ** _num(r[f"best_{k}_lfc"])), _z(r[f"best_{k}_z"])]
-                else:
-                    row += ["-", "", ""]
+                   _f(r["baseline_cpm"], "{:,.0f}"), count(r, "up"), count(r, "down")]
+            extra = ["", "", "", "", ""]
+            need = False
+            for k, s_ in (("up", 1), ("down", -1)):
+                b = best(r, k, s_)
+                row += list(b[:3]) if b else ["-", "", ""]
+                cleanb = None
+                if b and b[3] and s_ * _num(r.get(f"best_{k}_z")) >= t_line:      # the strongest has an alert: the
+                    cleanb = (f"no alert: {T.salt_base(_text(r[f'best_{k}_drug']))} {_text(r[f'best_{k}_dose'])}",
+                              _fold(2 ** _num(r[f"best_{k}_lfc"])), _z(r[f"best_{k}_z"]))   # strongest without one
+                    need = True
+                extra += list(cleanb) if cleanb else ["", "", ""]
             rows.append(row)
+            if need:
+                rows.append(extra)
+                n_extra += 1
         P += _table(["line", "organ", "CPM", "up", "down", "strongest up", "fold", "z", "strongest down", "fold",
                      "z"], rows, "llrrrlrrlrr", flex=(1, 5, 8), mins={1: 6, 5: 14, 8: 14}, drop=(1, 2))
+        if legend:
+            P += _wrap(f"{ALERT} " + "; ".join(f"{k} uM: {v}" for k, v in legend.items()) + " (for this gene)"
+                       + ("; a 'no alert' row under a line names its strongest drug-dose without an alert"
+                          if n_extra else ""), 2, 4)
         nexp = le[~le["expressed"].astype(bool)]
         if len(nexp):
             P += _wrap("not measured (not expressed, or only ambient RNA: no per-line values): " +
                        ", ".join(nexp["cell_name"].fillna(nexp["cell_line_id"]).astype(str)), 2, 4)
         n_any = int((expd["n"] > 0).sum())
-        P.append(f"  {n_any} of {len(expd)} measured lines have a clean drug-dose moving it >= 1.5x at per-line "
-                 f"|z| >= {t_line:.1f}")
+        P.append(f"  {n_any} of {len(expd)} measured lines have a drug-dose moving it >= 1.5x at per-line "
+                 f"|z| >= {t_line:.1f}" + (f"; in {int((expd['n_clean'] > 0).sum())} of them a drug-dose without "
+                                           "an alert does" if has_all else ""))
     else:
         P.append("  no rows")
 
@@ -919,21 +1080,26 @@ def gene_report(o, c, top, how=""):
         _title(P, f"{word} - " + ("goes up and down together with it" if sign > 0 else
                                   "goes down when it goes up, and vice versa"),
                ("cos of the gene vectors; halves = the same in two random halves of the compounds (a hash split of "
-                f"the compound names); repro: both = same sign with fdr <= {REPRO_FDR:g} in both halves, one = strong "
-                "in one of the two random halves only (not replicated, no error estimate), no = neither; module = "
-                "the partner's module and arm") if sign > 0 else "the same columns")
+                f"the compound names); repro: both = same sign with fdr <= {REPRO_FDR:g} in both halves, {ALERT} one "
+                "half = strong in one of the two random halves only (not replicated, no error estimate), "
+                f"{ALERT} not repro = neither; {ALERT} after a gene = it is in the vector space only through "
+                f"drug-doses with an artifact flag; {ALERT} locus / readthrough? = neighbours on the genome, which "
+                "can correlate for that reason alone; module = the partner's module and arm; rows with an alert "
+                "keep their place") if sign > 0 else "the same columns")
         rel = o.pq("relations/gene_relations.parquet", columns=REL_COLS, filters=[("col_a", "==", int(c))])
-        rows, n = _partner_rows(o, rel, top, sign)
+        rows, n, n_al = _partner_rows(o, rel, top, sign)
         if not rows:
             P.append(f"  none among its top {len(rel)} partners by |cos|")
             continue
         P += _table(PARTNER_HEAD, rows, "lrrlrlll", flex=(6, 7, 0), mins={6: 18, 7: 14, 0: 8}, drop=(7, 5))
+        if len(rows) < n:
+            P.append(f"  ... {n - len(rows)} more on this side (--top)")
         rep = rel[(np.sign(rel["cos"]) == sign) & (rel["evidence"] == "both halves")]
         if "fdr" in rep:
             rep = rep[rep["fdr"].fillna(1.0) <= REPRO_FDR]
-        P.append(f"  {n} of its top {len(rel)} partners by |cos| are on this side; {len(rep)} replicated (same sign "
-                 f"with fdr <= {REPRO_FDR:g} in two random halves of the compounds)"
-                 + (f", {int((rep['fdr'] <= 0.05).sum())} of them at fdr <= 0.05" if "fdr" in rep else ""))
+        P.append(f"  {n} of its top {len(rel)} partners by |cos| are on this side, {n_al} of them with an alert "
+                 f"({ALERT}); {len(rep)} replicated (same sign with fdr <= {REPRO_FDR:g} in two random halves of the "
+                 "compounds)" + (f", {int((rep['fdr'] <= 0.05).sum())} of them at fdr <= 0.05" if "fdr" in rep else ""))
         ok_nov, blocked = o.novelty()
         if sign < 0 and not ok_nov:
             P += _wrap(f"novelty not assessed: {', '.join(blocked) or 'reference sources'} missing "
@@ -1009,42 +1175,69 @@ def drug_report(o, drug, top):
             nw += f" of {int(nwa)}"
         rows.append([r["dose"], nw, _text(r.get("plates")).replace(",", ", "), _int(r.get("n_genes_up")),
                      _int(r.get("n_genes_down")), _f(r.get("replicate_r")), _f(r.get("cells_log2_vs_plate"), "{:+.2f}"),
-                     r["flags"] or "-"])
+                     _flags_shown(r["flags"])])
     P += _table(["uM", "wells", "plates", "up", "down", "rep r", "cells", "flags"], rows, "lllrrrrl",
                 flex=(2, 7), mins={2: 8, 7: 16})
+    if rows_dd["artifact"].any():
+        P += _wrap(f"{ALERT} = an artifact flag of the drug-dose; it is shown with all its genes below. For a "
+                   "cell-cycle shift the tables decide per gene whether the shift explains the change (genes whose "
+                   f"change it does not explain carry no {ALERT})", 2, 4)
 
     # top genes per dose
-    cols = ["col", "symbol", "dd", "lfc", "fold", "z", "q_up", "q_down", "clean", "n_lines_measured", "n_lines_up",
-            "n_lines_down"]
+    cols = ["col", "symbol", "dd", "lfc", "fold", "z", "q_up", "q_down", "flags", "clean", "n_lines_measured",
+            "n_lines_up", "n_lines_down", "cc_share"]
     de = o.pq("tables/drug_effects.parquet", columns=cols, filters=[("dd", "in", dds)])
+    if "cc_share" not in de:                     # an older tables stage
+        de["cc_share"] = np.nan
+    de["flags"] = de["flags"].fillna("").astype(str) if "flags" in de else ""
     g = o.genes()
     for _, r in rows_dd.iterrows():
         d = int(r["dd"])
         x = de[de["dd"] == d]
-        up = x[(x["q_up"] < Q_CUT) & (x["lfc"] >= LFC_MIN)].sort_values("z", ascending=False).head(top)
-        dn = x[(x["q_down"] < Q_CUT) & (x["lfc"] <= -LFC_MIN)].sort_values("z").head(top)
+        up = x[(x["q_up"] < Q_CUT) & (x["lfc"] >= LFC_MIN)].sort_values("z", ascending=False).reset_index(drop=True)
+        dn = x[(x["q_down"] < Q_CUT) & (x["lfc"] <= -LFC_MIN)].sort_values("z").reset_index(drop=True)
         note = _artifacts(r["flags"])
-        _title(P, f"TOP GENES at {r['dose']} uM", (f"FLAGGED {note}: these changes may be the artifact"
-                                                    if note else "clean drug-dose") +
-               "; lines = lines moving / measured" + ("" if note else "; ! = artifact flag for that gene"))
+        dose_art = set(note.split("; ")) - {TB.CC_FLAG} if note else set()
+        n_al = [int((~p_["clean"].astype(bool)).sum()) for p_ in (up, dn)]
+        _title(P, f"TOP GENES at {r['dose']} uM", (f"{ALERT} drug-dose flags: {note}; " if note else "") +
+               f"significant genes: {_n_alert(len(up), n_al[0], 'raised')}, {_n_alert(len(dn), n_al[1], 'lowered')}; "
+               f"lines = lines moving / measured; alert = an artifact flag for that gene: {ALERT} alone = the "
+               "drug-dose's flags named here, 'cell cycle ~N%' = its cell-cycle shift would explain ~N% of this "
+               "change, 'position uncertain' = position correction uncertain for that gene")
+
+        def gene_alert(y):
+            """The alert of a gene at this drug-dose, without repeating the drug-dose's own flags."""
+            if bool(y["clean"]):
+                return ""
+            own = [f for f in str(y["flags"]).split("; ") if f in A.ARTIFACT_FLAGS and f not in dose_art]
+            words = _alert("; ".join(own), y["cc_share"], "short")
+            return ALERT + (f" {words}" if words else "")
         if not len(up) and not len(dn):
             P.append("  no significant genes")
             continue
+        sides = []
+        for part in (up, dn):
+            ok = part["clean"].astype(bool).to_numpy()
+            sides.append((part, _capped(len(part), top, ok)))
         rows = []
-        for i in range(max(len(up), len(dn))):
-            row = [str(i + 1)]
-            for part, key in ((up, "n_lines_up"), (dn, "n_lines_down")):
-                if i < len(part):
-                    y = part.iloc[i]
-                    cc = int(y["col"])
-                    row += [g.at[cc, "label"] + ("" if note or bool(y["clean"]) else " !"), _fold(y["fold"]),
-                            _z(y["z"]),
-                            f"{int(y[key])}/{int(y['n_lines_measured'])}"]
+        for i in range(max(len(sides[0][1]), len(sides[1][1]))):
+            row = []
+            for (part, show), key in zip(sides, ("n_lines_up", "n_lines_down")):
+                if i < len(show):
+                    j = show[i]
+                    y = part.iloc[j]
+                    row += [str(j + 1), g.at[int(y["col"]), "label"], _fold(y["fold"]), _z(y["z"]),
+                            f"{int(y[key])}/{int(y['n_lines_measured'])}", gene_alert(y)]
                 else:
-                    row += ["", "", "", ""]
-            rows.append(row[:5] + ["|"] + row[5:])
-        P += _table(["#", "raised", "fold", "z", "lines", "|", "lowered", "fold", "z", "lines"], rows,
-                    "rlrrrllrrr", flex=(1, 6), mins={1: 8, 6: 8})
+                    row += ["", "", "", "", "", ""]
+            rows.append(row[:6] + ["|"] + row[6:])
+        P += _table(["#", "raised", "fold", "z", "lines", "alert", "|", "#", "lowered", "fold", "z", "lines", "alert"],
+                    rows, "rlrrrllrlrrrl", flex=(1, 5, 8, 12), mins={1: 8, 5: 5, 8: 8, 12: 5})
+        for (part, show), word in zip(sides, ("raised", "lowered")):
+            al = ~part["clean"].astype(bool).to_numpy()
+            more = _more(len(part), len(show), int(al.sum()) - int(al[show].sum()), word)
+            if more:
+                P.append(more)
 
     # similar drugs
     _title(P, "MOST SIMILAR DRUGS - cosine of the drug vectors (each drug's best dose) in the gene space")
@@ -1063,23 +1256,47 @@ def drug_report(o, drug, top):
             with np.errstate(invalid="ignore", divide="ignore"):
                 cs = V @ V[i] / (nrm * nrm[i])
             nsig = ed["n_sig_genes"].to_numpy() if "n_sig_genes" in ed else np.full(len(ed), min_act)
-            if nsig[i] < min_act:
-                P += _wrap(f"NOTE: its best dose has only {int(nsig[i])} significant genes (< {min_act}): its "
-                           "vector is mostly noise and so are these neighbours", 2, 4)
-            ok = (nsig >= min_act) & (np.arange(len(ed)) != i) & np.isfinite(cs)
-            order = [j for j in np.argsort(-np.where(ok, cs, -np.inf)) if ok[j]][:min(top, 12)]
+            trusted = ed["trusted"].fillna(True).astype(bool).to_numpy() if "trusted" in ed else \
+                np.ones(len(ed), dtype=bool)
+            vflags = dict(zip(dd["dd"].astype(int), dd["flags"]))
+
+            def why(j):
+                """The alert of drug j's vector: few significant genes at its vector dose, an untrusted vector dose or
+                artifact flags there ('' = none)."""
+                w = []
+                if nsig[j] < min_act:
+                    w.append(f"only {int(nsig[j])} significant gene{'s' if nsig[j] != 1 else ''}")
+                ddj = int(_num(ed.iloc[j].get("dd"))) if np.isfinite(_num(ed.iloc[j].get("dd"))) else -1
+                art = _artifacts(vflags.get(ddj, ""))
+                if art:
+                    w.append(f"dose flagged: {art}")
+                elif not trusted[j]:
+                    w.append("dose not trustworthy")
+                return "; ".join(w)
+            if why(i):
+                P += _wrap(f"{ALERT} this drug's own vector: {why(i)} at its vector dose: read its neighbours with "
+                           "that in mind", 2, 4)
+            cand = [j for j in np.argsort(-np.where(np.isfinite(cs), cs, -np.inf))
+                    if j != i and np.isfinite(cs[j]) and nrm[j] > 0]
+            ok = np.array([not why(j) for j in cand], dtype=bool)
+            show = _capped(len(cand), min(top, 12), ok)
             rows = []
-            for j in order:
+            for k in show:
+                j = cand[k]
                 e = ed.iloc[j]
                 same = " (same compound)" if T.salt_base(e["drug"]) == sb else ""
-                rows.append([e["drug"] + same, _text(e["dose"]), _cos(cs[j]), _int(nsig[j]),
-                             _text(e.get("moa_fine", "")), _text(e.get("targets", ""))])
+                rows.append([str(k + 1), e["drug"] + same, _text(e["dose"]), _cos(cs[j]), _int(nsig[j]),
+                             f"{ALERT} {why(j)}" if why(j) else "", _text(e.get("moa_fine", "")),
+                             _text(e.get("targets", ""))])
             if rows:
-                P += _table(["drug", "uM", "cos", "genes", "mechanism", "targets"], rows, "llrrll",
-                            flex=(0, 4, 5), mins={0: 14, 4: 12, 5: 8})
-                P.append(f"  among the {int(ok.sum())} drugs whose best dose has >= {min_act} significant genes")
+                P += _table(["#", "drug", "uM", "cos", "genes", "alert", "mechanism", "targets"], rows, "rlrrrlll",
+                            flex=(1, 6, 7), mins={1: 14, 6: 12, 7: 8}, drop=(7,))
+                P += _wrap(f"among {_n_alert(len(cand), int((~ok).sum()), 'other drugs with a vector')}; genes = "
+                           f"significant genes at the drug's vector dose; {ALERT} only N significant genes (< "
+                           f"{min_act}): the vector is mostly noise; {ALERT} dose flagged: artifact flags at the "
+                           "vector dose", 2, 4)
             else:
-                P.append(f"  no other drug has >= {min_act} significant genes")
+                P.append("  no other drug has a vector")
 
     # modules
     _title(P, "MODULES IT MOVES - module score = mean pooled z of the + arm minus the - arm (of all members in a "
@@ -1111,15 +1328,19 @@ def drug_report(o, drug, top):
         d = int(r["dd"])
         az = np.asarray(DAz[d], dtype=np.float32)
         a_ = np.asarray(DA[d], dtype=np.float32)
+        art = _artifacts(r["flags"])
         for l in np.flatnonzero(np.nan_to_num(az, nan=0.0) <= DEPLETE_Z):
-            rows.append((az[l], [r["dose"], ln.at[l, "name"], _text(ln.at[l, "Organ"]) if "Organ" in ln else "",
-                                 _fold(2 ** a_[l]), _z(az[l]), _artifacts(r["flags"]) or "-"]))
+            rows.append((az[l], not art, [r["dose"], ln.at[l, "name"],
+                                          _text(ln.at[l, "Organ"]) if "Organ" in ln else "", _fold(2 ** a_[l]),
+                                          _z(az[l]), f"{ALERT} {art}" if art else ""]))
     rows.sort(key=lambda t: t[0])
     if rows:
-        P += _table(["uM", "line", "organ", "abundance", "z", "drug-dose artifact flags"], [x[1] for x in rows[:top]],
-                    "lllrrl", flex=(2, 5), mins={2: 6, 5: 12})
-        if len(rows) > top:
-            P.append(f"  ... {len(rows) - top} more")
+        ok = np.array([x[1] for x in rows], dtype=bool)
+        show = _capped(len(rows), top, ok)
+        P += _table(["uM", "line", "organ", "abundance", "z", "alert (drug-dose artifact flags)"],
+                    [rows[i][2] for i in show], "lllrrl", flex=(2, 5), mins={2: 6, 5: 12})
+        P.append(f"  {_n_alert(len(rows), int((~ok).sum()), 'dose x line pairs')}"
+                 + (f"; {len(rows) - len(show)} more (--top)" if len(rows) > len(show) else ""))
     else:
         P.append("  none")
     _title(P, "LINES THAT SHOW ITS RESPONSE MOST - DD_beta",
@@ -1135,7 +1356,7 @@ def drug_report(o, drug, top):
         o_ = [l for l in np.argsort(-np.nan_to_num(b, nan=-np.inf), kind="stable") if np.isfinite(b[l])]
         k = min(8, len(o_) // 2)                       # 'most' and 'least' never share a line
         fl = _artifacts(r["flags"])
-        P += _wrap(f"{r['dose']} uM ({len(o_)} lines{'; ' + fl if fl else ''}): most: "
+        P += _wrap(f"{r['dose']} uM ({len(o_)} lines{f'; {ALERT} ' + fl if fl else ''}): most: "
                    + ", ".join(f"{ln.at[l, 'name']} {b[l]:.2f}" for l in (o_[:k] if k else o_))
                    + (";  least: " + ", ".join(f"{ln.at[l, 'name']} {b[l]:.2f}" for l in o_[::-1][:k]) if k else ""),
                    2, 4)
@@ -1216,31 +1437,41 @@ def cmd_line(o, names, top):
         spec = lg[l] - med_o
     nxt = others[np.argmax(cpm[others], axis=0)] if len(others) else np.zeros(gK, dtype=int)
     nexp = em.sum(axis=0)
-    ok = (cpm[l] >= SPECIFIC_MIN_CPM) & em[l] & ~noise & np.isfinite(spec)
-    order = [i for i in np.argsort(-np.where(ok, spec, -np.inf)) if ok[i]][:top]
+    def gene_alert(i):
+        """Why a baseline call of gene i may mislead: a noise-class RNA, or a level that is only ambient RNA here."""
+        w = (["noise-class RNA"] if noise[i] else []) + ([] if em[l, i] else ["only ambient RNA here (not measured)"])
+        return f"{ALERT} " + "; ".join(w) if w else ""
+
+    ok = (cpm[l] >= SPECIFIC_MIN_CPM) & np.isfinite(spec)
+    order = [i for i in np.argsort(-np.where(ok, spec, -np.inf)) if ok[i]]
+    show = _capped(len(order), top, [not gene_alert(i) for i in order])
     _title(P, "SPECIFICALLY HIGH AT BASELINE - this line's level vs the median of the other lines",
-           f"atlas line_cpm, all wells; >= {SPECIFIC_MIN_CPM:g} CPM here; noise-class RNA left out")
+           f"atlas line_cpm, all wells; >= {SPECIFIC_MIN_CPM:g} CPM here; {ALERT} = noise-class RNA, or the line "
+           "reads only ambient RNA of the gene (tensor/line_measured)")
     rows = []
-    for i in order:
-        rows.append([g.at[i, "label"], _f(cpm[l, i], "{:,.0f}"), _f(2 ** med_o[i] - 1, "{:,.1f}"),
+    for k in show:
+        i = order[k]
+        rows.append([str(k + 1), g.at[i, "label"], _f(cpm[l, i], "{:,.0f}"), _f(2 ** med_o[i] - 1, "{:,.1f}"),
                      _fold(2 ** spec[i]), f"{ln.at[nxt[i], 'name']} {cpm[nxt[i], i]:,.0f}", f"{int(nexp[i])}",
-                     o.ann_name(i)])
+                     gene_alert(i), o.ann_name(i)])
     if rows:
-        P += _table(["gene", "CPM here", "median other", "x median", "next highest line (CPM)", "lines expr",
-                     "name"], rows, "lrrrlrl", flex=(4, 6), mins={4: 12, 6: 10})
+        P += _table(["#", "gene", "CPM here", "median other", "x median", "next highest line (CPM)", "lines expr",
+                     "alert", "name"], rows, "rlrrrlrll", flex=(5, 8), mins={5: 12, 8: 10})
     else:
         P.append("  none")
-    okl = (med_o >= np.log2(20 + 1)) & (nexp >= 0.5 * len(ln)) & ~noise & np.isfinite(spec)
+    okl = (med_o >= np.log2(20 + 1)) & (nexp >= 0.5 * len(ln)) & np.isfinite(spec)
     kl = min(top, 10)
-    order = [i for i in np.argsort(np.where(okl, spec, np.inf)) if okl[i] and spec[i] < -1][:kl]
+    order = [i for i in np.argsort(np.where(okl, spec, np.inf)) if okl[i] and spec[i] < -1]
+    show = _capped(len(order), kl, [not noise[i] for i in order])
     _title(P, "SPECIFICALLY LOW AT BASELINE - absent or low here, expressed in most lines",
            "deletions, silencing; >= 20 CPM in the median other line; expressed here = measured "
-           "(tensor/line_measured: not ambient RNA only)")
-    if order:
-        P += _table(["gene", "CPM here", "median other", "x median", "expressed here", "name"],
-                    [[g.at[i, "label"], _f(cpm[l, i], "{:,.1f}"), _f(2 ** med_o[i] - 1, "{:,.0f}"),
-                      _fold(2 ** spec[i]), "yes" if em[l, i] else "no", o.ann_name(i)] for i in order],
-                    "lrrrll", flex=(5,), mins={5: 10})
+           f"(tensor/line_measured: not ambient RNA only); {ALERT} = noise-class RNA")
+    if show.size:
+        P += _table(["#", "gene", "CPM here", "median other", "x median", "expressed here", "alert", "name"],
+                    [[str(k + 1), g.at[order[k], "label"], _f(cpm[l, order[k]], "{:,.1f}"),
+                      _f(2 ** med_o[order[k]] - 1, "{:,.0f}"), _fold(2 ** spec[order[k]]),
+                      "yes" if em[l, order[k]] else "no", f"{ALERT} noise-class RNA" if noise[order[k]] else "",
+                      o.ann_name(order[k])] for k in show], "rlrrrlll", flex=(7,), mins={7: 10})
     else:
         P.append("  none at < 0.5x the median line")
 
@@ -1250,32 +1481,48 @@ def cmd_line(o, names, top):
     a_ = np.asarray(o.eff("DD_A")[:, l], dtype=np.float32)
     hit = np.flatnonzero(np.nan_to_num(az, nan=0.0) <= DEPLETE_Z)
     hit = hit[np.argsort(az[hit])]
-    n_clean = int((~dd["artifact"].to_numpy()[hit]).sum())
+    okd = ~dd["artifact"].to_numpy()[hit]
     _title(P, f"DRUG-DOSES THAT DEPLETE IT - relative abundance z <= {DEPLETE_Z:g} vs the other lines in the wells",
-           f"{len(hit)} drug-doses, {n_clean} without artifact flags")
+           f"{_n_alert(len(hit), int((~okd).sum()), 'drug-doses')}; {ALERT} = an artifact flag of the drug-dose")
     if len(hit):
-        P += _table(["drug", "uM", "abundance", "z", "significant genes", "drug-dose flags"],
-                    [[dd.at[d, "drug"], dd.at[d, "dose"], _fold(2 ** a_[d]), _z(az[d]), _int(dd.at[d, "n_sig_genes"]),
-                      dd.at[d, "flags"] or "-"] for d in hit[:top]], "llrrrl", flex=(0, 5), mins={0: 14, 5: 12})
-        if len(hit) > top:
-            P.append(f"  ... {len(hit) - top} more")
+        show = _capped(len(hit), top, okd)
+        P += _table(["#", "drug", "uM", "abundance", "z", "significant genes", "drug-dose flags"],
+                    [[str(k + 1), dd.at[hit[k], "drug"], dd.at[hit[k], "dose"], _fold(2 ** a_[hit[k]]),
+                      _z(az[hit[k]]), _int(dd.at[hit[k], "n_sig_genes"]), _flags_shown(dd.at[hit[k], "flags"])]
+                     for k in show], "rllrrrl", flex=(1, 6), mins={1: 14, 6: 12})
+        more = _more(len(hit), len(show), int((~okd).sum()) - int((~okd[show]).sum()))
+        if more:
+            P.append(more)
     else:
         P.append("  none")
 
     # strongest responses
     _title(P, "ITS STRONGEST RESPONSES - (gene, drug-dose) cells of this line, by per-line |z|",
-           f"tables/drug_line_top: each gene's 15 strongest clean cells up and down at {o.line_cut_text()}; fold = "
-           "per-line fold change")
+           f"tables/drug_line_top: each gene's 15 strongest cells up and down at {o.line_cut_text()}, over all "
+           f"drug-doses ({ALERT} = an artifact flag for that gene, kept in its place); fold = per-line fold change")
     dlt = o.pq("tables/drug_line_top.parquet",
-               columns=["col", "symbol", "direction", "drug", "dose", "line", "lfc", "z", "pooled_lfc", "pooled_z"],
+               columns=["col", "symbol", "direction", "drug", "dose", "line", "lfc", "z", "pooled_lfc", "pooled_z",
+                        "flags", "clean", "cc_share"],
                filters=[("line", "==", int(l))])
     if len(dlt):
-        dlt = dlt.assign(az=dlt["z"].abs()).sort_values("az", ascending=False).head(top)
-        P += _table(["gene", "", "drug", "uM", "fold", "z", "pooled fold", "pooled z"],
-                    [[g.at[int(x["col"]), "label"], x["direction"], x["drug"], x["dose"], _fold(2 ** _num(x["lfc"])),
-                      _z(x["z"]), _fold(2 ** _num(x["pooled_lfc"])), _z(x["pooled_z"])] for _, x in dlt.iterrows()],
-                    "lllrrrrr", flex=(0, 2), mins={0: 8, 2: 14})
-        P.append("  a large per-line fold change with a small pooled one = a response specific to this line")
+        older = "clean" not in dlt
+        if older:
+            dlt = dlt.assign(clean=True, flags="", cc_share=np.nan)
+        dlt = dlt.assign(az=dlt["z"].abs()).sort_values("az", ascending=False).reset_index(drop=True)
+        okc = dlt["clean"].astype(bool).to_numpy()
+        show = _capped(len(dlt), top, okc)
+        P += _table(["#", "gene", "", "drug", "uM", "fold", "z", "pooled fold", "pooled z", "alert"],
+                    [[str(k + 1), g.at[int(x["col"]), "label"], x["direction"], x["drug"], x["dose"],
+                      _fold(2 ** _num(x["lfc"])), _z(x["z"]), _fold(2 ** _num(x["pooled_lfc"])), _z(x["pooled_z"]),
+                      "" if okc[k] else _alert_cell(x["flags"], x["cc_share"], none=f"{ALERT} flagged")]
+                     for k, x in ((k, dlt.iloc[k]) for k in show)],
+                    "rlllrrrrrl", flex=(1, 3, 9), mins={1: 8, 3: 14, 9: 20})
+        P.append(f"  {_n_alert(len(dlt), int((~okc).sum()), 'cells')}"
+                 + (" (an older tables stage: clean drug-doses only)" if older else "")
+                 + "; a large per-line fold change with a small pooled one = a response specific to this line")
+        more = _more(len(dlt), len(show), int((~okc).sum()) - int((~okc[show]).sum()))
+        if more:
+            P.append(more)
     else:
         P.append("  none")
     tb = [["per gene", o.p("tables", "line_effects.parquet"), f"line == {l}"],
@@ -1332,6 +1579,44 @@ def _pair_relation(o, a, b):
     return r
 
 
+def _gene_flags_at(o, c, dds):
+    """(flags, cc_share) per drug-dose in dds for gene c: drug_effects' flags and cc_share where the tables stage
+    lists the drug-dose for the gene; else the same artifact rules applied here - the drug-dose's flags plus
+    'position correction uncertain' for the gene (atlas DD_posunc) and the cell-cycle rule (tables.cc_rule on the
+    gene's slopes, genes.parquet cc_slope_*). The soft caveats that depend on the gene (its plate factor, a position
+    effect removed) are left out of that fallback: it serves the alert, which holds artifact flags only."""
+    dd = o.drugdoses()
+    dds = np.asarray(dds, dtype=np.int64)
+    flags = dd["flags"].to_numpy(dtype=object)[dds].copy() if len(dds) else np.array([], dtype=object)
+    share = np.full(len(dds), np.nan)
+    pu = np.asarray(o.eff("DD_posunc")[:, c], dtype=bool)[dds] if o.has("atlas/effects/DD_posunc.npy") else \
+        np.zeros(len(dds), dtype=bool)
+    flags = np.array([A.gene_flags(f, bool(u)) for f, u in zip(flags, pu)], dtype=object)
+    g = o.genes()
+    cc = np.array([TB.CC_FLAG in str(f).split("; ") for f in flags], dtype=bool)
+    if cc.any() and {"cc_slope_S", "cc_slope_G2M"} <= set(g.columns) and \
+            {"S_PHASE_lfc", "G2M_PHASE_lfc"} <= set(dd.columns):
+        bS, bG = _num(g.at[c, "cc_slope_S"]), _num(g.at[c, "cc_slope_G2M"])
+        lf = np.asarray(o.eff("DD_lfc")[:, c], dtype=np.float64)[dds]
+        S = pd.to_numeric(dd["S_PHASE_lfc"], errors="coerce").to_numpy()[dds]
+        G = pd.to_numeric(dd["G2M_PHASE_lfc"], errors="coerce").to_numpy()[dds]
+        sh, cleared = TB.cc_rule(lf, bS * S + bG * G)
+        share = np.where(cc, sh, np.nan)
+        for i in np.flatnonzero(cc & cleared):
+            flags[i] = "; ".join(TB.CC_CLEARED.format(pct=int(round(100 * sh[i]))) if x == TB.CC_FLAG else x
+                                 for x in str(flags[i]).split("; "))
+    if o.has("tables/drug_effects.parquet") and len(dds):        # the stage's own strings where it wrote them
+        de = o.pq("tables/drug_effects.parquet", columns=["col", "dd", "flags", "cc_share"],
+                  filters=[("col", "==", int(c)), ("dd", "in", [int(x) for x in dds])])
+        pos = {int(d): i for i, d in enumerate(dds)}
+        for _, r in de.iterrows():
+            i = pos[int(r["dd"])]
+            flags[i] = _text(r["flags"])
+            if "cc_share" in r:
+                share[i] = _num(r["cc_share"])
+    return flags, share
+
+
 def cmd_pair(o, names, top):
     if len(names) != 2:
         raise NotFound("pair needs two genes: tahoe pair GENE_A GENE_B")
@@ -1369,10 +1654,18 @@ def cmd_pair(o, names, top):
         r = _pair_relation(o, ca, cb)
         if r is None:
             why = [f"{x}: {_not_in_space(o, c)}" for x, c in ((la, ca), (lb, cb)) if _not_in_space(o, c)]
-            P.append("  not both in the vector space - " + "; ".join(why))
+            P += _wrap(f"{ALERT} not both in the vector space - " + "; ".join(why), 2, 4)
         else:
+            ev = _text(r.get("evidence")) or "-"
             P.append(f"  cos {_cos(r['cos'])}   halves {_cos(r.get('cos_half1'))} / {_cos(r.get('cos_half2'))}   "
-                     f"evidence: {r.get('evidence', '-')}   fdr {_q(r.get('fdr'))}")
+                     f"evidence: {'' if ev in ('both halves', '-') else ALERT + ' '}{ev}   fdr {_q(r.get('fdr'))}")
+            if ev == "one half":
+                P += _wrap(f"{ALERT} seen in one random half of the compounds only: not replicated, no error "
+                           "estimate", 2, 4)
+            fo = [x for x, c in ((la, ca), (lb, cb)) if c in o.flagged_only()]
+            if fo:
+                P += _wrap(f"{ALERT} {' and '.join(fo)} {'is' if len(fo) == 1 else 'are'} in the vector space only "
+                           "through drug-doses with an artifact flag: the relation may reflect the artifact", 2, 4)
             ranks = []
             if r.get("rank_ab"):
                 ranks.append(f"{lb} is {la}'s partner #{r['rank_ab']} (z {_f(r['z_ab'], '{:+.1f}')})")
@@ -1442,30 +1735,52 @@ def cmd_pair(o, names, top):
     Lf = o.eff("DD_lfc")
     za, zb = np.asarray(Z[:, ca], dtype=np.float64), np.asarray(Z[:, cb], dtype=np.float64)
     fa, fb = np.asarray(Lf[:, ca], dtype=np.float64), np.asarray(Lf[:, cb], dtype=np.float64)
-    pu = o.eff("DD_posunc")
-    clean = ~dd["artifact"].to_numpy() & ~np.asarray(pu[:, ca], dtype=bool) & ~np.asarray(pu[:, cb], dtype=bool)
     with np.errstate(invalid="ignore"):
-        both = clean & (np.abs(za) >= PAIR_Z) & (np.abs(zb) >= PAIR_Z)
+        both = (np.abs(za) >= PAIR_Z) & (np.abs(zb) >= PAIR_Z)
         prod = za * zb
+    moved = np.flatnonzero(both & np.isfinite(prod))
+    fl_a, sh_a = _gene_flags_at(o, ca, moved)
+    fl_b, sh_b = _gene_flags_at(o, cb, moved)
+    at = {int(d): i for i, d in enumerate(moved)}
+
+    def pair_alert(d):
+        """The alert of drug-dose d for the pair: each gene's artifact flags (one text when they are the same)."""
+        i = at[int(d)]
+        a, b = _alert(fl_a[i], sh_a[i], "short"), _alert(fl_b[i], sh_b[i], "short")
+        if not a and not b:
+            return ""
+        if a == b:
+            return f"{ALERT} {a}"
+        return f"{ALERT} " + "; ".join(x for x in (f"{la}: {a}" if a else "", f"{lb}: {b}" if b else "") if x)
+
     k = min(top, 10)
     for sign, word in ((1, "SAME DIRECTION"), (-1, "OPPOSITE DIRECTIONS")):
         idx = np.flatnonzero(both & (np.sign(prod) == sign))
         idx = idx[np.argsort(-np.abs(prod[idx]))]
-        _title(P, f"DRUG-DOSES THAT MOVE BOTH, {word} - clean for both, pooled |z| >= {PAIR_Z:g} for each",
-               f"{len(idx)} drug-doses; top {k} by z({la}) x z({lb})")
+        ok = np.array([not pair_alert(d) for d in idx], dtype=bool)
+        show = _capped(len(idx), k, ok)
+        _title(P, f"DRUG-DOSES THAT MOVE BOTH, {word} - every drug-dose with pooled |z| >= {PAIR_Z:g} for each",
+               f"{_n_alert(len(idx), int((~ok).sum()), 'drug-doses')}; {ALERT} = an artifact flag for one or both "
+               f"genes ('cell cycle ~N%': the drug-dose's cell-cycle shift would explain ~N% of the gene's change), "
+               f"kept in its place; top {k} by z({la}) x z({lb})")
         if len(idx):
-            P += _table(["drug", "uM", f"{la} fold", "z", f"{lb} fold", "z", "caveats"],
-                        [[dd.at[d, "drug"], dd.at[d, "dose"], _fold(2 ** fa[d]), _z(za[d]), _fold(2 ** fb[d]),
-                          _z(zb[d]), dd.at[d, "flags"] or "-"] for d in idx[:k]], "llrrrrl", flex=(0, 6),
-                        mins={0: 14, 6: 8})
+            P += _table(["#", "drug", "uM", f"{la} fold", "z", f"{lb} fold", "z", "alert", "caveats"],
+                        [[str(j + 1), dd.at[d, "drug"], dd.at[d, "dose"], _fold(2 ** fa[d]), _z(za[d]),
+                          _fold(2 ** fb[d]), _z(zb[d]), pair_alert(d), _caveats(dd.at[d, "flags"]) or "-"]
+                         for j, d in ((j, idx[j]) for j in show)], "rllrrrrll", flex=(1, 8),
+                        mins={1: 12, 8: 8})
+            more = _more(len(idx), len(show), int((~ok).sum()) - int((~ok[show]).sum()))
+            if more:
+                P.append(more)
         else:
             P.append("  none")
 
     # per line
     act = o.active_dd()
     _title(P, "AGREEMENT INSIDE EACH CELL LINE - Pearson r of the per-line log2 fold changes (tensor DDL_lfc)",
-           f"over the {int(act.sum())} active, trustworthy drug-doses; each entry: line, r, drug-doses measured "
-           "in both")
+           f"over the {int(act.sum())} active, trustworthy drug-doses (the embed stage's contexts: an estimate, so "
+           f"drug-doses whose wells are untrusted - {', '.join(UNTRUSTED)} - are left out of it); each entry: line, "
+           "r, drug-doses measured in both")
     mp = act & np.isfinite(fa) & np.isfinite(fb)
     ra = np.nan
     if mp.sum() >= PAIR_MIN_N and fa[mp].std() > 0 and fb[mp].std() > 0:
@@ -1525,9 +1840,16 @@ def cmd_module(o, names, top):
             P += ["", "=" * min(WIDTH, 100), ""]
         if m == 0:
             un = nd[nd["module"] == 0]
-            P.append(f"MODULE 0 = genes in the vector space but in no module of >= 5 genes: {len(un)}")
+            fo = o.flagged_only()
+            n_fo = int(un["col"].isin(fo).sum())
+            P.append("MODULE 0 = genes in the vector space but in no module of >= 5 genes: "
+                     + (_n_alert(len(un), n_fo) if n_fo else f"{len(un)}"))
             if len(un):
-                P += _wrap(", ".join(un["symbol"].astype(str).head(60)) + (" ..." if len(un) > 60 else ""), 2, 2)
+                P += _wrap(", ".join(f"{sy}{' ' + ALERT if int(c_) in fo else ''}" for sy, c_ in
+                                     zip(un["symbol"].astype(str).head(60), un["col"].head(60)))
+                           + (" ..." if len(un) > 60 else ""), 2, 2)
+                if un["col"].isin(fo).any():
+                    P += _wrap(f"{ALERT} = in the vector space only through drug-doses with an artifact flag", 2, 4)
             continue
         hit = np.flatnonzero(mods["module"].to_numpy() == m)
         if not len(hit):
@@ -1561,16 +1883,20 @@ def cmd_module(o, names, top):
         mem["ap"] = mem["axis_proj"].abs() if "axis_proj" in mem else 0.0
         plus = mem[mem["arm"] == "+"].sort_values("ap", ascending=False).head(top)
         minus = mem[mem["arm"] == "-"].sort_values("ap", ascending=False).head(top)
+        fo = o.flagged_only()
+        n_fo = int(mem["col"].isin(fo).sum())
         _title(P, "TOP GENES PER ARM" if opp else "TOP GENES (single-armed module)",
-               "by |projection on the module's main direction|; name from the reference")
+               "by |projection on the module's main direction|; name from the reference" +
+               (f"; {_n_alert(len(mem), n_fo, 'members')}: {ALERT} after a gene = in the vector space only through "
+                "drug-doses with an artifact flag" if n_fo else ""))
         rows = []
         for j in range(max(len(plus), len(minus))):
             row = [str(j + 1)]
             for part in ((plus, minus) if opp else (plus,)):
                 if j < len(part):
                     y = part.iloc[j]
-                    row += [o.genes().at[int(y["col"]), "label"], _f(y.get("axis_proj"), "{:+.2f}"),
-                            o.ann_name(int(y["col"]))]
+                    row += [o.genes().at[int(y["col"]), "label"] + (f" {ALERT}" if int(y["col"]) in fo else ""),
+                            _f(y.get("axis_proj"), "{:+.2f}"), o.ann_name(int(y["col"]))]
                 else:
                     row += ["", "", ""]
             rows.append(row[:4] + ["|"] + row[4:] if opp else row)
@@ -1581,31 +1907,40 @@ def cmd_module(o, names, top):
             P += _table(["#", "gene", "proj", "name"], rows, "rlrl", flex=(3,), mins={3: 8})
 
         dd = o.drugdoses()
+        art = dd["artifact"].to_numpy()
         if o.has("graph/module_pooled_z.npy"):
             pz = np.asarray(o.npy("graph/module_pooled_z.npy")[i], dtype=np.float64)
             order = np.argsort(-np.nan_to_num(pz, nan=0.0))
             k = min(top, 12)
-            up = [d for d in order if np.isfinite(pz[d]) and pz[d] > 0][:k]
-            dn = [d for d in order[::-1] if np.isfinite(pz[d]) and pz[d] < 0][:k]
+            up_all = [d for d in order if np.isfinite(pz[d]) and pz[d] > 0]
+            dn_all = [d for d in order[::-1] if np.isfinite(pz[d]) and pz[d] < 0]
+            sides = [(lst, _capped(len(lst), k, [not art[d] for d in lst])) for lst in (up_all, dn_all)]
             _title(P, "DRUG-DOSES THAT MOVE IT - module score = " +
                    ("mean pooled z of the + arm minus the - arm" if opp else "mean pooled z of its genes"),
                    ("raise: + arm up, - arm down; lower: the reverse" if opp else "raise: its genes up; lower: down")
-                   + "; ! = artifact flag")
+                   + f"; {ALERT} = an artifact flag of the drug-dose (reasons below), kept in its place; raise: "
+                   f"{_n_alert(len(up_all), int(sum(art[d] for d in up_all)))}; lower: "
+                   f"{_n_alert(len(dn_all), int(sum(art[d] for d in dn_all)))}")
             rows = []
-            for j in range(max(len(up), len(dn))):
-                row = [str(j + 1)]
-                for part in (up, dn):
-                    if j < len(part):
-                        d = part[j]
-                        row += [dd.at[d, "label"] + " uM" + (" !" if dd.at[d, "artifact"] else ""), _z(pz[d])]
+            for j in range(max(len(sides[0][1]), len(sides[1][1]))):
+                row = []
+                for lst, show in sides:
+                    if j < len(show):
+                        d = lst[show[j]]
+                        row += [str(show[j] + 1), dd.at[d, "label"] + " uM" + (f" {ALERT}" if art[d] else ""),
+                                _z(pz[d])]
                     else:
-                        row += ["", ""]
+                        row += ["", "", ""]
                 rows.append(row[:3] + ["|"] + row[3:])
-            P += _table(["#", "raises it", "score", "|", "lowers it", "score"], rows, "rlrllr", flex=(1, 4),
-                        mins={1: 14, 4: 14})
-            fl = sorted({_artifacts(dd.at[d, "flags"]) for d in up + dn if dd.at[d, "artifact"]})
+            P += _table(["#", "raises it", "score", "|", "#", "lowers it", "score"], rows, "rlrlrlr", flex=(1, 5),
+                        mins={1: 14, 5: 14})
+            shown = [lst[x] for lst, show in sides for x in show]
+            fl = {}
+            for d in shown:
+                if art[d]:
+                    fl.setdefault(_artifacts(dd.at[d, "flags"]), []).append(dd.at[d, "label"] + " uM")
             if fl:
-                P += _wrap("! flags: " + " | ".join(fl), 2, 4)
+                P += _wrap(f"{ALERT} " + "; ".join(f"{', '.join(v)}: {a_}" for a_, v in fl.items()), 2, 4)
         pz = np.asarray(o.npy("graph/module_pooled_z.npy")[i], dtype=np.float64) \
             if o.has("graph/module_pooled_z.npy") else None
         if o.has("graph/module_scores.npy"):
@@ -1626,18 +1961,24 @@ def cmd_module(o, names, top):
             key = np.where(np.isfinite(follow), follow, spread)
             ol = [l for l in np.argsort(-np.nan_to_num(key, nan=-np.inf)) if np.isfinite(key[l])][:min(top, 10)]
             _title(P, "RESPONSIVE LINES - how strongly each line shows the module's response",
-                   f"follows = mean per-line score on the module's {len(main)} main clean drug-doses, signed so "
-                   "that > 0 = the line moves the way the pooled lines do; per (drug-dose, line) score = mean "
-                   "per-line z of the + arm minus the - arm, or of its genes if single-armed (tensor DDL_z); median "
-                   "|score| over the "
-                   f"{int(act.sum())} active drug-doses")
+                   f"follows = mean per-line score on the module's {len(main)} main clean drug-doses (an estimate: "
+                   "drug-doses with an artifact flag are left out of it), signed so that > 0 = the line moves the "
+                   "way the pooled lines do; per (drug-dose, line) score = mean per-line z of the + arm minus the - "
+                   "arm, or of its genes if single-armed (tensor DDL_z); median |score| over the "
+                   f"{int(act.sum())} active drug-doses (untrusted ones left out); strongest drug-dose over all, "
+                   f"{ALERT} = an artifact flag of the drug-dose")
             rows = []
             for l in ol:
                 col = np.nan_to_num(np.abs(S[:, l]), nan=-1.0)
                 d = int(np.argmax(col))
+                al = _artifacts(dd.at[d, "flags"]) if dd.at[d, "artifact"] else ""
                 rows.append([ln.at[l, "name"], _text(ln.at[l, "Organ"]) if "Organ" in ln else "",
                              _f(follow[l], "{:+.2f}"), _f(spread[l]),
-                             f"{dd.at[d, 'label']} uM ({_z(S[d, l])})" + (" !" if dd.at[d, "artifact"] else "")])
+                             f"{dd.at[d, 'label']} uM ({_z(S[d, l])})" + (f" {ALERT} {al}" if al else "")])
+                okd = np.flatnonzero(~art & np.isfinite(S[:, l])) if al else []
+                if len(okd):                     # the strongest has an alert: also the strongest without one
+                    d2 = int(okd[np.argmax(np.abs(S[okd, l]))])
+                    rows.append(["", "", "", "", f"no alert: {dd.at[d2, 'label']} uM ({_z(S[d2, l])})"])
             P += _table(["line", "organ", "follows", "median |score|", "strongest drug-dose (score)"], rows,
                         "llrrl", flex=(1, 4), mins={1: 6, 4: 16}, drop=(1,))
         tb = [["members", o.p("graph", "nodes.parquet"), f"module == {m}"],
@@ -1671,8 +2012,22 @@ def _fit(lines):
     return out
 
 
+def _printable(text, stream=None):
+    """text as the output stream can show it: on a console or a redirect whose encoding has no ALERT (a Windows code
+    page), ALERT becomes ALERT_ASCII and any other character it cannot show a '?'."""
+    stream = sys.stdout if stream is None else stream
+    enc = getattr(stream, "encoding", None) or "utf-8"
+    try:
+        text.encode(enc)
+        return text
+    except UnicodeEncodeError:
+        return text.replace(ALERT, ALERT_ASCII).encode(enc, errors="replace").decode(enc)
+    except LookupError:
+        return text
+
+
 def _emit(lines):
-    text = "\n".join(_fit(lines))
+    text = _printable("\n".join(_fit(lines)))
     try:
         print(text, flush=True)
     except OSError as e:                         # the reader went away: piped into head, or `| more` and q
