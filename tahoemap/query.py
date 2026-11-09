@@ -64,7 +64,7 @@ import pandas as pd
 from . import atlas_core as A
 from . import tables as TB
 from . import tlib as T
-from .common import read_effects_index, safe_filename
+from .common import marked_names, read_effects_index, safe_filename
 from .relations import REPRO_FDR             # evidence 'both halves' needs fdr <= this
 
 WIDTH = 118                 # set from the terminal in main(): 80..120 columns
@@ -449,8 +449,8 @@ class Out:
         return self._cached("active", load)
 
     def flagged_only(self):
-        """Gene cols in the vector space only through significant pooled drug-doses that carry an alert (embed
-        genes.parquet evidence_flagged_only; empty when an older embed stage did not write it)."""
+        """Gene cols in the vector space only through drug-doses that carry an alert for them, pooled and per line
+        (embed genes.parquet evidence_flagged_only; empty when an older embed stage did not write it)."""
         def load():
             if not self.has("embed/genes.parquet"):
                 return frozenset()
@@ -569,8 +569,8 @@ class Out:
         if mods is not None:
             r = mods[mods["module"] == m]
             if len(r):
-                tp = _text(r.iloc[0]["top_plus"]).split(", ")[:3]
-                tm = _text(r.iloc[0]["top_minus"]).split(", ")[:2]
+                tp = _arm_names(self, r.iloc[0]["top_plus"], 3)
+                tm = _arm_names(self, r.iloc[0]["top_minus"], 2)
                 return "genes: " + ", ".join([x for x in tp + tm if x])
         return ""
 
@@ -767,6 +767,20 @@ def _not_in_space(o, c):
     return txt
 
 
+def _arm_names(o, txt, n, exclude=""):
+    """The top genes of a module arm (graph/modules.parquet top_plus / top_minus, strongest first) cut at n with the cap
+    rule: a gene in the vector space only through flagged drug-doses reads 'SYMBOL ⚠' (written so by the graph stage;
+    an older graph stage: marked here from embed evidence_flagged_only). `exclude`: a symbol to leave out (the gene
+    itself)."""
+    names = marked_names(txt, None, exclude)
+    fo = o.flagged_only()
+    if fo and not any(x.endswith(ALERT) for x in names):
+        g = o.genes()
+        col = dict(zip(g["symbol"].astype(str), g.index))
+        names = [x + (f" {ALERT}" if col.get(x, -1) in fo else "") for x in names]
+    return marked_names(", ".join(names), n)
+
+
 def _partner_alert(o, x):
     """True when a partner row carries an alert: not replicated in both random halves, or the partner is in the
     vector space only through flagged drug-doses."""
@@ -934,22 +948,24 @@ def gene_report(o, c, top, how=""):
                 txt += f"; label: {lb}"
             P += _wrap(txt + "; " + o.arms_text(m), 2, 4)
             if mr is not None:
-                same = [x for x in _text(mr["top_plus" if arm == "+" else "top_minus"]).split(", ")
-                        if x and x != gr["symbol"]]
-                other = [x for x in _text(mr["top_minus" if arm == "+" else "top_plus"]).split(", ") if x]
+                same = _arm_names(o, mr["top_plus" if arm == "+" else "top_minus"], 8, gr["symbol"])
+                other = _arm_names(o, mr["top_minus" if arm == "+" else "top_plus"], 8)
+                note = f" ({ALERT} = in the vector space only through drug-doses with an artifact flag)" \
+                    if any(ALERT in x for x in same + (other if opp else [])) else ""
                 if same:
-                    P += _wrap((f"its arm ({arm}): " if opp else "module genes: ") + ", ".join(same[:8]), 4, 6)
+                    P += _wrap((f"its arm ({arm}): " if opp else "module genes: ") + ", ".join(same)
+                               + (note if not (other and opp) else ""), 4, 6)
                 if other and opp:
                     P += _wrap(f"opposite arm ({'-' if arm == '+' else '+'}, moves the other way): "
-                               + ", ".join(other[:8]), 4, 6)
+                               + ", ".join(other) + note, 4, 6)
         else:
             P.append("  nodal map: in the vector space, not in a module (module 0)")
     elif nd is None:
         P.append("  " + o.missing_note("graph", "module and arm"))
     if not why and c in o.flagged_only():
-        P += _wrap(f"{ALERT} in the vector space only through significant drug-doses that carry an alert (artifact "
-                   "flags for this gene; embed evidence_flagged_only): its partners and module may reflect the "
-                   "artifact", 2, 4)
+        P += _wrap(f"{ALERT} in the vector space only through drug-doses that carry an alert (artifact flags for this "
+                   "gene at every significant pooled drug-dose and per-line response; embed evidence_flagged_only): "
+                   "its partners and module may reflect the artifact", 2, 4)
 
     # drug-doses
     cols = ["dd", "drug", "dose", "lfc", "fold", "z", "q_up", "q_down", "flags", "clean", "n_lines_measured",
@@ -1015,7 +1031,17 @@ def gene_report(o, c, top, how=""):
         le["n"] = le[f"n_dd_up{sfx}"].fillna(0) + le[f"n_dd_down{sfx}"].fillna(0)
         le["n_clean"] = le["n_dd_up"].fillna(0) + le["n_dd_down"].fillna(0)
         le["mz"] = np.fmax(le[f"best_up_z{sfx}"].abs(), le[f"best_down_z{sfx}"].abs())
-        expd = le[le["expressed"].astype(bool)].sort_values(["n", "mz"], ascending=[False, False])
+        le["mz_clean"] = np.fmax(le["best_up_z"].abs(), le["best_down_z"].abs())
+        expd = le[le["expressed"].astype(bool)].sort_values(["n", "mz"], ascending=[False, False]) \
+            .reset_index(drop=True)
+        # the cap rule: the `top` lines by the count over all drug-doses, and also any of the `top` lines by the count
+        # over drug-doses without an alert that fall beyond them, in the first ranking's order
+        keep = np.arange(len(expd)) < top
+        if has_all:
+            cl = expd[expd["n_clean"] > 0].sort_values(["n_clean", "mz_clean"], ascending=[False, False])
+            keep[cl.index[:top].to_numpy()] = True
+        shown = expd[keep]
+        rest = expd[~keep]
         rows, legend, n_extra = [], {}, 0
 
         def best(r, k, s_):
@@ -1034,7 +1060,7 @@ def gene_report(o, c, top, how=""):
             n, nc = (np.nan_to_num(_num(r.get(x))) for x in (f"n_dd_{k}{sfx}", f"n_dd_{k}"))
             return f"{int(n)}" + (f" ({int(n - nc)}{ALERT})" if has_all and n > nc else "")
 
-        for _, r in expd.head(top).iterrows():
+        for _, r in shown.iterrows():
             row = [_text(r["cell_name"]) or _text(r["cell_line_id"]), organ.get(int(r["line"]), ""),
                    _f(r["baseline_cpm"], "{:,.0f}"), count(r, "up"), count(r, "down")]
             extra = ["", "", "", "", ""]
@@ -1054,6 +1080,13 @@ def gene_report(o, c, top, how=""):
                 n_extra += 1
         P += _table(["line", "organ", "CPM", "up", "down", "strongest up", "fold", "z", "strongest down", "fold",
                      "z"], rows, "llrrrlrrlrr", flex=(1, 5, 8), mins={1: 6, 5: 14, 8: 14}, drop=(1, 2))
+        n_only = int(((rest["n"] > 0) & (rest["n_clean"] == 0)).sum())
+        if len(rest):
+            P.append(f"  ... {len(rest)} more lines" + (f" ({n_only} of them with only flagged drug-doses)"
+                                                        if n_only else "") + " (--top)")
+        if len(shown) > top:
+            P += _wrap(f"lines beyond #{top}: among the {top} lines with the most drug-doses without an alert, shown "
+                       "so that lines moved only by flagged drug-doses do not push them out", 2, 4)
         if legend:
             P += _wrap(f"{ALERT} " + "; ".join(f"{k} uM: {v}" for k, v in legend.items()) + " (for this gene)"
                        + ("; a 'no alert' row under a line names its strongest drug-dose without an alert"
@@ -1583,7 +1616,8 @@ def _gene_flags_at(o, c, dds):
     """(flags, cc_share) per drug-dose in dds for gene c: drug_effects' flags and cc_share where the tables stage
     lists the drug-dose for the gene; else the same artifact rules applied here - the drug-dose's flags plus
     'position correction uncertain' for the gene (atlas DD_posunc) and the cell-cycle rule (tables.cc_rule on the
-    gene's slopes, genes.parquet cc_slope_*). The soft caveats that depend on the gene (its plate factor, a position
+    gene's full-fit slopes, genes.parquet cc_slope_*; the tables stage itself judges each drug-dose it lists with the
+    slopes fitted without it). The soft caveats that depend on the gene (its plate factor, a position
     effect removed) are left out of that fallback: it serves the alert, which holds artifact flags only."""
     dd = o.drugdoses()
     dds = np.asarray(dds, dtype=np.int64)
@@ -1881,30 +1915,43 @@ def cmd_module(o, names, top):
 
         mem = nd[nd["module"] == m].copy()
         mem["ap"] = mem["axis_proj"].abs() if "axis_proj" in mem else 0.0
-        plus = mem[mem["arm"] == "+"].sort_values("ap", ascending=False).head(top)
-        minus = mem[mem["arm"] == "-"].sort_values("ap", ascending=False).head(top)
         fo = o.flagged_only()
         n_fo = int(mem["col"].isin(fo).sum())
+        arms_ = []                                  # per arm: (all members ranked, positions shown), cap rule
+        for a_ in (("+", "-") if opp else ("+",)):
+            part = mem[mem["arm"] == a_].sort_values("ap", ascending=False).reset_index(drop=True)
+            arms_.append((part, _capped(len(part), top, ~part["col"].isin(fo).to_numpy())))
         _title(P, "TOP GENES PER ARM" if opp else "TOP GENES (single-armed module)",
-               "by |projection on the module's main direction|; name from the reference" +
+               "by |projection on the module's main direction|; # = rank in the arm; name from the reference" +
                (f"; {_n_alert(len(mem), n_fo, 'members')}: {ALERT} after a gene = in the vector space only through "
                 "drug-doses with an artifact flag" if n_fo else ""))
         rows = []
-        for j in range(max(len(plus), len(minus))):
-            row = [str(j + 1)]
-            for part in ((plus, minus) if opp else (plus,)):
-                if j < len(part):
-                    y = part.iloc[j]
-                    row += [o.genes().at[int(y["col"]), "label"] + (f" {ALERT}" if int(y["col"]) in fo else ""),
+        for j in range(max(len(sh) for _p, sh in arms_)):
+            row = []
+            for part, sh in arms_:
+                if j < len(sh):
+                    y = part.iloc[int(sh[j])]
+                    row += [str(int(sh[j]) + 1),
+                            o.genes().at[int(y["col"]), "label"] + (f" {ALERT}" if int(y["col"]) in fo else ""),
                             _f(y.get("axis_proj"), "{:+.2f}"), o.ann_name(int(y["col"]))]
                 else:
-                    row += ["", "", ""]
+                    row += ["", "", "", ""]
             rows.append(row[:4] + ["|"] + row[4:] if opp else row)
         if opp:
-            P += _table(["#", "+ arm", "proj", "name", "|", "- arm", "proj", "name"], rows, "rlrlllrl",
-                        flex=(3, 7), mins={3: 8, 7: 8})
+            P += _table(["#", "+ arm", "proj", "name", "|", "#", "- arm", "proj", "name"], rows, "rlrllrlrl",
+                        flex=(3, 8), mins={3: 8, 8: 8})
         else:
             P += _table(["#", "gene", "proj", "name"], rows, "rlrl", flex=(3,), mins={3: 8})
+        for (part, sh), a_ in zip(arms_, ("+", "-")):
+            n_al = int(part["col"].isin(fo).sum())
+            n_al_shown = int(part["col"].iloc[sh].isin(fo).sum()) if len(sh) else 0
+            line = f"{a_} arm: {_n_alert(len(part), n_al, 'genes')}" if opp else _n_alert(len(part), n_al, "genes")
+            more = _more(len(part), len(sh), n_al - n_al_shown, "genes")
+            P.append(f"  {line}" + (f"; shown {len(sh)}" if len(sh) < len(part) else "") + (
+                f"; rows beyond #{top}: the strongest without an alert, shown so that flagged members do not push "
+                "them out" if len(sh) > top else ""))
+            if more:
+                P.append("  " + more.strip())
 
         dd = o.drugdoses()
         art = dd["artifact"].to_numpy()

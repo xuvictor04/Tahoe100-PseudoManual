@@ -6,6 +6,8 @@
     gene SYMBOL | drug NAME | line NAME | pair A B | module N     look-ups on a finished run
     review plan|run|status|tables|stop   the literature-review agents (tahoemap/review; docs/review.md)
     duplicate DEST [--repo DIR]     copy a finished output folder for review work (big arrays hard-linked)
+    export DEST [--with-effects] [--include FILE ...] [--force]     the shareable results, ready to be committed and
+                pushed to a GitHub branch (tahoemap/export.py)
 
 A stage is out of date when it never finished, its method changed, it ran with other values of the options that
 change its results (--dims, --min-cells, ...: once given they stay in force for the output folder, so a stopped run
@@ -36,7 +38,8 @@ STAGE_MODULE = {"tensor": "tensor", "tables": "tables", "embed": "embed", "refer
                 "relations": "relations", "graph": "graph", "validate": "validate", "vault": "vault",
                 "map": "html_map"}
 LOOKUPS = ("gene", "drug", "line", "pair", "module")
-EXTRA_COMMANDS = ("review", "duplicate")   # not stages: they read a finished output (and never run the pipeline)
+EXTRA_COMMANDS = ("review", "duplicate", "export")   # not stages: they read a finished output (never run the
+                                                     # pipeline)
 
 # Options that change a stage's results. Each stage records them in its stamp (info.options); a run that sets one to
 # another value than the stage ran with redoes that stage and every later one. Once given they are remembered for the
@@ -59,7 +62,8 @@ def make_parser():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("command", choices=["run", "status"] + STAGES + list(LOOKUPS) + list(EXTRA_COMMANDS))
     ap.add_argument("names", nargs="*", help="look-ups: the gene / drug / line / module (pair: two genes); review: "
-                                             "plan, run, status, tables or stop; duplicate: the destination folder")
+                                             "plan, run, status, tables or stop; duplicate, export: the destination "
+                                             "folder")
     ap.add_argument("--data", default=None, help="Tahoe-100M folder (default $TAHOE_DATA or ~/Tahoe-100M)")
     ap.add_argument("--out", default=None, help="output folder (default <data>/tahoemap)")
     ap.add_argument("--stream", action="store_true",
@@ -134,6 +138,17 @@ def make_parser():
     g.add_argument("--tables", action="store_true", help="review status: also rebuild the review tables")
     g.add_argument("--repo", default=None, metavar="DIR",
                    help="duplicate: also clone this code repository into DIR (git clone)")
+    g = ap.add_argument_group("export (python -m tahoemap export DEST: the shareable results for a GitHub branch)")
+    g.add_argument("--with-effects", action="store_true",
+                   help="export: also atlas/effects (the pooled gene x drug-dose matrices, CSV tables) and "
+                        "atlas/reports")
+    g.add_argument("--include", action="append", nargs="+", default=None, metavar="FILE",
+                   help="export: also these files or folders, at the top of DEST (e.g. a RUN_REPORT.md)")
+    g.add_argument("--force", action="store_true",
+                   help="export: update an earlier export in DEST (only the files its MANIFEST.tsv lists are "
+                        "replaced or removed)")
+    g.add_argument("--max-file-mb", type=float, default=95.0,
+                   help="export: files larger than this many MiB are not copied (GitHub refuses files over 100 MB)")
     return ap
 
 
@@ -664,6 +679,9 @@ def main(argv=None):
         return None
     if a.command == "duplicate":
         return cmd_duplicate(a)
+    if a.command == "export":
+        from . import export
+        return export.cli(a)
     mark_output(a.out)
     lock = PipelineLock(a.out, "tahoemap " + " ".join(sys.argv[1:] if argv is None else argv))
     ok, who = lock.acquire()

@@ -36,6 +36,13 @@ tahoe open             # where the HTML map, the Obsidian vault and the validati
 Open the vault in Obsidian with *Open folder as vault* on `<output>/vault`, and the map by opening
 `<output>/map/gene_map.html` in a browser.
 
+Nothing is left out of these answers because of a flag. A drug-dose with an artifact flag (toxic, transcription
+drop, cell-cycle shift, ...), a partner not replicated in both halves of the compounds, or a gene in the vector space
+only through flagged drug-doses keeps its ranked place, marked `⚠` with the reason (e.g. `⚠ cell-cycle shift, explains
+~60% of this change`); each list says how many items carry an alert. In the map, the **Spread** slider pulls the
+modules apart, the **k-D tour** tab turns the vectors through all dimensions, and the neighbourhood view goes to
+depth 4 (its help panel explains every control).
+
 ## Literature review by AI agents (optional)
 
 With an Anthropic API key, `tahoe review` has an agent review genes, drugs and cell lines against the literature and
@@ -121,7 +128,7 @@ C:\tahoe\.venv\Scripts\python.exe tests\test_windows.py
 C:\tahoe\.venv\Scripts\python.exe tests\test_review.py --out C:\tahoe\test\out_seed0   # the review agents, fake API
 ```
 
-- `run_tests.py` should end with "31 passed, 0 warnings, 0 failed"; `test_review.py` (about a minute, offline, no
+- `run_tests.py` should end with "34 passed, 0 warnings, 0 failed"; `test_review.py` (a few minutes, offline, no
   key) with "0 failed". It works in a folder of its own in the temp folder and only reads `--out`.
 - The one warning you may see is "browser check skipped": that check opens the map in a headless browser and
   needs Playwright. It is optional. To include it, run
@@ -137,6 +144,13 @@ C:\tahoe\.venv\Scripts\python.exe tests\test_review.py --out C:\tahoe\test\out_s
 - With Windows Smart App Control on, Windows may block a library file the first time Python loads it ("An
   Application Control policy has blocked this file"). Running the same command again usually works. A stopped
   run continues from its finished stages.
+- Downloads (the reference stage: HGNC, Ensembl, UniProt, NCBI, Reactome, STRING ...) are verified by Windows
+  itself through `truststore` when it is installed; `requirements.txt` installs it on Windows. Without it, Python on
+  Windows cannot verify some servers' certificates (Ensembl's and NCBI's, whose root certificate Windows adds to its
+  store only when one of its own programs first needs it) and those sources fail with "certificate verify failed".
+  If that happens: `C:\tahoe\.venv\Scripts\python.exe -m pip install truststore`, then
+  `C:\tahoe\.venv\Scripts\python.exe -m tahoemap run --out C:\tahoe\out` retries the failed sources. On a
+  network that inspects HTTPS, the inspecting certificate must be trusted by the computer.
 
 The vault is `C:\tahoe\out\vault` and the map `C:\tahoe\out\map\gene_map.html`. `--stream` reads Tahoe-100M from
 Hugging Face with `curl`, which ships with Windows 10 and later. To work from a local copy instead (~340 GB):
@@ -147,6 +161,61 @@ C:\tahoe\.venv\Scripts\hf.exe download tahoebio/Tahoe-100M --repo-type dataset -
   --include "metadata/cell_line_metadata.parquet" --include "metadata/drug_metadata.parquet"
 C:\tahoe\.venv\Scripts\python.exe -m tahoemap run --data C:\tahoe\Tahoe-100M --out C:\tahoe\out
 ```
+
+## Put the results on GitHub
+
+`export` copies the shareable results of a finished run into a new folder, ready to be committed and pushed as a
+branch of its own: the vault, the map, the tables, the validation report, the graph, the relations, the vector space,
+the stage records, the derived reference tables and any literature reviews, with a `README.md` (what each folder
+holds, the code version and commit, the date, the sizes, what was left out and why), a `MANIFEST.tsv` (size and
+sha256 of every file) and a `.gitattributes` that stops git from changing line ends. It never copies the build, the
+per-line arrays, the downloads or API-key records, and it refuses while a run works on the output.
+
+- **GitHub refuses files over 100 MB.** A file over 95 MiB is not copied; the command and `README.md` list it (use
+  Git LFS or a GitHub release for it). GitHub also refuses one push over 2 GB: when the total is larger, the
+  command says so; commit and push in parts (e.g. `vault` first, then the rest).
+- **The repository is public, so the results become public** once pushed. Push to a private repository of your own
+  if they should not be.
+- **Pushing needs a GitHub sign-in.** The first `git push` asks for it: Git Credential Manager (part of Git for
+  Windows) opens a GitHub sign-in window or browser page; sign in with an account that may write to the repository.
+  If no sign-in appears and the push fails with an authentication error, the git in use has no credential manager:
+  install Git for Windows (git-scm.com), or give a GitHub personal access token as the password. Git also needs a
+  name and e-mail for the commit (`git config user.name` / `user.email`, below).
+
+Linux / macOS:
+
+```bash
+tahoe export ~/tahoe-results                 # add --out /path if your output is not the default
+cd ~/tahoe-results
+git init
+git checkout --orphan results               # a branch that holds only the results, no code history
+git config user.name "Your Name"; git config user.email "you@example.com"
+git add -A
+git commit -m "tahoemap results"
+git remote add origin https://github.com/xuvictor04/Tahoe100-PseudoManual.git
+git push -u origin results
+```
+
+Windows (PowerShell, from `C:\tahoe\repo`; with a portable MinGit in `C:\tahoe\mingit`, else use `git` from PATH):
+
+```powershell
+C:\tahoe\.venv\Scripts\python.exe -m tahoemap export C:\tahoe\results --out C:\tahoe\out
+cd C:\tahoe\results
+$git = "C:\tahoe\mingit\cmd\git.exe"
+& $git init
+& $git checkout --orphan results
+& $git config core.longpaths true          # vault paths can pass Windows' 260-character limit
+& $git config user.name "Your Name"
+& $git config user.email "you@example.com"
+& $git add -A
+& $git commit -m "tahoemap results"
+& $git remote add origin https://github.com/xuvictor04/Tahoe100-PseudoManual.git
+& $git push -u origin results
+```
+
+To update the branch after a new run: `export` again into the same folder with `--force` (it replaces only the files
+its earlier export wrote, and copies only what changed), then `git add -A`, `git commit -m "..."` and `git push`.
+The command itself prints these next steps with your folder in them.
 
 ## Resources
 
@@ -169,5 +238,5 @@ is killed for lack of memory the build stops and says so (finished plates are ke
 ## Test it first (3–5 minutes, no download)
 
 ```bash
-tahoe test             # synthetic Tahoe-100M with planted answers, the whole pipeline, and ~25 checks
+tahoe test             # synthetic Tahoe-100M with planted answers, the whole pipeline, and 34 checks
 ```

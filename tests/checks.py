@@ -351,7 +351,7 @@ def run_all(out, data, truth, check):
             return txt, json.loads(m.group(1))
 
         def map_tabs_and_edges():
-            """the six tabs exist; the embedded graph edges are graph/edges.parquet between two map genes"""
+            """the seven tabs exist; the embedded graph edges are graph/edges.parquet between two map genes"""
             import base64
             txt, D = map_data()
             tabs = re.findall(r'data-tab="(\w+)"', txt)
@@ -370,7 +370,7 @@ def run_all(out, data, truth, check):
                         want[k] = float(cc)
             got = {(int(x), int(y)): float(z) for x, y, z in zip(a, b, c)}
             err = max((abs(got[k] - v) for k, v in want.items() if k in got), default=1.0)
-            ok = (tabs == ["nodal", "signed", "nbr", "mod", "all", "help"] and e["m"] == len(a) == len(want)
+            ok = (tabs == ["nodal", "signed", "tour", "nbr", "mod", "all", "help"] and e["m"] == len(a) == len(want)
                   and set(got) == set(want) and err <= 0.0051 and bool((a < b).all()) and int(b.max()) < n
                   and set(np.unique(ev).tolist()) <= {0, 1, 2})
             return ok, (f"tabs {tabs}; {e['m']:,} edges embedded ({len(want):,} in graph/edges.parquet between map "
@@ -427,6 +427,201 @@ def run_all(out, data, truth, check):
                     f"HDAC module {r0[1]} + / {r0[2]} - genes: arm centroid distance / arm spread {r0[0]:.2f} when "
                     f"opposite genes attract, {r1[0]:.2f} when they repel; script errors: {errs[:3]}")
         check("map", "physics tabs run; the sign switch parts the planted HDAC arms", map_physics)
+
+        def knn_mixing(xy, group, k=5):
+            """share of the k nearest grouped genes of every grouped gene that belong to another group"""
+            from scipy.spatial import cKDTree
+            g = group >= 0
+            _, j = cKDTree(xy[g]).query(xy[g], k=k + 1)
+            return float((group[g][j[:, 1:]] != group[g][:, None]).mean())
+
+        def map_spread_layouts():
+            """graph/nodes.parquet's spread layouts move the modules apart: on the nodal map (groups = modules) and
+            the signed map (groups = module arms) far fewer of a module gene's nearest module genes are in another
+            group than on the t-SNE layouts, and the spread layouts are deterministic numbers (finite)"""
+            res, ok = {}, True
+            if not {"xm", "ym", "xsm", "ysm"} <= set(nodes.columns):
+                return False, "graph/nodes.parquet has no xm, ym, xsm, ysm"
+            m = nodes["module"].to_numpy()
+            two = nodes["module"].map(nodes.groupby("module")["arm"].agg(lambda a: (a == "-").any())).to_numpy()
+            gs = np.where(m > 0, 2 * m + ((nodes["arm"] == "-").to_numpy() & two), -1)
+            for name, a, b, grp in (("nodal", ("x", "y"), ("xm", "ym"), np.where(m > 0, m, -1)),
+                                    ("signed", ("xs", "ys"), ("xsm", "ysm"), gs)):
+                t, sp = (nodes[list(c)].to_numpy(float) for c in (a, b))
+                m0, m1 = knn_mixing(t, grp), knn_mixing(sp, grp)
+                res[name] = f"{m0:.3f} on the t-SNE layout -> {m1:.3f} spread"
+                ok &= bool(np.isfinite(sp).all()) and m1 < 0.5 * m0 and m1 <= 0.03
+            return ok, f"a module gene's 5 nearest module genes in another group: {res}"
+        check("map", "the spread layouts move the modules apart", map_spread_layouts)
+
+        def map_alerts_not_removed():
+            """the side panel's drug-dose lists hold every row of tables/drug_effects.parquet in its ranked place,
+            flagged ones too, cut at n_drugs plus any unflagged ones of the first n_drugs beyond them; a row with an
+            artifact flag carries an alert naming its flags; the planted toxic drug-doses show up with '⚠ toxic'"""
+            _, D = map_data()
+            de = pd.read_parquet(os.path.join(out, "tables", "drug_effects.parquet"))
+            ent = {c: i for i, c in enumerate(D["col"])}
+            fl, nd = D["fl"], D["n_drugs"]
+            bad, n_alert, seen_toxic = [], 0, set()
+            tox = {(t["drug"], float(t["conc"])) for t in truth.get("toxic_drug_doses", [])}
+            dlab = {r["dd"]: (r["drug"], float(r["conc"])) for r in de[["dd", "drug", "conc"]].drop_duplicates("dd")
+                    .to_dict("records")}
+            for sign, key in ((1, "up"), (-1, "dn")):
+                sub = de[np.sign(de["z"]) == sign].copy()
+                sub["ent"] = sub["col"].map(ent)
+                sub["zz"] = sign * sub["z"]
+                for e, g in sub.dropna(subset=["ent"]).sort_values(["ent", "zz"], ascending=[True, False],
+                                                                    kind="mergesort").groupby("ent"):
+                    clean = g["clean"].to_numpy(bool)
+                    keep = np.zeros(len(g), dtype=bool)
+                    keep[:nd] = True
+                    keep[np.flatnonzero(clean)[:nd]] = True
+                    want = g["dd"].to_numpy()[keep].tolist()
+                    a = D[key][int(e)]
+                    got = a[0::5]
+                    if got != want:
+                        bad.append((D["sym"][int(e)], key, got[:4], want[:4]))
+                        continue
+                    ccs = g["cc_share"].to_numpy(float)[keep] if "cc_share" in g else np.full(keep.sum(), np.nan)
+                    for dd_, code, cl, f, cc in zip(got, a[4::5], clean[keep], g["flags"].to_numpy()[keep], ccs):
+                        alert = code > 0 and fl[code - 1][1] == 1
+                        # the cell-cycle share shown is this row's own (100 x cc_share, rounded; cc_share is stored
+                        # as float32, so allow the last digit)
+                        pct = re.search(r"explains ~(\d+)%", fl[code - 1][0]) if code > 0 else None
+                        cc_ok = not (np.isfinite(cc) and "cell-cycle shift" in str(f)) or (
+                            pct is not None and abs(int(pct.group(1)) - 100 * cc) <= 0.51)
+                        if alert != (not cl) or not cc_ok or (alert and not fl[code - 1][0].split(";")[0]
+                                                              .split(",")[0] in str(f)):
+                            bad.append((D["sym"][int(e)], key, dd_, code, cl, f))
+                        n_alert += alert
+                        if alert and "toxic" in fl[code - 1][0] and dlab.get(dd_) in tox:
+                            seen_toxic.add(dlab[dd_])
+            return (not bad and n_alert > 0 and seen_toxic == tox,
+                    f"{n_alert} listed rows with an alert; planted toxic drug-doses shown with '⚠ toxic': "
+                    f"{sorted(seen_toxic)} of {sorted(tox)}; mismatches: {bad[:3]}")
+        check("map", "flagged drug-doses stay in the side panel's lists, with an alert", map_alerts_not_removed)
+
+        def map_line_rows():
+            """the side panel's cell-line rows: when a line's strongest drug-dose carries an alert, the row also names
+            the line's strongest drug-dose without one (tables/line_effects best_* clean columns, the stronger of up
+            and down), when that one reaches the per-line cut; no row names one otherwise"""
+            _, D = map_data()
+            W = int(D.get("lnw") or 9)
+            if W < 12 or not D.get("ln_all"):
+                return False, f"the page has no clean drug-dose per line row (lnw {W}, ln_all {D.get('ln_all')})"
+            le = pd.read_parquet(os.path.join(out, "tables", "line_effects.parquet"),
+                                 columns=["col", "line", "best_up_dd", "best_up_z", "best_down_dd", "best_down_z"])
+            by = {(int(c), int(ln_)): r for c, ln_, r in zip(le["col"], le["line"], le.to_dict("records"))}
+            fl, lz = D["fl"], float(D["line_z"])
+            n_rows = n_flag = n_named = 0
+            bad = []
+            for e, a in enumerate(D["ln"]):
+                for t in range(0, len(a) - W + 1, W):
+                    n_rows += 1
+                    r = by[(int(D["col"][e]), int(a[t]))]
+                    alert = a[t + 5] >= 0 and a[t + 8] > 0 and fl[a[t + 8] - 1][1] == 1
+                    u = r["best_up_z"] if np.isfinite(r["best_up_z"]) else -np.inf
+                    d = r["best_down_z"] if np.isfinite(r["best_down_z"]) else np.inf
+                    dd_, z_ = (r["best_up_dd"], u) if u >= -d else (r["best_down_dd"], d)
+                    want = int(dd_) if alert and np.isfinite(z_) and abs(z_) >= lz and np.isfinite(dd_) else -1
+                    n_flag += alert
+                    n_named += a[t + 9] >= 0
+                    if a[t + 9] != want or (want >= 0 and abs(a[t + 11] / 10 - z_) > 0.051):
+                        bad.append((D["sym"][e], int(a[t]), a[t + 9], want))
+            return (not bad and n_named > 0,
+                    f"{n_rows:,} line rows, {n_flag:,} with a strongest drug-dose that carries an alert, "
+                    f"{n_named:,} of these also name the strongest without one; mismatches: {bad[:3]}")
+        check("map", "a line row whose strongest drug-dose is flagged also names the strongest without an alert",
+              map_line_rows)
+
+        def map_views():
+            """in a headless browser: the Spread slider moves the genes and parts the modules on the page; the tour
+            tab draws and turns; axis mode shows two axes exactly (x = axis i, y = axis j of each gene's vector);
+            depth 3 holds more genes than depth 2; the side panel lists an alerted drug-dose with its alert"""
+            try:
+                from playwright.sync_api import sync_playwright
+            except ImportError:
+                return "warn", "Playwright not installed: browser check skipped"
+            res = {}
+            try:
+                with sync_playwright() as p:
+                    b = p.chromium.launch()
+                    try:
+                        pg = b.new_page(viewport={"width": 1300, "height": 800})
+                        errs = []
+                        pg.on("pageerror", lambda e: errs.append(str(e)))
+                        pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
+                        pg.goto(pathlib.Path(html).resolve().as_uri())
+                        pg.wait_for_function("() => !!window.TAHOE_MAP")
+                        D = pg.evaluate("TAHOE_MAP.data")
+                        n = D["n"]
+                        mod = np.array(D["mod"][:n])
+                        grp = np.where(mod > 0, mod, -1)
+                        # spread
+                        p0 = pg.evaluate("TAHOE_MAP.positions()")
+                        pg.evaluate("TAHOE_MAP.spread(1)")
+                        pg.wait_for_function("() => !TAHOE_MAP.positions().animating", timeout=10000)
+                        p1 = pg.evaluate("TAHOE_MAP.positions()")
+                        xy0, xy1 = (np.column_stack([q["x"], q["y"]]) for q in (p0, p1))
+                        res["spread"] = (knn_mixing(xy0, grp), knn_mixing(xy1, grp),
+                                         float(np.hypot(*(xy1 - xy0).T).mean()))
+                        pg.evaluate("TAHOE_MAP.spread(0)")
+                        # tour
+                        pg.click("#tabs [data-tab='tour']")
+                        pg.wait_for_timeout(700)
+                        s1 = pg.evaluate("TAHOE_MAP.tour()")
+                        pg.wait_for_timeout(500)
+                        s2 = pg.evaluate("TAHOE_MAP.tour()")
+                        drawn = pg.evaluate("""() => { const c = document.querySelector('#pane-tour canvas');
+                            const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let k = 0;
+                            for (let i = 0; i < d.length; i += 4) if (d[i] < 240 || d[i + 2] < 240) k++; return k; }""")
+                        res["tour"] = (s1["k"], s1["n"], float(np.abs(np.subtract(s1["frame"], s2["frame"])).max()),
+                                       drawn, round(pg.evaluate("TAHOE_MAP.tourBench(30)"), 2))
+                        # axis mode: axis 1 against axis 3
+                        pg.evaluate("TAHOE_MAP.tourAxes(0, 2)")
+                        pg.wait_for_function("() => !TAHOE_MAP.tour().moving", timeout=30000)
+                        pos = pg.evaluate("TAHOE_MAP.tourPositions()")
+                        err = max(max(abs(pos["x"][i] - v[0]), abs(pos["y"][i] - v[2]))
+                                  for i in range(0, n, max(1, n // 25))
+                                  for v in [pg.evaluate(f"TAHOE_MAP.tourVector({i})")])
+                        res["axes"] = (pg.evaluate("TAHOE_MAP.tour().mode"), err)
+                        # neighbourhood depth
+                        g = next(s for s in sets["HDAC_UP"] if s in D["sym"][:n])
+                        pg.evaluate(f"TAHOE_MAP.select({D['sym'].index(g)})")
+                        pg.click("#tabs [data-tab='nbr']")
+                        pg.wait_for_function("() => { const s = TAHOE_MAP.sim('nbr'); return s && s.n > 0; }")
+                        d2 = pg.evaluate("TAHOE_MAP.sim('nbr')")
+                        pg.click("#pane-nbr [data-k='dep2']")
+                        pg.wait_for_timeout(200)
+                        d3 = pg.evaluate("TAHOE_MAP.sim('nbr')")
+                        res["depth"] = (d2["depth"], d2["n"], d3["depth"], d3["n"])
+                        # side panel: an alerted drug-dose of a map gene
+                        fl = D["fl"]
+                        pick = next(((i, key) for i in range(n) for key in ("up", "dn")
+                                     if any(c > 0 and fl[c - 1][1] == 1 for c in D[key][i][4::5])), None)
+                        if pick:
+                            i, key = pick
+                            a = D[key][i]
+                            t = next(t for t in range(0, len(a), 5) if a[t + 4] > 0 and fl[a[t + 4] - 1][1] == 1)
+                            pg.evaluate(f"TAHOE_MAP.select({i})")
+                            txt = pg.evaluate("TAHOE_MAP.panel()")
+                            res["panel"] = (D["sym"][i], D["dd"][a[t]], "⚠ " + fl[a[t + 4] - 1][0] in txt,
+                                            D["dd"][a[t]] in txt)
+                    finally:
+                        b.close()
+            except Exception as e:  # noqa: BLE001
+                if "Executable doesn't exist" in str(e) or "playwright install" in str(e):
+                    return "warn", "Playwright's Chromium is not installed: browser check skipped"
+                raise
+            sp, tr, ax, dp = res["spread"], res["tour"], res["axes"], res["depth"]
+            ok = (not errs and sp[1] < 0.5 * sp[0] and sp[2] > 0 and tr[2] > 1e-3 and tr[3] > tr[1]
+                  and ax[0] == "axes" and ax[1] < 1e-4 and dp[0] == 2 and dp[2] == 3 and dp[3] > dp[1]
+                  and bool(res.get("panel")) and all(res["panel"][2:]))
+            return ok, (f"spread: module mixing {sp[0]:.3f} -> {sp[1]:.3f}, mean move {sp[2]:.3f}; tour: {tr[0]}-D, "
+                        f"{tr[1]} genes, frame change {tr[2]:.3f} in 0.5 s, {tr[3]} pixels drawn, {tr[4]} ms per "
+                        f"frame; axis mode max |error| {ax[1]:.1e}; neighbourhood depth 2: {dp[1]} genes, depth 3: "
+                        f"{dp[3]}; side panel {res.get('panel')}; script errors: {errs[:3]}")
+        check("map", "spread slider, tour, axis mode, neighbourhood depth, alerts in the side panel", map_views)
 
     # ---------------------------------------------------------------- look-ups
     def lookup_gene():

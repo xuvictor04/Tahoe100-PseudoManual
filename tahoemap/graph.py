@@ -16,10 +16,44 @@ module's main direction gives its arm; a module has a real "-" arm only when >= 
 sides anti-correlate (mean cosine between them <= -0.2): then the + arm and the - arm move opposite to each other
 under the same drugs. Otherwise every member is "+" (a single-armed module). Modules larger than 300 genes or
 looser than a mean member |cosine| of 0.3 are split again by Louvain on their own subgraph (up to 4 levels): at full
-scale the first pass returns programme-sized communities of 1,000+ loosely related genes. modules.parquet records the mean cosine
-within each arm and between the arms. Module scores per (drug-dose, line) = mean z of the + arm minus mean z of the
-- arm (the + arm alone in single-armed modules), from tensor DDL_z; pooled scores likewise from atlas DD_z. A
-module's responsive lines are those with the largest mean |score| over its 8 strongest drug-doses.
+scale the first pass returns programme-sized communities of 1,000+ loosely related genes. modules.parquet records the
+mean cosine within each arm and between the arms. Module scores per (drug-dose, line) = mean z of the + arm minus
+mean z of the - arm (the + arm alone in single-armed modules), from tensor DDL_z; pooled scores likewise from atlas
+DD_z. A module's responsive lines are those with the largest mean |score| over its 8 strongest drug-doses. Its drug
+lists (drugs_up / drugs_down) are the 8 strongest pooled module z, flagged drug-doses included in their ranked
+place: a drug-dose with an artifact flag (atlas_core.has_artifact) reads '... (+4.2) (⚠ toxic; transcription drop)'
+(its flags), and any of the 8 strongest without an alert that falls beyond the first 8 is listed too.
+
+Spread layouts (xm, ym on the nodal map; xsm, ysm on the signed map). t-SNE keeps each gene's near neighbours but
+packs the groups against each other, so on the 2D maps the modules look mushed. The spread layouts keep each group's
+own t-SNE arrangement and move the groups apart as blocks:
+  groups     nodal map: the modules; signed map: the arms of the modules (a two-armed module is two groups there,
+             because its arms sit apart on the signed map)
+  anchors    from how far apart the groups are in the full vector space (embed gene vectors, k dimensions): a group's
+             direction is its main axis (first right singular vector of its unit gene vectors; nodal) or its mean
+             unit vector (signed); distance 1 - |cos| (nodal) or 1 - cos (signed) between the directions; 2D positions
+             by classical MDS refined by SMACOF (stress majorisation)
+  blocks     each group becomes one compact block: its islands on the t-SNE map (members within SPREAD_LINK x the
+             map's median neighbour distance of each other, single linkage) keep their own arrangement and are
+             packed together (a lone far-away member is an island of one); the block's disc covers its members
+  packing    the anchors are scaled so that neighbouring discs about touch; overlapping discs are pushed apart (gap
+             SPREAD_GAP x the median radius), then the whole set is drawn toward its centre in small steps, each
+             followed by the collision pass, until the discs cover SPREAD_FILL of their bounding circle (so the empty
+             space between far-apart groups goes, while neighbours stay neighbours)
+  the rest   a gene without a module moves rigidly with one group: of the groups of its SPREAD_NEAR nearest grouped
+             genes on the t-SNE map, the one it is most similar to in the vector space (summed |cos| on the nodal
+             map, summed positive cos on the signed map, to those neighbours of that group); it keeps its offset
+             from the nearest of them, so it stays where it was relative to them (moves are never averaged across
+             groups, whose blocks move in different directions)
+Deterministic (no random draws). info.json "spread" records, per map, how mixed the groups are: the share of the 5
+nearest grouped genes of every grouped gene that belong to another group, on the t-SNE layout and on the spread one
+(mixing_tsne, mixing_spread); and, for the genes without a group, their mean |cos| (nodal) or cos (signed) to their 5
+nearest grouped genes on each layout (free_sim_tsne, free_sim_spread: how alike the genes they are drawn next to are).
+
+modules.parquet top_plus / top_minus: the arm's members by |projection| on the module's main direction, cut at 15
+with the cap rule (capped: the 15 strongest, and any of the 15 strongest without an alert beyond them); a gene in the
+vector space only through drug-doses that carry an alert (embed genes.parquet evidence_flagged_only) is written
+'SYMBOL ⚠' in its ranked place.
 """
 
 import os
@@ -29,10 +63,12 @@ import warnings
 import numpy as np
 import pandas as pd
 
+from . import atlas_core as A
 from .common import folder, log, read_effects_index, save_npy, stable_seed, stamp_stage, write_json, \
     write_parquet
 
-VERSION = 3
+VERSION = 5                # 4: spread layouts (xm, ym, xsm, ysm); flagged drug-doses marked in the module drug lists
+#                            5: genes without a module move with one group; top_plus / top_minus marked and capped
 K_EDGES = 15
 K_LAYOUT = 90
 MIN_MODULE = 5
@@ -42,6 +78,13 @@ ARMS_OPPOSITE = -0.2     # mean cosine between the two sides at or below this: t
 MAX_MODULE = 300         # larger modules are split again (Louvain on their own subgraph) ...
 LOOSE_COS = 0.3          # ... and so are modules whose members' mean |cosine| is below this
 SPLIT_DEPTH = 4
+N_MOD_DRUGS = 8          # drugs_up / drugs_down: the strongest pooled module z (plus unflagged ones beyond them)
+SPREAD_LINK = 3.0        # a group's islands: members within this x the map's median neighbour distance, linked
+SPREAD_GAP = 0.3         # gap between two group discs, x the median disc radius
+SPREAD_FILL = 0.4        # groups packed until their discs cover this share of their bounding circle
+SPREAD_FILL_ISLANDS = 0.6  # the same for the islands of one group
+SPREAD_NEAR = 5          # a gene without a module moves with one group, chosen among this many nearest module genes
+ALERT = "⚠"
 
 
 def _layout(n, rows, cols, dist, init, seed):
@@ -117,6 +160,202 @@ def _knn(U, k, signed, block=2048):
     return np.concatenate(rows), np.concatenate(cols), np.concatenate(dist).astype(np.float64)
 
 
+def capped(order, alert, k):
+    """The first k of `order` (indices, strongest first), plus any of the first k without an alert that fall beyond
+    them, in their ranked order: flagged items keep their place, and they never push an unflagged one out of view."""
+    order = list(order)
+    keep = set(order[:k]) | set([i for i in order if not alert[i]][:k])
+    return [i for i in order if i in keep]
+
+
+def _mds2(Dm, iters=300):
+    """2D points whose distances fit the dissimilarities Dm: classical MDS, refined by SMACOF (stress majorisation:
+    the Guttman transform, unweighted). Deterministic: the eigenvector signs are fixed (largest entry positive)."""
+    from scipy.linalg import eigh
+    n = len(Dm)
+    if n == 1:
+        return np.zeros((1, 2))
+    if n == 2:
+        return np.array([[0.0, 0.0], [float(Dm[0, 1]), 0.0]])
+    J = np.eye(n) - 1.0 / n
+    B = -0.5 * J @ (Dm ** 2) @ J
+    w, V = eigh(B, subset_by_index=[n - 2, n - 1])
+    X = V[:, ::-1] * np.sqrt(np.maximum(w[::-1], 0.0))
+    for c in range(2):
+        if X[np.argmax(np.abs(X[:, c])), c] < 0:
+            X[:, c] = -X[:, c]
+    t = np.arange(n, dtype=np.float64)                    # coincident points: a tiny fixed offset parts them
+    X = X + 1e-6 * max(float(Dm.max()), 1e-9) * np.column_stack([np.cos(t), np.sin(t)])
+    for _ in range(iters):
+        d = np.sqrt(((X[:, None, :] - X[None, :, :]) ** 2).sum(-1))
+        with np.errstate(divide="ignore", invalid="ignore"):
+            Bm = np.where(d > 1e-12, -Dm / d, 0.0)
+        np.fill_diagonal(Bm, 0.0)
+        np.fill_diagonal(Bm, -Bm.sum(axis=1))
+        Xn = Bm @ X / n
+        done = np.abs(Xn - X).max() <= 1e-7 * max(float(np.abs(Xn).max()), 1e-12)
+        X = Xn
+        if done:
+            break
+    return X
+
+
+def _collide(P, R, gap, iters=3000):
+    """Push discs (centres P, radii R) apart until no two overlap (closer than R_a + R_b + gap); the larger disc of a
+    pair moves less (shares by the other's area). Deterministic."""
+    from scipy.spatial import cKDTree
+    P = np.array(P, dtype=np.float64)
+    w = R.astype(np.float64) ** 2
+    reach = 2.0 * float(R.max()) + gap
+    tol = 1e-3 * max(gap, 1e-12)
+    for _ in range(iters):
+        pr = cKDTree(P).query_pairs(reach, output_type="ndarray")
+        if not len(pr):
+            break
+        a, b = pr[:, 0], pr[:, 1]
+        dv = P[b] - P[a]
+        d = np.hypot(dv[:, 0], dv[:, 1])
+        ov = R[a] + R[b] + gap - d
+        m = ov > tol
+        if not m.any():
+            break
+        a, b, dv, d, ov = a[m], b[m], dv[m], d[m], ov[m]
+        z = d < 1e-12
+        if z.any():                                       # the same point: a fixed direction per pair
+            ang = (a[z] * 7 + b[z] * 3).astype(np.float64)
+            dv[z] = np.column_stack([np.cos(ang), np.sin(ang)])
+            d[z] = 1.0
+        u = dv / d[:, None]
+        fa = w[b] / (w[a] + w[b])
+        mv = np.zeros_like(P)
+        np.add.at(mv, a, -u * (ov * fa)[:, None])
+        np.add.at(mv, b, u * (ov * (1.0 - fa))[:, None])
+        P += 0.5 * mv
+    return P
+
+
+def _mixing(xy, t_of, k=5):
+    """Share of the k nearest grouped genes (on this layout) of every grouped gene that belong to another group."""
+    from scipy.spatial import cKDTree
+    g = t_of >= 0
+    if g.sum() <= k or len(np.unique(t_of[g])) < 2:
+        return 0.0
+    _, j = cKDTree(xy[g]).query(xy[g], k=k + 1)
+    return float((t_of[g][j[:, 1:]] != t_of[g][:, None]).mean())
+
+
+def _pack(P, R, gap, fill):
+    """Discs (centres P, radii R) packed: overlaps pushed apart (_collide), then the whole set drawn toward its
+    area-weighted centre in small steps, each followed by a collision pass, until the discs cover `fill` of their
+    bounding circle or stop getting closer. Neighbours stay neighbours; empty space between far-apart discs goes."""
+    P = _collide(P, R, gap)
+    w = R.astype(np.float64) ** 2
+    area = float(np.pi * w.sum())
+
+    def bound(Q):
+        c = (Q * w[:, None]).sum(axis=0) / w.sum()
+        return c, float((np.hypot(Q[:, 0] - c[0], Q[:, 1] - c[1]) + R).max())
+    for _ in range(400):
+        c, b = bound(P)
+        if area >= fill * np.pi * b * b:
+            break
+        Q = _collide(c + (P - c) * 0.95, R, gap, iters=80)
+        if bound(Q)[1] > 0.995 * b:
+            break
+        P = Q
+    return _collide(P, R, gap)
+
+
+def _block(p, spacing):
+    """A group's members as one compact block: its islands on the t-SNE map (members within SPREAD_LINK x the map's
+    typical neighbour spacing of each other, single linkage) keep their own arrangement and are packed together
+    (_pack). Returns the members' offsets from the block's centre and the block's radius."""
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import connected_components
+    from scipy.spatial import cKDTree
+    m = len(p)
+    pr = cKDTree(p).query_pairs(SPREAD_LINK * spacing, output_type="ndarray") if m > 1 else np.zeros((0, 2), int)
+    nc, lab = connected_components(coo_matrix((np.ones(len(pr)), (pr[:, 0], pr[:, 1])), shape=(m, m)),
+                                   directed=False)
+    cen = np.array([p[lab == t].mean(axis=0) for t in range(nc)])
+    if nc > 1:
+        rad = np.array([max(float(np.hypot(*(p[lab == t] - cen[t]).T).max()), 0.5 * spacing) for t in range(nc)])
+        size = np.bincount(lab, minlength=nc).astype(np.float64)
+        c0 = (cen * size[:, None]).sum(axis=0) / size.sum()
+        P = _pack(cen - c0, rad, 0.5 * spacing, SPREAD_FILL_ISLANDS)
+        off = p - cen[lab] + P[lab]
+    else:
+        off = p - cen[0]
+    off = off - np.median(off, axis=0)
+    return off, float(np.hypot(off[:, 0], off[:, 1]).max()) + 0.5 * spacing
+
+
+def _free_sim(xy, unit, vecs, signed, k=5):
+    """Mean |cos| (signed: cos) of every gene without a group to its k nearest grouped genes on this layout; None
+    without vectors or without such genes."""
+    from scipy.spatial import cKDTree
+    g, f = unit >= 0, unit < 0
+    if vecs is None or not f.any() or g.sum() < k:
+        return None
+    _, j = cKDTree(xy[g]).query(xy[f], k=k)
+    c = np.einsum("fk,fjk->fj", vecs[f], vecs[g][j.reshape(int(f.sum()), -1)])
+    return round(float((c if signed else np.abs(c)).mean()), 4)
+
+
+def spread_layout(xy, unit, dirs, signed, vecs=None):
+    """The spread layout of one map (module docstring, 'Spread layouts'). xy: the t-SNE layout (genes x 2); unit:
+    group per gene, 0..G-1, -1 = no group; dirs: G x k unit directions of the groups in the vector space; signed:
+    distance 1 - cos (else 1 - |cos|); vecs: the genes' unit vectors (genes x k), which choose the group a gene
+    without a group moves with (None: the group of its nearest grouped gene). Returns (genes x 2 float32, stats)."""
+    from scipy.spatial import cKDTree
+    xy = np.asarray(xy, dtype=np.float64)
+    out = xy.copy()
+    G = len(dirs)
+    grouped = unit >= 0
+    if G < 2 or not grouped.any():
+        return out.astype(np.float32), {"groups": int(G), "mixing_tsne": 0.0, "mixing_spread": 0.0}
+    spacing = float(np.median(cKDTree(xy).query(xy, k=2)[0][:, 1])) if len(xy) > 1 else 1.0
+    spacing = spacing if spacing > 0 else 1e-3
+    R, off = np.full(G, 0.5 * spacing), np.zeros_like(xy)
+    for t in range(G):
+        m = np.flatnonzero(unit == t)
+        if len(m):
+            off[m], R[t] = _block(xy[m], spacing)
+    C = np.clip(dirs @ dirs.T, -1.0, 1.0)
+    Dm = (1.0 - C) if signed else (1.0 - np.abs(C))
+    Dm = np.clip((Dm + Dm.T) / 2.0, 0.0, 2.0)
+    np.fill_diagonal(Dm, 0.0)
+    Aa = _mds2(Dm)
+    gap = SPREAD_GAP * float(np.median(R))
+    dA = np.sqrt(((Aa[:, None, :] - Aa[None, :, :]) ** 2).sum(-1))
+    np.fill_diagonal(dA, np.inf)
+    nn = np.argmin(dA, axis=1)
+    dnn = dA[np.arange(G), nn]
+    ok = np.isfinite(dnn) & (dnn > 1e-9)
+    s = float(np.median((R + R[nn] + gap)[ok] / dnn[ok])) if ok.any() else 1.0
+    P = _pack(Aa * s, R, gap, SPREAD_FILL)
+    out[grouped] = P[unit[grouped]] + off[grouped]
+    free = ~grouped
+    if free.any():                                        # a gene without a group moves rigidly with one group
+        gi, fi = np.flatnonzero(grouped), np.flatnonzero(free)
+        kk = int(min(SPREAD_NEAR, gi.size))
+        _, j = cKDTree(xy[gi]).query(xy[fi], k=kk)
+        j = j.reshape(fi.size, -1)                         # nearest first
+        anchor = j[:, 0]
+        if vecs is not None and kk > 1:
+            sim = np.einsum("fk,fjk->fj", vecs[fi], vecs[gi][j])
+            sim = np.clip(sim, 0.0, None) if signed else np.abs(sim)
+            tj = unit[gi][j]                                # the neighbours' groups
+            score = (sim[:, :, None] * (tj[:, :, None] == tj[:, None, :])).sum(axis=1)   # summed sim of its group
+            best = tj[np.arange(fi.size), np.argmax(score, axis=1)]
+            anchor = j[np.arange(fi.size), np.argmax(tj == best[:, None], axis=1)]       # nearest of that group
+        out[fi] = xy[fi] + (out[gi][anchor] - xy[gi][anchor])
+    return out.astype(np.float32), {"groups": int(G), "mixing_tsne": round(_mixing(xy, unit), 4),
+                                    "mixing_spread": round(_mixing(out, unit), 4),
+                                    "free_genes": int(free.sum()), "free_sim_tsne": _free_sim(xy, unit, vecs, signed),
+                                    "free_sim_spread": _free_sim(out, unit, vecs, signed)}
+
+
 def run(out, k_edges=K_EDGES, resolution=1.0):
     import networkx as nx
     t0 = time.time()
@@ -127,7 +366,11 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
     U = np.load(os.path.join(ed, "gene_unit.npy"))[inc].astype(np.float32)
     eg = pd.read_parquet(os.path.join(ed, "genes.parquet"))
     sym = eg["symbol"].astype(str).to_numpy()
+    fo_all = eg["evidence_flagged_only"].fillna(False).astype(bool).to_numpy() if "evidence_flagged_only" in eg \
+        else np.zeros(len(eg), dtype=bool)
     n = len(inc)
+    fo = fo_all[inc]                                      # per map gene: in the space only through flagged drug-doses
+    glab = np.array([s_ + (f" {ALERT}" if f_ else "") for s_, f_ in zip(sym[inc], fo)], dtype=object)
     pos = {c: i for i, c in enumerate(inc)}
     rel = pd.read_parquet(os.path.join(out, "relations", "gene_relations.parquet"),
                           columns=["col_a", "col_b", "rank", "cos", "abs_cos", "evidence"])
@@ -154,6 +397,7 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
     arm = np.array([""] * n, dtype=object)
     axis_proj = np.zeros(n, dtype=np.float32)
     arm_stats = {}
+    mod_axis = np.zeros((len(comms), U.shape[1]), dtype=np.float64)   # each module's main direction
 
     def mean_cos(A, B, same):
         if len(A) < 2 if same else (len(A) == 0 or len(B) == 0):
@@ -171,6 +415,7 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
             p = -p
         cp = [i for i, v in zip(c, p) if v >= 0]
         cm = [i for i, v in zip(c, p) if v < 0]
+        mod_axis[m - 1] = vt[0]
         between = mean_cos(cp, cm, False)
         opposite = len(cm) >= MIN_MODULE and np.isfinite(between) and between <= ARMS_OPPOSITE
         arm[c] = np.where(p >= 0, "+", "-") if opposite else "+"
@@ -192,9 +437,31 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
     xys = _layout(n, r, c_, d, init, seed)
     log(f"  signed map laid out ({(time.time() - t0) / 60:.1f} min)")
 
+    # spread layouts: the groups moved apart as blocks (module docstring)
+    unit_n = np.where(module > 0, module - 1, -1)
+    U64 = U.astype(np.float64)
+    xym, st_n = spread_layout(xy, unit_n, mod_axis, signed=False, vecs=U64)
+    key = np.where(module > 0, 2 * module + (arm == "-"), -1)
+    keys = np.unique(key[key >= 0])
+    unit_s = np.where(key >= 0, np.searchsorted(keys, key), -1)
+    sdir = np.zeros((len(keys), U.shape[1]), dtype=np.float64)
+    for t in range(len(keys)):
+        v = U[unit_s == t].astype(np.float64).mean(axis=0)
+        sdir[t] = v / max(float(np.linalg.norm(v)), 1e-12)
+    xysm, st_s = spread_layout(xys, unit_s, sdir, signed=True, vecs=U64)
+    spread_info = {"nodal": st_n, "signed": st_s}
+    log(f"  spread layouts: {st_n['groups']} modules on the nodal map (a module gene's 5 nearest module genes in "
+        f"another module: {st_n['mixing_tsne']:.1%} on the t-SNE layout, {st_n['mixing_spread']:.1%} spread), "
+        f"{st_s['groups']} module arms on the signed map ({st_s['mixing_tsne']:.1%} -> {st_s['mixing_spread']:.1%})")
+    if st_n.get("free_sim_tsne") is not None and st_s.get("free_sim_tsne") is not None:
+        log(f"  genes without a module, mean |cos| to their 5 nearest module genes: {st_n['free_sim_tsne']:.3f} on the "
+            f"t-SNE layout, {st_n['free_sim_spread']:.3f} spread (signed map, mean cos: {st_s['free_sim_tsne']:.3f} -> "
+            f"{st_s['free_sim_spread']:.3f})")
+
     deg = np.bincount(np.concatenate([edges["i"], edges["j"]]), minlength=n)
     nodes = pd.DataFrame({"col": inc, "symbol": sym[inc], "module": module, "arm": arm, "axis_proj": axis_proj,
-                          "x": xy[:, 0], "y": xy[:, 1], "xs": xys[:, 0], "ys": xys[:, 1], "degree": deg})
+                          "x": xy[:, 0], "y": xy[:, 1], "xs": xys[:, 0], "ys": xys[:, 1], "degree": deg,
+                          "xm": xym[:, 0], "ym": xym[:, 1], "xsm": xysm[:, 0], "ysm": xysm[:, 1]})
     write_parquet(nodes, os.path.join(gd, "nodes.parquet"))
     write_parquet(pd.DataFrame({"col_a": inc[edges["i"].to_numpy()], "col_b": inc[edges["j"].to_numpy()],
                                 "cos": edges["cos"].to_numpy(), "sign": np.sign(edges["cos"].to_numpy())}),
@@ -211,6 +478,12 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
     scores = np.zeros((nm, Dn, L), dtype=np.float32)
     pooled = np.zeros((nm, Dn), dtype=np.float32)
     dlabel = (dd["drug"].astype(str) + " " + dd["dose"].astype(str) + " uM").to_numpy()
+    dflags = dd["flags"].fillna("").astype(str).to_numpy() if "flags" in dd else np.array([""] * Dn, dtype=object)
+    dalert = np.array([A.has_artifact(f) for f in dflags], dtype=bool)
+
+    def dlist(m, order):
+        return "; ".join(f"{dlabel[i]} ({pooled[m - 1, i]:+.1f})" + (f" (⚠ {dflags[i]})" if dalert[i] else "")
+                         for i in capped(order, dalert, N_MOD_DRUGS))
     cell = lines["cell_name"].fillna(lines["cell_line_id"]).astype(str).to_numpy()
     rows = []
     for m, c in enumerate(comms, 1):
@@ -239,11 +512,11 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
         plus = sorted(plus, key=lambda i: -abs(axis_proj[i]))
         minus = sorted(minus, key=lambda i: -abs(axis_proj[i]))
         rows.append({"module": m, "n_genes": len(c), "n_plus": len(plus), "n_minus": len(minus),
-                     "top_plus": ", ".join(sym[inc[plus[:15]]]), "top_minus": ", ".join(sym[inc[minus[:15]]]),
+                     "top_plus": ", ".join(glab[capped(plus, fo, 15)]),
+                     "top_minus": ", ".join(glab[capped(minus, fo, 15)]),
                      "x": float(xy[c, 0].mean()), "y": float(xy[c, 1].mean()),
                      "xs": float(xys[c, 0].mean()), "ys": float(xys[c, 1].mean()),
-                     "drugs_up": "; ".join(f"{dlabel[i]} ({pooled[m - 1, i]:+.1f})" for i in o[:8]),
-                     "drugs_down": "; ".join(f"{dlabel[i]} ({pooled[m - 1, i]:+.1f})" for i in o[::-1][:8]),
+                     "drugs_up": dlist(m, o), "drugs_down": dlist(m, o[::-1]),
                      "responsive_lines": ", ".join(cell[ol[:8]]), **arm_stats[m]})
     write_parquet(pd.DataFrame(rows), os.path.join(gd, "modules.parquet"))
     save_npy(os.path.join(gd, "module_scores.npy"), scores.astype(np.float16))
@@ -251,6 +524,8 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
     info = {"version": VERSION, "genes": int(n), "modules": nm, "unassigned": int((module == 0).sum()),
             "modules_split": int(n_split), "max_module": MAX_MODULE, "loose_cos": LOOSE_COS,
             "edges": int(len(edges)), "k_edges": k_edges, "k_layout": K_LAYOUT, "resolution": resolution,
+            "min_edge": MIN_EDGE, "one_half_edge": ONE_HALF_EDGE, "min_module": MIN_MODULE,
+            "arms_opposite_cos": ARMS_OPPOSITE, "split_depth": SPLIT_DEPTH, "spread": spread_info,
             "minutes": round((time.time() - t0) / 60, 2)}
     write_json(info, os.path.join(gd, "info.json"))
     stamp_stage(out, "graph", VERSION, info)

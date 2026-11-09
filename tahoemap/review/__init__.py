@@ -20,7 +20,8 @@ calls the Anthropic API at import time; the dossiers, tools and verification run
 
 import os
 
-VERSION = 1                       # bump when the dossier, tool or review formats change
+VERSION = 2                       # bump when the dossier, tool or review formats change; 2: the dossiers keep
+                                  # flagged drug-doses, cells and partners in their ranked place, with an alert
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 AGENTS_DIR = os.path.join(HERE, "agents")

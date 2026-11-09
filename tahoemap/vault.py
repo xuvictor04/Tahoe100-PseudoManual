@@ -99,6 +99,9 @@ N_DRUGS = 15                         # drug-doses per direction in a gene note (
 N_PARTNERS = 12
 N_PRED = 5
 N_GLANCE = 3                         # partners per direction in 'At a glance'
+N_NEAR_DRUGS = 8                     # nearest drugs in a drug note (cap_keep: + the most similar without an alert)
+N_CANDIDATES = 15                    # candidate new members in a module note (cap_keep)
+N_OWN_LEVEL = 15                     # genes per list in a line note's 'Its own level' (cap_keep)
 LINE_Z_FALLBACK = 4.0                # per-line |z| cut for a run whose tables/info.json has no calibrated
                                      # line_z_threshold (older tables stage); then it is NOT calibrated
 LINE_FOLD_FALLBACK = math.log2(1.5)  # per-line counts need >= 1.5x (tables/info.json line_fold_min)
@@ -1161,7 +1164,7 @@ class Run:
         self.vrep = eg["represented_fraction"].to_numpy()
         self.noise = eg["noise_rna"].fillna(False).astype(bool).to_numpy() if "noise_rna" in eg else \
             tg["noise_rna"].fillna(False).astype(bool).to_numpy()
-        # in the space only through significant pooled drug-doses that carry an alert (newer embed stage)
+        # in the space only through drug-doses that carry an alert, pooled and per line (newer embed stage)
         self.flagged_only = eg["evidence_flagged_only"].fillna(False).astype(bool).to_numpy() \
             if "evidence_flagged_only" in eg else np.zeros(gK, dtype=bool)
         self.has_flagged_only = "evidence_flagged_only" in eg
@@ -1270,12 +1273,13 @@ class Run:
         self.le = {c: (_factor(le[c]) if c.endswith("_flags_all") else le[c].to_numpy())[o] for c in le.columns}
         self.le_s = _slices(self.le["col"], gK)
         del le
-        rel = pd.read_parquet(os.path.join(self.out, "relations", "gene_relations.parquet"),
-                              columns=["col_a", "col_b", "rank", "cos", "cos_half1", "cos_half2", "evidence", "fdr",
-                                       "z_gene", "locus", "readthrough_risk", "distance_bp", "same_strand",
-                                       "shared_gene_group", "shared_pathway", "string_score", "novel_candidate"])
+        rp = os.path.join(self.out, "relations", "gene_relations.parquet")
+        rel = pd.read_parquet(rp, columns=["col_a", "col_b", "rank", "cos", "cos_half1", "cos_half2", "evidence",
+                                           "fdr", "z_gene", "locus", "readthrough_risk", "distance_bp", "same_strand",
+                                           "shared_gene_group", "shared_pathway", "string_score", "novel_candidate"]
+                              + (["alert"] if "alert" in _columns(rp) else []))
         o = np.lexsort((rel["rank"].to_numpy(), rel["col_a"].to_numpy()))
-        self.rel = {c: (_factor(rel[c]) if c in ("shared_pathway", "evidence") else rel[c].to_numpy())[o]
+        self.rel = {c: (_factor(rel[c]) if c in ("shared_pathway", "evidence", "alert") else rel[c].to_numpy())[o]
                     for c in rel.columns}
         self.rel_s = _slices(self.rel["col_a"], gK)
         del rel
@@ -2021,8 +2025,9 @@ class Vault:
         R = self.R
         S = []
         if R.included[c] and R.flagged_only[c]:
-            S.append(f"{ALERT} It is in the vector space only through significant pooled drug-doses that carry an "
-                     "alert (`embed/genes.parquet` evidence_flagged_only): its vector, partners and module rest on "
+            S.append(f"{ALERT} It is in the vector space only through drug-doses that carry an alert for it (its "
+                     "significant pooled drug-doses and per-line responses; `embed/genes.parquet` "
+                     "evidence_flagged_only): its vector, partners and module rest on "
                      "changes that may come from what those drug-doses did to the cells rather than from its own "
                      "regulation.")
         for d in ("up", "down"):
@@ -2050,20 +2055,23 @@ class Vault:
         if R.included[c]:
             rr = np.arange(R.rel_s[c], R.rel_s[c + 1])
             rep = self._replicated(rr)
+            why = self._partner_alerts(c, rr, rep)
             parts = []
             for sign, what in ((1, "moves with "), (-1, "moves opposite to ")):
-                ii = rr[np.sign(R.rel["cos"][rr]) == sign]
-                al = ~rep[np.sign(R.rel["cos"][rr]) == sign]
-                keep = cap_keep(al, N_GLANCE)
+                m_ = np.sign(R.rel["cos"][rr]) == sign
+                ii, wy = rr[m_], why[m_]
+                keep = cap_keep(wy != "", N_GLANCE)
                 if len(keep):
                     parts.append(what + ", ".join(
                         f"{self.glink(R.rel['col_b'][ii[k]])} ({fcos(R.rel['cos'][ii[k]])}, fdr "
-                        f"{fq(R.rel['fdr'][ii[k]])}" + (f", {self._evidence_alert(ii[k])}" if al[k] else "") + ")"
+                        f"{fq(R.rel['fdr'][ii[k]])}" + (f", {ALERT} {wy[k]}" if wy[k] else "") + ")"
                         for k in keep))
             if parts:
                 S.append(f"Its strongest partners by |cos| ({int(rep.sum())} of its {len(rr)} nearest are "
                          f"replicated: the same sign with fdr ≤ {REPRO_FDR:.2f} in two random halves of the "
-                         f"compounds; {ALERT} = not replicated): it " + "; ".join(parts) + ".")
+                         f"compounds; {int((why != '').sum())} carry an alert, {ALERT} + the reason: not replicated, "
+                         "same locus, or the partner in the vector space only through flagged drug-doses): it "
+                         + "; ".join(parts) + ".")
             else:
                 S.append("It has no partner among its nearest genes (see the tables below).")
             m = int(R.module[c])
@@ -2329,7 +2337,8 @@ class Vault:
                 notes.append(f"{ALERT} **readthrough risk**: {where} on the same strand (can correlate by "
                              "spillover, not regulation)")
             else:
-                notes.append(f"same locus ({kb}{', same strand' if bool(rel['same_strand'][r]) else ''})")
+                notes.append(f"{ALERT} same locus ({kb}{', same strand' if bool(rel['same_strand'][r]) else ''}: "
+                             "neighbours can correlate without regulation)")
         return notes
 
     def _replicated(self, rr):
@@ -2339,10 +2348,37 @@ class Vault:
         fdr = np.nan_to_num(rel["fdr"][rr].astype(float), nan=1.0)
         return (rel["evidence"][rr] == "both halves") & (fdr <= REPRO_FDR)
 
-    def _evidence_alert(self, r):
-        """'⚠ one half only, not replicated' for a relation row that is not replicated (_replicated)."""
-        ev = self.R.rel["evidence"][r]
-        return f"{ALERT} " + EVIDENCE_ALERT.get(ev, f"{ev}, fdr above {REPRO_FDR:.2f}: not replicated")
+    def _partner_alerts(self, c, rr, rep=None):
+        """Per relation row rr of gene c: the reasons to doubt the partner, in plain words ('; '-joined, '' = none):
+        not replicated in both random halves, same locus / read-through risk, the PARTNER in the vector space only
+        through flagged drug-doses (relations' 'alert' reasons; a newer relations stage's other reasons too). The
+        note's own gene being in the space only through flagged drug-doses is said once in the note, not on every
+        row (it would mark every partner, and the cap could then never add the strongest without an alert)."""
+        R, rel = self.R, self.R.rel
+        rep = self._replicated(rr) if rep is None else rep
+        own = f"{R.sym[int(c)]} is in the vector space only through drug-doses that carry an alert"
+        known = ("not replicated", "not reproduced", "reproducibility not tested", "read-through risk", "same locus",
+                 "is in the vector space only through")
+        out = []
+        for k, r in enumerate(rr):
+            why = []
+            if not rep[k]:
+                ev = rel["evidence"][r]
+                why.append(EVIDENCE_ALERT.get(ev, f"{ev}, fdr above {REPRO_FDR:.2f}") + (
+                    " (not replicated)" if ev == "one half" else ""))
+            if bool(rel["readthrough_risk"][r]):
+                why.append("read-through risk")
+            elif bool(rel["locus"][r]):
+                why.append("same locus")
+            b = int(rel["col_b"][r])
+            if R.flagged_only[b]:
+                why.append(f"{R.sym[b]} in the vector space only through flagged drug-doses")
+            if "alert" in rel:                         # reasons of a newer relations stage that the above lacks
+                for t in str(rel["alert"][r] or "").lstrip(ALERT).strip().split("; "):
+                    if t and t != own and not any(x in t for x in known):
+                        why.append(t)
+            out.append("; ".join(why))
+        return np.array(out, dtype=object)
 
     def sec_partners(self, c):
         R, rel = self.R, self.R.rel
@@ -2352,10 +2388,13 @@ class Vault:
         rows = np.arange(R.rel_s[c], R.rel_s[c + 1])
         L = []
         rep = self._replicated(rows)
+        why = self._partner_alerts(c, rows, rep)
+        alert = why != ""
         sels = {}
-        for sign in (1, -1):                           # the N_PARTNERS strongest + the strongest replicated ones
+        for sign in (1, -1):                           # the N_PARTNERS strongest + the strongest without an alert
             m_ = np.sign(rel["cos"][rows]) == sign
-            sels[sign] = (rows[m_][cap_keep(~rep[m_], N_PARTNERS)], int(m_.sum()), int((m_ & ~rep).sum()))
+            sels[sign] = (rows[m_][cap_keep(alert[m_], N_PARTNERS)], int(m_.sum()), int((m_ & alert).sum()),
+                          int((m_ & ~rep).sum()))
         shown = [r for sign in (1, -1) for r in sels[sign][0]]
         lit = {int(rel["col_b"][r]): self.lit_partner_cell(c, rel["col_b"][r]) for r in shown} \
             if self.lit_pairs else {}
@@ -2363,23 +2402,26 @@ class Vault:
             lit = {}
         self.n_lit_cells += sum(1 for v in lit.values() if v)
         for sign in (1, -1):
-            sel, n_side, n_al = sels[sign]
+            sel, n_side, n_al, n_nrep = sels[sign]
             extra = max(0, len(sel) - N_PARTNERS)
             cnt = (f"*{n_side:,} of its nearest partners move {'with it' if sign > 0 else 'opposite'}, {n_al:,} of "
-                   f"them not replicated ({ALERT})"
-                   + (f"; shown: the {N_PARTNERS} strongest" + (f" and the {extra} next strongest replicated ones"
+                   f"them with an alert ({ALERT}; {n_nrep:,} not replicated)"
+                   + (f"; shown: the {N_PARTNERS} strongest" + (f" and the {extra} next strongest without an alert"
                                                                 if extra else "") if len(sel) < n_side else "")
                    + ".*")
             if sign > 0:
                 L += ["## Genes that move with it", "",
                       f"*Strongest of its {len(rows)} nearest partners by |cos| (`relations/gene_relations.parquet` "
-                      f"col_a == {c}), and any of the {N_PARTNERS} strongest replicated ones below them; halves = cos "
+                      f"col_a == {c}), and any of the {N_PARTNERS} strongest without an alert below them; halves = cos "
                       "in the spaces fitted on two random halves of the compounds (a hash split of the compound "
                       "names). Evidence: `both halves` = replicated: the same sign in both, |cos| ≥ "
                       f"{REL.REPRO_MIN:g} in each and fdr ≤ {REPRO_FDR:.2f}; {ALERT} `one half` = strong in one of "
                       f"the two random halves only — not replicated, no error estimate; {ALERT} `not reproduced` = "
-                      f"neither. A partner that is not replicated is shown in its place with the alert, not left "
-                      "out. A correlation across drugs and lines, not evidence that one gene regulates the other.*",
+                      f"neither. Other alerts: {ALERT} same locus / read-through risk (neighbours on the genome can "
+                      f"correlate for that reason alone), and `GENE {ALERT}` = the partner is in the vector space only "
+                      "through flagged drug-doses (all its evidence carries an artifact flag for it). A partner with "
+                      "an alert is shown in its place, not left out. A correlation across drugs and lines, not "
+                      "evidence that one gene regulates the other.*",
                       ""]
                 if not R.novel_assessed:
                     L += [f"*Novelty not assessed: {', '.join(R.novel_blocked) or 'reference sources'} missing "
@@ -2414,7 +2456,9 @@ class Vault:
                     ev_cell = f"{ALERT} not reproduced"
                 else:
                     ev_cell = f"{ALERT} {ev} (fdr above {REPRO_FDR:.2f}: not replicated)"
-                body.append([self.glink(b), fcos(rel["cos"][r]),
+                if R.flagged_only[b]:
+                    notes.append(f"{ALERT} in the vector space only through flagged drug-doses")
+                body.append([self.glink(b) + (f" {ALERT}" if R.flagged_only[b] else ""), fcos(rel["cos"][r]),
                              f"{fcos(rel['cos_half1'][r])} / {fcos(rel['cos_half2'][r])}", ev_cell,
                              fq(rel["fdr"][r]), "; ".join(notes)] + ([lit.get(b) or "—"] if lit else []))
             L += table(["Gene", "cos", "Halves", "Evidence", "fdr", "Notes"] + (["Literature"] if lit else []),
@@ -2449,8 +2493,8 @@ class Vault:
             L.append("- **Module**: none (module 0: its neighbourhood formed no community of ≥ 5 genes).")
         if R.flagged_only[c]:
             L.append(f"- {ALERT} **In the space only through flagged drug-doses**: its significant pooled drug-doses "
-                     "all carry an alert (`embed/genes.parquet` evidence_flagged_only), so its module and partners may "
-                     "reflect what those drug-doses did to the cells.")
+                     "and per-line responses all carry an alert (`embed/genes.parquet` evidence_flagged_only), so its "
+                     "module and partners may reflect what those drug-doses did to the cells.")
         L.append(f"- **Nodal map** (x, y) = ({R.xy[c, 0]:.1f}, {R.xy[c, 1]:.1f}); signed map ({R.xys[c, 0]:.1f}, "
                  f"{R.xys[c, 1]:.1f}). **Vector** length {g3(R.vnorm[c])}, {g3(100 * R.vrep[c])}% of its response "
                  f"variance represented; |z| ≥ 3 in {fint(R.n_resp[c])} contexts (`embed/genes.parquet`).")
@@ -2685,15 +2729,35 @@ class Vault:
         dd_sorted = de["dd"][o]
         dds = _slices(dd_sorted, R.Dn)
         self._dd_rows = (o, dds)
-        # drug vectors: cosine among active drugs
+        # drug vectors: cosine among every drug with a vector; a drug whose vector rests on few significant genes or
+        # on a flagged or untrustworthy dose keeps its place with an alert (as the `drug` look-up)
         ed = os.path.join(self.out, "embed")
         self.drug_near = {}
         try:
             dv = np.load(os.path.join(ed, "drug_vectors.npy")).astype(np.float64)
             dt = pd.read_parquet(os.path.join(ed, "drugs.parquet"))
-            act = dt["n_sig_genes"].to_numpy() >= 10
+            min_act = int(R.embed_info.get("min_active", 10) or 10)
+            self.drug_min_act = min_act
+            nsig = pd.to_numeric(dt["n_sig_genes"], errors="coerce").fillna(0).to_numpy() \
+                if "n_sig_genes" in dt else np.full(len(dt), min_act)
+            trusted = dt["trusted"].fillna(True).astype(bool).to_numpy() if "trusted" in dt else \
+                np.ones(len(dt), dtype=bool)
+            vfl = dt["flags"].fillna("").astype(str).to_numpy() if "flags" in dt else np.array([""] * len(dt))
+            valert = dt["alert"].fillna("").astype(str).to_numpy() if "alert" in dt else np.array([""] * len(dt))
+            why = []
+            for k in range(len(dt)):
+                w = [f"only {int(nsig[k])} significant gene{'s' if nsig[k] != 1 else ''}"] if nsig[k] < min_act \
+                    else []
+                art = "; ".join(f for f in vfl[k].split("; ") if f in A.ARTIFACT_FLAGS)
+                if not trusted[k]:
+                    w.append("no trustworthy dose" + (f" (vector dose flagged: {art})" if art else ""))
+                elif art:
+                    w.append(f"vector dose flagged: {art}")
+                elif valert[k] and "flags" not in dt:
+                    w.append(valert[k].lstrip(ALERT).strip())
+                why.append("; ".join(w))
             nrm = np.linalg.norm(dv, axis=1)
-            ok = act & (nrm > 0)
+            ok = nrm > 0
             U = np.where(ok[:, None], dv / np.maximum(nrm[:, None], 1e-12), 0.0)
             C = U @ U.T
             names = dt["drug"].astype(str).to_numpy()
@@ -2701,8 +2765,11 @@ class Vault:
                 cc = C[i].copy()
                 cc[i] = -np.inf
                 cc[~ok] = -np.inf
-                top = np.argsort(-cc)[:8]
-                self.drug_near[names[i]] = [(names[j], cc[j]) for j in top if np.isfinite(cc[j])]
+                order = [j for j in np.argsort(-cc, kind="stable") if np.isfinite(cc[j])]
+                al = np.array([bool(why[j]) for j in order], dtype=bool)
+                keep = cap_keep(al, N_NEAR_DRUGS)
+                self.drug_near[names[i]] = ([(names[order[k]], cc[order[k]], why[order[k]]) for k in keep],
+                                            len(order), int(al.sum()), why[i])
         except (OSError, KeyError) as e:
             log(f"  vault: no drug-vector neighbours ({e})")
         Az = self._load_opt(os.path.join(self.out, "atlas", "effects", "DD_Az.npy"))
@@ -2870,14 +2937,24 @@ class Vault:
                   "response; drug-doses with ≥ 20 significant genes).*", ""]
             L += table(["Dose", "Most depleted lines (Az)", "Strongest responders (β)"], body) + [""]
         near = self.drug_near.get(d)
-        if near:
+        if near and near[0]:
+            lst, n_all, n_al, own = near
+            extra = max(0, len(lst) - N_NEAR_DRUGS)
             L += ["## Nearest drugs in the vector space", "",
                   "*Cosine of the drug vectors (each drug's most active dose projected into the gene vector space; "
-                  "`embed/drug_vectors.npy`): drugs that move the same genes the same way.*", ""]
+                  "`embed/drug_vectors.npy`): drugs that move the same genes the same way. Every drug with a vector "
+                  f"is ranked; {ALERT} = its vector rests on fewer than the space's {self.drug_min_act} "
+                  "significant genes, or on a dose with an artifact flag or none trustworthy (`embed/drugs.parquet` "
+                  "alert); such a drug keeps its place.*", ""]
+            if own:
+                L += [f"{ALERT} This drug's own vector: {own}. Read its neighbours with that in mind.", ""]
+            L += [f"*{n_all:,} other drugs have a vector, {n_alerts(n_al)}; shown: the {min(N_NEAR_DRUGS, n_all)} "
+                  "most similar" + (f" and the {extra} next most similar without an alert" if extra else "") + ".*",
+                  ""]
             moa = R.tdrugs.set_index(R.tdrugs["drug"].astype(str))["moa_fine"] if "moa_fine" in R.tdrugs else None
             L += ["- " + "; ".join(f"{self.dlink(n)} ({fcos(v)}"
                                    + (f", {cell(sval(moa.get(n)))}" if moa is not None and sval(moa.get(n)) else "")
-                                   + ")" for n, v in near), ""]
+                                   + (f", {ALERT} {w}" if w else "") + ")" for n, v, w in lst), ""]
         L += self.sec_literature("drug", d, f"Drugs/{self.drug_name[d]}.md")
         L += ["## Data", "",
               "- `tables/drugs.parquet` — drug == " + json.dumps(d),
@@ -3028,18 +3105,36 @@ class Vault:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             ratio = np.log2((base[:, line] + 1.0) / (med + 1.0))
-        hi = [i for i in np.argsort(-np.nan_to_num(ratio, nan=-np.inf)) if _finite(ratio[i]) and ratio[i] >= 1
-              and base[i, line] >= 10][:15]
-        lo = [i for i in np.argsort(np.nan_to_num(ratio, nan=np.inf)) if _finite(ratio[i]) and ratio[i] <= -1
-              and med[i] >= 20 and not expr[i, line]][:15]
+        hi_all = [i for i in np.argsort(-np.nan_to_num(ratio, nan=-np.inf), kind="stable") if _finite(ratio[i])
+                  and ratio[i] >= 1 and base[i, line] >= 10]
+        lo_all = [i for i in np.argsort(np.nan_to_num(ratio, nan=np.inf), kind="stable") if _finite(ratio[i])
+                  and ratio[i] <= -1 and med[i] >= 20 and not expr[i, line]]
+
+        def lvl_alert(i, own=True):
+            """Why a baseline call may mislead: a noise-class RNA; (own) a level here that is only ambient RNA."""
+            return "; ".join((["noise-class RNA"] if R.noise[i] else []) +
+                             (["only ambient RNA here"] if own and not expr[i, line] else []))
+
+        def lvl_list(lst, own):
+            why = [lvl_alert(i, own) for i in lst]
+            keep = cap_keep([bool(w) for w in why], N_OWN_LEVEL)
+            n_al = sum(1 for w in why if w)
+            items = ", ".join(f"{self.glink(lst[k])} ({ratio[lst[k]]:+.1f}" + (f", {ALERT} {why[k]}" if why[k] else "")
+                              + ")" for k in keep) or "none"
+            cnt = (f" ({len(lst):,} genes, {n_alerts(n_al)}" + (f"; shown: the {N_OWN_LEVEL} strongest"
+                                                                 + (" and the next strongest without an alert"
+                                                                    if len(keep) > N_OWN_LEVEL else "")
+                                                                 if len(keep) < len(lst) else "") + ")") if lst else ""
+            return items + cnt
         L += ["## Its own level", "",
               "*Baseline CPM in this line vs the median line (`tables/line_effects.parquet` baseline_cpm; log2 "
-              "ratio). Lacks = expressed at ≥ 20 CPM in the median line, not measured here (below 25% of the "
+              "ratio). Highest = at least 2× the median line and ≥ 10 CPM here. Lacks = expressed at ≥ 20 CPM in "
+              "the median line, not measured here (below 25% of the "
               f"median line, or below {R.amb_frac:g} × the gene's pooled level, where the line reads only ambient "
-              "RNA; deletion, silencing or lineage).*", "",
-              "- Highest relative to other lines: " + (", ".join(f"{self.glink(i)} ({ratio[i]:+.1f})" for i in hi)
-                                                       or "none"),
-              "- Lacks: " + (", ".join(f"{self.glink(i)} ({ratio[i]:+.1f})" for i in lo) or "none"), ""]
+              f"RNA; deletion, silencing or lineage). {ALERT} = a noise-class RNA, or a level here that is only "
+              "ambient RNA (kept in its rank).*", "",
+              "- Highest relative to other lines: " + lvl_list(hi_all, True),
+              "- Lacks: " + lvl_list(lo_all, False), ""]
         if sens is not None and comp is not None and np.isfinite(sens[line]).any():
             s = sens[line]
 
@@ -3233,19 +3328,39 @@ class Vault:
                   "(`graph/modules.parquet` responsive_lines), strongest first.*", "",
                   "- " + ", ".join(self.llink(idx[n]) if n in idx else cell(n) for n in rl), ""]
         if R.novel_members is not None:
-            nm = R.novel_members[R.novel_members["module"] == m].sort_values("mean_cos", ascending=False)
-            nm = nm.drop_duplicates("col").head(15)
+            nm = R.novel_members[R.novel_members["module"] == m].sort_values("mean_cos", ascending=False,
+                                                                              kind="stable")
+            nm = nm.drop_duplicates("col").reset_index(drop=True)
             if len(nm):
+                # the alert of validate (a gene in the space only through flagged drug-doses; an older validate
+                # stage: from embed evidence_flagged_only), in its ranked place; capped by cap_keep
+                def cand_alert(r):
+                    t = sval(getattr(r, "alert", "")).lstrip(ALERT).strip()
+                    if not t and R.flagged_only[int(r.col)]:
+                        t = "in the vector space only through drug-doses that carry an alert"
+                    return t.replace(f"{R.sym[int(r.col)]} is in the vector space", "in the vector space")
+                recs = list(nm.itertuples(index=False))
+                why = [cand_alert(r) for r in recs]
+                keep = cap_keep([bool(w) for w in why], N_CANDIDATES)
+                n_al = sum(1 for w in why if w)
+                extra = max(0, len(keep) - N_CANDIDATES)
                 L += ["## Candidate new members", "",
                       "*Members not annotated to the set their arm is enriched for, ranked by mean cos to the "
-                      "annotated members (`validation/novel_members.csv`).*", ""]
-                L += table(["Gene", "Set", "Mean cos"], [[self.glink(r.col), r.set_label, fcos(r.mean_cos)]
-                                                         for r in nm.itertuples(index=False)]) + [""]
+                      f"annotated members (`validation/novel_members.csv`); {ALERT} = a reason to doubt the gene's "
+                      "place (in the vector space only through flagged drug-doses), kept in its rank. "
+                      f"{len(recs):,} candidates, {n_alerts(n_al)}"
+                      + (f"; shown: the {N_CANDIDATES} strongest" + (f" and the {extra} next strongest without an "
+                                                                    "alert" if extra else "")
+                         if len(keep) < len(recs) else "") + ".*", ""]
+                L += table(["#", "Gene", "Set", "Mean cos"] + (["Alert"] if n_al else []),
+                           [[str(k + 1), self.glink(recs[k].col) + (f" {ALERT}" if why[k] else ""),
+                             recs[k].set_label, fcos(recs[k].mean_cos)]
+                            + ([f"{ALERT} {why[k]}" if why[k] else ""] if n_al else []) for k in keep]) + [""]
         n_fo = int(sum(1 for c in mem if R.flagged_only[c]))
         if n_fo:
-            L += [f"*{ALERT} {n_fo} of its {len(mem)} genes are in the vector space only through significant pooled "
-                  "drug-doses that carry an alert (`embed/genes.parquet` evidence_flagged_only): their place here may "
-                  "reflect what those drug-doses did to the cells. They are marked in the tables below.*", ""]
+            L += [f"*{ALERT} {n_fo} of its {len(mem)} genes are in the vector space only through drug-doses that "
+                  "carry an alert (`embed/genes.parquet` evidence_flagged_only): their place here may reflect what "
+                  "those drug-doses did to the cells. They are marked in the tables of this note.*", ""]
         for arm_name, lst in (("+ arm", plus), ("− arm", minus)):
             L += [f"## {arm_name} ({len(lst)})", ""]
             if not lst:
@@ -3788,9 +3903,10 @@ seen.
   spaces fitted on two random halves of the compounds (a hash split of the compound names; drug families fall in
   both); *evidence* = `both halves` (the same sign in the full space and in both halves, |cos| ≥ {repro_min:g} in
   each, **and** fdr ≤ {repro_fdr:.2f}), `⚠ one half` (strong, |cos| ≥ {one_half:g}, in one of the two random halves
-  only: not replicated, no error estimate; often one compound), `⚠ not reproduced`. The tables show the {n_part}
-  strongest per side and any of the {n_part} strongest replicated ones below them; a partner that is not replicated
-  keeps its place with the alert. *fdr* = the estimated share of
+  only: not replicated, no error estimate; often one compound), `⚠ not reproduced`. Other alerts: `⚠ same locus` /
+  `⚠ readthrough risk` (neighbours on the genome), and ⚠ after the partner's name = the partner is in the vector space
+  only through drug-doses that carry an alert. The tables show the {n_part} strongest per side and any of the {n_part} strongest
+  without an alert below them; a partner with an alert keeps its place with it. *fdr* = the estimated share of
   false relations among pairs at least this strong in both halves, from sign concordance between the halves (see
   [[FDR calibration and the inflated null]]). *Notes*: known links (shared HGNC gene group, shared Hallmark/Reactome
   pathway, STRING score), **novel candidate** (both halves, fdr ≤ {novel_fdr:.2f}, |cos| ≥ {novel_cos:g}, no known

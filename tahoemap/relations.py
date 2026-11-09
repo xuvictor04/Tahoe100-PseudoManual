@@ -33,6 +33,11 @@ For every gene in the vector space (embed stage) the 100 partners with the large
                  "not the same locus" mean nothing), and only when the sources that define "known" loaded (HGNC,
                  Ensembl, STRING, and Hallmark or Reactome); otherwise info.json says which were missing.
 
+  alert          '' or '⚠ ' + every reason to doubt the pair, in plain words: not reproduced in both random halves
+                 (or strong in one half only), the same locus or a read-through risk, a gene that is in the vector
+                 space only through drug-doses that carry an alert (embed genes.parquet evidence_flagged_only). Every
+                 pair stays in the table in its ranked place; the alert only says why to doubt it.
+
 Without the reference stage the genomic and known flags are empty and nothing is called novel.
 """
 
@@ -45,7 +50,9 @@ import pandas as pd
 
 from .common import folder, log, stamp_stage, write_csv, write_json, write_parquet
 
-VERSION = 3
+ALERT = "⚠"
+
+VERSION = 4                 # 4: an alert column (every reason to doubt a pair, in plain words)
 TOP = 100
 REPRO_MIN = 0.2
 REPRO_FDR = 0.10
@@ -160,6 +167,33 @@ def _missing_sources(out):
         return ["reference/sources.json"]
     ok = {k for k, v in st.items() if v in ("cached", "downloaded")}
     return [" or ".join(alts) for alts in NOVEL_SOURCES if not any(a in ok for a in alts)]
+
+
+def pair_alerts(rel, flagged_only, sym, have_halves=True):
+    """The alert of every pair (module docstring, 'alert'): '' or '⚠ ' + its reasons, '; '-joined. flagged_only:
+    bool per gene col (embed evidence_flagged_only); sym: symbol per gene col."""
+    n = len(rel)
+    ev = rel["evidence"].astype(str).to_numpy() if "evidence" in rel else np.full(n, "")
+    ca, cb = rel["col_a"].to_numpy(np.int64), rel["col_b"].to_numpy(np.int64)
+
+    def col(c):
+        return rel[c].fillna(False).astype(bool).to_numpy() if c in rel else np.zeros(n, dtype=bool)
+    rt, lc = col("readthrough_risk"), col("locus")
+    reasons = [(ev == "one half", "strong in one random half of the compounds only (not replicated)"),
+               (ev == "not reproduced", "not reproduced in both random halves of the compounds" if have_halves else
+                "reproducibility not tested (no half spaces)"),
+               (rt, "read-through risk (neighbours on one strand, the 5' gene far more expressed)"),
+               (lc & ~rt, f"same locus (<= {LOCUS_BP // 1000} kb apart: neighbours can correlate without regulation)")]
+    code = np.zeros(n, dtype=np.int64)                     # one bit per reason: few distinct texts to build
+    for b, (mask, _) in enumerate(reasons):
+        code |= mask.astype(np.int64) << b
+    text = {c: "; ".join(t for b, (_, t) in enumerate(reasons) if c >> b & 1) for c in np.unique(code)}
+    out = pd.Series(code).map(text).to_numpy(dtype=object)
+    for c in (ca, cb):                                     # a gene in the space only through flagged drug-doses
+        for i in np.flatnonzero(flagged_only[c]):
+            t = f"{sym[c[i]]} is in the vector space only through drug-doses that carry an alert"
+            out[i] = f"{out[i]}; {t}" if out[i] else t
+    return np.array([f"{ALERT} {t}" if t else "" for t in out], dtype=object)
 
 
 def run(out, top=TOP):
@@ -277,6 +311,9 @@ def run(out, top=TOP):
     if blocked:
         log(f"  novel candidates not assessed: missing {', '.join(blocked)} (run 'tahoe run --from reference' "
             "with network access)")
+    fo = eg["evidence_flagged_only"].fillna(False).astype(bool).to_numpy() if "evidence_flagged_only" in eg \
+        else np.zeros(gK, dtype=bool)
+    rel["alert"] = pair_alerts(rel, fo, sym, have_halves)
     write_parquet(rel, os.path.join(rd, "gene_relations.parquet"))
     und = rel[rel["col_a"] < rel["col_b"]]
     info = {"version": VERSION, "genes": int(n), "top": int(kk), "pairs": int(len(rel)),
@@ -285,6 +322,8 @@ def run(out, top=TOP):
             "fdr_le_0.05_pairs": int((und["fdr"] <= 0.05).sum()) if have_halves else None,
             "known_pairs": int(und["known"].sum()), "locus_pairs": int(und["locus"].sum()),
             "readthrough_risk_pairs": int(und["readthrough_risk"].sum()),
+            "pairs_with_alert": int((und["alert"] != "").sum()),
+            "pairs_with_flagged_only_gene": int((fo[und["col_a"].to_numpy()] | fo[und["col_b"].to_numpy()]).sum()),
             "novel_candidate_pairs": int(und["novel_candidate"].sum()), "reference": bool(have_ref),
             "novel_assessed": not blocked, "novel_blocked_by": blocked, "repro_fdr": REPRO_FDR,
             "minutes": round((time.time() - t0) / 60, 2)}

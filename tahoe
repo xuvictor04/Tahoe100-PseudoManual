@@ -6,6 +6,7 @@
 #   tahoe              where things stand (= tahoe status)
 #   tahoe gene MDM2    which drugs raise / lower MDM2, in which cell lines, which genes move with it
 #   tahoe review ...   literature-review agents on a finished run (docs/review.md); tahoe duplicate DEST copies a run
+#   tahoe export DEST  the shareable results of a finished run, ready to be pushed to a GitHub branch
 #
 # Folders: data = --data DIR, else $TAHOE_DATA, else ~/Tahoe-100M; output = --out DIR, else $TAHOE_OUT, else
 # <data>/tahoemap; venv = $TAHOE_VENV or ~/tahoe-venv. --data / --out go with any command (give the same ones to
@@ -349,6 +350,28 @@ cmd_duplicate() {                # tahoe duplicate DEST [--repo DIR]: DEST and D
   tm duplicate "${args[@]}"
 }
 
+cmd_export() {                   # tahoe export DEST [--with-effects] [--include FILE ...] [--force]: paths as typed
+  need_packages
+  local p dest="" inc=0 args=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --include) inc=1; args+=("$1"); shift ;;
+      --include=*) inc=0; args+=("--include" "$(absolute "${1#--include=}")"); shift ;;
+      --max-file-mb) [ $# -ge 2 ] || die "--max-file-mb needs a number"; inc=0; args+=("$1" "$2"); shift 2 ;;
+      -*) inc=0; args+=("$1"); shift ;;
+      *) if [ $inc = 1 ]; then args+=("$(absolute "$1")")
+         else
+           [ -z "$dest" ] || die "export: one destination folder (got '$dest' and '$1'; give DEST before --include)"
+           dest="$(absolute "$1")"; args+=("$dest")
+         fi
+         shift ;;
+    esac
+  done
+  [ -n "$dest" ] || die "usage: tahoe export DEST [--with-effects] [--include FILE ...] [--force]   (exports $OUT)"
+  if p="$(job_pid)"; then die "a job is running on $OUT (pid $p): wait for it, or 'tahoe stop$SAME' first"; fi
+  tm export "${args[@]}"
+}
+
 cmd_update() {
   if job_pid >/dev/null; then die "a job is running; wait for it or 'tahoe stop$SAME' first"; fi
   git -C "$REPO" pull --ff-only || die "git pull failed"
@@ -376,6 +399,9 @@ tahoe - every gene, drug and cell line of Tahoe-100M in one map
   review status|tables  counts, spend and projected cost of the rest / rebuild review/connections + findings
   duplicate DEST [--repo DIR]     copy this output for review work (big arrays hard-linked; --repo DIR: also
                         clone this code repository there); then: tahoe review ... --out DEST
+  export DEST [--with-effects] [--include FILE ...] [--force]     the shareable results (vault, map, tables, ...;
+                        no file over 95 MiB) with README.md and MANIFEST.tsv, ready to push to a GitHub branch;
+                        it prints the git commands. --force updates an earlier export there
   test                  the whole pipeline on synthetic data with planted answers (a few minutes)
   update                newest scripts (git pull)
   <stage> [options]     one stage now, in the foreground: build effects tensor tables embed reference
@@ -403,6 +429,7 @@ main() {
     gene|drug|line|pair|module) need_packages; tm "$c" "$@" ;;
     review) cmd_review "$@" ;;
     duplicate) cmd_duplicate "$@" ;;
+    export) cmd_export "$@" ;;
     open|where)
       say "Interactive map:  $OUT/map/gene_map.html   (open it in a browser)"
       say "Obsidian vault:   $OUT/vault   (Obsidian: Open folder as vault)"

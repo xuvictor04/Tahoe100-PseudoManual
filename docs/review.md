@@ -28,11 +28,15 @@ Contents: [What the agents do](#what-the-agents-do-and-do-not-do) · [Agents and
 For each entity the runner builds a **dossier** from the run's own outputs (tables, relations, graph, validation,
 reference annotations, vector space) — for a gene: its identity, expression, the drug-doses that raise and lower it,
 its module and arm, its 25 strongest partners each way with their evidence, the literature-known partners that are
-*not* among its data partners, and its novel candidate pairs; for a drug: targets, mechanism, the genes each dose
-moves (the full lists at the best trustworthy dose - an active dose without an artifact flag - and, marked as
-flagged, at the drug's vector dose when that one carries a flag; when no dose is trustworthy the dossier says so and
-lists the flags), the lines it depletes, the nearest drugs; for a cell line:
-organ, drivers, TP53, its Cellosaurus links (written out, because web fetch opens only URLs that appear in the
+*not* among its data partners, and its novel candidate pairs. Nothing is left out of a dossier for a flag: a drug-dose
+with an artifact flag for the gene, a single-line cell at such a drug-dose, or a partner not replicated in both
+halves keeps its ranked place, marked ⚠ with the reason in plain words (for a cell-cycle shift: how much of this
+gene's change it would explain), and each list says how many items carry an alert; a list capped at N shows the N
+strongest plus any of the N strongest without an alert that would fall below them. For a drug: targets, mechanism,
+the genes each dose moves (the full lists at the best trustworthy dose - an active dose without an artifact flag -
+and, marked as flagged, at the drug's vector dose when that one carries a flag; when no dose is trustworthy the
+dossier says so and lists the flags), the lines it depletes, the nearest drugs; for a cell line: organ, drivers,
+TP53, its Cellosaurus links (written out, because web fetch opens only URLs that appear in the
 conversation), the genes specifically high or low, the drugs that deplete it. `tahoe review run --dry-run` writes
 the dossiers so you can read them.
 

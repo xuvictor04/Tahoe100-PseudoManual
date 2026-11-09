@@ -50,14 +50,16 @@ Cell-cycle shift. The atlas flags a drug-dose 'cell-cycle shift' when its S_PHAS
 moved into or out of S or G2/M. Whether that explains one gene's change depends on how much the gene goes with the
 cycle, which is measured here (cell_cycle_share): per gene, a robust regression of its pooled lfc on the two modules'
 pooled lfc (lfc ~ a + bS x S + bG x G) over the drug-doses without another artifact flag. At every drug-dose with the
-flag the shift predicts bS x S + bG x G, and cc_share = |that| / |lfc| when it has the sign of the change (else 0,
-at most 1). Fitted slopes are attenuated by measurement noise, so the rule doubles them (CC_SAFETY = 2): the shift
-is not the explanation when 2 x cc_share < 0.5 and the change left after the doubled prediction is at least the 1.2x
-floor; then the gene's flags read 'cell-cycle shift (explains ~N% here)', which is no artifact flag, while the plain
-token 'cell-cycle shift' (an artifact flag) stays everywhere else. Other artifact flags of a drug-dose still apply.
-Real-data example: TRIM72 (slopes bS +0.50, bG +0.47) is raised 12.2x by idarubicin 5 uM, of which the shift would
-explain ~4% (cleared), while panobinostat 0.5 uM (~87%) stays flagged; classic cycle genes (PCNA, CCNE2 bS ~ +1.5;
-TOP2A, CCNB1 bG ~ +1.4) keep the flag at a real shift.
+flag the shift predicts bS x S + bG x G, with the slopes fitted without that drug-dose (leave-one-out, so the change
+being judged does not pull the slopes toward explaining itself), and cc_share = |that| / |lfc| when it has the sign
+of the change (else 0, at most 1). Fitted slopes are attenuated by measurement noise, so the rule doubles them
+(CC_SAFETY = 2): the shift is not the explanation when 2 x cc_share < 0.5 and the change left after the doubled
+prediction is at least the 1.2x floor; then the gene's flags read 'cell-cycle shift (explains ~N% here)', which is no
+artifact flag, while the plain token 'cell-cycle shift' (an artifact flag) stays everywhere else. Other artifact
+flags of a drug-dose still apply. Real-data example (full-fit slopes, before the leave-one-out step): TRIM72 (slopes
+bS +0.50, bG +0.47) is raised 12.2x by idarubicin 5 uM, of which the shift would explain ~4% (cleared), while
+panobinostat 0.5 uM (~87%) stays flagged; classic cycle genes (PCNA, CCNE2 bS ~ +1.5; TOP2A, CCNB1 bG ~ +1.4) keep
+the flag at a real shift.
 
 Outputs in OUT/tables/ (README.md there documents every column, its units and its baseline):
     genes.parquet          one row per gene: level, counts of drug-doses up / down, best drug-dose up / down (any and
@@ -103,7 +105,8 @@ from . import tlib as T
 from .common import log, read_effects_index, replace_file, stamp_stage, write_json, write_parquet
 from .tensor import AMB_FRAC, measured_mask
 
-VERSION = 3                         # 3: a cell-cycle shift blocks a gene only when it explains its change
+VERSION = 4                         # 3: a cell-cycle shift blocks a gene only when it explains its change;
+#                                     4: each cell-cycle-flagged drug-dose is judged with slopes fitted without it
 
 LFC_MIN = A.LFC_MIN                 # log2(1.2): smallest change the atlas counts
 Q_CUT = A.Q_CUT                     # 0.10: the atlas FDR cut
@@ -231,7 +234,11 @@ def cell_cycle_share(lfc, s_lfc, g_lfc, dd_flags, posunc=None, chunk=4096):
     modules' pooled lfc, lfc ~ a + bS x S + bG x G, over the drug-doses without any other artifact flag (none, or
     only the cell-cycle shift; per gene also without 'position correction uncertain'). At every drug-dose whose flags
     include 'cell-cycle shift' the shift predicts pred = bS x S + bG x G of the change (cc_rule gives the share and
-    whether it is cleared). Slopes need >= CC_MIN_FIT fitted drug-doses with a value for the gene.
+    whether it is cleared), with the slopes fitted without that drug-dose when it is in the fit (leave-one-out: a
+    rank-1 downdate of the final weighted fit, the Huber weights kept): the flagged drug-doses have the largest |S|
+    and |G|, so a strong change of the gene's own there would otherwise pull the slopes toward explaining it. Slopes
+    need >= CC_MIN_FIT fitted drug-doses with a value for the gene (also after leaving one out). The slopes returned
+    (bS, bG: genes.parquet cc_slope_*) are those of the full fit.
     Returns cc (bool per drug-dose: its flags include 'cell-cycle shift'), share (drug-doses x genes float32; NaN
     outside the cc rows or without slopes), cleared (drug-doses x genes bool), the slopes bS, bG (float32 per gene,
     NaN without a fit) and the number of drug-doses in the fit."""
@@ -250,6 +257,7 @@ def cell_cycle_share(lfc, s_lfc, g_lfc, dd_flags, posunc=None, chunk=4096):
     if nf < CC_MIN_FIT or not cc.any():
         return cc, share, cleared, bS, bG, nf
     fi = np.flatnonzero(fit)
+    pos_fit = {int(d): k for k, d in enumerate(fi)}                          # drug-dose -> its row in the fit
     rows = np.flatnonzero(cc & np.isfinite(S) & np.isfinite(G))
     X = np.column_stack([np.ones(nf), S[fi], G[fi]])                         # n x 3
     XX = (X[:, :, None] * X[:, None, :]).reshape(nf, 9)                       # n x 9: the products x_i x_j
@@ -259,12 +267,14 @@ def cell_cycle_share(lfc, s_lfc, g_lfc, dd_flags, posunc=None, chunk=4096):
         ok = np.isfinite(Y)
         if posunc is not None:
             ok &= ~np.asarray(posunc[fi, g0:g1], dtype=bool)
-        enough = ok.sum(axis=0) >= CC_MIN_FIT
+        n_ok = ok.sum(axis=0)
+        enough = n_ok >= CC_MIN_FIT
         W = ok.astype(np.float64)
         Y = np.where(ok, Y, 0.0)
         for it in range(2):                                                   # OLS, then one Huber reweighting
             A_ = (W.T @ XX).reshape(-1, 3, 3) + np.eye(3)[None] * 1e-9          # c x 3 x 3: X' W X per gene
-            B = np.linalg.solve(A_, ((W * Y).T @ X)[..., None])[..., 0]        # c x 3
+            rhs = (W * Y).T @ X                                                # c x 3: X' W y per gene
+            B = np.linalg.solve(A_, rhs[..., None])[..., 0]                   # c x 3
             if it:
                 break
             R = Y - X @ B.T
@@ -276,6 +286,23 @@ def cell_cycle_share(lfc, s_lfc, g_lfc, dd_flags, posunc=None, chunk=4096):
         bS[g0:g1], bG[g0:g1] = B[:, 1], B[:, 2]
         if rows.size:
             pred = S[rows, None] * B[None, :, 1] + G[rows, None] * B[None, :, 2]
+            # leave-one-out: a judged drug-dose that is itself in the fit (its only artifact flag is the shift) is
+            # judged with the slopes fitted without it (a rank-1 downdate of X'WX and X'Wy, with the Huber weights
+            # of the full fit), so a strong change of its own does not pull the slopes toward explaining it
+            for ri, d_ in enumerate(rows):
+                k = pos_fit.get(int(d_))
+                if k is None:
+                    continue
+                w = W[k]                                                       # c: this row's weight per gene
+                if not (w > 0).any():
+                    continue
+                A1 = A_ - w[:, None, None] * XX[k].reshape(1, 3, 3)
+                r1 = rhs - (w * Y[k])[:, None] * X[k][None, :]
+                with np.errstate(all="ignore"):
+                    B1 = np.linalg.solve(A1, r1[..., None])[..., 0]
+                p1 = S[d_] * B1[:, 1] + G[d_] * B1[:, 2]
+                p1[(n_ok - ok[k]) < CC_MIN_FIT] = np.nan
+                pred[ri] = np.where(w > 0, p1, pred[ri])
             sh, cl = cc_rule(lfc[rows, g0:g1], pred)
             share[rows, g0:g1] = sh
             cleared[rows, g0:g1] = cl
@@ -1146,8 +1173,9 @@ DOCS = {
          "single dose / all doses, stronger at high dose / all doses, flat / top dose only / rises with dose / two "
          "highest doses / inconsistent across doses", "pattern_down": "the same for the decrease (z negated)",
          "cc_share": "at a drug-dose whose flags include 'cell-cycle shift': the share of this gene's change that the "
-         "shift would explain, |bS x S + bG x G| / |lfc| with the gene's slopes as fitted (genes.parquet "
-         "cc_slope_S, cc_slope_G2M) and the drug-dose's S_PHASE_lfc / G2M_PHASE_lfc; 0 when that predicted part "
+         "shift would explain, |bS x S + bG x G| / |lfc| with the gene's slopes (genes.parquet cc_slope_S, "
+         "cc_slope_G2M, here fitted again without this drug-dose when it is in the fit: leave-one-out) and the "
+         "drug-dose's S_PHASE_lfc / G2M_PHASE_lfc; 0 when that predicted part "
          "goes the other way; at most 1. NaN for drug-doses without the flag (or genes without slopes). The flag "
          "stays an artifact flag unless 2 x cc_share < 0.5 and |lfc| x (1 - 2 x cc_share) >= log2 1.2 (see "
          "'Cell-cycle shift')"}),
@@ -1360,7 +1388,10 @@ def _cell_cycle_text(cc):
         f"then one Huber reweighting at {CC_HUBER:g} robust SDs) of its pooled lfc on the two modules' pooled lfc, "
         f"lfc ~ a + bS x S + bG x G, over the {n('drugdoses_fitted')} drug-doses with no other artifact flag "
         f"(genes.parquet cc_slope_S / cc_slope_G2M; >= {CC_MIN_FIT} drug-doses with a value for the gene). At a "
-        "flagged drug-dose the shift predicts bS x S + bG x G of the gene's change, and `cc_share` (drug_effects, "
+        "flagged drug-dose the shift predicts bS x S + bG x G of the gene's change, with the slopes fitted again "
+        "without that drug-dose when it is among the fitted ones (leave-one-out: the drug-doses being judged have "
+        "the largest module changes, so a strong change of the gene's own there would otherwise pull the slopes "
+        "toward explaining it), and `cc_share` (drug_effects, "
         "drug_line_top) is that part's share of the observed change (0 when it points the other way). Fitted slopes "
         "are attenuated by measurement noise (the modules' lfc are measured with error too), so the rule doubles "
         f"them to be safe: the plain artifact flag 'cell-cycle shift' stays unless {k:g} x cc_share < "

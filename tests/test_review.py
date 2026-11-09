@@ -859,11 +859,13 @@ def vault_splice(work, src, ents):
           "\n### Caveats" in gsec and "NO_SUCH_NOTE_XYZ" in gsec and "[[NO_SUCH_NOTE_XYZ]]" not in gsec
           and f"[[{plabel}]]" in gsec and f"[[{d['name']} (drug)]]" in gsec, gsec[:300])
     tab = gt.split("## Genes that move with it", 1)[1].split("\n## ", 1)[0]
-    row = next((x for x in tab.splitlines() if x.startswith(f"| [[{plabel}]] |")), "")
+    # a partner's Gene cell is '[[X]]', or '[[X]] ⚠' when X is in the vector space only through flagged drug-doses
+    row = next((x for x in tab.splitlines() if re.match(rf"^\| \[\[{re.escape(plabel)}\]\](?: ⚠)? \|", x)), "")
     check(c, "the partner table: a Literature column with the verdict and its linked citations",
           "| Literature |" in tab and "established" in row and "](https://pubmed.ncbi.nlm.nih.gov/31000001/)" in row,
           row[:200])
-    prow = next((x for x in after.get(ppath, "").splitlines() if x.startswith(f"| [[{g['name']}]] |")), "")
+    prow = next((x for x in after.get(ppath, "").splitlines()
+                 if re.match(rf"^\| \[\[{re.escape(g['name'])}\]\](?: ⚠)? \|", x)), "")
     check(c, "the partner's own table shows the verdict of the reviewed gene's review" if reverse_shown else
           "the partner's note: no reverse row expected (the reviewed gene is not in its table)",
           (f"({g['name']}'s review)" in prow) if reverse_shown else True, prow[:200])
@@ -1201,7 +1203,7 @@ def vault_map_literature(work, src, ents):
     for head in ("## Genes that move with it", "## Genes that move opposite"):
         tab = gt.split(head, 1)[1].split("\n## ", 1)[0] if head in gt else ""
         for line in tab.splitlines() if "| Literature |" in tab else []:
-            m = re.match(r"^\| \[\[([^\]|]+)\]\] \|.*\| ([^|]*) \|$", line)
+            m = re.match(r"^\| \[\[([^\]|]+)\]\](?: ⚠)? \|.*\| ([^|]*) \|$", line)
             if m:
                 rows[m.group(1)] = m.group(2).strip()
     vline = next((x for x in sec.splitlines() if x.startswith("**Connection verdicts**")), "")
@@ -1726,7 +1728,7 @@ def retractions_shown(work, src, ents):
     for head in ("## Genes that move with it", "## Genes that move opposite"):
         tab = gt.split(head, 1)[1].split("\n## ", 1)[0] if head in gt else ""
         for line in tab.splitlines() if "| Literature |" in tab else []:
-            m = re.match(r"^\| \[\[([^\]|]+)\]\] \|.*\| ([^|]*) \|$", line)
+            m = re.match(r"^\| \[\[([^\]|]+)\]\](?: ⚠)? \|.*\| ([^|]*) \|$", line)
             if m:
                 rows[m.group(1)] = m.group(2).strip()
     vline = next((x for x in lit_section(gt).splitlines() if x.startswith("**Connection verdicts**")), "")
@@ -1995,7 +1997,7 @@ def vault_round5(work, src, ents):
     for head in ("## Genes that move with it", "## Genes that move opposite"):
         tab = gt.split(head, 1)[1].split("\n## ", 1)[0] if head in gt else ""
         for line in tab.splitlines() if "| Literature |" in tab else []:
-            m = re.match(r"^\| \[\[([^\]|]+)\]\] \|.*\| ([^|]*) \|$", line)
+            m = re.match(r"^\| \[\[([^\]|]+)\]\](?: ⚠)? \|.*\| ([^|]*) \|$", line)
             if m:
                 rows[m.group(1)] = m.group(2).strip()
     vline = next((x for x in sec.splitlines() if x.startswith("**Connection verdicts**")), "")
@@ -2073,6 +2075,64 @@ def drug_dossier_trustworthy_dose(view, ents):
           and moved and n_none,
           wrong[:3] or f"{len(ents['drugs'])} drugs; {n_none} without a trustworthy dose; full lists of a clean dose "
                        f"first, then of the flagged vector dose, for {moved[:5]}")
+
+
+@case
+def gene_dossier_alerts(view, ents):
+    """The user's rule ('flagging should not remove things; add an alert'): a gene dossier ranks every drug-dose of
+    tables/drug_effects.parquet, a flagged one in its ranked place with '⚠' + its flags in plain words, capped at
+    LIMITS['drugs'] plus any of that many strongest without an alert beyond the cut; there is no separate flagged
+    section; the single-line cells keep flagged ones with an alert too."""
+    import numpy as np
+    from tahoemap import query as Q
+    c = "gene_dossier_alerts"
+    de = pd.read_parquet(os.path.join(view, "tables", "drug_effects.parquet"),
+                         columns=["col", "symbol", "drug", "dose", "z", "clean", "flags"])
+    de["clean"] = de["clean"].astype(bool)
+    strongest = de.assign(az=de["z"].abs()).sort_values("az", ascending=False).drop_duplicates("col")
+    cols = strongest.loc[~strongest["clean"], "col"].astype(int).tolist()[:6]       # led by a flagged drug-dose
+    ctx, k = D.context(view), D.LIMITS["drugs"]
+    wrong, kinds, n_flagged = [], set(), 0
+    for col in cols:
+        P, data = D._gene(ctx, col, dict(D.LIMITS))
+        text = "\n".join(P)
+        g = de[de["col"] == col]
+        for sign, key in ((1, "up"), (-1, "down")):
+            sub = g[np.sign(g["z"]) == sign].sort_values("z", ascending=(sign < 0), kind="stable")
+            want = (Q._capped(len(sub), k, sub["clean"].to_numpy()) + 1).tolist()
+            recs = data["drugs"][key]
+            got = [x["rank"] for x in recs]
+            alerts_ok = all(bool(x["alert"]) == (not cl) for x, cl in zip(recs, sub["clean"].to_numpy()[
+                np.array(want, dtype=int) - 1])) if len(recs) == len(want) else False
+            if got != want or not alerts_ok:
+                wrong.append((col, key, got[:5], want[:5]))
+            for x in recs:
+                if x["alert"]:
+                    n_flagged += 1
+                    kinds.update(f.split(",")[0] for f in x["alert"].split("; "))
+                    if f"| {x['rank']} | {x['drug']} | {x['dose']} | \u26a0 {x['alert']} |" not in text:
+                        wrong.append((col, key, "row", x["drug"], x["dose"], x["alert"]))
+        if "### Flagged drug-doses" in text:
+            wrong.append((col, "a separate flagged section"))
+    check(c, "gene dossiers: every drug-dose in its ranked place, flagged ones with '\u26a0' + their flags; capped "
+             "lists keep the strongest without an alert; no separate flagged section",
+          cols and not wrong and n_flagged, wrong[:3] or f"{len(cols)} genes led by a flagged drug-dose; "
+                                                         f"{n_flagged} flagged rows shown; reasons {sorted(kinds)}")
+    dlt = pd.read_parquet(os.path.join(view, "tables", "drug_line_top.parquet"))
+    if "clean" not in dlt:                       # an older tables stage: drug_line_top holds clean cells only
+        _P, data = D._gene(ctx, int(dlt["col"].iloc[0]), dict(D.LIMITS))
+        check(c, "single-line cells, older tables stage (clean cells only): no alert, and the dossier says so",
+              not any(x["alert"] for x in data["drugs"]["single_line"])
+              and "clean drug-doses only: an older tables stage" in "\n".join(_P), "drug_line_top has no 'clean'")
+        return
+    dlt = dlt.assign(az=dlt["z"].abs()).sort_values(["col", "az"], ascending=[True, False], kind="stable")
+    top = dlt.groupby("col").head(D.LIMITS["single"])                  # a gene's cells the dossier shows first
+    got = []
+    for col in top.loc[~top["clean"].astype(bool), "col"].astype(int).unique()[:5]:
+        _P, data = D._gene(ctx, int(col), dict(D.LIMITS))
+        got.append(any(x["alert"] for x in data["drugs"]["single_line"]))
+    check(c, "gene dossiers: single-line cells at flagged drug-doses are listed, with an alert",
+          bool(got) and all(got), f"{sum(got)} of {len(got)} genes with a flagged cell show it with an alert")
 
 
 @case
@@ -3532,6 +3592,7 @@ def main():
     retractions_shown(work, src, ents)
     vault_round5(work, src, ents)
     drug_dossier_trustworthy_dose(view, ents)
+    gene_dossier_alerts(view, ents)
     cellosaurus_url_in_dossier(view, ents, work)
     note_provenance(work)
     note_citation_forms(work)

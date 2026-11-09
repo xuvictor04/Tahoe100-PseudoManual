@@ -65,13 +65,16 @@ re-expression of a gene a line has silenced cannot be detected.
 
 ## Flags
 
-Artifact flags make a drug-dose (or one gene's value) unclean; the gene's change may be the artifact:
+Artifact flags make a drug-dose (or one gene's value) unclean; the gene's change may be the artifact. Nothing is left
+out for a flag: a flagged item keeps its ranked place and is marked ⚠ followed by the reason in plain words, and
+counts say how many items carry an alert. A list capped at N shows the N strongest, plus any of the N strongest
+without an alert that would fall below them, so flagged items never push clean ones out of view.
 
 | flag | what happened | how to read the genes |
 |---|---|---|
 | `toxic` | the line's cells fell to under half the plate's (beyond their plate row), with no recovery at a higher dose | dying and stressed cells dominate: stress, ISR, p53, apoptosis genes rise and proliferation genes fall whatever the target |
 | `transcription drop` | genes or UMIs per cell fell: global shutdown (e.g. CDK7/CDK9 or RNA polymerase inhibition) | short-lived mRNAs (MYC, immediate-early genes, histones) fall first; after the composition correction stable mRNAs appear to rise; do not read single genes |
-| `cell-cycle shift` | the S-phase or G2/M programme moved | cycle genes follow the share of cells in S and G2/M; a CDK4/6 inhibitor lowers E2F targets by arresting cells, not by regulating each gene |
+| `cell-cycle shift` | the S-phase or G2/M programme moved | cycle genes follow the share of cells in S and G2/M; a CDK4/6 inhibitor lowers E2F targets by arresting cells, not by regulating each gene. Judged gene by gene: the alert says how much of this gene's change the shift would explain ("cell-cycle shift, explains ~40%", from the gene's own slopes on the S-phase and G2/M programmes); where it explains little (less than half even with the slopes doubled, and what is left is still >= 1.2x) the gene's value reads `cell-cycle shift (explains ~N% here)`, is no artifact flag and is clean |
 | `unreliable plate only` | only wells on the unreliable plate | not reproducible; ignore unless confirmed elsewhere |
 | `position not correctable` | too few other drugs at the well position | a position artifact cannot be excluded |
 | `position correction uncertain` | (per gene) too few clean donors at the position | the same, for that gene |
@@ -91,9 +94,10 @@ move together. Negative: one rises where the other falls, often the induced and 
 (p53 targets against the G2/M genes p53 represses through p21 and DREAM), or two programmes the same drugs push in
 opposite directions. Neither sign is a regulatory arrow: no gene was knocked out or overexpressed.
 
-Only genes with a real response are in the space (enough contexts at |z| >= 3, and a significant clean pooled
-drug-dose or a strong single-line response in two lines). A gene outside the space has no partners, module or arm;
-that says only that no drug moved it detectably.
+Only genes with a real response are in the space (enough contexts at |z| >= 3, and a significant pooled drug-dose
+or a strong single-line response in two lines). A gene in the space only through significant drug-doses that carry
+an artifact flag is marked ⚠: its vector, partners and module may reflect the artifact. A gene outside the space
+has no partners, module or arm; that says only that no drug moved it detectably.
 
 Partner columns:
 - **evidence**: `both halves` = the compounds were split into two random halves (by a hash of the compound name, salt

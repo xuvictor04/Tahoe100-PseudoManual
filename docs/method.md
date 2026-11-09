@@ -29,13 +29,24 @@ the line has < 30 cells in the well or does not express the gene (below 25% of t
   drug-doses that have no other well, and flagged.
 - **Drug-dose** = mean over its wells (log2 fold change) and Stouffer over its wells (z); **BH FDR within each gene**
   across drug-doses; significant = q < 0.10 and ≥ 1.2×.
-- Every drug-dose carries **flags** (exact strings, below). "Clean" in the outputs means: none of the artifact flags.
+- Every drug-dose carries **flags** (exact strings, below). "Clean" in the outputs means: none of the artifact flags
+  (for that gene: the drug-dose's flags plus the gene's own, with the cell-cycle shift judged gene by gene, §4).
+  **A flag never removes anything from what is shown.** Every table keeps flagged rows; the vault, the map, the
+  look-ups and the review dossiers show a flagged item in its ranked place with an alert, '⚠' plus the flags in plain
+  words (e.g. '⚠ toxic; transcription drop', '⚠ cell-cycle shift, explains ~60% of this change'), and every list
+  says how many items it holds and how many carry an alert. A list capped at N shows the N strongest overall and any
+  of the N strongest without an alert that would otherwise fall below the cut, sorted together, so flagged items
+  never push clean ones out of view either. The same holds for every other reason to doubt: a partner not replicated
+  in both halves, neighbours on the genome, a gene in the vector space only through flagged drug-doses, a gene
+  outside the space. Estimators may still leave out data that is technically broken (the vector space leaves out the
+  drug-doses flagged `unreliable plate only`, `position not correctable` or `wells disagree`; the per-line cut is
+  calibrated on clean drug-doses); that is computing, not showing, and the outputs say where they do it.
 
 | Flag | Means | Artifact? |
 |---|---|---|
 | `toxic` | < −1 log2 cells vs the plate (beyond its row's shift), the best well < −0.5 too, no higher dose recovering | yes |
 | `transcription drop` | genes or UMIs per cell fall vs the plate and its row (< −0.3 / < −0.5 log2): global shutdown | yes |
-| `cell-cycle shift` | S or G2/M module moved > 0.5 log2 (or > 0.25 with \|z\| ≥ 4): cycle genes follow the cycle mix | yes |
+| `cell-cycle shift` | S or G2/M module moved > 0.5 log2 (or > 0.25 with \|z\| ≥ 4): cycle genes follow the cycle mix | yes, unless the shift does not explain this gene's change (§4) |
 | `unreliable plate only` | only wells on an unreliable plate (plate 13) | yes |
 | `position not correctable` | < 3 other-drug wells at the position | yes |
 | `position correction uncertain` | (per gene) < 3 clean donors at the position: not corrected | yes |
@@ -84,17 +95,38 @@ per line, per plate, per well. `tables/README.md` (written by the stage) documen
 - The **per-line** tables (`line_effects`, `drug_line_top`) search ~1,100 drug-doses per gene and line, so their cut
   is calibrated on the run itself: from the per-line |z| of (gene, clean drug-dose) pairs with no pooled response, the
   threshold at which fewer than 0.05 chance hits are expected per gene and line (never below 4); it is written to
-  `tables/info.json`.
+  `tables/info.json`. The per-line tables then rank **every** drug-dose: `drug_line_top` keeps each gene's 15
+  strongest cells per direction over all drug-doses plus any of its 15 strongest clean cells beyond them, with their
+  `flags` and `clean`; `line_effects` keeps its counts and strongest drug-dose over clean drug-doses and adds the same
+  over all drug-doses (`n_dd_up_all`, `best_up_drug_all`, `best_up_flags_all` ...).
+- **The cell-cycle shift, gene by gene.** A drug-dose that moves the S-phase or G2/M programme carries the flag
+  `cell-cycle shift` for every gene, yet it explains the change of a cell-cycle gene, not necessarily of a gene with
+  little cell-cycle dependence. For each gene a robust regression of its pooled log2 fold change on the drug-doses'
+  S-phase and G2/M module changes (over the drug-doses whose only artifact flag, if any, is the cell-cycle shift; at
+  least 20) gives its slopes (`genes.parquet` cc_slope_S, cc_slope_G2M). At each drug-dose flagged `cell-cycle
+  shift`, the slopes predict how much of the gene's change the shift explains (`drug_effects.parquet` cc_share; 0
+  when the prediction goes the other way), fitted again without that drug-dose (leave-one-out, so a strong change
+  of the gene's own there does not pull its slopes toward explaining it). Fitted slopes are attenuated by noise, so the rule doubles them: when even
+  the doubled prediction explains less than half of the change, and what is left is still ≥ 1.2×, the shift is not
+  the explanation; the gene's flags then read `cell-cycle shift (explains ~N% here)`, which is no artifact flag, and
+  the value can be clean. Otherwise the artifact flag stays and the alert says how much it explains. On planted data,
+  0 of the 154 significant changes of the S-phase and G2/M programme genes at such drug-doses are cleared. On the
+  real data, Idarubicin 5 µM raises TRIM72 (MG53) 12.2× with the cell-cycle flag; its slopes predict ~4% of that
+  change, so the rise is the gene's own response, not the cycle mix.
 
 ## 5. Embed — the vector space
 
 Each gene is described by its per-line z in every (drug-dose, cell line) context of an *active, trustworthy*
 drug-dose: not `unreliable plate only`, `position not correctable` or `wells disagree`, and either ≥ 10 significant
 genes pooled over lines, or ≥ 10 genes at per-line |z| ≥ 5 in ≥ 2 lines (so a response confined to a few lines
-counts). A gene enters the space only if it responds: |z| ≥ 3 in ≥ 5 contexts **and** a significant clean pooled
+counts). A gene enters the space only if it responds: |z| ≥ 3 in ≥ 5 contexts **and** a significant pooled
 drug-dose (q < 0.1, ≥ 1.2×) or a per-line |z| ≥ max(5, the calibrated per-line cut) in ≥ 2 lines of one drug-dose. (A
-count alone is reached by chance by almost every expressed gene at full scale.) Noise RNAs are left out. Genes outside
-the space keep all their tables and notes.
+count alone is reached by chance by almost every expressed gene at full scale.) Evidence at a drug-dose with an
+artifact flag for the gene counts too: a gene whose only evidence, pooled and per-line, is at such drug-doses is in
+the space, marked
+(`embed/genes.parquet` evidence_flagged_only) and shown with an alert wherever it appears, because its vector,
+partners and module may reflect the artifact. Noise RNAs are left out. Genes outside the space keep all their
+tables and notes, and are shown with '⚠ not in the vector space' and the reason.
 Each gene's row is centred and scaled; broad components that a large share of genes follow (global toxicity or
 shutdown; the earlier atlas's rule) are removed; then a truncated SVD, `X ≈ U S Vᵀ`, gives (64 dimensions by
 default):
@@ -139,16 +171,25 @@ in one half (|cos| ≥ 0.5). A module has a − arm only when ≥ 5 members sit 
 and the two sides anti-correlate (mean cosine between them ≤ −0.2); otherwise it is single-armed (all +).
 `graph/modules.parquet` gives the mean cosine within each arm and between the arms. A first Louvain pass over the
 whole genome returns programme-sized communities of 1,000+ loosely related genes, so modules larger than 300 genes
-or looser than a mean member |cos| of 0.3 are split again on their own subgraph (up to 4 levels). The nodal map is a t-SNE layout
-of 1 − |cos|; the signed map is the same on 1 − cos.
+or looser than a mean member |cos| of 0.3 are split again on their own subgraph (up to 4 levels); pieces under 5
+genes get no module (module 0). The nodal map is a t-SNE layout of 1 − |cos|; the signed map is the same on 1 − cos.
+t-SNE keeps neighbours together but can let modules touch or interleave, so each map also has a **spread** layout
+(the map's Spread slider): each module keeps its own t-SNE arrangement as one block, the blocks are placed by the
+modules' directions in the full vector space (classical MDS refined by SMACOF on 1 − |cos|, or 1 − cos for the signed
+map, between module directions), overlapping blocks are pushed apart, and genes without a module move with their 5
+nearest module genes. On planted data the share of a module gene's 5 nearest module genes that belong to another
+module falls from 9.5% to 0.4% (nodal map).
 
 ## 8. Reference, validation, vault, map
 
 Public annotations (HGNC, Ensembl GRCh38 r112 coordinates, UniProt function, NCBI summaries, Reactome, MSigDB
 Hallmark, STRING v12) are downloaded once and cached; every source is optional. Validation scores the space against
 curated control programmes that were not derived from Tahoe (`tahoemap/data/control_sets.json`) and against Hallmark
-and Reactome, tests the opposite-arm prediction, labels modules by enrichment, and lists novel candidates. The vault
-and the HTML map present all of it.
+and Reactome, tests the opposite-arm prediction, labels modules by enrichment, and lists novel candidates (its lists
+keep flagged items with an alert too). The vault and the HTML map present all of it. The map has, besides the two
+maps and their Spread slider, a **k-D tour** (the genes' unit vectors in all dimensions projected onto a 2-D plane
+that turns smoothly, or one component against another exactly), and three physics simulations: a gene's
+neighbourhood (its partners and theirs, to depth 1-4, up to 2,000 genes), one module, and all genes.
 
 ## Caveats that apply everywhere
 

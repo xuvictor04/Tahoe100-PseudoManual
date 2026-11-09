@@ -225,6 +225,23 @@ def safe_filename(name, maxlen=120):
     return s[:maxlen] or "_"
 
 
+ALERT = "⚠"
+
+
+def marked_names(txt, n=None, exclude=""):
+    """The names of a ', '-joined list, strongest first, in which a name with an alert ends in ' ⚠' (graph
+    modules.parquet top_plus / top_minus): without `exclude` (a name, with or without its mark), and cut at n with
+    the cap rule (the n strongest, and also any of the n strongest without an alert that come after them, in rank
+    order; n None: all). Returns the names as written, marks included."""
+    names = [x.strip() for x in str(txt if txt is not None and txt == txt else "").split(", ") if x.strip()]
+    names = [x for x in names if x.rstrip(ALERT).rstrip() != exclude or not exclude]
+    if n is None or len(names) <= n:
+        return names
+    clean = [i for i, x in enumerate(names) if not x.endswith(ALERT)]
+    keep = set(range(n)) | set(clean[:n])
+    return [x for i, x in enumerate(names) if i in keep]
+
+
 def stable_seed(*parts):
     """A seed that is the same in every process and on every machine (Python's hash() is salted)."""
     h = hashlib.blake2b("|".join(str(p) for p in parts).encode(), digest_size=8).digest()

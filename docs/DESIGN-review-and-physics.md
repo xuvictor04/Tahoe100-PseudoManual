@@ -12,9 +12,10 @@ search box are shared by all tabs, and selecting a gene in one tab selects it in
 
 | Tab | What it shows |
 |---|---|
-| Nodal map | the existing t-SNE layout of 1 − \|cos\| (opposite genes together) |
-| Signed vector map | the existing t-SNE layout of 1 − cos (opposite genes apart) |
-| Physics: neighbourhood | a live force simulation of the selected gene, its partners and (depth 2) their partners |
+| Nodal map | the t-SNE layout of 1 − \|cos\| (opposite genes together); a Spread slider moves it to the modules-apart layout (`graph/nodes.parquet` xm, ym) |
+| Signed vector map | the t-SNE layout of 1 − cos (opposite genes apart); Spread moves it to xsm, ysm (each arm of a two-armed module its own group) |
+| k-D tour | the genes' unit vectors (`embed/gene_unit.npy`, all dimensions) projected onto a 2-D plane that turns smoothly (a grand tour); axis mode shows component i against component j exactly |
+| Physics: neighbourhood | a live force simulation of the selected gene, its partners and their partners, to depth 1-4 |
 | Physics: module | a live force simulation of one module (all its members and the edges among them) |
 | Physics: all genes | a live force simulation of every gene in the space, started from the nodal-map positions |
 | How to read this | the help text (what each tab means, colours, controls) |
@@ -33,8 +34,15 @@ search box are shared by all tabs, and selecting a gene in one tab selects it in
 - **Interaction**: pan/zoom, drag a node (its neighbours follow), double-click to pin/unpin, click to select (side
   panel), pause/resume, re-heat, reset; sliders for repulsion strength, spring strength, minimum |cos|; colour by
   module or by arm; labels for the selected gene, its partners and (when zoomed in) everyone.
-- **Neighbourhood tab**: depth 1 or 2 (default 2), at most N nodes (default 300; the strongest partners first);
-  edges green (moves with) / red (moves opposite), thickness ∝ |cos|; the centre gene is pinned at the start.
+- **Neighbourhood tab**: depth 1 to 4 (default 2; built one depth at a time, strongest partners first), at most N
+  nodes (a slider from 20 to 2,000, default 300); evidence filter both halves / also one half / every relation (the
+  info box counts the selected gene's listed partners the filter leaves out); edges green (moves with) / red (moves
+  opposite), thickness ∝ |cos|, ⚠ in a spring's tooltip when the relation is not replicated; the centre gene is
+  pinned at the start.
+- **Spread** (nodal and signed maps): each module keeps its own t-SNE arrangement as one block; the blocks are placed
+  by the modules' directions in the full vector space (1 − |cos| nodal, 1 − cos signed; classical MDS refined by
+  SMACOF), overlapping blocks are pushed apart, genes without a module move with their 5 nearest module genes. No
+  random draws. The slider (0 to 1) interpolates between the t-SNE and the spread positions.
 - **Module tab**: a module picker (dropdown + "module of the selected gene"), its label and arms; nodes coloured by
   arm; optional dimmed ring of 1-hop outside genes.
 - **All-genes tab**: nodes start at the nodal-map coordinates; edges hidden while moving (drawn for the selected
@@ -103,11 +111,12 @@ tahoemap/review/
 **Dossier** (`dossier.build(out, kind, name)` → `Dossier(kind, name, entity_id, text, data)`): markdown text (≤ ~8,000
 tokens, size-bounded) + the same facts as a dict. Built only from the run's outputs (tables, relations, graph,
 validation, reference, embed). Contents:
-- gene: identity (HGNC name, location, UniProt function snippet); expression (lines measured, level); strongest clean
-  drug-doses up / down (pooled) and strongest per-line responses; module, arm, module label; **data partners**: top 25
-  moving with and top 25 moving opposite (cos, evidence, fdr, mutual rank, specificity, locus / readthrough, known:
-  STRING score / shared pathway / gene group); **known but absent**: literature-known partners (STRING ≥ 700, or a
-  shared Hallmark / Reactome pathway ≤ 100 genes, at most 30) that are NOT among its 100 data partners, each with its
+- gene: identity (HGNC name, location, UniProt function snippet); expression (lines measured, level); strongest
+  drug-doses up / down (pooled, every drug-dose ranked, ⚠ + the reason on one with an artifact flag for the gene) and
+  strongest per-line responses (the same); module, arm, module label; **data partners**: top 25 moving with and top
+  25 moving opposite (cos, evidence, ⚠ alert, fdr, mutual rank, specificity, locus / readthrough, known: STRING score
+  / shared pathway / gene group; capped lists add any of the 25 strongest without an alert that fall below them);
+  **known but absent**: literature-known partners (STRING ≥ 700, or a shared Hallmark / Reactome pathway ≤ 100 genes, at most 30) that are NOT among its 100 data partners, each with its
   cosine to the gene if both are in the space, else the reason (not measured / not in the vector space); novel
   candidate pairs involving the gene.
 - drug: targets, MOA, approval; per dose: wells, flags, genes up/down; top genes up / down at the best trustworthy dose;

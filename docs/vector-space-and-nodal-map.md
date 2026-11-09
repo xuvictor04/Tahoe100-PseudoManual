@@ -36,6 +36,51 @@ Put differently: the vector space answers "does this gene do what that gene does
 gene part of the same response as that gene?". A pathway's activators and its repressed targets fail the first
 question and pass the second.
 
+## How the gene modules are made
+
+The modules (and their + / − arms) are groups of the nodal map, made in the graph stage (`tahoemap/graph.py`) from
+the gene relations, in five steps:
+
+1. **A graph of strong, replicated partners.** Each gene in the vector space is linked to its 15 strongest partners
+   by |cos| ≥ 0.3 whose relation is replicated (`both halves`: the same sign in the full space and in the spaces fitted
+   on two random halves of the compounds, fdr ≤ 0.10) or very strong in one half (|cos| ≥ 0.5). The link's weight is
+   |cos|: genes that move opposite are linked as strongly as genes that move together (its sign is kept for the arms).
+2. **Communities.** Louvain community detection (resolution 1, fixed seed) on that weighted graph: groups of genes
+   linked more densely to one another than to the rest.
+3. **Split what is too broad.** Over the whole genome a first pass returns programme-sized groups of 1,000+ loosely
+   related genes, so a group of more than 300 genes, or one whose members' mean |cos| is below 0.3, is split again by
+   Louvain on its own subgraph (up to 4 levels).
+4. **Too small is no module.** A piece of fewer than 5 genes gets module 0 (unassigned); its genes keep their place
+   on the maps and their partners.
+5. **Arms.** Each member is projected on the module's first principal direction. The module gets a separate − arm
+   only when at least 5 members sit on the negative side and the two sides anti-correlate (mean cosine between them
+   ≤ −0.2); otherwise every member is +. `graph/modules.parquet` gives the mean cosine within each arm and between
+   the arms; `graph/info.json` records the numbers used; the map's help ("How the modules are made") repeats them.
+
+Modules are then labelled by enrichment (validation: curated control programmes, Hallmark, Reactome); a module
+without a significant set is named by its top genes.
+
+## Spreading the modules apart, and the k-D tour
+
+t-SNE keeps each gene near its neighbours but does not keep modules apart: on a large map, neighbouring modules touch
+and interleave. Each map therefore also has a **spread layout** (`graph/nodes.parquet` xm, ym for the nodal map;
+xsm, ysm for the signed map, where each arm of a two-armed module is its own group), and the map's **Spread** slider
+moves smoothly between the two. Each module keeps its own t-SNE arrangement as one block (islands of a module are
+packed together); the blocks are placed by the modules' directions in the full vector space (1 − |cos| between
+module directions for the nodal map, 1 − cos for the signed map; classical MDS refined by SMACOF); overlapping blocks
+are pushed apart; a gene without a module moves rigidly with one module: among the modules of its 5 nearest module
+genes on the t-SNE map, the one it is most alike in the vector space (summed |cos|, or cos on the signed map, to those
+neighbours), keeping its offset from the nearest of them (moves are never averaged across modules, whose blocks move
+in different directions). No random draws: the same run gives the same layout. On planted data the share of a module
+gene's 5 nearest module genes that belong to another group falls from 9.5% to 0.4% on the nodal map, and from 16.7%
+to 0.8% on the signed map; a gene without a module has a mean |cos| of 0.29 to its 5 nearest module genes on the
+t-SNE layout and 0.25 spread (signed map, mean cos 0.25 and 0.18; averaging the moves gave 0.21 and 0.11).
+
+Both maps squeeze 64 dimensions into 2. The map's **k-D tour** tab shows the vectors themselves: the genes' unit
+vectors projected onto a 2-D plane that turns smoothly through all dimensions (a grand tour; play / pause, speed,
+"New direction"), or, in axis mode, one component of the space against another exactly (the components of the embed
+stage, largest first). A group that stays together while the plane turns is together in the full space.
+
 ## What this looks like on planted data
 
 The synthetic test data plant modules whose genes go up together, and pairs of modules that one set of drugs moves in
@@ -88,7 +133,10 @@ Drugs, drug-doses, every drug-dose × cell-line context and every cell line get 
   a repressed arm), but it can also mean two pathways that the same drugs push in opposite directions.
 - t-SNE layouts preserve neighbourhoods, not long distances: two islands far apart on the nodal map are "not
   neighbours", not "maximally different". Use the cosine (`tahoe pair A B`) for any quantitative question.
-- Genes without evidence of a response (no significant clean pooled drug-dose and no strong per-line response in
-  two lines of one drug-dose) are not in the space; they still have tables and notes, which say why.
+- Genes without evidence of a response (no significant pooled drug-dose and no strong per-line response in two
+  lines of one drug-dose) are not in the space; they still have tables and notes, which say why ('⚠ not in the
+  vector space' and the reason). A gene whose only evidence is significant drug-doses with an artifact flag (toxic,
+  transcription drop, a cell-cycle shift that explains its change ...) is in the space but marked ⚠ everywhere: its
+  place, partners and module may reflect the artifact.
 - A module's − arm exists only when its two sides really anti-correlate; `graph/modules.parquet` gives the mean
   cosine between the arms, and the vault says when a module is single-armed.

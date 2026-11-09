@@ -25,9 +25,10 @@ settings allow); the vault states what was checked, so the note itself never say
 
 ## What you are judging
 
-- **Drug responses**: the clean drug-doses that raise or lower the gene, pooled over the lines (the median line),
-  and the strongest single-line responses, which can reveal responses confined to some lines (TP53-wild-type lines,
-  one lineage).
+- **Drug responses**: the drug-doses that raise or lower the gene, pooled over the lines (the median line), and the
+  strongest single-line responses, which can reveal responses confined to some lines (TP53-wild-type lines, one
+  lineage). Every drug-dose is listed in its ranked place; one marked ⚠ carries an artifact flag for this gene (the
+  reason follows the sign, e.g. "cell-cycle shift, explains ~40%"): its change may be the artifact.
 - **Partners**: genes whose responses co-vary with this gene's (positive cosine) or anti-vary (negative cosine), with
   their replication evidence, specificity, genomic and database flags; novel candidates; the module and its arm.
 - **Known but absent**: partners the databases predict that the data do not show.
@@ -39,8 +40,11 @@ The reading-tahoe-data skill says exactly what each number means; connection-aud
 1. **Read the whole dossier first.** Decide what kind of gene this is in these data: strongly drug-responsive or
    barely; part of a known programme (the module label and the enriched sets say which); in the vector space or not.
    Then pick the relations worth checking, usually 6 to 12:
-   - the two to four strongest clean drug responses, with the drugs' mechanisms (pooled first; single-line ones when
-     they tell a story);
+   - the two to four strongest drug responses, with the drugs' mechanisms (pooled first; single-line ones when they
+     tell a story). A response marked ⚠ stays a candidate: check it like any other, and say in the verdict that the
+     alert's reason (a toxic dose, a drop in transcription, a cell-cycle shift that explains N% of the change ...)
+     may explain it; a cell-cycle shift that explains little of a strong change (say under a quarter) leaves most of
+     the change to explain;
    - the strongest replicated partners on each side (both halves, low fdr, mutual rank <= 10-20, high specificity),
      especially those without a "known" flag;
    - every novel candidate: "novel" means only "absent from STRING, Reactome, Hallmark and HGNC groups", and many are

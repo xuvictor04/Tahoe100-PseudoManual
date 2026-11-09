@@ -9,7 +9,8 @@ Every test runs on the genes in the vector space (embed/included_cols.npy); cos 
                    the space, on cos and on |cos| (Mann-Whitney: P(set pair > random pair), ties count 1/2; 0.5 = no
                    better than random); an empirical p of that AUROC against random gene sets of the same size
                    (control, Hallmark and synthetic sets); the share of members in the set's most common module of
-                   the nodal map; the drug-doses that raise / lower the set most (mean pooled DD_z over members).
+                   the nodal map; the drug-doses that raise / lower the set most (mean pooled DD_z over members;
+                   every drug-dose in its ranked place, one with an artifact flag marked '⚠' with its flags).
   opposite pairs   programmes expected to move in opposite directions (control_sets.json 'opposite_pairs'): mean
                    cross-set cos (expect < 0), share of cross pairs with cos < 0, share of cross pairs in the same
                    module (expect high: the nodal map is built on |cos|), and the distance between the two sets'
@@ -33,6 +34,13 @@ Every test runs on the genes in the vector space (embed/included_cols.npy); cos 
   synthetic truth  only with truth=<ground_truth.json of tests/make_synthetic_tahoe.py>: the generator's planted gene
                    sets and opposite pairs, with the same metrics.
 
+Alerts: nothing is left out of a list for a flag ("if there is a reason to doubt, do not remove, rather alert"). An
+item with a reason for doubt keeps its ranked place and carries '⚠' with the reason in plain words: a drug-dose with
+an artifact flag in the best drug-dose lists, a novel pair or module member with a gene that is in the vector space
+only through drug-doses that carry an alert (embed genes.parquet evidence_flagged_only; column alert), a drug with no
+trustworthy dose in the drug check. A list cut at N (the report's top 25, the 5 best drug-doses) also keeps the N
+strongest items without an alert that the flagged ones would push below the cut (embed.capped).
+
 Outputs in OUT/validation/ (README.md there documents every column):
     report.md, metrics.json, control_sets.csv (every tested set, all sources), opposite_pairs.csv,
     module_enrichment.csv, module_labels.csv, drug_moa.csv, novel_edges.csv, novel_members.csv
@@ -49,10 +57,11 @@ import pandas as pd
 
 from . import atlas_core as A
 from . import tlib as T
-from .common import (folder, log, read_effects_index, replace_file, stable_seed, stamp_stage, write_csv,
-                     write_json)
+from .common import (folder, log, marked_names, read_effects_index, replace_file, stable_seed, stamp_stage,
+                     write_csv, write_json)
+from .embed import capped
 
-VERSION = 2
+VERSION = 3                 # 3: flagged items stay in their ranked place, with an alert
 N_RANDOM = 20_000           # random gene pairs: the background of every AUROC
 N_NULL = 200                # random gene sets per set size for the empirical p of a set's AUROC
 NULL_SOURCES = ("control", "hallmark", "synthetic")
@@ -60,7 +69,8 @@ NULL_POOL = 4000            # random sets are drawn from this many random genes 
 MIN_SET = 5                 # Hallmark / Reactome sets need this many genes in the space (enrichment: every source)
 LABEL_Q = 0.05
 LABEL_MIN_OVERLAP = 3
-LABEL_MAX_SET = 300         # labels prefer specific sets (as relations' PATHWAY_MAX); guilt by association uses only these
+LABEL_MAX_SET = 300         # labels prefer specific sets (as relations' PATHWAY_MAX); guilt by association uses
+                            # only these
 GBA_Q = 0.01
 GBA_COS = 0.5
 GBA_MIN_ANNOT = 3
@@ -72,7 +82,8 @@ MIX_K = 5                   # map_mixing: nearest map neighbours per gene
 MIX_APART = 0.25            # 'apart on the signed map': mixing <= this (0 = no shared neighbourhood, 1 = chance)
 ENRICH_KEEP_P = 0.05        # module_enrichment.csv keeps tests with overlap >= 2 and p <= this
 TOP_DD = 5
-UNTRUSTED = ("unreliable plate only", "position not correctable", "wells disagree")
+ALERT = "⚠"
+CC_FLAG = "cell-cycle shift"  # the drug-dose flag whose share of a set's change the best drug-dose lists give
 NO_MOA = {"", "nan", "none", "unclear", "unknown"}
 CONTROL_JSON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "control_sets.json")
 SYNTH_OPPOSITE = [("HDAC_UP", "HDAC_DOWN"), ("COLOC_UP", "COLOC_DOWN"), ("COLOC2_UP", "COLOC2_DOWN")]
@@ -252,6 +263,9 @@ class _Space:
         self.eg = pd.read_parquet(os.path.join(ed, "genes.parquet"))
         self.gK = len(self.eg)
         self.sym = self.eg["symbol"].fillna("").astype(str).to_numpy()
+        # genes in the space only through drug-doses that carry an alert (False: an older embed stage)
+        self.flagged_only = self.eg["evidence_flagged_only"].fillna(False).astype(bool).to_numpy() \
+            if "evidence_flagged_only" in self.eg else np.zeros(self.gK, dtype=bool)
         self.pos = np.full(self.gK, -1, dtype=np.int64)
         self.pos[self.inc] = np.arange(len(self.inc))
         self.included = self.pos >= 0
@@ -354,39 +368,97 @@ def _set_metrics(sp, st, n_null):
     return r
 
 
+def _set_means(M, X):
+    """sets x drug-doses: the mean of X (drug-doses x genes) over each set's members (M: genes x sets), NaN-aware."""
+    F = np.isfinite(X).astype(np.float32)
+    X = np.nan_to_num(X, nan=0.0)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        return np.asarray(M.T @ X.T) / np.asarray(M.T @ F.T)
+
+
+def _cc_shares(out, fxd, dd, M, gK, cc):
+    """For the drug-doses whose flags include 'cell-cycle shift' (cc, bool per drug-dose): (share, cleared), sets x
+    drug-doses (NaN / False elsewhere), by the tables stage's rule (tables.cc_rule) applied to each set's mean change:
+    the mean pooled lfc over its members against what the shift predicts for them, the drug-dose's S / G2M module lfc
+    times the members' mean cell-cycle slopes (tables/genes.parquet cc_slope_S, cc_slope_G2M). None when the slopes,
+    the module values or the rule are missing (then the flag is shown as it is)."""
+    gp = os.path.join(out, "tables", "genes.parquet")
+    if not cc.any() or not os.path.exists(gp) or not {"S_PHASE_lfc", "G2M_PHASE_lfc"} <= set(dd.columns):
+        return None
+    import pyarrow.parquet as pq
+    if not {"col", "cc_slope_S", "cc_slope_G2M"} <= set(pq.ParquetFile(gp).schema_arrow.names):
+        return None
+    try:
+        from .tables import cc_rule
+    except ImportError:
+        return None
+    tg = pd.read_parquet(gp, columns=["col", "cc_slope_S", "cc_slope_G2M"]).set_index("col").reindex(np.arange(gK))
+    rows = np.flatnonzero(cc)
+    slopes = tg[["cc_slope_S", "cc_slope_G2M"]].to_numpy(np.float32).T             # 2 x genes
+    mS, mG = _set_means(M, slopes).T                                               # per set: mean slopes
+    S = pd.to_numeric(dd["S_PHASE_lfc"], errors="coerce").to_numpy(np.float64)[rows]
+    G = pd.to_numeric(dd["G2M_PHASE_lfc"], errors="coerce").to_numpy(np.float64)[rows]
+    lfc = np.asarray(np.load(os.path.join(fxd, "DD_lfc.npy"), mmap_mode="r")[rows, :gK], dtype=np.float32)
+    sh, cl = cc_rule(_set_means(M, lfc), mS[:, None] * S[None, :] + mG[:, None] * G[None, :])
+    share = np.full((M.shape[1], len(dd)), np.nan)
+    cleared = np.zeros((M.shape[1], len(dd)), dtype=bool)
+    share[:, rows], cleared[:, rows] = sh, cl
+    return share, cleared
+
+
 def _best_drugdoses(out, gK, sets):
-    """Per set: the TOP_DD drug-doses with the highest / lowest mean pooled DD_z over its members (drug-doses that are
-    technically untrustworthy are left out; '†' marks other artifact flags, e.g. toxic)."""
+    """Per set: the TOP_DD drug-doses with the highest / lowest mean pooled DD_z over its members, every drug-dose in
+    its ranked place. One with an artifact flag (technically untrustworthy ones included) is followed by '⚠' and its
+    flags in plain words; for a cell-cycle shift also the share of the set's mean change that the shift would explain
+    (_cc_shares), and a shift that is not the explanation by the tables stage's rule is named without '⚠'. When the
+    TOP_DD strongest include drug-doses with an alert, the TOP_DD strongest without one are listed too, all in ranked
+    order (embed.capped). Returns the lists up and down and, per set, how many entries of each carry an alert."""
     from scipy import sparse
     fxd = os.path.join(out, "atlas", "effects")
     dd = read_effects_index(fxd)["drugdose"]
     flags = dd["flags"].fillna("").astype(str).to_numpy()
-    ok = np.array([not any(u in set(f.split("; ")) for u in UNTRUSTED) for f in flags])
-    art = np.array([A.has_artifact(f) for f in flags])
+    art = [[t for t in f.split("; ") if t in A.ARTIFACT_FLAGS] for f in flags]
+    cc = np.array([CC_FLAG in a for a in art], dtype=bool)
     lab = (dd["drug"].astype(str) + " " + dd["dose"].astype(str) + " uM").to_numpy()
-    Z = np.asarray(np.load(os.path.join(fxd, "DD_z.npy"), mmap_mode="r")[:, :gK], dtype=np.float32)
-    F = np.isfinite(Z).astype(np.float32)
-    Z = np.nan_to_num(Z, nan=0.0)
     rows, cols = [], []
     for j, st in enumerate(sets):
         rows += list(st["cols"])
         cols += [j] * len(st["cols"])
     M = sparse.csr_matrix((np.ones(len(rows), dtype=np.float32), (rows, cols)), shape=(gK, len(sets)))
-    with np.errstate(invalid="ignore", divide="ignore"):
-        mean = np.asarray(M.T @ Z.T) / np.asarray(M.T @ F.T)           # sets x drug-doses
-    mean[:, ~ok] = np.nan
-    up, down = [], []
+    Z = np.asarray(np.load(os.path.join(fxd, "DD_z.npy"), mmap_mode="r")[:, :gK], dtype=np.float32)
+    mean = _set_means(M, Z)                                                         # sets x drug-doses
+    del Z
+    ccs = _cc_shares(out, fxd, dd, M, gK, cc)
+    other = np.array([any(a != CC_FLAG for a in x) for x in art], dtype=bool)     # an alert whatever the set
+
+    def entry(j, i, alert):
+        """The text of drug-dose i in set j's list."""
+        txt = [a for a in art[i] if a != CC_FLAG]
+        if cc[i]:
+            sh = ccs[0][j, i] if ccs is not None else np.nan
+            txt.append(f"{CC_FLAG}, explains ~{int(round(100 * sh))}% of this change" if np.isfinite(sh) else CC_FLAG)
+        return f"{lab[i]} ({mean[j, i]:+.1f}" + ((f", {ALERT} " if alert else ", ") + ", ".join(txt) if txt else "") \
+            + ")"
+
+    up, down, n_alert = [], [], []
     for j in range(len(sets)):
         v = mean[j]
         fin = np.where(np.isfinite(v))[0]
         if not len(fin):
             up.append("")
             down.append("")
+            n_alert.append((0, 0))
             continue
+        alert = other | (cc & ~ccs[1][j]) if ccs is not None else other | cc
         o = fin[np.argsort(-v[fin], kind="mergesort")]
-        up.append("; ".join(f"{lab[i]}{'†' if art[i] else ''} ({v[i]:+.1f})" for i in o[:TOP_DD]))
-        down.append("; ".join(f"{lab[i]}{'†' if art[i] else ''} ({v[i]:+.1f})" for i in o[::-1][:TOP_DD]))
-    return up, down
+        res = []
+        for order in (o, o[::-1]):
+            shown = capped(order, ~alert, TOP_DD)
+            res.append(("; ".join(entry(j, i, alert[i]) for i in shown), int(alert[shown].sum())))
+        up.append(res[0][0])
+        down.append(res[1][0])
+        n_alert.append((res[0][1], res[1][1]))
+    return up, down, n_alert
 
 
 # ----------------------------------------------------------------------------- opposite pairs
@@ -583,13 +655,16 @@ def _labels(sp, sets, units, tsets, O, P, Q, out):
                "n_minus": int((sp.arm[mem] == "-").sum())}
         b = best(list(u.values()))
         if m in mods.index:
-            tp = [g for g in str(mods.at[m, "top_plus"]).split(", ") if g]
-            tm = [g for g in str(mods.at[m, "top_minus"]).split(", ") if g]
+            tp = marked_names(mods.at[m, "top_plus"])
+            tm = marked_names(mods.at[m, "top_minus"])
         else:
             order = mem[np.argsort(-np.abs(sp.axis_proj[mem]), kind="mergesort")]
-            tp = [sp.sym[sp.inc[k]] for k in order if sp.arm[k] == "+"]
-            tm = [sp.sym[sp.inc[k]] for k in order if sp.arm[k] == "-"]
-        top_genes = ", ".join(tp[:3] + tm[:2])
+            tp = [sp.sym[sp.inc[k]] + (f" {ALERT}" if sp.flagged_only[sp.inc[k]] else "") for k in order
+                  if sp.arm[k] == "+"]
+            tm = [sp.sym[sp.inc[k]] + (f" {ALERT}" if sp.flagged_only[sp.inc[k]] else "") for k in order
+                  if sp.arm[k] == "-"]
+        # the top genes keep a member with an alert ('SYMBOL ⚠') in its place, cut with the cap rule
+        top_genes = ", ".join(marked_names(", ".join(tp), 3) + marked_names(", ".join(tm), 2))
         if b is not None:
             i, j = b
             st = sets[tsets[j]]
@@ -605,8 +680,8 @@ def _labels(sp, sets, units, tsets, O, P, Q, out):
                 rec[f"{nm}_label"], rec[f"{nm}_set"], rec[f"{nm}_q"] = st["label"], st["set"], Q[bb]
             else:
                 rec[f"{nm}_label"], rec[f"{nm}_set"], rec[f"{nm}_q"] = "", "", np.nan
-        rec["top_plus"] = ", ".join(tp[:8])
-        rec["top_minus"] = ", ".join(tm[:8])
+        rec["top_plus"] = ", ".join(marked_names(", ".join(tp), 8))
+        rec["top_minus"] = ", ".join(marked_names(", ".join(tm), 8))
         rows.append(rec)
     return pd.DataFrame(rows)
 
@@ -615,10 +690,10 @@ def _labels(sp, sets, units, tsets, O, P, Q, out):
 def _novel_edges(out, sp, ann_name):
     p = os.path.join(out, "relations", "gene_relations.parquet")
     cols = ["col_a", "col_b", "cos", "abs_cos", "cos_half1", "cos_half2", "evidence", "fdr", "novel_candidate",
-            "locus", "readthrough_risk", "same_chrom", "distance_bp"]
+            "locus", "readthrough_risk", "same_chrom", "distance_bp", "alert"]
     empty = pd.DataFrame(columns=["col_a", "symbol_a", "name_a", "module_a", "arm_a", "col_b", "symbol_b", "name_b",
                                   "module_b", "arm_b", "same_module", "cos", "cos_half1", "cos_half2", "evidence",
-                                  "fdr", "same_chrom", "distance_bp"])
+                                  "fdr", "same_chrom", "distance_bp", "alert"])
     if not os.path.exists(p):
         return empty
     import pyarrow.parquet as pq
@@ -650,12 +725,24 @@ def _novel_edges(out, sp, ann_name):
                         "evidence": r["evidence"].to_numpy(), "fdr": r["fdr"].to_numpy(),
                         "same_chrom": r["same_chrom"].to_numpy() if "same_chrom" in r else False,
                         "distance_bp": r["distance_bp"].to_numpy() if "distance_bp" in r else np.nan})
+    # the pair's alert (relations 'alert'; an older relations stage: from embed's evidence_flagged_only)
+    if "alert" in r:
+        res["alert"] = r["alert"].fillna("").astype(str).to_numpy()
+    else:
+        res["alert"] = [_gene_alert(sp, [x, y]) for x, y in zip(a, b)]
     return res.reset_index(drop=True)
+
+
+def _gene_alert(sp, cols):
+    """'' or '⚠ ' + the genes of cols that are in the vector space only through drug-doses that carry an alert."""
+    fo = [sp.sym[c] for c in cols if sp.flagged_only[c]]
+    return f"{ALERT} " + "; ".join(f"{g} is in the vector space only through drug-doses that carry an alert"
+                                   for g in fo) if fo else ""
 
 
 def _novel_members(sp, sets, units, tsets, Q, ann_name, n_ref_sets):
     cols = ["col", "symbol", "name", "module", "arm", "source", "set", "set_label", "set_q", "n_annotated_in_arm",
-            "n_arm", "mean_cos", "max_cos", "mean_cos_half1", "mean_cos_half2", "n_reference_sets"]
+            "n_arm", "mean_cos", "max_cos", "mean_cos_half1", "mean_cos_half2", "n_reference_sets", "alert"]
     parts = []
     for i, (m, arm, mem) in enumerate(units):
         if arm == "all":
@@ -686,7 +773,7 @@ def _novel_members(sp, sets, units, tsets, Q, ann_name, n_ref_sets):
                 "n_annotated_in_arm": len(annot), "n_arm": len(mem), "mean_cos": mc[ok], "max_cos": C.max(axis=1)[ok],
                 "mean_cos_half1": (sp.U1[k] @ sp.U1[annot].T).mean(axis=1) if sp.U1 is not None else nan,
                 "mean_cos_half2": (sp.U2[k] @ sp.U2[annot].T).mean(axis=1) if sp.U2 is not None else nan,
-                "n_reference_sets": n_ref_sets[g]}))
+                "n_reference_sets": n_ref_sets[g], "alert": [_gene_alert(sp, [x]) for x in g]}))
     if not parts:
         return pd.DataFrame(columns=cols)
     df = pd.concat(parts, ignore_index=True)[cols]
@@ -719,11 +806,17 @@ def _drug_check(out):
     valid = ~pd.Series(moa).str.lower().isin(NO_MOA).to_numpy() & (norm > 0)
     salt = np.array([T.salt_base(d) for d in dr["drug"].astype(str)])
     nsig = pd.to_numeric(dr.get("n_sig_genes", pd.Series(0, index=dr.index)), errors="coerce").fillna(0).to_numpy()
+    # a drug whose vector is of a dose with an artifact flag (embed drugs.parquet alert), e.g. one with no trustworthy
+    # dose (trusted = False), is tested like the others and marked
+    untr = ~dr["trusted"].fillna(True).astype(bool).to_numpy() if "trusted" in dr else np.zeros(len(dr), dtype=bool)
+    flagged = (dr["alert"].fillna("").astype(str) != "").to_numpy() | untr if "alert" in dr else untr
+    names = np.array([d + (f" {ALERT}" if u else "") for d, u in zip(dr["drug"].astype(str), flagged)], dtype=object)
     res = {}
     for tag, sel in (("all", valid), ("active", valid & (nsig >= min_active))):
         idx = np.where(sel)[0]
         r = {"drugs": int(len(idx)), "moa_classes": int(len(set(moa[idx]))), "pos_pairs": 0, "neg_pairs": 0,
-             "auroc": np.nan, "mean_cos_same_moa": np.nan, "mean_cos_other": np.nan}
+             "auroc": np.nan, "mean_cos_same_moa": np.nan, "mean_cos_other": np.nan,
+             "drugs_no_trustworthy_dose": int(untr[idx].sum()), "drugs_flagged_dose": int(flagged[idx].sum())}
         if len(idx) >= 3:
             C = Un[idx] @ Un[idx].T
             iu = np.triu_indices(len(idx), 1)
@@ -752,8 +845,9 @@ def _drug_check(out):
             ks = (si[w][:, None] != si[w][None, :])[iu]
             within = sub[iu][ks]
             between = C[np.ix_(w, o)].ravel()
-            rows.append({"moa_fine": cl, "n_drugs": len(w), "drugs": ", ".join(dr["drug"].astype(str).to_numpy()
-                                                                               [idx[w]][:12]),
+            rows.append({"moa_fine": cl, "n_drugs": len(w), "drugs": ", ".join(names[idx[w]][:12]),
+                         "n_drugs_flagged_dose": int(flagged[idx[w]].sum()),
+                         "n_drugs_no_trustworthy_dose": int(untr[idx[w]].sum()),
                          "n_pairs": int(len(within)), "mean_cos_within": float(within.mean()) if len(within)
                          else np.nan, "mean_cos_to_other_classes": float(between.mean()) if len(between) else np.nan,
                          "auroc_within_vs_other": _auroc(within, np.sort(between))})
@@ -795,6 +889,13 @@ def _opp_table(op):
                       "signed map: distance / mixing"], rows)
 
 
+def _also_clean(alert, n):
+    """The note that a top-n list also holds the n strongest items without an alert (when they fall below the cut)."""
+    alert = np.asarray(alert, dtype=bool)
+    extra = len(capped(np.arange(alert.size), ~alert, n)) - min(n, alert.size)
+    return f", and {extra} more without an alert that the {n} strongest pushed below the cut" if extra else ""
+
+
 def _report(path, ctx):
     sp, cs, op, labels, edges, members, drug, drug_tab, n_sets, n_null = (
         ctx["sp"], ctx["cs"], ctx["op"], ctx["labels"], ctx["edges"], ctx["members"], ctx["drug"], ctx["drug_tab"],
@@ -816,14 +917,19 @@ def _report(path, ctx):
           f"{int((tested['auroc_cos'] >= 0.6).sum())} reach AUROC >= 0.6 and "
           f"{int((tested['p_random_sets_cos'] <= 0.05).sum())} have p <= 0.05 against random sets. "
           f"'top module' = the module holding most of the set's genes, its share of the set, and its share of all "
-          f"genes (the chance level). Drug-doses marked † carry an artifact flag (e.g. toxic).", "",
+          f"genes (the chance level). Every drug-dose keeps its ranked place; {ALERT} and its flags in plain words "
+          f"mark one with an artifact flag (technically untrustworthy ones included), and when the {TOP_DD} strongest "
+          f"hold such drug-doses, the {TOP_DD} strongest without an alert follow in their ranked place too. For a "
+          f"cell-cycle shift the share of the set's mean change that the shift would explain is given (the tables "
+          f"stage's rule; a shift that does not explain the change is named without {ALERT}).", "",
           _md_table(SET_HEAD, _set_rows(ctl, n_null=n_null)), ""]
     for src, title in (("hallmark", "MSigDB Hallmark"), ("reactome", "Reactome")):
         d = cs[cs["source"] == src]
         if not len(d):
             continue
         L += [f"**{title}** ({len(d)} sets with >= {MIN_SET} genes in the space): median AUROC on cos "
-              f"{_f(d['auroc_cos'].median())}, {int((d['auroc_cos'] >= 0.6).sum())} sets ({_pct((d['auroc_cos'] >= 0.6).mean())}) "
+              f"{_f(d['auroc_cos'].median())}, {int((d['auroc_cos'] >= 0.6).sum())} sets "
+              f"({_pct((d['auroc_cos'] >= 0.6).mean())}) "
               f"at >= 0.6" + (f", {int((d['p_random_sets_cos'] <= 0.05).sum())} with p <= 0.05 against random sets"
                               if d["p_random_sets_cos"].notna().any() else "") + ".", ""]
         if src == "hallmark":
@@ -855,8 +961,15 @@ def _report(path, ctx):
                 f"active drugs only (best dose >= {d.get('min_active', 10)} significant genes)"
             rows.append([lab, d["drugs"], d["moa_classes"], d["pos_pairs"], d["neg_pairs"],
                          _f(d["mean_cos_same_moa"], "{:+.2f}"), _f(d["mean_cos_other"], "{:+.2f}"), _f(d["auroc"])])
-        L += ["Cosine of drug vectors (each drug's best dose) for pairs sharing moa_fine vs pairs with different "
-              "moa_fine ('unclear' / 'unknown' left out; salt forms of one compound never paired).", "",
+        n_untr = drug.get("all", {}).get("drugs_no_trustworthy_dose", 0)
+        n_fl = drug.get("all", {}).get("drugs_flagged_dose", 0)
+        L += ["Cosine of drug vectors (each drug's best trustworthy dose) for pairs sharing moa_fine vs pairs with "
+              "different moa_fine ('unclear' / 'unknown' left out; salt forms of one compound never paired)."
+              + (f" {n_fl} of the drugs tested get the vector of a dose with an artifact flag (marked {ALERT} in "
+                 f"drug_moa.csv; embed/drugs.parquet alert says which)" if n_fl else "")
+              + (f", {n_untr} of them because they have no trustworthy dose (every dose flagged unreliable plate "
+                 f"only, position not correctable or wells disagree)" if n_untr else "")
+              + ("; they are tested like the others." if n_fl else ""), "",
               _md_table(["drugs", "n", "classes", "same-moa pairs", "other pairs", "mean cos same", "mean cos other",
                          "AUROC"], rows), ""]
         if len(drug_tab):
@@ -879,8 +992,8 @@ def _report(path, ctx):
     if len(labels):
         rows = [[r["module"], r["n_genes"], f"{r['n_plus']}/{r['n_minus']}", r["label"],
                  f"{r['label_source']}{(' (' + r['label_arm'] + ')') if r['label_arm'] else ''}",
-                 _p_fmt(r["label_q"]), ", ".join(r["top_plus"].split(", ")[:5]) or "-",
-                 ", ".join(r["top_minus"].split(", ")[:5]) or "-"]
+                 _p_fmt(r["label_q"]), ", ".join(marked_names(r["top_plus"], 5)) or "-",
+                 ", ".join(marked_names(r["top_minus"], 5)) or "-"]
                 for _, r in labels.sort_values("n_genes", ascending=False).head(20).iterrows()]
         L += [_md_table(["module", "genes", "+/-", "label", "from (arm)", "q", "top + arm", "top - arm"], rows), ""]
 
@@ -896,29 +1009,44 @@ def _report(path, ctx):
         L += [f"**Novelty was not assessed**: these reference sources did not load: "
               f"{', '.join(rinfo['novel_blocked_by'])}. Without them a known link or a shared locus cannot be ruled "
               "out, so no pair is called novel. Run `tahoe run --from reference` with network access.", ""]
+    e_alert = edges["alert"].fillna("").astype(str).to_numpy() != "" if "alert" in edges else \
+        np.zeros(len(edges), dtype=bool)
     L += [f"{len(edges):,} pairs (one row per pair) are reproduced in both halves of the compounds (fdr <= 0.05, "
           f"|cos| >= 0.5) and have no shared HGNC gene group, no shared Hallmark / Reactome pathway and no STRING "
-          f"link, and are not the same locus or a read-through pair. Top 25 by |cos| (novel_edges.csv has all):", ""]
+          f"link, and are not the same locus or a read-through pair"
+          + (f"; {int(e_alert.sum()):,} of them carry an alert ({ALERT}: a gene of the pair is in the vector space "
+             f"only through drug-doses that carry an alert, so the relation may reflect what those drug-doses did "
+             f"to the cells)" if e_alert.any() else "")
+          + f". Top 25 by |cos|{_also_clean(e_alert, 25)} (novel_edges.csv has all):", ""]
     if len(edges):
-        rows = [[f"{r['symbol_a']} ({r['module_a']}{r['arm_a']})", f"{r['symbol_b']} ({r['module_b']}{r['arm_b']})",
+        fo = sp.flagged_only
+        rows = [[f"{r['symbol_a']}{' ' + ALERT if fo[r['col_a']] else ''} ({r['module_a']}{r['arm_a']})",
+                 f"{r['symbol_b']}{' ' + ALERT if fo[r['col_b']] else ''} ({r['module_b']}{r['arm_b']})",
                  _f(r["cos"], "{:+.2f}"), f"{_f(r['cos_half1'], '{:+.2f}')} / {_f(r['cos_half2'], '{:+.2f}')}",
                  _p_fmt(r["fdr"]), (str(r["name_a"])[:40] or "-") + " / " + (str(r["name_b"])[:40] or "-")]
-                for _, r in edges.head(25).iterrows()]
+                for _, r in edges.iloc[capped(np.arange(len(edges)), ~e_alert, 25)].iterrows()]
         L += [_md_table(["gene a (module arm)", "gene b (module arm)", "cos", "cos half1 / half2", "fdr",
                          "names"], rows), ""]
     elif not n_sets.get("reference"):
         L += ["Nothing can be called novel without the reference stage.", ""]
 
+    top = members.drop_duplicates("col") if len(members) else members
+    m_alert = top["alert"].fillna("").astype(str).to_numpy() != "" if "alert" in top else \
+        np.zeros(len(top), dtype=bool)
     L += ["## 6. Novel module members (guilt by association)", "",
           f"Genes on a module arm enriched for a set (q < {GBA_Q}; sets of <= {LABEL_MAX_SET} genes in the space, "
           f">= {GBA_MIN_ANNOT} of them on the arm) that the set does not list, with mean cosine >= {GBA_COS} to the "
-          f"arm's listed members: {members['col'].nunique() if len(members) else 0:,} genes "
-          f"({len(members):,} gene-set rows in novel_members.csv, <= {GBA_PER_GENE} most significant sets per gene). "
-          f"Top 25 genes, each with the arm's most significant set that does not list it ('sets already listing the "
-          f"gene' = Hallmark / Reactome sets naming it at all; 0 = no pathway annotation):", ""]
+          f"arm's listed members: {len(top):,} genes "
+          f"({len(members):,} gene-set rows in novel_members.csv, <= {GBA_PER_GENE} most significant sets per gene)"
+          + (f"; {int(m_alert.sum()):,} of these genes carry an alert ({ALERT}: in the vector space only through "
+             f"drug-doses that carry an alert)" if m_alert.any() else "")
+          + f". Top 25 genes{_also_clean(m_alert, 25)}, each with the arm's most significant set that does not list "
+          f"it ('sets already listing the gene' = Hallmark / Reactome sets naming it at all; 0 = no pathway "
+          f"annotation):", ""]
     if len(members):
-        top = members.drop_duplicates("col").head(25)
-        rows = [[r["symbol"], (str(r["name"])[:45] or "-"), f"{r['module']}{r['arm']}", r["set_label"][:60],
+        top = top.iloc[capped(np.arange(len(top)), ~m_alert, 25)]
+        rows = [[r["symbol"] + (f" {ALERT}" if r.get("alert") else ""), (str(r["name"])[:45] or "-"),
+                 f"{r['module']}{r['arm']}", r["set_label"][:60],
                  f"{r['n_annotated_in_arm']}/{r['n_arm']}", _f(r["mean_cos"]),
                  f"{_f(r['mean_cos_half1'])} / {_f(r['mean_cos_half2'])}", r["n_reference_sets"]]
                 for _, r in top.iterrows()]
@@ -951,7 +1079,13 @@ def _report(path, ctx):
           "- 'Not known' means no shared HGNC gene group, Hallmark / Reactome pathway or STRING link (score >= 400) "
           "in the cached reference files; the literature may still describe the relation.",
           "- Gene-set AUROCs are against random gene pairs of the space; sets of genes that respond rarely in "
-          "Tahoe-100M (few genes in the space) are weak tests, whatever their biology.", ""]
+          "Tahoe-100M (few genes in the space) are weak tests, whatever their biology.",
+          f"- Nothing is left out of a list for a flag: an item with a reason for doubt keeps its ranked place and "
+          f"carries {ALERT} with the reason. Genes in the vector space only through drug-doses that "
+          f"carry an alert ({int((sp.flagged_only & sp.included).sum()):,} genes; embed/genes.parquet "
+          f"evidence_flagged_only) are part of every test. Only the fit of the vector space leaves out the "
+          f"technically untrustworthy drug-doses (unreliable plate only, position not correctable, wells disagree; "
+          f"embed/info.json lists them).", ""]
     L += ["## Files", "",
           "control_sets.csv (every tested set), opposite_pairs.csv, module_enrichment.csv, module_labels.csv, "
           "drug_moa.csv, novel_edges.csv, novel_members.csv, metrics.json; README.md documents the columns.", ""]
@@ -965,22 +1099,35 @@ README = """# validation/ - does the vector space recover known biology, and wha
 
 Written by `tahoemap validate` (tahoemap/validate.py). `cos` = signed cosine of two genes' unit vectors
 (embed/gene_unit.npy). Every number is over the genes in the vector space (embed/included_cols.npy). Gene cols are the
-row order of atlas/effects/genes.csv; symbols can repeat, so join on col. Read report.md first.
+row order of atlas/effects/genes.csv; symbols can repeat, so join on col. Read report.md first. Nothing is left out of
+a list for a flag: an item with a reason for doubt keeps its ranked place and carries ⚠ with the reason in plain words.
 
 ## control_sets.csv - one row per tested gene set
 | column | meaning |
 |---|---|
-| `source` | control (tahoemap/data/control_sets.json), hallmark, reactome (reference/gene_sets.parquet, >= 5 genes in the space), synthetic (only with truth=) |
+| `source` | control (tahoemap/data/control_sets.json), hallmark, reactome (reference/gene_sets.parquet, >= 5 genes \
+in the space), synthetic (only with truth=) |
 | `set`, `label`, `note` | set name, short name, curator's note |
-| `n_listed`, `n_found`, `n_in_space` | genes listed by the source, found among Tahoe genes, in the vector space (all metrics use these) |
+| `n_listed`, `n_found`, `n_in_space` | genes listed by the source, found among Tahoe genes, in the vector space (all \
+metrics use these) |
 | `mean_cos`, `median_cos`, `frac_pos` | over within-set pairs |
-| `auroc_cos`, `auroc_abs` | AUROC of within-set pairs vs 20,000 random pairs of genes in the space, on cos / on abs(cos) (P(set pair > random pair), ties 1/2) |
-| `p_random_sets_cos`, `p_random_sets_abs` | share of 200 random gene sets of the same size with an AUROC at least as high ((1 + count) / 201; control, Hallmark, synthetic only) |
+| `auroc_cos`, `auroc_abs` | AUROC of within-set pairs vs 20,000 random pairs of genes in the space, on cos / on \
+abs(cos) (P(set pair > random pair), ties 1/2) |
+| `p_random_sets_cos`, `p_random_sets_abs` | share of 200 random gene sets of the same size with an AUROC at least as \
+high ((1 + count) / 201; control, Hallmark, synthetic only) |
 | `mean_cos_half1`, `mean_cos_half2` | mean within-set cos in the spaces fitted on each half of the compounds |
-| `top_module`, `top_module_share` | the module (nodal map) holding most of the set's genes, and the share of the set's genes in it |
+| `top_module`, `top_module_share` | the module (nodal map) holding most of the set's genes, and the share of the \
+set's genes in it |
 | `top_module_genome_share` | that module's share of all genes in the space (chance level of top_module_share) |
 | `top_module_arm_share` | share of the set's genes in that module on its majority arm |
-| `best_dd_up`, `best_dd_down` | the 5 drug-doses with the highest / lowest mean pooled z (DD_z) over the set's genes ('drug dose uM (mean z)'; drug-doses flagged unreliable plate only / position not correctable / wells disagree are left out; † = another artifact flag, e.g. toxic) |
+| `best_dd_up`, `best_dd_down` | the 5 drug-doses with the highest / lowest mean pooled z (DD_z) over the set's \
+genes, every drug-dose in its ranked place ('drug dose uM (mean z)'). One with an artifact flag (unreliable plate \
+only, position not correctable, wells disagree, toxic, ...) reads 'drug dose uM (mean z, ⚠ its flags)'; for a \
+cell-cycle shift with the share of the set's mean change the shift would explain ('cell-cycle shift, explains ~N% of \
+this change': the tables stage's rule on the members' mean lfc and mean cell-cycle slopes; a shift that does not \
+explain the change is named without ⚠). When the 5 strongest hold drug-doses with an alert, the 5 strongest without \
+one follow in their ranked place too |
+| `best_dd_up_n_alert`, `best_dd_down_n_alert` | how many drug-doses of each list carry an alert |
 
 ## opposite_pairs.csv - programmes expected to move in opposite directions
 | column | meaning |
@@ -995,7 +1142,8 @@ row order of atlas/effects/genes.csv; symbols can repeat, so join on col. Read r
 | `share_same_module` | share of cross pairs in the same module of the nodal map (module 0 = unassigned never counts) |
 | `random_same_module` | the same for two random genes (sum of squared module shares) |
 | `share_opposite_arms_in_same_module` | among cross pairs in one module, the share on opposite arms |
-| `nodal_centroid_dist`, `signed_centroid_dist` | distance between the two sets' centroids on the nodal map (x, y) / signed map (xs, ys), divided by the map's spread sqrt(var x + var y) |
+| `nodal_centroid_dist`, `signed_centroid_dist` | distance between the two sets' centroids on the nodal map (x, y) / \
+signed map (xs, ys), divided by the map's spread sqrt(var x + var y) |
 | `reading` | the plain-language reading |
 
 ## module_enrichment.csv - modules and arms vs gene sets
@@ -1014,17 +1162,24 @@ and p <= 0.05 (or q < 0.05) are kept.
 | column | meaning |
 |---|---|
 | `module`, `n_genes`, `n_plus`, `n_minus` | the module and its arms |
-| `label` | best set with q < 0.05 and >= 3 genes shared (smallest p among sets of <= 300 genes in the space, else any), short name; else 'genes: ...' (top genes of the + arm, then the - arm) |
-| `label_source`, `label_set`, `label_arm` | where it came from (control / hallmark / reactome / top genes), the set, the unit (all / + / -) |
+| `label` | best set with q < 0.05 and >= 3 genes shared (smallest p among sets of <= 300 genes in the space, else \
+any), short name; else 'genes: ...' (top genes of the + arm, then the - arm) |
+| `label_source`, `label_set`, `label_arm` | where it came from (control / hallmark / reactome / top genes), the set, \
+the unit (all / + / -) |
 | `label_overlap`, `label_n_set`, `label_p`, `label_q` | its test |
 | `plus_label`, `plus_set`, `plus_q`, `minus_label`, `minus_set`, `minus_q` | the best set of each arm alone |
-| `top_plus`, `top_minus` | top genes of each arm (graph/modules.parquet) |
+| `top_plus`, `top_minus` | top genes of each arm (graph/modules.parquet; cut at 8 with the cap rule; a gene in the \
+vector space only through drug-doses that carry an alert reads 'SYMBOL ⚠') |
 
 ## drug_moa.csv - mechanism classes (moa_fine) with >= 2 drugs
 | column | meaning |
 |---|---|
-| `moa_fine`, `n_drugs`, `drugs` | the class |
-| `n_pairs`, `mean_cos_within` | drug pairs within the class (salt forms of one compound not paired), their mean drug-vector cos |
+| `moa_fine`, `n_drugs`, `drugs` | the class and its drugs (the first 12; ⚠ = the drug's vector is of a dose with \
+an artifact flag, embed/drugs.parquet alert; it is tested like the others) |
+| `n_drugs_flagged_dose`, `n_drugs_no_trustworthy_dose` | the class's drugs marked ⚠; those of them with no \
+trustworthy dose (every dose flagged unreliable plate only, position not correctable or wells disagree) |
+| `n_pairs`, `mean_cos_within` | drug pairs within the class (salt forms of one compound not paired), their mean \
+drug-vector cos |
 | `mean_cos_to_other_classes` | mean cos of class members to drugs of other known classes |
 | `auroc_within_vs_other` | AUROC of within-class pairs vs (member, other-class drug) pairs |
 
@@ -1034,8 +1189,11 @@ and p <= 0.05 (or q < 0.05) are kept.
 | `col_a`, `symbol_a`, `name_a`, `module_a`, `arm_a` | gene a (col_a < col_b), its HGNC name, module and arm |
 | `col_b`, `symbol_b`, `name_b`, `module_b`, `arm_b` | gene b |
 | `same_module` | both in the same module |
-| `cos`, `cos_half1`, `cos_half2`, `evidence`, `fdr` | from relations (full space, the two compound halves, sign-concordance FDR) |
+| `cos`, `cos_half1`, `cos_half2`, `evidence`, `fdr` | from relations (full space, the two compound halves, \
+sign-concordance FDR) |
 | `same_chrom`, `distance_bp` | genomic position (locus and read-through pairs are excluded) |
+| `alert` | '' or '⚠ ' + the reasons to doubt the pair in plain words (relations' alert: e.g. a gene that is in the \
+vector space only through drug-doses that carry an alert); such pairs are listed like the others |
 
 ## novel_members.csv - guilt by association
 A module arm enriched (q < 0.01) for a set of <= 300 genes in the space with >= 3 of them on the arm; a gene of the arm
@@ -1050,6 +1208,8 @@ gene keeps its 5 most significant sets; genes are ranked by the mean cos for the
 | `mean_cos`, `max_cos` | the candidate's cos to the arm's listed members (mean >= 0.5 kept) |
 | `mean_cos_half1`, `mean_cos_half2` | the mean in the two half spaces |
 | `n_reference_sets` | Hallmark / Reactome sets that already list the gene (0 = no pathway annotation at all) |
+| `alert` | '' or '⚠ ' + why to doubt the gene's place: it is in the vector space only through drug-doses that carry \
+an alert (embed/genes.parquet evidence_flagged_only); such genes are listed like the others |
 
 ## metrics.json
 The headline numbers of report.md.
@@ -1082,9 +1242,11 @@ def run(out, truth=None, n_random=N_RANDOM, n_null=N_NULL):
              "n_listed": st["n_listed"], "n_found": st["n_found"]}
         r.update(_set_metrics(sp, st, n_null))
         recs.append(r)
-    up, down = _best_drugdoses(out, sp.gK, sets)
+    up, down, n_alert = _best_drugdoses(out, sp.gK, sets)
     cs = pd.DataFrame(recs)
     cs["best_dd_up"], cs["best_dd_down"] = up, down
+    cs["best_dd_up_n_alert"] = [a for a, _ in n_alert]
+    cs["best_dd_down_n_alert"] = [b for _, b in n_alert]
     cs["_s"] = cs["source"].map(SOURCES_ORDER).fillna(9)
     cs = cs.sort_values(["_s", "auroc_cos"], ascending=[True, False], na_position="last", kind="mergesort") \
         .drop(columns="_s").reset_index(drop=True)
@@ -1169,7 +1331,11 @@ def run(out, truth=None, n_random=N_RANDOM, n_null=N_NULL):
                          "genes_with_novel_edge": int(len(set(edges["col_a"]) | set(edges["col_b"])))
                          if len(edges) else 0,
                          "member_rows": int(len(members)),
-                         "member_genes": int(members["col"].nunique()) if len(members) else 0},
+                         "member_genes": int(members["col"].nunique()) if len(members) else 0,
+                         "edges_with_alert": int((edges["alert"].fillna("") != "").sum()) if len(edges) else 0,
+                         "member_genes_with_alert": int(members.loc[members["alert"].fillna("") != "", "col"]
+                                                        .nunique()) if len(members) else 0},
+               "genes_in_space_flagged_only": int((sp.flagged_only & sp.included).sum()),
                "reference": bool(n_sets["reference"])}
     if n_sets["synthetic"]:
         metrics["synthetic"] = dict(summ("synthetic"), per_set=per_set("synthetic"), opposite_pairs=opp("synthetic"))
@@ -1187,6 +1353,9 @@ def run(out, truth=None, n_random=N_RANDOM, n_null=N_NULL):
             "control_median_auroc_cos": metrics["control_sets"]["median_auroc_cos"],
             "drug_moa_auroc": drug.get("all", {}).get("auroc") if drug else None,
             "novel_edges": int(len(edges)), "novel_member_genes": metrics["novel"]["member_genes"],
+            "novel_edges_with_alert": metrics["novel"]["edges_with_alert"],
+            "novel_member_genes_with_alert": metrics["novel"]["member_genes_with_alert"],
+            "genes_in_space_flagged_only": metrics["genes_in_space_flagged_only"],
             "truth": bool(truth), "minutes": round((time.time() - t0) / 60, 2)}
     stamp_stage(out, "validate", VERSION, info)
     log(f"Validate done: report in {os.path.join(vd, 'report.md')} ({info['minutes']} min)")
