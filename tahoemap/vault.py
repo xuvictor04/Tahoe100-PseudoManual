@@ -18,11 +18,15 @@ Notes (basenames are unique vault-wide, case-insensitively, because Obsidian res
                                        grids per plate
     Drugs/<drug> (drug).md, Cell lines/<cell name> (line).md, Plates/Plate NN.md,
     Modules/Module NNN.md + Module NNN.canvas, Indexes/..., Home.md, How to read this vault.md, Concepts/...
+    Concepts/Probable direction.md     generated (not written): the direction stage's arrows explained, with this
+                                       run's counts and controls
 
 Rules: frontmatter values are json.dumps'ed (valid YAML); wikilinks are bare [[basename]]; a gene note links only
-to its partners, its drugs, the cell lines, its module and its plates note (never to boilerplate notes, which would
-turn them into hubs of 16,000 links); output is sorted and carries no timestamps, so an unchanged run rewrites
-nothing; generated files carry `generated_by: "tahoemap"` and only such files are ever deleted as stale.
+to its partners, its drugs, the cell lines, its module, its plates note and the genes and drugs of its direction
+arrows (never to boilerplate notes, which would turn them into hubs of 16,000 links; the one exception, the
+direction section's [[Probable direction]], is left out of the default graph view); output is sorted and carries no
+timestamps, so an unchanged run rewrites nothing; generated files carry `generated_by: "tahoemap"` and only such
+files are ever deleted as stale.
 
 What a note claims is the earlier stages' own rule, quoted with this run's numbers, so that a sentence never says
 more than the data behind it: per-line counts and 'strongest' use the per-line |z| cut the tables stage calibrated
@@ -46,6 +50,22 @@ capped at N shows the N strongest and any of the N strongest without an alert th
 flagged items never push unflagged ones out of view. Where an estimate of an earlier stage left technically broken
 data out, the note says so beside it. Tables of an older tables stage (no cc_share, line_effects counts over clean
 drug-doses only, drug_line_top without flags) are read as they are, and the notes say what they lack.
+
+Probable direction (the direction stage, OUT/direction; read through direction_view, which collapses, orders, caps
+and words the arrows the same way for every surface): a gene note's "Direction (probable)" section lists the arrows
+whose target is the gene (upstream: [[source]], its grade, what the source's activity does, the evidence with the
+lines on each side, the size of the effect, q and the alerts' short labels) and those whose source it is
+(downstream: [[target]], or the cells under [[drug]] at a dose), each list capped by the cap rule with its counts;
+At a glance names the strongest of each in one sentence; the frontmatter counts them (direction_upstream /
+direction_downstream; null when the stage has not run). A drug note lists the genes that set how the cells fare under
+it (sensitivity arrows at its doses) and the drug-target arrows of its compound classes (whether it moves the gene
+that way too); a cell-line note its genotype groups (loss / gain of function / any record) and the genes it lacks
+that served as natural knockouts, with the arrows each gave. A row that is one test for several sources names them
+all. Concepts/Probable direction.md (linked from Home and from every direction section) explains kinds, grades, sign
+and alerts, with this run's controls (direction/controls.json). The arrows of a gene are looked up by position
+(direction_positions, built once; the same rows as dv.upstream / downstream / cells) and each row is worded once,
+so 16,643 gene notes do not scan the edges. On an output without the stage every such section says that the stage
+has not run there.
 
 Literature reviews (optional; tahoemap/review, docs/review.md): when OUT/review holds reviews (review/notes/<kind>/,
 review/reviews/<kind>/, review/connections.parquet), the note of every reviewed gene, drug or cell line gets a section
@@ -80,15 +100,17 @@ import numpy as np
 import pandas as pd
 
 from . import atlas_core as A
+from . import direction_view as DV
 from . import graph as GR
 from . import relations as REL
 from . import tensor as TN
 from . import tlib as T
-from .common import folder, log, read_effects_index, replace_file, safe_filename, stamp_stage
+from .common import cap_keep as _cap_keep, folder, log, read_effects_index, replace_file, safe_filename, stamp_stage
 # the sentence-level rule the runner applies to the notes it stores (verify imports only the standard library)
 from .review.verify import ITEM_SECTIONS, drop_self_check as _verify_drop_self_check
 
-VERSION = 3                          # 3: nothing is left out for a flag; flagged items carry an alert (ALERT)
+VERSION = 4                          # 3: nothing is left out for a flag; flagged items carry an alert (ALERT);
+#                                      4: the direction stage's arrows (gene, drug and line notes, Probable direction)
 GEN = "tahoemap"
 SEED_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vault_seed")
 MANIFEST = ".tahoemap-manifest.json"
@@ -129,6 +151,14 @@ CC_FLAG = "cell-cycle shift"         # the drug-dose flag the tables stage refin
 N_GENES_DOSE = 12                    # genes per dose and direction in a drug note
 N_LINE_LIST = 12                     # drug-doses / genes per list in a cell-line note
 N_MOD_DRUGS = 10                     # drug-doses per direction in a module note
+N_DIRECTION = 12                     # arrows per list (upstream / downstream) in a gene note (DV.cap: + the strongest
+#                                      without an alert)
+N_DIR_DRUG = 15                      # arrows per list in a drug note (DV.cap)
+N_DIR_LINE = 15                      # groups per list in a cell-line note (cap_keep on the groups' alerts)
+N_DIR_NAMES = 8                      # genes named per line set in a cell-line note (the rest counted)
+DIR_NOTE = "Probable direction"      # the generated concept note on the direction stage's arrows (Concepts/)
+DIR_NOT_RUN = ("The direction stage has not run on this output: `tahoe run` adds it, then rebuilds the validation "
+               "report, this vault and the map.")
 # a well of a plate note that carries one of these is shown with an alert
 WELL_ALERTS = ("unreliable plate", "position not correctable", "not used in its drug-dose", "failed (excluded)")
 # partner evidence that is a reason for doubt, in plain words (relations: evidence)
@@ -324,12 +354,9 @@ def flags_cell(flags, cc_share=None, dash="—"):
 def cap_keep(alert, n):
     """Which items of a list ranked strongest first a note shows when the list is capped at n: the n strongest, and
     any of the n strongest without an alert (alert[i] True: item i carries one) that would fall outside them, in
-    ranked order. So no item is pushed out of view by flagged ones. Returns their positions."""
-    alert = np.asarray(alert, dtype=bool)
-    keep = np.zeros(len(alert), dtype=bool)
-    keep[:n] = True
-    keep[np.flatnonzero(~alert)[:n]] = True
-    return np.flatnonzero(keep)
+    ranked order. So no item is pushed out of view by flagged ones. Returns their positions (common.cap_keep: the
+    same rule everywhere)."""
+    return _cap_keep(alert, n)
 
 
 def n_alerts(k):
@@ -1346,6 +1373,39 @@ class Run:
         self.DD_z = np.load(os.path.join(self.out, "atlas", "effects", "DD_z.npy"), mmap_mode="r")
 
 
+# ----------------------------------------------------------------------------- direction (OUT/direction)
+DIR_STR = ("source", "target", "target_type", "kind", "grade", "mechanism", "alerts", "top_drugdoses", "compounds",
+           "compounds_supporting", "drug_effect", "target_drug", "target_dose", "group")   # dv.rows, read as text
+DIR_NUM = ("source_col", "target_col", "target_dd", "sign", "n_altered", "n_intact", "n_lines", "contrast",
+           "retained_fraction", "rise_share", "baseline_log2_diff", "r", "r_reverse", "n_compounds", "n_supporting",
+           "background_rate", "p", "q", "q_group", "n_sources", "order")                  # ... and as numbers
+_NO_ROWS = np.zeros(0, dtype=np.int64)
+
+
+def direction_positions(dv):
+    """Per gene col, the positions in dv.rows (= their rank in ORDER, ascending) of the display rows that
+    direction_view's upstream / downstream / cells return for that col: {'up': {col: positions}, 'down': ...,
+    'cells': ...}, built in one pass over the rows, so that 16,643 gene notes look their arrows up without a
+    DataFrame each (tests/checks.py compares them with the look-ups)."""
+    out = {"up": {}, "down": {}, "cells": {}}
+    r = dv.rows
+    if not len(r):
+        return out
+    cells = (r["target_type"].astype(str) == "cells").to_numpy()
+    tc = r["target_col"].to_numpy(dtype=np.int64)
+    for i, (cols, isc) in enumerate(zip(r["source_cols"].tolist(), cells)):
+        d = out["cells" if isc else "down"]
+        for c_ in cols:
+            if int(c_) >= 0:
+                d.setdefault(int(c_), []).append(i)
+        if not isc and tc[i] >= 0:
+            out["up"].setdefault(int(tc[i]), []).append(i)
+    for d in out.values():
+        for k in d:
+            d[k] = np.unique(np.array(d[k], dtype=np.int64))
+    return out
+
+
 # ----------------------------------------------------------------------------- the vault
 class Vault:
     def __init__(self, out):
@@ -1364,7 +1424,7 @@ class Vault:
         R, N = self.R, self.names
         self.fixed = {}
         for t in ("Home", "How to read this vault", "Genes by letter", "Genes by module", "Drugs by mechanism",
-                  "Lines by organ", "Genes below the detection limit"):
+                  "Lines by organ", "Genes below the detection limit", DIR_NOTE):
             self.fixed[t] = N.add(t)
             assert self.fixed[t] == t
         # seed concept notes keep their titles
@@ -1931,6 +1991,9 @@ class Vault:
               "n_dd_up": num("n_dd_up"), "n_dd_down": num("n_dd_down"),
               "n_dd_up_clean": num("n_dd_up_clean"), "n_dd_down_clean": num("n_dd_down_clean"),
               "in_vector_space": inc}
+        up, dn = self._dir_gene_rows(c) if self.dv is not None else (None, None)
+        fm["direction_upstream"] = len(up) if up is not None else None      # arrows (None: the stage has not run)
+        fm["direction_downstream"] = len(dn) if dn is not None else None
         if name != sym:
             fm["aliases"] = [sym]
         fm["tags"] = tags
@@ -1953,10 +2016,11 @@ class Vault:
             self.n_fragments += 1
         s = R.de_s
         rows = np.arange(s[c], s[c + 1])
-        L += self.sec_glance(c, tg, rows)
+        L += self.sec_glance(c, tg, rows, self.dir_glance(c, up, dn) if up is not None else "")
         L += self.sec_drugs(c, tg, rows)
         L += self.sec_lines(c)
         L += self.sec_partners(c)
+        L += self.sec_direction(c, up, dn)
         L += self.sec_where(c)
         L += self.sec_literature("gene", c, self.gene_path[c])
         L += self.sec_record(c, an)
@@ -2021,7 +2085,7 @@ class Vault:
                f"{lines})" + (f" {al}" if al else ""))
         return txt, bdd, al
 
-    def sec_glance(self, c, tg, rows):
+    def sec_glance(self, c, tg, rows, direction=""):
         R = self.R
         S = []
         if R.included[c] and R.flagged_only[c]:
@@ -2084,6 +2148,8 @@ class Vault:
                 S.append("Its neighbourhood forms no module of 5 or more genes (module 0, unassigned).")
         else:
             S.append(f"It is not in the vector space: {self._why_out(c)}. So it has no partners and no module.")
+        if direction:
+            S.append(direction)
         return ["## At a glance", "", "> [!summary] In this data"] + ["> " + x for x in S] + [""]
 
     def _single_lines(self, c, d):
@@ -2475,6 +2541,586 @@ class Vault:
                   "link: a retracted paper is no support.*", ""]
         return L
 
+    # ------------------------------------------------------------------ direction (direction_view; OUT/direction)
+    def load_direction(self):
+        """The direction stage's arrows (direction_view.load: collapsed, in ORDER, indexed), and once per build: per
+        gene col the positions of its rows (direction_positions: what dv.upstream / downstream / cells return), the
+        columns the notes read as plain arrays (one str object per distinct value), the arrows per comparison group
+        and the groups per cell line. So a note looks its arrows up and reads its rows from arrays instead of
+        scanning the edges or building a DataFrame per note. self.dv is None when the stage has not run."""
+        self.dv = DV.load(self.out)
+        self.dir_by_group, self.dir_line_groups, self.dir_line_intact = {}, {}, {}
+        self.dir_pos, self.dir_col, self._dir_memo, self._dir_cnt_memo = {"up": {}, "down": {}, "cells": {}}, {}, \
+            {}, {}
+        if self.dv is None:
+            log("  vault: no direction stage in this output (direction/edges.parquet): its sections say so")
+            return
+        r = self.dv.rows
+        self.dir_pos = direction_positions(self.dv)
+        for c_ in DIR_STR:
+            self.dir_col[c_] = _factor(r[c_]) if c_ in r else np.full(len(r), "", dtype=object)
+        for c_ in DIR_NUM:
+            self.dir_col[c_] = pd.to_numeric(r[c_], errors="coerce").to_numpy(dtype=float) if c_ in r else \
+                np.full(len(r), np.nan)
+        for c_ in ("sources", "source_cols"):
+            self.dir_col[c_] = r[c_].to_numpy(dtype=object)
+        self.dir_col["has_alert"] = r["has_alert"].to_numpy(dtype=bool)
+        self.dir_col["direction_clear"] = np.array([x is True or (isinstance(x, (bool, np.bool_)) and bool(x))
+                                                    for x in r["direction_clear"].tolist()], dtype=bool) \
+            if "direction_clear" in r else np.zeros(len(r), dtype=bool)
+        if len(r):
+            sub = r[r["kind"].astype(str).str.startswith(("genotype", "null"))]
+            for (grp, kind, grade, al), n in sub.groupby(["group", "kind", "grade", "has_alert"]).size().items():
+                d = self.dir_by_group.setdefault(str(grp), {"kinds": {}, "grades": {}, "n": 0, "n_alert": 0})
+                d["kinds"][kind] = d["kinds"].get(kind, 0) + int(n)
+                d["grades"][grade] = d["grades"].get(grade, 0) + int(n)
+                d["n"] += int(n)
+                d["n_alert"] += int(n) if al else 0
+        g = self.dv.groups
+        if len(g):
+            line_ix = {str(nm): i for i, nm in enumerate(self.R.cell)}
+            with_sep = [(nm, i) for nm, i in line_ix.items() if ", " in nm]
+
+            def lines_of(txt):
+                txt = str(txt or "")
+                out = {line_ix[x] for x in txt.split(", ") if x in line_ix}
+                return out | {i for nm, i in with_sep if f", {nm}, " in f", {txt}, "}
+            for rec in g[g["kind"].isin(["genotype", "null"])].to_dict("records"):
+                for i in lines_of(rec.get("altered_lines")):
+                    self.dir_line_groups.setdefault(i, []).append(rec)
+                for i in lines_of(rec.get("intact_lines")):
+                    self.dir_line_intact.setdefault((i, rec["kind"]), []).append(rec)
+        log(f"  vault: direction arrows loaded ({len(r):,} arrows from {len(self.dv.edges):,} edges)")
+
+    def _dir_rec(self, i):
+        """Display row i of dv.rows (its position = its rank in ORDER) as a dict of the columns the notes read."""
+        return {k: v[i] for k, v in self.dir_col.items()}
+
+    def _dir_gene(self, col, name):
+        """A gene of an arrow: its note's link (col: genes.csv), or its name as text (a drug target that is not a
+        measured gene)."""
+        col = int(col) if _finite(col) else -1
+        return self.glink(col) if 0 <= col < self.R.gK else cell(name)
+
+    def _dir_sources(self, r, skip=None):
+        """Every source of a row, linked where it has a note (a collapsed row names them all); skip: a gene col shown
+        as plain text (the note's own gene)."""
+        srcs = list(r.get("sources") or ()) or [str(r.get("source", ""))]
+        cols = list(r.get("source_cols") or ()) or [r.get("source_col", -1)]
+        return ", ".join(cell(s_) if skip is not None and _finite(c_) and int(c_) == int(skip) else
+                         self._dir_gene(c_, s_) for s_, c_ in zip(srcs, cols))
+
+    def _dir_target(self, r):
+        """The target of a row: a gene's link, or 'cells under [[DRUG (drug)]] DOSE' for the sensitivity kinds."""
+        dd = int(r.get("target_dd", -1)) if _finite(r.get("target_dd")) else -1
+        if str(r.get("target_type", "")) == "cells":
+            return f"cells under {self.ddlink(dd)}" if 0 <= dd < self.R.Dn else cell(r.get("target", ""))
+        return self._dir_gene(r.get("target_col", -1), r.get("target", ""))
+
+    @staticmethod
+    def _dir_effect(r):
+        """The size of a row's effect in words, from its numbers (edges.parquet; the units differ by kind)."""
+        kind = str(r.get("kind", ""))
+        src = DV.source_text(r, 3)
+        side = f"the lines without {src}" if kind.startswith("null") else f"the {src}-altered lines"
+        ct = r.get("contrast")
+        if kind in ("genotype_response", "null_response"):
+            rf = r.get("retained_fraction")
+            s = (f"{side} respond {float(rf):.2f}× as strongly" if _finite(rf) and float(rf) >= 0 else
+                 f"{side} respond the other way" if _finite(rf) else "")
+            s += (f" (z diff {flog(ct)})" if _finite(ct) else "")
+            tops = [t for t in str(r.get("top_drugdoses", "") or "").split("; ") if t]
+            rs = r.get("rise_share")
+            if tops and _finite(rs) and DV.MIXED <= float(rs) <= 1.0 - DV.MIXED:
+                return s + f"; rises at some drug-doses, falls at others ({float(rs):.0%} from rises): " + \
+                    "; ".join(tops)
+            return s + (f"; strongest at {tops[0]}" if tops else "")
+        if kind in ("genotype_baseline", "null_baseline"):
+            d = r.get("baseline_log2_diff")
+            d = d if _finite(d) else ct
+            if not _finite(d):
+                return "—"
+            return f"{2.0 ** abs(float(d)):.2f}× {'lower' if float(d) > 0 else 'higher'} at baseline in {side}"
+        if kind in ("genotype_sensitivity", "null_sensitivity"):
+            return f"{side}: {2.0 ** -float(ct):.2f}× the cells of the other lines" if _finite(ct) else "—"
+        if kind == "level":
+            rr = r.get("r_reverse")
+            return (f"r {fcos(r.get('r'))}" + (f", reverse {fcos(rr)}" if _finite(rr) else "")
+                    + ("; direction clear" if bool(r.get("direction_clear")) else "; direction not clear"))
+        if kind == "level_sensitivity":
+            return f"r {fcos(r.get('r'))}"
+        if kind == "drug_target":
+            bg = r.get("background_rate")
+            return (f"{100 * float(ct):.0f}% of the class's compounds" if _finite(ct) else "—") + (
+                f" vs {100 * float(bg):.1f}% of all compounds" if _finite(bg) else "")
+        return "—"
+
+    def _dir_words(self, i):
+        """The texts of display row i that do not depend on the note (direction_view's wording); the short alerts
+        are worded once per distinct alerts text (rows of one comparison share theirs)."""
+        r = self._dir_rec(i)
+        q = DV.q_text(r)
+        al = str(r["alerts"])
+        a = self._dir_memo.get(al)
+        if a is None:
+            a = self._dir_memo[al] = DV.alert_short(al) or "—"
+        return {"rec": r, "grade": str(r["grade"]), "sign": DV.sign_text(r), "kind": DV.kind_text(r),
+                "effect": self._dir_effect(r), "q": q[2:] if q.startswith("q ") else q, "alerts": a,
+                "source": self._dir_sources(r), "target": self._dir_target(r)}
+
+    def _dir_table(self, pos, first, skip=None, extra=None, first_head=None):
+        """A table of arrows (display rows at positions pos, in ORDER). first: 'source' (the sources linked) or
+        'target' (the target linked; a collapsed row's other sources linked in its direction text). extra:
+        [(header, fn(row dict) -> text)] columns after the first."""
+        extra = extra or []
+        head = [first_head or ("Source" if first == "source" else "Target")] + [h for h, _ in extra] + [
+            "Grade", "Direction (probable)", "Evidence", "Effect", "q", "Alerts"]
+        body = []
+        for i in pos:
+            w = self._dir_words(int(i))
+            r = w["rec"]
+            st = w["sign"]
+            if first == "target" and int(r.get("n_sources", 1) or 1) > 1:
+                st = st.replace(DV.source_text(r), self._dir_sources(r, skip), 1)
+            body.append([w[first]] + [fn(r) for _, fn in extra]
+                        + [w["grade"], st, w["kind"], w["effect"], w["q"], w["alerts"]])
+        return table(head, body)
+
+    def _dir_list(self, pos, n, what="arrows"):
+        """(shown positions, the counts sentence) of a list capped by the cap rule (cap_keep, as DV.cap: the n
+        strongest, and any of the n strongest without an alert beyond them; DV.counts_text and DV.more_text: how
+        many there are, how many more, how many of them with an alert)."""
+        al = self.dir_col["has_alert"][pos]
+        keep = cap_keep(al, n)
+        n_more = len(pos) - len(keep)
+        n_more_al = int(al.sum()) - int(al[keep].sum())
+        gr = self.dir_col["grade"][pos]
+        key = (len(pos), int(al.sum()), what) + tuple(int((gr == g_).sum()) for g_ in DV.GRADES)
+        s = self._dir_cnt_memo.get(key)
+        if s is None:
+            s = self._dir_cnt_memo[key] = DV.counts_text(pd.DataFrame({"has_alert": al, "grade": gr}), what)
+        if n_more:
+            extra = len(keep) - min(n, len(pos))
+            s += (f". Shown: the {min(n, len(pos)):,} strongest" + (
+                f" and the {extra:,} next strongest without an alert" if extra else "")
+                  + f"; {DV.more_text(n_more, n_more_al, what)} not shown")
+        return pos[keep], s + "."
+
+    def _dir_gene_rows(self, c):
+        """(upstream positions, downstream positions: gene targets and cells together), in ORDER, of gene c."""
+        p = self.dir_pos
+        up = p["up"].get(int(c), _NO_ROWS)
+        dn, ce = p["down"].get(int(c), _NO_ROWS), p["cells"].get(int(c), _NO_ROWS)
+        return up, (np.union1d(dn, ce) if len(dn) and len(ce) else (dn if len(dn) else ce))
+
+    def _dir_intro(self):
+        return (f"*Arrows SOURCE → TARGET of the direction stage (`direction/edges.parquet`), each from a test (q < "
+                "0.10 in its family of tests: over the whole table, or for a lead - grade C - within its own group) "
+                "of a recorded mutation, a natural knockout (lines that do not express a gene), compounds that "
+                f"target a gene, or a gene's natural level. A {DV.CAVEAT_SHORT}. Grades: "
+                + ", ".join(DV.grade_legend("short")) + f"; {ALERT} = a reason for doubt, shown in place. How to "
+                f"read them, and this run's controls: [[{self.fixed[DIR_NOTE]}]].*")
+
+    def dir_glance(self, c, up, dn):
+        """The At-a-glance sentence of a gene with arrows ('' without)."""
+        if self.dv is None or not (len(up) or len(dn)):
+            return ""
+        parts = []
+        if len(up):
+            w = self._dir_words(int(up[0]))
+            parts.append(f"{len(up):,} arrow{'s point' if len(up) != 1 else ' points'} to it, the strongest "
+                         f"{w['source']} → it (grade {w['grade']}" + (f" {ALERT}" if w["rec"]["has_alert"] else "")
+                         + ")")
+        else:
+            parts.append("none points to it")
+        if len(dn):
+            w = self._dir_words(int(dn[0]))
+            parts.append(f"{len(dn):,} go{'es' if len(dn) == 1 else ''} from it, the strongest it → "
+                         f"{w['target']} (grade {w['grade']}" + (f" {ALERT}" if w["rec"]["has_alert"] else "") + ")")
+        else:
+            parts.append("none goes from it")
+        return (f"Probable direction (from the cell lines, not proof of direct regulation): {parts[0]}; {parts[1]}. "
+                "See Direction (probable) below.")
+
+    def sec_direction(self, c, up, dn):
+        """The gene note's 'Direction (probable)': the arrows whose target is this gene (upstream) and those whose
+        source it is (downstream: genes, and the cells under drug-doses), capped by the cap rule, with counts."""
+        L = ["## Direction (probable)", ""]
+        if self.dv is None:
+            return L + [DIR_NOT_RUN, ""]
+        if not len(up) and not len(dn):
+            return L + [f"No arrow points to or from this gene in this run (how the arrows are made: "
+                        f"[[{self.fixed[DIR_NOTE]}]]).", ""]
+        L += [self._dir_intro(), ""]
+        for head, pos, first, none in (
+                ("Upstream of this gene", up, "source", "None: no arrow points to this gene."),
+                ("Downstream of this gene", dn, "target",
+                 "None: no arrow goes from this gene (to a gene, or to the cells under a drug-dose).")):
+            L += [f"### {head}", ""]
+            if not len(pos):
+                L += [none, ""]
+                continue
+            shown, cnt = self._dir_list(pos, N_DIRECTION)
+            L += [f"*{cnt}*", ""] + self._dir_table(shown, first, skip=c) + [""]
+        return L
+
+    # ---- drug notes
+    def sec_direction_drug(self, d, rows):
+        """A drug note's 'Direction (probable)': the genes that set how the cells fare under this drug (sensitivity
+        arrows at its doses: dv.for_drugdose) and the drug-target arrows in which it is one of the compounds
+        (dv.drug_targets: by name or salt base)."""
+        L = ["## Direction (probable)", ""]
+        if self.dv is None:
+            return L + [DIR_NOT_RUN, ""]
+        dv = self.dv
+        cells = np.unique(np.concatenate([_NO_ROWS] + [dv.for_drugdose(i)["order"].to_numpy(dtype=np.int64)
+                                                       for i in rows]))
+        tg = np.unique(dv.drug_targets(d)["order"].to_numpy(dtype=np.int64))
+        if not len(cells) and not len(tg):
+            return L + ["No arrow involves this drug in this run: no gene was found to set how the cells fare under "
+                        "it, and it is not one of the compounds of a drug-target arrow (how the arrows are made: "
+                        f"[[{self.fixed[DIR_NOTE]}]]).", ""]
+        L += [self._dir_intro(), ""]
+        L += ["### Genes that set how the cells fare under it", ""]
+        if len(cells):
+            shown, cnt = self._dir_list(cells, N_DIR_DRUG)
+            L += ["*Arrows gene → cells under this drug at one of its doses (the cells' numbers relative to the "
+                  f"other lines in the same wells). {cnt}*", ""]
+            L += self._dir_table(shown, "source", extra=[("Dose", lambda r: fdose(r.get("target_dose")) or "—")],
+                                 first_head="Gene") + [""]
+        else:
+            L += ["None: no gene was found to set how the cells fare under it.", ""]
+        L += ["### Its targets: what acting on them probably does", ""]
+        if len(tg):
+            keys = {d.lower(), str(T.salt_base(d)).lower()}
+
+            def mine(r):
+                sup = [y for x in str(r.get("compounds_supporting", "") or "").split("; ") for y in x.split(" / ")
+                       if y]
+                ok = any(k in keys for x in sup for k in (x.lower(), str(T.salt_base(x)).lower()))
+                return "moves it that way too" if ok else "does not move it that way (the class's other compounds do)"
+            shown, cnt = self._dir_list(tg, N_DIR_DRUG)
+            L += [f"*Drug-target arrows of the compound classes it belongs to (compounds sharing a listed target and "
+                  f"mechanism; one molecule counts once, under all its names): the target → a gene whose level those "
+                  f"compounds move. A row that names several targets is one test: the compounds share them all, and "
+                  f"any of them could be the cause. {cnt}*", ""]
+            L += self._dir_table(shown, "source", extra=[("Gene it moves", self._dir_target), ("This drug", mine)],
+                                 first_head="Its target") + [""]
+        else:
+            L += ["None: it is not one of the compounds of a drug-target arrow.", ""]
+        return L
+
+    # ---- cell-line notes
+    def _dir_group_rank(self, recs):
+        """Groups ranked: those with more arrows first, then by their best grade, then by name."""
+        def key(rec):
+            d = self.dir_by_group.get(str(rec.get("description", "")), {})
+            best = min((DV.GRADES.index(g_) for g_ in d.get("grades", {}) if g_ in DV.GRADES), default=9)
+            return (-d.get("n", 0), best, str(rec.get("gene", "")).lower(), str(rec.get("description", "")))
+        return sorted(recs, key=key)
+
+    def _dir_group_cells(self, rec):
+        """(arrows by kind 'response / level / cells', grades) of a comparison group, from its display rows."""
+        d = self.dir_by_group.get(str(rec.get("description", "")), {})
+        k = d.get("kinds", {})
+        pre = "genotype" if rec.get("kind") == "genotype" else "null"
+        arrows = " / ".join(str(k.get(f"{pre}_{x}", 0)) for x in ("response", "baseline", "sensitivity"))
+        gr = d.get("grades", {})
+        grades = ", ".join(f"{g_} {gr[g_]}" for g_ in DV.GRADES if gr.get(g_)) or "—"
+        return arrows, grades + (f"; {d['n_alert']:,} with an alert {ALERT}" if d.get("n_alert") else "")
+
+    def _dir_group_genes(self, rec):
+        """The genes of an expression-null line set (every gene absent from exactly these lines), linked."""
+        names = [x for x in str(rec.get("genes_same_lines", "") or "").split(", ") if x] or [str(rec.get("gene", ""))]
+        out = []
+        for k_, nm in enumerate(names[:N_DIR_NAMES]):
+            col = int(rec.get("gene_col", -1)) if k_ == 0 and nm == str(rec.get("gene", "")) else -1
+            if col < 0:
+                n_ = self.sym_note.get(nm)
+                out.append(f"[[{n_}]]" if n_ else cell(nm))
+            else:
+                out.append(self._dir_gene(col, nm))
+        return ", ".join(out) + (f" (+{len(names) - N_DIR_NAMES} more)" if len(names) > N_DIR_NAMES else "")
+
+    @staticmethod
+    def _dir_hidden(al, keep, what):
+        """'; 3 more groups (2 of them with an alert ⚠) not shown' for a capped list (al: every item's alert flag,
+        keep: the shown positions); '' when nothing is left out."""
+        n_more = len(al) - len(keep)
+        if n_more <= 0:
+            return ""
+        return f"; {DV.more_text(n_more, int(al.sum()) - int(al[keep].sum()), what)} not shown"
+
+    def sec_direction_line(self, line):
+        """A cell-line note's 'Direction (probable)': its recorded driver alterations as the direction stage
+        grouped them (loss / gain of function / any record), and the genes it does not express that served as
+        natural knockouts, each with what came out of it."""
+        L = ["## Direction (probable)", ""]
+        if self.dv is None:
+            return L + [DIR_NOT_RUN, ""]
+        recs = self.dir_line_groups.get(line, [])
+        geno = self._dir_group_rank([x for x in recs if x.get("kind") == "genotype"])
+        null = self._dir_group_rank([x for x in recs if x.get("kind") == "null"])
+        L += [self._dir_intro(), ""]
+        n_other = len(self.dir_line_intact.get((line, "genotype"), []))
+        L += ["### Its recorded alterations", ""]
+        if geno:
+            al = np.array([bool(str(x.get("alerts", "") or "")) for x in geno], dtype=bool)
+            keep = cap_keep(al, N_DIR_LINE)
+            cnt = shown_text(len(geno), int(al.sum()), len(keep), N_DIR_LINE, max(0, len(keep) - N_DIR_LINE))
+            cnt += self._dir_hidden(al, keep, "groups")
+            L += [f"*The comparison groups that count this line as altered (Tahoe's cell-line genetics; "
+                  f"`direction/groups.parquet`): {cnt}. "
+                  "Each group is its gene's recorded loss of function, gain of function, or any record (some records "
+                  "carry no mechanism), against the lines with no record of the gene. Arrows = the arrows that "
+                  f"came out of the group, by target: a gene's drug response / its level / the cells under a "
+                  f"drug-dose. In {n_other:,} other groups this line is on the 'not recorded' side.*", ""]
+            body = []
+            for k_ in keep:
+                x = geno[k_]
+                arrows, grades = self._dir_group_cells(x)
+                body.append([self._dir_gene(x.get("gene_col", -1), x.get("gene", "")), cell(x.get("description", "")),
+                             arrows, grades, DV.alert_short(str(x.get("alerts", "") or "")) or "—"])
+            L += table(["Gene", "Group", "Arrows (response / level / cells)", "Grades", "Alerts"], body) + [""]
+        else:
+            L += [f"None: no recorded alteration of this line forms a group (a group needs at least 3 altered lines "
+                  f"and 3 without a record). In {n_other:,} groups it is on the 'not recorded' side.", ""]
+        L += ["### Genes it does not express (natural knockouts)", ""]
+        if null:
+            al = np.array([bool(str(x.get("alerts", "") or "")) for x in null], dtype=bool)
+            keep = cap_keep(al, N_DIR_LINE)
+            n_genes = sum(max(1, len([y for y in str(x.get("genes_same_lines", "") or "").split(", ") if y]))
+                          for x in null)
+            n_with = sum(1 for x in null if self.dir_by_group.get(str(x.get("description", "")), {}).get("n"))
+            cnt = shown_text(len(null), int(al.sum()), len(keep), N_DIR_LINE, max(0, len(keep) - N_DIR_LINE))
+            cnt += self._dir_hidden(al, keep, "line sets")
+            L += [f"*Genes this line does not express (it reads only the ambient RNA of the well) while at least 3 "
+                  f"other lines do: the stage compared the lines lacking each gene with the lines expressing it "
+                  f"(genes absent from exactly the same lines share one test). Line sets that include this line: "
+                  f"{cnt}; "
+                  f"{n_genes:,} genes; {n_with:,} of the sets gave arrows. Ranked by the number of arrows.*", ""]
+            body = []
+            for k_ in keep:
+                x = null[k_]
+                arrows, grades = self._dir_group_cells(x)
+                how = "within organs" if bool(x.get("stratified")) else "across organs"
+                note = sval(x.get("note"))
+                body.append([self._dir_group_genes(x), f"{fint(x.get('n_altered'))} vs {fint(x.get('n_intact'))}",
+                             arrows, grades, how + (f"; {note}" if note else ""),
+                             DV.alert_short(str(x.get("alerts", "") or "")) or "—"])
+            L += table(["Gene(s)", "Lines without vs expressing", "Arrows (response / level / cells)", "Grades",
+                        "Compared", "Alerts"], body) + [""]
+        else:
+            L += ["None: no gene that this line lacks was tested as a natural knockout (a gene needs at least 3 lines "
+                  "without it and 3 expressing it).", ""]
+        return L
+
+    # ---- the concept note
+    @staticmethod
+    def _dir_label_family(label):
+        """An alert's short label with its numbers and gene names left out, to count the labels of a run."""
+        f = re.sub(r"\d+", "N", label)
+        f = re.sub(r"^co-occurs with .+", "co-occurs with (another gene's altered lines)", f)
+        f = re.sub(r"^mostly lines without an? .+ alteration$", "mostly lines without (another gene's) alteration", f)
+        f = re.sub(r"^.+ alterations on the other side$", "(another gene's) alterations on the other side", f)
+        f = re.sub(r"^also absent: .+", "also absent: (other genes absent from most of these lines)", f)
+        return re.sub(r"^\S+ not expressed in N of the N altered lines$",
+                      "(the source) not expressed in N of the N altered lines", f)
+
+    @staticmethod
+    def _dir_num(x):
+        """A control's count or rate: three significant digits, no trailing zeros ('—' when missing)."""
+        return f"{float(x):.3g}" if _finite(x) else "—"
+
+    def _dir_positive(self, k, v):
+        """One positive control of controls.json as a list item; every arrow it names marked ALERT when it carries an
+        alert (rule 1: the doubt is shown in place)."""
+        marks = self.dv.control_alerts(k, v) if self.dv is not None else {}
+
+        def mk(nm):
+            return f" {ALERT}" if marks.get(str(nm)) else ""
+        k = k.replace(" -> ", " → ")
+        if "per_gene" in v:
+            want = -1 if str(v.get("expected", "")).startswith("sign -1") else 1
+            per = sorted(v["per_gene"], key=lambda x: (x.get("rank") if _finite(x.get("rank")) else 10 ** 9))
+            rec = [x for x in per if x.get("edge") and x.get("sign") == want]
+            miss = [x for x in per if not (x.get("edge") and x.get("sign") == want)]
+
+            def gl(nm):
+                n_ = self.sym_note.get(str(nm))
+                return f"[[{n_}]]" if n_ else cell(nm)
+            found = ", ".join(f"{gl(x['gene'])} (rank {fint(x.get('rank'))}, grade {x.get('grade') or '—'}"
+                              f"{mk(x['gene'])})" for x in rec) or "none"
+            rest = ", ".join(f"{gl(x['gene'])} ({fint(x.get('rank'))})" for x in miss[:15]) + (
+                f", and {len(miss) - 15} more" if len(miss) > 15 else "")
+            return (f"- {k}: {fint(v.get('recovered_right_sign'))} of the {fint(v.get('targets_present'))} target "
+                    f"genes present come back as arrows with the expected sign ({cell(v.get('expected', ''))}), "
+                    f"{fint(v.get('wrong_sign'))} with the other sign; their median rank among the "
+                    f"{fint(v.get('genes_ranked'))} genes tested: {self._dir_num(v.get('median_rank'))}. Found (rank, "
+                    f"grade; {ALERT} = the arrow carries an alert): "
+                    f"{found}. Not found (rank): {rest or 'none'}.")
+        if "drugdoses_tested" in v:
+            return (f"- {k}: {fint(v.get('edges'))} arrows among the {fint(v.get('drugdoses_tested'))} drug-doses "
+                    f"tested, {fint(v.get('right_sign'))} with the expected sign ({cell(v.get('expected', ''))})"
+                    + (": " + ", ".join(cell(x) + mk(x) for x in v.get("drugdoses") or []) if v.get("drugdoses")
+                       else "") + ".")
+        if v.get("assessable") is False:
+            return f"- {k}: not assessable here ({cell(v.get('why', ''))})."
+        return (f"- {k}: {fint(v.get('recovered_right_sign'))} of {fint(v.get('targets_present'))} come back with "
+                f"the expected sign, {fint(v.get('wrong_sign'))} with the other sign"
+                + (": " + ", ".join(cell(x) + mk(x) for x in v.get("genes") or []) if v.get("genes") else "")
+                + ".")
+
+    def direction_note(self):
+        """Concepts/Probable direction.md (generated): what the arrows are (kinds, grades, sign, alerts), this run's
+        counts, its controls (direction/controls.json: the positive controls; per kind the arrows written against
+        the false arrows the negative controls expect) and what an arrow does not say. Linked from Home and from
+        every direction section; rebuilt on every run."""
+        dv = self.dv
+        fm = {"type": "concept", "tags": ["concept", "direction"], "source": "direction/ (tahoemap/direction.py)"}
+        L = [frontmatter(fm), f"# {DIR_NOTE}", "",
+             "Which gene probably acts on which. The partners of a gene note move with it, but a correlation has no "
+             "direction: CDKN1A and MDM2 rise together, and the cosine does not say that both follow TP53. The "
+             "**direction** stage (`direction/`; the method is tahoemap/direction.py, explained in "
+             "`docs/direction.md` of the tahoemap repository) adds arrows **SOURCE → TARGET**, computed by code "
+             "from this run's own tables. Every arrow comes from a statistical test, with a p-value and a "
+             "Benjamini-Hochberg q (q < 0.10 in its family of tests: a pair without such a result has no arrow), "
+             "and carries a grade and its alerts.", "", f"> [!warning] {DV.CAVEAT}", "",
+             "## Where the arrows are", "",
+             "- A gene note's **Direction (probable)** section: *upstream of this gene* (the arrows whose target it "
+             "is) and *downstream of this gene* (the arrows whose source it is: to other genes, and to the cells "
+             "under a drug-dose); a sentence in its At a glance when it has arrows.",
+             "- A drug note: the genes that set how the cells fare under the drug, and the drug-target arrows of the "
+             "compound classes it belongs to.",
+             "- A cell-line note: its recorded alterations as the comparison groups the stage formed, and the genes "
+             "it does not express that served as natural knockouts, each with the arrows that came out of it.",
+             "- Every list is in one order: grade A, B, C, then q (smallest first), then the size of the effect. A "
+             f"list capped at N shows the N strongest and any of the N strongest without an alert ({ALERT}) beyond "
+             "them, and says how many more there are and how many of those carry an alert. Nothing is left out "
+             "for a reason to doubt it.",
+             "- An arrow is one test. Where one test stands for several sources (compounds that share several "
+             "listed targets; genes absent from exactly the same lines) the arrow names them all, and any of them "
+             "could be the cause.", ""]
+        cnt = dv.counts() if dv is not None else None
+        L += ["## The kinds of evidence", ""]
+        body = []
+        for k in DV.KINDS:
+            row = [f"`{k}`", DV.KIND_SHORT[k], DV.KIND_WORDS[k]]
+            if cnt is not None:
+                bk = cnt["by_kind"].get(k, {})
+                row.append(" / ".join(str(bk.get(g_, 0)) for g_ in DV.GRADES))
+            body.append(row)
+        L += table(["Kind", "Short", "The source, and what it is set against"]
+                   + (["Arrows A / B / C (this run)"] if cnt is not None else []), body) + [""]
+        L += ["## Grades", ""] + [f"- **{x[0]}**{x[1:]}" for x in DV.grade_legend("long")] + [""]
+        L += ["## The sign: what the source's activity does", "",
+              "Every arrow says what the source's **activity** does to the target. For a level (the target's baseline "
+              "level, or its level under the compounds that target the source) and for the cells' numbers: *raises* "
+              "or *lowers*. For a drug response: *strengthens* or *weakens* - how strongly the target responds, in "
+              "its own direction at each drug-dose. Where the target falls under the drugs, *strengthens* means it "
+              "falls further (the source deepens the fall, i.e. represses it there), and *weakens* means it falls "
+              "less; where it rises, *strengthens* means it rises more. Read which from all the drug-doses an arrow "
+              "lists (e.g. 0.49x vs 0.80x: a fall), not the first alone: a target can rise under some drugs and "
+              "fall under others, and such an arrow is alerted *rises at some drug-doses, falls at others* - its "
+              "sign then says how strongly the target responds, not whether the source induces or represses it. "
+              "*Not inferred*: the mechanism of the alteration is not recorded.", "",
+              "For a loss-of-function mutation, the source's activity raises (strengthens) the target when the "
+              "target is higher (responds more strongly) where the source is intact; for a gain of function it is "
+              "the reverse. For a gene that some lines do not express, the same with the lines that express it. For "
+              "compounds that target the source: an inhibitor that raises the target means the source's activity "
+              "lowers it. For the cells: *raises the cells' numbers* = the source protects the cells under that "
+              "drug-dose; *lowers* = it makes them more sensitive. For a natural level: the lines with more of the "
+              "source respond more strongly (strengthens) or less (weakens), or have more (raises) or fewer "
+              "(lowers) cells.", ""]
+        L += ["## Alerts", "",
+              f"An arrow with a reason for doubt keeps its place, marked {ALERT} with the reason; the doubts lower "
+              "its grade where the grade rules say so. The tables show each reason by a short label; every reason "
+              "in full is in `direction/edges.parquet` (column alerts).", ""]
+        if dv is not None and len(dv.rows):
+            fam, ex, cache = {}, {}, {}
+            for al in dv.rows["alerts"].fillna("").astype(str):
+                seen = set()
+                for rsn in DV.alert_reasons(al):
+                    f_ = cache.get(rsn)
+                    if f_ is None:
+                        f_ = cache[rsn] = self._dir_label_family(DV.alert_short(rsn)[len(ALERT) + 1:])
+                    if f_ in seen:
+                        continue
+                    seen.add(f_)
+                    fam[f_] = fam.get(f_, 0) + 1
+                    ex.setdefault(f_, rsn)
+            if fam:
+                L += ["The labels in this run, with the number of arrows that carry each, and one reason in full (from "
+                      "the strongest arrow that carries it):", ""]
+                L += table(["Label", "Arrows", "In full (an example)"],
+                           [[f_, f"{n_:,}", clip_text(ex[f_], 400)] for f_, n_ in
+                            sorted(fam.items(), key=lambda t: (-t[1], t[0]))]) + [""]
+        L += ["## This run, and how much to trust it", ""]
+        if dv is None:
+            L += [DIR_NOT_RUN, ""]
+        else:
+            ctl = dv.controls or {}
+            L += [f"{cnt['rows']:,} arrows ({cnt['edges']:,} edges of `direction/edges.parquet`: an arrow that names "
+                  f"several sources stands for one edge per source), {cnt['with_alert']:,} of them with an alert "
+                  f"{ALERT}; grade " + ", ".join(
+                      f"{g_} {sum(v.get(g_, 0) for v in cnt['by_kind'].values()):,}" for g_ in DV.GRADES) + ".", ""]
+            pos = ctl.get("positive") or {}
+            if pos:
+                L += ["**Positive controls** (known biology that has to come back):", ""]
+                L += [self._dir_positive(k, v) for k, v in pos.items()] + [""]
+            exp = ctl.get("expected_false_edges") or {}
+            if exp:
+                L += ["**Arrows against the false arrows the controls expect.** Random pseudo-genotype groups (line "
+                      "sets drawn at random, tested exactly like the recorded groups and counted at the real table's "
+                      "cut) give the false arrows a group without any real effect adds; for the natural levels, the "
+                      "same tests with every gene's level shuffled over its lines.", ""]
+                body = []
+                for key, x in exp.items():
+                    kind, part = key, "over the whole table"
+                    for suf, what in (("_within_group_only", "significant only within its group (grade C: leads)"),
+                                      ("_within_drugdose_only",
+                                       "significant only within its drug-dose (grade C: leads)")):
+                        if key.endswith(suf):
+                            kind, part = key[:-len(suf)], what
+                    n_, f_, u_ = x.get("edges"), x.get("expected_false"), x.get("expected_false_upper")
+                    bad = _finite(f_) and _finite(n_) and n_ and float(f_) >= 0.5 * float(n_)
+                    body.append([DV.KIND_SHORT.get(kind, kind), part, fint(n_),
+                                 self._dir_num(f_) + (f" (up to {self._dir_num(u_)})" if _finite(u_) else ""),
+                                 f"{ALERT} about half or more may be false: read them as leads" if bad else ""])
+                L += table(["Evidence", "Which arrows", "Written", "Expected false", ""], body) + [""]
+                L += [DV.CONTROLS_CAVEAT, ""]
+                L += ["The natural knockouts and the drug-target arrows have no random control: each arrow's alerts "
+                      "say what to doubt.", ""]
+            neg = (ctl.get("negative") or {}).get("summary") or {}
+            if neg:
+                L += [f"**Random pseudo-groups** ({fint((dv.info.get('groups_tested') or {}).get('pseudo_controls'))} "
+                      "groups): arrows per group, random vs recorded groups:", ""]
+                for k, v in neg.items():
+                    L.append(f"- {k}: over the whole table {self._dir_num(v.get('pseudo_edges_mean_per_group'))} vs "
+                             f"{self._dir_num(v.get('real_edges_mean_per_group'))}; within the group only "
+                             f"{self._dir_num(v.get('pseudo_within_group_edges_mean_per_group'))} vs "
+                             f"{self._dir_num(v.get('real_within_group_edges_mean_per_group'))}"
+                             + (f" {ALERT} the random groups do as well as the recorded ones"
+                                if v.get("pseudo_at_or_above_real") else "") + ".")
+                L.append("")
+            lv = ctl.get("level_controls") or {}
+            if lv:
+                L += ["**Natural levels, shuffled** (every gene's level permuted over its lines, the same tests):", ""]
+                for k, v in lv.items():
+                    L.append(f"- {DV.KIND_SHORT.get(k, k)}: {fint(v.get('tests'))} tests, {fint(v.get('edges'))} "
+                             f"arrows; with the levels shuffled {fint(v.get('control_permuted_levels_edges'))}"
+                             + (f" (and {fint(v.get('control_permuted_levels_within_drugdose_only'))} within a "
+                                f"drug-dose only, against {fint(v.get('edges_within_drugdose_only'))})"
+                                if "control_permuted_levels_within_drugdose_only" in v else "") + ".")
+                L.append("")
+        L += ["## What an arrow does not say", ""] + [f"- {x}" for x in DV.caveat_lines()] + [""]
+        L += ["## Files", "",
+              "- `direction/edges.parquet`: one row per edge (its README.md lists every column); "
+              "`direction/groups.parquet`: the comparison groups (recorded alterations, natural knockouts, random "
+              "pseudo-groups); `direction/controls.json`; `direction/info.json`.",
+              f"- Generated by `tahoe vault` (v{VERSION}) from `direction/`; rebuilt on every run: do not edit it.", ""]
+        self.W.write(f"Concepts/{self.fixed[DIR_NOTE]}.md", "\n".join(L))
+
     def sec_where(self, c):
         R = self.R
         L = ["## Where it sits", ""]
@@ -2610,7 +3256,9 @@ class Vault:
                 f"`tables/drug_line_top.parquet` (col == {c}); `tables/drug_effects.parquet` ({n_de} rows, flagged "
                 f"included); `relations/gene_relations.parquet` (col_a == {c}, {nrel} rows); "
                 f"`atlas/effects/DD_lfc|DD_z|DD_qup|DD_qdn.npy` [:, {c}]; `tensor/DDL_lfc|DDL_z.npy` [{c}]; "
-                f"`embed/gene_vectors.npy` [{c}]; `graph/nodes.parquet`. Every well: [[{self.plates_note[c]}]].",
+                f"`embed/gene_vectors.npy` [{c}]; `graph/nodes.parquet`"
+                + (f"; `direction/edges.parquet` (source_col == {c} or target_col == {c})" if self.dv is not None
+                   else "") + f". Every well: [[{self.plates_note[c]}]].",
                 ""]
 
     # ------------------------------------------------------------------ plates notes (per gene)
@@ -2955,13 +3603,17 @@ class Vault:
             L += ["- " + "; ".join(f"{self.dlink(n)} ({fcos(v)}"
                                    + (f", {cell(sval(moa.get(n)))}" if moa is not None and sval(moa.get(n)) else "")
                                    + (f", {ALERT} {w}" if w else "") + ")" for n, v, w in lst), ""]
+        L += self.sec_direction_drug(d, rows)
         L += self.sec_literature("drug", d, f"Drugs/{self.drug_name[d]}.md")
         L += ["## Data", "",
               "- `tables/drugs.parquet` — drug == " + json.dumps(d),
               "- `tables/drugdoses.parquet` — dd in " + ", ".join(str(i) for i in rows),
               "- `tables/drug_effects.parquet` — rows with dd in those rows; `atlas/effects/DD_*.npy` — those rows",
-              "- `embed/drugdose_vectors.npy` — those rows", ""]
-        return "\n".join(L)
+              "- `embed/drugdose_vectors.npy` — those rows"]
+        if self.dv is not None:
+            L += ["- `direction/edges.parquet` — target_dd in those rows; drug_target rows whose compounds include "
+                  "it"]
+        return "\n".join(L + [""])
 
     # ------------------------------------------------------------------ line notes
     def line_notes(self):
@@ -3158,12 +3810,16 @@ class Vault:
                 L += [f"- Every component responds within 0.7–1.5 of a typical line (range {g3(np.nanmin(s))} to "
                       f"{g3(np.nanmax(s))})."]
             L += [""]
+        L += self.sec_direction_line(line)
         L += self.sec_literature("line", line, f"Cell lines/{self.line_name[line]}.md")
         L += ["## Data", "",
               f"- `tables/lines.parquet` — line == {line}; `tables/line_effects.parquet` — line == {line}",
               f"- `atlas/effects/DD_A.npy`, `DD_Az.npy`, `DD_beta.npy`, `line_cpm.npy` — column / row {line}; "
-              f"`tensor/DDL_lfc.npy`, `DDL_z.npy` — [:, :, {line}]", ""]
-        return "\n".join(L)
+              f"`tensor/DDL_lfc.npy`, `DDL_z.npy` — [:, :, {line}]"]
+        if self.dv is not None:
+            L += ["- `direction/groups.parquet` — the genotype and natural-knockout groups whose altered_lines "
+                  f"include {R.cell[line]}"]
+        return "\n".join(L + [""])
 
     # ------------------------------------------------------------------ plate notes
     def plate_notes(self):
@@ -3554,7 +4210,8 @@ class Vault:
         ei = R.embed_info
         n_written = sum(1 for c in range(R.gK) if R.sym[c] in self.fragments)
         stamps = {}
-        for s in ("build", "effects", "tensor", "tables", "embed", "reference", "relations", "graph", "validate"):
+        for s in ("build", "effects", "tensor", "tables", "embed", "reference", "relations", "graph", "direction",
+                  "validate"):
             p = os.path.join(self.out, "stages", s + ".json")
             if os.path.exists(p):
                 try:
@@ -3577,6 +4234,15 @@ class Vault:
              f"| Modules | {len(self.module_name)} |",
              f"| Drugs / drug-doses | {len(self.drug_name)} / {R.Dn:,} |",
              f"| Cell lines | {R.L} |", f"| Plates / wells | {len(self.plate_name)} / {R.N:,} |"]
+        if self.dv is not None:
+            dc = self.dv.counts()
+            L += [f"| Probable direction (arrows SOURCE → TARGET; [[{self.fixed[DIR_NOTE]}]]) | {dc['rows']:,} arrows: "
+                  "grade " + ", ".join(f"{g_} {sum(v.get(g_, 0) for v in dc['by_kind'].values()):,}"
+                                       for g_ in DV.GRADES)
+                  + f"; {dc['with_alert']:,} with an alert {ALERT} |"]
+        else:
+            L += [f"| Probable direction ([[{self.fixed[DIR_NOTE]}]]) | not computed: the direction stage has not run "
+                  "on this output |"]
         if self.lit:
             nk = {k: sum(1 for x in self.lit if x[0] == k) for k in REVIEW_KINDS}
             L += ["| Literature reviews (AI agents; `review/`) | " + ", ".join(
@@ -3590,13 +4256,17 @@ class Vault:
              "| [[How to read this vault]] |",
              "| a gene | the quick switcher (Ctrl/Cmd-O), or [[Genes by letter]] |",
              "| the modules of the nodal map | [[Genes by module]] |",
+             f"| which gene probably acts on which (from the cell lines; not proof of direct regulation) "
+             f"| [[{self.fixed[DIR_NOTE]}]], and a gene note's Direction (probable) |",
              "| a drug | [[Drugs by mechanism]] |", "| a cell line | [[Lines by organ]] |",
              "| why a gene has no note | [[Genes below the detection limit]] |",
              "| a plate's layout and its failed wells | " + ", ".join(f"[[{n}]]" for n in self.plate_name.values())
              + " |", "",
              "## Concepts", "",
              "Written notes (from `tahoemap/vault_seed/notes/`), each explained once:", ""]
-        L += ["- " + ", ".join(f"[[{n}]]" for n in sorted(self.seed_notes.values())), ""]
+        L += ["- " + ", ".join(f"[[{n}]]" for n in sorted(self.seed_notes.values())), "",
+              f"Generated from this run: [[{self.fixed[DIR_NOTE]}]] (the direction stage's arrows, their grades, "
+              "alerts and controls).", ""]
         if R.have_validation:
             mt = R.metrics
             cs = mt.get("control_sets", {}) or {}
@@ -3660,7 +4330,8 @@ class Vault:
                                  novel_status=novel_status, arm_min=ARM_MIN, arms_opp=ARMS_OPPOSITE,
                                  n_old=self.n_old_study, cc_safety=R.cc_safety,
                                  cc_max_pct=f"{100 * R.cc_max:g}%" if R.cc_max != 0.5 else "half",
-                                 artifacts=", ".join(f"`{a}`" for a in A.ARTIFACT_FLAGS))
+                                 artifacts=", ".join(f"`{a}`" for a in A.ARTIFACT_FLAGS), n_dir=N_DIRECTION,
+                                 dir_note=self.fixed[DIR_NOTE])
         if self.lit:
             txt = txt.rstrip("\n") + "\n\n" + LIT_HOWTO
         self.W.write(f"{self.fixed['How to read this vault']}.md",
@@ -3700,7 +4371,7 @@ class Vault:
         merge("app.json", app, app_merge)
         graph = {"collapse-filter": False,
                  "search": '-path:"Indexes" -path:"Plates" -path:"Cell lines" -file:"— plates" '
-                           '-file:"Home" -file:"How to read this vault"',
+                           '-file:"Home" -file:"How to read this vault" -file:"Probable direction"',
                  "showTags": False, "showAttachments": False, "hideUnresolved": True, "showOrphans": False,
                  "colorGroups": [{"query": 'path:"Drugs"', "color": {"a": 1, "rgb": 14725458}},
                                  {"query": 'path:"Modules"', "color": {"a": 1, "rgb": 5431378}},
@@ -3711,7 +4382,8 @@ class Vault:
                            "ensembl_id": "text", "name": "text", "location": "text", "module": "number",
                            "arm": "text", "pooled_cpm": "number", "n_lines_expressing": "number",
                            "n_dd_up_clean": "number", "n_dd_down_clean": "number", "in_vector_space": "checkbox",
-                           "n_dd_up": "number", "n_dd_down": "number",
+                           "n_dd_up": "number", "n_dd_down": "number", "direction_upstream": "number",
+                           "direction_downstream": "number",
                            "generated_by": "text", "source": "text", "drug": "text", "doses": "multitext",
                            "max_sig_genes": "number", "cell_line": "text", "drivers": "multitext",
                            "tp53_status": "text", "n_dd_depleted": "number", "median_response": "number",
@@ -3750,7 +4422,9 @@ class Vault:
         self.load_fragments()
         self.assign_names()
         self.load_literature()
+        self.load_direction()
         self.write_concepts()
+        self.direction_note()
         self.gene_notes()
         self.drug_notes()
         self.line_notes()
@@ -3780,6 +4454,7 @@ class Vault:
                 "fragments_marked_earlier_study": self.n_old_study,
                 "fragments_available": len(self.fragments), "written": self.W.n_written,
                 "literature_notes": self.n_lit_notes, "literature_partner_cells": self.n_lit_cells,
+                "direction_arrows": len(self.dv.rows) if self.dv is not None else None,
                 "review": self.lit_fp,
                 "unchanged": self.W.n_same, "stale_removed": removed, "mb": round(self.W.bytes / 1e6, 1),
                 "gene_note_kb_median": round(float(np.median(gs)) / 1e3, 1) if len(gs) else None,
@@ -3905,9 +4580,10 @@ seen.
   each, **and** fdr ≤ {repro_fdr:.2f}), `⚠ one half` (strong, |cos| ≥ {one_half:g}, in one of the two random halves
   only: not replicated, no error estimate; often one compound), `⚠ not reproduced`. Other alerts: `⚠ same locus` /
   `⚠ readthrough risk` (neighbours on the genome), and ⚠ after the partner's name = the partner is in the vector space
-  only through drug-doses that carry an alert. The tables show the {n_part} strongest per side and any of the {n_part} strongest
-  without an alert below them; a partner with an alert keeps its place with it. *fdr* = the estimated share of
-  false relations among pairs at least this strong in both halves, from sign concordance between the halves (see
+  only through drug-doses that carry an alert. The tables show the {n_part} strongest per side and any of the
+  {n_part} strongest without an alert below them; a partner with an alert keeps its place with it. *fdr* = the
+  estimated share of false relations among pairs at least this strong in both halves, from sign concordance between
+  the halves (see
   [[FDR calibration and the inflated null]]). *Notes*: known links (shared HGNC gene group, shared Hallmark/Reactome
   pathway, STRING score), **novel candidate** (both halves, fdr ≤ {novel_fdr:.2f}, |cos| ≥ {novel_cos:g}, no known
   link, not the same locus, both genes described by HGNC and placed on the genome; assessed only when HGNC, Ensembl,
@@ -3916,6 +4592,16 @@ seen.
   more expressed: the 3′ gene's counts can be the 5′ gene's transcription, marked ⚠; see
   [[Readthrough spillover]]). A
   relation is a correlation across drugs and lines; it is never evidence that one gene regulates the other.
+- **Direction (probable)** — the arrows of the direction stage (`direction/`): **upstream of this gene**, the arrows
+  whose target it is, and **downstream of this gene**, the arrows whose source it is (to another gene, or to the
+  cells under a drug-dose). Each arrow names its source or target (linked), its grade (A strong, B read its alerts,
+  C a glimpse), what the source's activity does (raises, lowers, or not inferred), the evidence (a recorded mutation
+  and the lines on each side, lines that do not express the source, compounds that target it, or its natural level
+  across the lines), the size of the effect, q, and its alerts (⚠ and a short label per reason; every reason in full
+  is in `direction/edges.parquet`). Each list shows the {n_dir} strongest and any of the {n_dir} strongest without an
+  alert beyond them, and says how many more there are. An arrow is a **probable** direction, from the screen's cell
+  lines: not proof of direct regulation (A → B → C looks like A → C). Kinds, grades, sign, alerts and this run's
+  controls: [[{dir_note}]]. When the gene has arrows, At a glance says so in one sentence.
 - **Where it sits** — its module and arm, its positions on the two maps, the length of its vector, and the {n_pred}
   drug-doses whose vectors **predict** the largest rise and fall of the gene (gene vector · drug-dose vector, in z
   units), with the {n_pred} strongest predictions among drug-doses without an artifact flag (⚠ = the drug-dose, or
@@ -3947,10 +4633,12 @@ seen.
 - **Drug** — doses (wells, significant genes, replicate agreement, cell loss, cell-cycle and proteasome module z,
   flags with ⚠ before the artifact flags), the genes each dose raises and lowers (every significant gene counts;
   those with an alert are marked, a bare ⚠ standing for the dose's own alert named after the dose), the modules it
-  moves, the lines it depletes and the lines that respond most, and the nearest drugs in the vector space.
+  moves, the lines it depletes and the lines that respond most, the nearest drugs in the vector space, and (Direction
+  (probable)) the genes that set how the cells fare under it and the drug-target arrows of its compound classes.
 - **Cell line** — organ, TP53 status, drivers, the drug-doses that deplete it, how strongly it responds (both over
   all drug-doses, flagged ones marked ⚠), the genes it moves most, the genes it has unusually high or lacks, and the
-  programmes that do not respond in it.
+  programmes that do not respond in it; and (Direction (probable)) its recorded alterations as the direction stage
+  grouped them, and the genes it does not express that served as natural knockouts, with the arrows each gave.
 - **Plate** — dose, reliability, plate factor, DMSO and failed wells, an 8 × 12 layout and a 96-row well table
   (wells on an unreliable plate, without a position correction, not used in their drug-dose or failed are marked ⚠).
 - **Module** — label from the validation stage, enrichment, the drugs that raise or lower it (flagged ones marked

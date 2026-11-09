@@ -10,15 +10,15 @@ read: the test copies it to DIR/export_test/out (without the big per-well and pe
 stand-ins) and adds what an export must leave alone - review caches, key state, lock and stop files, temporary files,
 raw reference downloads, hf/ - and a few literature-review results it must copy. No network; a few seconds.
 
-Checks: the folders and files copied and the ones never copied; --include; MANIFEST.tsv (every file, bytes and
-sha256, nothing else in DEST); .gitattributes ('* -text'); README.md (folders, provenance, stage states, what was
-left out and why, the files too large for GitHub); a file over the limit skipped and listed (a 96 MiB sparse file at
-the default 95 MiB, and a lowered --max-file-mb); a DEST inside OUT (or holding OUT) refused, also with other letter
-case on a case-insensitive system; a non-empty DEST refused without --force; --force: unchanged files kept, files
-the source no longer has removed, the user's own files (a .git folder, notes) left alone, a file in the way that the
-manifest does not list stops it before anything is copied; --with-effects; a live pipeline lock refused; the command
-line (python -m tahoemap export ...) and its next steps; and, when git is installed, a commit of DEST that stores a
-CRLF file byte for byte with core.autocrlf=true.
+Checks: the folders and files copied (direction/ whole, and described) and the ones never copied; --include;
+MANIFEST.tsv (every file, bytes and sha256, nothing else in DEST); .gitattributes ('* -text'); README.md (folders,
+provenance, stage states, what was left out and why, the files too large for GitHub); a file over the limit skipped
+and listed (a 96 MiB sparse file at the default 95 MiB, and a lowered --max-file-mb); a DEST inside OUT (or holding
+OUT) refused, also with other letter case on a case-insensitive system; a non-empty DEST refused without --force;
+--force: unchanged files kept, files the source no longer has removed, the user's own files (a .git folder, notes)
+left alone, a file in the way that the manifest does not list stops it before anything is copied; --with-effects; a
+live pipeline lock refused; the command line (python -m tahoemap export ...) and its next steps; and, when git is
+installed, a commit of DEST that stores a CRLF file byte for byte with core.autocrlf=true.
 
 Prints PASS / FAIL per check; exit code 1 if anything fails.
 """
@@ -118,6 +118,8 @@ NEVER = ["tensor/DDL_z.npy", "atlas/pseudobulk/group000.npy", "hf/data/train-000
          "reference/downloads/hgnc_complete_set.txt", "review/cache/pubmed/ab/abcdef.json",
          "review/dry_run/summary.json", "review/keys_state.json", "review/ledger.unwritten.jsonl", "review/.run.lock",
          "review/.stop", "tables/genes.parquet.tmp", "vault/Home.md.part", ".pipeline.lock", ".job.pid"]
+DIRECTION = ["direction/edges.parquet", "direction/groups.parquet", "direction/controls.json", "direction/info.json",
+             "direction/README.md"]
 REVIEW = ["review/reviews/gene/TP53.json", "review/notes/gene/TP53.md", "review/history/gene/TP53/20261109-0001.jsonl",
           "review/ledger.jsonl", "review/queue.parquet", "review/connections.parquet", "review/findings.parquet",
           "review/review.log"]
@@ -158,11 +160,17 @@ def basic(base, out):
             "validation/report.md", "graph/nodes.parquet", "relations/gene_relations.parquet", "embed/genes.parquet",
             "embed/info.json", "reference/annotations.parquet", "reference/sources.json", "stages/embed.json",
             "run_options.json", "run.log", "RUN_REPORT.md", "README.md", "MANIFEST.tsv", ".gitattributes"] + REVIEW
+    must += DIRECTION
     must = [m for m in must if os.path.exists(os.path.join(out, *m.split("/"))) or m in X.WRITTEN
             or m == "RUN_REPORT.md"]
     miss = [m for m in must if m not in got]
-    check("basic", "the shareable results are copied (vault, map, tables, validation, graph, relations, embed, "
-          "reference tables, stages, run files, review results, --include)", not miss, f"missing {miss}")
+    check("basic", "the shareable results are copied (vault, map, tables, validation, direction, graph, relations, "
+          "embed, reference tables, stages, run files, review results, --include)", not miss, f"missing {miss}")
+    have_dir = all(os.path.exists(os.path.join(out, *m.split("/"))) for m in DIRECTION)
+    n_dir = sum(1 for f in files_under(os.path.join(out, "direction"))) if have_dir else 0
+    check("basic", "direction/ is copied whole (edges, groups, controls, info, README) and described in README.md",
+          have_dir and sum(1 for f in got if f.startswith("direction/")) == n_dir and n_dir >= len(DIRECTION),
+          f"{n_dir} files in OUT/direction" if have_dir else f"the output has no direction stage ({DIRECTION[0]})")
     n_vault = sum(1 for f in files_under(os.path.join(out, "vault")) if not f.endswith((".tmp", ".part")))
     check("basic", "every vault note is copied", sum(1 for f in got if f.startswith("vault/")) == n_vault,
           f"{n_vault} in OUT")
@@ -187,7 +195,8 @@ def basic(base, out):
     check("gitattributes", "'* -text' (git stores every file byte for byte)", ga == ["* -text"], f"{ga}")
     with open(os.path.join(dest, "README.md"), encoding="utf-8") as fh:
         rd = fh.read()
-    want = ["## What each folder holds", "`vault`", "`map`", "Obsidian", "gene_map.html", "## Provenance",
+    want = ["## What each folder holds", "`vault`", "`map`", "`direction`", "probable direction", "Obsidian",
+            "gene_map.html", "## Provenance", "| direction |",
             "tahoemap version", "code commit", "| embed |", "## What was left out, and why", "`tensor`",
             "`atlas/pseudobulk`", "`reference/downloads`", "`review/cache`", "`review/keys_state.json`",
             "MANIFEST.tsv"]

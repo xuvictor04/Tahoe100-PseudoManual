@@ -22,7 +22,11 @@ What the page shows
       Physics: neighbourhood          a live force simulation of the selected gene, its partners and (depth 2-4)
                                       their partners, one depth at a time, strongest first (the product of |cos|
                                       along the way), at most Max genes (default 300, up to 2,000) (springs = the
-                                      embedded top-partner lists, `rel`)
+                                      embedded top-partner lists, `rel`); Direction (probable direction, below):
+                                      off / arrows (between the genes shown) / + its genes (the default: also the
+                                      selected gene's up- and downstream genes of its side-panel lists, held by a
+                                      link that is no relation and not drawn, so that a gene not on the map, such as
+                                      a recorded mutation's gene, is shown with its arrows)
       Physics: module                 a live force simulation of one module (springs = graph/edges.parquet among its
                                       genes; optional dimmed ring of 1-hop outside genes)
       Physics: all genes              every map gene, started from the nodal-map positions (springs = every edge of
@@ -48,7 +52,11 @@ What the page shows
     spread(v) (set the Spread slider; no argument: read it), hasSpread(), positions() (the map's drawn positions),
     mapScreen(i) (where gene i is drawn on the map canvas);
     tour(), tourPositions(), tourVector(i), tourAxes(i, j) (0-based), tourMode('tour' | 'axes'), tourPlay(bool),
-    tourBench(n) (mean ms of one tour frame: projection and drawing), tourScreen(i); panel() (the side panel's text).
+    tourBench(n) (mean ms of one tour frame: projection and drawing), tourScreen(i); panel() (the side panel's text);
+    direction(i) (gene i's up / dn / ce lists: every row as direction_view.edge_line, *_shown = the positions the
+    capped list shows, *_more = [rows left out, of them with an alert], *_counts = counts_text), dirArrows(tab) (the
+    arrows a physics tab draws: mode, genes added, ids, [{s, t, k, grade, sign, n, line}]), mapArrows() (the
+    selected gene's arrows on the maps).
     The maps: the NODAL map (graph x, y: genes that respond to the same drugs sit together whether they go up together
     or in opposite directions; the two arms of a pathway form one island) and the SIGNED vector map (graph xs, ys:
     genes that move in opposite directions are pushed apart; a two-armed module is labelled once per arm there). Pan
@@ -62,6 +70,18 @@ What the page shows
     evidence of a response beyond that count, noise RNA) are searchable too: the panel then gives their drug-doses and
     lines, and why they are not on the map, as the embed stage's rule with its counts.
     The URL hash selects a gene (gene_map.html#HMOX1), so other documents can link to a gene.
+    Probable direction (direction stage, OUT/direction; read, ordered, collapsed and worded by direction_view, so the
+    page says what the vault notes and the look-ups say): the side panel lists the selected gene's Upstream rows (it is
+    the target: what probably acts on it), Downstream rows (it is a source, the target a gene) and Cells rows (it is a
+    source, the target the cells under a drug-dose), each in direction_view.ORDER and capped at N_DIR by the cap rule
+    (direction_view.cap) with its counts (counts_text, more_text) and a 'show all'; a row reads 'SOURCE → TARGET', its
+    grade badge (A / B / C, the grade's words as its tooltip), the sign word, the kind and q, the sentence of
+    sign_text, the short alerts (⚠; the full reasons as tooltip) and, on click, the evidence (kind_text, the reading,
+    every alert); a gene's name selects it. Arrows: on the neighbourhood tab between the genes shown (one per ordered
+    pair, its strongest row; at most 3,000, the info box counts any more), on the two maps the selected gene's rows of
+    its lists (the 'Direction arrows' box); line style by grade (A thick, B thin, C dashed), head by sign (raises: a
+    filled head, lowers: a bar, not inferred: an open circle), in one violet. An output without the stage: the panel,
+    the help and the disabled toggles say so.
 
 Alerts, not removal. An item with a reason for doubt stays in its ranked place with a visible alert, '⚠' and the
 reason in plain words, and every list says how many items there are in all and how many carry an alert:
@@ -78,12 +98,14 @@ reason in plain words, and every list says how many items there are in all and h
                      the space only through flagged drug-doses, the panel says so once and the cap and the counts
                      look at the partners' reasons)
     module drugs     ⚠ + the drug-dose's own flags (tables/drugdoses.parquet) for an artifact flag
+    direction rows   ⚠ + direction_view.alert_short (the stage's reasons as short labels; the full reasons in the
+                     tooltip and in the row's evidence), cut by direction_view's cap rule with its counts
     genes            ⚠ not on the map (not in the vector space; also in the search list); ⚠ in the vector space only
                      through flagged drug-doses (embed/genes.parquet evidence_flagged_only, when the column is there)
-A list capped at N (partners 15, drug-doses 8 per direction, lines 5, module drug-doses 10 per direction) holds the N
-strongest overall AND any of the N strongest without an alert that would otherwise fall beyond them, all in one
-ranking (cap_keep), so flagged items never push unflagged ones out of view. The physics springs use the Evidence
-filter (computing, not showing): the info box says how many listed partners it leaves out.
+A list capped at N (partners 15, drug-doses 8 per direction, lines 5, module drug-doses 10 per direction, direction
+rows 8 per list) holds the N strongest overall AND any of the N strongest without an alert that would otherwise fall
+beyond them, all in one ranking (cap_keep), so flagged items never push unflagged ones out of view. The physics
+springs use the Evidence filter (computing, not showing): the info box says how many listed partners it leaves out.
 
 What the page says is the stages' own rule, never more: the per-line counts and 'strongest' use the per-line |z| cut
 the tables stage calibrated (tables/info.json; '-' below it); 'both' halves = same sign with fdr <= 0.10 in two random
@@ -96,9 +118,11 @@ Inputs (read only): graph/nodes.parquet, graph/modules.parquet, graph/module_poo
 graph/info.json, relations/gene_relations.parquet, relations/info.json,
 tables/{genes,drug_effects,line_effects,drugdoses,lines}.parquet, tables/info.json, embed/genes.parquet,
 embed/info.json, embed/gene_unit.npy, embed/components.parquet; optional: reference/annotations.parquet,
-validation/module_labels.csv. Without graph/edges.parquet (an older graph stage) the module and all-genes tabs fall
-back to the top-partner lists; without the spread columns of graph/nodes.parquet the Spread slider is off; without
-embed/gene_unit.npy the tour tab says so.
+validation/module_labels.csv, direction/ (edges.parquet, groups.parquet, controls.json, info.json; and
+atlas/effects/drugdose.csv for the cells rows' drug-doses: direction_view.load). Without graph/edges.parquet (an
+older graph stage) the module and all-genes tabs fall back to the top-partner lists; without the spread columns of
+graph/nodes.parquet the Spread slider is off; without embed/gene_unit.npy the tour tab says so; without direction/
+the panel, the help and the (disabled) arrow toggles say that the stage has not run.
 
 The embedded JSON (<script id="tm-data" type="application/json">; "<" is written as \\u003c). Entries 0..n-1 are
 the genes on the map in graph/nodes.parquet order, entries n..n_all-1 the genes that are not on the map (by col).
@@ -172,6 +196,28 @@ Scaled integers: cos x100, fdr x100 (-1 = none), lfc x100 (log2), z x10.
                                    of int8 round(127 x v / sc) of the map genes' unit vectors (n x k, row-major; ~1.3
                                    MB at 15,000 x 64), "ax": per-axis top genes (+ / −, embed/components.parquet),
                                    "var": per-axis % of the space}, or {} without embed/gene_unit.npy
+    dir                            the probable direction (DirBlock.encode): {"ok": false, "why"} without the
+                                   stage; else direction_view's display rows (collapsed, in ORDER) that touch a gene
+                                   of the page, as "r": flat ints, w = DIR_FIELDS per row: [kind + 16 x grade + 64 x
+                                   (sign + 1) + 256 x has_alert (kind, grade: indices into "kinds", "grades"),
+                                   source set (index into "ss"), target name (index into "nm"), target entry (gene
+                                   targets; -1 = not a gene of the page) or drug-dose row (cells targets: target_dd),
+                                   sign_text, kind_text, q_text, alert_short, alert_long, reading (indices into "tx";
+                                   -1 = left out to keep the page small)]; "ss": [source text (nm), then per source
+                                   name (nm), entry (-1 = not a gene of the page)]; "nm", "tx": the strings, the most
+                                   frequent first (tx[0] = ""); a text is a template: \u0001 = the row's source text,
+                                   \u0002 = its target name (for a cells target the drug-dose after 'cells under '),
+                                   put back as T then S (_templ / _fill: exact); "cmore": flat [entry, rows left out,
+                                   of them with an alert, A, B, C] when the cells rows beyond the cap were left out;
+                                   "cap" N_DIR; the words of direction_view: kinds, kshort, kwords, sens (sensitivity
+                                   kinds), grades, gwords, gshort, signw (for -1, 0, +1), caveat, caveat_short,
+                                   caveat_lines, order; counts (direction_view.counts), n_rows_stage, n_edges_stage,
+                                   n_rows, n_edges (on the page), n_rows_out (rows that touch no gene of the page: a
+                                   source that is no measured gene and a cells target; rows_out_sources, their first
+                                   sources), short (what was shortened, in words), lines (the stage's lines). About
+                                   40 bytes a row without its texts; at full scale (an estimate with ~115,000 edges,
+                                   ~94,000 display rows) 13.6 MB with every text, 7.8 MB without the grade C rows'
+                                   readings, 6.5 MB without any reading (run: the shortening steps, in order)
     lit, lit_v                     only when OUT/review holds literature reviews (tahoemap/review): flat [entry a,
                                    entry b, kind, citations] x the connection verdicts of gene a's review on gene b
                                    (review/connections.parquet, of each gene's latest review, one per partner by
@@ -189,6 +235,7 @@ Scaled integers: cos x100, fdr x100 (-1 = none), lfc x100 (log2), z x10.
 
 import base64
 import json
+from collections import Counter
 import os
 import re
 import time
@@ -198,12 +245,14 @@ import numpy as np
 import pandas as pd
 
 from . import atlas_core as A
+from . import direction_view as DV
 from . import vault as V
-from .common import ALERT, folder, log, marked_names, replace_file, stamp_stage
+from .common import ALERT, cap_keep as cap_rule, folder, log, marked_names, replace_file, stamp_stage
 
-VERSION = 5                    # 3: tabs, the physics simulations, graph/edges.parquet embedded; 4: a slow
+VERSION = 6                    # 3: tabs, the physics simulations, graph/edges.parquet embedded; 4: a slow
                                # double-click pins, at most 120 steps a second, literature badges with their check;
-                               # 5: alerts instead of removal, the Spread slider, the k-D tour, neighbourhood depth 4
+                               # 5: alerts instead of removal, the Spread slider, the k-D tour, neighbourhood depth 4;
+                               # 6: probable direction (direction stage): side-panel lists and arrows
 N_PARTNERS = 15
 N_DRUGS = 8
 N_LINES = 5
@@ -214,6 +263,8 @@ LINE_Z_FALLBACK = 4.0          # per-line |z| cut when tables/info.json has none
 FN_CHARS = 110
 MAX_BYTES = 20_000_000         # above this the function snippets are shortened, then the line lists (a 20 MB page
                                # opens in about a second; version 5 adds ~1.3 MB of tour vectors at full scale)
+N_DIR = 8                      # side panel: probable-direction rows per list (upstream, downstream, cells), cap rule
+DIR_FIELDS = 10                # ints per row of the `dir` block's r (module docstring)
 EVIDENCE = {"not reproduced": 0, "one half": 1, "both halves": 2}
 # 20 colours for modules (cycled: module m gets PALETTE[(m - 1) % 20]); the first 8 are a CVD-checked categorical
 # set on the light surface, the next 12 darker / other hues. Modules are numbered by size, so the big ones get these.
@@ -527,6 +578,175 @@ def _edge_block(gd, ent, gK, n, pair_keys, pair_ev):
         f"{(ev == 1).sum():,} one half)")
     return {"m": int(len(key)), "bytes": width, "a": _b64(lo.astype(dt)), "b": _b64(hi.astype(dt)), "cos": _b64(q),
             "ev": _b64(ev)}
+
+
+# ----------------------------------------------------------------------------- probable direction (direction stage)
+S_MARK, T_MARK = "\x01", "\x02"      # in a text template: the row's source text / target name (module docstring)
+_CELLS = "cells under "
+
+
+def _templ(text, s, t):
+    """A text of a row with its source text s and its target name t replaced by the marks; the page puts them back
+    (first T_MARK -> t, then S_MARK -> s), which gives the text exactly (the marks never occur in a text)."""
+    text = str(text or "")
+    if s:
+        text = text.replace(s, S_MARK)
+    if t:
+        text = text.replace(t, T_MARK)
+    return text
+
+
+def _fill(text, s, t):
+    """The inverse of _templ (the page's fillT)."""
+    return text.replace(T_MARK, t).replace(S_MARK, s)
+
+
+def dir_missing(why):
+    """The `dir` block of a page without the direction stage (an older output, or no stage run): the side panel and
+    the arrow toggles say so."""
+    return {"ok": False, "why": why}
+
+
+class DirBlock:
+    """The direction stage's display rows (direction_view: collapsed, in ORDER, with its wording) that touch a gene of
+    the page (on the map or searchable), kept as texts, so that the `dir` block can be made again with shorter texts
+    when the page would be too large (encode). A row is a gene's upstream row (it is the target), downstream row (it
+    is a source, the target a gene) or cells row (it is a source, the target the cells under a drug-dose)."""
+
+    def __init__(self, out, ent, gK):
+        self.why = "no direction stage in this output (direction/edges.parquet is missing)"
+        try:
+            self.dv = dv = DV.load(out, cache=False)
+        except (OSError, ValueError, KeyError, TypeError) as e:       # unreadable: the page says so, the map is made
+            self.dv = dv = None
+            self.why = f"the direction stage's files could not be read ({type(e).__name__}: {str(e)[:160]})"
+            log(f"  direction: {self.why}")
+        self.ok = dv is not None
+        if not self.ok:
+            return
+        rows = dv.rows
+        self.n_stage = len(rows)
+        self.n_edges_stage = len(dv.edges)
+        sens = set(DV.SENSITIVITY)
+        kix = {k: i for i, k in enumerate(DV.KINDS)}
+        gix = {g: i for i, g in enumerate(DV.GRADES)}
+
+        def entry(c):
+            c = int(c)
+            return int(ent[c]) if 0 <= c < gK else -1
+        al_cache = {}
+        self.rows, self.out_rows = [], []
+        for r in rows.itertuples(index=False):
+            kind = str(r.kind)
+            cells = kind in sens or str(r.target_type) == "cells"
+            srcs = [str(x) for x in (r.sources or (r.source,))]
+            se = [entry(c) for c in (r.source_cols or (r.source_col,))]
+            tgt = str(r.target)
+            te = int(r.target_dd) if cells else entry(r.target_col)
+            if max(se + ([] if cells else [te])) < 0:
+                self.out_rows.append(r)                     # touches no gene of the page (counted, said so)
+                continue
+            s = DV.source_text(r)
+            t = tgt[len(_CELLS):] if cells and tgt.startswith(_CELLS) else tgt
+            a = str(r.alerts or "")
+            if a not in al_cache:
+                al_cache[a] = (DV.alert_short(a), DV.alert_long(a))
+            ash, alg = al_cache[a]
+            sg = DV._sign(r)
+            self.rows.append({
+                "kgs": kix.get(kind, 15) + 16 * gix.get(str(r.grade), 3) + 64 * (sg + 1) + 256 * bool(r.has_alert),
+                "cells": cells,
+                "grade": str(r.grade), "alert": bool(r.has_alert), "srcs": list(zip(srcs, se)), "s": s, "tgt": tgt,
+                "te": te, "edges": len(r.members or (0,)),
+                "sign": _templ(DV.sign_text(r), s, t), "kind": _templ(DV.kind_text(r), s, t),
+                "q": DV.q_text(r), "ash": _templ(ash, s, t), "alg": _templ(alg, s, t),
+                "rd": _templ(str(r.reading or ""), s, t)})
+
+    def encode(self, readings="all", long_alerts=True, cells_cap=None):
+        """The `dir` block (module docstring). readings: 'all', 'AB' (grade A and B rows only) or 'none'; long_alerts
+        False: the long alert texts are left out (the short labels stay); cells_cap n: a cells row is embedded only
+        when it is among the rows a gene's capped list shows (the cap rule at n), the others are counted per gene
+        (`cmore`)."""
+        if not self.ok:
+            return dir_missing(self.why)
+        rows = self.rows
+        keep = [True] * len(rows)
+        cmore = []
+        if cells_cap is not None:
+            by = {}
+            for k, r in enumerate(rows):
+                if r["cells"]:
+                    for _n, e in r["srcs"]:
+                        if e >= 0:
+                            by.setdefault(e, []).append(k)
+            keep = [not r["cells"] for r in rows]
+            for e, ks in by.items():
+                for p in cap_rule([rows[k]["alert"] for k in ks], cells_cap):
+                    keep[ks[p]] = True
+            for e, ks in sorted(by.items()):
+                miss = [k for k in ks if not keep[k]]
+                if miss:
+                    g = [sum(rows[k]["grade"] == x for k in miss) for x in DV.GRADES]
+                    cmore += [e, len(miss), sum(rows[k]["alert"] for k in miss), *g]
+        use = [r for r, k in zip(rows, keep) if k]
+        # interned strings, the most frequent first (small ids): names (nm), texts (tx), source sets (ss)
+        nm_c, tx_c = Counter(), Counter()
+        for r in use:
+            nm_c[r["s"]] += 1
+            nm_c[r["tgt"]] += 1
+            for n_, _e in r["srcs"]:
+                nm_c[n_] += 1
+            for f in ("sign", "kind", "q", "ash"):
+                tx_c[r[f]] += 1
+            if long_alerts:
+                tx_c[r["alg"]] += 1
+            if readings == "all" or (readings == "AB" and r["grade"] in ("A", "B")):
+                tx_c[r["rd"]] += 1
+        tx_c[""] += 0
+        nm = [x for x, _ in nm_c.most_common()]
+        tx = [""] + [x for x, _ in tx_c.most_common() if x != ""]
+        nmi = {x: i for i, x in enumerate(nm)}
+        txi = {x: i for i, x in enumerate(tx)}
+        ss, ssi, flat = [], {}, []
+        for r in use:
+            key = (r["s"], tuple(r["srcs"]))
+            if key not in ssi:
+                ssi[key] = len(ss)
+                v = [nmi[r["s"]]]
+                for n_, e in r["srcs"]:
+                    v += [nmi[n_], e]
+                ss.append(v)
+            rd = txi.get(r["rd"], -1) if (readings == "all" or (readings == "AB" and r["grade"] in ("A", "B"))) \
+                else -1
+            flat += [r["kgs"], ssi[key], nmi[r["tgt"]], r["te"], txi[r["sign"]], txi[r["kind"]], txi[r["q"]],
+                     txi[r["ash"]], txi[r["alg"]] if long_alerts else -1, rd]
+        short = []
+        if readings != "all":
+            short.append("the readings (each row's sentence with its numbers) of the grade C rows" if readings == "AB"
+                         else "the readings (each row's sentence with its numbers)")
+        if not long_alerts:
+            short.append("the alerts' full wording (each alert keeps its short label)")
+        n_c = sum(cmore[1::6])
+        if cells_cap is not None and n_c:
+            short.append(f"{n_c:,} cells rows beyond the {cells_cap} a gene's list shows (each gene's list counts "
+                         "them)")
+        dv = self.dv
+        nd = sum(r["edges"] for r in use)
+        out_names = sorted({str(r.source) for r in self.out_rows})
+        return {
+            "ok": True, "w": DIR_FIELDS, "r": flat, "nm": nm, "tx": tx, "ss": ss, "cmore": cmore, "cap": N_DIR,
+            "kinds": list(DV.KINDS), "kshort": [DV.KIND_SHORT[k] for k in DV.KINDS],
+            "kwords": [DV.KIND_WORDS[k] for k in DV.KINDS], "sens": [k in DV.SENSITIVITY for k in DV.KINDS],
+            "grades": list(DV.GRADES), "gwords": [DV.GRADE_WORDS[g] for g in DV.GRADES],
+            "gshort": [DV.GRADE_SHORT[g] for g in DV.GRADES], "signw": [DV.sign_word(s) for s in (-1, 0, 1)],
+            "signw_resp": [DV.sign_word(s, DV.RESPONSE[0]) for s in (-1, 0, 1)],
+            "resp": [k in DV.RESPONSE for k in DV.KINDS],
+            "caveat": DV.CAVEAT, "caveat_short": DV.CAVEAT_SHORT, "caveat_lines": DV.caveat_lines(),
+            "order": DV.ORDER, "counts": dv.counts(), "n_rows_stage": self.n_stage, "n_edges_stage": self.n_edges_stage,
+            "n_rows": len(use), "n_edges": nd, "n_rows_out": len(self.out_rows),
+            "n_rows_out_alert": int(sum(bool(r.has_alert) for r in self.out_rows)),
+            "rows_out_sources": out_names[:12], "n_rows_out_sources": len(out_names), "short": short,
+            "lines": (dv.info or {}).get("lines")}
 
 
 # ----------------------------------------------------------------------------- the data block
@@ -866,6 +1086,13 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
     grule = {k: ginfo.get(k) for k in ("k_edges", "min_edge", "one_half_edge", "max_module", "loose_cos",
                                         "split_depth", "min_module", "arms_opposite_cos", "spread")}
     tour = _tour_block(out, on)
+    dblock = DirBlock(out, ent, gK)
+    if dblock.ok:
+        log(f"  direction: {len(dblock.rows):,} of the stage's {dblock.n_stage:,} display rows touch a gene of the "
+            f"page ({len(dblock.out_rows):,} do not: their source is no measured gene and their target none of the "
+            "page's genes)")
+    elif "missing" in dblock.why:
+        log("  no direction/edges.parquet (the direction stage has not run): the page says so")
     return {
         "v": VERSION, "title": "Tahoe-100M gene map", "made": time.strftime("%Y-%m-%d"),
         "n": n, "scale": {"cos": 100, "fdr": 100, "lfc": 100, "z": 10},
@@ -886,6 +1113,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
         "grule": grule, "tour": tour, "n_partners": partners, "n_drugs": drugs, "n_lines": lines,
         "halves": bool(einfo.get("halves", True)),
         "n_mod_drugs": N_MOD_DRUGS,
+        "dir": dblock.encode(), "_dir": dblock,
         **lit,
     }
 
@@ -932,8 +1160,10 @@ def _literature(out, tg, ent, gK, n, shown_pairs):
 
 
 def _encode(data):
-    """Compact JSON that is safe inside a <script> element."""
-    s = json.dumps(data, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+    """Compact JSON that is safe inside a <script> element (keys starting with '_' are the builder's, not the
+    page's)."""
+    s = json.dumps({k: v for k, v in data.items() if not k.startswith("_")}, separators=(",", ":"),
+                   ensure_ascii=False, allow_nan=False)
     return s.replace("<", "\\u003c")
 
 
@@ -951,6 +1181,29 @@ def render(data):
     return _TEMPLATE.replace("__TITLE__", title).replace("__DATA__", payload)
 
 
+def _shrink_steps(data):
+    """The ways to make a too-large page smaller, in order, each on top of the ones before: (what is shortened, in
+    words; a function that shortens it). Texts only: no gene, partner, drug-dose or direction row is left out; the
+    last step leaves out the cells rows beyond a gene's capped list, and each gene's list counts them."""
+    db, opt = data.get("_dir"), {}
+
+    def direction(**kw):
+        def f(d):
+            opt.update(kw)
+            d["dir"] = db.encode(**opt)
+        return f
+    steps = []
+    if db is not None and db.ok:
+        steps += [("the direction readings of the grade C rows", direction(readings="AB")),
+                  ("every direction reading", direction(readings="none"))]
+    steps += [(f"the function snippets to {fc} characters" + (f" and the line lists to {nl}" if nl else ""),
+               (lambda fc_, nl_: lambda d: _shrink(d, fc_, nl_))(fc, nl)) for fc, nl in ((80, None), (60, 3), (40, 2))]
+    if db is not None and db.ok:
+        steps += [("the direction alerts' full wording (their short labels stay)", direction(long_alerts=False)),
+                  (f"the cells rows beyond the {N_DIR} of a gene's list (counted there)", direction(cells_cap=N_DIR))]
+    return steps
+
+
 def run(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=FN_CHARS, max_bytes=MAX_BYTES):
     t0 = time.time()
     warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -959,13 +1212,16 @@ def run(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=FN_CHAR
         data = build_data(out, partners=partners, drugs=drugs, lines=lines, fn_chars=fn_chars)
     page = render(data)
     size = len(page.encode("utf-8"))
-    for fc, nl in ((80, None), (60, 3), (40, 2)):          # keep the page loadable on a laptop
+    shortened = []
+    for what, step in _shrink_steps(data):                 # keep the page loadable on a laptop
         if size <= max_bytes:
             break
-        log(f"  page is {size / 1e6:.1f} MB: shortening function snippets to {fc} characters"
-            + (f" and line lists to {nl}" if nl else ""))
-        page = render(_shrink(data, fc, nl))
+        log(f"  page is {size / 1e6:.1f} MB: shortening {what}")
+        step(data)
+        shortened.append(what)
+        page = render(data)
         size = len(page.encode("utf-8"))
+    dr = data.get("dir") or {}
     path = os.path.join(md, "gene_map.html")
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
@@ -981,6 +1237,9 @@ def run(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=FN_CHAR
             "literature_verdicts": len(data.get("lit") or []) // 4, "review": V.review_fingerprint(out),
             "spread_layouts": "xm" in data, "tour_dims": (data.get("tour") or {}).get("k"),
             "tour_bytes": len((data.get("tour") or {}).get("q", "")), "flag_texts": len(data.get("fl") or []),
+            "direction": bool(dr.get("ok")), "direction_rows": dr.get("n_rows", 0),
+            "direction_rows_stage": dr.get("n_rows_stage", 0), "direction_rows_no_page_gene": dr.get("n_rows_out", 0),
+            "direction_bytes": len(_encode({"dir": dr}).encode("utf-8")), "shortened": shortened,
             "minutes": round((time.time() - t0) / 60, 2)}
     stamp_stage(out, "map", VERSION, info)
     log(f"Map done: {path} ({info['mb']} MB, {data['n']:,} genes on the map, {info['minutes']} min)")
@@ -1112,6 +1371,24 @@ a:hover,.lk:hover{text-decoration:underline}
 .howto h4{margin:12px 0 3px;font-size:13px}
 .howto p,.howto li{color:var(--ink2);margin:3px 0}
 .howto ul{padding-left:18px;margin:4px 0}
+.dh4{font-size:12px;margin:10px 0 3px;color:var(--ink);font-weight:600}
+.dkey{position:absolute;right:10px;top:10px;max-width:min(600px,calc(100% - 320px));background:rgba(252,252,251,.88);border:1px solid var(--ring);border-radius:8px;padding:4px 8px;z-index:4;color:var(--ink2);font-size:12px;display:none}
+.dkey span.it{white-space:nowrap;margin-right:9px}
+.dkey .dkx{float:right;border:0;background:transparent;cursor:pointer;color:var(--ink2);font:inherit;padding:0 2px 0 8px}
+.dkey.closed .dkb{display:none}
+.dr{padding:4px 2px 5px;border-bottom:1px solid #f0efea;cursor:pointer}
+.dr:hover{background:var(--hl)}
+.dr .dtx{color:var(--ink2);font-size:12px;line-height:1.3;margin:1px 0 0}
+.dr .dx{display:none;color:var(--ink2);font-size:12px;line-height:1.35;margin:3px 0 0 4px;padding:3px 0 2px 7px;border-left:2px solid #c9c1ee}
+.dr.open .dx{display:block}
+.dr .dx div{margin:1px 0}
+.gb{display:inline-block;min-width:17px;text-align:center;font-size:11px;font-weight:700;line-height:15px;border-radius:4px;margin-right:3px;border:1px solid #5b3fc4}
+.gb.g0{background:#5b3fc4;color:#fff}
+.gb.g1{background:#ece8fb;color:#3a2a8a}
+.gb.g2{background:#fff;color:#5b3fc4;border-style:dashed}
+.sgn{font-size:11px;padding:0 5px;border-radius:8px;border:1px solid var(--axis);color:var(--ink2);white-space:nowrap;margin-left:3px}
+.dsel{font-weight:700}
+.dnm{color:var(--muted)}
 @media (max-width:1280px){#tabs button{padding:12px 6px 9px}#q{width:165px}#ac{min-width:300px}header{gap:4px 10px}}
 </style>
 </head>
@@ -1137,12 +1414,14 @@ a:hover,.lk:hover{text-decoration:underline}
         <button class="btn" id="fitb" title="Show every gene">Reset view</button>
         <label class="rng" id="sprl" title="0 = the t-SNE layout; 1 = every module moved apart as a block, keeping its own arrangement, to a place set by how far apart the modules are in the full vector space">Spread <input type="range" id="spr" min="0" max="100" step="1" value="0" aria-label="Spread the modules apart"><output id="spro">0.00</output></label>
         <button class="btn" id="sprb" title="Animate between the t-SNE layout (0) and the spread layout (1)">Spread &#8644;</button>
+        <label class="grp" id="dirml" title="Draw the selected gene's probable-direction arrows (direction stage) to and from the genes on the map: the rows its side-panel lists show"><input type="checkbox" id="dirm" checked> Direction arrows</label>
         <span class="note" id="mapnote"></span>
       </div>
       <div class="wrap" id="mapwrap">
         <canvas id="cv"></canvas>
         <div id="legend"><div class="hd"><span id="lgtitle">Modules</span><button id="lgx" title="Collapse / expand">&#8722;</button></div><div id="armkey"></div><div id="lgbody"></div></div>
         <div id="tip" class="tip"></div>
+        <div id="dirkey" class="dkey"></div>
         <div id="status" class="status"></div>
       </div>
     </div>
@@ -1279,6 +1558,146 @@ function Labeler(ctx) {
 }
 function quant(sorted, q) { return sorted[Math.min(sorted.length - 1, Math.max(0, Math.round(q * (sorted.length - 1))))]; }
 
+// ---------------------------------------------------------------- probable direction (direction stage; D.dir)
+// Rows are direction_view's display rows in its ORDER; their texts are its own (templates: \u0001 = the row's source
+// text, \u0002 = its target name), so the page words them exactly as the vault and the look-ups do.
+const DR = D.dir || {ok: false};
+const HAS_DIR = !!DR.ok;
+const DIRC = "#5b3fc4", DIRC_T = "#3a2a8a";        // arrows, and the ring of genes added for their direction rows
+const DW = DR.w || 10, NDR = HAS_DIR ? Math.floor(DR.r.length / DW) : 0;
+const ALERT_S = "⚠", ARROW_S = "→";
+const fillT = (t, S, T) => (t.indexOf("\u0001") < 0 && t.indexOf("\u0002") < 0) ? t : t.split("\u0002").join(T).split("\u0001").join(S);
+const fmtN = v => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+let DX = null;                                     // per entry: its upstream, downstream and cells rows, in ORDER
+function dirIndex() {
+  if (DX) return DX;
+  const up = new Map(), dn = new Map(), ce = new Map(), more = new Map();
+  const push = (m, e, k) => { let a = m.get(e); if (!a) { a = []; m.set(e, a); } a.push(k); };
+  for (let k = 0; k < NDR; k++) {
+    const b = k * DW, kind = DR.r[b] & 15, cells = !!DR.sens[kind], ss = DR.ss[DR.r[b + 1]];
+    for (let t = 2; t < ss.length; t += 2) if (ss[t] >= 0) push(cells ? ce : dn, ss[t], k);
+    if (!cells && DR.r[b + 3] >= 0) push(up, DR.r[b + 3], k);
+  }
+  const cm = DR.cmore || [];
+  for (let t = 0; t + 5 < cm.length; t += 6) more.set(cm[t], cm.slice(t + 1, t + 6));
+  return (DX = {up: up, dn: dn, ce: ce, more: more});
+}
+const dirRowsOf = (i, which) => HAS_DIR ? (dirIndex()[which].get(i) || []) : [];
+const dirAlert = k => (DR.r[k * DW] & 256) !== 0;
+// a row whose target is a gene's drug response (direction_view.RESPONSE): its sign is strengthens / weakens, drawn
+// with its own heads (an open head, a double bar); headSign: the sign the ArrowBatch draws (+-2 for those rows)
+const dirResp = k => !!(DR.resp && DR.resp[DR.r[k * DW] & 15]);
+const headSign = a => a.sign * (dirResp(a.k) ? 2 : 1);
+function dirRow(k) {
+  const r = DR.r, b = k * DW, kgs = r[b], ss = DR.ss[r[b + 1]];
+  const kind = kgs & 15, gi = (kgs >> 4) & 3, sign = ((kgs >> 6) & 3) - 1, cells = !!DR.sens[kind];
+  const S = DR.nm[ss[0]], tgt = DR.nm[r[b + 2]], T = cells && tgt.indexOf("cells under ") === 0 ? tgt.slice(12) : tgt;
+  const tx = id => id >= 0 ? fillT(DR.tx[id], S, T) : "";
+  const src = [];
+  for (let t = 1; t + 1 < ss.length; t += 2) src.push({name: DR.nm[ss[t]], e: ss[t + 1]});
+  return {k: k, kind: kind, gi: gi, grade: DR.grades[gi] || "?", sign: sign, cells: cells, S: S, src: src, tgt: tgt,
+    te: cells ? -1 : r[b + 3], dd: cells ? r[b + 3] : -1, signText: tx(r[b + 4]), kindText: tx(r[b + 5]), q: tx(r[b + 6]),
+    alShort: tx(r[b + 7]), alLong: tx(r[b + 8]), reading: tx(r[b + 9]), alert: (kgs & 256) !== 0};
+}
+// direction_view.edge_line(row): 'TP53 → CDKN1A  [A]  TP53 activity raises ... (mutation: response; q 0.025)  ⚠ ...'
+const dirLine = w => w.S + " " + ARROW_S + " " + w.tgt + "  [" + w.grade + "]  " + w.signText + " (" + DR.kshort[w.kind] + "; " + w.q + ")" + (w.alShort ? "  " + w.alShort : "");
+// direction_view.cap (rule 1): the n strongest, and any of the n strongest without an alert that come after them
+function dirCap(list, n) {
+  const shown = [];
+  let clean = 0, more = 0, moreAl = 0;
+  for (let t = 0; t < list.length; t++) {
+    const al = dirAlert(list[t]);
+    if (t < n || (!al && clean < n)) shown.push(list[t]); else { more++; if (al) moreAl++; }
+    if (!al) clean++;
+  }
+  return {shown: shown, more: more, moreAl: moreAl};
+}
+// direction_view.more_text / counts_text (extra: rows counted but not embedded: [n, with an alert, A, B, C])
+function dirMoreText(n, nAl, what) {
+  if (n <= 0) return "";
+  const w = n === 1 && /s$/.test(what) && !/ss$/.test(what) ? what.slice(0, -1) : what;
+  return fmtN(n) + " more " + w + (nAl ? " (" + fmtN(nAl) + " of them with an alert " + ALERT_S + ")" : "");
+}
+function dirCountsText(list, what, extra) {
+  const g = [0, 0, 0];
+  let n = list.length, k = 0;
+  for (const r of list) { g[(DR.r[r * DW] >> 4) & 3]++; if (dirAlert(r)) k++; }
+  if (extra) { n += extra[0]; k += extra[1]; g[0] += extra[2]; g[1] += extra[3]; g[2] += extra[4]; }
+  if (!n) return "none";
+  const w = n === 1 && /s$/.test(what) ? what.slice(0, -1) : what;
+  return fmtN(n) + " " + w + (k ? ", " + fmtN(k) + " of them with an alert " + ALERT_S : "") + "; grade " + DR.grades.map((x, t) => x + " " + fmtN(g[t])).join(", ");
+}
+// the genes a row links to the gene i: the sources of an upstream row, the target of a downstream row
+function dirOthers(w, i) {
+  if (w.cells) return [];
+  if (w.te === i) return w.src.map(s => s.e).filter(e => e >= 0 && e !== i);
+  return w.te >= 0 && w.te !== i ? [w.te] : [];
+}
+// arrows from (x0, y0) to (x1, y1), ending r1 before the target's centre: the grade sets the line (A thick, B thin,
+// C dashed), the sign the head (raises: a filled head; lowers: a bar, as an inhibition; not inferred: an open circle;
+// for a drug response, sign +-2: strengthens an open head, weakens a double bar).
+// Collected, then drawn grouped by style: the dimmed ones first and plain, the selected gene's on top with a pale
+// casing that lifts them off the springs (one stroke per arrow rasterizes faster than one path of thousands).
+const AW = [2.4, 1.6, 1.15], AA = [0.95, 0.85, 0.75];
+function ArrowBatch() {
+  const L = [];
+  return {
+    add: (x0, y0, x1, y1, r0, r1, gi, sign, dim, off) => {
+      let dx = x1 - x0, dy = y1 - y0;
+      const len = Math.hypot(dx, dy);
+      gi = gi >= 0 && gi < 3 ? gi : 2;
+      if (!(len > r0 + r1 + 6)) return;
+      dx /= len; dy /= len;
+      const px = -dy * (off || 0), py = dx * (off || 0);
+      L.push({ax: x0 + dx * r0 + px, ay: y0 + dy * r0 + py, bx: x1 - dx * r1 + px, by: y1 - dy * r1 + py, dx: dx, dy: dy, gi: gi, sign: sign, dim: dim ? 1 : 0});
+    },
+    draw: g => {
+      L.sort((p, q) => (q.dim - p.dim) || (q.gi - p.gi));
+      g.lineCap = "butt";
+      let style = -1;
+      for (const a of L) {
+        const resp = Math.abs(a.sign) === 2, sg = Math.sign(a.sign);
+        const w = AW[a.gi], hl = 6.5 + 1.2 * w, al = AA[a.gi] * (a.dim ? 0.6 : 1), back = sg > 0 ? hl * 0.85 : sg < 0 ? 0 : 6;
+        const ex = a.bx - a.dx * back, ey = a.by - a.dy * back;
+        if (style !== 3 * a.dim + a.gi) { style = 3 * a.dim + a.gi; g.setLineDash(a.gi === 2 ? [4, 3] : []); }
+        if (!a.dim) {
+          g.strokeStyle = SURF; g.lineWidth = w + 2.6; g.globalAlpha = al * 0.85;
+          g.beginPath(); g.moveTo(a.ax, a.ay); g.lineTo(ex, ey); g.stroke();
+        }
+        g.strokeStyle = DIRC; g.fillStyle = DIRC; g.lineWidth = w; g.globalAlpha = al;
+        g.beginPath(); g.moveTo(a.ax, a.ay); g.lineTo(ex, ey); g.stroke();
+        const bx = a.bx, by = a.by, dx = a.dx, dy = a.dy;
+        if (sg > 0) {
+          g.beginPath(); g.moveTo(bx, by); g.lineTo(bx - dx * hl - dy * hl * 0.45, by - dy * hl + dx * hl * 0.45);
+          g.lineTo(bx - dx * hl + dy * hl * 0.45, by - dy * hl - dx * hl * 0.45); g.closePath();
+          if (resp) { g.setLineDash([]); style = -1; g.fillStyle = SURF; g.fill(); g.lineWidth = 1.5; g.stroke(); }
+          else g.fill();
+        } else {
+          if (a.gi === 2) { g.setLineDash([]); style = -1; }
+          if (sg < 0) {
+            g.lineWidth = w + 0.9; g.beginPath(); g.moveTo(bx - dy * 5.5, by + dx * 5.5); g.lineTo(bx + dy * 5.5, by - dx * 5.5);
+            if (resp) { g.moveTo(bx - dx * 4.5 - dy * 5.5, by - dy * 4.5 + dx * 5.5); g.lineTo(bx - dx * 4.5 + dy * 5.5, by - dy * 4.5 - dx * 5.5); }
+            g.stroke();
+          }
+          else { g.lineWidth = 1.4; g.beginPath(); g.arc(bx - dx * 3, by - dy * 3, 3, 0, 2 * Math.PI); g.stroke(); }
+        }
+      }
+      g.setLineDash([]); g.globalAlpha = 1;
+    }};
+}
+// the legend of the arrows (small inline drawings)
+function dirKey() {
+  const svg = (inner, w) => "<svg width='" + (w || 26) + "' height='10' style='vertical-align:middle;margin-right:3px'>" + inner + "</svg>";
+  const ln = (dash, wd) => "<line x1='1' y1='5' x2='19' y2='5' stroke='" + DIRC + "' stroke-width='" + wd + "'" + (dash ? " stroke-dasharray='4 3'" : "") + "/>";
+  const it = s => "<span class='it'>" + s + "</span> ";
+  return it(svg(ln(0, 1.6) + "<path d='M25 5 L17 1.4 L17 8.6 Z' fill='" + DIRC + "'/>") + "raises (a level, the cells)") +
+    it(svg(ln(0, 1.6) + "<line x1='20' y1='0' x2='20' y2='10' stroke='" + DIRC + "' stroke-width='2.5'/>") + "lowers") +
+    it(svg(ln(0, 1.6) + "<path d='M25 5 L17 1.4 L17 8.6 Z' fill='#fff' stroke='" + DIRC + "' stroke-width='1.3'/>") + "strengthens a drug response") +
+    it(svg(ln(0, 1.6) + "<line x1='16' y1='0' x2='16' y2='10' stroke='" + DIRC + "' stroke-width='2.5'/><line x1='21' y1='0' x2='21' y2='10' stroke='" + DIRC + "' stroke-width='2.5'/>") + "weakens it") +
+    it(svg(ln(0, 1.6) + "<circle cx='22' cy='5' r='3' fill='none' stroke='" + DIRC + "' stroke-width='1.4'/>") + "sign not inferred") +
+    it(svg(ln(0, 2.4), 21) + "A " + svg(ln(0, 1.6), 21) + "B " + svg(ln(1, 1.15), 21) + "C");
+}
+
 // ================================================================ tabs 1-2: the two t-SNE maps (one canvas, two layouts)
 function norm(xa, ya) {
   const n = xa.length, X = new Float32Array(n), Y = new Float32Array(n);
@@ -1384,6 +1803,7 @@ function mapDraw() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   drawModuleLabels();
   if (sel >= 0 && sel < N) drawSelection(r);
+  mapKey(sel >= 0 && sel < N ? mapArrowList().length : 0);
   if (hover >= 0 && hover !== sel) {
     ctx.beginPath(); ctx.arc(sx(hover), sy(hover), r + 3, 0, 2 * Math.PI);
     ctx.lineWidth = 1.5; ctx.strokeStyle = INK; ctx.stroke();
@@ -1421,6 +1841,48 @@ function drawModuleLabels() {
     }
   }
 }
+// the maps: the selected gene's probable-direction arrows, for the rows its side-panel lists show (all of them after
+// 'show all'), to and from the genes on the map; one arrow per ordered pair (its strongest row)
+let mapArrows = null;
+function mapArrowsDirty() { mapArrows = null; }
+let mapKeyN = -1;
+function mapKey(n) {                               // the arrows' legend on the map, while it draws any
+  if (n === mapKeyN) return;
+  mapKeyN = n;
+  const el = $("dirkey");
+  el.style.display = n ? "block" : "none";
+  if (n) el.innerHTML = "<button class='dkx' title='Collapse / expand the key'>" + (el.classList.contains("closed") ? "+" : "&#8722;") + "</button><span style='color:" + DIRC_T + "'>Probable direction</span>: " + fmtN(n) + " arrow" + (n === 1 ? "" : "s") + " of " + esc(D.sym[sel] || "") +
+    "'s side-panel rows to and from genes on the map<div class='dkb'>" + dirKey() + "</div>";
+}
+$("dirkey").addEventListener("click", e => {          // the key collapses to its first line, out of the arrows' way
+  if (!e.target.closest(".dkx")) return;
+  const el = $("dirkey");
+  el.classList.toggle("closed");
+  e.target.innerHTML = el.classList.contains("closed") ? "+" : "&#8722;";
+});
+function mapArrowList() {
+  if (mapArrows) return mapArrows;
+  const out = [], seen = new Set();
+  if (HAS_DIR && sel >= 0 && $("dirm").checked) {
+    const ks = [];
+    for (const which of ["up", "dn"]) {
+      const rows = dirRowsOf(sel, which);
+      for (const k of (dirAll[which] ? rows : dirCap(rows, DR.cap || 8).shown)) ks.push([k, which]);
+    }
+    ks.sort((a, b) => a[0] - b[0]);
+    for (const [k, which] of ks) {
+      const w = dirRow(k);
+      for (const j of dirOthers(w, sel)) {
+        if (j >= N) continue;
+        const a = which === "up" ? {s: j, t: sel} : {s: sel, t: j}, key = a.s * NA + a.t;
+        if (seen.has(key)) continue;
+        seen.add(key); a.k = k; a.gi = w.gi; a.sign = w.sign; out.push(a);
+      }
+    }
+    for (const a of out) a.rev = seen.has(a.t * NA + a.s);
+  }
+  return (mapArrows = out);
+}
 function drawSelection(r) {
   const x0 = sx(sel), y0 = sy(sel);
   for (const p of P) {
@@ -1429,17 +1891,27 @@ function drawSelection(r) {
     ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(sx(p.j), sy(p.j)); ctx.stroke();
   }
   ctx.globalAlpha = 1;
+  const arrows = mapArrowList(), ab = ArrowBatch();
+  for (const a of arrows) ab.add(sx(a.s), sy(a.s), sx(a.t), sy(a.t), a.s === sel ? r + 5 : r + 2, a.t === sel ? r + 6 : r + 3, a.gi, headSign(a), false, a.rev ? 3 : 0);
+  ab.draw(ctx);
   for (const p of P) {
     ctx.beginPath(); ctx.arc(sx(p.j), sy(p.j), r + 1.5, 0, 2 * Math.PI);
     ctx.fillStyle = colourOf(p.j); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = p.cos > 0 ? WITH : OPP; ctx.stroke();
   }
+  const ends = arrows.map(a => a.s === sel ? a.t : a.s).filter(j => !pset.has(j));
+  for (const j of ends) {
+    ctx.beginPath(); ctx.arc(sx(j), sy(j), r + 1.5, 0, 2 * Math.PI);
+    ctx.fillStyle = colourOf(j); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = DIRC; ctx.stroke();
+  }
   ctx.beginPath(); ctx.arc(x0, y0, r + 4, 0, 2 * Math.PI);
   ctx.fillStyle = colourOf(sel); ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = INK; ctx.stroke();
-  // labels: the selected gene first, then partners by |cos|, skipping any that would overlap one already drawn
+  // labels: the selected gene first, then partners by |cos|, then its arrows' other genes, skipping any that would
+  // overlap one already drawn
   ctx.textAlign = "left"; ctx.textBaseline = "middle";
   const label = Labeler(ctx);
   label(D.sym[sel], x0 + r + 7, y0, "700 13px " + FF, INK, 15);
   for (const p of P) label(D.sym[p.j], sx(p.j) + r + 4, sy(p.j), "11px " + FF, p.cos > 0 ? WITH_T : OPP_T, 12);
+  for (const j of ends) label(D.sym[j], sx(j) + r + 4, sy(j), "600 11px " + FF, DIRC_T, 12);
 }
 
 // hit testing, pointer, wheel
@@ -1514,6 +1986,7 @@ function tipHtml(i) {
   const m = D.mod[i], arm = D.arm[i], mod = MODS.get(m);
   let h = "<b>" + esc(D.sym[i]) + "</b>";
   if (has(D.name) && D.name[i]) h += " <span class='m'>" + esc(D.name[i]) + "</span>";
+  if (i >= N) return h + "<br><span class='alc'>&#9888; not on the map</span> <span class='m'>(not in the vector space: no partners or module)</span>";
   h += "<br><span class='k' style='background:" + modColour(m) + "'></span>" +
        (m > 0 ? "Module " + m + (arm !== "." && mod && mod.opp ? ", arm " + (arm === "-" ? "&minus;" : "+") : "") + (mod ? " <span class='m'>" + esc(mod.label) + "</span>" : "") : "<span class='m'>no module</span>");
   if (EFO.has(i)) h += "<br><span class='alc'>&#9888; " + EFO_TXT + "</span>";
@@ -1527,7 +2000,24 @@ function placeTip(el, html, mx, my, Wd, Hd) {
   if (y + th > Hd - 4) y = my - th - 12;
   el.style.left = Math.max(2, x) + "px"; el.style.top = Math.max(2, y) + "px";
 }
-function showTip(i, mx, my) { placeTip(tip, tipHtml(i), mx, my, W, H); }
+function showTip(i, mx, my) { placeTip(tip, tipHtml(i) + ($("dirm").checked ? dirTip(i) : ""), mx, my, W, H); }
+// the probable-direction rows between the selected gene and gene i (either way, gene targets), in ORDER
+function dirBetween(a, b) {
+  if (!HAS_DIR || a < 0 || b < 0 || a === b) return [];
+  const te = k => DR.r[k * DW + 3];
+  return dirRowsOf(a, "dn").filter(k => te(k) === b).concat(dirRowsOf(b, "dn").filter(k => te(k) === a)).sort((x, y) => x - y);
+}
+function dirTip(i) {
+  // the cap rule (rule 1): the 3 strongest, and any of the 3 strongest without an alert that come after them
+  const ks = dirBetween(sel, i), c = dirCap(ks, 3);
+  let h = "";
+  for (const k of c.shown) {
+    const w = dirRow(k);
+    h += "<br><span style='color:" + DIRC_T + "'>[" + esc(w.grade) + "] " + esc(w.S + " " + ARROW_S + " " + w.tgt) + "</span>: " + esc(w.signText) + (w.alShort ? " <span class='alc'>" + esc(w.alShort) + "</span>" : "");
+  }
+  if (c.more) h += "<br><span class='m'>" + esc(dirMoreText(c.more, c.moreAl, "rows")) + " between them in the side panel</span>";
+  return h;
+}
 function hideTip() { tip.style.display = "none"; }
 
 // views, colours, legend
@@ -1586,7 +2076,7 @@ function buildLegend() {
   });
 }
 function highlight(m) {
-  hlMod = m; focus = "module";
+  hlMod = m; focus = "module"; srcSel = "";
   for (const li of document.querySelectorAll("#lgbody .li")) li.classList.toggle("on", +li.dataset.m === m);
   if (m >= 0) { const li = document.querySelector("#lgbody .li[data-m='" + m + "']"); if (li) li.scrollIntoView({block: "nearest"}); }
   regroup(); renderPanel(); status();
@@ -1865,7 +2355,10 @@ function physBar(kind) {
     "<button data-k='fit' title='Fit the view to all genes'>Fit</button></span>";
   if (kind === "nbr") h += "<div class='grp' title='1: the selected gene and its partners; 2: also their partners; 3, 4: and theirs, one more step each'>Depth " +
     seg("dep", ["1", "2", "3", "4"], 1) + "</div>" +
-    rng("max", "Max genes", 20, 2000, 10, 300, "At most this many genes, the strongest partners first (the product of the |cos| along the way)");
+    rng("max", "Max genes", 20, 2000, 10, 300, "At most this many genes, the strongest partners first (the product of the |cos| along the way)") +
+    "<div class='grp' title='Probable direction (direction stage): arrows between the genes shown; + its genes also adds the selected gene&#39;s probable up- and downstream genes'>Direction " +
+    seg("dir", ["off", "arrows", "+ its genes"], HAS_DIR ? 2 : 0, ["No direction arrows", "Arrows between the genes shown (their probable direction rows)",
+      "Arrows, and the selected gene&#39;s probable up- and downstream genes (the rows its side-panel lists show) added to the neighbourhood"]) + "</div>";
   h += "</div><div class='bar'>";
   h += rng("rep", "Repulsion", 0, 150, 5, 30, "Strength of the push between every pair of genes") +
     rng("spr", "Springs", 0, 300, 10, 100, "Strength of the springs, in % of the default") +
@@ -1892,7 +2385,8 @@ function PhysPane(kind) {
     depth: 2, maxN: 300, minCos: 0.3, ev: 1, module: -1, ring: false,
     ids: new Int32Array(0), dim: new Uint8Array(0), level: new Uint8Array(0), byDeg: new Int32Array(0), centre: -1,
     msg: "", info: "", hover: -1, drag: -1, groups: null, groupsDirty: true, avgTick: 0, tpf: 0, drawMs: 0, frames: [],
-    skip: 0, centreSel: false, lastStatus: 0, src: "", lastRun: 0, debt: 0};
+    skip: 0, centreSel: false, lastStatus: 0, src: "", lastRun: 0, debt: 0,
+    dir: kind === "nbr" && HAS_DIR ? 2 : 0, nRel: 0, extraFrom: 0, arrows: [], arrowsMore: 0, dirInfo: ""};
   const loc = new Int32Array(NA).fill(-1), nloc = new Int32Array(NA).fill(-1);
   let W = 1, H = 1, DPR = 1, fitK = 1, sized = false, clickTimer = 0, dragged = false, downAt = null, pinch = null, lastFit = null;
   // a click on a gene selects it after DBL_MS without a second click; the last two press-releases (a micro-drag too)
@@ -1905,9 +2399,20 @@ function PhysPane(kind) {
   const nodeColour = i => st.colour === 1 ? (ARMC[D.arm[i]] || GREY) : modColour(D.mod[i]);
 
   // ---------------------------------------------------------------- what to simulate
+  function dirGenes(i) {                                        // the genes of the selected gene's shown direction rows
+    const out = [];
+    if (!HAS_DIR || i < 0) return out;
+    for (const which of ["up", "dn"]) {
+      const rows = dirRowsOf(i, which);
+      for (const k of (dirAll[which] ? rows : dirCap(rows, DR.cap || 8).shown)) for (const j of dirOthers(dirRow(k), i)) if (out.indexOf(j) < 0) out.push(j);
+    }
+    return out;
+  }
   function buildNbr() {
     if (sel < 0) return {msg: "Select a gene (search above, or click one on another tab) to see it with its partners and their partners."};
-    if (sel >= N) return {msg: "<b>" + esc(D.sym[sel]) + "</b> is not on the map (not in the vector space), so it has no partners to simulate. Its drug-doses and cell lines are in the side panel."};
+    const dg = st.dir === 2 ? dirGenes(sel) : [];
+    if (sel >= N && !dg.length) return {msg: "<b>" + esc(D.sym[sel]) + "</b> is not on the map (not in the vector space), so it has no partners to simulate. Its drug-doses and cell lines are in the side panel." +
+      (!HAS_DIR ? "" : st.dir === 2 ? " It has no probable up- or downstream gene either." : " <i>Direction: + its genes</i> shows its probable up- and downstream genes, if it has any.")};
     // breadth first, one depth at a time: each depth's genes by the product of the |cos| along the way, strongest
     // first, until Max genes
     const ids = [sel], parent = [-1], level = [0], score = [1], perLevel = [1];
@@ -1927,12 +2432,18 @@ function PhysPane(kind) {
       perLevel.push(nxt.length);
       frontier = nxt;
     }
+    // Direction '+ its genes': the selected gene's probable up- and downstream genes, placed around it and held by a
+    // link that is no relation (not drawn: its arrow is)
+    const nPart = ids.length;
+    for (const j of dg) if (nloc[j] < 0 && ids.length - nPart < 80) { nloc[j] = ids.length; ids.push(j); parent.push(0); level.push(1); score.push(0); }
     const sp = relSprings(ids, nloc, st.minCos, st.ev), own = partnersOf(sel), left = own.filter(p => !ok(p)).length;
+    sp.nRel = sp.ea.length;
+    for (let u = nPart; u < ids.length; u++) { sp.ea.push(0); sp.eb.push(u); sp.ec.push(0.35); sp.ev.push(2); }
     const dl = perLevel.slice(1).map((c, t) => c + (t === 0 ? " partner" + (c === 1 ? "" : "s") : " at depth " + (t + 1))).join(", ");
-    const info = "<b>" + esc(D.sym[sel]) + "</b>: " + dl + " &middot; " + ids.length + " genes" + (full ? " (Max genes reached)" : "") +
-      " &middot; " + sp.ea.length + " springs (top partners, |cos| &ge; " + st.minCos.toFixed(2) + ", " + ["every relation", "both or one half", "both halves"][st.ev] + ")" +
+    const info = "<b>" + esc(D.sym[sel]) + "</b>: " + (sel >= N ? "not on the map (no partners)" : dl) + " &middot; " + ids.length + " genes" + (full ? " (Max genes reached)" : "") +
+      " &middot; " + sp.nRel + " springs (top partners, |cos| &ge; " + st.minCos.toFixed(2) + ", " + ["every relation", "both or one half", "both halves"][st.ev] + ")" +
       (left ? "<br><span class='alc'>&#9888; " + left + " of its " + own.length + " listed partners are left out by Min |cos| / Evidence</span> (they stay in the side panel, with their alerts)" : "");
-    return {ids: ids, parent: parent, level: level, centre: 0, springs: sp, info: info};
+    return {ids: ids, parent: parent, level: level, centre: 0, springs: sp, info: info, extraFrom: nPart};
   }
   function buildMod() {
     if (!D.mods.length || !N) return {msg: "This run has no modules."};
@@ -2022,6 +2533,7 @@ function PhysPane(kind) {
       st.ids = new Int32Array(0); st.dim = new Uint8Array(0); st.level = new Uint8Array(0); st.byDeg = new Int32Array(0);
       S.load(0, [], [], [], [], []); S.alpha = 0;
       st.msg = g.msg || ""; st.info = ""; st.centre = -1;
+      st.arrows = []; st.arrowsMore = 0; st.arrowsMoreAl = 0; st.dirInfo = ""; st.extraFrom = 0; st.nRel = 0;
       showText(); req();
       return;
     }
@@ -2037,6 +2549,7 @@ function PhysPane(kind) {
     if (g.centre >= 0) { const c = g.centre; S.fixed[c] |= 4; S.fx[c] = S.x[c]; S.fy[c] = S.y[c]; }
     st.ids = ids; st.dim = g.dim ? Uint8Array.from(g.dim) : new Uint8Array(n); st.level = g.level ? Uint8Array.from(g.level) : new Uint8Array(n);
     st.centre = g.centre; st.info = g.info || ""; st.msg = ""; st.src = g.springs.src; st.sev = Uint8Array.from(g.springs.ev || []);
+    st.nRel = g.springs.nRel != null ? g.springs.nRel : g.springs.ea.length; st.extraFrom = g.extraFrom != null ? g.extraFrom : n;
     const order = Array.from({length: n}, (_, u) => u);
     order.sort((a, b) => (st.dim[a] - st.dim[b]) || (S.deg[b] - S.deg[a]));
     st.byDeg = Int32Array.from(order);
@@ -2048,7 +2561,50 @@ function PhysPane(kind) {
       if (kind === "all") st.centreSel = sel >= 0 && sel < N;
     }
     st.groupsDirty = true;
+    computeArrows();
     showText(); req();
+  }
+  // the probable-direction arrows between the genes shown: one per ordered pair, its strongest row (rows in ORDER);
+  // past MAXA pairs the cap rule (rule 1), on the pairs in the order of their strongest rows: the MAXA strongest, and
+  // any of the MAXA strongest without an alert that come after them; the rest are counted (with their alerts)
+  function computeArrows() {
+    st.arrows = []; st.arrowsMore = 0; st.arrowsMoreAl = 0; st.dirInfo = "";
+    const n = st.ids.length;
+    if (!HAS_DIR || !st.dir || !n) return;
+    const seen = new Map(), MAXA = 3000, cnt = [0, 0, 0], cands = [];
+    for (let u = 0; u < n; u++) for (const k of dirRowsOf(st.ids[u], "dn")) {
+      const te = DR.r[k * DW + 3], v = te >= 0 ? loc[te] : -1;
+      if (v < 0 || v === u) continue;
+      const key = u * n + v, o = seen.get(key);
+      if (o) { o.n++; if (k < o.k) o.k = k; continue; }
+      const a = {u: u, v: v, k: k, n: 1, rev: false};
+      seen.set(key, a); cands.push(a);
+    }
+    cands.sort((p, q) => p.k - q.k);
+    let clean = 0;
+    const drawn = new Set();
+    for (let t = 0; t < cands.length; t++) {
+      const a = cands[t], al = dirAlert(a.k), kgs = DR.r[a.k * DW];
+      if (t < MAXA || (!al && clean < MAXA)) {
+        a.gi = (kgs >> 4) & 3; a.sign = ((kgs >> 6) & 3) - 1;
+        st.arrows.push(a); cnt[a.gi]++; drawn.add(a.u * n + a.v);
+      } else { st.arrowsMore++; if (al) st.arrowsMoreAl++; }
+      if (!al) clean++;
+    }
+    for (const a of st.arrows) a.rev = drawn.has(a.v * n + a.u);
+    // the selected gene's direction rows whose other gene is not shown here
+    let out = 0, tot = 0;
+    if (sel >= 0) for (const which of ["up", "dn"]) for (const k of dirRowsOf(sel, which)) {
+      tot++;
+      if (!dirOthers(dirRow(k), sel).some(j => loc[j] >= 0)) out++;
+    }
+    const added = st.ids.length - st.extraFrom, nce = sel >= 0 ? dirRowsOf(sel, "ce").length : 0;
+    const capped = st.arrows.length > MAXA ? " (the " + fmtN(MAXA) + " strongest pairs, then the strongest without " + ALERT_S + " after them)" : "";
+    st.dirInfo = "<br><span style='color:" + DIRC_T + "'>Probable direction</span>: " + (st.arrows.length ? fmtN(st.arrows.length) + " arrow" + (st.arrows.length === 1 ? "" : "s") +
+      " between these genes (grade " + DR.grades.map((g, t) => g + " " + fmtN(cnt[t])).join(", ") + ")" + capped : "no arrow between these genes") +
+      (st.arrowsMore ? "; <span class='alc'>" + esc(dirMoreText(st.arrowsMore, st.arrowsMoreAl, "pairs")) + " not drawn (too many to read; each gene's side panel lists its rows)</span>" : "") +
+      (added > 0 ? "; " + fmtN(added) + " of its probable up- and downstream genes added (violet ring: held by a link that is no relation)" : "") +
+      (out ? "; " + fmtN(out) + " of its " + fmtN(tot) + " gene rows point to genes not shown here" : "") + (nce ? "; its " + fmtN(nce) + " cells row" + (nce === 1 ? "" : "s") : "") + (out || nce ? " (side panel)" : "");
   }
   function showText() {
     msgEl.innerHTML = st.msg ? "<div>" + st.msg + "</div>" : ""; msgEl.classList.toggle("on", !!st.msg);
@@ -2060,7 +2616,8 @@ function PhysPane(kind) {
         it("thickness = |cos|") + (st.colour === 1 ? it("<span class='sw' style='background:" + ARMC["+"] + "'></span> + arm") +
         it("<span class='sw' style='background:" + ARMC["-"] + "'></span> &minus; arm") : "") + "</div>";
     }
-    itxt.innerHTML = st.info ? st.info + key : "";
+    if (S.n && st.dir) key += "<div class='ky'>" + dirKey() + "</div>";
+    itxt.innerHTML = st.info ? st.info + (st.dir ? st.dirInfo : "") + key : "";
     infoEl.classList.toggle("none", !st.info && kind !== "mod");
     st.infoH = infoEl.classList.contains("none") ? 0 : infoEl.offsetHeight;
   }
@@ -2179,7 +2736,7 @@ function PhysPane(kind) {
   function selNeighbours() {                                    // [node, cos] of the selected gene's springs, strongest first
     const u = sel >= 0 ? loc[sel] : -1, out = [];
     if (u < 0) return out;
-    for (let p = S.off[u]; p < S.off[u + 1]; p++) { const k = S.adj[p]; out.push([S.ea[k] === u ? S.eb[k] : S.ea[k], S.ec[k]]); }
+    for (let p = S.off[u]; p < S.off[u + 1]; p++) { const k = S.adj[p]; if (k < st.nRel) out.push([S.ea[k] === u ? S.eb[k] : S.ea[k], S.ec[k]]); }
     return out.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
   }
   function draw() {
@@ -2190,7 +2747,7 @@ function PhysPane(kind) {
     g2.setTransform(DPR, 0, 0, DPR, 0, 0);
     if (!n) return;
     const r = nodeR(), nb = selNeighbours();
-    if (kind !== "all") { drawEdges(); drawNodes(r); }
+    if (kind !== "all") { drawEdges(); drawArrowsP(r); drawNodes(r); }
     else drawSelected(r, nb);
     if (kind === "mod") drawArmLabels(r);
     drawLabels(r, nb);
@@ -2199,8 +2756,18 @@ function PhysPane(kind) {
       g2.lineWidth = 1.5; g2.strokeStyle = INK; g2.stroke();
     }
   }
+  function drawArrowsP(r) {
+    if (!st.dir || !st.arrows.length) return;
+    const u0 = sel >= 0 ? loc[sel] : -1, ab = ArrowBatch();     // the selected gene's arrows on top, the others paler
+    for (const a of st.arrows) {
+      const X0 = SX(a.u), Y0 = SY(a.u), X1 = SX(a.v), Y1 = SY(a.v);
+      if ((X0 < -20 && X1 < -20) || (Y0 < -20 && Y1 < -20) || (X0 > W + 20 && X1 > W + 20) || (Y0 > H + 20 && Y1 > H + 20)) continue;
+      ab.add(X0, Y0, X1, Y1, (a.u === u0 ? r + 3 : r) + 1.5, (a.v === u0 ? r + 3 : r) + 2.5, a.gi, headSign(a), u0 >= 0 && a.u !== u0 && a.v !== u0, a.rev ? 3 : 0);
+    }
+    ab.draw(g2);
+  }
   function drawEdges() {
-    const m = S.m, ea = S.ea, eb = S.eb, ec = S.ec, dim = st.dim, paths = [];
+    const m = Math.min(S.m, st.nRel), ea = S.ea, eb = S.eb, ec = S.ec, dim = st.dim, paths = [];
     const dens = Math.max(0.08, Math.min(1, Math.sqrt(160 / Math.max(1, m))));   // many edges: each one lighter
     for (let b = 0; b < 16; b++) paths.push(null);
     for (let e = 0; e < m; e++) {
@@ -2234,6 +2801,7 @@ function PhysPane(kind) {
       if (n < 800) { g2.lineWidth = 1; g2.strokeStyle = SURF; g2.stroke(); }
       g2.globalAlpha = 1;
       if (fixed[u] & 5) { g2.beginPath(); g2.arc(X, Y, r + (i === sel ? 4.5 : 2.2), 0, 2 * Math.PI); g2.lineWidth = 1.6; g2.strokeStyle = INK2; g2.stroke(); }
+      if (u >= st.extraFrom) { g2.beginPath(); g2.arc(X, Y, r + 1.2, 0, 2 * Math.PI); g2.lineWidth = 2; g2.strokeStyle = DIRC; g2.stroke(); }
       if (i === sel) { g2.beginPath(); g2.arc(X, Y, r + 1, 0, 2 * Math.PI); g2.lineWidth = 2.5; g2.strokeStyle = INK; g2.stroke(); }
     }
   }
@@ -2295,6 +2863,8 @@ function PhysPane(kind) {
     const u0 = sel >= 0 ? loc[sel] : -1;
     if (u0 >= 0) put(u0, "700 13px " + FF, INK, 15);
     for (const [v, c] of nb) put(v, "600 11px " + FF, c > 0 ? WITH_T : OPP_T, 12);
+    for (let u = st.extraFrom; u < n; u++) put(u, "600 11px " + FF, DIRC_T, 12);
+    if (st.dir && u0 >= 0) for (const a of st.arrows) if (a.u === u0 || a.v === u0) put(a.u === u0 ? a.v : a.u, "600 11px " + FF, DIRC_T, 12);
     if (st.hover >= 0 && st.hover < n) put(st.hover, "600 11px " + FF, INK, 12);
     for (let u = 0; u < n; u++) if (S.fixed[u] & 5) put(u, "600 11px " + FF, INK2, 12);
     if (everyone) for (const u of st.byDeg) { if (placed > 450) break; put(u, "11px " + FF, st.dim[u] ? "#a3a29b" : INK2, 12); }
@@ -2305,7 +2875,7 @@ function PhysPane(kind) {
   function status() {
     st.lastStatus = performance.now();
     if (!S.n) { statusEl.textContent = ""; return; }
-    const s = [S.n.toLocaleString() + " genes", S.m.toLocaleString() + " springs",
+    const s = [S.n.toLocaleString() + " genes", st.nRel.toLocaleString() + " springs" + (S.m > st.nRel ? " + " + (S.m - st.nRel) + " direction links" : ""),
       st.paused ? "paused" : S.moving() ? "moving (alpha " + S.alpha.toFixed(2) + ")" : "settled"];
     const f = fps();
     if (f && !st.paused && S.moving()) s.push(Math.round(f) + " frames/s, " + st.tpf + " step" + (st.tpf === 1 ? "" : "s") + " per frame");
@@ -2314,7 +2884,7 @@ function PhysPane(kind) {
   }
   function springOf(a, b) {                                   // [cos, evidence code] of the spring a-b, or null
     if (a < 0 || b < 0) return null;
-    for (let p = S.off[a]; p < S.off[a + 1]; p++) { const k = S.adj[p]; if ((S.ea[k] === a ? S.eb[k] : S.ea[k]) === b) return [S.ec[k], st.sev && k < st.sev.length ? st.sev[k] : 2]; }
+    for (let p = S.off[a]; p < S.off[a + 1]; p++) { const k = S.adj[p]; if (k < st.nRel && (S.ea[k] === a ? S.eb[k] : S.ea[k]) === b) return [S.ec[k], st.sev && k < st.sev.length ? st.sev[k] : 2]; }
     return null;
   }
   function showTipP(u, mx, my) {
@@ -2326,6 +2896,8 @@ function PhysPane(kind) {
         (sp[1] < 2 ? " <span class='alc'>&#9888; " + EV_ALERT[sp[1]] + "</span>" : "");
     }
     if (st.dim[u]) h += "<br><span class='m'>outside the module</span>";
+    if (st.dir) h += dirTip(i);
+    if (u >= st.extraFrom) h += "<br><span class='m' style='color:" + DIRC_T + "'>added for its probable direction (no relation spring)</span>";
     h += "<br><span class='m'>" + ((S.fixed[u] & 5) ? "pinned: double-click to unpin" : "drag to move, double-click to pin") + "</span>";
     placeTip(tipEl, h, mx, my, W, H);
   }
@@ -2476,6 +3048,7 @@ function PhysPane(kind) {
     else if (k === "reset") { rebuild(true); st.autoFit = true; st.follow = false; setPaused(false); }
     else if (k === "fit") { st.autoFit = true; st.follow = false; req(); }
     else if (/^dep[0-3]$/.test(k)) { st.depth = +k.slice(3) + 1; segSet("dep", st.depth - 1, 4); rebuild(false); }
+    else if (/^dir[0-2]$/.test(k) && HAS_DIR) { const m = +k.slice(3), was = st.dir; st.dir = m; segSet("dir", m, 3); if ((m === 2) !== (was === 2)) rebuild(false); else { computeArrows(); showText(); req(); } }
     else if (k === "mselg") { if (sel >= 0 && sel < N && D.mod[sel] > 0) setModule(D.mod[sel]); }
   });
   const out = (k, v) => { const o = q(k + "o"); if (o) o.textContent = v; };
@@ -2495,6 +3068,7 @@ function PhysPane(kind) {
     q("max").addEventListener("change", () => { st.maxN = Math.max(20, Math.min(2000, +q("max").value || 300)); q("max").value = st.maxN; sliders(); rebuild(false); });
   }
   if (q("msel")) q("msel").addEventListener("change", () => setModule(+q("msel").value));
+  if (!HAS_DIR) for (let t = 0; t < 3; t++) { const b = q("dir" + t); if (b) { b.disabled = true; b.title = "Not available: this output has no direction stage"; } }
   if (q("ring")) q("ring").addEventListener("change", () => { st.ring = q("ring").checked; rebuild(false); });
 
   // ---------------------------------------------------------------- the rest of the page talks to the tab through these
@@ -2529,6 +3103,9 @@ function PhysPane(kind) {
     screen: i => { const u = i >= 0 && i < NA ? loc[i] : -1; return u < 0 ? null : {x: SX(u), y: SY(u), w: W, h: H}; },
     stats: () => ({fps: fps(), tickMs: st.avgTick, drawMs: st.drawMs, ticksPerFrame: st.tpf, alpha: S.alpha, n: S.n, m: S.m}),
     benchTick: k => { const a = S.alpha; S.alpha = Math.max(a, 0.5); const t0 = performance.now(); for (let r = 0; r < k; r++) S.tick(); const ms = (performance.now() - t0) / k; return ms; },
+    arrows: () => ({mode: st.dir, more: st.arrowsMore, moreAlert: st.arrowsMoreAl || 0, added: st.ids.length - st.extraFrom, ids: Array.from(st.ids),
+      arrows: st.arrows.map(a => ({s: st.ids[a.u], t: st.ids[a.v], k: a.k, grade: DR.grades[a.gi], sign: a.sign, n: a.n, line: dirLine(dirRow(a.k))}))}),
+    redir: () => { if (kind === "nbr") st.dirty = true; if (visible() && st.dirty) rebuild(false); },
   };
 }
 
@@ -2902,7 +3479,7 @@ function TourPane() {
 
 // ================================================================ selection (shared by every tab) and the side panel
 function select(i, centre, origin) {
-  sel = i; focus = "gene"; selGen++;
+  sel = i; focus = "gene"; selGen++; dirAll = {}; mapArrowsDirty(); mapKeyN = -1; srcSel = "";
   P = partnersOf(i); pset = new Set(P.map(p => p.j));
   qi.value = i >= 0 ? D.sym[i] : "";
   if (i >= 0 && i < N) {
@@ -3067,6 +3644,60 @@ function whyOut(w) {
 }
 const EFO = new Set(D.efo || []);                 // entries in the space only through drug-doses with an alert
 const EFO_TXT = "in the vector space only through drug-doses that carry an alert (artifact flags at every significant pooled drug-dose and per-line response)";
+// ---------------------------------------------------------------- the side panel's probable direction
+let dirAll = {};                                  // the lists opened with 'show all' (reset when the gene changes)
+const DIR_LISTS = {up: ["Upstream (probable)", "what acts on "], dn: ["Downstream (probable)", "what ", " acts on"],
+  ce: ["Cells under drug-doses (probable)", "how ", " acts on the cells' numbers"]};
+function dirNames(w, i) {
+  // a row's source names (each a link when it is a gene of the page; the selected gene in bold), at most 5 of them
+  const one = s => s.e === i ? "<span class='dsel'>" + esc(s.name) + "</span>" :
+    s.e >= 0 ? "<span class='lk' data-g='" + s.e + "'>" + esc(s.name) + "</span>" : "<span class='dnm' title='not a measured gene of this run'>" + esc(s.name) + "</span>";
+  const shown = w.src.length > 6 ? w.src.slice(0, 5) : w.src;
+  let h = shown.map(one).join(", ");
+  if (shown.length < w.src.length) h += " <span class='note' title='" + esc(w.S) + "'>(+" + (w.src.length - shown.length) + " more)</span>";
+  return h;
+}
+function dirRowHtml(k, i) {
+  const w = dirRow(k), tgt = w.cells ? esc(w.tgt) : w.te === i ? "<span class='dsel'>" + esc(w.tgt) + "</span>" :
+    w.te >= 0 ? "<span class='lk' data-g='" + w.te + "'>" + esc(w.tgt) + "</span>" : esc(w.tgt);
+  const sw = ((dirResp(k) && DR.signw_resp) ? DR.signw_resp : DR.signw)[w.sign + 1] || "";
+  let h = "<div class='dr' data-dk='" + k + "' title='" + esc(w.kindText) + " (click for the evidence)'><div><span class='gb g" + w.gi + "' title='" +
+    esc("grade " + w.grade + ": " + (DR.gwords[w.gi] || "")) + "'>" + esc(w.grade) + "</span> " + dirNames(w, i) + " &rarr; " + tgt +
+    " <span class='sgn' title='" + esc(w.signText) + "'>" + esc(sw) + "</span> <span class='note'>" + esc(DR.kshort[w.kind]) + " &middot; " + esc(w.q) + "</span></div>" +
+    "<div class='dtx'>" + esc(w.signText) + "</div>";
+  if (w.alShort) h += "<div class='al' title='" + esc(w.alLong || w.alShort) + "'>" + esc(w.alShort) + "</div>";
+  h += "<div class='dx'><div>" + esc(w.kindText) + "</div>" + (w.reading ? "<div>" + esc(w.reading) + "</div>" : "") +
+    (w.alLong ? "<div class='alc' style='white-space:normal'>" + esc(w.alLong) + "</div>" : "") + "</div>";
+  return h + "</div>";
+}
+function dirListHtml(i, which) {
+  // one list: the cap rule (N strongest, plus any of the N strongest without an alert after them), its counts and a
+  // 'show all'; a list the page holds only in part (shortened) says how many rows it leaves out
+  const L = DIR_LISTS[which], rows = dirRowsOf(i, which), extra = which === "ce" ? dirIndex().more.get(i) : null;
+  const title = L[0] + ": " + L[1] + esc(D.sym[i]) + (L[2] || "");
+  const cnt = dirCountsText(rows, "rows", extra);
+  if (!rows.length && !extra) return "<div class='dlw' id='dlw-" + which + "'><div class='dh4'>" + title + " <span class='cnt'>none</span></div></div>";
+  const all = !!dirAll[which], c = dirCap(rows, DR.cap || 8), list = all ? rows : c.shown;
+  let h = "<div class='dlw' id='dlw-" + which + "'><div class='dh4'>" + title + " <span class='cnt'>(" + esc(cnt) + ")</span></div><div id='dl-" + which + "'>" + list.map(k => dirRowHtml(k, i)).join("") + "</div>";
+  const notes = [];
+  if (!all && c.more) notes.push(esc(dirMoreText(c.more, c.moreAl, "rows")) + " <span class='lk' data-dall='" + which + "'>show all</span>");
+  else if (all && c.more) notes.push("all " + fmtN(rows.length) + " shown <span class='lk' data-dall='" + which + "'>show fewer</span>");
+  if (!all && c.shown.length > (DR.cap || 8)) { const nx = c.shown.length - (DR.cap || 8); notes.push("the " + (DR.cap || 8) + " strongest shown, plus " + nx + " without " + ALERT_S + " that come" + (nx === 1 ? "s" : "") + " after them"); }
+  if (extra && extra[0]) notes.push("<span class='alc'>" + esc(dirMoreText(extra[0], extra[1], "rows")) + " are not in this page (left out to keep it small): <code>tahoe gene " + esc(D.sym[i]) + " --top " + (rows.length + extra[0]) + "</code> and <code>direction/edges.parquet</code> list them all</span>");
+  return h + (notes.length ? "<p class='note'>" + notes.join("; ") + ".</p>" : "") + "</div>";
+}
+function dirSection(i) {
+  if (!HAS_DIR) return "<h3>Probable direction</h3><p class='note'>No probable directions here: " + esc(DR.why || "this output has no direction stage") +
+    ". <code>python -m tahoemap run --out OUT</code> runs the direction stage (newer than this output) and makes the map again.</p>";
+  const cv = String(DR.caveat_short || "probable direction"), c2 = cv.indexOf(": ");
+  let h = "<h3>" + esc(cv.charAt(0).toUpperCase() + (c2 > 0 ? cv.slice(1, c2) : cv.slice(1))) + (c2 > 0 ? " <span class='cnt'>(" + esc(cv.slice(c2 + 2)) + ")</span>" : "") + "</h3>";
+  h += dirListHtml(i, "up") + dirListHtml(i, "dn") + dirListHtml(i, "ce");
+  h += "<p class='note'>Grades: " + DR.grades.map((g, t) => "<span class='gb g" + t + "' title='" + esc(DR.gwords[t]) + "'>" + g + "</span> " + esc(DR.gshort[t])).join(" &middot; ") +
+    ". Sign: what the source's activity does to the target. &#9888; = a reason for doubt; the row keeps its place. In order: " + esc(DR.order) +
+    ". Click a row for its evidence. " + (DR.short && DR.short.length ? "<span class='alc'>Shortened to keep the page small: " + esc(DR.short.join("; ")) + ".</span> " : "") +
+    "<span class='lk' data-help='dir'>How to read the arrows</span></p>";
+  return h;
+}
 function geneCard(i) {
   let h = "<h2>" + esc(D.sym[i]) + "</h2>";
   if (has(D.name) && D.name[i]) h += "<div class='nm'>" + esc(D.name[i]) + "</div>";
@@ -3090,6 +3721,7 @@ function geneCard(i) {
   if (i < N) {
     h += "<h3>Moves with (<span style='color:" + WITH + "'>green</span>) or opposite to (<span style='color:" + OPP + "'>red</span>) &mdash; top " + P.length + "</h3>" + partnerTable();
   }
+  h += dirSection(i);
   h += "<h3>Drug-doses that raise it</h3>" + drugTable(i, 1);
   h += "<h3>Drug-doses that lower it</h3>" + drugTable(i, -1);
   h += "<h3>Cell lines where it responds most</h3>" + lineTable(D.ln[i]);
@@ -3097,6 +3729,7 @@ function geneCard(i) {
   return h;
 }
 function renderPanel() {
+  if (srcSel && sel < 0) { $("panel").innerHTML = srcCard(srcSel); $("panel").scrollTop = 0; return; }
   const g = sel >= 0 ? geneCard(sel) : "", m = hlMod >= 0 ? moduleCard(hlMod) : "";
   let h = (focus === "module" || !g) ? m + g : g + (m ? "<h3>Highlighted module</h3>" + m : "");
   if (!h) h = "<p class='note'>Click a gene on the map or search for one. <span class='lk' data-help='1'>How to read this</span></p>" + HOWTO_MAPS;
@@ -3105,10 +3738,20 @@ function renderPanel() {
 }
 $("panel").addEventListener("click", e => {
   const g = e.target.closest("[data-g]"), m = e.target.closest("[data-hl]"), hp = e.target.closest("[data-help]"), mt = e.target.closest("[data-mtab]");
+  const da = e.target.closest("[data-dall]"), dr = e.target.closest(".dr");
   if (g) select(+g.dataset.g, true, "panel");
   else if (mt) { if (+mt.dataset.mtab !== hlMod) highlight(+mt.dataset.mtab); showTab("mod"); }
   else if (m) highlight(+m.dataset.hl === hlMod ? -1 : +m.dataset.hl);
-  else if (hp) showTab("help");
+  else if (da) {                                   // 'show all' / 'show fewer' of one direction list
+    const w = da.dataset.dall, el = $("dlw-" + w);
+    dirAll[w] = !dirAll[w];
+    if (w === "src") { renderPanel(); return; }
+    if (el && sel >= 0) el.outerHTML = dirListHtml(sel, w);
+    mapArrowsDirty(); req();
+    if (PHYS.nbr) PHYS.nbr.redir();
+  }
+  else if (hp) { showTab("help"); const t = hp.dataset.help === "dir" ? $("help-dir") : null; if (t) t.scrollIntoView({block: "start"}); }
+  else if (dr && !e.target.closest("a,.lk")) dr.classList.toggle("open");   // a row: its evidence
 });
 
 // ---------------------------------------------------------------- search
@@ -3129,16 +3772,55 @@ function search(q) {
   for (const [l, a, i] of ALI) { if (out.length >= MAX) break; if (l.startsWith(q)) add(i, a); }
   for (let i = 0; i < NA && out.length < MAX; i++) if (SYM_L[i].includes(q)) add(i);
   if (q.length >= 3 && has(D.name)) for (let i = 0; i < NA && out.length < MAX; i++) if (D.name[i] && D.name[i].toLowerCase().includes(q)) add(i, "name");
-  return out;
+  // sources of probable-direction rows that are no gene of this page (a drug target the screen does not measure)
+  const srcs = [];
+  for (const [nm, ks] of dirSources()) { const l = nm.toLowerCase(); if (l === q || l.startsWith(q)) srcs.push({i: -1, src: nm, n: ks.length, ex: l === q}); }
+  srcs.sort((a, b) => (b.ex - a.ex) || (a.src.length - b.src.length) || (a.src < b.src ? -1 : 1));
+  for (const r of srcs) if (out.length < MAX || r.ex) out.splice(r.ex ? 0 : out.length, 0, r);
+  return out.slice(0, Math.max(MAX, 1));
+}
+// the direction rows' sources that are no gene of this page: name -> its rows (in ORDER), built on first use
+let DSRC = null;
+function dirSources() {
+  if (DSRC) return DSRC;
+  DSRC = new Map();
+  if (!HAS_DIR) return DSRC;
+  const nr = DR.r.length / DW;
+  for (let k = 0; k < nr; k++) {
+    const ss = DR.ss[DR.r[k * DW + 1]];
+    for (let t = 1; t + 1 < ss.length; t += 2) if (ss[t + 1] < 0) {
+      const nm = DR.nm[ss[t]];
+      if (!DSRC.has(nm)) DSRC.set(nm, []);
+      DSRC.get(nm).push(k);
+    }
+  }
+  return DSRC;
+}
+let srcSel = "";                                  // the panel shows such a source (its rows) instead of a gene
+function srcCard(nm) {
+  const ks = dirSources().get(nm) || [], all = !!dirAll.src, c = dirCap(ks, DR.cap || 8), list = all ? ks : c.shown;
+  let h = "<h2>" + esc(nm) + "</h2><p class='al'>&#9888; <b>Not a measured gene of this run</b>: no expression data of its own, so no place on the map, but the source of probable-direction rows (a gene that compounds of the screen target, or a recorded driver gene whose own mRNA is not measured). <code>tahoe gene " + esc(nm) + "</code> lists them too.</p>";
+  h += "<h3>What " + esc(nm) + " probably acts on <span class='cnt'>(" + esc(dirCountsText(ks, "rows")) + ")</span></h3><div id='dl-src'>" + list.map(k => dirRowHtml(k, -2)).join("") + "</div>";
+  const notes = [];
+  if (!all && c.more) notes.push(esc(dirMoreText(c.more, c.moreAl, "rows")) + " <span class='lk' data-dall='src'>show all</span>");
+  else if (all && c.more) notes.push("all " + fmtN(ks.length) + " shown <span class='lk' data-dall='src'>show fewer</span>");
+  if (!all && c.shown.length > (DR.cap || 8)) { const nx = c.shown.length - (DR.cap || 8); notes.push("the " + (DR.cap || 8) + " strongest shown, plus " + nx + " without " + ALERT_S + " that come" + (nx === 1 ? "s" : "") + " after them"); }
+  return h + (notes.length ? "<p class='note'>" + notes.join("; ") + ".</p>" : "") + "<p class='note'>Click a row for its evidence; click a gene's name to select it. Its rows to the cells under drug-doses (when it has any) link no gene of this page: <code>tahoe gene " + esc(nm) + "</code>. <span class='lk' data-help='dir'>How to read the arrows</span></p>";
+}
+function showSource(nm) {
+  select(-1, false, "search");
+  srcSel = nm; qi.value = nm;
+  renderPanel();
 }
 let acItems = [], acOn = 0;
 const qi = $("q"), ac = $("ac");
 function acRender() {
   if (!acItems.length) { ac.style.display = "none"; return; }
   ac.innerHTML = acItems.map((r, k) => "<div data-k='" + k + "' class='" + (k === acOn ? "on" : "") + "'>" +
+    (r.src ? "<b>" + esc(r.src) + "</b> <span class='alc'>&#9888; not a measured gene: the source of " + fmtN(r.n) + " probable-direction row" + (r.n === 1 ? "" : "s") + "</span></div>" :
     (r.via && r.via !== "name" ? "<span class='m'>" + esc(r.via) + " &rarr; </span>" : "") + "<b>" + esc(D.sym[r.i]) + "</b>" +
     (has(D.name) && D.name[r.i] ? " <span class='m'>" + esc(D.name[r.i]) + "</span>" : "") +
-    (r.i >= N ? " <span class='alc'>&#9888; not on the map</span>" : "") + "</div>").join("");
+    (r.i >= N ? " <span class='alc'>&#9888; not on the map</span>" : "") + "</div>")).join("");
   ac.style.display = "block";
 }
 qi.addEventListener("input", () => { acItems = search(qi.value); acOn = 0; acRender(); });
@@ -3158,6 +3840,7 @@ qi.addEventListener("focus", () => qi.select());              // typing replaces
 function pick(k) {
   const r = acItems[k];
   if (!r) return;
+  if (r.src) { acItems = []; acRender(); showSource(r.src); return; }
   qi.value = D.sym[r.i]; acItems = []; acRender();
   select(r.i, true, "search");
 }
@@ -3177,6 +3860,7 @@ const HOWTO_MAPS = "<div class='howto'><h3>How to read this</h3>" +
   "<li><b>halves</b>: the compounds were split at random into two halves (a hash of the compound name) and the space fitted on each; <i>both</i> = the same sign in both halves with fdr &le; 0.10; <i>one</i> = strong in one of the two random halves only: not replicated, no error estimate (&#9888;); <i>none</i> = neither (&#9888;). <b>fdr</b>: the estimated share of false relations among pairs at least this strong in both halves.</li>" +
   "<li><b>same locus</b> / <b>read-through risk</b> (&#9888;): neighbouring genes can correlate for genomic reasons. <b>known</b>: shared pathway, gene family or STRING interaction; <b>novel?</b>: a strong relation seen in both halves (fdr &le; 0.05) and not found in those references; shown only when the references needed to rule out known links loaded.</li>" +
   "<li><b>Drug-doses</b>: fold change and z of the gene, pooled over the cell lines (median: a response in fewer than about half of the lines does not show here), against the same line's typical treated well on the plate (not DMSO); every drug-dose, those with an artifact flag marked &#9888; with the flag. <b>lines</b> = number of cell lines moving the same way.</li>" +
+  "<li><b>Probable direction</b>: which genes probably act on it (upstream), which it probably acts on (downstream), and how it probably acts on the cells' numbers under a drug; see <i>Probable direction</i> in the help.</li>" +
   "<li><b>Cell lines</b>: where the gene responds most: how many drug-doses raise (&uarr;) or lower (&darr;) it at least 1.5&times; in that line at the per-line |z| cut calibrated on this run, how many of them carry an artifact flag, and the strongest one, flagged or not; when that one carries an alert, the line's strongest drug-dose without one follows ('no alert:'). Lines that do not express the gene, or read only ambient RNA for it, are not measured.</li></ul>" +
   "<h4>Using the map</h4><p>Drag to pan, scroll or pinch to zoom, double-click to zoom in, click a gene to select it (Esc clears), click a module in the legend to highlight it. Search finds symbols, aliases, previous symbols and names; genes that are not on the map (&#9888;, too few responses) still open their drug and cell-line tables. A link ending in <code>#SYMBOL</code> opens that gene. The selected gene is the same on every tab.</p></div>";
 const KTXT = D.k_edges ? "each gene's " + D.k_edges + " strongest replicated partners" : "each gene's strongest replicated partners";
@@ -3185,7 +3869,7 @@ const HOWTO_PHYS = "<div class='howto'><h3>The tabs</h3><ul>" +
   "<li><b>Nodal map</b>: the t-SNE layout of 1 &minus; |cos|: opposite genes together.</li>" +
   "<li><b>Signed vector map</b>: the t-SNE layout of 1 &minus; cos: opposite genes apart.</li>" +
   "<li><b>" + TK + "-D tour</b>: the gene vectors in their full " + TK + "-dimensional space, through a slowly turning 2D window, or on any two of its axes.</li>" +
-  "<li><b>Physics: neighbourhood</b>: a live force simulation of the selected gene, its partners and (depth 2 to 4) their partners, step by step.</li>" +
+  "<li><b>Physics: neighbourhood</b>: a live force simulation of the selected gene, its partners and (depth 2 to 4) their partners, step by step; with the probable-direction arrows between them (<i>Direction</i>).</li>" +
   "<li><b>Physics: module</b>: a live force simulation of one module, all its genes and the edges among them.</li>" +
   "<li><b>Physics: all genes</b>: a live force simulation of every gene on the map, started from the nodal-map positions.</li></ul>" +
   "<p>The side panel and the search box belong to every tab: a gene selected on one tab is selected on all of them.</p>" +
@@ -3195,14 +3879,30 @@ const HOWTO_PHYS = "<div class='howto'><h3>The tabs</h3><ul>" +
   "<h4>The sign switch</h4><p><b>Opposite genes attract</b> (the default): red relations (genes that move opposite) are springs like green ones, so a gene and the genes that move opposite to it gather into one cluster: the nodal view, where both arms of a pathway form one island. <b>Opposite genes repel</b>: red relations push their two genes apart (drawn dashed; they push up to six rest lengths and do not pull beyond), so a module's &minus; arm separates from its + arm: the signed view. Flipping the switch re-heats the simulation so you can watch the arms part.</p>" +
   "<h4>Colours</h4><ul><li>Edges: <b style='color:" + WITH + "'>green</b> = the two genes move together, <b style='color:" + OPP + "'>red</b> = they move opposite; thickness &prop; |cos|.</li>" +
   "<li>Genes: by module (the legend's colours) or by arm (<b style='color:" + ARMC["+"] + "'>+ arm</b>, <b style='color:" + ARMC["-"] + "'>&minus; arm</b>, grey = no module). A dark ring = the selected gene; a grey ring = a pinned gene; grey dots in the module tab = genes outside the module.</li></ul>" +
-  "<h4>Neighbourhood</h4><p>The selected gene (pinned at the start), its partners (depth 1), their partners (depth 2) and so on up to depth 4, one depth at a time; within a depth the strongest first (the product of the |cos| along the way), at most <i>Max genes</i> (default 300, up to 2,000). The springs are the genes' top partners from the relations table (the lists in the side panel) that pass <i>Min |cos|</i> and <i>Evidence</i>; the info box says how many of the selected gene's listed partners these leave out (they stay in the side panel, with their alerts). Click another gene to move the neighbourhood to it; the genes already there keep their places.</p>" +
+  "<h4>Neighbourhood</h4><p>The selected gene (pinned at the start), its partners (depth 1), their partners (depth 2) and so on up to depth 4, one depth at a time; within a depth the strongest first (the product of the |cos| along the way), at most <i>Max genes</i> (default 300, up to 2,000). The springs are the genes' top partners from the relations table (the lists in the side panel) that pass <i>Min |cos|</i> and <i>Evidence</i>; the info box says how many of the selected gene's listed partners these leave out (they stay in the side panel, with their alerts). Click another gene to move the neighbourhood to it; the genes already there keep their places. <i>Direction</i>: <i>arrows</i> draws the probable-direction arrows between the genes shown, styled by grade; <i>+ its genes</i> also adds the selected gene's probable up- and downstream genes (a violet ring), so that a gene not on the map but with arrows (for example a recorded mutation's gene) can be shown with them; <i>off</i> hides them (see <span class='lk' onclick=\"document.getElementById('help-dir').scrollIntoView()\">Probable direction</span>).</p>" +
   "<h4>Module</h4><p>One module: pick it from the list, use <i>Selected gene's module</i>, click <i>simulate</i> on a module card in the side panel, or click a module in the map legend. Its springs are the edges of the kNN graph that defines the modules (" + KTXT + ", |cos| &ge; 0.3), among the module's genes. Coloured by arm by default; <i>outside genes (1 hop)</i> adds, dimmed, the genes outside the module that its genes link to.</p>" +
   "<h4>All genes</h4><p>Every gene on the map, starting from its place on the nodal map, with every kNN-graph edge as a spring. Edges are drawn for the selected gene only (while the layout moves, 177,000 lines would hide everything). Each frame runs as many simulation steps as fit in about 13 ms (at most 120 a second in every tab, so a re-heat or the sign switch plays out over about two seconds), so the page stays responsive at any size; the status line shows frames per second.</p>" +
   "<h4>Controls</h4><ul><li><b>Drag a gene</b> to move it: its partners follow. <b>Double-click</b> a gene to pin or unpin it (a slow double-click works too: it pins the gene you clicked first). <b>Click</b> a gene to select it (after a short pause, in case a second click follows). Drag the background to pan; wheel or pinch to zoom.</li>" +
   "<li><b>Pause / Resume</b> (space bar), <b>Re-heat</b> (let it move again), <b>Reset</b> (start the layout again and unpin everything), <b>Fit</b> (show every gene).</li>" +
   "<li><b>Repulsion</b> and <b>Springs</b>: the strengths of the two forces. <b>Min |cos|</b>: weaker relations are not springs. <b>Evidence</b>: only relations replicated in both random halves of the compounds, also those strong in one half (the default), or every relation; a spring that is not replicated says so (&#9888;) in the tooltip.</li>" +
   "<li>Labels: the selected gene, its springs' partners and pinned genes; everyone when zoomed in (labels that would overlap are left out).</li></ul></div>";
-$("helptext").innerHTML = HOWTO_PHYS + HOWTO_MAPS;
+// the probable direction (direction stage): its words are direction_view's (grades, caveat, order), embedded in D.dir
+const HOWTO_DIR = "<div class='howto' id='help-dir'><h3>Probable direction: which gene probably acts on which</h3>" + (!HAS_DIR ?
+  "<p>No arrows on this map: " + esc(DR.why || "this output has no direction stage") + ". <code>python -m tahoemap run --out OUT</code> runs the direction stage (newer than this output) and makes the map again.</p></div>" :
+  "<p>A relation (cos) has no direction: two genes rise together, but which one drives the other? The direction stage adds arrows <b>SOURCE &rarr; TARGET</b>, each from a statistical test across the screen's " + (DR.lines || "") + " cell lines (q &lt; 0.10 in its family of tests), with a grade and its alerts. The source is what the test compares the lines by:</p><ul>" +
+  "<li><b>mutation</b>: lines with a recorded mutation of the source (loss or gain of function) against lines without one recorded;</li>" +
+  "<li><b>not expressed</b>: lines that do not express the source at all (natural knockouts) against lines that do;</li>" +
+  "<li><b>drug target</b>: compounds that target the source's protein, and what they do to the target's level;</li>" +
+  "<li><b>natural level</b>: lines with more or less of the source, after allowing for the lines' tissue lineage &mdash; a glimpse of a direction without any known mutation.</li></ul>" +
+  "<p>The target is another gene (its <i>level</i>: at baseline for a mutation or a natural knockout, under the compounds for a drug target; or how strongly it responds to the drugs: <i>response</i>) or the cells themselves (<i>cells</i>: how many cells of the line remain under a drug-dose, against the other lines in the same wells). The sign is what the source's <b>activity</b> does to the target: <b>raises</b> / <b>lowers</b> a level or the cells' numbers (an inhibitor that raises a gene means the source's activity lowers it); <b>strengthens</b> / <b>weakens</b> a drug response, in the target's own direction at each drug-dose &mdash; where it falls under the drugs, <i>strengthens</i> means it falls further (the source deepens the fall), where it rises, that it rises more. Read which from all the drug-doses a row lists; a row alerted <i>rises at some drug-doses, falls at others</i> says only how strongly the target responds, not whether the source induces or represses it; <b>not inferred</b> = the mechanism is not recorded, so the sign is not known.</p>" +
+  "<p>Grades: " + DR.grades.map((g, t) => "<span class='gb g" + t + "'>" + g + "</span> " + esc(DR.gwords[t])).join("; ") + ". An arrow with a reason for doubt keeps its place and carries <span class='alc'>&#9888;</span> with the reason (hover for the full text; click a row for its evidence: the comparison, the reading with its numbers, every alert).</p>" +
+  "<p><b>What an arrow does not say</b> (" + esc(DR.caveat_short) + "):</p><ul>" + DR.caveat_lines.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>" +
+  "<h4>In the side panel</h4><p>Three lists for the selected gene: <b>Upstream</b> (what probably acts on it), <b>Downstream</b> (what it probably acts on) and <b>Cells under drug-doses</b> (how it probably acts on the cells' numbers under a drug). Each is in this order: " + esc(DR.order) + ". A list shows the " + (DR.cap || 8) + " strongest rows and also any of the " + (DR.cap || 8) + " strongest without an alert that come after them; it says how many more rows there are and how many of them carry an alert, and <i>show all</i> lists every one. A row that is one test for several genes (the targets of the same compounds; genes absent from exactly the same lines) names all of them. Click a gene's name to select it.</p>" +
+  "<h4>Arrows</h4><p>" + dirKey() + "</p><p>On the <b>neighbourhood</b> tab, <i>Direction: arrows</i> draws the arrows between the genes shown (one per pair and direction: its strongest row); <i>+ its genes</i> (the default) also adds the selected gene's probable up- and downstream genes of its side-panel lists to the simulation (a violet ring; they are held by a link that is no relation, so they show where the arrow points, not a similar response). On the two <b>maps</b>, <i>Direction arrows</i> draws the selected gene's arrows to and from the genes on the map. Hover a gene to read the rows between it and the selected gene.</p>" +
+  (DR.n_rows_out ? "<p>" + fmtN(DR.n_rows_out) + " of the stage's " + fmtN(DR.n_rows_stage) + " rows link no gene of this page" + (DR.n_rows_out_alert ? " (" + fmtN(DR.n_rows_out_alert) + " of them with an alert <span class='alc'>&#9888;</span>)" : "") + ": their source is not a measured gene and their target is the cells (sources: " + esc((DR.rows_out_sources || []).join(", ")) + (DR.n_rows_out_sources > (DR.rows_out_sources || []).length ? ", and " + fmtN(DR.n_rows_out_sources - (DR.rows_out_sources || []).length) + " more" : "") + "); they are in <code>direction/edges.parquet</code>, and <code>tahoe gene SOURCE</code> lists them.</p>" : "") +
+  "<p>A source that is not a measured gene (a drug target the screen does not measure, say) has no place on the map; the search finds it, and its panel lists its arrows.</p>" +
+  (DR.short && DR.short.length ? "<p class='alc'>Shortened to keep the page small: " + esc(DR.short.join("; ")) + ". Nothing else is left out; <code>tahoe pair SOURCE TARGET</code> gives a row's every reason in full, <code>tahoe gene SYMBOL --top N</code> lists a gene's rows, and <code>direction/edges.parquet</code> holds everything.</p>" : "") + "</div>");
+$("helptext").innerHTML = HOWTO_PHYS + HOWTO_MAPS + HOWTO_DIR;
 
 // ---------------------------------------------------------------- tabs, status, keys, start
 const TABS = ["nodal", "signed", "tour", "nbr", "mod", "all", "help"];
@@ -3235,6 +3935,8 @@ function status() {
   // wraps or unwraps, and the canvas keeps its size, while the slider moves
   $("mapnote").textContent = layout === 0 ? "distance = 1 − |cos|: genes that move opposite sit together" : "distance = 1 − cos: genes that move opposite sit apart";
 }
+if (HAS_DIR) $("dirm").addEventListener("change", () => { mapArrowsDirty(); req(); });
+else { $("dirm").checked = false; $("dirm").disabled = true; $("dirml").title = "Not available: this output has no direction stage"; }
 $("c0").addEventListener("click", () => setColour(0));
 $("c1").addEventListener("click", () => setColour(1));
 $("fitb").addEventListener("click", () => fit(false));
@@ -3283,7 +3985,21 @@ window.TAHOE_MAP = {select: i => select(i, true, "api"), search: search, data: D
   tour: () => TOUR.state(), tourPositions: () => TOUR.positions(), tourVector: i => TOUR.vector(i),
   tourAxes: (i, j) => TOUR.axes(i, j), tourMode: m => TOUR.mode(m), tourPlay: p => TOUR.play(p),
   tourBench: n => TOUR.bench(n || 30), tourScreen: i => TOUR.screen(i),
-  panel: () => $("panel").innerText};
+  panel: () => $("panel").innerText,
+  // probable direction: a gene's three lists (every row as direction_view.edge_line, in ORDER; shown = the positions the
+  // capped list shows), the arrows a physics tab draws, and the selected gene's arrows on the maps
+  direction: i => {
+    if (!HAS_DIR) return {ok: false, why: DR.why || ""};
+    const out = {ok: true};
+    for (const w of ["up", "dn", "ce"]) {
+      const rows = dirRowsOf(i, w), c = dirCap(rows, DR.cap || 8), pos = new Map(rows.map((k, t) => [k, t]));
+      out[w] = rows.map(k => dirLine(dirRow(k))); out[w + "_shown"] = c.shown.map(k => pos.get(k));
+      out[w + "_more"] = [c.more, c.moreAl]; out[w + "_counts"] = dirCountsText(rows, "rows", w === "ce" ? dirIndex().more.get(i) : null);
+    }
+    return out;
+  },
+  dirArrows: key => PHYS[key] && PHYS[key].arrows ? PHYS[key].arrows() : null,
+  mapArrows: () => mapArrowList().map(a => ({s: a.s, t: a.t, k: a.k, line: dirLine(dirRow(a.k))}))};
 })();
 </script>
 </body>

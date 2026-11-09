@@ -8,9 +8,10 @@ folder under the output root `OUT` (default `<data>/tahoemap`).
 
 One command (`tahoe run`) turns Tahoe-100M (50 cell lines × 379 drugs × 3 doses, 14 plates × 96 wells, ~96M cells)
 into, for every gene: which drugs raise or lower it, in which cell lines, which other genes move with it or opposite
-to it; vectors for genes, drugs, drug-doses and cell lines in one space; a 2D nodal map; an Obsidian vault with a
-note per gene, drug, cell line, plate and module; an interactive HTML map; and a validation report that separates
-known from previously unreported gene relations.
+to it, and which genes probably act on it or are acted on by it (probable direction, from the cell lines); vectors
+for genes, drugs, drug-doses and cell lines in one space; a 2D nodal map; an Obsidian vault with a note per gene,
+drug, cell line, plate and module; an interactive HTML map; and a validation report that separates known from
+previously unreported gene relations.
 
 ## Stages (in order; each writes `OUT/stages/<stage>.json` when it finishes)
 
@@ -24,15 +25,19 @@ known from previously unreported gene relations.
 | reference | `reference.run` (network; cached; optional) | effects/genes.csv, gene metadata | `OUT/reference/` |
 | relations | `relations.run` | embed, tables, reference (optional) | `OUT/relations/` |
 | graph | `graph.run` | embed, relations | `OUT/graph/` |
+| direction | `direction.run` | tensor (DDL_z, DDL_lfc, line_measured), effects (genes, drugdose, lines, line_cpm, DD_z / DD_qup / DD_qdn / DD_lfc, DD_A / DD_Az), the cell-line metadata, relations and tables/drugdoses (optional) | `OUT/direction/` |
 | validate | `validate.run` | everything above | `OUT/validation/` |
 | vault | `vault.run` | everything above | `OUT/vault/` |
-| map | `html_map.run` | tables, embed, relations, graph | `OUT/map/gene_map.html` |
+| map | `html_map.run` | tables, embed, relations, graph, direction | `OUT/map/gene_map.html` |
 
 Every `run(out, **opts)` function: takes the output root, logs with `common.log`, writes atomically
 (`common.write_parquet/write_csv/write_json/save_npy` write a `.tmp` then `os.replace`), ends with
 `common.stamp_stage(out, "<stage>", VERSION, info_dict)` and returns the info dict. Use `np.errstate` / `warnings`
 to silence all-NaN warnings. Never use Python's `hash()` for seeds: use `common.stable_seed(...)`.
 Dependencies allowed: numpy, pandas, pyarrow, scipy, scikit-learn, networkx (pure Python). Nothing else.
+Console text goes through `common.printable(text)`: on a console or redirect whose encoding lacks a sign (a Windows
+code page), ⚠ becomes '!', → '->', ≥ '>=' (`common.ASCII_FALLBACK`). A capped list keeps its items by
+`common.cap_keep(alert, n)`: the n strongest and any of the n strongest without an alert beyond them.
 
 ## Indices (shared by every stage)
 
@@ -126,8 +131,9 @@ noise RNA, |z| ≥ 3 in ≥ `--min-responsive` (default 5) contexts, AND a signi
 trustworthy drug-dose; either counts with an artifact flag for the gene too. A gene whose evidence, pooled and
 per-line, is all at drug-doses with an artifact flag for that gene (`tables/drug_effects.parquet` clean; for rows it
 does not hold, the drug-dose's own flags and the gene's atlas `DD_posunc`) is in the space with
-`evidence_flagged_only` = True, and every reader shows it with an alert. The three technically untrustworthy flags still keep their drug-doses out of the fit (computing,
-not showing): `info.json` lists each one left out with the reason, `drugdoses.parquet` has `fit_status`.
+`evidence_flagged_only` = True, and every reader shows it with an alert. The three technically untrustworthy flags
+still keep their drug-doses out of the fit (computing, not showing): `info.json` lists each one left out with the
+reason, `drugdoses.parquet` has `fit_status`.
 1. Rows centred and scaled by max(own SD, median SD). Broad components: among the first 3 components, one whose
    gene-component correlation is |r| ≥ 0.3 for ≥ max(200, 5% of genes) genes is removed (atlas programs rule).
    Logged in `broad_components.csv`.
@@ -195,10 +201,63 @@ and free_sim_tsne / free_sim_spread, the mean |cos| or cos of the genes without 
 genes on each layout).
 Files: `nodes.parquet` (col, symbol, module, arm, axis_proj, x, y, xs, ys, xm, ym, xsm, ysm, degree), `edges.parquet`,
 `modules.parquet` (module, n_genes, n_plus, n_minus, top_plus, top_minus (15 per arm by |projection|, capped the same
-way; a member in the vector space only through flagged drug-doses reads "SYMBOL ⚠"), centroids, drugs_up/down (capped: the
-strongest plus any of the strongest without an alert beyond them; a flagged drug-dose reads "(⚠ flags)"),
+way; a member in the vector space only through flagged drug-doses reads "SYMBOL ⚠"), centroids, drugs_up/down
+(capped: the strongest plus any of the strongest without an alert beyond them; a flagged drug-dose reads "(⚠
+flags)"),
 responsive_lines, mean_cos_within_plus/minus, mean_cos_between_arms, arms_opposite), `module_scores.npy`
 (modules × drug-doses × lines), `module_pooled_z.npy` (modules × drug-doses), `info.json`.
+
+## direction (OUT/direction/) — probable direction
+
+Directed edges SOURCE → TARGET from the cell lines; the method is the module docstring of `tahoemap/direction.py`,
+the user-facing explanation `docs/direction.md`. Every edge comes from a test with p and a BH q (a pair without q <
+0.10 in its family is no edge), has a grade (A, B, C), a sign (+1 / −1 / 0: the effect of the SOURCE's activity on
+the target) and `alerts` ('' or '⚠ ' + every reason, '; '-joined); nothing that passes is dropped for doubt.
+Kinds: `genotype_response`, `genotype_baseline`, `genotype_sensitivity` (recorded LoF / GoF / 'altered (any record)'
+vs 'not recorded'; per driver gene with ≥ 3 lines each side; 200 label permutations, within organs when they allow
+≥ 100 arrangements; q over every group of the kind, q_group within the group; written when q_group < 0.10, grade A /
+B need q < 0.10 too); `null_response`, `null_baseline`, `null_sensitivity` (lines that do not express the source:
+natural knockouts; towards the source's relations partners); `level`, `level_sensitivity` (the source's
+lineage-adjusted natural level; grade C; `direction_clear` when |r| > |r_reverse| beyond what selecting the edge
+for its strength gives: a null of two equally strong directions with the forward drawn conditional on passing the
+same BH cut, the largest p over the common strength); `drug_target` (compounds of one mechanism class that target
+the source, one molecule counted once under all its names; hypergeometric; grade B). Grades: A needs no co-occurrence
+alert either way (another gene's altered lines on the same side, or on the other side); a tissue-confounded genotype
+edge is C. The sign of a response kind is how strongly the target responds in its own direction ('strengthens' /
+'weakens'; for a falling target, a deeper fall). Sensitivity kinds have target
+`cells under DRUG DOSE` with `target_dd` = the drug-dose row (`drugdose.csv`), `target_col` −1.
+Files: `edges.parquet` (source, source_col, target, target_col, target_dd, target_type, kind, grade, sign, reading,
+group, mechanism, n_altered, n_intact, n_lines, contrast, D_raw, retained_fraction, raw_share, baseline_log2_diff, r,
+r_reverse, direction_clear, p_direction, n_compounds, n_supporting, background_rate, compounds, compounds_supporting,
+drug_effect, T, p, q, q_group, alerts, top_drugdoses, n_alerts), `groups.parquet` (every genotype, expression-null
+and pseudo group: lines, organs, stratified, alerts, edges per kind), `controls.json` (positive: TP53 → p53 targets
+with ranks, TP53 → cells under DNA-damaging drugs, KEAP1 → NRF2 targets; negative: 60 random pseudo-genotype groups
+counted at the real BH cut, permuted levels; `expected_false_edges` per kind with a 95% Poisson upper bound),
+`info.json` (`peak_rss_mb`: the stage's own peak, `peak_rss_how` says how it was measured), `README.md` (every
+column). The stage streams the per-line tensor in gene chunks (`--mem-gb`, default 1; plain reads, no memory map);
+estimated 6–7 min and 1.3–1.8 GB at 16,643 genes on 4 CPUs (`tests/test_direction.py`, generated outputs of the full
+size). `cli` passes `data` = the `--data` folder (a streamed build: `OUT/hf`), else `atlas/file_index.json` names the
+metadata; no result-changing option is exposed through `python -m tahoemap direction`.
+
+**`direction_view.py` is the only reader.** The vault, the map, the look-ups, validate and the review dossiers read
+the edges through `direction_view.load(out)` (None without the stage: every reader says so in one sentence and goes
+on), so they show the same rows in the same order with the same words:
+- `rows`: the display rows = the edges, with one test for several sources merged into one row naming them all
+  (drug_target edges with the same target, compounds, mechanism, effect and result; null edges of genes absent from
+  exactly the same lines); `members` = their edge ids, `sources`, `n_sources`, `has_alert`, `order`, `effect`,
+  `target_drug` / `target_dose`. `edges` = edges.parquet + edge_id, has_alert, target_drug, target_dose.
+- `ORDER`: grade A, B, C, then q ascending, then |contrast| descending, then p, kind, source, target.
+- Look-ups (gene = col or symbol): `upstream(gene)`, `downstream(gene)` (gene targets), `cells(gene)` (sensitivity
+  rows), `for_drugdose(dd)`, `sensitivity(drug)`, `drug_targets(drug)`, `for_drug(drug)`, `gene_counts(gene)`,
+  `group(row)`, `counts()`; `collapse=False` gives edges.
+- The cap rule: `cap(rows, n)` → (shown, n_more, n_more_alert); `more_text`, `counts_text`.
+- Wording: `edge_line(row)` ('TP53 → CDKN1A  [B]  TP53 activity strengthens CDKN1A's drug response (mutation:
+  response; q 0.025)  ⚠ ...'), `sign_text`, `sign_word(sign, kind)` (raises / lowers; strengthens / weakens for the
+  `RESPONSE` kinds, `SIGN_RESPONSE_NOTE`), `kind_text`, `q_text`, `alert_short` (a short label per reason) /
+  `alert_long`, `GRADE_WORDS`, `KIND_SHORT`, `CAVEAT`, `caveat_lines()`, `expected_text` / `CONTROLS_CAVEAT`;
+  `ascii=True` forms for consoles.
+Edge cap per surface: vault 12 per gene list and 15 per drug / line list, map 8 per side-panel list (3 in a hover
+tooltip; 3,000 pairs in the neighbourhood view), look-ups 10 per list (`--top N` when given), all by the cap rule.
 
 ## validate (OUT/validation/)
 
@@ -210,8 +269,11 @@ the set's top module. Opposite-arm test (p53 up vs DREAM down): mean cross-arm c
 cross-arm pairs in the same module (expect high). Module enrichment (hypergeometric, BH) → module labels. Drug
 check: AUROC of drug-vector cosine for same-moa_fine pairs. Novel candidates: (a) top `novel_candidate` edges;
 (b) guilt by association: genes in a module enriched for a set (q < 0.01) that are not annotated to it, ranked by
-cosine to the module's annotated members. Files: `report.md`, `metrics.json`, `module_labels.csv`,
-`module_enrichment.csv`, `control_sets.csv`, `novel_edges.csv`, `novel_members.csv`.
+cosine to the module's annotated members. Direction (report.md section 8, metrics.json `direction`): the positive
+controls with their ranks, per kind the edges written against the false edges the controls expect (⚠ when about half
+or more may be false), the counts by grade, and with `--truth` the planted direction answers; on an output without
+the stage, one sentence saying so (metrics `direction`: null). Files: `report.md`, `metrics.json`, `module_labels.csv`, `module_enrichment.csv`, `control_sets.csv`,
+`novel_edges.csv`, `novel_members.csv`.
 
 ## vault (OUT/vault/) — Obsidian
 
@@ -222,7 +284,13 @@ Notes: `Genes/<chrom>/<SYMBOL>.md` (every gene col; symbol repeats → label), `
 `Home.md`, `How to read this vault.md`, written notes from `tahoemap/vault_seed/`. Frontmatter emitted with
 `json.dumps` values. Wikilinks bare `[[Note name]]`; drugs suffixed ` (drug)`, lines ` (line)`; unique basenames.
 `.obsidian/app.json`, `graph.json` (filtered), `types.json`. Written fragments `vault_seed/genes/<SYMBOL>.md` are
-spliced under the title.
+spliced under the title. Direction (direction_view): every gene note has a section `## Direction (probable)` with the
+tables *Upstream of this gene* and *Downstream of this gene* (gene and cells targets together; 12 per table by the cap
+rule), a sentence in At a glance when it has arrows, and frontmatter `direction_upstream`, `direction_downstream`
+(null without the stage); drug notes list the sensitivity rows at the drug's doses and its drug-target rows; line
+notes list the genotype groups and natural-knockout line sets that include the line (`groups.parquet`); the generated
+`Concepts/Probable direction.md` (kinds with this run's counts, grades, sign, alert labels, controls, caveats) is
+linked from Home, How to read this vault and every direction section.
 
 ## map (OUT/map/gene_map.html)
 
@@ -231,15 +299,31 @@ layout to the modules-apart layout), a k-D tour of the genes' unit vectors (a gr
 three physics simulations (neighbourhood to depth 1-4, a module, all genes) and the help; colour by module, search,
 click a gene → its top partners (green = same direction, red = opposite), its drug-doses up/down, lines. Every list
 keeps flagged items in their ranked place with '⚠' + the reason and says how many carry an alert; a list capped at N
-adds any of the N strongest without an alert that fall below the cut. Data embedded as JSON
+adds any of the N strongest without an alert that fall below the cut. Probable direction (direction_view): the side
+panel's Upstream, Downstream and Cells lists (8 each, cap rule, show all); arrows between the genes shown on the
+neighbourhood tab (Direction: off / arrows / + its genes) and the selected gene's arrows on the two maps; the `dir`
+block holds every display row that touches a gene of the page. A page that would pass 20 MB is shortened in order:
+the grade C rows' readings, all readings, the function snippets, the line lists, the full alert texts (short labels
+stay), the cells rows beyond a gene's capped list (counted); no gene-target row is left out. Data embedded as JSON
 (details: `docs/DESIGN-review-and-physics.md`).
 
 ## CLI
 
 `python -m tahoemap <command>`; the `tahoe` shell wrapper calls it. Commands: run, status, the stage names (build,
-effects, tensor, tables, embed, reference, relations, graph, validate, vault, map) and the look-ups gene, drug, line,
-pair, module. `run` executes every stage that is missing or out of date: a stage is out of date when its code
-VERSION changed, an earlier stage was redone, a result-changing option differs from the one stamped (options given
-once are remembered in `OUT/run_options.json`), or (reference) a source failed to load on a run with network.
-`--from` / `--to` / `--redo` override the plan; `--allow-partial`, `--refresh-reference`, `--well-tensor` /
+effects, tensor, tables, embed, reference, relations, graph, direction, validate, vault, map), the look-ups gene, drug,
+line, pair, module, and review, duplicate, export (they read a finished output). `run` executes every stage that is
+missing or out of date: a stage is out of date when its code VERSION changed, an earlier stage was redone, a
+result-changing option differs from the one stamped (options given once are remembered in `OUT/run_options.json`), or
+(reference) a source failed to load on a run with network. A stage that is new to an output (direction, on an output
+finished before it existed) is missing, so `run` does it and the stages after it (validate, vault, map), nothing
+earlier. `--from` / `--to` / `--redo` override the plan; `--allow-partial`, `--refresh-reference`, `--well-tensor` /
 `--no-well-tensor`, `--reuse-atlas DIR` (an old tahoe_atlas.py build; recorded in `atlas/reused_from.json`).
+`duplicate` hard-links the arrays and tables of atlas, tensor, tables, embed, relations, graph and direction;
+`export` copies vault, map, tables, validation, direction, graph, relations, embed and stages.
+
+The look-ups read the direction through `direction_view` too: `gene X` has a PROBABLE DIRECTION section (upstream,
+downstream, cells under drugs), `line X` its recorded alterations and natural knockouts, `drug X` its sensitivity and
+drug-target rows, `pair A B` any edge between the two (and the genes with an edge to both, by the cap rule); a name
+that is no measured gene but the source of edges (a drug target such as NR3C1) gets its own arrows from `gene`, and
+`pair NR3C1 GENE` gives the edges between them with every alert in full (the review dossiers' `tahoe_lookup` does the
+same); every line printed through `common.printable`.

@@ -35,8 +35,8 @@ from .common import (GIT_MISSING, STAGES, PipelineLock, clear_stamps_from, find_
                      log, mark_output, read_stamp, stamp_stage, write_json)
 
 STAGE_MODULE = {"tensor": "tensor", "tables": "tables", "embed": "embed", "reference": "reference",
-                "relations": "relations", "graph": "graph", "validate": "validate", "vault": "vault",
-                "map": "html_map"}
+                "relations": "relations", "graph": "graph", "direction": "direction", "validate": "validate",
+                "vault": "vault", "map": "html_map"}
 LOOKUPS = ("gene", "drug", "line", "pair", "module")
 EXTRA_COMMANDS = ("review", "duplicate", "export")   # not stages: they read a finished output (never run the
                                                      # pipeline)
@@ -96,7 +96,8 @@ def make_parser():
     ap.add_argument("--dims", type=int, default=64, help="embed: dimensions of the vector space")
     ap.add_argument("--min-active", type=int, default=10, help="embed: significant genes a drug-dose needs")
     ap.add_argument("--min-responsive", type=int, default=5, help="embed: contexts with |z| >= 3 a gene needs")
-    ap.add_argument("--top", type=int, default=15, help="look-ups: rows per table")
+    ap.add_argument("--top", type=int, default=None, help="look-ups: rows per table (default 15; the probable-"
+                    "direction lists show 10 unless --top is given)")
     ap.add_argument("--truth", default=None, help="validate: ground_truth.json of synthetic test data (tests only)")
     g = ap.add_argument_group("review (python -m tahoemap review plan|run|status|tables) and duplicate")
     g.add_argument("--kinds", default=None, help="review: which entities, a comma list of gene,drug,line (default all)")
@@ -434,6 +435,10 @@ def _run_stage(stage, a):
         kw = {"dtype": a.tensor_dtype, "keep_well": not a.no_well_tensor}
     elif stage == "embed":
         kw = {"dims": a.dims, "min_active": a.min_active, "min_responsive": a.min_responsive}
+    elif stage == "direction":
+        # the cell lines' genetics: the Tahoe metadata under the data folder (a streamed build's OUT/hf too), else
+        # the files atlas/file_index.json lists
+        kw = {"data": a.data_in}
     elif stage == "validate" and a.truth:
         kw = {"truth": a.truth}
     elif stage == "reference":
@@ -464,7 +469,7 @@ def cmd_status(a):
 # duplicate: in these folders the arrays and tables are written once (to a .tmp file, then swapped in), so a hard link
 # shares them safely: a stage that runs again in either copy replaces the file instead of writing into it. (On Windows
 # a file in use cannot be replaced, and the two names are one file: not while the other copy has it open.)
-HARDLINK_DIRS = ("atlas", "tensor", "tables", "embed", "relations", "graph")
+HARDLINK_DIRS = ("atlas", "tensor", "tables", "embed", "relations", "graph", "direction")
 HARDLINK_EXT = (".npy", ".npz", ".parquet")
 DUPLICATED = "duplicated_from.json"
 

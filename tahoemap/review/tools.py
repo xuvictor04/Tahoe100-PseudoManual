@@ -274,7 +274,8 @@ def http_get(ctx, service, url, params, max_age_days=None, cache=True):
 
 
 # ----------------------------------------------------------------------------- ids
-_PMID = re.compile(r"^(?:pmid\s*[:#]?\s*|https?://(?:www\.)?(?:pubmed\.ncbi\.nlm\.nih\.gov|ncbi\.nlm\.nih\.gov/pubmed)/)"
+_PMID = re.compile(r"^(?:pmid\s*[:#]?\s*|https?://(?:www\.)?"
+                   r"(?:pubmed\.ncbi\.nlm\.nih\.gov|ncbi\.nlm\.nih\.gov/pubmed)/)"
                    r"?(\d{1,9})/?$", re.I)
 _DOI = re.compile(r"^(?:doi\s*:?\s*|https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}(?:/|%2F)\S+)$", re.I)
 # A DOI inside running text or a URL: Crossref's recommended character set (- . _ ; : / letters digits), plus the

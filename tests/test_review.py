@@ -49,6 +49,9 @@ what a removal puts back together (a tag, an autolink, a definition), '^' labels
 inline queries, linear time on unclosed '<!--' / '<?' / '<script>', e-mail / mailto / '//host' autolinks; two
 reviews of one gene (the latest's verdicts in the vault and the map alike), the callout's unverified count
 (retracted-only verdicts too), unread papers the id check removed, and ids not looked up but graded by the checker.
+The direction stage in the review: a gene dossier's 'Probable direction' (direction_view's rows, order, cap rule and
+words; data['direction']; the size bound), the short dossier and the pair look-up, an output without the stage, the
+reviewer's and the checker's instructions, and a direction verdict as an ordinary connection verdict.
 Prints PASS / FAIL per check; exit code 1 if anything fails. Takes well under a minute.
 """
 
@@ -568,8 +571,8 @@ def dry_run(view, ents):
     res, fk = run(view, {}, kinds="line,drug", limit=3, dry_run=True)
     c = "dry_run"
     d = os.path.join(view, "review", "dry_run")
-    summ = json.load(open(os.path.join(d, "summary.json"), encoding="utf-8")) if os.path.exists(os.path.join(d, "summary.json")) \
-        else {}
+    sj = os.path.join(d, "summary.json")
+    summ = json.load(open(sj, encoding="utf-8")) if os.path.exists(sj) else {}
     reqs = sorted(glob.glob(os.path.join(d, "*", "*.request.json")))
     doss = sorted(glob.glob(os.path.join(d, "*", "*.dossier.md")))
     check(c, "nothing sent, no ledger; 3 dossiers and first requests written",
@@ -788,8 +791,9 @@ def vault_splice(work, src, ents):
         vault.run(sv)
     before = notes()
     sv_vault = os.path.join(src, "vault")
-    same_code = (json.load(open(os.path.join(src, "stages", "vault.json"), encoding="utf-8")).get("version") == vault.VERSION
-                 if os.path.exists(os.path.join(src, "stages", "vault.json")) else False)
+    vj = os.path.join(src, "stages", "vault.json")
+    same_code = (json.load(open(vj, encoding="utf-8")).get("version") == vault.VERSION
+                 if os.path.exists(vj) else False)
     if same_code and os.path.isdir(sv_vault):
         diff = [k for k, t in before.items() if k != "Home.md" and (not os.path.exists(os.path.join(sv_vault, k))
                                                                     or open(os.path.join(sv_vault, k),
@@ -988,9 +992,12 @@ def sanitize_gaps(c, VT):
     ('_Citations were checked ..._'). (Checked against commonmark.js 0.31 and marked 18 while fixing; here without
     a JavaScript renderer.)"""
     sn = VT.sanitize_note
-    ref = {x: sn(x) for x in ("Click [x][r]\n\n> [r]: javascript:alert(1)", "Click [x][r]\n\n> [r]:\n> javascript:alert(2)",
-                              "Click [x][r]\n\n> [r]: data:text/html;base64,PHM+", "Click [x][r]\n\n- [r]: vbscript:msgbox(1)",
-                              "Click [x][r]\n\n> > - [r]: javascript:alert(4) \"t\"", "Click [x][r]\n\n- [r]:\njavascript:alert(5)",
+    ref = {x: sn(x) for x in ("Click [x][r]\n\n> [r]: javascript:alert(1)",
+                              "Click [x][r]\n\n> [r]:\n> javascript:alert(2)",
+                              "Click [x][r]\n\n> [r]: data:text/html;base64,PHM+",
+                              "Click [x][r]\n\n- [r]: vbscript:msgbox(1)",
+                              "Click [x][r]\n\n> > - [r]: javascript:alert(4) \"t\"",
+                              "Click [x][r]\n\n- [r]:\njavascript:alert(5)",
                               "Click [x][r]\n\n1) [r\n   x]: https://evil.example/a",
                               "Click [x][r]\n\n> [r]: https://www.ncbi.nlm.nih.gov/gene/1017")}
     vals = list(ref.values())
@@ -999,7 +1006,8 @@ def sanitize_gaps(c, VT):
           and all(v.startswith("Click [x][r]") for v in vals)
           and vals[-1].endswith("> [r]: https://www.ncbi.nlm.nih.gov/gene/1017\n>"), ref)
     img = [sn("![pixel]\n\n> [pixel]: https:/evil.example/track.png"),
-           sn("![pixel]\n\n[pixel]: https://www.ncbi.nlm.nih.gov/track.png"), sn("![pixel][]\n\n[pixel]: https://doi.org/x"),
+           sn("![pixel]\n\n[pixel]: https://www.ncbi.nlm.nih.gov/track.png"),
+           sn("![pixel][]\n\n[pixel]: https://doi.org/x"),
            sn("![a [b [c]] d](https://evil.example/x.png)"), sn("![a `]` b](https://evil.example/x.png)")]
     check(c, "ui#2: no image: a shortcut reference image ('![name]') or one the patterns cannot parse is text",
           not any("![" in x for x in img) and "evil.example/track" not in img[0] and img[1].startswith("pixel\n"), img)
@@ -1007,7 +1015,8 @@ def sanitize_gaps(c, VT):
           sn("> - ~~~ mermaid\n>   graph TD\n>   ~~~"), sn("1. ```dataviewjs\n   x\n   ```"),
           sn("[^1]: ```dataviewjs\n    x\n    ```"), sn("> ```python\n> x = 1\n> ```")]
     check(c, "ui#2: a fence inside a blockquote, callout, list item or footnote keeps only a plain code language",
-          not any(re.search(r"dataviewjs|mermaid", x) for x in nf) and nf[0] == "> [!note]\n> ```\n> dv.paragraph(1)\n> ```"
+          not any(re.search(r"dataviewjs|mermaid", x) for x in nf)
+          and nf[0] == "> [!note]\n> ```\n> dv.paragraph(1)\n> ```"
           and nf[-1] == "> ```python\n> x = 1\n> ```", nf)
     lk = [sn("[a `]` b](javascript:alert(1))"), sn("[a [b [c]] d](javascript:alert(1))"),
           sn("[a <b>]</b> c](vbscript:x)"), sn("text[^1]\n\n[^1]: javascript:alert(1)"),
@@ -2136,6 +2145,124 @@ def gene_dossier_alerts(view, ents):
 
 
 @case
+def gene_dossier_direction(view, ents, work):
+    """The direction stage in the review: a gene dossier ends with 'Probable direction' - upstream, downstream and
+    the cells under drug-doses, each direction_view's rows in its order and words, capped by the cap rule
+    (LIMITS['direction'] plus any of that many strongest without an alert), with the counts, the caveat and every
+    alert label's reason in full - and data['direction'] holds the same rows (edge ids, every alert in full); the
+    short dossier (tahoe_lookup gene) lists them and the pair look-up gives the arrow either way; the dossier still fits
+    its size bound; an output without the stage gets one sentence; the gene reviewer, the skills and the citation
+    checker explain how to judge an arrow, and a direction verdict is an ordinary connection verdict (the review
+    format is unchanged)."""
+    from tahoemap import direction_view as DV
+    from tahoemap.common import cap_keep
+    from tahoemap.review import definitions as DF, tools as TL, verify as V
+    c = "gene_dossier_direction"
+    dv = DV.load(view, cache=False)
+    if dv is None:
+        check(c, "the output has the direction stage (direction/edges.parquet)", False, view)
+        return
+
+    def ranks(rows, n):
+        return [int(k) + 1 for k in cap_keep(rows["has_alert"].to_numpy(dtype=bool), n)] if len(rows) else []
+    # CDKN1A: TP53 -> CDKN1A upstream (the planted p53 answer, grade A)
+    d = D.build(view, "gene", "CDKN1A")
+    t, dd = d.text, d.data.get("direction") or {}
+    up = dv.upstream("CDKN1A")
+    sec = t.split("## Probable direction", 1)[1] if "## Probable direction" in t else ""
+    r0 = up.iloc[0] if len(up) else None
+    rec = (dd.get("upstream") or [{}])[0]
+    ok = (r0 is not None and DV.CAVEAT in sec and f"| 1 | {DV.edge_arrow(r0)} | {r0['grade']} | {DV.sign_text(r0)} |"
+          in sec and f"### Upstream: what probably acts on CDKN1A ({DV.counts_text(up, 'arrows')})" in sec
+          and rec.get("arrow") == "TP53 → CDKN1A" and rec.get("alerts") == DV.alert_long(r0)
+          and rec.get("edge_ids") == [int(x) for x in r0["members"]] and dd.get("n_upstream") == len(up)
+          and all(lb in sec for lb in (DV.alert_short(r0)[2:].split("; "))) and "Alert reasons in full" in sec)
+    check(c, "CDKN1A's dossier: TP53 → CDKN1A upstream (grade, sign words, counts), the caveat, the alert reasons in "
+             "full; the same row in data['direction'] with its edge ids and every alert", ok,
+          f"{len(up)} upstream rows; {rec.get('arrow')} {rec.get('grade')}; dossier {len(t):,} characters")
+    # TP53: the cap rule on its downstream and cells lists, at full size and at a tight size bound
+    probs = []
+    for max_chars in (D.MAX_CHARS, 9_000):
+        d = D.build(view, "gene", "TP53", max_chars=max_chars)
+        dd = d.data.get("direction") or {}
+        n = len(dd.get("downstream") or [])
+        for key, rows in (("downstream", dv.downstream("TP53")), ("cells", dv.cells("TP53"))):
+            got = [x["rank"] for x in dd.get(key) or []]
+            want_n = next((m for m in range(1, len(rows) + 1) if ranks(rows, m) == got), None)
+            if not got or want_n is None or not all(f"| {x['rank']} | {x['arrow']} | {x['grade']} |" in d.text
+                                                     for x in dd[key]):
+                probs.append((max_chars, key, got[:6]))
+        if len(d.text) > max_chars:
+            probs.append((max_chars, "size", len(d.text)))
+    check(c, "TP53's dossier: downstream and cells rows by the cap rule (at the full size and at a tight size bound, "
+             "where the lists shrink)", not probs, probs or f"{len(dv.downstream('TP53'))} downstream, "
+                                                         f"{len(dv.cells('TP53'))} cells rows; at 9,000 characters "
+                                                         f"{n} downstream rows shown")
+    # a gene without arrows
+    has = set(int(x) for x in dv.rows["target_col"]) | {int(x) for s in dv.rows["source_cols"] for x in s}
+    quiet = next((e for e in ents["genes"] if int(e["col"]) not in has), None)
+    if quiet is not None:
+        t = D.build(view, "gene", quiet["entity_id"]).text
+        check(c, "a gene without arrows: the section says so",
+              "No arrow involves" in t and "## Probable direction" in t, quiet["name"])
+    # the short dossier and the pair look-up (tahoe_lookup)
+    s = D.summary(view, "gene", "CDKN1A")
+    p = D.summary(view, "pair", "TP53|CDKN1A")
+    e = dv.downstream("TP53")
+    e = e[e["target"] == "CDKN1A"]
+    check(c, "tahoe_lookup: the short gene dossier lists the arrows; the pair gives the arrow either way, every alert "
+             "in full",
+          f"- Probable direction, upstream - what probably acts on it ({DV.counts_text(up, 'arrows')}): "
+          f"{DV.edge_line(r0, alerts='short', max_names=4)}" in s and len(e) == 1
+          and f"- probable direction TP53 → CDKN1A: {DV.edge_line(e.iloc[0], alerts='long', max_names=4)}" in p
+          and "- probable direction CDKN1A → TP53: none" in p, f"summary {len(s):,}, pair {len(p):,} characters"
+          if "TP53 → CDKN1A" in p else p[-400:])
+    # an output without the stage (a view without direction/)
+    old = os.path.join(work, "review_view_no_direction")
+    if os.path.lexists(old):
+        shutil.rmtree(old)
+    os.makedirs(old)
+    for x in sorted(os.listdir(view)):
+        if x not in ("review", "direction"):
+            link_entry(os.path.realpath(os.path.join(view, x)), os.path.join(old, x))
+    try:
+        t = D.build(old, "gene", "CDKN1A").text
+        s = D.summary(old, "gene", "CDKN1A")
+        p = D.summary(old, "pair", "TP53|CDKN1A")
+    finally:
+        shutil.rmtree(old, ignore_errors=True)
+        D.clear_cache()
+    check(c, "an output without the direction stage: one sentence in the dossier, the summary and the pair",
+          "## Probable direction\n- Not available: the direction stage has not run for this output" in t
+          and "- Probable direction: the direction stage has not run" in s
+          and "probable direction: the direction stage has not run for this output" in p,
+          "dossier, summary and pair" if "Not available" in t else t[-300:])
+    # instructions: the gene reviewer, the skills, the citation checker
+    gr = DF.load_agent("gene-reviewer")
+    cc = DF.load_agent("citation-checker")
+    check(c, "the gene reviewer's prompt explains arrows (what they are, which to check, how to give the verdict); "
+             "the reading skill lists the alert labels; the checker reads an arrow's direction and sign",
+          all(x in gr.system for x in ("**Probable direction**", "**Directions.**", "## Probable direction (arrows)",
+                                       "## Probable directions", "within its group / drug-dose only (a lead)",
+                                       "feedback loops are common"))
+          and "**Arrows.**" in cc.system and "probable direction SOURCE → TARGET" in cc.system,
+          f"gene reviewer prompt {len(gr.system):,} characters")
+    # a direction verdict is an ordinary connection verdict: accepted as is; the checker sees the arrow as data
+    rv = F.sample_review("NQO1", ("31000001",))
+    rv["connection_verdicts"].append({
+        "partner": "TP53", "verdict": "established",
+        "relation": "TP53 transactivates CDKN1A; its knockdown abolishes CDKN1A induction by DNA damage",
+        "data_evidence": "probable direction TP53 → CDKN1A, grade A: TP53 activity raises CDKN1A's drug response; "
+                         "recorded TP53 loss of function in 10 lines vs 8; q 0.025",
+        "citations": ["PMID:31000001"]})
+    r, errs = TL.normalize_review(rv)
+    cl = [x for x in V.claims(r, {"kind": "gene", "name": "CDKN1A"}) if x["data"].startswith("probable direction")]
+    check(c, "a direction verdict passes submit_review's checks unchanged and reaches the citation checker with its "
+             "arrow as the data line", not errs and len(cl) == 1 and "TP53 → CDKN1A" in cl[0]["data"]
+          and cl[0]["meaning"] == V.VERDICT_MEANING["established"], errs or (cl[0]["data"] if cl else "no claim"))
+
+
+@case
 def cellosaurus_url_in_dossier(view, ents, work):
     """sdk#6 / science#10: the line's Cellosaurus URLs are written out in its dossier and in tahoe_lookup's result
     (web_fetch opens only URLs present in the conversation); no prompt tells the agent to compose one."""
@@ -2168,7 +2295,8 @@ def note_provenance(work):
     rd = os.path.join(REPO, "tahoemap", "review")
     claims_check = [p for p in glob.glob(os.path.join(rd, "agents", "*.md")) + glob.glob(os.path.join(rd, "skills",
                                                                                                       "*", "SKILL.md"))
-                    if re.search(r"citations were checked|were checked against PubMed", open(p, encoding="utf-8").read(), re.I)]
+                    if re.search(r"citations were checked|were checked against PubMed",
+                                 open(p, encoding="utf-8").read(), re.I)]
     wn = open(os.path.join(rd, "skills", "writing-the-note", "SKILL.md"), encoding="utf-8").read()
     check(c, "no agent or skill file has the agent claim its own verification; writing-the-note forbids it",
           not claims_check and "Write no footer" in wn, claims_check)
@@ -2445,7 +2573,8 @@ def note_links_and_structure(work, view, ents):
           and r_al["note_markdown"].count("(retracted paper)") == 2
           and "fake.31000005) (retracted paper)" in r_al["note_markdown"], r_al["note_markdown"])
     check(c, "the reverse (the item cites the DOI, the note links the PMID): kept, counted once",
-          rep_rev["note_removed"] == 0 and rep_rev["n_cited"] == 1 and "(citation removed" not in r_rev["note_markdown"],
+          rep_rev["note_removed"] == 0 and rep_rev["n_cited"] == 1
+          and "(citation removed" not in r_rev["note_markdown"],
           r_rev["note_markdown"])
     check(c, "a retracted paper cited only in the note is removed and not counted as a cited retracted paper",
           rep_lone["retracted"] == 0 and rep_lone["retracted_ids"] == [] and rep_lone["note_removed"] == 1
@@ -3593,6 +3722,7 @@ def main():
     vault_round5(work, src, ents)
     drug_dossier_trustworthy_dose(view, ents)
     gene_dossier_alerts(view, ents)
+    gene_dossier_direction(view, ents, work)
     cellosaurus_url_in_dossier(view, ents, work)
     note_provenance(work)
     note_citation_forms(work)

@@ -103,15 +103,15 @@ per line, per plate, per well. `tables/README.md` (written by the stage) documen
   `cell-cycle shift` for every gene, yet it explains the change of a cell-cycle gene, not necessarily of a gene with
   little cell-cycle dependence. For each gene a robust regression of its pooled log2 fold change on the drug-doses'
   S-phase and G2/M module changes (over the drug-doses whose only artifact flag, if any, is the cell-cycle shift; at
-  least 20) gives its slopes (`genes.parquet` cc_slope_S, cc_slope_G2M). At each drug-dose flagged `cell-cycle
-  shift`, the slopes predict how much of the gene's change the shift explains (`drug_effects.parquet` cc_share; 0
-  when the prediction goes the other way), fitted again without that drug-dose (leave-one-out, so a strong change
-  of the gene's own there does not pull its slopes toward explaining it). Fitted slopes are attenuated by noise, so the rule doubles them: when even
-  the doubled prediction explains less than half of the change, and what is left is still ≥ 1.2×, the shift is not
-  the explanation; the gene's flags then read `cell-cycle shift (explains ~N% here)`, which is no artifact flag, and
-  the value can be clean. Otherwise the artifact flag stays and the alert says how much it explains. On planted data,
-  0 of the 154 significant changes of the S-phase and G2/M programme genes at such drug-doses are cleared. On the
-  real data, Idarubicin 5 µM raises TRIM72 (MG53) 12.2× with the cell-cycle flag; its slopes predict ~4% of that
+  least 20) gives its slopes (`genes.parquet` cc_slope_S, cc_slope_G2M). At each drug-dose flagged `cell-cycle shift`,
+  the slopes predict how much of the gene's change the shift explains (`drug_effects.parquet` cc_share; 0 when the
+  prediction goes the other way), fitted again without that drug-dose (leave-one-out, so a strong change of the gene's
+  own there does not pull its slopes toward explaining it). Fitted slopes are attenuated by noise, so the rule doubles
+  them: when even the doubled prediction explains less than half of the change, and what is left is still ≥ 1.2×, the
+  shift is not the explanation; the gene's flags then read `cell-cycle shift (explains ~N% here)`, which is no artifact
+  flag, and the value can be clean. Otherwise the artifact flag stays and the alert says how much it explains. On
+  planted data, 0 of the 154 significant changes of the S-phase and G2/M programme genes at such drug-doses are cleared.
+  On the real data, Idarubicin 5 µM raises TRIM72 (MG53) 12.2× with the cell-cycle flag; its slopes predict ~4% of that
   change, so the rise is the gene's own response, not the cycle mix.
 
 ## 5. Embed — the vector space
@@ -180,13 +180,42 @@ map, between module directions), overlapping blocks are pushed apart, and genes 
 nearest module genes. On planted data the share of a module gene's 5 nearest module genes that belong to another
 module falls from 9.5% to 0.4% (nodal map).
 
-## 8. Reference, validation, vault, map
+## 8. Direction — which gene probably acts on which
+
+The relations above have no direction. The direction stage adds arrows SOURCE → TARGET from what the screen's 50 cell
+lines differ in, each from a statistical test (p, a Benjamini–Hochberg q < 0.10 in its family), with a grade (A
+strong, B read its alerts, C a glimpse), a sign (what the source's activity does to the target: raises, lowers, or
+not inferred) and its alerts. The source can be:
+
+- **a recorded mutation** of the source gene (loss or gain of function, from Tahoe's cell-line metadata): lines with
+  it are compared with lines without any record of the gene, by permuting which lines count as altered (within
+  organs where possible), for every target gene's drug response and baseline level and for the cells' numbers under
+  every drug-dose. The mutation was there before the experiment, so the arrow points one way;
+- **the source's absence** from some lines (natural knockouts: lines that read only the ambient RNA of the gene),
+  tested the same way towards the source's related partners;
+- **compounds that target the source** (two or more of one mechanism moving the target the same way, more often than
+  compounds in general);
+- **the source's natural level** across the lines (lineage-adjusted correlation with a related gene's response,
+  computed in both directions, or with the cells' numbers under a drug-dose; a glimpse, grade C).
+
+A line that responds less to every drug (fewer cells, drug efflux, a resistant genotype) would make every gene look
+dependent on what that line carries, so each response is first set against the line's general responsiveness at the
+same drug-doses. Random groups of lines tested in the same way, and the same level tests with shuffled levels, give
+the number of false arrows to expect per kind; the TP53 → p53 targets arrows are the positive control. Nothing that
+passes is dropped for doubt: an arrow keeps its place with ⚠ and the reason. The arrows are a *probable* direction,
+not proof of direct regulation (A → B → C looks like A → C; 'not recorded' is not 'wild type'; one time point; drugs
+act on proteins). [direction.md](direction.md) explains every kind, grade and alert with examples;
+`tahoemap/direction.py` has the method in full.
+
+## 9. Reference, validation, vault, map
 
 Public annotations (HGNC, Ensembl GRCh38 r112 coordinates, UniProt function, NCBI summaries, Reactome, MSigDB
 Hallmark, STRING v12) are downloaded once and cached; every source is optional. Validation scores the space against
 curated control programmes that were not derived from Tahoe (`tahoemap/data/control_sets.json`) and against Hallmark
-and Reactome, tests the opposite-arm prediction, labels modules by enrichment, and lists novel candidates (its lists
-keep flagged items with an alert too). The vault and the HTML map present all of it. The map has, besides the two
+and Reactome, tests the opposite-arm prediction, labels modules by enrichment, lists novel candidates (its lists
+keep flagged items with an alert too), and reports the direction stage's controls. The vault and the HTML map
+present all of it, the probable directions included (a gene note's Direction (probable) section; the map's side
+panel and arrows). The map has, besides the two
 maps and their Spread slider, a **k-D tour** (the genes' unit vectors in all dimensions projected onto a 2-D plane
 that turns smoothly, or one component against another exactly), and three physics simulations: a gene's
 neighbourhood (its partners and theirs, to depth 1-4, up to 2,000 genes), one module, and all genes.
@@ -195,7 +224,8 @@ neighbourhood (its partners and theirs, to depth 1-4, up to 2,000 genes), one mo
 
 - **Correlation is not mechanism.** There are no genetic perturbations in Tahoe-100M; "moves with" means the two
   genes respond alike across ~1,100 drug-doses in 50 lines, not that one regulates the other. "Upstream" and
-  "downstream" are reserved for regulatory claims, never chromosomal position (that is "5′ of" / "3′ of").
+  "downstream" are used only for the direction stage's arrows (§8), which are probable directions from the cell
+  lines' natural differences, never for chromosomal position (that is "5′ of" / "3′ of").
 - **One time point** (24 h): a gene that responds late or transiently can look unrelated to its regulator.
 - **Most drug-doses sit in one well** (1,024 of 1,132): their significance rests on the spread of other drug wells,
   not on replicates.

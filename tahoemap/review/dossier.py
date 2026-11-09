@@ -17,15 +17,26 @@
         name or Cellosaurus id) or its entity_id.
     summary(out, kind, name) -> str
         the short version (at most SUMMARY_CHARS) that the tahoe_lookup tool returns; kind 'pair' with name 'A|B'
-        gives the relation of two genes.
+        gives the relation of two genes, with any probable-direction arrow between them (either way, every alert in
+        full).
     Dossier.user_message() -> str
         the first user message of a review: one line of task + the dossier in <dossier> tags.
 
-Built only from the run's own outputs (tables, relations, graph, validation, reference, embed and a few atlas
-matrices), read the way `query.py` reads them (filtered parquet reads, memory-mapped arrays): one dossier stays well
-under 1 GB and a few seconds at full scale (15,000 genes, 1,100 drug-doses, 100 partners per gene). Every stage
-except tables is optional; a missing one is named in the text. The text holds no dates or paths, so its sha256
-changes only when the data do.
+A gene dossier ends with its probable direction (the direction stage, read through direction_view, which the vault,
+the map and the look-ups use too, so all of them show the same arrows in the same order and words): what probably
+acts on the gene (upstream), the genes it probably acts on (downstream) and how it probably acts on the cells under
+drug-doses, each capped by the cap rule (LIMITS['direction'], plus any of that many strongest without an alert beyond
+them) with grade, sign words, evidence, the stage's numbers, q and the alerts' short labels, then each label's reason
+in full once; data['direction'] holds the same rows with every alert in full and their edge ids. The reviewing agent
+judges each arrow against the literature (agents/gene-reviewer.md, skills reading-tahoe-data and connection-audit);
+its verdict is an ordinary connection verdict, so the review format is unchanged. An output without the stage gets
+one sentence.
+
+Built only from the run's own outputs (tables, relations, graph, direction, validation, reference, embed and a few
+atlas matrices), read the way `query.py` reads them (filtered parquet reads, memory-mapped arrays; OUT/direction is
+read whole once per process): one dossier stays around 1 GB and a few seconds at full scale (15,000 genes, 1,100
+drug-doses, 100 partners per gene). Every stage except tables is optional; a missing one is named in the text. The
+text holds no dates or paths, so its sha256 changes only when the data do.
 """
 
 import hashlib
@@ -39,9 +50,10 @@ import numpy as np
 import pandas as pd
 
 from .. import atlas_core as A
+from .. import direction_view as DV
 from .. import tlib as T
 from .. import query as Q
-from ..common import replace_file
+from ..common import cap_keep, replace_file
 from ..relations import REPRO_FDR
 
 MAX_CHARS = 24_000             # ~7,000-8,000 tokens of markdown tables with numbers (~3-3.5 characters a token)
@@ -58,10 +70,11 @@ CELLOSAURUS_URL = "https://www.cellosaurus.org/{}"   # a line's entry; + ".txt" 
 LIMITS = {"drugs": 12, "single": 10, "partners": 25, "known": KNOWN_MAX, "novel": 10, "members": 6,
           "lines_hi": 5, "top_genes": 25, "top_genes_other": 10, "modules": 8, "deplete": 15, "beta": 6,
           "near_drugs": 10, "baseline_hi": 25, "baseline_lo": 15, "responses": 25, "components": 5, "targets": 12,
-          "text": 600}
+          "direction": 10, "dir_reasons": 20, "text": 600}
 SHORT = {"drugs": 5, "single": 4, "partners": 8, "known": 6, "novel": 5, "members": 0, "lines_hi": 3,
          "top_genes": 10, "top_genes_other": 0, "modules": 4, "deplete": 6, "beta": 4, "near_drugs": 5,
-         "baseline_hi": 10, "baseline_lo": 5, "responses": 8, "components": 3, "targets": 6, "text": 300}
+         "baseline_hi": 10, "baseline_lo": 5, "responses": 8, "components": 3, "targets": 6, "direction": 4,
+         "dir_reasons": 0, "text": 300}
 
 
 @dataclass
@@ -527,7 +540,7 @@ def build(out, kind, name, max_chars=MAX_CHARS):
     nm, eid, key = resolve(out, kind, name)
     fn = {"gene": _gene, "drug": _drug, "line": _line}[kind]
     text, data = "", {}
-    for scale in (1.0, 0.75, 0.55, 0.4, 0.3, 0.2):
+    for scale in (1.0, 0.75, 0.55, 0.4, 0.3, 0.2, 0.1):
         lim = {k: (max(1, int(round(v * scale))) if v else 0) for k, v in LIMITS.items()}
         lim["text"] = max(200, int(LIMITS["text"] * max(scale, 0.5)))
         P, data = fn(C, key, lim, short=False)
@@ -548,10 +561,22 @@ def summary(out, kind, name, max_chars=SUMMARY_CHARS):
     if kind == "pair":
         text = _pair(C, name)
     else:
-        nm, eid, key = resolve(out, kind, name)
+        try:
+            nm, eid, key = resolve(out, kind, name)
+        except Q.NotFound:
+            alt = _unmeasured_source(C, name) if kind == "gene" else None
+            if not alt:                              # (a source that is no gene of this run: its arrows, as the CLI)
+                raise
+            return alt if len(alt) <= max_chars else \
+                alt[:max_chars - 60].rsplit("\n", 1)[0] + "\n[summary truncated]\n"
         fn = {"gene": _gene, "drug": _drug, "line": _line}[kind]
-        P, _ = fn(C, key, dict(SHORT), short=True)
-        text = "\n".join(P).rstrip() + "\n"
+        for scale in (1.0, 0.75, 0.5, 0.35, 0.25):        # shorter lists until it fits, as build does
+            lim = {k: (max(1, int(round(v * scale))) if v else 0) for k, v in SHORT.items()}
+            lim["text"] = max(150, int(SHORT["text"] * max(scale, 0.5)))
+            P, _ = fn(C, key, lim, short=True)
+            text = "\n".join(P).rstrip() + "\n"
+            if len(text) <= max_chars:
+                break
     if len(text) > max_chars:
         text = text[:max_chars - 60].rsplit("\n", 1)[0] + "\n[summary truncated]\n"
     return text
@@ -728,6 +753,7 @@ def _gene(C, c, lim, short=False):
     if not short:
         _gene_known_absent(C, c, rel, in_space, lim, P, D)
     _gene_novel(C, c, rel, lim, short, P, D)
+    _gene_direction(C, c, lim, short, P, D)
     return P, D
 
 
@@ -1061,8 +1087,8 @@ def _gene_known_absent(C, c, rel, in_space, lim, P, D):
                  f"{n_space:,} genes in the space (its data partners are ranks 1-{len(rel) if rel is not None else 0}, "
                  f"down to |cos| {weakest:.2f}).")
     elif not in_space:
-        P.append(f"- {g.at[c, 'label']} itself is not in the vector space, so no cosine can be given; the status column "
-                 "says whether each known partner responds in these data (is in the space) or not.")
+        P.append(f"- {g.at[c, 'label']} itself is not in the vector space, so no cosine can be given; the status "
+                 "column says whether each known partner responds in these data (is in the space) or not.")
     H1 = o.npy("embed/gene_unit_half1.npy") if C.has("embed/gene_unit_half1.npy") else None
     H2 = o.npy("embed/gene_unit_half2.npy") if C.has("embed/gene_unit_half2.npy") else None
     rows, recs = [], []
@@ -1161,6 +1187,135 @@ def _gene_novel(C, c, rel, lim, short, P, D):
             P.append(f"- module {x['module']}{x['arm']}: {x['set']} ({x['source']}, q {_q(x['set_q'])}; "
                      f"{x['n_annotated_in_arm']} annotated members on its arm; its mean cos to them "
                      f"{_cos(x['mean_cos'])})")
+
+
+# ----------------------------------------------------------------------------- probable direction (direction stage)
+DIR_LISTS = (("upstream", "Upstream: what probably acts on {g}", "upstream - what probably acts on it"),
+             ("downstream", "Downstream: genes {g} probably acts on", "downstream - genes it probably acts on"),
+             ("cells", "Cells under drugs: how {g} probably acts on the cells' growth under a drug-dose",
+              "cells under drugs - how it probably acts on the cells' growth under a drug-dose"))
+
+
+def _direction(C):
+    """(direction_view.Direction or None, why) of the output (query._direction: one load per process)."""
+    return C.get("direction", lambda: Q._direction(C.o))
+
+
+def _dir_rec(r, rank):
+    """One display row as the dossier's data: direction_view's texts and the stage's own numbers."""
+    t = DV.texts(r, max_names=None)
+    return {"rank": int(rank), "arrow": t["arrow"], "source": t["source"], "sources": list(r["sources"]),
+            "target": t["target"], "kind": t["kind"], "evidence": t["kind_short"], "grade": t["grade"],
+            "sign": t["sign"], "sign_text": t["sign_text"], "kind_text": t["kind_text"],
+            "reading": Q._dir_reading(r), "group": _text(r.get("group")), "q": _num(r.get("q")),
+            "q_group": _num(r.get("q_group")), "p": _num(r.get("p")), "q_text": t["q_text"],
+            "alerts": t["alerts_long"], "alerts_short": t["alerts_short"],
+            "target_drug": _text(r.get("target_drug")), "target_dose": _text(r.get("target_dose")),
+            "drugdoses": _text(r.get("top_drugdoses")) if r.get("kind") in DV.RESPONSE else "",
+            "rise_share": _num(r.get("rise_share")), "edge_ids": [int(x) for x in r["members"]]}
+
+
+def _gene_direction(C, c, lim, short, P, D):
+    """The gene's probable direction (the direction stage, read through direction_view, which the vault, the map and
+    the look-ups use too): what probably acts on it (upstream), the genes it probably acts on (downstream) and how it
+    probably acts on the cells under drug-doses, each in direction_view's ORDER and capped by the cap rule (the
+    lim['direction'] strongest plus any of that many strongest without an alert beyond them), with the grade, the
+    sign words, the evidence, the stage's numbers, q and the alerts (short labels in the table, every reason in full
+    once below the tables); the caveat. An output without the stage: one sentence."""
+    lab = _label(C, c)
+    dv, why = _direction(C)
+    D["direction"] = {"available": dv is not None}
+    if dv is None:
+        txt = ("the direction stage has not run for this output: no probable direction (which gene acts on which) is "
+               "available" if not why else f"the direction stage's files cannot be read ({why})")
+        if short:
+            P.append(f"- Probable direction: {txt}.")
+        else:
+            P += ["", "## Probable direction", f"- Not available: {txt}."]
+        D["direction"]["why"] = txt
+        return
+    lists = {"upstream": dv.upstream(int(c)), "downstream": dv.downstream(int(c)), "cells": dv.cells(int(c))}
+    n = lim.get("direction", 0) or 1
+    D["direction"].update({f"n_{k}": int(len(v)) for k, v in lists.items()})
+    D["direction"].update({f"n_{k}_alert": int(v["has_alert"].sum()) if len(v) else 0 for k, v in lists.items()})
+    D["direction"]["caveat"] = DV.CAVEAT
+    if short:
+        if not any(len(v) for v in lists.values()):
+            P.append(f"- Probable direction: no arrow involves {lab} in this run.")
+            return
+        for key, _h, word in DIR_LISTS:
+            rows = lists[key]
+            if not len(rows):
+                continue
+            shown, n_more, n_more_al = DV.cap(rows, n)
+            more = DV.more_text(n_more, n_more_al, "arrows")
+            P.append(f"- Probable direction, {word} ({DV.counts_text(rows, 'arrows')}): "
+                     + "; ".join(DV.edge_line(r, alerts="short", max_names=4) for _, r in shown.iterrows())
+                     + (f" ... {more}" if more else ""))
+        P.append(f"- ({DV.CAVEAT_SHORT}; the sign is what the source's activity probably does to the target: "
+                 "strengthens / weakens a drug response in the target's own direction at each drug-dose - a higher "
+                 "rise or a deeper fall -, which says nothing of induction or repression where it rises at some "
+                 "drug-doses and falls at others)")
+        return
+    P += ["", "## Probable direction (which genes probably act on it, and what it probably acts on)",
+          f"Arrows SOURCE {DV.ARROW} TARGET of the direction stage. The source is what a test conditions on: a "
+          "recorded mutation of the source in Tahoe's cell-line genetics (lines with it against lines with no record "
+          "of the gene), lines that do not express the source (natural knockouts), compounds that target the "
+          "source's protein, or the source's natural level across the lines (a glimpse). The target is what differs "
+          "with it: "
+          "its level, its drug response, or the cells' numbers under a drug-dose. The sign (column 'probable "
+          "direction') is what the source's ACTIVITY probably does to the target; 'not inferred' when the mechanism "
+          f"is not recorded. {DV.SIGN_RESPONSE_NOTE} Grades: " + "; ".join(DV.grade_legend("long"))
+          + ". q = Benjamini-Hochberg over the "
+          f"kind's whole table of tests. {Q.ALERT} = a reason to doubt the arrow, kept in its ranked place (short "
+          "labels in the table, each reason in full below). " + DV.CAVEAT]
+    if not any(len(v) for v in lists.values()):
+        P.append(f"- No arrow involves {lab} in this run (each arrow needs a test result at q < 0.10).")
+        return
+    reasons = {}                                   # short label -> [its first reason in full, rows with it]
+    for key, head, _w in DIR_LISTS:
+        rows = lists[key]
+        recs = []
+        if len(rows):
+            al = rows["has_alert"].to_numpy(dtype=bool)
+            keep = cap_keep(al, n)
+            rest = np.setdiff1d(np.arange(len(rows)), keep)
+            recs = [_dir_rec(rows.iloc[int(k)], k + 1) for k in keep]
+            for x in recs:
+                for rs in DV.alert_reasons(x["alerts"]):
+                    lb = DV.alert_short(rs)[len(Q.ALERT) + 1:]
+                    reasons.setdefault(lb, [rs, 0])[1] += 1
+            more = DV.more_text(int(rest.size), int(al[rest].sum()), "arrows")
+        D["direction"][key] = recs
+        P += ["", f"### {head.format(g=lab)} ({DV.counts_text(rows, 'arrows')}"
+                  + (f"; the strongest {n}, plus any of the {n} strongest without an alert beyond them" if recs and
+                     len(recs) < len(rows) else "") + ")"]
+        if not recs:
+            P.append("none")
+            continue
+        body, last = [], None
+        for x in recs:
+            cmp_ = x["kind_text"] if x["kind_text"] != last else "(same comparison as the row above)"
+            last = x["kind_text"]
+            # the drug-doses carrying the difference beyond the one the reading already gives
+            more_dd = [t for t in x["drugdoses"].split("; ") if t and f"at {t.rsplit(': ', 1)[0]}" not in x["reading"]]
+            dds = f"also at {'; '.join(more_dd)}" if more_dd else ""
+            if np.isfinite(x["rise_share"]):
+                dds += ("; " if dds else "") + f"{x['rise_share']:.0%} of the evidence from drug-doses where it rises"
+            body.append([x["rank"], x["arrow"], x["grade"], x["sign_text"], x["evidence"],
+                         "; ".join(t for t in (cmp_, x["reading"], dds) if t),
+                         x["q_text"][2:] if x["q_text"].startswith("q ") else x["q_text"], x["alerts_short"] or "-"])
+        P += _md(["#", "arrow", "grade", "probable direction", "evidence", "comparison and numbers", "q", "alerts"],
+                 body)
+        if more:
+            P.append(f"({more}, later in the order)")
+    if reasons:
+        k = lim.get("dir_reasons", 0) or len(reasons)
+        P += ["", "Alert reasons in full: each short label of the tables above with its first reason (rows with the "
+                  "same label give the same reason with their own numbers):"]
+        P += [f"- {lb}: {rs}" + (f" ({n_} rows)" if n_ > 1 else "") for lb, (rs, n_) in list(reasons.items())[:k]]
+        if len(reasons) > k:
+            P.append(f"- ({len(reasons) - k} more labels; each keeps its place in the tables above)")
 
 
 # ----------------------------------------------------------------------------- drug
@@ -1487,8 +1642,8 @@ def _line(C, l, lim, short=False):
          f"entity_id line:{_text(r.get('cell_line_id'))}", "", "## Identity (Tahoe cell-line metadata)"]
     ident = {k: _text(r.get(k)) for k in ("Organ", "Cell_ID_DepMap", "tp53_status", "drivers", "driver_changes")}
     D["identity"] = ident
-    P.append(f"- Organ: {ident['Organ'] or '-'} · Cellosaurus {D['cell_line_id']} · DepMap {ident['Cell_ID_DepMap'] or '-'}"
-             f" · TP53: {ident['tp53_status'] or 'unknown'} (from the drivers list)")
+    P.append(f"- Organ: {ident['Organ'] or '-'} · Cellosaurus {D['cell_line_id']} · DepMap "
+             f"{ident['Cell_ID_DepMap'] or '-'} · TP53: {ident['tp53_status'] or 'unknown'} (from the drivers list)")
     cvcl = D["cell_line_id"].strip()
     if re.fullmatch(r"CVCL_[A-Z0-9]{4,6}", cvcl):
         # written out in full: web_fetch only opens URLs that are already in the conversation (the dossier, a
@@ -1502,7 +1657,8 @@ def _line(C, l, lim, short=False):
         P.append(f"- Driver protein changes: {ident['driver_changes']}")
     bits = [f"{Q._int(r.get('n_cells_total'))} cells in total"]
     if np.isfinite(_num(r.get("wells_usable"))):
-        bits.append(f"usable expression in {Q._int(r.get('wells_usable'))} wells ({Q._f(r.get('pct_wells_usable'), '{:.1f}')}%)")
+        bits.append(f"usable expression in {Q._int(r.get('wells_usable'))} wells "
+                    f"({Q._f(r.get('pct_wells_usable'), '{:.1f}')}%)")
     if "in_growth_analysis" in r:
         bits.append("in the growth analysis" if bool(r.get("in_growth_analysis")) else "NOT in the growth analysis "
                     "(too few cells: depletion not measured)")
@@ -1572,7 +1728,8 @@ def _line(C, l, lim, short=False):
     else:
         P += ["", f"## Genes specifically high at baseline (this line vs the median of the other lines; >= "
                   f"{Q.SPECIFIC_MIN_CPM:g} CPM here; noise-class RNA left out)"]
-        P += _md(["gene", "CPM here", "median other", "x median", "next highest line (CPM)", "lines expressing", "name"],
+        P += _md(["gene", "CPM here", "median other", "x median", "next highest line (CPM)", "lines expressing",
+                  "name"],
                  [[x["gene"], Q._f(x["cpm"], "{:,.0f}"), Q._f(x["median_other"], "{:,.1f}"), _fold(x["x_median"]),
                    f"{x['next_line']} {Q._f(x['next_cpm'], '{:,.0f}')}", x["lines_expressing"],
                    _cut(x["name"], 40) or "-"] for x in D["baseline_high"]] or [["none"] + [""] * 6])
@@ -1601,8 +1758,9 @@ def _line(C, l, lim, short=False):
             P.append(f"- Depleted by {len(hit)} drug-doses: " + ", ".join(
                 f"{x['drug']} {x['dose']} (z {_z(x['z'])})" for x in D["depleted_by"]))
     else:
-        P += ["", f"## Drug-doses that deplete it (relative abundance z <= {DEPLETE_Z:g} vs the other lines in the same "
-                  f"wells, 24 h): {len(hit)}, {int((~dd['artifact'].to_numpy()[hit]).sum())} without artifact flags"]
+        P += ["", f"## Drug-doses that deplete it (relative abundance z <= {DEPLETE_Z:g} vs the other lines in the "
+                  f"same wells, 24 h): {len(hit)}, {int((~dd['artifact'].to_numpy()[hit]).sum())} without artifact "
+                  "flags"]
         if len(hit):
             P += _md(["drug", "uM", "abundance", "z", "sig genes", "flags", "mechanism (targets)"],
                      [[x["drug"], x["dose"], _fold(x["abundance"]), _z(x["z"]), x["n_sig_genes"], x["flags"] or "-",
@@ -1691,6 +1849,66 @@ def _line(C, l, lim, short=False):
 
 
 # ----------------------------------------------------------------------------- pair (tahoe_lookup only)
+def _unmeasured_source(C, name):
+    """The summary of a name that is no gene of this run but the source of probable-direction arrows (a drug target
+    the screen does not measure, a recorded driver gene whose own mRNA is not measured) - the gene dossiers name such
+    sources in their arrows, and `tahoe gene NAME` lists them (query._unmeasured_source). None when it is not one."""
+    key = str(name).strip().strip(",;")
+    if not key or not Q._is_direction_source(C.o, key):
+        return None
+    dv, _why = _direction(C)
+    if dv is None:
+        return None
+    down, cells = dv.downstream(key), dv.cells(key)
+    if not (len(down) or len(cells)):
+        return None
+    first = down if len(down) else cells
+    lab = next((s_ for s_ in first.iloc[0]["sources"] if str(s_).upper() == key.upper()), key)
+    n = SHORT.get("direction") or 4
+    P = [f"# Summary: {lab} (not a measured gene of this run)",
+         f"- No gene of this run has this symbol, label, Ensembl id or alias, but {lab} is the source of "
+         "probable-direction arrows: a gene that compounds of the screen target, or a driver gene recorded in Tahoe's "
+         "cell-line genetics, whose own mRNA is not among the genes measured here. Its arrows (pair look-up "
+         f"'{lab}|GENE' gives the arrows to one gene with every alert in full):"]
+    for word, rows in (("downstream (genes it probably acts on)", down),
+                       ("on the cells under drug-doses", cells)):
+        if not len(rows):
+            continue
+        shown, n_more, n_more_al = DV.cap(rows, n)
+        more = DV.more_text(n_more, n_more_al, "arrows")
+        P.append(f"- Probable direction, {word} ({DV.counts_text(rows, 'arrows')}): "
+                 + "; ".join(DV.edge_line(r, alerts="short", max_names=4) for _, r in shown.iterrows())
+                 + (f" ... {more}" if more else ""))
+    P.append(f"- ({DV.CAVEAT_SHORT}; the sign is what the source's activity probably does to the target. "
+             f"{DV.SIGN_RESPONSE_NOTE})")
+    return "\n".join(P) + "\n"
+
+
+def _pair_unmeasured(C, src, cb):
+    """A pair whose one name is a direction source that is not a measured gene (src) and the other a gene (col cb):
+    the arrows src -> cb with every alert in full (none can point the other way: an arrow's target is a measured
+    gene or the cells). None when src is not such a source."""
+    key = str(src).strip().strip(",;")
+    if not Q._is_direction_source(C.o, key):
+        return None
+    dv, _why = _direction(C)
+    if dv is None:
+        return None
+    lb = _label(C, cb)
+    d = dv.downstream(key)
+    d = d[d["target_col"].to_numpy() == int(cb)] if len(d) else d
+    P = [f"# Pair: {key} x {lb}",
+         f"- {key} is not a measured gene of this run (no expression data of its own), but the source of "
+         "probable-direction arrows; only the probable direction can link the two.",
+         f"- probable direction {DV.arrow(key, lb)}: " + (
+             "; ".join(DV.edge_line(r, alerts="long", max_names=4) for _, r in d.iterrows()) or "none"),
+         f"- probable direction {DV.arrow(lb, key)}: none can exist (an arrow's target is a measured gene or the "
+         "cells)",
+         f"- ({DV.CAVEAT_SHORT}; the sign is what the source's activity probably does to the target. "
+         f"{DV.SIGN_RESPONSE_NOTE})"]
+    return "\n".join(P) + "\n"
+
+
 def _pair(C, name):
     parts = [p.strip() for p in re.split(r"\s*\|\s*|\s*,\s*|\s+vs\.?\s+", str(name).strip()) if p.strip()]
     if len(parts) != 2:
@@ -1698,8 +1916,24 @@ def _pair(C, name):
     if len(parts) != 2:
         raise Q.NotFound("a pair look-up needs two genes: name = 'GENE_A|GENE_B'")
     o = C.o
-    ca = int(Q.resolve_gene(o, parts[0])[0][0])
-    cb = int(Q.resolve_gene(o, parts[1])[0][0])
+    found = []
+    for p_ in parts:
+        try:
+            found.append(int(Q.resolve_gene(o, p_)[0][0]))
+        except Q.NotFound as e:
+            found.append(e)
+    bad = [i for i, f in enumerate(found) if isinstance(f, Exception)]
+    if bad:
+        i = bad[0]
+        if len(bad) == 1:                            # a direction source that is no gene, and a gene
+            alt = _pair_unmeasured(C, parts[i], found[1 - i])
+            if alt:
+                return alt
+        if Q._is_direction_source(o, parts[i]):
+            raise Q.NotFound(f"{str(found[i]).rstrip('.')}. {parts[i]} is not a measured gene of this run, but the "
+                             f"source of probable-direction arrows: a gene look-up of {parts[i]} lists them")
+        raise found[i]
+    ca, cb = found
     la, lb = _label(C, ca), _label(C, cb)
     P = [f"# Pair: {la} x {lb}"]
     if ca == cb:
@@ -1765,6 +1999,18 @@ def _pair(C, name):
             pos = Q._capped(len(ks), 8, [not (A_.at[k, "alert"] or B_.at[k, "alert"]) for k in ks])
             P.append(f"  - {word}: " + "; ".join(one(ks[i]) for i in pos)
                      + (f" ... {len(ks) - len(pos)} more" if len(ks) > len(pos) else ""))
+    dv, why = _direction(C)
+    if dv is None:
+        P.append("- probable direction: " + ("the direction stage has not run for this output" if not why else
+                                             f"the direction stage's files cannot be read ({why})"))
+    else:
+        for x, y, lx, ly in ((ca, cb, la, lb), (cb, ca, lb, la)):
+            d = dv.downstream(int(x))
+            d = d[d["target_col"].to_numpy() == int(y)]
+            P.append(f"- probable direction {DV.arrow(lx, ly)}: " + (
+                "; ".join(DV.edge_line(r, alerts="long", max_names=4) for _, r in d.iterrows()) or "none"))
+        P.append(f"- ({DV.CAVEAT_SHORT}; the sign is what the source's activity probably does to the target. "
+                 f"{DV.SIGN_RESPONSE_NOTE})")
     return "\n".join(P) + "\n"
 
 

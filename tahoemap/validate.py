@@ -33,6 +33,11 @@ Every test runs on the genes in the vector space (embed/included_cols.npy); cos 
                    listed members.
   synthetic truth  only with truth=<ground_truth.json of tests/make_synthetic_tahoe.py>: the generator's planted gene
                    sets and opposite pairs, with the same metrics.
+  direction        the direction stage's controls (direction/controls.json, edges.parquet; when the stage ran): the
+                   positive controls recovered (TP53 -> the p53 targets with their ranks among all genes, TP53 -> cells
+                   under DNA-damaging drugs, KEAP1 -> NRF2 targets), per kind the edges written next to the false
+                   edges the controls expect (random pseudo-genotype groups; the level tests with permuted levels),
+                   the counts by grade, and with truth the generator's planted direction answers.
 
 Alerts: nothing is left out of a list for a flag ("if there is a reason to doubt, do not remove, rather alert"). An
 item with a reason for doubt keeps its ranked place and carries '⚠' with the reason in plain words: a drug-dose with
@@ -61,7 +66,7 @@ from .common import (folder, log, marked_names, read_effects_index, replace_file
                      write_csv, write_json)
 from .embed import capped
 
-VERSION = 3                 # 3: flagged items stay in their ranked place, with an alert
+VERSION = 4                 # 3: flagged items stay in their ranked place, with an alert; 4: the direction section
 N_RANDOM = 20_000           # random gene pairs: the background of every AUROC
 N_NULL = 200                # random gene sets per set size for the empirical p of a set's AUROC
 NULL_SOURCES = ("control", "hallmark", "synthetic")
@@ -896,6 +901,156 @@ def _also_clean(alert, n):
     return f", and {extra} more without an alert that the {n} strongest pushed below the cut" if extra else ""
 
 
+DIR_KIND_WORDS = {"genotype_response": "recorded mutation -> a gene's drug response",
+                  "genotype_baseline": "recorded mutation -> a gene's baseline level",
+                  "genotype_sensitivity": "recorded mutation -> cells under a drug-dose",
+                  "null_response": "not expressed (natural knockout) -> a partner's drug response",
+                  "null_baseline": "not expressed (natural knockout) -> a partner's baseline level",
+                  "null_sensitivity": "not expressed (natural knockout) -> cells under a drug-dose",
+                  "drug_target": "compounds that target a gene -> a gene's level",
+                  "level": "natural level -> a partner's drug response",
+                  "level_sensitivity": "natural level -> cells under a drug-dose"}
+
+
+def _direction_section(out, truth=None):
+    """Section 8 of report.md and metrics.json 'direction': the direction stage's positive controls with ranks, per
+    kind the edges written against the false edges its controls expect, counts by grade, and (truth) the planted
+    direction answers. When the stage has not run (an older output): one sentence that says so, and None."""
+    from . import direction_view as DV
+    dv = DV.load(out, cache=False)
+    if dv is None:
+        return ["## 8. Direction: which gene probably acts on which", "",
+                "The direction stage has not run on this output: `tahoe run` adds it, then rebuilds this report, the "
+                "vault and the map.", ""], None
+    e, ctl, inf = dv.edges, dv.controls or {}, dv.info or {}
+    grades = {g: int((e["grade"] == g).sum()) for g in DV.GRADES} if len(e) else {g: 0 for g in DV.GRADES}
+    n_alert = int(e["has_alert"].sum()) if len(e) else 0
+    L = ["## 8. Direction: which gene probably acts on which", "",
+         "From the direction stage (direction/; its README.md documents the columns; docs/direction.md explains "
+         "the method): arrows SOURCE → TARGET from recorded mutations, natural knockouts (lines that do not express "
+         "a gene), compounds that target a gene, and genes' natural levels across the lines, each with a p, a "
+         f"Benjamini-Hochberg q, a grade and its alerts. {DV.CAVEAT}", "",
+         f"{len(e):,} edges ({len(dv.rows):,} rows once edges that are one test for several sources are merged): "
+         f"grade A {grades['A']:,}, B {grades['B']:,}, C {grades['C']:,}; {n_alert:,} with an alert ({ALERT}). "
+         "Grades: " + "; ".join(DV.grade_legend("long")) + ".", ""]
+    met = {"edges": int(len(e)), "rows": int(len(dv.rows)), "by_grade": grades, "with_alert": n_alert,
+           "positive": {}, "expected_false_edges": {}, "synthetic": {}}
+    # ---- positive controls
+    pos = ctl.get("positive") or {}
+    if pos:
+        L += ["**Positive controls** (known biology that has to come back):", ""]
+    for k, v in pos.items():
+        marks = dv.control_alerts(k, v)
+
+        def mk(nm, marks=marks):
+            return f" {ALERT}" if marks.get(str(nm)) else ""
+        if "per_gene" in v:
+            per = sorted(v["per_gene"], key=lambda x: (x.get("rank") or 10 ** 9))
+            rec = [x for x in per if x.get("edge") and x.get("sign") == 1]
+            miss = [x for x in per if not (x.get("edge") and x.get("sign") == 1)]
+            shown = ", ".join(f"{x['gene']} (rank {x['rank']}, {x['grade']}{mk(x['gene'])})" for x in rec) or "none"
+            rest = ", ".join(f"{x['gene']} ({x['rank']})" for x in miss[:15]) + (
+                f", and {len(miss) - 15} more" if len(miss) > 15 else "")
+            L.append(f"- {k}: {v['recovered_right_sign']} of the {v['targets_present']} p53 target genes present "
+                     f"recovered with the right sign ({v['wrong_sign']} with the wrong sign); median rank "
+                     f"{_f(v.get('median_rank'), '{:.0f}')} of {v.get('genes_ranked', 0):,} genes. Recovered "
+                     f"(rank among all genes, grade; {ALERT} = the arrow carries an alert): {shown}. Not recovered "
+                     f"(rank): {rest or 'none'}.")
+            met["positive"][k] = {"present": v["targets_present"], "recovered_right_sign": v["recovered_right_sign"],
+                                  "wrong_sign": v["wrong_sign"], "median_rank": v.get("median_rank"),
+                                  "ranks_recovered": [x["rank"] for x in rec]}
+        elif "drugdoses_tested" in v:
+            L.append(f"- {k}: {v['edges']} edges among {v['drugdoses_tested']} DNA-damaging drug-doses, "
+                     f"{v['right_sign']} with the expected sign ({v['expected']})"
+                     + (": " + ", ".join(str(x) + mk(x) for x in v.get("drugdoses") or []) if v.get("drugdoses")
+                        else ""))
+            met["positive"][k] = {"edges": v["edges"], "right_sign": v["right_sign"],
+                                  "drugdoses_tested": v["drugdoses_tested"]}
+        elif v.get("assessable") is False:
+            L.append(f"- {k}: not assessable ({v.get('why', '')})")
+            met["positive"][k] = {"assessable": False}
+        else:
+            L.append(f"- {k}: {v.get('recovered_right_sign', 0)} of {v.get('targets_present', 0)} recovered with the "
+                     f"right sign ({v.get('wrong_sign', 0)} with the wrong sign): "
+                     + (", ".join(str(x) + mk(x) for x in v.get("genes") or []) or "none"))
+            met["positive"][k] = {"recovered_right_sign": v.get("recovered_right_sign"),
+                                  "wrong_sign": v.get("wrong_sign")}
+    if pos:
+        L.append("")
+    # ---- per kind: real edges vs the expected false edges
+    exp = ctl.get("expected_false_edges") or {}
+    rows = []
+    wide = ((e["q"] < 0.10) & (e["q_group"].isna() | (e["q_group"] < 0.10))) if len(e) else pd.Series(dtype=bool)
+
+    def gr(sel):
+        return "/".join(str(int((sel["grade"] == g).sum())) for g in DV.GRADES)
+    label = {}                                     # metrics key -> its plain-words row label
+    for kind in DV.KINDS:
+        sel = e[e["kind"] == kind] if len(e) else e
+        if kind.startswith(("genotype", "level")):
+            parts = [(kind, "over the whole table", sel[wide[sel.index]] if len(sel) else sel)]
+            if kind.startswith("genotype") or kind == "level_sensitivity":
+                key = f"{kind}_within_group_only" if kind.startswith("genotype") else f"{kind}_within_drugdose_only"
+                what = "within its group only" if kind.startswith("genotype") else "within its drug-dose only"
+                parts.append((key, what, sel[~wide[sel.index]] if len(sel) else sel))
+            ctl_w = "random pseudo-genotype groups" if kind.startswith("genotype") else \
+                "the same tests with every level permuted"
+            for key, what, sub in parts:
+                x = exp.get(key) or {}
+                rows.append([f"{DIR_KIND_WORDS[kind]} ({what})", len(sub), gr(sub), DV.expected_text(x), ctl_w])
+                label[key] = f"{DIR_KIND_WORDS[kind]} ({what})"
+                met["expected_false_edges"][key] = {"edges": int(len(sub)), "expected_false": x.get("expected_false"),
+                                                    "expected_false_upper": x.get("expected_false_upper")}
+        else:
+            rows.append([DIR_KIND_WORDS[kind], len(sel), gr(sel), "-",
+                         "no random control (each edge's alerts say what to doubt)"])
+    L += ["**Edges per kind against the controls.** 'Expected false' = the edges a table without any real effect "
+          "would hold: random pseudo-genotype groups (line sets drawn at random, tested exactly like the recorded "
+          "groups, counted at the real table's cut) and, for the level kinds, the same tests with every gene's level "
+          "permuted over its lines.", "",
+          _md_table(["evidence", "edges", "A / B / C", "expected false", "control"], rows), "",
+          DV.CONTROLS_CAVEAT, ""]
+    warn = [f"{label.get(k, k)} ({v.get('edges')} edge{'' if v.get('edges') == 1 else 's'}, "
+            f"{v.get('expected_false')} expected false)"
+            for k, v in met["expected_false_edges"].items()
+            if v.get("expected_false") is not None and v.get("edges") and v["expected_false"] >= 0.5 * v["edges"]]
+    if warn:
+        L += [f"{ALERT} The controls expect at least half of these edges to be false: " + "; ".join(warn)
+              + ". Read them as leads.", ""]
+    neg = (ctl.get("negative") or {}).get("summary") or {}
+    if neg:
+        L += [f"Random pseudo-groups ({(inf.get('groups_tested') or {}).get('pseudo_controls', '?')} groups): edges "
+              "per group over the whole table, pseudo vs real: " + "; ".join(
+                  f"{k} {v.get('pseudo_edges_mean_per_group')} vs {v.get('real_edges_mean_per_group')}"
+                  for k, v in neg.items()) + ".", ""]
+    # ---- the synthetic truth's planted direction answers (truth: ground_truth.json's path, or its content)
+    if isinstance(truth, str) and truth:
+        try:
+            with open(truth, encoding="utf-8") as fh:
+                truth = json.load(fh)
+        except (OSError, ValueError):
+            truth = None
+    planted = (truth if isinstance(truth, dict) else {}).get("direction") or {}
+    if planted:
+        L += ["**Synthetic ground truth** (ground_truth.json 'direction'; the generator's planted answers):", ""]
+        for name, p in planted.items():
+            tg = set(p.get("targets") or p.get("partners") or [])
+            sel = e[(e["kind"] == p.get("kind")) & (e["source"] == p.get("source"))] if len(e) else e
+            hit = sel[sel["target"].isin(tg)] if len(sel) else sel
+            right = hit[hit["sign"] == p.get("sign", 1)] if len(hit) else hit
+            clear = int(right["direction_clear"].fillna(False).astype(bool).sum()) if len(right) and \
+                p.get("kind") == "level" else None
+            L.append(f"- {name}: {p.get('source')} → {len(right)} of the {len(tg)} planted targets as "
+                     f"{p.get('kind')} edges with the right sign ({len(hit) - len(right)} with the other sign)"
+                     + (f", {clear} with the direction clear (the reverse clearly weaker, allowing for the arrow "
+                        "having been selected because it is strong)" if clear is not None else "")
+                     + (f"; grades {right['grade'].value_counts().to_dict()}" if len(right) else ""))
+            met["synthetic"][name] = {"planted": len(tg), "recovered_right_sign": int(len(right)),
+                                      "other_sign": int(len(hit) - len(right)), "direction_clear": clear}
+        L.append("")
+    return L, met
+
+
 def _report(path, ctx):
     sp, cs, op, labels, edges, members, drug, drug_tab, n_sets, n_null = (
         ctx["sp"], ctx["cs"], ctx["op"], ctx["labels"], ctx["edges"], ctx["members"], ctx["drug"], ctx["drug_tab"],
@@ -1064,6 +1219,7 @@ def _report(path, ctx):
         if len(so):
             L += [_opp_table(so), ""] + ["- " + _reading(r) for _, r in so.iterrows()] + [""]
 
+    L += ctx.get("direction_lines") or []
     L += ["## Caveats", "",
           "- Correlation is not mechanism: two genes with a high cosine respond alike to these drugs in these "
           "lines; that may be co-regulation, a shared upstream stress, or a shared cell-state change.",
@@ -1339,10 +1495,12 @@ def run(out, truth=None, n_random=N_RANDOM, n_null=N_NULL):
                "reference": bool(n_sets["reference"])}
     if n_sets["synthetic"]:
         metrics["synthetic"] = dict(summ("synthetic"), per_set=per_set("synthetic"), opposite_pairs=opp("synthetic"))
+    dir_lines, dir_metrics = _direction_section(out, truth)
+    metrics["direction"] = dir_metrics
     write_json(metrics, os.path.join(vd, "metrics.json"))
     _report(os.path.join(vd, "report.md"), {"sp": sp, "cs": cs, "op": op, "labels": labels, "edges": edges,
                                              "members": members, "drug": drug, "drug_tab": drug_tab,
-                                             "n_sets": n_sets, "n_null": n_null})
+                                             "n_sets": n_sets, "n_null": n_null, "direction_lines": dir_lines})
     tmp = os.path.join(vd, "README.md.tmp")
     with open(tmp, "w", encoding="utf-8") as fh:
         fh.write(README)

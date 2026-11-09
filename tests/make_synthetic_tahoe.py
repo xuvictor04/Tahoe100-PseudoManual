@@ -26,6 +26,13 @@ correctable), a composition-shift drug, a plate-row cell loss and a low-dose-onl
 The efflux pumps ABCB1 / ABCG2 are expressed in a few lines each (emitted as extra output columns from a separate
 random stream, so the other genes and all cell numbers are byte-identical to a run without them; only expression,
 not a growth effect, is planted).
+Direction plants (ground_truth.json 'direction'; put on the counts of their genes from separate random streams, so
+every other gene and all cell numbers stay byte-identical, as for the efflux pumps): NFE2L2's natural level across
+the lines sets how strongly the NRF2 targets (NRF2_CORE, HMOX1, SLC7A11 and 25 SYNTH genes, set NRF2_EXT) respond to
+the NRF2 activators (dimethyl fumarate, auranofin, bortezomib): level edges NFE2L2 -> its targets, with a clear
+direction (NFE2L2 rises a little with them, in every line alike), and a co-activator of the glucocorticoid
+programme (the first GLUCO SYNTH gene) is absent - ambient RNA only - from 6 lines spread over the four organs,
+where the other GLUCO genes respond 0.25x as strongly (log scale): a natural knockout with partner effects.
 Self-contained: the real metadata rows it needs are in tahoe_meta_snapshot.py next to this file.
 Deterministic for a given --seed. Needs numpy and pyarrow only.
 """
@@ -123,6 +130,29 @@ IL1B_EXPRESSING = ["HS-578T", "Calu-1"]
 ABCB1_HIGH = ["HCT116", "LoVo", "SW480"]
 ABCG2_HIGH = ["NCI-H460", "A549", "MIA PaCa-2"]
 PUMP_HIGH_CPM, PUMP_HIGH_SD, PUMP_AMBIENT_CPM = 1600.0, 0.3, 15.0
+# direction plants (tahoemap/direction.py; see direction_plants). (a) NFE2L2's natural level: NFE2L2_LEVEL holds the
+# levels (x the median line); Design.direction_design gives them to the lines (orthogonal to the organs and the main
+# axes between the lines, unlike any recorded driver group, the extremes on lines of about average cell numbers) and
+# rescales them. The level sets how strongly the NRF2 targets (NRF2_CORE, HMOX1, SLC7A11, and NRF2_EXT_N SYNTH genes:
+# set NRF2_EXT) respond to the NRF2 activators: their log effect x m, m = NRF2_AMP x (1 + NRF2_GAIN x the standardised
+# ln level, at least 0.1). NFE2L2 itself rises NFE2L2_SELF x under them in every line alike (NRF2 induces its own
+# gene), so relations pair it with its targets and the reverse (a target's level -> NFE2L2's response) stays flat. A
+# level test with 18 lines is weak (10 degrees of freedom after the lineage adjustment), hence the strong, broad plant.
+# (b) a co-activator of the glucocorticoid programme (the first GLUCO SYNTH gene) is absent from GLUCO_NULL_LINES (2
+# Lung, 2 Bowel, 1 Pancreas, 1 Breast; 3 TP53-altered; no recorded driver group with |phi| > 0.32): its counts there are
+# ambient RNA only, and the other GLUCO genes respond GLUCO_NULL_X as strongly (log scale).
+NFE2L2_LEVEL = {"A549": 0.83, "MCF-7": 0.88, "PANC-1": 0.97, "MIA PaCa-2": 0.67, "BxPC-3": 1.55, "HCT116": 0.69,
+                "RKO": 1.33, "LoVo": 1.46, "NCI-H460": 1.6, "A-427": 1.21, "SW48": 0.75, "HT-29": 0.52, "SW480": 1.6,
+                "NCI-H1299": 1.33, "Calu-1": 0.47, "BT-474": 1.17, "DLD-1": 1.21, "HS-578T": 0.97}
+NRF2_ACTIVATORS = ("Dimethyl fumarate", "Auranofin", "Bortezomib")
+NRF2_EXTRA = {"Bortezomib": 1.6}     # NRF2_CORE fold at the top dose, on top of the drug's own planted effects (a
+                                     # proteasome inhibitor stabilises NRF2), x m as for the other activators
+NRF2_AMP, NRF2_GAIN, NFE2L2_SELF = 1.3, 0.8, 1.8
+NRF2_DOSE = {0.4: 0.7}               # the NRF2 response nears its top at 0.5 uM already: dose scale 0.4 -> 0.7
+NRF2_EXT_N = 25                      # more NRF2 targets (SYNTH genes no other drug moves; set NRF2_EXT): fold at the
+NRF2_EXT_FOLD = {"Dimethyl fumarate": 2.0, "Auranofin": 1.8, "Bortezomib": 1.6}   # top dose, x m as the others
+GLUCO_NULL_LINES = ["Calu-1", "LoVo", "MCF-7", "NCI-H1299", "PANC-1", "RKO"]
+GLUCO_NULL_X = 0.25
 
 # ----------------------------------------------------------------------------- drugs
 PLANTED_DRUGS = ["Doxorubicin (hydrochloride)", "Topotecan (hydrochloride)", "5-Fluorouracil", "Dimethyl fumarate",
@@ -274,6 +304,7 @@ class Design:
         self.il1b_expr = [n for n in IL1B_EXPRESSING if n in names]
         self.abcb1_high = [n for n in ABCB1_HIGH if n in names]
         self.abcg2_high = [n for n in ABCG2_HIGH if n in names]
+        self.gluco_null = [n for n in GLUCO_NULL_LINES if n in names]
         d = np.array([LINE_DESIGN[n] for n in names])
         self.abund, self.libf, self.psmd10, self.acsl4, self.g2m_frac = (d[:, i] for i in range(5))
         self.abund = self.abund / 1.15                    # an average line gets ~0.7 x --cells per well
@@ -317,6 +348,7 @@ class Design:
         assert len(self.drugs) == 94, len(self.drugs)
         self.P = args.plates                                  # regular plates; plate13 comes on top
         self.effects(rng)
+        self.direction_design()
         self.make_layout(rng)
 
     # ------------------------------------------------------------------ plates and well positions
@@ -614,6 +646,71 @@ class Design:
             used.update(int(c) for c in cols)
         self.coloc2_genes = [int(c) for c in rest if int(c) not in used]    # moved by no other drug (c2)
 
+    def direction_design(self):
+        """The direction plants (NFE2L2_LEVEL, GLUCO_NULL_LINES; no random draw: direction_plants puts them on the
+        counts from a separate stream)."""
+        li = {n: i for i, n in enumerate(self.lines)}
+        g = self.gi
+        vals = np.log(np.array([NFE2L2_LEVEL.get(n, 1.0) for n in self.lines]))
+        sd0 = vals.std()
+        # Which line gets which level. The level test adjusts levels and responses for the organs and the top 3
+        # principal components of the lines' baseline profiles, which with 18 lines overlap any 18 values largely by
+        # chance; and a line's per-line z grows with the cells it contributes, so an effect that differs between lines
+        # reads strongest on the lines of about average cell numbers. So the designed ln levels go to the lines (a
+        # deterministic search: 4,000 orders drawn from a separate stream) such that, made orthogonal to those
+        # covariates (here from the expected profile of each line, its phases mixed, genes expressed in every line),
+        # the extremes fall on lines of about average cells x UMIs and no recorded driver group follows them (|r| <=
+        # 0.3): a level that varies within organs, independently of the main axes between the lines.
+        fr = np.column_stack([1.0 - self.g2m_frac - self.s_frac, self.s_frac, self.g2m_frac])
+        prof = (self.phase_profiles(self.B) * fr[:, :, None]).sum(axis=1)
+        full = np.isfinite(self.B).all(axis=0) & (np.median(prof, axis=0) * 1e6 >= 10.0)
+        Xb = np.log2(1e6 * prof[:, full] + 1.0)
+        Xb = Xb - Xb.mean(axis=0)
+        s = Xb.std(axis=0)
+        Xb = Xb[:, s > 0] / s[s > 0]
+        U = np.linalg.svd(Xb, full_matrices=False)[0][:, :3]
+        org = np.array(self.organ, dtype=object)
+        Cm = np.column_stack([np.ones(self.L)] + [(org == o).astype(float) for o in sorted(set(self.organ))] + [U])
+        H = np.eye(self.L) - Cm @ np.linalg.pinv(Cm)
+        cf = np.sqrt(self.abund * self.libf)
+        cf = cf / cf.mean()
+        drv = {}
+        for r in self.cl_rows:
+            if r["cell_name"] in li:
+                drv.setdefault(r["Driver_Gene_Symbol"], np.zeros(self.L))[li[r["cell_name"]]] = 1.0
+        drv = np.array([x for x in drv.values() if 3 <= x.sum() <= self.L - 3]).reshape(-1, self.L)
+        drv = (drv - drv.mean(axis=1, keepdims=True)) / drv.std(axis=1, keepdims=True)
+        rng = np.random.default_rng([self.args.seed, 31])
+        best, v = np.inf, None
+        for _ in range(4000):
+            w = H @ vals[rng.permutation(self.L)]
+            w = (w - w.mean()) / w.std()
+            if drv.size and np.abs(drv @ w / self.L).max() > 0.3:
+                continue
+            score = float(np.sum(w ** 2 * (cf - 1.0) ** 2) / np.sum(w ** 2)) + 0.02 * float(np.abs(w).max())
+            if score < best:
+                best, v = score, w
+        if v is None:
+            v = H @ vals
+            v = (v - v.mean()) / v.std()
+        v = v * sd0
+        lv = np.exp(v)
+        z = (v - v.mean()) / v.std()
+        self.nfe2l2_level = lv
+        self.nrf2_m = NRF2_AMP * np.maximum(0.1, 1.0 + NRF2_GAIN * z)  # the NRF2 targets' response, x their effect
+        # NFE2L2 counts x its designed level / the level baseline() drew (G1 profile), in every well
+        self.nfe2l2_f = np.exp(math.log(LEVELS["NFE2L2"][0]) + np.log(lv) - self.B[:, g["NFE2L2"]])
+        self.nrf2_targets = [g[x] for x in self.sets["NRF2_CORE"] + ["HMOX1", "SLC7A11"]]
+        self.nrf2_core = {g[x] for x in self.sets["NRF2_CORE"]}
+        # more NRF2 targets: the first NRF2_EXT_N SYNTH genes that no drug moves (coloc2 takes the last ones)
+        assert len(self.coloc2_genes) >= NRF2_EXT_N + COLOC2_DOWN[0] + COLOC2_UP[0] + 5
+        self.nrf2_ext = [int(x) for x in self.coloc2_genes[:NRF2_EXT_N]]
+        self.coloc2_genes = self.coloc2_genes[NRF2_EXT_N:]
+        self.synth_sets["NRF2_EXT"] = [self.genes[x] for x in self.nrf2_ext]
+        self.gluco_x = g[self.synth_sets["GLUCO"][0]]
+        self.gluco_partners = [g[x] for x in self.synth_sets["GLUCO"][1:]]
+        self.gluco_null_idx = np.array([li[n] for n in self.gluco_null], dtype=np.int64)
+
     def phase_profiles(self, Bw):
         """ln weights per line for G1, S and G2M cells (L, 3, G), each normalised to sum 1 (returned linear)."""
         P = np.empty((self.L, 3, self.G))
@@ -628,6 +725,47 @@ class Design:
 
 
 # ============================================================================= simulation of one plate
+def direction_plants(ds, p, slot, k, s, C, line_of_cell, lib, amb_frac, amb):
+    """The direction plants (NFE2L2_LEVEL, GLUCO_NULL_LINES) on one well's counts C (cells x genes), from a separate
+    random stream (as trap c2): binomial thinning scales a count down, Poisson addition up. So every other gene, and
+    every cell number, stays byte-identical to a run without them. k: the well's biology (drug index) or None, s: its
+    dose scale."""
+    rng = np.random.default_rng([ds.args.seed, 900 + p, slot])
+    drug = ds.drugs[k] if k is not None else None
+    fac = {}                                                        # gene col -> factor per line
+    f = ds.nfe2l2_f.copy()
+    if drug in NRF2_ACTIVATORS and s > 0:
+        f = f * 2.0 ** (s * math.log2(NFE2L2_SELF))                 # NFE2L2 rises with its targets, every line alike
+        se = NRF2_DOSE.get(s, s)
+        for c in ds.nrf2_targets:                                   # ... which respond x m (NFE2L2's level)
+            if drug in NRF2_EXTRA:
+                if c in ds.nrf2_core:
+                    fac[c] = 2.0 ** (se * math.log2(NRF2_EXTRA[drug]) * ds.nrf2_m)
+            else:
+                fac[c] = 2.0 ** (ds.E[k][:, c].astype(np.float64) * (se * ds.nrf2_m - s))
+        for c in ds.nrf2_ext:
+            fac[c] = 2.0 ** (se * math.log2(NRF2_EXT_FOLD[drug]) * ds.nrf2_m)
+    fac[ds.gi["NFE2L2"]] = f
+    if drug in GLUCO and s > 0 and ds.gluco_null_idx.size:          # no co-activator: a weaker programme
+        nl = ds.gluco_null_idx
+        for c in ds.gluco_partners:
+            m = np.ones(ds.L)
+            m[nl] = 2.0 ** (s * ds.E[k][nl, c].astype(np.float64) * (GLUCO_NULL_X - 1.0))
+            fac[c] = m
+    for c in sorted(fac):
+        m = fac[c][line_of_cell]
+        x = C[:, c].astype(np.int64)
+        down = m < 1.0
+        y = x.copy()
+        y[down] = rng.binomial(x[down], m[down])
+        y[~down] = x[~down] + rng.poisson(x[~down] * (m[~down] - 1.0))
+        C[:, c] = y
+    cells = np.flatnonzero(np.isin(line_of_cell, ds.gluco_null_idx))
+    if cells.size:                                                  # the co-activator's null lines: ambient RNA only
+        C[cells, ds.gluco_x] = rng.poisson(lib[cells] * amb_frac[cells] * amb[ds.gluco_x])
+    return C
+
+
 def simulate_plate(ds, p, de_cols):
     """Returns per-cell CSR (in output order) + per-cell metadata + per (well, line) sums."""
     args = ds.args
@@ -703,6 +841,7 @@ def simulate_plate(ds, p, de_cols):
                 m = 2.0 ** (s * lf)
                 C[:, c] = r2.binomial(C[:, c].astype(np.int64), m) if m < 1 else \
                     C[:, c] + r2.poisson(C[:, c] * (m - 1.0))
+        C = direction_plants(ds, p, slot, k, s, C, line_of_cell, lib, amb_frac, amb)
         del rate, Pc
         # ---- barcodes: round-1 well = this slot; rounds 2-3 unique within the well; two sublibraries per plate
         code = np.sort(rng.choice(192 * 192, size=n, replace=False)) if n else np.zeros(0, dtype=np.int64)
@@ -1039,7 +1178,7 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
         ratio = cpm / med[None, :]
     measured = {}
     for g in ["MTAP", "CDKN2A", "CDKN2B", "TP53", "GSDME", "CASP1", "IL1B", "NLRP3", "CASP5", "AIM2", "TRIM72",
-              "PSMD10", "ACSL4", "FTL", "BAX"]:
+              "PSMD10", "ACSL4", "FTL", "BAX", "NFE2L2", ds.genes[ds.gluco_x]]:
         c = ds.gi[g]
         measured[g] = {"median_line_cpm": round(float(med[c]), 2),
                        "vs_median_line": {n: (round(float(ratio[i, c]), 4) if np.isfinite(ratio[i, c]) else None)
@@ -1049,6 +1188,7 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
         lines.append({"cell_name": n, "cell_line_id": ds.line_id[i], "organ": ds.organ[i],
                       "relative_abundance": float(ds.abund[i]), "tp53": "wt" if n in ds.tp53_wt else "altered",
                       "PSMD10_level": float(ds.psmd10[i]), "ACSL4_level": float(ds.acsl4[i]),
+                      "NFE2L2_level": float(ds.nfe2l2_level[i]), "NRF2_response_x": float(ds.nrf2_m[i]),
                       "cells_total": int(sum(r["ncell"][:, i].sum() for r in results))})
     layout = []
     for p, res in enumerate(results):
@@ -1074,7 +1214,8 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
         "groups": {"tp53_wt": ds.tp53_wt, "tp53_altered": ds.tp53_alt, "tp53_deleted": ds.tp53_deleted,
                    "mtap_null": ds.mtap_null, "cdkn2a_deleted": ds.cdkn2a_del, "cdkn2b_deleted": ds.cdkn2b_del,
                    "gsdme_silenced": ds.gsdme_sil, "casp1_absent": ds.casp1_abs, "il1b_expressing": ds.il1b_expr,
-                   "abcb1_high": ds.abcb1_high, "abcg2_high": ds.abcg2_high},
+                   "abcb1_high": ds.abcb1_high, "abcg2_high": ds.abcg2_high,
+                   "gluco_coactivator_absent": ds.gluco_null},
         "group_ids": {k: [ds.line_id[li[n]] for n in v] for k, v in {
             "tp53_wt": ds.tp53_wt, "mtap_null": ds.mtap_null, "gsdme_silenced": ds.gsdme_sil,
             "casp1_absent": ds.casp1_abs, "il1b_expressing": ds.il1b_expr, "cdkn2a_deleted": ds.cdkn2a_del,
@@ -1085,15 +1226,18 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
             "Doxorubicin (hydrochloride)|Topotecan (hydrochloride)|5-Fluorouracil":
                 "P53_ACTIVITY genes 2x (CDKN1A 3x, MDM2 2.5x) in tp53_wt lines, 1.1x in tp53_altered; cells: "
                 "tp53_wt x0.6, tp53_altered x0.9 (relative); Doxorubicin also toxic: all cells ~0.4x of plate median",
-            "Dimethyl fumarate": "NRF2_CORE 2x, HMOX1 4x, SLC7A11 2.5x (all lines)",
+            "Dimethyl fumarate": "NRF2_CORE 2x, HMOX1 4x, SLC7A11 2.5x, NRF2_EXT SYNTH genes 2x, each x the line's "
+                                 "NRF2 factor (direction.nfe2l2_level; dose scale 0.7 at 0.5 uM); NFE2L2 1.8x",
             "Artesunate": "PTGS2 2x, CHAC1 2x, TFRC 1.5x, no ISR change; cells: high-ACSL4 lines depleted more "
                           "(log2 change -1.8 x ACSL4 rank fraction)",
-            "Auranofin": "NRF2_CORE 1.8x, HMOX1 3x, SLC7A11 2x, CHAC1 2.5x, ISR_ATF4 1.8x",
+            "Auranofin": "NRF2_CORE 1.8x, HMOX1 3x, SLC7A11 2x, NRF2_EXT 1.8x (each x the line's NRF2 factor), CHAC1 "
+                         "2.5x, ISR_ATF4 1.8x; NFE2L2 1.8x",
             "Ciclopirox": "TFRC 2.5x, FTH1 0.7x, FTL 0.7x, NCOA4 1.3x",
             "Decitabine|5-Azacytidine": "IFN 1.6x (all lines); GSDME x{:g} (Decitabine) / x{:g} (5-Azacytidine) of "
                                         "the silenced level in gsdme_silenced lines (~6x / ~3.5x as measured, ambient "
                                         "included)".format(*GSDME_REEXPRESS.values()),
-            "Bortezomib": "PROTEASOME 1.8x, HSF1_HEAT 3x, HMOX1 3x, ISR_ATF4 2x, CHAC1 2x; cells 0.3x; UMIs/cell 0.6x",
+            "Bortezomib": "PROTEASOME 1.8x, HSF1_HEAT 3x, HMOX1 3x, ISR_ATF4 2x, CHAC1 2x, NRF2_CORE and NRF2_EXT "
+                          "1.6x (x the line's NRF2 factor), NFE2L2 1.8x; cells 0.3x; UMIs/cell 0.6x",
             "Paclitaxel": "G2M_PHASE genes 1.8x",
             "Pemetrexed": "cells of mtap_null lines 0.5x (0.75x at 0.5 uM)",
             "Ixazomib": "cells: high-PSMD10 lines depleted more (log2 change -1.8 x PSMD10 rank fraction)",
@@ -1123,6 +1267,8 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
                      "the ambient floor)",
             "MTAP": "0 in mtap_null lines (ambient only)", "CDKN2A|CDKN2B": "0 in deleted lines (ambient only)",
             "TP53": "0 in tp53_deleted lines (ambient only)",
+            "NFE2L2": "its level per line is direction.nfe2l2_level.level_by_line (x the median line)",
+            "GLUCO co-activator": "the first GLUCO SYNTH gene: ambient only in gluco_coactivator_absent lines",
             "ABCB1": f"expressed (~{PUMP_HIGH_CPM:g} CPM) only in abcb1_high lines (side-column; others ambient only)",
             "ABCG2": f"expressed (~{PUMP_HIGH_CPM:g} CPM) only in abcg2_high lines (side-column; others ambient only)",
             "ambient": "each cell gets 8-14% of its counts from the well-average profile",
@@ -1141,6 +1287,23 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
             "synthetic gene sets": ds.synth_sets,
         },
         "method_v3": v3,
+        "direction": {
+            "nfe2l2_level": {
+                "source": "NFE2L2", "kind": "level", "sign": 1,
+                "targets": [ds.genes[c] for c in ds.nrf2_targets + ds.nrf2_ext], "drugs": list(NRF2_ACTIVATORS),
+                "level_by_line": {n: float(v) for n, v in zip(ds.lines, ds.nfe2l2_level)},
+                "response_x_by_line": {n: round(float(v), 4) for n, v in zip(ds.lines, ds.nrf2_m)},
+                "nfe2l2_self_fold": NFE2L2_SELF,
+                "expected": "level edges NFE2L2 -> the NRF2 targets (sign +1: lines with more NFE2L2 respond more to "
+                            "the NRF2 activators), direction clear (the reverse - a target's level and NFE2L2's own "
+                            "response, the same in every line - is flat)"},
+            "gluco_coactivator_null": {
+                "source": ds.genes[ds.gluco_x], "kind": "null_response", "sign": 1, "lines": ds.gluco_null,
+                "partners": [ds.genes[c] for c in ds.gluco_partners], "drugs": list(GLUCO),
+                "partner_response_x": GLUCO_NULL_X,
+                "expected": "null_response edges from it to the other GLUCO genes (sign +1: they respond less to the "
+                            "glucocorticoids where it is absent), compared within organs, grade B (6 lines lack it, "
+                            "12 express it)"}},
         "layout": layout,
     }
     with open(os.path.join(outdir, "ground_truth.json"), "w", encoding="utf-8") as fh:

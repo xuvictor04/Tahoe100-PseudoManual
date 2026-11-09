@@ -7,7 +7,10 @@ gene you can:
 1. **see which drugs raised it (or lowered it)**, at which dose, how strongly, and with which caveats;
 2. **see in which cell lines** it happened, against each line's own baseline;
 3. **see which other genes move with it, and which move opposite to it**, how sure that is, and whether the relation
-   is already known (STRING, Reactome, Hallmark, HGNC gene groups) or a candidate new one.
+   is already known (STRING, Reactome, Hallmark, HGNC gene groups) or a candidate new one;
+4. **see which genes probably act on it, and what it probably acts on** (its probable direction, upstream and
+   downstream, and on the cells' growth under a drug), from the cell lines' recorded mutations and, without any known
+   mutation, from lines that do not express a gene, from drugs that target a gene and from genes' natural levels.
 
 ```bash
 ~/tahoemap-repo/tahoe setup     # once
@@ -28,9 +31,10 @@ incomplete download unless `--allow-partial`; reference downloads that failed ar
 
 | Output (under `<data>/tahoemap/`) | What it is |
 |---|---|
-| `vault/` | **An Obsidian vault**: a note per gene (16k+), drug, cell line, plate and module, linked; each gene note has the drugs that raise / lower it, the cell lines, the genes that move with / opposite it, its place in the map, registry facts (HGNC, UniProt, NCBI) and a companion note with the raw and corrected per-well values laid out plate by plate |
-| `map/gene_map.html` | **The interactive map**: every gene on the nodal map or the signed vector map (a Spread slider pulls the modules apart), a k-D tour of the vectors themselves, and physics views (a gene's neighbourhood to depth 1-4, a module, all genes); searchable; click a gene for its partners, drugs and lines |
-| `validation/report.md` | How well the space recovers known biology, the opposite-arm test, module labels, and **novel candidate relations** |
+| `vault/` | **An Obsidian vault**: a note per gene (16k+), drug, cell line, plate and module, linked; each gene note has the drugs that raise / lower it, the cell lines, the genes that move with / opposite it, its probable direction (the genes upstream and downstream of it), its place in the map, registry facts (HGNC, UniProt, NCBI) and a companion note with the raw and corrected per-well values laid out plate by plate |
+| `map/gene_map.html` | **The interactive map**: every gene on the nodal map or the signed vector map (a Spread slider pulls the modules apart), a k-D tour of the vectors themselves, and physics views (a gene's neighbourhood to depth 1-4, a module, all genes) with the probable-direction arrows; searchable; click a gene for its partners, drugs, lines and probable up- and downstream genes |
+| `validation/report.md` | How well the space recovers known biology, the opposite-arm test, module labels, **novel candidate relations**, and the direction stage's controls |
+| `direction/` | **Probable direction** (which gene acts on which): arrows SOURCE → TARGET with p, q, a grade A / B / C and their alerts, the groups of lines compared, the controls; `direction/README.md` documents every column ([docs/direction.md](docs/direction.md)) |
 | `tables/` | The fold-change tables (parquet): per gene × drug-dose, per gene × cell line, per (drug-dose, line), per gene, drug, line, plate, well — every column documented in `tables/README.md` |
 | `relations/gene_relations.parquet` | Gene × gene: each gene's 100 strongest partners, signed, with split-half evidence, FDR and known / locus / readthrough flags |
 | `embed/` | The vector space: gene, drug-dose, drug, (drug-dose × line) and cell-line vectors |
@@ -40,8 +44,8 @@ incomplete download unless `--allow-partial`; reference downloads that failed ar
 | `review/` | *Optional, from `tahoe review` (below)*: AI-agent literature reviews of genes, drugs and cell lines — each review with its verification, the full history of every agent run, a ledger of attempts and costs, and every connection verdict and finding as tables; the vault and the map show them |
 
 `tahoe gene / drug / line / pair / module` answer from these files in the terminal. `tahoe export DEST` copies the
-shareable results (vault, map, tables, validation, graph, relations, embed ...) into a folder ready to push to GitHub
-([docs/quick-start.md](docs/quick-start.md#put-the-results-on-github)).
+shareable results (vault, map, tables, validation, direction, graph, relations, embed ...) into a folder ready to push
+to GitHub ([docs/quick-start.md](docs/quick-start.md#put-the-results-on-github)).
 
 **Flags are alerts, never removals.** A drug-dose can carry an artifact flag (toxic, transcription drop, cell-cycle
 shift, unreliable plate only, position not correctable or correction uncertain, wells disagree); a relation can be
@@ -68,13 +72,17 @@ artifact for that gene and the value counts as clean
 | reference | public annotations, downloaded once and cached (`--offline` skips) | ~3 min |
 | relations | gene × gene partners, evidence, FDR, known / novel | ~1 min |
 | graph | modules, arms, the nodal map and the signed map | ~2 min |
+| direction | probable direction between genes (which acts on which), from the cell lines' recorded mutations, natural knockouts, drug targets and natural levels ([docs/direction.md](docs/direction.md)) | ~6–7 min (estimated) |
 | validate | control programmes, opposite-arm test, module labels, novel candidates | ~2 min |
 | vault | the Obsidian vault | ~2 min |
 | map | the interactive HTML map | ~1 min |
 
 Times were measured on the full data on a 4-core, 15 GB machine (a scale test of this code; its outputs were not
-kept); see [docs/quick-start.md](docs/quick-start.md#resources) for disk and memory. [docs/method.md](docs/method.md)
-explains every step and every flag.
+kept), except the direction stage's, which is estimated from generated outputs of the full size (it has not yet run on
+the real data); see [docs/quick-start.md](docs/quick-start.md#resources) for disk and memory. An output that finished
+before the direction stage existed runs direction, validate, vault and map after the update, plus any earlier stage
+whose method changed since it was made (`tahoe` shows the plan; from older code typically tables to graph as well:
+about 15–25 minutes). [docs/method.md](docs/method.md) explains every step and every flag.
 
 ## The vector space and the nodal map
 
@@ -87,6 +95,26 @@ The modules are Louvain communities of a graph that links each gene to its 15 st
 |cosine| ≥ 0.3 (or ≥ 0.5 in one random half of the compounds); groups over 300 genes or looser than a mean |cosine|
 of 0.3 are split again, groups under 5 genes get no module, and a module has a − arm only when its two sides
 anti-correlate. [docs/vector-space-and-nodal-map.md](docs/vector-space-and-nodal-map.md) explains it in full.
+
+## Probable direction: which gene acts on which
+
+A correlation has no direction: CDKN1A and MDM2 rise together, and the cosine does not say that both follow TP53. The
+direction stage adds arrows SOURCE → TARGET, each from a statistical test. The strongest come from the cell lines'
+**recorded mutations**: a mutation was there before the experiment, so it cannot be a consequence of the target.
+**Without any known mutation**, a glimpse comes from lines that do not express a gene at all (natural knockouts), from
+compounds that target a gene's protein, and from a gene's natural level across the lines. Every arrow has a grade (A
+strong, B read its alerts, C a glimpse) and says what the source's activity does: raises or lowers (a level, the
+cells' numbers), strengthens or weakens (a drug response), or not inferred. A
+doubtful arrow keeps its place with ⚠ and the reason. Random groups of lines, tested the same way, give the number of
+false arrows to expect. The arrows appear in the vault's gene, drug and cell-line notes (section Direction
+(probable)), in the map's side panel and as arrows on its neighbourhood and maps, and in the validation report. They
+are a **probable** direction, from 50 cancer cell lines at one time point: A → B → C looks like A → C, 'not
+recorded' is not 'wild type', and drugs act on proteins, not on mRNA. [docs/direction.md](docs/direction.md)
+explains it, with examples.
+
+The look-ups show the same arrows: `tahoe gene X` (upstream, downstream, the cells under drugs), `tahoe line X` (its
+recorded alterations and natural knockouts), `tahoe drug X` (the cells under its doses, its drug-target arrows) and
+`tahoe pair A B` (any arrow between the two); the literature reviewers' dossiers include a gene's arrows.
 
 ## Literature review agents
 
@@ -130,6 +158,8 @@ python3 tests/test_port.py      # the port is verbatim
 python3 tests/test_review.py --workdir /tmp/tahoemap_test   # the review agents against a scripted fake API
 python3 tests/test_windows.py   # Windows-only behaviour, simulated on Linux / macOS (seconds)
 python3 tests/test_export.py --out /tmp/tahoemap_test/out_seed0   # `tahoe export` (seconds)
+python3 tests/test_direction.py --no-scale   # the direction stage against its planted answers (a few minutes;
+                                             # without --no-scale also at 4,000 and 8,000 genes, ~15 min)
 ```
 
 `tests/test_review.py` (after `run_tests.py`, offline, no key, about 3 minutes) drives the review runner through the
@@ -140,18 +170,21 @@ map, and `duplicate`; it also checks that no key reaches any file or any printed
 
 The synthetic data plant drug effects (some only in TP53-wild-type lines), co-regulated modules, pairs of modules
 moved in opposite directions, un-moved genes, and every artifact the method corrects. The tests check each stage
-against them (34 checks): the tensor reproduces the atlas exactly, ambient-only lines and uncountable profiles are
+against them (49 checks): the tensor reproduces the atlas exactly, ambient-only lines and uncountable profiles are
 masked, per-line effects appear only where planted (e.g. p53 targets in TP53-wild-type lines only), the per-line cut
 is calibrated, planted modules are tight in the space, opposite modules point opposite ways and share a nodal-map
 island on opposite arms, un-moved genes rarely form strong relations, the FDR is monotone and calibrated, the vault
 has a note per gene and no broken links, the map's spread layouts move the modules apart, flagged drug-doses stay in
 the map's lists with their alert, the map's spread slider, tour and neighbourhood depth work in a browser, the
-look-ups answer.
+look-ups answer, and the direction stage recovers its planted answers (TP53 → the p53 targets and the cells under
+DNA-damaging drugs, a natural knockout's partners, a gene's level → its partners' response) while random groups give
+no more arrows than expected, and the vault and the map show the same arrows as the stage wrote.
 
 ## Read the results with these in mind
 
 - **Correlation across drug responses is not mechanism.** No genes were knocked out; "moves with" means "responds
-  alike to ~1,100 drug-doses in 50 lines". Upstream / downstream are kept for regulatory claims.
+  alike to ~1,100 drug-doses in 50 lines". Upstream / downstream are used only for the direction stage's arrows,
+  which are **probable**: from cell lines, not proof of direct regulation.
 - **One time point** (24 h), **cancer cell lines**, **most drug-doses in a single well**, **dose confounded with
   plate**. Fold changes are against the same line's median drug well on the same plate, not DMSO.
 - Pairs of neighbouring genes on the same strand can correlate through **readthrough** transcription; such pairs
@@ -168,9 +201,9 @@ look-ups answer.
 |---|---|
 | `tahoe` | the command (Linux / macOS); Windows: `python -m tahoemap …` (see the quick start) |
 | `tahoemap/review/` | the literature-review agents: agent and skill files (Claude Code format), dossiers, tools, verification, key pool, histories, the runner |
-| `tahoemap/` | the package: `atlas_core.py` + `tlib.py` (ported method), `stream.py`, `tensor.py`, `tables.py`, `embed.py`, `reference.py`, `relations.py`, `graph.py`, `validate.py`, `vault.py`, `html_map.py`, `query.py`, `export.py`, `cli.py` |
+| `tahoemap/` | the package: `atlas_core.py` + `tlib.py` (ported method), `stream.py`, `tensor.py`, `tables.py`, `embed.py`, `reference.py`, `relations.py`, `graph.py`, `direction.py`, `direction_view.py`, `validate.py`, `vault.py`, `html_map.py`, `query.py`, `export.py`, `cli.py` |
 | `tahoemap/data/control_sets.json` | curated control programmes for validation (from the literature, not Tahoe) |
 | `tahoemap/vault_seed/` | the written layer of the vault (add `genes/SYMBOL.md` to add knowledge; it survives rebuilds) |
 | `docs/` | quick start, method, the two maps, the literature review ([review.md](docs/review.md)), design contracts |
-| `tests/` | synthetic data generator, end-to-end tests, port test, review, Windows and export tests |
+| `tests/` | synthetic data generator, end-to-end tests, port test, review, Windows, export and direction tests |
 | `tools/port_from_old.py` | how the method was carried over |

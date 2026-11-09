@@ -6,7 +6,7 @@ pushed to a GitHub branch.
 What is copied from OUT to DEST (same relative paths):
     vault/        the Obsidian vault (every note, its .obsidian settings, the vault's own manifest)
     map/          gene_map.html, the self-contained interactive map
-    tables/ validation/ graph/ relations/ embed/ stages/        every file
+    tables/ validation/ direction/ graph/ relations/ embed/ stages/        every file
     reference/    the derived tables and the record of the sources: the files directly in reference/ (annotations,
                   gene sets, STRING pairs, sources.json); not reference/downloads/ (the raw downloaded sources)
     review/       the literature reviews, when there are any: reviews/, notes/, history/, ledger.jsonl, the queue and
@@ -41,13 +41,13 @@ import sys
 import time
 
 from . import __version__
-from .common import (STAGES, PIPELINE_LOCK, find_git, git_out, is_link, lock_state, log, read_stamp, remove_file,
-                     replace_file)
+from .common import (STAGES, PIPELINE_LOCK, find_git, git_out, is_link, lock_state, log, printable, read_stamp,
+                     remove_file, replace_file)
 
 MAX_MB = 95.0                      # MiB: GitHub refuses files over 100 MB
 WARN_MB = 50.0                     # MiB: GitHub accepts these but warns
 PUSH_GB = 1.9                      # GB: GitHub refuses one push over 2 GB
-FOLDERS = ("vault", "map", "tables", "validation", "graph", "relations", "embed", "stages")
+FOLDERS = ("vault", "map", "tables", "validation", "direction", "graph", "relations", "embed", "stages")
 TOP_FILES = ("run_options.json", "run.log")
 EFFECTS = (("atlas", "effects"), ("atlas", "reports"))
 WRITTEN = ("README.md", "MANIFEST.tsv", ".gitattributes")     # written by the export itself, at the top of DEST
@@ -89,6 +89,10 @@ DESCRIBE = {
               "flags (parquet; tables/README.md documents every column)",
     "validation": "does the vector space recover known biology, and what in it is new (start at "
                   "validation/report.md; README.md there documents the columns)",
+    "direction": "probable direction between genes, from the cell lines (which gene acts on which, or on the "
+                 "cells' growth under a drug): edges with p, q, an evidence grade A / B / C and their alerts, the "
+                 "groups compared and the controls (direction/README.md documents every column; a probable "
+                 "direction, not proof of direct regulation)",
     "graph": "the nodal map: nodes (map coordinates, module, arm), edges and modules (parquet)",
     "relations": "gene x gene: each gene's 100 strongest partners, how reproducible, known or new (parquet)",
     "embed": "the vector space: gene, drug-dose, drug and cell-line vectors (numpy .npy) and their tables",
@@ -449,7 +453,8 @@ def export(out, dest, with_effects=False, include=(), force=False, max_mb=MAX_MB
 
 # the stage that writes each exported folder (a folder whose stage is not current may be out of date)
 FOLDER_STAGE = {"tables": "tables", "embed": "embed", "reference": "reference", "relations": "relations",
-                "graph": "graph", "validation": "validate", "vault": "vault", "map": "map", "atlas/effects": "effects"}
+                "graph": "graph", "direction": "direction", "validation": "validate", "vault": "vault", "map": "map",
+                "atlas/effects": "effects"}
 
 
 def _stage_states(stamps, folders):
@@ -577,7 +582,7 @@ def _report(rec):
         log(f"  {len(warn)} file(s) over {WARN_MB:g} MiB (GitHub accepts them, with a warning): "
             + ", ".join(warn[:5]) + (", ..." if len(warn) > 5 else ""))
     for f, why in rec["stale"].items():
-        log(f"  ⚠ {f}/: {why}")
+        log(printable(f"  ⚠ {f}/: {why}"))             # '!' on a console that cannot show the sign (cp1252)
     if rec["removed"]:
         log(f"  {len(rec['removed']):,} file(s) of the earlier export that this one no longer has were removed")
     log(f"Export done in {rec['seconds']:.0f} s: {rec['files']:,} files, {_mb(rec['bytes'])} in {rec['destination']} "

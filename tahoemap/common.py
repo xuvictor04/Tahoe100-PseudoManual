@@ -22,10 +22,11 @@ log = T.log
 # <out>/atlas      the build and the method-v3 effects (same layout as the old tahoe_atlas.py, so an old atlas folder
 #                  can be reused);  <out>/tensor  per-cell-line layer;  <out>/tables  fold-change tables;
 # <out>/embed      gene / drug / line vectors;  <out>/relations  gene-gene relations;  <out>/graph  nodal map;
+# <out>/direction  probable direction between genes (which acts on which; from the cell lines);
 # <out>/reference  public annotations;  <out>/validation;  <out>/vault  Obsidian;  <out>/map  interactive map;
 # <out>/stages     one stamp per finished stage.
-STAGES = ["build", "effects", "tensor", "tables", "embed", "reference", "relations", "graph", "validate",
-          "vault", "map"]
+STAGES = ["build", "effects", "tensor", "tables", "embed", "reference", "relations", "graph", "direction",
+          "validate", "vault", "map"]
 
 
 def folder(out, name):
@@ -226,6 +227,60 @@ def safe_filename(name, maxlen=120):
 
 
 ALERT = "⚠"
+ALERT_ASCII = "!"           # ALERT on a console that cannot show it (one character, so that tables stay aligned)
+ARROW = "→"                 # a probable direction: SOURCE → TARGET (direction stage)
+ARROW_ASCII = "->"
+# the signs the package prints, and their ASCII forms for a console or redirect whose encoding lacks them (a Windows
+# code page: cp1252, cp437, ...)
+ASCII_FALLBACK = {ALERT: ALERT_ASCII, ARROW: ARROW_ASCII, "←": "<-", "≥": ">=", "≤": "<=", "−": "-", "–": "-",
+                  "—": "-", "…": "...", "×": "x", "·": "-"}
+
+
+def ascii_signs(text):
+    """text with the ASCII form of every sign in ASCII_FALLBACK (⚠ -> '!', → -> '->', ≥ -> '>=', ...)."""
+    for ch, rep in ASCII_FALLBACK.items():
+        if ch in text:
+            text = text.replace(ch, rep)
+    return text
+
+
+def encodable(text, encoding):
+    """text as `encoding` can hold it: unchanged when it can; else each sign of ASCII_FALLBACK that the encoding
+    lacks becomes its ASCII form, and any other character it cannot hold a '?'. An unknown encoding: unchanged."""
+    try:
+        text.encode(encoding)
+        return text
+    except UnicodeEncodeError:
+        pass
+    except LookupError:
+        return text
+    for ch, rep in ASCII_FALLBACK.items():
+        if ch in text:
+            try:
+                ch.encode(encoding)
+            except UnicodeEncodeError:
+                text = text.replace(ch, rep)
+    return text.encode(encoding, errors="replace").decode(encoding)
+
+
+def printable(text, stream=None):
+    """text as the output stream (default sys.stdout) can show it: on a console or redirect whose encoding lacks ⚠ or
+    → (a Windows code page) they become '!' and '->' (encodable). The one function every console printer uses."""
+    stream = sys.stdout if stream is None else stream
+    return encodable(text, getattr(stream, "encoding", None) or "utf-8")
+
+
+def cap_keep(alert, n):
+    """The cap rule (doubt never removes an item): which items of a list ranked strongest first are shown when it is
+    capped at n - the n strongest, and any of the n strongest without an alert (alert[i] True: item i carries one)
+    that fall beyond them, in rank order. Returns their positions (ascending). n None: all."""
+    alert = np.asarray(alert, dtype=bool)
+    if n is None:
+        return np.arange(alert.size)
+    keep = np.zeros(alert.size, dtype=bool)
+    keep[:max(0, int(n))] = True
+    keep[np.flatnonzero(~alert)[:max(0, int(n))]] = True
+    return np.flatnonzero(keep)
 
 
 def marked_names(txt, n=None, exclude=""):

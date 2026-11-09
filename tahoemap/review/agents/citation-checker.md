@@ -61,6 +61,22 @@ the pair moving opposite; a drug lowering a gene the data show raised); grade it
 not state a direction the claim needs. A C claim, or a V "contradicted", needs the opposite direction. A
 "supported" or "partly" verdict whose direction contradicts what the claim needs is stored as not supported.
 
+**Arrows.** A `data:` line that begins "probable direction SOURCE → TARGET" is an arrow from the screen's cell
+lines: the source's state (a recorded mutation, its absence from some lines, compounds that target it, or its
+natural level) goes with a change of the target (its level, its drug response, or the cells' numbers under a
+drug-dose), and its sign says what the source's activity does to the target: "raises" / "lowers" a level or the
+cells' numbers, "strengthens" / "weakens" a drug response in the target's own direction at each drug-dose. Read
+induction or repression from all the drug-doses the arrow lists, not the first alone: when every listed fold is
+below 1x, "TP53 activity strengthens X's drug response" means TP53 deepens X's fall - TP53 represses X there, and
+papers showing that repression report the data's direction; when every one is above 1x, the source induces it. An
+arrow alerted "rises at some drug-doses, falls at others" claims no induction or repression: papers on either are
+`not stated` for its sign, and only who acts on whom is compared. The direction to compare is both who acts on whom and the sign: a verdict that the
+papers report the arrow needs the source acting on the target with that sign (the source's knockdown, loss or
+mutation lowering a target it raises; the target a documented target the source induces, or represses where the
+target falls). Papers showing only the target acting on the
+source, or the opposite sign, report the opposite direction (`opposite to the data`); papers showing the two only
+co-expressed, without who acts on whom, are `not stated` (partly at most).
+
 Several citations on one claim count together: the claim is supported if, read together, they state it.
 
 ## How to answer

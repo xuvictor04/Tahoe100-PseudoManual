@@ -40,6 +40,13 @@ TP53, its Cellosaurus links (written out, because web fetch opens only URLs that
 conversation), the genes specifically high or low, the drugs that deplete it. `tahoe review run --dry-run` writes
 the dossiers so you can read them.
 
+A gene's dossier also has its **probable direction** (from the direction stage, [direction.md](direction.md)): the
+arrows that point to it, those that go from it, and those to the cells under a drug, each with its grade, what the
+source's activity does to the target, the evidence, q and its alerts, in the same order as in the vault (a long list
+is capped by the same rule, and says how many more arrows there are). The reviewer can then say whether the
+literature knows the arrow, and in which direction. The arrows are probable (from cell lines, not proof of direct
+regulation), and the dossier says so.
+
 The agent then:
 
 - searches PubMed and Europe PMC (our own tools, run on your machine; cached in `review/cache/`), and the web
@@ -492,15 +499,15 @@ tahoe duplicate ~/tm/review1 --out ~/tm/main --repo ~/tahoemap-review
 ```
 
 `tahoe duplicate DEST` copies the output folder (`--out`, or the default one): the large arrays and tables (`atlas`,
-`tensor`, `tables`, `embed`, `relations`, `graph`) are **hard-linked** when DEST is on the same file system — they
-take no extra space, and because every stage writes a new file and swaps it in, a stage that runs again in either
-copy replaces its file there without touching the other (on Windows only while no program has that file open in
-either copy: a hard-linked file is one file under two names, and a file in use cannot be replaced there) — and everything else (vault, map, validation, reference)
-is copied (on the full data mostly the vault, ~0.6 GB, and the build's CSV tables). It writes `DEST/duplicated_from.json`: the source, the date, the code commit
-(and whether the code had uncommitted changes), and the stage stamps. `--repo DIR` also `git clone`s this code
-repository into DIR, so the copy's code (and its agent and skill files) can change on their own; edit and commit
-there. Call the clone's `tahoe` by its path (do not run `tahoe setup` in the clone, which would point the `tahoe`
-command at it); both use the same Python environment.
+`tensor`, `tables`, `embed`, `relations`, `graph`, `direction`) are **hard-linked** when DEST is on the same file system
+— they take no extra space, and because every stage writes a new file and swaps it in, a stage that runs again in either
+copy replaces its file there without touching the other (on Windows only while no program has that file open in either
+copy: a hard-linked file is one file under two names, and a file in use cannot be replaced there) — and everything else
+(vault, map, validation, reference) is copied (on the full data mostly the vault, ~0.6 GB, and the build's CSV tables).
+It writes `DEST/duplicated_from.json`: the source, the date, the code commit (and whether the code had uncommitted
+changes), and the stage stamps. `--repo DIR` also `git clone`s this code repository into DIR, so the copy's code (and
+its agent and skill files) can change on their own; edit and commit there. Call the clone's `tahoe` by its path (do not
+run `tahoe setup` in the clone, which would point the `tahoe` command at it); both use the same Python environment.
 
 ## Windows and macOS
 

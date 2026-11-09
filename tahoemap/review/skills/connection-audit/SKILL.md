@@ -35,6 +35,50 @@ Give no verdict to genomic neighbours (`same locus`, `READTHROUGH RISK`): their 
 genome. Mention them once in the note's caveats. Pairs with evidence `not reproduced` get a verdict only when they
 are the entity's most notable relations, and then the note says they are weak.
 
+## Probable directions
+
+A gene dossier's "Probable direction" tables hold arrows SOURCE → TARGET: the source's state (a recorded mutation, its
+absence from some lines, compounds that target its protein, or its natural level) goes with a change of the target
+(its level, its drug response, or the cells' numbers under a drug-dose). The sign says what the source's ACTIVITY
+probably does to the target: *raises* / *lowers* a level or the cells' numbers; *strengthens* / *weakens* a drug
+response, in the target's own direction at each drug-dose. Read induction or repression from ALL the drug-doses the
+row lists ("drug-doses carrying the difference"), not from the first one: when every listed fold is below 1x,
+"strengthens" means the source deepens the fall - it **represses** the target there, and a paper showing that
+repression supports the arrow (do not call it `contradicted` for not "inducing" it); when every one is above 1x, the
+source induces it. When the row carries the alert "rises at some drug-doses, falls at others", the sign says only
+how strongly the target responds: judge who acts on whom, and do not count papers on induction or repression for or
+against the sign. Judge an arrow as a relation with a direction and a sign:
+
+| verdict | use it when | citations |
+|---|---|---|
+| `established` | a retrieved paper shows the source acting on the target this way: the source's knockdown, knockout, loss-of-function mutation or activation changing the target's mRNA (or its drug response) with this sign, or the target shown as a direct transcriptional target the source induces (or represses); for an arrow to the cells, the source's loss or mutation changing sensitivity to that drug or its class as the sign says | required |
+| `indirect` | papers put the target downstream of the source through a named intermediate, or show the target regulated by a factor the source is shown to control, with the sign the data show | required: one per step, or a review naming the chain |
+| `plausible` | the source's known function makes the arrow likely, but no paper links the two | optional |
+| `unexpected` | a grade A or B arrow without a co-occurrence alert (another alteration on either side), and no paper after the pair searched both ways and with aliases | none; list the queries |
+| `contradicted` | a paper shows the opposite sign in a comparable setting (the source's activity lowers what the arrow says it raises; for a drug response, the source's activity making the target respond less where the arrow says it strengthens the response), or the target acting on the source where the paper rules out this direction | required |
+
+- Give the verdict as a `connection_verdicts` entry on the other gene (its symbol as in the dossier; for an arrow to
+  the cells, `drug:<the drug's name as in the dossier>`). Its `data_evidence` begins with `probable direction` and the
+  arrow as the dossier writes it, then the grade, the sign sentence, the evidence kind, q and the alerts that matter
+  ("probable direction TP53 → CDKN1A, grade B: TP53 activity strengthens CDKN1A's drug response (CDKN1A rises:
+  1.32x vs 3.00x); recorded TP53 loss-of-function in 10 lines vs 8; q 0.025; KMT2D, CTNNB1 alterations on the other
+  side"). Its `relation` says what the papers report about who
+  acts on whom, with the sign ("TP53 transactivates CDKN1A; TP53 knockdown abolishes its induction by DNA damage").
+  A gene that also has a co-variation verdict gets a second entry; the two are judged separately.
+- A paper on the reverse direction alone is not a contradiction: feedback loops are common (TP53 induces MDM2, MDM2
+  degrades TP53). Call it `contradicted` only when the paper shows this arrow's sign reversed, or tests this direction
+  and finds none.
+- Grade C arrows (a gene's natural level, a result significant only within its own group, a comparison the tissue
+  can explain, a natural knockout with few lines or concentrated in organs) are leads: give a verdict only when the
+  literature speaks clearly, and never `unexpected`.
+- An arrow from compounds that target the source (`drug target: level`) concerns inhibiting or activating the source's
+  protein: a paper on that inhibition (or on the drug class) can establish it; drugs also act on other proteins, and a
+  row naming several targets (HDAC1, HDAC2, ...) is one test that any of them could explain.
+- An arrow whose alerts say "co-occurs with X" may be X's effect: say so in `relation` when a paper ties the target
+  to X rather than to the source. "tissue-confounded" arrows may be tissue programmes.
+- The absence of an arrow says nothing: only recorded mutations, genes absent from some lines, drug targets and
+  related pairs (for levels) are tested.
+
 ## Transcript-level versus protein-level knowledge
 
 Tahoe sees mRNA, so ask whether the literature relation predicts co-variation of mRNA:
@@ -89,7 +133,8 @@ partner at all. Then the usual reasons:
   measured); `likely_reason`; citations only if a paper supports the expectation.
 - `contradicted`: rare; needs a paper with the opposite direction in a comparable setting.
 - `connection_verdicts`: the partners you examined, typically 8-20 entries: the strongest replicated partners on
-  both sides, every novel candidate, and any partner named in another section. Write genes as their symbols in the
+  both sides, every novel candidate, any partner named in another section, and the probable-direction arrows you
+  examined (one entry each, as "Probable directions" above describes). Write genes as their symbols in the
   dossier, drugs as `drug:<name as in the dossier>`, cell lines as `line:<cell name>`. Each entry says, in one short
   sentence each, `relation`: what the cited papers report, with its direction ("each an NRF2 target, induced by
   electrophiles"; for `plausible` / `unexpected` the reasoning or "no paper found"), and `data_evidence`: the

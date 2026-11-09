@@ -8,7 +8,10 @@
    that move in opposite directions), and every artifact the method corrects (ground_truth.json says what).
 2. Runs `python -m tahoemap run` on it (offline: the reference stage needs the network and is skipped).
 3. Checks each stage against the planted truth. Every check prints PASS / FAIL / WARN with its numbers; the exit
-   code is 1 if anything FAILs. Thresholds are set well inside what seeds 0-2 give, so a FAIL means a regression.
+   code is 1 if anything FAILs. Thresholds are set inside what seed 0 (the default) gives, so a FAIL there means a
+   regression. Other seeds draw other data, and with 18 lines a few planted effects sit near what can be detected:
+   seeds 1 and 2 each fail a few such checks (on both: CDKN1A rising in one TP53-mutant line, and TP53 -> cells
+   under the DNA-damaging drugs significant only within the TP53 group).
 """
 
 import argparse

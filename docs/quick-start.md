@@ -43,6 +43,17 @@ only through flagged drug-doses keeps its ranked place, marked `⚠` with the re
 modules apart, the **k-D tour** tab turns the vectors through all dimensions, and the neighbourhood view goes to
 depth 4 (its help panel explains every control).
 
+**Which gene probably acts on which.** The direction stage adds arrows SOURCE → TARGET: from the cell lines' recorded
+mutations and, without any known mutation, from lines that do not express a gene, from drugs that target a gene and
+from genes' natural levels. Each arrow has a grade (A strong, B read its alerts, C a glimpse) and says whether the
+source's activity raises or lowers the target (for a drug response: strengthens or weakens it, in the target's own
+direction). You find them in a gene note's **Direction (probable)** section
+(upstream and downstream of the gene), in drug and cell-line notes, in the map's side panel and as arrows in its
+neighbourhood view, and in `validation/report.md`. They are a probable direction, from cell lines: not proof of direct
+regulation. [direction.md](direction.md) explains how to read them.
+
+`tahoe gene X` lists them too (PROBABLE DIRECTION), and `tahoe line`, `tahoe drug` and `tahoe pair` show theirs.
+
 ## Literature review by AI agents (optional)
 
 With an Anthropic API key, `tahoe review` has an agent review genes, drugs and cell lines against the literature and
@@ -68,6 +79,17 @@ Its build (the one long pass over all cells) can be reused, which saves the 1–
 ```bash
 tahoe run --reuse-atlas ~/Tahoe-100M/atlas
 ```
+
+## After an update of the code
+
+`tahoe update` (Windows: `git -C C:\tahoe\repo pull`) fetches the newest code; then `tahoe run` (Windows: the same
+`python -m tahoemap run --out ...` as before) redoes only the stages whose method changed, and the stages after them.
+`tahoe` alone shows the plan first. An output that finished before the **direction** stage existed runs `direction`,
+`validate`, `vault` and `map`, and also any earlier stage whose method changed since the output was made (the plan says
+which and why: an output made with older code, for example, may also redo `tables`, `embed`, `reference`,
+`relations` and `graph`: about 15–25 minutes in all on the full data, with embed's ~6.8 GB of memory). The build, the effects and the tensor are kept unless the plan names them. The vault keeps your Obsidian
+settings; in its graph view the new note *Probable direction*, which every gene note links, shows as a hub until you add
+`-file:"Probable direction"` to the graph's filter (a new vault has it).
 
 ## Folders and options
 
@@ -128,7 +150,7 @@ C:\tahoe\.venv\Scripts\python.exe tests\test_windows.py
 C:\tahoe\.venv\Scripts\python.exe tests\test_review.py --out C:\tahoe\test\out_seed0   # the review agents, fake API
 ```
 
-- `run_tests.py` should end with "34 passed, 0 warnings, 0 failed"; `test_review.py` (a few minutes, offline, no
+- `run_tests.py` should end with "49 passed, 0 warnings, 0 failed"; `test_review.py` (a few minutes, offline, no
   key) with "0 failed". It works in a folder of its own in the temp folder and only reads `--out`.
 - The one warning you may see is "browser check skipped": that check opens the map in a headless browser and
   needs Playwright. It is optional. To include it, run
@@ -165,8 +187,9 @@ C:\tahoe\.venv\Scripts\python.exe -m tahoemap run --data C:\tahoe\Tahoe-100M --o
 ## Put the results on GitHub
 
 `export` copies the shareable results of a finished run into a new folder, ready to be committed and pushed as a
-branch of its own: the vault, the map, the tables, the validation report, the graph, the relations, the vector space,
-the stage records, the derived reference tables and any literature reviews, with a `README.md` (what each folder
+branch of its own: the vault, the map, the tables, the validation report, the probable directions (`direction/`), the
+graph, the relations, the vector space, the stage records, the derived reference tables and any literature reviews,
+with a `README.md` (what each folder
 holds, the code version and commit, the date, the sizes, what was left out and why), a `MANIFEST.tsv` (size and
 sha256 of every file) and a `.gitattributes` that stops git from changing line ends. It never copies the build, the
 per-line arrays, the downloads or API-key records, and it refuses while a run works on the output.
@@ -219,7 +242,9 @@ The command itself prints these next steps with your folder in them.
 
 ## Resources
 
-Measured on the full data (95.6M cells) on a 4-core machine with 15 GB of memory:
+Measured on the full data (95.6M cells) on a 4-core machine with 15 GB of memory (the direction stage, and what it
+adds to the vault and the map, are estimates: they were measured on generated outputs of the full size, because the
+stage has not yet run on the real data):
 
 | Stage | Time | Disk it adds | Peak memory |
 |---|---|---|---|
@@ -230,13 +255,14 @@ Measured on the full data (95.6M cells) on a 4-core machine with 15 GB of memory
 | tables, embed | 2 + 2 min | < 0.1 GB | 6.8 GB (embed) |
 | reference | ~3 min the first time (downloads ~200 MB), seconds after | 0.2 GB | ~1 GB |
 | relations, graph, validate | 1 + 2 + 1 min | 0.15 GB | ~3 GB |
-| vault, map | 2 min + seconds | 0.6 GB (35,000 notes), 10 MB | ~1.5 GB |
+| direction | ~6–7 min (estimated) | < 0.1 GB | 1.3–1.8 GB (estimated) |
+| vault, map | 2 min + seconds | 0.6 GB (35,000 notes; the direction sections add ~0.06 GB), 10 MB (~17–19 MB with the direction arrows; a page that would pass 20 MB first leaves out the grade C readings) | ~1.5 GB, plus up to ~1 GB to read the direction arrows (estimated) |
 
-So: about 30 GB of disk in all and ~30 minutes after the build. Build workers are sized from free memory; if one
+So: about 30 GB of disk in all and ~40 minutes after the build. Build workers are sized from free memory; if one
 is killed for lack of memory the build stops and says so (finished plates are kept): rerun with fewer `--workers`.
 
 ## Test it first (3–5 minutes, no download)
 
 ```bash
-tahoe test             # synthetic Tahoe-100M with planted answers, the whole pipeline, and 34 checks
+tahoe test             # synthetic Tahoe-100M with planted answers, the whole pipeline, and 49 checks
 ```

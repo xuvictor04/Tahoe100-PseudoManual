@@ -386,7 +386,8 @@ tahoe - every gene, drug and cell line of Tahoe-100M in one map
   run [--stream]        every stage that is missing or out of date, in the background
   status                what is done and what runs next (also just: tahoe)
   log [download|review] follow the running job's log            stop    stop it (finished stages are kept)
-  gene SYMBOL           drugs that raise / lower it, in which lines, genes that move with / opposite it
+  gene SYMBOL           drugs that raise / lower it, in which lines, genes that move with / opposite it,
+                        what probably acts on it and what it probably acts on (probable direction)
   drug NAME | line NAME | pair GENE1 GENE2 | module N        the same for a drug, a cell line, two genes
   open                  where the interactive map, the Obsidian vault and the validation report are
   review plan           AI literature-review agents (docs/review.md): the queue, in priority order, and its cost
@@ -405,7 +406,7 @@ tahoe - every gene, drug and cell line of Tahoe-100M in one map
   test                  the whole pipeline on synthetic data with planted answers (a few minutes)
   update                newest scripts (git pull)
   <stage> [options]     one stage now, in the foreground: build effects tensor tables embed reference
-                        relations graph validate vault map
+                        relations graph direction validate vault map
 Folders: data $DATA   output $OUT
   (change them with --data DIR / --out DIR on every command, or set TAHOE_DATA / TAHOE_OUT)
 Options go to python -m tahoemap (e.g. tahoe run --dims 96 --offline); see README.md.
@@ -434,7 +435,7 @@ main() {
       say "Interactive map:  $OUT/map/gene_map.html   (open it in a browser)"
       say "Obsidian vault:   $OUT/vault   (Obsidian: Open folder as vault)"
       say "Validation:       $OUT/validation/report.md" ;;
-    build|effects|tensor|tables|embed|reference|relations|graph|validate|vault|map)
+    build|effects|tensor|tables|embed|reference|relations|graph|direction|validate|vault|map)
       need_packages; tm "$c" "$@" ;;
     *) die "unknown command '$c' (tahoe help)" ;;
   esac

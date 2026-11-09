@@ -7,15 +7,15 @@ Engineering contract for two additions. User-facing docs: `docs/review.md` and t
 ## Part 1 — the map gets tabs, three of them physics simulations (`tahoemap/html_map.py`)
 
 `OUT/map/gene_map.html` stays ONE self-contained file (no network, no external JS/CSS). It gets a tab bar; each tab
-is a separate display with its own canvas and controls; the side panel (selected gene: partners, drugs, lines) and the
-search box are shared by all tabs, and selecting a gene in one tab selects it in all.
+is a separate display with its own canvas and controls; the side panel (selected gene: partners, drugs, lines,
+probable direction) and the search box are shared by all tabs, and selecting a gene in one tab selects it in all.
 
 | Tab | What it shows |
 |---|---|
 | Nodal map | the t-SNE layout of 1 − \|cos\| (opposite genes together); a Spread slider moves it to the modules-apart layout (`graph/nodes.parquet` xm, ym) |
 | Signed vector map | the t-SNE layout of 1 − cos (opposite genes apart); Spread moves it to xsm, ysm (each arm of a two-armed module its own group) |
 | k-D tour | the genes' unit vectors (`embed/gene_unit.npy`, all dimensions) projected onto a 2-D plane that turns smoothly (a grand tour); axis mode shows component i against component j exactly |
-| Physics: neighbourhood | a live force simulation of the selected gene, its partners and their partners, to depth 1-4 |
+| Physics: neighbourhood | a live force simulation of the selected gene, its partners and their partners, to depth 1-4, with the probable-direction arrows between them |
 | Physics: module | a live force simulation of one module (all its members and the edges among them) |
 | Physics: all genes | a live force simulation of every gene in the space, started from the nodal-map positions |
 | How to read this | the help text (what each tab means, colours, controls) |
@@ -49,6 +49,35 @@ search box are shared by all tabs, and selecting a gene in one tab selects it in
   gene only); a frame-time budget so the page stays responsive (several ticks per frame when fast, fewer when slow).
 - Data: embed `graph/edges.parquet` compactly (index pairs + quantised cos) — target ≤ +4 MB at 177,000 edges; the
   page must still open in a few seconds at 15,000 genes.
+- **Probable direction** (the direction stage, read through `direction_view` so the page shows the rows, order and
+  words of the vault and the look-ups; `docs/direction.md`):
+  - side panel (shared by all tabs): the selected gene's *Upstream*, *Downstream* and *Cells under drug-doses* lists,
+    each in `direction_view.ORDER`, capped at 8 by the cap rule with its counts and *show all*; a row = the arrow
+    ('A, B (+k more) → X' for a row that names several sources), a grade badge (A solid, B pale, C dashed; the grade's
+    words as tooltip), the sign word, the kind and q, the sign sentence and '⚠ short labels' (the full reasons as
+    tooltip); a click opens its evidence (kind_text, the reading, every alert); gene names select the gene, sources
+    that are not measured genes are greyed out;
+  - neighbourhood tab: a **Direction** control *off* / *arrows* (between the genes shown: one per ordered pair from its
+    strongest row; past 3,000 pairs the cap rule on the pairs in ORDER - the 3,000 strongest and any of the 3,000
+    strongest without an alert after them - and the info box counts the rest and how many carry an alert) / *+ its
+    genes* (the default: also the selected gene's
+    up- and downstream genes from its panel lists, at most 80, violet ring, held by an undrawn link that is not a
+    relation); pairs pointing both ways are drawn offset; the info box has a legend and counts of arrows by grade,
+    genes added, rows pointing outside the view and cells rows;
+  - nodal and signed maps: a **Direction arrows** box draws the selected gene's panel rows to and from genes on the
+    map, with a legend (top right, folds away) while arrows are drawn; a hover tooltip lists the rows between the
+    hovered and the selected gene by the cap rule (3);
+  - style: line by grade (A thick, B thin, C dashed), head by sign (raises: filled head, lowers: bar; for a drug
+    response - `DR.resp` - strengthens: open head, weakens: double bar; not inferred: open circle), one violet;
+  - search: a source that is no gene of the page (a drug target the screen does not measure) is found by name and
+    opens a panel with its rows (the cap rule, *show all*);
+  - data: the `dir` block (`html_map.DirBlock`) holds every display row that touches a gene of the page, 10 integers
+    a row, its texts interned; rows touching no gene of the page are counted and named in the help. Estimated at full
+    scale: ~7 MB at ~54,000 edges, ~13.6 MB at ~115,000 with every text. A page that would pass 20 MB
+    (`MAX_BYTES`) is shortened in order: grade C readings, all readings, function snippets, line lists, the full
+    alert texts (short labels stay), cells rows beyond a gene's capped list (counted per gene); no gene-target row is
+    left out; the stamp, the panel and the help say what was shortened;
+  - without the stage the block is `{ok: false, why}`: the panel and the help say why, and the toggles are disabled.
 
 ---
 
@@ -116,9 +145,11 @@ validation, reference, embed). Contents:
   strongest per-line responses (the same); module, arm, module label; **data partners**: top 25 moving with and top
   25 moving opposite (cos, evidence, ⚠ alert, fdr, mutual rank, specificity, locus / readthrough, known: STRING score
   / shared pathway / gene group; capped lists add any of the 25 strongest without an alert that fall below them);
-  **known but absent**: literature-known partners (STRING ≥ 700, or a shared Hallmark / Reactome pathway ≤ 100 genes, at most 30) that are NOT among its 100 data partners, each with its
-  cosine to the gene if both are in the space, else the reason (not measured / not in the vector space); novel
-  candidate pairs involving the gene.
+  **known but absent**: literature-known partners (STRING ≥ 700, or a shared Hallmark / Reactome pathway ≤ 100
+  genes, at most 30) that are NOT among its 100 data partners, each with its cosine to the gene if both are in the
+  space, else the reason (not measured / not in the vector space); novel candidate pairs involving the gene.
+- gene, probable direction: its rows from `direction_view` (upstream, downstream, cells under drugs; grade, sign
+  sentence, evidence, q, alerts; capped by the cap rule), so the reviewer can check each arrow against the literature.
 - drug: targets, MOA, approval; per dose: wells, flags, genes up/down; top genes up / down at the best trustworthy dose;
   target genes' own mRNA response; modules it moves; lines it depletes / that respond most; nearest drugs by vector.
 - line: organ, drivers, TP53 status; genes specifically high / low at baseline; strongest responses; drug-doses that
@@ -217,7 +248,7 @@ start without `--max-usd` or `--limit` unless `--no-cap` is given, and prints th
   column (connection verdict) to the partner tables; the map's side panel shows the verdicts.
 
 **Duplicate**: `python -m tahoemap duplicate DEST` (`tahoe duplicate DEST`) copies a finished output folder for the
-review work: large immutable arrays (atlas, tensor, tables, embed, relations, graph) are hard-linked when on the same
-file system (else copied), everything else is copied; writes `DEST/duplicated_from.json` (source, date, code commit,
-stage stamps). With `--repo DIR` it also clones this code repository into DIR (`git clone`), so code and outputs of
-the review copy can evolve separately.
+review work: large immutable arrays (atlas, tensor, tables, embed, relations, graph, direction) are hard-linked when on
+the same file system (else copied), everything else is copied; writes `DEST/duplicated_from.json` (source, date, code
+commit, stage stamps). With `--repo DIR` it also clones this code repository into DIR (`git clone`), so code and outputs
+of the review copy can evolve separately.

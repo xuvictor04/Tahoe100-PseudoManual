@@ -4,6 +4,8 @@
     python tests/test_direction.py [--src OUT --data DATA] [--work DIR] [--no-fixture] [--no-scale]
                                    [--scale-genes 4000,8000] [--keep]
 
+0. Unit checks: drug_target counts one molecule under two names (the real Tahoe pairs) once; a level edge's
+   'direction clear' allows for the edge having been selected because it is strong (simulated pairs).
 1. Synthetic run. Copies a finished synthetic output (default: run_tests.py's, /tmp/tahoemap_test/out_seed0 and
    data_seed0; made with run_tests.py when missing), runs `python -m tahoemap.direction` on the copy in its own
    process and checks the answers make_synthetic_tahoe.py planted (ground_truth.json next to the data): TP53 -> most
@@ -130,9 +132,13 @@ def integrity(e):
     a = e[e["grade"] == "A"]
     rule = a["kind"].str.startswith("genotype") & (a["q"] < 0.05) & (a["q_group"] < 0.10) & \
         (a["n_altered"] >= 5) & (a["n_intact"] >= 5) & ~a["alerts"].str.contains(
-            "tissue-confounded|co-occurs with|compared across organs|exists only relative|significant within this")
+            "tissue-confounded|co-occurs with|compared across organs|exists only relative|significant within this|"
+            "sit on the other side")
     if not rule.all():
         bad.append(f"{int((~rule).sum())} grade-A edges break the A rule")
+    tc = e["kind"].str.startswith("genotype") & e["alerts"].str.contains("tissue-confounded")
+    if not (e.loc[tc, "grade"] == "C").all():
+        bad.append("a tissue-confounded genotype edge is not grade C")
     only_group = e["kind"].str.startswith("genotype") & ~table_wide(e)
     if not (e.loc[only_group, "grade"] == "C").all():
         bad.append("an edge significant only within its group is not grade C")
@@ -143,6 +149,97 @@ def integrity(e):
     if not (n == e["n_alerts"]).all():
         bad.append("n_alerts")
     return bad, len(a)
+
+
+# ----------------------------------------------------------------------------- 0. unit checks (no output needed)
+def unit_checks():
+    """(a) drug_target counts one molecule once: the real Tahoe names of one molecule in two forms ('Ixazomib' /
+    'Ixazomib citrate', 'Larotrectinib' / 'Larotrectinib sulfate', 'crizotinib' / 'Crizotinib (hydrochloride)'), each
+    moving a gene alone, give no edge (one molecule is not >= 2 compounds), while two different molecules do. (b) the
+    direction of a level edge allows for its selection: on simulated pairs whose two directions are equally strong, the
+    written edges are rarely called 'direction clear' (a plain bootstrap called 20-60% of them clear), while a pair
+    with one real direction often is, and its reverse never."""
+    import types
+    from scipy import stats
+    from tahoemap import direction as Dm
+    from tahoemap import tlib as T
+
+    def molecules():
+        real = [("Bortezomib", "PSMB5"), ("Ixazomib", "PSMB5"), ("Ixazomib citrate", "PSMB1, PSMB2, PSMB5"),
+                ("Larotrectinib", "NTRK1, NTRK2, NTRK3"), ("Larotrectinib sulfate", "NTRK1, NTRK2, NTRK3"),
+                ("Entrectinib", "ALK, NTRK1, NTRK2, NTRK3, ROS1"), ("crizotinib", "ALK, MET, ROS1"),
+                ("Crizotinib (hydrochloride)", "ALK, MET, ROS1"), ("Abemaciclib", "CDK4, CDK6"),
+                ("Ribociclib", "CDK4, CDK6")]
+        drugs = real + [(f"Other{i:02d}", "") for i in range(60)]
+        dd = pd.DataFrame([{"drug": d, "dose": x, "targets": t, "moa_broad": "inhibitor/antagonist", "flags": ""}
+                           for d, t in drugs for x in ("0.05", "0.5", "5")])
+        Dn, gK = len(dd), 4
+        c = types.SimpleNamespace(dd=dd, Dn=Dn, gK=gK, col_of={})
+        c.salt = np.array([T.salt_base(x) for x in dd["drug"]], dtype=object)
+        c.sym = np.array(["YIXA", "YLARO", "YCRIZ", "YCDK"], dtype=object)
+        c.sig_up = np.zeros((Dn, gK), bool)
+        c.sig_dn = np.zeros((Dn, gK), bool)
+        moved = {0: ("Ixazomib", "Ixazomib citrate"), 1: ("Larotrectinib", "Larotrectinib sulfate"),
+                 2: ("crizotinib", "Crizotinib (hydrochloride)"), 3: ("Abemaciclib", "Ribociclib")}
+        for i, (d, x) in enumerate(zip(dd["drug"], dd["dose"])):
+            for g, names in moved.items():
+                if d in names and x == "5":
+                    c.sig_up[i, g] = True
+        for g in range(gK):                         # a background: two unrelated compounds move each gene too
+            for k in (12 + g, 40 + g):
+                c.sig_up[3 * k + 2, g] = True
+        c.Zp = np.full((Dn, gK), 4.0, np.float32)
+        c.lfc_p = np.ones((Dn, gK), np.float32)
+        c.dd_label = [f"{a} {b} µM" for a, b in zip(dd["drug"], dd["dose"])]
+        c.dd_art = np.zeros(Dn, bool)
+        c.dd_flags = [""] * Dn
+        rows, _n = Dm._drug_target(c)
+        tg = sorted({r["target"] for r in rows})
+        keys = {Dm._molecule_key(x) for x in ("Ixazomib", "Ixazomib citrate", "crizotinib",
+                                                "Crizotinib (hydrochloride)", "Larotrectinib", "Larotrectinib sulfate")}
+        return (tg == ["YCDK"] and len(keys) == 3 and Dm._molecule_key("(S)-Crizotinib") != "crizotinib",
+                f"genes with a drug_target edge: {tg} (expected only YCDK, moved by 2 different molecules); "
+                f"6 names -> {len(keys)} molecules; " + "; ".join(f"{r['source']} -> {r['target']}: {r['reading']}"
+                                                                    for r in rows[:2]))
+    check("drug_target: one molecule under two names counts once (the real Tahoe pairs)", molecules)
+
+    def level_selection():
+        rng = np.random.default_rng(5)
+        res = {}
+        for name, (L, rf, rr, npairs, share) in {"equal": (50, 0.4, 0.4, 3000, 0.05),
+                                                 "one-way": (50, 0.6, 0.0, 1500, 0.05)}.items():
+            G = 2 * npairs
+            X, Y = rng.standard_normal((G, L)), rng.standard_normal((G, L))
+            eff = rng.random(npairs) < share
+            for i in np.flatnonzero(eff):
+                u, v = rng.standard_normal(L), rng.standard_normal(L)
+                X[2 * i] = np.sqrt(rf) * u + np.sqrt(1 - rf) * rng.standard_normal(L)
+                Y[2 * i + 1] = np.sqrt(rf) * u + np.sqrt(1 - rf) * rng.standard_normal(L)
+                X[2 * i + 1] = np.sqrt(rr) * v + np.sqrt(1 - rr) * rng.standard_normal(L)
+                Y[2 * i] = np.sqrt(rr) * v + np.sqrt(1 - rr) * rng.standard_normal(L)
+            xi = np.r_[np.arange(0, G, 2), np.arange(1, G, 2)]
+            yi = np.r_[np.arange(1, G, 2), np.arange(0, G, 2)]
+            r, n = Dm._masked_corr(X[xi], Y[yi])
+            dof = n - 2
+            p = 2 * stats.t.sf(np.abs(Dm._r_to_t(r, dof)), dof)
+            q, cut = Dm._bh(p), Dm._bh_cut(p)
+            rrev = np.r_[r[npairs:], r[:npairs]]
+            fwd = np.r_[np.ones(npairs, bool), np.zeros(npairs, bool)]
+            hit = np.flatnonzero(q < Dm.Q_SIG)
+            n_clear = n_rev_clear = 0
+            for h in hit:
+                pdir, _k = Dm._level_direction(X, Y, int(xi[h]), int(yi[h]), 100 + int(h), float(r[h]),
+                                               float(rrev[h]), int(dof[h]), int(dof[h]),
+                                               Dm._r_cut(cut, int(dof[h]), 1.0))
+                clr = bool(np.isfinite(pdir) and pdir < Dm.LEVEL_DIR_P and abs(r[h]) > abs(rrev[h]))
+                n_clear += clr
+                n_rev_clear += clr and not fwd[h] and bool(eff[int(h) % npairs])    # a real pair's null direction
+            res[name] = (len(hit), n_clear, n_rev_clear)
+        (we, ce, _), (wo, co, ro) = res["equal"], res["one-way"]
+        return (we >= 50 and ce <= max(2, 0.05 * we) and wo >= 30 and co >= 0.2 * wo and ro == 0,
+                f"equally strong directions: {ce} of {we} written edges called clear (<= 5%); one real direction: "
+                f"{co} of {wo} clear, reverse edges called clear {ro}")
+    check("level: 'direction clear' allows for the edge's selection (simulated pairs)", level_selection)
 
 
 # ----------------------------------------------------------------------------- 1. the synthetic run
@@ -179,14 +276,18 @@ def synthetic_checks(out, data, info, console):
         ranks = sorted(x["rank"] for x in (ctl_k[0]["per_gene"] if ctl_k else []) if x["gene"] in p53)
         top = sum(x <= 0.05 * 1198 for x in ranks)
         tw = right[table_wide(right)]
+        # grade A, or B where an alteration of another gene sits on one side (on seed 0 the TP53-intact colon lines
+        # are the KMT2D / CTNNB1-altered ones, which blocks grade A)
+        ab = tw[(tw["grade"] == "A") | ((tw["grade"] == "B") & tw["alerts"].str.contains(
+            "sit on the other side|co-occurs with"))]
         ok = len(right) >= 0.4 * len(p53) and prec >= 0.8 and (hit["sign"] == -1).sum() == 0 and \
-            (tw["grade"] == "A").any() and top >= 0.5 * len(p53)
+            len(ab) > 0 and top >= 0.5 * len(p53)
         return ok, (f"{len(right)} of {len(p53)} P53_ACTIVITY genes with an edge, sign +1 ({(hit['sign'] == -1).sum()}"
                     f" wrong sign); grades {right['grade'].value_counts().to_dict()} ({len(tw)} significant over the "
                     f"whole table, the rest within the TP53 group only: grade C); {len(hit)} of the {len(r)} TP53 "
                     f"response edges are P53_ACTIVITY genes ({prec:.0%}); {top} of {len(p53)} ranked in the top 5% of "
                     f"all genes (ranks {ranks[:12]}...)")
-    check("TP53 -> most P53_ACTIVITY genes (sign +1, graded)", tp53)
+    check("TP53 -> most P53_ACTIVITY genes (sign +1, graded A, or B with another alteration on a side)", tp53)
 
     def tp53_sens():
         s = e[(e["kind"] == "genotype_sensitivity") & (e["source"] == "TP53")]
@@ -834,6 +935,7 @@ def main():
     work = a.work or tempfile.mkdtemp(prefix="tahoe_direction_")
     os.makedirs(work, exist_ok=True)
     print(f"Synthetic output {src}; work folder {work}", flush=True)
+    unit_checks()
     out = os.path.join(work, "out")
     copy_output(src, out)
     rc, dt, info, console = run_stage(out, data)

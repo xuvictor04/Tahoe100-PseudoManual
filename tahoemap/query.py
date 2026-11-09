@@ -4,16 +4,23 @@
                           that raise it and lower it (pooled over the cell lines: fold, z, q, lines that move / lines
                           measured, dose pattern, alert, soft caveats), the cell lines where drug-doses move it most
                           (with each line's strongest drug-dose), the genes that move with it and opposite to it (cos,
-                          evidence, fdr, locus / read-through / known / novel), and where the full tables are
+                          evidence, fdr, locus / read-through / known / novel), its PROBABLE DIRECTION (what
+                          probably acts on it, what it probably acts on, how it probably sets the cells' growth under
+                          drug-doses), and where the full tables are. A name that is no gene of the run but the
+                          source of direction arrows (a drug target the screen does not measure) gets those arrows
     tahoe drug NAME       targets and mechanism; per dose: wells, flags, genes up / down, top genes up / down; the
                           drugs with the most similar vector, the modules it moves, the lines it depletes and the
-                          lines that show its response most. NAME is case-insensitive; a salt form can be left out
-                          ('Doxorubicin' = 'Doxorubicin (hydrochloride)'); a part of a name lists the matches
+                          lines that show its response most; the genes that probably set how the cells fare under it
+                          and what acting on its targets probably does. NAME is case-insensitive; a salt form can be
+                          left out ('Doxorubicin' = 'Doxorubicin (hydrochloride)'); a part of a name lists the matches
     tahoe line NAME       organ, drivers, TP53 status; genes specifically high (and low) at baseline; drug-doses
-                          that deplete it; its strongest responses. NAME = cell name or Cellosaurus id
+                          that deplete it; its strongest responses; its recorded alterations and the genes it does
+                          not express as the direction stage compared them, with their arrows. NAME = cell name or
+                          Cellosaurus id
     tahoe pair A B        the two genes' cosine, its two compound halves, evidence, fdr, known / novel flags and
-                          genomic distance; the drug-doses that move both (same / opposite direction); how far the
-                          two agree inside each cell line
+                          genomic distance; any probable-direction arrow between them, either way (every alert in
+                          full), and the genes with an arrow to both; the drug-doses that move both (same / opposite
+                          direction); how far the two agree inside each cell line
     tahoe module N        size, arms, label (validation stage), top genes per arm, top drug-doses up / down and the
                           lines where it responds most
 
@@ -29,13 +36,23 @@ strongest without an alert that would fall outside them, all in rank order (_cap
 clean ones out of view. Estimates (correlations, the module's main drug-doses for 'follows') may still leave flagged
 drug-doses out; where they do, the text says so.
 
+Probable direction (the direction stage, OUT/direction): every row, its order, the merging of rows that are one test
+for several sources, the cap rule and every word (the edge line: SOURCE → TARGET [grade] what the source's activity
+probably does (the evidence; q), the comparison, the alerts' short labels, the counts, the grade legend and the
+caveat) come from direction_view, so the look-ups say what the vault, the map and the review dossiers say; the
+numbers are the stage's own sentences (edges.parquet reading). A direction is probable - from the screen's cell
+lines, not proof of direct regulation - and every list says so. On a console or redirect that cannot show '→' or
+ALERT (a Windows code page such as cp1252) these texts are built in ASCII ('->', '!') before they are laid out, so
+that every line stays within WIDTH. An output made before the direction stage existed gets one sentence instead.
+
 Nothing is computed afresh that a stage already wrote: the look-ups read OUT/tables, OUT/embed, OUT/relations,
-OUT/graph, OUT/reference and OUT/validation (each optional where the answer can do without it; a missing stage is
-named with the command that makes it; a column an older stage version did not write is done without), plus a few
-columns of the atlas matrices (atlas/effects DD_z, DD_lfc, DD_posunc, DD_A, DD_Az, DD_beta, line_cpm, expr_mask),
-tensor/line_measured.npy, and two genes' rows of tensor/DDL_lfc for `pair`. Every read is a filtered
-parquet read or a memory-mapped slice: one look-up stays well under 1 GB at full scale. Unknown names get close matches
-(difflib). Nothing is written.
+OUT/graph, OUT/direction, OUT/reference and OUT/validation (each optional where the answer can do without it; a
+missing stage is named with the command that makes it; a column an older stage version did not write is done
+without), plus a few columns of the atlas matrices (atlas/effects DD_z, DD_lfc, DD_posunc, DD_A, DD_Az, DD_beta,
+line_cpm, expr_mask), tensor/line_measured.npy, and two genes' rows of tensor/DDL_lfc for `pair`. Every read is a
+filtered parquet read or a memory-mapped slice (OUT/direction is read whole: direction_view.load, ~1 GB and a few
+seconds on a full-scale table of ~100,000 edges): one look-up stays around 1 GB at full scale. Unknown names get close
+matches (difflib). Nothing is written.
 
 An answer states the stages' own rules, never more: per-line counts and 'strongest' use the per-line |z| cut the
 tables stage calibrated (tables/info.json, with the expected chance calls); 'both' halves = same sign with fdr <=
@@ -62,9 +79,10 @@ import numpy as np
 import pandas as pd
 
 from . import atlas_core as A
+from . import direction_view as DV
 from . import tables as TB
 from . import tlib as T
-from .common import marked_names, read_effects_index, safe_filename
+from .common import ARROW, cap_keep, encodable, marked_names, printable, read_effects_index, safe_filename
 from .relations import REPRO_FDR             # evidence 'both halves' needs fdr <= this
 
 WIDTH = 118                 # set from the terminal in main(): 80..120 columns
@@ -81,14 +99,19 @@ _TAG = re.compile(r"^\s*\[[^\]]{1,80}\]:\s*")    # UniProt isoform tag before a 
 ALERT = "\u26a0"            # the alert sign: an item kept in its place although there is a reason to doubt it
 ALERT_ASCII = "!"           # what it becomes on a console that cannot show it (_emit; one character, so that
                             # tables stay aligned)
+ASCII = False               # set in main(): the output cannot show the arrow or ALERT (a Windows code page, e.g. a
+                            # cp1252 redirect): the direction texts are built in ASCII ('->', '!') before they are
+                            # laid out, so that every line keeps within WIDTH
+N_DIRECTION = 10            # rows per probable-direction list (the cap rule) unless --top is given (then --top)
+TOP_GIVEN = False           # set in main(): the user gave --top (the direction lists then show that many)
 
 # the file whose presence says a stage has run (look-ups must not depend on stage stamps: an output folder can be
 # assembled from finished stage folders)
 STAGE_FILE = {"effects": "atlas/effects/drugdose.csv", "tensor": "tensor/DDL_lfc.npy",
               "tables": "tables/genes.parquet", "embed": "embed/gene_unit.npy",
               "reference": "reference/annotations.parquet", "relations": "relations/gene_relations.parquet",
-              "graph": "graph/nodes.parquet", "validate": "validation/module_labels.csv", "vault": "vault",
-              "map": "map/gene_map.html"}
+              "graph": "graph/nodes.parquet", "direction": "direction/edges.parquet",
+              "validate": "validation/module_labels.csv", "vault": "vault", "map": "map/gene_map.html"}
 
 
 class Missing(Exception):
@@ -168,8 +191,9 @@ def _text(v):
 
 def _wrap(text, indent=2, sub=None, max_lines=None):
     sub = indent if sub is None else sub
-    lines = textwrap.wrap(str(text), width=WIDTH, initial_indent=" " * indent, subsequent_indent=" " * sub,
-                          break_on_hyphens=False) or [""]
+    text = re.sub(r" (?=[µu]M\b)", "\u00a0", str(text))        # a dose stays with its unit ('5 µM')
+    lines = [x.replace("\u00a0", " ") for x in textwrap.wrap(
+        text, width=WIDTH, initial_indent=" " * indent, subsequent_indent=" " * sub, break_on_hyphens=False)] or [""]
     if max_lines and len(lines) > max_lines:
         lines = lines[:max_lines]
         last = _cut(lines[-1], WIDTH - 4)
@@ -868,6 +892,147 @@ def _single_lines(o, c, direction, k=3):
             + "; ".join(parts))
 
 
+# ----------------------------------------------------------------------------- probable direction (direction stage)
+def _direction(o):
+    """(direction_view.Direction or None, why): None with why '' when the direction stage has not run (an older
+    output), with why = the error when its files cannot be read."""
+    def load():
+        if not o.ran("direction"):
+            return None, ""
+        try:
+            return DV.load(o.out), ""
+        except Exception as e:  # noqa: BLE001  (a damaged or partial folder: a sentence, not a traceback)
+            return None, f"{type(e).__name__}: {_cut(str(e), 160)}"
+    return o._cached("direction", load)
+
+
+def _dir_missing(o, why, what="probable direction"):
+    """The sentence for an output without the direction stage (or with one that cannot be read)."""
+    if why:
+        return (f"[{what}: OUT/direction cannot be read here ({why}); `tahoe run --from direction` makes it "
+                "again]")
+    return o.missing_note("direction", what)
+
+
+def _dt(text):
+    """A direction text as the output can show it: in ASCII ('->', '!', '>=') when the console cannot show the signs
+    (ASCII, set in main), so that it is laid out at its printed width."""
+    return DV.ascii_signs(text) if ASCII else text
+
+
+_SIGN_CLAUSE = re.compile(r"; [^;]*\bactivity (?:raises|lowers|strengthens|weakens|protects|makes) [^;]*$")
+
+
+def _dir_n(top):
+    """Rows per probable-direction list: N_DIRECTION, or --top when the user gave it (more or fewer)."""
+    return int(top) if TOP_GIVEN else min(int(top), N_DIRECTION)
+
+
+def _top_hint(total):
+    """Where the rows a capped list leaves out are: '--top N' lists them all."""
+    return f"(`--top {int(total)}` lists them all)"
+
+
+def _dir_reading(r):
+    """The stage's own sentence for a row (direction.py's reading: its numbers), without its closing clause on what
+    the source's activity does, which the row's edge line already says (DV.sign_text)."""
+    return _SIGN_CLAUSE.sub("", _text(r.get("reading", "")))
+
+
+def _dir_rows(P, rows, n, alerts="short", extra=None, max_names=4):
+    """A probable-direction list, rows in direction_view's ORDER, capped by the cap rule (the n strongest, and any of
+    the n strongest without an alert beyond them; DV.cap): per row its rank and edge line (arrow, grade, what the
+    source's activity probably does, the kind of evidence, q), then the comparison (kind_text, where it differs from
+    the row above) and its numbers (the stage's reading), extra(row) when given, and the alerts (ALERT + short labels;
+    alerts='long': every reason in full). The texts are direction_view's (and direction.py's readings); lines are
+    wrapped, never cut. Returns (shown, n_more, n_more_alert)."""
+    if rows is None or not len(rows):
+        return 0, 0, 0
+    al = rows["has_alert"].to_numpy(dtype=bool)
+    keep = cap_keep(al, n)
+    last = None
+    for k in keep:
+        r = rows.iloc[int(k)]
+        P += _wrap(f"{k + 1:>3}  " + DV.edge_line(r, ASCII, alerts="none", max_names=max_names), 2, 7)
+        ev = DV.kind_text(r)
+        ev, last = ("" if ev == last else ev), ev        # the comparison is named where it changes
+        rd = _dir_reading(r)
+        x = extra(r) if extra else ""
+        P += _wrap(_dt("; ".join(t for t in (ev, rd, x) if t)), 7, 7)
+        a = DV.alert_long(r, ASCII) if alerts == "long" else DV.alert_short(r, ASCII)
+        if a:
+            P += _wrap(a, 7, 9)
+    rest = np.setdiff1d(np.arange(len(rows)), keep)
+    return len(keep), int(rest.size), int(al[rest].sum())
+
+
+def _dir_list(P, title, rows, n, what="arrows", **kw):
+    """One list: its title with the counts (DV.counts_text), the rows (_dir_rows), and what the cap leaves out
+    (DV.more_text)."""
+    P += _wrap(_dt(f"{title}: {DV.counts_text(rows, what)}"), 2, 4)
+    if rows is None or not len(rows):
+        return 0
+    shown, n_more, n_more_al = _dir_rows(P, rows, n, **kw)
+    more = DV.more_text(n_more, n_more_al, what)
+    if more:
+        P += _wrap(_dt(f"... {more} {_top_hint(len(rows))}"), 2, 6)
+    if n is not None and shown > n:
+        P += _wrap(f"rows beyond #{n}: among the {n} strongest without an alert, shown so that rows with an alert do "
+                   "not push them out", 4, 6)
+    return len(rows)
+
+
+def _dir_legend(P):
+    """How to read a probable-direction list: the row layout, the grades, the kinds, the order and the caveat."""
+    arrow = DV.arrow("SOURCE", "TARGET", ASCII)
+    P += _wrap(f"how to read: {arrow}  [grade]  what the source's ACTIVITY probably does to the target - raises or "
+               "lowers its level or the cells' numbers under a drug-dose (lowers = makes the cells more sensitive), "
+               "strengthens or weakens its drug response, or 'not inferred' (mechanism not recorded) - (the evidence; "
+               "q: Benjamini-Hochberg over the kind's whole table of tests); below it the comparison (where it "
+               f"changes) and its numbers; {_dt(ALERT)} = a reason to doubt the arrow, in short labels (every reason "
+               "in full: `tahoe pair SOURCE TARGET`, the map's side panel or direction/edges.parquet), kept in its "
+               f"ranked place; order: {DV.ORDER}", 2, 4)
+    P += _wrap(DV.SIGN_RESPONSE_NOTE, 2, 4)
+    P += _wrap("grades: " + "; ".join(DV.grade_legend("long")), 2, 4)
+    P += _wrap("evidence: mutation = a recorded mutation of the source (Tahoe's cell-line genetics: lines with it vs "
+               "lines with no record of the gene); not expressed = lines that do not express the source (natural "
+               "knockouts); drug target = compounds that target the source's protein; natural level = the source's "
+               "level across the lines (a glimpse)", 2, 4)
+    P += _wrap(_dt(DV.CAVEAT), 2, 4)
+
+
+def _dir_where(o, tb, key):
+    if o.ran("direction"):
+        tb.append(["direction (arrows)", o.p("direction", "edges.parquet"), key])
+
+
+def _dir_gene(o, P, gene, lab, top):
+    """The gene's PROBABLE DIRECTION: upstream (rows whose target is the gene: what probably acts on it), downstream
+    (gene targets it is the source of, or one of the sources of a row that names several) and the cells under
+    drug-doses (sensitivity rows it is the source of), each in direction_view's ORDER with the cap rule and counts,
+    then the legend and the caveat. gene: its col (exact) or, for a source that is not a measured gene, its symbol."""
+    _title(P, f"PROBABLE DIRECTION - what probably acts on {lab}, and what it probably acts on", DV.CAVEAT_SHORT
+           + "; direction/edges.parquet")
+    dv, why = _direction(o)
+    if dv is None:
+        P += _wrap(_dir_missing(o, why), 2, 4)
+        return
+    n = _dir_n(top)
+    lists = [(f"upstream - what probably acts on {lab} ({lab} is the target)", dv.upstream(gene)),
+             (f"downstream - genes {lab} probably acts on", dv.downstream(gene)),
+             (f"cells under drugs - how {lab} probably acts on the cells' growth under a drug-dose (their numbers "
+              "relative to the other lines in the same wells)", dv.cells(gene))]
+    if not any(len(r) for _t, r in lists):
+        P += _wrap(f"none: no arrow involves {lab} in this run. Arrows come from recorded mutations of a gene, from "
+                   "lines that do not express it (natural knockouts), from compounds that target it and from its "
+                   "natural level across the lines; each needs a test result at q < 0.10.", 2, 4)
+        P += _wrap(_dt(DV.CAVEAT), 2, 4)
+        return
+    for title, rows in lists:
+        _dir_list(P, title, rows, n)
+    _dir_legend(P)
+
+
 # ----------------------------------------------------------------------------- gene
 def gene_report(o, c, top, how=""):
     g = o.genes()
@@ -1138,6 +1303,9 @@ def gene_report(o, c, top, how=""):
             P += _wrap(f"novelty not assessed: {', '.join(blocked) or 'reference sources'} missing "
                        "(relations/info.json), so no pair is called NOVEL", 2, 4)
 
+    # probable direction
+    _dir_gene(o, P, int(c), lab, top)
+
     # where
     tb = [["drug-doses (pooled)", o.p("tables", "drug_effects.parquet"), f"col == {c}"],
           ["per line", o.p("tables", "line_effects.parquet"), f"col == {c}"],
@@ -1146,6 +1314,7 @@ def gene_report(o, c, top, how=""):
         tb.append(["partners", o.p("relations", "gene_relations.parquet"), f"col_a == {c}"])
     if o.ran("tensor"):
         tb.append(["every drug-dose x line", (o.p("tensor", "DDL_lfc.npy"), " / DDL_z.npy"), f"[{c}] (dd x line)"])
+    _dir_where(o, tb, f"source_col == {c} or target_col == {c}")
     vn = _vault_note(o, "Genes", lab)
     if vn:
         tb.append(["vault note", vn, ""])
@@ -1155,11 +1324,58 @@ def gene_report(o, c, top, how=""):
     return P
 
 
+def _is_direction_source(o, name):
+    """The name (any case) is the source of a probable-direction edge. Reads one column only, so that a mistyped
+    name does not load the whole direction table. Read by Arrow from the path, in this thread: a pandas read hands
+    Arrow a Python file object, which Arrow may still be releasing in a thread of its own when the process ends
+    right after (a name not found), and that can hang the exit."""
+    if not o.ran("direction"):
+        return False
+    try:
+        import pyarrow.parquet as pq
+        srcs = pq.read_table(o.p("direction", "edges.parquet"), columns=["source"], use_threads=False,
+                             pre_buffer=False).column("source").to_pylist()
+    except Exception:  # noqa: BLE001  (unreadable: the name is simply not found)
+        return False
+    return name.strip().strip(",;").upper() in {str(x).upper() for x in srcs}
+
+
+def _unmeasured_source(o, name, top):
+    """The look-up of a name that is no gene of this run but the source of probable-direction arrows (a drug target
+    or a recorded driver gene the screen does not measure): its arrows, else [] (the caller reports the name as not
+    found)."""
+    key = name.strip().strip(",;")
+    if not _is_direction_source(o, key):
+        return []
+    dv, _w = _direction(o)
+    if dv is None or not (len(dv.downstream(key)) or len(dv.cells(key))):
+        return []
+    rows = dv.downstream(key)
+    rows = rows if len(rows) else dv.cells(key)
+    lab = next((s_ for s_ in rows.iloc[0]["sources"] if str(s_).upper() == key.upper()), key)
+    P = [f"{lab}   not a measured gene of this run"]
+    P += _wrap("No gene of this run has this symbol, label, Ensembl id or alias, but it is the source of "
+               "probable-direction arrows: a gene that compounds of the screen target, or a driver gene recorded in "
+               "Tahoe's cell-line genetics, whose own mRNA is not among the genes measured here.", 2, 4)
+    _dir_gene(o, P, key, lab, top)
+    tb = []
+    _dir_where(o, tb, f"source == '{lab}' (or among the names of a row naming several)")
+    _where(o, P, tb)
+    return P
+
+
 def cmd_gene(o, names, top):
     o.require("effects", "tables")
     P = []
     for i, nm in enumerate(names):
-        cols, how = resolve_gene(o, nm)
+        try:
+            cols, how = resolve_gene(o, nm)
+        except NotFound:
+            alt = _unmeasured_source(o, nm, top)
+            if not alt:
+                raise
+            P += (["", "=" * min(WIDTH, 100), ""] if i else []) + alt
+            continue
         if len(cols) > 1 and not how:
             how = f"{nm} also names " + ", ".join(f"{o.genes().at[x, 'label']} (col {x})" for x in cols[1:]) + \
                   ": ask by label for those"
@@ -1396,13 +1612,53 @@ def drug_report(o, drug, top):
     if not any_beta:
         P.append("  no estimate at any dose (fewer than 20 significant genes)")
 
+    _dir_drug(o, P, drug, dds, top)
+
     tb = [["per dose", o.p("tables", "drugdoses.parquet"), "dd in " + str(dds)],
           ["genes", o.p("tables", "drug_effects.parquet"), "dd in " + str(dds)]]
+    _dir_where(o, tb, f"target_dd in {dds}; drug_target: compounds")
     vn = _vault_note(o, "Drugs", drug + " (drug)")
     if vn:
         tb.append(["vault note", vn, ""])
     _where(o, P, tb)
     return P
+
+
+def _dir_drug(o, P, drug, dds, top):
+    """The drug's PROBABLE DIRECTION: the genes that set how the cells fare under it (sensitivity rows whose target is
+    one of its drug-doses: dv.for_drugdose) and the drug-target rows of the compound classes it belongs to
+    (dv.drug_targets: by name or salt base), each saying whether this drug is one of the compounds that move the
+    gene that way."""
+    _title(P, "PROBABLE DIRECTION - genes that set how the cells fare under it, and what acting on its targets "
+              "probably does", DV.CAVEAT_SHORT + "; direction/edges.parquet")
+    dv, why = _direction(o)
+    if dv is None:
+        P += _wrap(_dir_missing(o, why), 2, 4)
+        return
+    n = _dir_n(top)
+    pos = np.unique(np.concatenate([np.zeros(0, dtype=np.int64)] + [
+        dv.for_drugdose(int(d))["order"].to_numpy(dtype=np.int64) for d in dds]))
+    cells = dv.rows.iloc[pos]
+    tg = dv.drug_targets(drug)
+    if not len(cells) and not len(tg):
+        P += _wrap("none: no gene was found to set how the cells fare under it, and it is not one of the compounds of "
+                   "a drug-target arrow (a class of >= 2 compounds sharing a listed target and mechanism).", 2, 4)
+        P += _wrap(_dt(DV.CAVEAT), 2, 4)
+        return
+    _dir_list(P, "genes that set how the cells fare under it (arrows gene → the cells under one of its doses: their "
+                 "numbers relative to the other lines in the same wells)", cells, n)
+    keys = {drug.lower(), str(T.salt_base(drug)).lower()}
+
+    def mine(r):
+        sup = [y for x in _text(r.get("compounds_supporting", "")).split("; ") for y in x.split(" / ") if y]
+        ok = any(k in keys for x in sup for k in (x.lower(), str(T.salt_base(x)).lower()))
+        return "this drug moves it that way too" if ok else \
+            "this drug does not move it that way (the class's other compounds do)"
+    _dir_list(P, "its targets: what acting on them probably does (drug-target arrows of the compound classes it "
+                 "belongs to - compounds sharing a listed target and mechanism, one molecule counted once under all "
+                 "its names: the target → a gene whose level those compounds move; a row naming several targets is "
+                 "one test, any of them could be the cause)", tg, n, extra=mine)
+    _dir_legend(P)
 
 
 def cmd_drug(o, names, top):
@@ -1422,6 +1678,124 @@ def cmd_drug(o, names, top):
             P += ["", "=" * min(WIDTH, 100), ""]
         P += drug_report(o, d, top)
     return P
+
+
+def _in_lines(name, txt):
+    """True when the line `name` is one of the ', '-joined cell names of a groups.parquet line list (a name that
+    itself contains ', ' too)."""
+    txt = _text(txt)
+    return bool(name) and (name in txt.split(", ") or f", {name}, " in f", {txt}, ")
+
+
+def _dir_group_rows(o, dv):
+    """groups.parquet description -> positions (in ORDER) of the genotype and expression-null display rows that came
+    out of the comparison (cached)."""
+    def load():
+        r = dv.rows
+        out = {}
+        if len(r):
+            sub = r["kind"].astype(str).str.startswith(("genotype", "null")).to_numpy()
+            for i, g in zip(np.flatnonzero(sub), r["group"].astype(str).to_numpy()[sub]):
+                out.setdefault(g, []).append(int(i))
+        return {k: np.array(v, dtype=np.int64) for k, v in out.items()}
+    return o._cached("dir_group_rows", load)
+
+
+def _dir_groups_block(o, P, dv, recs, n, what):
+    """Comparison groups (groups.parquet records) as a ranked list - most arrows first, then the best grade, then the
+    gene - capped by the cap rule on the groups' own alerts: per group its comparison, its arrows by target (a gene's
+    drug response / its level / the cells) and grade, how it was compared, and its alerts. Returns the positions of
+    all their rows (in ORDER)."""
+    gpos = _dir_group_rows(o, dv)
+    rows = dv.rows
+
+    def info(rec):
+        pos = gpos.get(_text(rec.get("description")), np.zeros(0, dtype=np.int64))
+        kinds = rows["kind"].to_numpy()[pos].astype(str)
+        grades = rows["grade"].to_numpy()[pos].astype(str)
+        return pos, kinds, grades
+    ranked = []
+    for rec in recs:
+        pos, kinds, grades = info(rec)
+        best = min((DV.GRADES.index(g_) for g_ in grades if g_ in DV.GRADES), default=9)
+        ranked.append((-len(pos), best, _text(rec.get("gene")).lower(), _text(rec.get("description")), rec, pos,
+                       kinds, grades))
+    ranked.sort(key=lambda t: t[:4])
+    al = np.array([bool(_text(t[4].get("alerts"))) for t in ranked], dtype=bool)
+    keep = cap_keep(al, n)
+    allpos = [t[5] for t in ranked]
+    for k in keep:
+        _a, _b, _c, desc, rec, pos, kinds, grades = ranked[int(k)]
+        pre = "genotype" if rec.get("kind") == "genotype" else "null"
+        by = ", ".join(f"{w} {int((kinds == f'{pre}_{x}').sum())}" for x, w in (
+            ("response", "response"), ("baseline", "level"), ("sensitivity", "cells")))
+        gr = ", ".join(f"{g_} {int((grades == g_).sum())}" for g_ in DV.GRADES)
+        n_al = int(rows["has_alert"].to_numpy()[pos].sum()) if len(pos) else 0
+        txt = f"{k + 1:>3}  {desc}: " + (f"{len(pos)} arrow{'s' if len(pos) != 1 else ''} ({by}; grade {gr}"
+                                         + (f"; {n_al} with an alert {ALERT}" if n_al else "") + ")"
+                                         if len(pos) else "no arrow")
+        P += _wrap(_dt(txt), 2, 7)
+        bits = []
+        if pre == "null":
+            names = [x for x in _text(rec.get("genes_same_lines")).split(", ") if x] or [_text(rec.get("gene"))]
+            if len(names) > 1:
+                bits.append(f"genes absent from exactly these lines: {', '.join(names[:8])}"
+                            + (f" (+{len(names) - 8} more)" if len(names) > 8 else "") + "; any of them could be the "
+                            "cause")
+        bits.append("compared within organs" if bool(rec.get("stratified")) else "compared across organs")
+        if _text(rec.get("note")):
+            bits.append(_text(rec.get("note")))
+        P += _wrap(_dt("; ".join(bits)), 7, 7)
+        a = DV.alert_short(_text(rec.get("alerts")), ASCII)
+        if a:
+            P += _wrap(a, 7, 9)
+    rest = np.setdiff1d(np.arange(len(ranked)), keep)
+    more = DV.more_text(int(rest.size), int(al[rest].sum()), what)
+    if more:
+        P += _wrap(_dt(f"... {more} {_top_hint(len(ranked))}"), 2, 6)
+    if len(keep) > n:
+        P += _wrap(f"{what} beyond #{n}: among the {n} with the most arrows without an alert, shown so that {what} "
+                   "with an alert do not push them out", 4, 6)
+    return np.unique(np.concatenate([np.zeros(0, dtype=np.int64)] + allpos))
+
+
+def _dir_line(o, P, r, top):
+    """The line's PROBABLE DIRECTION: its recorded driver alterations as the direction stage grouped them (loss / gain
+    of function / any record, each against the lines with no record of the gene) and the genes it does not express
+    that served as natural knockouts, each with what came out of it, then the strongest arrows of those groups."""
+    _title(P, "PROBABLE DIRECTION - its recorded alterations and the genes it does not express, as the direction stage "
+              "compared them", DV.CAVEAT_SHORT + "; direction/groups.parquet, edges.parquet")
+    dv, why = _direction(o)
+    if dv is None:
+        P += _wrap(_dir_missing(o, why), 2, 4)
+        return
+    names = {x for x in (_text(r.get("cell_name")), _text(r.get("name"))) if x}
+    g = dv.groups
+    recs = [x for x in (g.to_dict("records") if len(g) else []) if x.get("kind") in ("genotype", "null")]
+    alt = [x for x in recs if any(_in_lines(nm, x.get("altered_lines")) for nm in names)]
+    n_other = sum(1 for x in recs if x.get("kind") == "genotype"
+                  and any(_in_lines(nm, x.get("intact_lines")) for nm in names))
+    geno = [x for x in alt if x.get("kind") == "genotype"]
+    null = [x for x in alt if x.get("kind") == "null"]
+    n = _dir_n(top)
+    P += _wrap(f"recorded alterations - the comparison groups that count this line as altered (Tahoe's cell-line "
+               f"genetics: a gene's loss of function, gain of function, or any record, against the lines with no "
+               f"record of the gene; a group needs >= 3 lines on each side): "
+               f"{_n_alert(len(geno), sum(1 for x in geno if _text(x.get('alerts'))), 'groups')}; in "
+               f"{n_other} other groups it is on the 'not recorded' side", 2, 4)
+    pos_g = _dir_groups_block(o, P, dv, geno, n, "groups") if geno else np.zeros(0, dtype=np.int64)
+    P += _wrap(f"genes it does not express (natural knockouts) - genes this line does not express (it reads only the "
+               f"well's ambient RNA) while >= 3 other lines do, compared as lines without the gene vs lines "
+               f"expressing it: "
+               f"{_n_alert(len(null), sum(1 for x in null if _text(x.get('alerts'))), 'line sets')}", 2, 4)
+    pos_n = _dir_groups_block(o, P, dv, null, n, "line sets") if null else np.zeros(0, dtype=np.int64)
+    pos = np.unique(np.concatenate([pos_g, pos_n]))
+    if len(pos):
+        _dir_list(P, "the strongest arrows of these groups (the same arrows for every line of a group)",
+                  dv.rows.iloc[pos], n)
+        _dir_legend(P)
+    else:
+        P += _wrap(_dt(DV.CAVEAT), 2, 4)
 
 
 # ----------------------------------------------------------------------------- line
@@ -1558,9 +1932,13 @@ def cmd_line(o, names, top):
             P.append(more)
     else:
         P.append("  none")
+    _dir_line(o, P, r, top)
+
     tb = [["per gene", o.p("tables", "line_effects.parquet"), f"line == {l}"],
           ["cells", o.p("tables", "drug_line_top.parquet"), f"line == {l}"],
           ["line", o.p("tables", "lines.parquet"), f"line == {l}"]]
+    if o.ran("direction") and o.has("direction/groups.parquet"):
+        tb.append(["direction (groups)", o.p("direction", "groups.parquet"), "altered_lines / intact_lines"])
     vn = _vault_note(o, "Cell lines", f"{nm} (line)")
     if vn:
         tb.append(["vault note", vn, ""])
@@ -1651,12 +2029,110 @@ def _gene_flags_at(o, c, dds):
     return flags, share
 
 
+def _dir_pair(o, P, ca, cb, la, lb):
+    """PROBABLE DIRECTION between two genes: every display row from one to the other, either way (a row naming
+    several sources counts when the gene is one of them), with every alert in full; then the genes with an arrow to
+    both (a shared upstream gene, e.g. both follow TP53)."""
+    _title(P, "PROBABLE DIRECTION BETWEEN THEM - an arrow from one to the other, either way", DV.CAVEAT_SHORT
+           + "; direction/edges.parquet")
+    dv, why = _direction(o)
+    if dv is None:
+        P += _wrap(_dir_missing(o, why), 2, 4)
+        return
+    any_row = False
+    for x, y, lx, ly in ((ca, cb, la, lb), (cb, ca, lb, la)):
+        d = dv.downstream(int(x))
+        d = d[d["target_col"].to_numpy() == int(y)]
+        any_row |= bool(len(d))
+        _dir_list(P, DV.arrow(lx, ly, ASCII), d, None, alerts="long")
+    if not any_row:
+        P += _wrap(f"no arrow between {la} and {lb} in either direction in this run (an arrow needs a test result at "
+                   "q < 0.10: a recorded mutation, lines that do not express the source, compounds that target it, or "
+                   "its natural level; level arrows are tested for related pairs only)", 2, 4)
+    ua, ub = dv.upstream(int(ca)), dv.upstream(int(cb))
+    srcs = {}
+    for rows, who in ((ua, 0), (ub, 1)):
+        for _, r in rows.iterrows():
+            for s_ in r["sources"]:
+                srcs.setdefault(str(s_), [None, None])
+                if srcs[str(s_)][who] is None:
+                    srcs[str(s_)][who] = r
+    both = [(k, v) for k, v in srcs.items() if v[0] is not None and v[1] is not None and k not in (la, lb)]
+    both.sort(key=lambda t: (min(int(t[1][0]["order"]), int(t[1][1]["order"])), t[0]))
+    if both:
+        k = 8
+
+        def side(r, lab):
+            return (f"{DV.arrow('', lab, ASCII).strip()} [{r['grade']}] {DV.sign_word(r['sign'], r['kind'])}"
+                    + (f" {ALERT}" if bool(r["has_alert"]) else ""))
+        al = np.array([bool(v[0]["has_alert"]) or bool(v[1]["has_alert"]) for _s, v in both], dtype=bool)
+        keep = cap_keep(al, k)                     # the cap rule: the k strongest, and unflagged ones beyond them
+        rest = np.setdiff1d(np.arange(len(both)), keep)
+        txt = "; ".join(f"{both[i][0]} ({side(both[i][1][0], la)}, {side(both[i][1][1], lb)})" for i in keep)
+        more = DV.more_text(int(rest.size), int(al[rest].sum()), "genes")
+        beyond = f", then any of the {k} strongest without an alert after them" if len(keep) > k else ""
+        P += _wrap(_dt(f"shared upstream - genes with an arrow to both ({_n_alert(len(both), int(al.sum()), 'genes')}"
+                       f"; strongest first{beyond}; {ALERT} = an alert on that arrow): {txt}"
+                       + (f"; {more} (`tahoe gene {la}` and `tahoe gene {lb}` list them)" if more else "")
+                       + ": two genes that follow one source can move together without acting on each other"), 2, 4)
+    P += _wrap(_dt(f"[grade] and words as in `tahoe gene`: A strong, B read its alerts, C a glimpse; the sign is what "
+                   f"the source's activity probably does to the target. {DV.CAVEAT}"), 2, 4)
+
+
+def _pair_unmeasured(o, src, gname, found):
+    """`tahoe pair SOURCE GENE` where SOURCE is not a measured gene but the source of probable-direction arrows (a drug
+    target the screen does not measure, a recorded driver gene): the arrows SOURCE -> GENE with every alert in full
+    (an arrow's target is always a measured gene or the cells, so none can point to SOURCE). [] when there is none to
+    show (the caller then names the source's look-up)."""
+    dv, _w = _direction(o)
+    if dv is None:
+        return []
+    key = src.strip().strip(",;")
+    (cb, *_more), how = found
+    lb = o.genes().at[cb, "label"]
+    rows = dv.downstream(key)
+    rows = rows[rows["target_col"].to_numpy() == int(cb)] if len(rows) else rows
+    lab = next((s_ for s_ in (rows.iloc[0]["sources"] if len(rows) else ()) if str(s_).upper() == key.upper()), key)
+    P = [f"{lab} (not a measured gene of this run) x {lb} (col {cb})"]
+    if how:
+        P.append(f"  ({how})")
+    P += _wrap(f"{lab} is no gene of this run (no symbol, label, Ensembl id or alias matches), but it is the source of "
+               f"probable-direction arrows (`tahoe gene {lab}` lists them all); only the probable direction can link "
+               "the two.", 2, 4)
+    _title(P, "PROBABLE DIRECTION BETWEEN THEM", DV.CAVEAT_SHORT + "; direction/edges.parquet")
+    _dir_list(P, DV.arrow(lab, lb, ASCII), rows, None, alerts="long")
+    if not len(rows):
+        P += _wrap(f"no arrow from {lab} to {lb} in this run", 2, 4)
+    P += _wrap(_dt(f"{DV.arrow(lb, lab, ASCII)}: none can exist (an arrow's target is a measured gene or the cells)"),
+               2, 4)
+    _dir_legend(P)
+    return P
+
+
 def cmd_pair(o, names, top):
     if len(names) != 2:
         raise NotFound("pair needs two genes: tahoe pair GENE_A GENE_B")
     o.require("effects")
-    (ca, *more_a), how_a = resolve_gene(o, names[0])
-    (cb, *more_b), how_b = resolve_gene(o, names[1])
+    found, unmeasured = [], []
+    for nm in names:
+        try:
+            found.append(resolve_gene(o, nm))
+        except NotFound as e:                    # a drug target the screen does not measure: say where its arrows are
+            if _is_direction_source(o, nm):
+                unmeasured.append((nm, e))
+                found.append(None)
+                continue
+            raise
+    if unmeasured:
+        if len(unmeasured) == 1:                 # an unmeasured source and a gene: the arrows between them, in full
+            P = _pair_unmeasured(o, *(names if found[1] is not None else names[::-1]),
+                                 found[1] if found[1] is not None else found[0])
+            if P:
+                return P
+        nm, e = unmeasured[0]
+        raise NotFound(f"{str(e).rstrip('.')}. {nm.strip()} is not a measured gene of this run, but the source of "
+                       f"probable-direction arrows: `tahoe gene {nm.strip()}` lists them")
+    ((ca, *more_a), how_a), ((cb, *more_b), how_b) = found
     g = o.genes()
     hows = [how_a, how_b]
     for i, (nm, more) in enumerate(((names[0], more_a), (names[1], more_b))):
@@ -1725,6 +2201,9 @@ def cmd_pair(o, names, top):
         P.append(f"  nodal map: {la} module {_gene_module(o, ca)}, {lb} module {_gene_module(o, cb)}" +
                  ((" - same module, " + ("single-armed" if not ma[1] else "same arm" if ma[1] == mb[1] else
                                          "opposite arms")) if same else ""))
+
+    # probable direction
+    _dir_pair(o, P, ca, cb, la, lb)
 
     # known / genome
     ann = o.ann()
@@ -2060,17 +2539,18 @@ def _fit(lines):
 
 
 def _printable(text, stream=None):
-    """text as the output stream can show it: on a console or a redirect whose encoding has no ALERT (a Windows code
-    page), ALERT becomes ALERT_ASCII and any other character it cannot show a '?'."""
+    """text as the output stream can show it (common.printable): on a console or a redirect whose encoding lacks
+    ALERT or the arrow (a Windows code page) they become '!' and '->', and any other character it cannot show a
+    '?'."""
+    return printable(text, stream)
+
+
+def _needs_ascii(stream=None):
+    """True when the stream (default stdout) cannot show the arrow or ALERT: the direction texts are then built in
+    ASCII before they are laid out (ASCII)."""
     stream = sys.stdout if stream is None else stream
-    enc = getattr(stream, "encoding", None) or "utf-8"
-    try:
-        text.encode(enc)
-        return text
-    except UnicodeEncodeError:
-        return text.replace(ALERT, ALERT_ASCII).encode(enc, errors="replace").decode(enc)
-    except LookupError:
-        return text
+    sign = ARROW + ALERT
+    return encodable(sign, getattr(stream, "encoding", None) or "utf-8") != sign
 
 
 def _emit(lines):
@@ -2088,10 +2568,12 @@ def _emit(lines):
 
 def main(a):
     """The look-up commands of cli.py: a.command in gene | drug | line | pair | module, a.names, a.top, a.out."""
-    global WIDTH
+    global WIDTH, ASCII, TOP_GIVEN
     WIDTH = max(80, min(120, shutil.get_terminal_size((120, 24)).columns)) - 2
+    ASCII = _needs_ascii()
     warnings.filterwarnings("ignore", category=RuntimeWarning)
-    top = int(a.top) if getattr(a, "top", None) and int(a.top) > 0 else 15
+    TOP_GIVEN = getattr(a, "top", None) is not None and int(a.top) > 0
+    top = int(a.top) if TOP_GIVEN else 15
     names = [n for n in (getattr(a, "names", None) or []) if str(n).strip()]
     if not names:
         _emit([f"usage: {USAGE[a.command]}   (options: --top N rows per table, --out OUTPUT folder)"])

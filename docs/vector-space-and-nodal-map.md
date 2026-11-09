@@ -103,7 +103,8 @@ one-in-a-million perturbations of its input). So the tests and `validation/repor
 and "together" by the nodal-map centre distance and mixing, never by the signed-map centre distance.
 
 The HDAC module of the nodal map holds 63 genes, 40 on its + arm and 23 on its − arm (planted: 40 and 25); the mean
-cosine between its arms is −0.69. Random gene pairs have a mean cosine of +0.01. So: anti-aligned in the vector space, one island on the nodal map.
+cosine between its arms is −0.69. Random gene pairs have a mean cosine of +0.01. So: anti-aligned in the vector
+space, one island on the nodal map.
 
 ## What this looks like on the real data
 
@@ -126,11 +127,37 @@ Drugs, drug-doses, every drug-dose × cell-line context and every cell line get 
   typical line (1 typical, 0 not at all) — the "where";
 - each (drug-dose, line) context vector says what that drug did in that line.
 
+## Arrows on the maps: probable direction
+
+Neither map has arrows of its own: a cosine is symmetric. The arrows come from the direction stage
+([direction.md](direction.md)), which asks what differs between the cell lines (a recorded mutation, a gene that some
+lines do not express, compounds that target a gene, a gene's natural level) and which genes follow it. The map shows
+them in three places:
+
+- **The side panel** of the selected gene: *Upstream* (what probably acts on it), *Downstream* (what it probably acts
+  on) and *Cells under drug-doses* (how it probably acts on the cells' numbers under a drug). Each list shows its 8
+  strongest rows and any of the 8 strongest without an alert that come after them, says how many more there are and
+  how many of those carry an alert, and opens fully with *show all*.
+- **The neighbourhood tab**, with its **Direction** control: *off*; *arrows* between the genes shown; or *+ its genes*
+  (the default), which also adds the selected gene's up- and downstream genes around it (a violet ring). That is how a
+  gene that is not on the map (it responds too little to the drugs to be in the vector space, as TP53 in the synthetic
+  test data) is shown with the genes it probably acts on. The added genes are held near it by a link that is not
+  drawn and is not a relation.
+- **The nodal and signed maps**, with the **Direction arrows** box: the selected gene's arrows to and from the genes
+  on the map.
+
+The line shows the grade (A thick, B thin, C dashed), the head the sign (a filled head: the source's activity raises
+the target's level or the cells' numbers; a bar: lowers it; an open head: strengthens the target's drug response; a
+double bar: weakens it; an open circle: not inferred). Hover a gene to see the rows between it and the selected
+gene. An arrow is a probable direction from the cell lines, not proof of direct regulation, and its alerts (⚠) say
+what to doubt.
+
 ## Limits
 
 - The space is built from responses to drugs, not from genetic perturbations: "moves with" is co-regulation across
-  perturbations, not a regulatory arrow. Opposite movement often means one pathway with two arms (an induced arm and
-  a repressed arm), but it can also mean two pathways that the same drugs push in opposite directions.
+  perturbations, not a regulatory arrow (the probable arrows come from the direction stage, above). Opposite movement
+  often means one pathway with two arms (an induced arm and a repressed arm), but it can also mean two pathways that
+  the same drugs push in opposite directions.
 - t-SNE layouts preserve neighbourhoods, not long distances: two islands far apart on the nodal map are "not
   neighbours", not "maximally different". Use the cosine (`tahoe pair A B`) for any quantitative question.
 - Genes without evidence of a response (no significant pooled drug-dose and no strong per-line response in two
