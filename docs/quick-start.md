@@ -66,7 +66,7 @@ the code repository); the large data files go to a second public repository, `Ta
 anyone can open https://xuvictor04.github.io/Tahoe100-PseudoManual/.
 
 ```bash
-tahoe export ~/tahoe-pub --explorer      # site/, data/ (hard links: no extra disk), publish.sh, PUBLISH.md
+tahoe export ~/tahoe-pub --explorer      # site/, data/ (hard links to the output's files), publish.sh, PUBLISH.md
 bash ~/tahoe-pub/publish.sh              # uploads the data, then the pages (it asks for the GitHub sign-in)
 ```
 
@@ -87,6 +87,26 @@ After every later run: `tahoe run`, then `tahoe export ~/tahoe-pub --explorer --
 replaced), then `bash ~/tahoe-pub/publish.sh`. The upload is about 5 GB of data (in parts of at most 1.5 GB, one
 push each; a part that fails is resumed with `--from-part K`) and about 0.7 GB of pages. The pages are pinned to the
 exact data commit, so they never mix data from two runs.
+
+**Disk space for publishing.** The export folder needs more than the output's own explorer:
+
+- The pages are copied (about 0.7 GB). The data files are hard links to the output's files, so they take no space
+  at first.
+- The upload adds every file it sends to a git folder (`data/.git` and `site/.git`), about 4.5 GB together. They
+  stay after the upload. Once the pages are live, you can delete both folders; the next upload makes them again.
+  The upload turns off git's automatic repack, so they never need that space twice.
+- After the next `tahoe run`, the output has new explorer files, but the previous run's data stay on disk through
+  the hard links (about 5.2 GB) until `export --explorer --force` replaces them.
+
+`export --explorer` checks that the copies and the git folders fit on the disk before it writes anything.
+
+**The data repository grows.** Each upload sends the whole data again (about 5 GB). GitHub keeps the replaced data
+until its own clean-up, so the stored size of `Tahoe100-PseudoManual-data` can grow over several uploads (GitHub
+recommends staying under 5 GB). If GitHub warns about its size, delete that repository on github.com (its Settings
+tab, at the bottom) and create it again as in step 1, then upload. Until the new pages are live, the pages online
+cannot load the per-gene and per-drug-dose data files; everything else on them keeps working. While the parts
+upload, the branch `main` holds only part of the new data, but the pages online keep reading the previous data
+commit by its id.
 
 Nothing is left out of these answers because of a flag. A drug-dose with an artifact flag (toxic, transcription
 drop, cell-cycle shift, ...), a partner not replicated in both halves of the compounds, or a gene in the vector space
@@ -134,17 +154,19 @@ tahoe run --reuse-atlas ~/Tahoe-100M/atlas
 
 ## After an update of the code
 
-`tahoe update` (Windows: `git -C C:\tahoe\repo pull`) fetches the newest code; then `tahoe run` (Windows: the same
-`python -m tahoemap run --out ...` as before) redoes only the stages whose method changed, and the stages after them.
-`tahoe` alone shows the plan first. An output that finished before the **explorer** stage existed runs it (and any
-stage whose method changed before it: after this update, direction, validate, vault and map too). The explorer takes
-about 15–25 minutes on the full data. When only the explorer's page files changed in an update, `tahoe run` copies
-just those (seconds). An output that finished before the **direction** stage existed runs `direction`,
-`validate`, `vault` and `map`, and also any earlier stage whose method changed since the output was made (the plan says
-which and why: an output made with older code, for example, may also redo `tables`, `embed`, `reference`,
-`relations` and `graph`: about 15–25 minutes in all on the full data, with embed's ~6.8 GB of memory). The build, the effects and the tensor are kept unless the plan names them. The vault keeps your Obsidian
-settings; in its graph view the new note *Probable direction*, which every gene note links, shows as a hub until you add
-`-file:"Probable direction"` to the graph's filter (a new vault has it).
+`tahoe update` fetches the newest code. On Windows, with the portable MinGit, that is
+`& "C:\tahoe\mingit\cmd\git.exe" -C C:\tahoe\repo pull` (or `git -C C:\tahoe\repo pull` when git is on PATH).
+Then `tahoe run` (Windows: the same `python -m tahoemap run --out ...` as before, from `C:\tahoe\repo`) redoes only
+the stages whose method changed, and the stages after them. `tahoe` alone shows the plan first. An output that finished
+before the **explorer** stage existed runs it (and any stage whose method changed before it: after this update,
+direction, validate, vault and map too). The explorer takes about 15–25 minutes on the full data. When only the
+explorer's page files changed in an update, `tahoe run` copies just those (seconds). An output that finished before the
+**direction** stage existed runs `direction`, `validate`, `vault` and `map`, and also any earlier stage whose method
+changed since the output was made (the plan says which and why: an output made with older code, for example, may also
+redo `tables`, `embed`, `reference`, `relations` and `graph`: about 15–25 minutes in all on the full data, with embed's
+~6.8 GB of memory). The build, the effects and the tensor are kept unless the plan names them. The vault keeps your
+Obsidian settings; in its graph view the new note *Probable direction*, which every gene note links, shows as a hub
+until you add `-file:"Probable direction"` to the graph's filter (a new vault has it).
 
 ## Folders and options
 
@@ -164,8 +186,9 @@ Options go through `tahoe run` to `python -m tahoemap run` (all of them: `python
 tensor), `--no-well-tensor`, `--workers N`, `--unreliable-plates plate13|none`, `--min-cells 30`. For the explorer:
 `--site-url URL` (where it is published; the vault, the map and the look-ups link there; default
 `https://<owner>.github.io/<repo>/` of this code's GitHub repository; `none` for no site), `--data-url URL`,
-`--with-line-dd` (also every gene's per-line values per drug-dose, about 4.3 GB more), `--pages-max-mb 950` (above
-it, parts of the pages move to the data folder; nothing is dropped). Look-ups take `--top N` or `--top all`.
+`--with-line-dd` (also every gene's per-line values per drug-dose, about 4.3 GB more), `--pages-max-mb 905` (in MiB
+of 1,048,576 bytes: 905 MiB is 0.949 GB, about 50 MB below GitHub Pages' 1 GB limit; above it, parts of the pages
+move to the data folder; nothing is dropped). Look-ups take `--top N` or `--top all`.
 
 The options that change results (`--dims`, `--min-active`, `--min-responsive`, `--min-cells`,
 `--unreliable-plates`, `--layout`, `--tensor-dtype`, `--no-well-tensor`, `--site-url`, `--data-url`,
@@ -211,8 +234,8 @@ C:\tahoe\.venv\Scripts\python.exe tests\test_windows.py
 C:\tahoe\.venv\Scripts\python.exe tests\test_review.py --out C:\tahoe\test\out_seed0   # the review agents, fake API
 ```
 
-- `run_tests.py` (about 6 minutes) should end with "78 passed, 5 warnings, 0 failed" when Playwright is not
-  installed, or "98 passed, 0 warnings, 0 failed" with it; `test_review.py` (a few minutes, offline, no key) with
+- `run_tests.py` (about 6 minutes) should end with "85 passed, 6 warnings, 0 failed" when Playwright is not
+  installed, or "106 passed, 0 warnings, 0 failed" with it; `test_review.py` (a few minutes, offline, no key) with
   "0 failed". It works in a folder of its own in the temp folder and only reads `--out`.
 - The warnings say the browser checks were skipped: those checks open the map and the explorer in a headless
   browser and need Playwright. They are optional. To include them, run
@@ -315,11 +338,15 @@ $env:TAHOE_GIT = "C:\tahoe\mingit\cmd\git.exe"      # only when git is not on PA
 powershell -ExecutionPolicy Bypass -File C:\tahoe\pub\publish.ps1
 ```
 
-`export --explorer` writes `C:\tahoe\pub\site` (the pages), `C:\tahoe\pub\data` (hard links to the output's files:
-no extra disk space), the upload lists, `publish.ps1` and `PUBLISH.md`. It checks first that the explorer is up to
+`export --explorer` writes `C:\tahoe\pub\site` (the pages), `C:\tahoe\pub\data` (hard links to the output's files),
+the upload lists, `publish.ps1` and `PUBLISH.md`. It checks first that the explorer is up to
 date and that every file and every upload fits GitHub's limits; it never uploads. `publish.ps1` uploads the data
 (about 5 GB, in parts of at most 1.5 GB), pins the pages to that data commit, then uploads the pages (about 0.7 GB).
-If a part fails (network, sign-in), run it again with `-FromPart K`. After every later run:
+If a part fails (network, sign-in), run it again from that part, for example
+`powershell -ExecutionPolicy Bypass -File C:\tahoe\pub\publish.ps1 -FromPart 2`; `PUBLISH.md` gives the number that
+uploads only the pages. The upload leaves git copies of the files in `C:\tahoe\pub\data\.git` and
+`C:\tahoe\pub\site\.git` (about 4.5 GB; see "Disk space for publishing" above). After every later run (from
+`C:\tahoe\repo`; add `--data C:\tahoe\Tahoe-100M` to `run` when the output was built from a local copy):
 
 ```powershell
 C:\tahoe\.venv\Scripts\python.exe -m tahoemap run --out C:\tahoe\out
@@ -344,13 +371,15 @@ stage has not yet run on the real data):
 | relations, graph, validate | 1 + 2 + 1 min | 0.15 GB | ~3 GB |
 | direction | ~6–7 min (estimated) | < 0.1 GB | 1.3–1.8 GB (estimated) |
 | vault, map | 2 min + seconds | 0.6 GB (35,000 notes; the direction sections add ~0.06 GB), about 26 MB for the map (nothing is left out to make it smaller; the stage warns above 25 MB) | ~1.5 GB, plus up to ~1 GB to read the direction arrows (estimated) |
-| explorer | ~15–25 min (estimated) | ~5.9 GB: pages 0.67 GB, data 5.2 GB (+4.3 GB with `--with-line-dd`); the stage checks for 1.3 times its estimate of free space first | ~2.5–3 GB (estimated) |
+| explorer | ~15–25 min (estimated) | ~5.9 GB: pages 0.67 GB, data 5.2 GB (+4.3 GB with `--with-line-dd`); the stage checks for 1.3 times its estimate of free space first | ~2.5–3 GB (estimated; the per-line tensor is read in blocks, so the peak the stage reports is the memory it really uses) |
+| publishing the explorer (optional) | upload time | ~5.2 GB in the export folder: the page copies (0.67 GB) and the upload's git copies (~4.5 GB, which can be deleted once the pages are live); plus ~5.2 GB for a while after a later run (the previous run's data, kept by the hard links until `export --explorer --force`) | small |
 
-So: about 36 GB of disk in all and ~1 hour after the build. Build workers are sized from free memory; if one
+So: about 36 GB of disk in all and ~1 hour after the build; about 41 GB with the published explorer, and up to
+about 47 GB between a later `run` and its `export --explorer --force`. Build workers are sized from free memory; if one
 is killed for lack of memory the build stops and says so (finished plates are kept): rerun with fewer `--workers`.
 
 ## Test it first (3–5 minutes, no download)
 
 ```bash
-tahoe test             # synthetic Tahoe-100M with planted answers, the whole pipeline, and 98 checks
+tahoe test             # synthetic Tahoe-100M with planted answers, the whole pipeline, and 106 checks
 ```

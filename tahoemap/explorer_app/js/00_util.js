@@ -48,9 +48,20 @@ TM.esc = function (s) {
   });
 };
 TM.frag = function () { var f = document.createDocumentFragment(); TM.append(f, [].slice.call(arguments)); return f; };
-// A plain-language paragraph; parts may be strings or nodes.
-TM.p = function () { var a = [].slice.call(arguments); return TM.h('p', null, a); };
-TM.note = function () { var a = [].slice.call(arguments); return TM.h('p', {class: 'note'}, a); };
+// A plain-language paragraph; parts may be strings or nodes. A plain object as the first part holds attributes
+// (TM.p({class: 'muted'}, 'Loading...')), as in TM.h.
+TM.isAttrs = function (x) {
+  return x !== null && typeof x === 'object' && !Array.isArray(x) && !(x instanceof Node);
+};
+TM.p = function () {
+  var a = [].slice.call(arguments), at = TM.isAttrs(a[0]) ? a.shift() : null;
+  return TM.h('p', at, a);
+};
+TM.note = function () {
+  var a = [].slice.call(arguments), at = TM.isAttrs(a[0]) ? Object.assign({}, a.shift()) : {};
+  at.class = 'note' + (at.class ? ' ' + at.class : '');
+  return TM.h('p', at, a);
+};
 TM.section = function (title, id) {
   var s = TM.h('section', {class: 'sec', id: id || null});
   if (title) s.appendChild(TM.h('h2', null, title));
@@ -173,15 +184,25 @@ TM.isReady = function (name) {
 };
 
 // ----------------------------------------------------------------------------- the error banner (no blank page)
+// The banner lists what failed on the page being shown. A new page (another address) starts with an empty banner;
+// every failure stays in the diagnostics ("copy diagnostics"), each with the address it happened on.
 TM.errors = [];
 TM.banner = function (msg, detail) {
-  TM.errors.push(msg + (detail ? ' | ' + detail : ''));
+  TM.errors.push('[' + (location.hash || '#/') + '] ' + msg + (detail ? ' | ' + detail : ''));
   TM.log('ERROR ' + msg + (detail ? ' | ' + detail : ''));
   var box = document.getElementById('tm-errbanner');
   if (!box) return;
   box.hidden = false;
   var list = box.querySelector('ul');
-  list.appendChild(TM.h('li', null, msg, detail ? TM.h('div', {class: 'mono small'}, detail) : null));
+  list.appendChild(TM.h('li', {dataset: {hash: location.hash || '#/'}}, msg,
+    detail ? TM.h('div', {class: 'mono small'}, detail) : null));
+};
+TM.bannerReset = function () {
+  var box = document.getElementById('tm-errbanner');
+  if (!box) return;
+  var list = box.querySelector('ul');
+  if (list) TM.clear(list);
+  box.hidden = true;
 };
 TM.diagnostics = function () {
   var c = TM.core;

@@ -6,7 +6,8 @@
 // TM.heat(o) -> {el, canvas, redraw(), setOrder(rowOrder, colOrder)}
 // o: {rows, cols, value(r, c), kind: 'f16'|'f32' (exact text), missing(r, c) -> reason index or -1,
 //     reasons: [texts], mark(r, c) -> bool, markText, rowLabel(r) -> text, rowSub(r) -> text, rowHref(r),
-//     colLabel(c) -> text, colHref(c), colFlag(c) -> bool, flagText, top: [{label, value(c), kind}] (rows above the
+//     colLabel(c) -> text, colHref(c), colFlag(c) -> bool, flagText, top: [{label, value(c), kind, missing(c) ->
+//     reason index, why(c) -> reason text of an empty cell, note(c) -> more text for the detail box}] (rows above the
 //     lines: pooled, group contrasts), clip, unit, zoom (1, 2 or 4 px per column), rowH, onCell(r, c, el),
 //     name (data-heat attribute)}
 TM.heat = (function () {
@@ -174,7 +175,8 @@ TM.heat = (function () {
       TM.clear(labels);
       labels.appendChild(TM.h('div', {class: 'hl-flag', style: {height: flagH + 'px'}}));
       top.forEach(function (t) {
-        labels.appendChild(TM.h('div', {class: 'hl-row hl-top', style: {height: rowH + 'px'}}, t.label));
+        labels.appendChild(TM.h('div', {class: 'hl-row hl-top', style: {height: rowH + 'px'}, title: t.label},
+          t.label));
       });
       if (top.length) labels.appendChild(TM.h('div', {style: {height: gap + 'px'}}));
       for (var rr = 0; rr < R; rr++) {
@@ -204,7 +206,9 @@ TM.heat = (function () {
         ': no artifact flag');
       if (h.part === 'top') {
         var t = top[h.t], v = t.value(h.c);
-        return t.label + ' \u00b7 ' + cl + ': ' + (isNaN(v) ? 'empty' : TM.csv.num(v, t.kind || 'f32'));
+        return t.label + ' \u00b7 ' + cl + ': ' + (isNaN(v) ? 'empty: ' + (t.why ? t.why(h.c) :
+          (o.reasons || [])[t.missing ? t.missing(h.c) : 0] || 'no value') : TM.csv.num(v, t.kind || 'f32')) +
+          (t.note ? ' \u00b7 ' + t.note(h.c) : '');
       }
       var val = o.value(h.r, h.c);
       parts.push(o.rowLabel(h.r) + ' \u00b7 ' + cl);
@@ -218,6 +222,7 @@ TM.heat = (function () {
       if (o.extra) parts.push(o.extra(h.r, h.c));
       return parts.join(' \u00b7 ');
     }
+    canvas.tmDescribe = describe;          // the detail text of a cell (the browser test reads it)
     canvas.addEventListener('mousemove', function (ev) {
       var h = at(ev);
       if (!h) { tip.hidden = true; return; }

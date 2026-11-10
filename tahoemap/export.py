@@ -646,8 +646,11 @@ def _explorer_lines(x):
 
 
 # ----------------------------------------------------------------------------- the explorer (export DEST --explorer)
-SITE_MAX_MB = 950.0           # MiB: the most the pages may hold (explorer.PAGES_MAX_MB; GitHub Pages: sites to 1 GB)
+SITE_MAX_MB = 905.0           # MiB: the most the pages may hold (explorer.PAGES_MAX_MB; 0.949 GB: GitHub Pages
+#                               publishes sites up to 1 GB, so about 50 MB is left to spare)
 BATCH_BYTES = 1.5e9           # bytes on disk per upload list: one commit and one push each (GitHub: 2 GB a push)
+GIT_STORE = 0.8               # the upload's git copies (DEST/<folder>/.git, loose zlib objects) per byte uploaded:
+#                               measured 0.77 for the data and 0.74 for the pages
 ASSET_MAX = 2 ** 31           # bytes: a GitHub release asset must be smaller than 2 GiB
 RECORD = "EXPLORER_EXPORT.json"
 FOLDER = {"web": "site", "data": "data", "data_dd": "data_dd"}       # OUT/explorer/<volume> -> DEST/<folder>
@@ -875,11 +878,13 @@ def explorer_export(out, dest, force=False, line_dd=False, github=None, site_max
         DEST/RELEASE_ASSETS.txt   optional: the exact arrays as release files
         DEST/EXPLORER_EXPORT.json what this export did
 
-    The data files are hard links to OUT's when DEST is on the same disk (no extra space), else copies (checked
-    against the stage's sha256). The pages are always copies: the explorer stage rewrites its page files in place
-    when only they changed (explorer.refresh_assets), which must not reach DEST behind the export's back. Checks
+    The data files are hard links to OUT's when DEST is on the same disk (no extra space while OUT keeps the same
+    files; after the explorer is rebuilt the links keep the previous files until --force replaces them), else copies
+    (checked against the stage's sha256). The pages are always copies: the explorer stage rewrites its page files in
+    place when only they changed (explorer.refresh_assets), which must not reach DEST behind the export's back. Checks
     before anything is written: the explorer is finished and current, the web volume is at most site_max_mb MiB,
-    every file at most max_mb MiB, every upload list at most batch_bytes, and the free space. A DEST that is not
+    every file at most max_mb MiB, every upload list at most batch_bytes, and the free space (the copies, and the
+    git copies the upload will make: about GIT_STORE x the bytes it uploads). A DEST that is not
     empty needs force and an earlier explorer export there; force then replaces only what changed and removes what
     the explorer no longer has (files the earlier export did not write are left alone, and stop the export when they
     are in the way)."""
@@ -950,15 +955,24 @@ def explorer_export(out, dest, force=False, line_dd=False, github=None, site_max
     todo = [(v, rel, n) for v in rows for rel, n, _h in rows[v]
             if not _same(os.path.join(dest, FOLDER[v], *rel.split("/")), os.path.join(vols[v], rel))]
     need = sum(n for v, _r, n in todo if v == "web" or not use_link) + 50 * 2 ** 20
+    vol_bytes = {v: sum(n for _r, n, _h in rows[v]) for v in rows}
+    git_need, git_old = _git_store_need(dest, vol_bytes)
     free = _free_bytes(dest)
-    if free is not None and free < need * 1.02:
+    if free is not None and free < (need + git_need) * 1.02:
         if made:
             shutil.rmtree(_lp(dest), ignore_errors=True)
-        sys.exit(f"export --explorer: {_mb(need)} to copy, but only {_mb(free)} free where {dest} is")
+        sys.exit(f"export --explorer: not enough free disk where {dest} is: {_mb(free)} free, about "
+                 f"{_mb(need + git_need)} needed. The export copies {_mb(need)}"
+                 + (" (the data are hard links: no copy)" if use_link else "") + f"; the upload (publish.ps1 / "
+                 f"publish.sh) then makes git copies of the files it uploads, about {_mb(git_need)} in "
+                 f"{FOLDER['data']}{os.sep}.git and {FOLDER['web']}{os.sep}.git"
+                 + (f" (the {_mb(git_old)} of the last upload's copies there are deleted first)" if git_old else "")
+                 + ". Nothing was written. Free some space, or export to another disk.")
 
     log(f"Exporting the explorer of {out} (run {run}) -> {dest}: "
         + ", ".join(f"{FOLDER[v]}/ {len(rows[v]):,} files, {_mb(sum(n for _r, n, _h in rows[v]))}" for v in rows)
-        + ("; the data as hard links (no extra disk space), the pages as copies" if use_link else " (copies)"))
+        + ("; the data as hard links to the output's files, the pages as copies" if use_link else " (copies)")
+        + f"; the upload will add git copies of about {_mb(git_need + git_old)}")
     counts = {}
     for v in rows:
         droot = os.path.join(dest, FOLDER[v])
@@ -1045,6 +1059,7 @@ def explorer_export(out, dest, force=False, line_dd=False, github=None, site_max
            "volumes": counts, "parts": parts, "hard_links": use_link, "hosts": hosts_note, "pinned": {},
            "code": _provenance(out), "python": sys.executable, "repo_dir": os.path.dirname(os.path.dirname(
                os.path.abspath(__file__))), "git": find_git(), "batch_bytes": batch_bytes,
+           "data_folder": _run_data_folder(out), "git_store_bytes": int(git_need + git_old),
            "long_paths": os.name == "nt" and len(dest) + 1 + max(len(r_) for v in rows for r_, _n, _h in rows[v])
            >= 250}
     if info.get("site_url") and LK.norm_url(info["site_url"]) != site_url:
@@ -1063,6 +1078,40 @@ def explorer_export(out, dest, force=False, line_dd=False, github=None, site_max
     _write_text(os.path.join(dest, RECORD), json.dumps(rec, indent=1, sort_keys=True) + "\n")
     _explorer_report(rec)
     return rec
+
+
+def _dir_bytes(path):
+    """Bytes of the files under path (0 when it does not exist)."""
+    n = 0
+    for root, _dirs, files in os.walk(_lp(path)):
+        for f in files:
+            try:
+                n += os.path.getsize(os.path.join(root, f))
+            except OSError:
+                pass
+    return n
+
+
+def _git_store_need(dest, vol_bytes):
+    """(bytes the upload's git copies will add in DEST, bytes of the last upload's copies there). publish.ps1 /
+    publish.sh add every file to DEST/<folder>/.git as loose zlib objects (about GIT_STORE x its size; gc.auto is
+    off, so no repack doubles them) and keep them after the upload; each upload deletes the folder's previous .git
+    before adding, so those bytes come back first."""
+    old = sum(_dir_bytes(os.path.join(dest, FOLDER[v], ".git")) for v in vol_bytes)
+    new = sum(GIT_STORE * b for b in vol_bytes.values())
+    return max(0.0, new - old), old
+
+
+def _run_data_folder(out):
+    """The Tahoe-100M folder the output's build read (stages/build.json info.data), or None when the build streamed
+    (OUT/hf: `run` finds that one by itself) or the stamp does not say."""
+    st = read_stamp(out, "build") or {}
+    d = (st.get("info") or {}).get("data")
+    if not d:
+        return None
+    if os.path.normcase(os.path.abspath(d)) == os.path.normcase(os.path.abspath(os.path.join(out, "hf"))):
+        return None
+    return str(d)
 
 
 def pin(dest, sha, volume="data"):
@@ -1117,14 +1166,18 @@ def publish_ps1(rec):
     for v in vols:
         n = rec["parts"][v]["lists"]
         L.append(f"#   {v}/  -> https://github.com/{o}/{r}{DATA_REPO[v]}.git, branch main, in {n} part(s)")
-        L.append("#           (one commit and one push each; the first push replaces the branch, so the repository")
-        L.append("#           keeps one snapshot: the newest)")
+        L.append("#           (one commit and one push each; the first push replaces the branch, so the branch")
+        L.append("#           holds one snapshot: the newest. GitHub keeps the replaced data until its own")
+        L.append("#           clean-up, so the repository's stored size can grow: PUBLISH.md says what to do)")
     L += ["#   then the pages are pinned to that data commit (python -m tahoemap export ... --pin-data <commit>)",
           f"#   site/  -> https://github.com/{o}/{r}.git, branch site (replaced: one snapshot).",
           "#           GitHub Pages then publishes it within about 10 minutes.",
           "# If an upload stops (network, sign-in), run the script again with -FromPart K, K the data part that",
           "# failed (-FromPart " + str(rec["parts"]["data"]["lists"] + 1) + " skips the data, for the pages only)."
           + (" -FromDdPart K does the same for data_dd." if "data_dd" in vols else ""),
+          "# The git copies of the uploaded files stay in data\\.git and site\\.git (about "
+          + _mb(rec.get("git_store_bytes") or 0) + "). A pages-only retry",
+          "# needs data\\.git; once the pages are live, both can be deleted (the next upload makes them again).",
           "param([int]$FromPart = 1, [int]$FromDdPart = 1)",
           '$ErrorActionPreference = "Stop"',
           "$Dest = $PSScriptRoot",
@@ -1145,6 +1198,7 @@ def publish_ps1(rec):
           "  Git-Do init -q",
           "  Git-Do config core.longpaths true",
           "  Git-Do config core.autocrlf false",
+          "  Git-Do config gc.auto 0          # no repack during the commits (it would need about as much disk again)",
           "  Git-Do remote add origin $Remote",
           "  Git-Do checkout -q --orphan $Branch",
           "}",
@@ -1207,6 +1261,10 @@ def publish_ps1(rec):
           f"Write-Host \"Done. The pages are on the branch site of {o}/{r}.\"",
           f"Write-Host \"GitHub Pages publishes them at {rec['site_url']} within about 10 minutes\"",
           "Write-Host \"(the Actions tab of the repository shows pages-build-deployment).\"",
+          "Write-Host (\"The git copies of the uploaded files are in \" + (Join-Path $Dest 'data\\.git') + \" and \" +",
+          "  (Join-Path $Dest 'site\\.git') + \" (about " + _mb(rec.get("git_store_bytes") or 0)
+          + "). Once the pages are live you can delete them \" +",
+          "  \"to free the space; the next upload makes them again.\")",
           ""]
     return "\n".join(L)
 
@@ -1224,7 +1282,9 @@ def publish_sh(rec):
          "#",
          "# The same steps as publish.ps1, and only to these branches (it never pushes anything else):"]
     for v in vols:
-        L.append(f"#   {v}/  -> https://github.com/{o}/{r}{DATA_REPO[v]}.git, branch main (one snapshot, in parts)")
+        L.append(f"#   {v}/  -> https://github.com/{o}/{r}{DATA_REPO[v]}.git, branch main (the branch holds one "
+                 "snapshot, in parts;")
+        L.append("#           GitHub keeps replaced data until its own clean-up: PUBLISH.md)")
     L += [f"#   site/  -> https://github.com/{o}/{r}.git, branch site (one snapshot),",
           "#           pinned to the data commit",
           "set -euo pipefail",
@@ -1250,6 +1310,7 @@ def publish_sh(rec):
           "  \"$GIT\" init -q",
           "  \"$GIT\" config core.longpaths true",
           "  \"$GIT\" config core.autocrlf false",
+          "  \"$GIT\" config gc.auto 0        # no repack during the commits (it would need about as much disk again)",
           "  \"$GIT\" remote add origin \"$1\"",
           "  \"$GIT\" checkout -q --orphan \"$2\"",
           "}",
@@ -1315,6 +1376,9 @@ def publish_sh(rec):
           "cd \"$DEST\"",
           f"echo \"Done. The pages are on the branch site of {o}/{r}.\"",
           f"echo \"GitHub Pages publishes them at {rec['site_url']} within about 10 minutes.\"",
+          "echo \"The git copies of the uploaded files are in $DEST/data/.git and $DEST/site/.git (about "
+          + _mb(rec.get("git_store_bytes") or 0) + ").\"",
+          "echo \"Once the pages are live you can delete them to free the space; the next upload makes them again.\"",
           ""]
     return "\n".join(L)
 
@@ -1327,6 +1391,13 @@ def publish_md(rec):
     sep = "\\" if win else "/"
     py = rec["python"]
     vb = rec["volumes"]
+    git = rec.get("git") or "git"
+    n_parts = rec["parts"]["data"]["lists"] if "data" in rec["parts"] else 0
+    ps1, sh = os.path.join(dest, "publish.ps1"), os.path.join(dest, "publish.sh")
+    run_ps = f"powershell -ExecutionPolicy Bypass -File \"{ps1}\""
+    run_sh = f"bash {shlex.quote(sh)}"
+    git_ps = f"& \"{git}\"" if win else shlex.quote(git)
+    data_mb = sum(vb[v]["bytes"] for v in vols)
     L = ["# Publishing the explorer", "",
          f"This folder holds the explorer of run `{rec['run']}`, ready to publish on GitHub. It was written by "
          f"`python -m tahoemap export ... --explorer` on {rec['date']}, from `{rec['source']}`. Nothing has been "
@@ -1348,7 +1419,8 @@ def publish_md(rec):
           f"| `{RECORD}` | What this export did (used by `--force` and `--pin-data`). | | |", ""]
     if rec["hard_links"]:
         L += ["The files in the data folders are hard links to the files in the output's `explorer` folder (all "
-              "but MANIFEST.tsv). They take no extra disk space. Do not edit them: an edit would change the output's "
+              "but MANIFEST.tsv). They take no extra disk space as long as the output keeps the same files (see \"Disk "
+              "space\" below). Do not edit them: an edit would change the output's "
               "file too. The export and the pin step replace files instead of writing into them. The `site` folder "
               "holds copies.", ""]
     L += ["## Once: two settings on github.com", "",
@@ -1374,7 +1446,8 @@ def publish_md(rec):
         p_ = rec["parts"][v]
         L.append(f"{k}. It uploads `{v}` to `{o}/{r}{DATA_REPO[v]}`, branch `main`, in {p_['lists']} part(s) (about "
                  f"{_mb(sum(p_['bytes']))} in all). Each part is one commit and one push. The first push replaces the "
-                 "branch, so the data repository keeps one snapshot: the newest.")
+                 "branch `main`, so the branch holds one snapshot: the newest. (The repository can still grow: see "
+                 "\"Size of the data repository\" below.)")
         k += 1
     L += [f"{k}. It pins the pages to that data commit (`python -m tahoemap export ... --pin-data <commit>`). The "
           "pages then read exactly the data of this run, even while a later upload is under way.",
@@ -1385,29 +1458,64 @@ def publish_md(rec):
           "`site` is its default branch.", "",
           "- **Sign-in.** The first push asks you to sign in to GitHub (Git Credential Manager opens a window or a "
           "browser page). Use an account that may write to both repositories.",
-          "- **Name and e-mail.** Git needs them once for the commits: `git config --global user.name \"Your Name\"` "
-          "and `git config --global user.email \"you@example.com\"`.",
-          "- **If an upload stops** (network, sign-in), run the script again with `-FromPart K` (`--from-part K` for "
-          "bash), K being the data part that failed. The script prints each part as it is uploaded.",
+          f"- **Name and e-mail.** Git needs them once for the commits: `{git_ps} config --global user.name "
+          f"\"Your Name\"` and `{git_ps} config --global user.email \"you@example.com\"`"
+          + (" (in PowerShell; with git on PATH, `git config ...` works too)." if win else "."),
+          f"- **If an upload stops** (network, sign-in), run the script again from the part that failed. The script "
+          f"prints each part as it is uploaded. For example, when part 2 failed: `{run_ps} -FromPart 2` (bash: "
+          f"`{run_sh} --from-part 2`). The data has {n_parts} part(s); `-FromPart {n_parts + 1}` (bash: `--from-part "
+          f"{n_parts + 1}`) skips the data and uploads only the pages: use it when only the pages failed.",
           f"- **Programs used.** Python: `{py}`. Git: `{rec.get('git') or 'git on PATH'}` (git on PATH is used "
           "first). To use others, set `$env:TAHOE_PYTHON` or `$env:TAHOE_GIT` (bash: `TAHOE_PYTHON`, `TAHOE_GIT`) "
           "before running the script. A portable MinGit that is not on PATH works when TAHOE_GIT names its "
           "`cmd\\git.exe`.", ""]
+    git_b = rec.get("git_store_bytes") or 0
+    L += ["## Disk space", "",
+          f"- **The upload's git copies.** The script adds every file it uploads to a git folder: `data{sep}.git` and "
+          f"`site{sep}.git`, about {_mb(git_b)} together. They stay after the upload. A pages-only retry "
+          f"(`-FromPart {n_parts + 1}`) needs `data{sep}.git`. Once the pages are live, you can delete both folders "
+          "to free the space; the next upload makes them again. `export --explorer` checked that this space was free "
+          "when it ran.",
+          f"- **The previous run's data.** The files in `data{sep}` are hard links to the output's files. When the "
+          f"next `run` rebuilds the explorer, the output gets new files, but the old ones stay on disk through "
+          f"these links (about {_mb(data_mb)}) until `export --explorer --force` replaces the links. So between "
+          "those two commands, the disk holds the data of both runs.", "",
+          "## Size of the data repository on GitHub", "",
+          f"- Each upload sends the whole data again (about {_mb(data_mb)}): the script starts a new git history "
+          "every time, so nothing is shared with the previous upload.",
+          f"- GitHub keeps the replaced data until its own clean-up. The stored size of `{o}/{r}-data` can "
+          "therefore grow over several uploads. GitHub recommends staying under 5 GB.",
+          f"- If GitHub warns about the size, delete `{o}/{r}-data` on github.com (its Settings tab, at the bottom: "
+          "Delete this repository), create it again as in step 1, then run the upload. From the moment it is deleted "
+          "until the new pages are live, the pages online cannot load the data files (one per gene and one per "
+          "drug-dose); everything else on the pages keeps working.",
+          "- While the parts upload, the branch `main` holds only part of the new data. The pages already online "
+          "keep reading the previous data commit by its id, so they keep working until the new pages replace them.",
+          ""]
     if rec.get("long_paths"):
         L += ["- **Long paths.** Some paths here pass Windows' 260-character limit. The scripts set "
               "`core.longpaths true` for git; keep the folder name short if git still complains.", ""]
     if rec.get("note_site"):
         L += [f"- **Web address.** {rec['note_site']}", ""]
-    L += ["## Every later run", "", "```powershell" if win else "```bash"]
+    L += ["## Every later run", "",
+          "In a new " + ("PowerShell" if win else "terminal") + " window. The first line goes to the code folder: "
+          "the package runs from there.", "", "```powershell" if win else "```bash"]
+    dfold = rec.get("data_folder")
     if win:
-        L += [f"& \"{py}\" -m tahoemap run --out \"{rec['source']}\"",
+        L += [f"Set-Location \"{rec.get('repo_dir') or '.'}\"",
+              f"& \"{py}\" -m tahoemap run" + (f" --data \"{dfold}\"" if dfold else "") + f" --out \"{rec['source']}\"",
               f"& \"{py}\" -m tahoemap export \"{dest}\" --explorer --force --out \"{rec['source']}\"",
-              f"powershell -ExecutionPolicy Bypass -File \"{os.path.join(dest, 'publish.ps1')}\""]
+              run_ps]
     else:
-        L += [f"python -m tahoemap run --out {shlex.quote(rec['source'])}",
-              f"python -m tahoemap export {shlex.quote(dest)} --explorer --force --out {shlex.quote(rec['source'])}",
-              f"bash {shlex.quote(os.path.join(dest, 'publish.sh'))}"]
+        L += [f"cd {shlex.quote(rec.get('repo_dir') or '.')}",
+              f"{shlex.quote(py)} -m tahoemap run" + (f" --data {shlex.quote(dfold)}" if dfold else "")
+              + f" --out {shlex.quote(rec['source'])}",
+              f"{shlex.quote(py)} -m tahoemap export {shlex.quote(dest)} --explorer --force --out "
+              f"{shlex.quote(rec['source'])}",
+              run_sh]
     L += ["```", "",
+          ("`--data` names the Tahoe-100M folder the run was built from (`run` does not remember it). "
+           if dfold else "The run was built by streaming, so `run` needs no `--data`. ") +
           "`--force` replaces only the files that changed and removes the files the explorer no longer has. Files "
           "that an earlier export did not write are left alone (they are not uploaded: the upload lists name every "
           "file that is).", "",

@@ -315,7 +315,7 @@ in '…' when cut, with a link to the full text. Data embedded as JSON (details:
 
 ## explorer (OUT/explorer/) — searchable pages with every value
 
-`explorer.run(out, site_url, data_url, line_dd=False, pages_max_mb=950, pooled_r=False)` writes three volumes of
+`explorer.run(out, site_url, data_url, line_dd=False, pages_max_mb=905, pooled_r=False)` writes three volumes of
 static files (format and catalogue: `docs/explorer-data.md`; front end: `tahoemap/explorer_app/`):
 
 - `web/`: the pages (`index.html`, `app.js` joined from `explorer_app/js/*.js`, `app.css`) and their data `d/`
@@ -371,8 +371,9 @@ GB: one commit and one push each), `publish.ps1` / `publish.sh` (fixed refspecs:
 `<repo>-data`, then `export DEST --pin-data <commit>` rewrites `site/d/hosts.js` and its MANIFEST line, then
 `HEAD:refs/heads/site` to the code repository; never `results`, `finalized` or the default branch), `PUBLISH.md` (the
 one-time GitHub steps), `RELEASE_ASSETS.txt` and `EXPLORER_EXPORT.json`. Before writing it checks that the explorer
-is current (run id, assets_sha), the pages are at most 950 MiB, every file at most 95 MiB and the free space; it
-never runs git push.
+is current (run id, assets_sha), the pages are at most 905 MiB (0.949 GB), every file at most 95 MiB and the free
+space (the copies, and the git copies the upload makes: about 0.8 x the bytes it uploads, kept loose with gc.auto 0
+so no repack needs the space twice); it never runs git push.
 
 The look-ups read the direction through `direction_view` too: `gene X` has a PROBABLE DIRECTION section (upstream,
 downstream, cells under drugs), `line X` its recorded alterations and natural knockouts, `drug X` its sensitivity and

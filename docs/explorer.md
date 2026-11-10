@@ -63,7 +63,14 @@ top rounds them to 3 digits for reading; the row drawer and every download keep 
 ## 3. Search
 
 The search box is at the top of every page (press `/` to jump to it). Results appear as you type, grouped by kind,
-each with the field that matched. Enter opens the first result. "All matches" opens a page that lists every match.
+each with the field that matched. The link at the bottom of the list opens the results page, which lists every
+match; its count includes the genes below the detection cut and the combined views, and it says "No match" when
+nothing matches.
+
+Enter opens a page only when one entity is the clear answer: a single exact name or id (a gene first, then a drug,
+a line...), the single best match, or a gene with exactly one cell line or drug named by the rest of the text. When
+the best matches are several entities (the 15 lung lines, the 4 HDAC inhibitors, an alias two genes share), Enter
+opens the results page instead, so that none of them is picked for you. The list says what Enter will open.
 
 - **Genes** are found by symbol, label, Ensembl id, HGNC id and symbol, aliases, previous symbols, words of the
   name, Entrez id, UniProt id and cytoband.
@@ -72,11 +79,16 @@ each with the field that matched. Enter opens the first result. "All matches" op
   driver gene, protein change (for example "R273H") and TP53 status.
 - **Modules, gene sets and direction groups** are searched too.
 - **Two words** give a combined view: "TRIM72 A549" opens TRIM72 in the line A549; "TRIM72 idarubicin" opens TRIM72
-  under every dose of idarubicin, in every line.
+  under every dose of idarubicin, in every line. The first word must be a gene (exact symbol, id or alias). When the
+  rest matches several lines or drugs (an organ, a mechanism, a target, a word of a name), the results page lists one
+  combined link for each, for example "BBC3 in each of the 7 cell lines that "bowel" matches". A mere piece of text
+  never makes a combined view.
 - **Prefixes** `gene:`, `drug:`, `line:` and `module:` search one kind only.
 
-Best matches come first: an exact name or id, then an exact alias, then names that start with the text, aliases that
-start with it, a whole word (of a name, target, mechanism or organ), and last any piece of text.
+Best matches come first: an exact name or id; then an exact alias, or the whole of a field such as an organ
+("Lung"), a mechanism of action ("HDAC inhibitor") or one target; then names that start with the text, aliases that
+start with it, a whole word (of a name, target, mechanism or organ), and last any piece of text. The kinds are listed
+in the order of their best match, so "lung" lists the lung lines before the genes with "lung" in their name.
 
 An alias opens the gene with a notice, for example "MG53 is an alias of TRIM72 (HGNC)". A Tahoe gene below the
 detection cut (pooled level under 2 counts per million) has no values; the search says so instead of "not found".
@@ -107,12 +119,12 @@ HGNC, Ensembl, UniProt, NCBI, GeneCards).
 | Tab | What it holds |
 |---|---|
 | Overview | Four short answers: what moves the gene (with the strongest rises and falls; a flagged row keeps its place with ⚠ and its flags), in which lines, what moves with it, and what probably acts on it. Each preview says "k of N shown" and links to the full list. |
-| Drugs | Every drug-dose (1,132 on the real data): fold, log2 fold change, z, q rise, q fall, call, flags in full, line counts, dose patterns, whether the row is in `tables/drug_effects`, the position effect removed, the z the vector space predicts, the drug's mechanism, targets and flags. The list starts with the strongest rise, so a flagged strongest raiser is the first row. Click a row for every field and the per-line values. |
+| Drugs | Every drug-dose (1,132 on the real data): fold, log2 fold change, z, q rise, q fall, call, flags in full, line counts, dose patterns, whether the row is in `tables/drug_effects`, the position effect removed, the z the vector space predicts (on the z scale: row mean + row scale × gene vector · drug-dose vector, the inverse of the standardisation the space was fitted on; z beyond ±8 is not reproduced), the drug's mechanism, targets and flags. The list starts with the strongest rise, so a flagged strongest raiser is the first row. A drug-dose with no pooled value for the gene keeps its row, and each empty cell says why (see section 7). Click a row for every field and the per-line values. |
 | Cell lines | The per-line block: a heatmap of every line at every drug-dose (never averaged), a long table with one row per (drug-dose, line), and the pipeline tables `line_effects` and `drug_line_top`. Rows can be ordered by organ, TP53 status, a driver gene or response; columns by pooled z, drug or mechanism. Group rows (for example "mean of the TP53-altered lines") can be added; they are computed in the page and labelled so. |
 | Correlations | (a) the cosine with every other gene of the vector space, with both halves, z, fdr and evidence (the 100 stored partners show the pipeline's own values; the rest are computed in the page with the same formulas); (b) baseline co-expression across the lines; (c) pooled-profile r for one partner through the pair page. |
 | Partners & module | The stored partners with every column and alert, the genes that list this one, STRING partners, gene sets, graph edges, and the module: every member, its pooled z at every drug-dose and its per-line scores. |
-| Direction | Every probable-direction arrow into the gene, from it to other genes, and from it to how many cells remain, with every alert (⚠, in full), note (muted, in full), support reason and the drug-doses behind it. The caveat every arrow of a kind carries is written once above each list. |
-| Baseline & wells | The level in each line, the plate baselines that every fold change is relative to, the DMSO offset per plate, the well-position medians as a 96-well grid, and every well with W1, W2, Z, raw counts and raw CPM. |
+| Direction | Every probable-direction arrow into the gene, from it to other genes, and from it to how many cells remain, with every alert (⚠, in full), note (muted, in full), support reason and the drug-doses behind it. The caveat every arrow of a kind carries is written once above each list. The tab label counts the arrows in words: "Direction (0 into · 13 from · 0 to cell numbers)". The tab also gives how many tests the direction stage ran over all genes (an arrow is written only at q < 0.10); the stage does not record how many of them involved one gene. |
+| Baseline & wells | The level in each line, the line centre and scale (the per-line z divisor), the plate baselines that every fold change is relative to, the DMSO offset per plate, the well-position medians as a 96-well grid, the gene's z divisor in each plate-and-dose group with the group's name and its `plate_scale` rows, and every well with W1, W2, Z, raw counts and raw CPM. |
 | Annotation | Every annotation field in full, gene sets and STRING partners. |
 | Downloads | CSV files of the drug-doses, the drug-dose × line table, the wells and the correlations, and the raw data files of the gene. |
 
@@ -230,7 +242,31 @@ finds the file of any gene, drug, drug-dose, line or module.
   the data were re-published; reload".
 - **The optional data_dd volume was not made**: the drug-dose Per-line values tab says so and loads the genes gene
   by gene.
-- **A script error**: a red banner lists what failed, with a button that copies the diagnostics.
+- **A script error**: a red banner lists what failed on the page shown, with a button that copies the diagnostics.
+  Opening another page clears the banner; the diagnostics keep every failure with the address it happened on.
+
+### Why a value is empty
+
+Every empty cell says why, in the page and in the `missing_reason` column of its CSV. The common reasons:
+
+- **No pooled value** (fold, log2 fold change, z, q): the atlas gives a well a value for a gene only when at least 5
+  cell lines there have `min_cells` or more cells and express the gene (atlas `MIN_LINES` and `expr_mask`). The
+  drug-dose value is the mean over its used wells, so it is empty when no used well has one. The reason gives the
+  counts of each used well, for example "its one used well (plate5 E5) has only 3 cell lines with 10 or more
+  cells". When this holds for every gene, the drug-dose's header says "no pooled values at this drug-dose" instead
+  of "0 genes up, 0 down". Fold, z and q next to an empty log2 fold change point to its reason.
+- **No per-line value**: the line does not truly express the gene; or no used well of the drug-dose has `min_cells`
+  or more cells of the line (the rule is per well; the reason lists the line's cells in each used well); or the gene
+  has fewer than 2 expected counts in the line there.
+- **No per-line z next to a measured log2 fold change**: the line's spread over the reference wells
+  (`tensor/line_scale`) is empty for this gene.
+- **No plate base**: the line does not express the gene (atlas `expr_mask`), or no drug well of the plate has
+  `min_cells` cells of the line.
+- **No W1, W2 or Z in a well**: fewer than 5 cell lines in that well have `min_cells` cells and express the gene.
+- **No response beta or r**: the drug-dose has fewer than 20 significant genes (atlas `MIN_SIG_BETA`), the well is
+  left out, or the line has too few cells there.
+- **Group rows** of the Cell lines heatmap average only the lines with a value; the detail box says "mean of 7 of 8
+  TP53 wild type lines".
 
 ## 8. For developers
 

@@ -191,8 +191,11 @@ TM.route.render = function () {
   TM.route.params = r.params;
   TM.route.cur = {path: r.path || '/', segs: r.segs, seq: seq, hash: location.hash};
   var main = document.getElementById('main');
-  var prevPath = TM.route.lastPath;
+  var prevPath = TM.route.lastPath, prevHash = TM.route.lastHash;
   TM.route.lastPath = r.path;
+  TM.route.lastHash = location.hash;
+  // another page: the banner of the page before is cleared (its failures stay in the diagnostics)
+  if (prevHash !== undefined && prevHash !== location.hash) TM.bannerReset();
   TM.clear(main);
   main.removeAttribute('data-total');
   document.documentElement.removeAttribute('data-ready');

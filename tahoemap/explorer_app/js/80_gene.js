@@ -226,7 +226,7 @@ TM.gene = (function () {
     return {drugs: TM.fmt.int(d.D), lines: d.L + ' \u00d7 ' + TM.fmt.int(d.D),
       corr: inSpace ? TM.fmt.int((d.counts.included || spaceCount()) - 1) : 'not in the space',
       partners: (G.missing.rel ? 'not loaded' : G.t.rel.n) + ' + ' + G.t.relb.n,
-      direction: up + ' \u2191 / ' + dn + ' \u2193 / ' + cells + ' cells',
+      direction: up + ' into \u00b7 ' + dn + ' from \u00b7 ' + cells + ' to cell numbers',
       baseline: d.L + ' lines, ' + TM.fmt.int(d.W) + ' wells', annotation: null, downloads: null, overview: null};
   }
   function spaceCount() {
@@ -268,9 +268,19 @@ TM.gene = (function () {
     function ddcol(name) { var c = ddv[name]; return function (k) { return c ? c.get(row[k]) : null; }; }
     function eddcol(name) { var c = edd && edd.c[name]; return function (k) { return c && eddRow[k] !== undefined ?
         c.get(eddRow[k]) : null; }; }
-    var predicted = null, predWhy = '\u29d7 loads with the vector file (ddarr.js)';
-    function predict(dda) {               // gene vector . drug-dose vector, when ddarr.js has arrived
+    var predicted = null, predWhy = '\u29d7 loads with the vector files (ddarr.js, space/u.js)';
+    // the pooled z the vector space reproduces: row mean + row scale x (gene vector . drug-dose vector), the inverse of
+    // the standardisation embed applied before the fit (when ddarr.js and space/u.js have arrived)
+    function predict(dda, su) {
       if (!G.gvec || !dda || !dda.a.drugdose_vectors) { predWhy = 'no vectors in this run'; return; }
+      if (!su) {
+        predWhy = 'space/u.js (the gene\u2019s row mean and scale) could not be loaded';
+        return;
+      }
+      var jj = su.pos[G.col], mu = su.u.a.row_mean, sc = su.u.a.row_scale;
+      if (jj < 0) { predWhy = 'not in the vector space'; return; }
+      if (su.u.meta && su.u.meta.rows === 'all') jj = G.col;        // a file with one row per column
+      if (!mu || !sc) { predWhy = 'no row mean and scale in this run\u2019s space/u.js'; return; }
       var V = dda.a.drugdose_vectors.v, Kd = dda.a.drugdose_vectors.shape[1];
       var finite = G.gvec.every(function (x) { return !isNaN(x); });
       predicted = new Float64Array(n);
@@ -278,11 +288,12 @@ TM.gene = (function () {
         if (!finite) { predicted[k] = NaN; continue; }
         var s = 0;
         for (var j = 0; j < Kd; j++) s += G.gvec[j] * V[k * Kd + j];
-        predicted[k] = s;
+        predicted[k] = mu.v[jj] + sc.v[jj] * s;
       }
       predWhy = finite ? 'no value' : 'not in the vector space';
     }
-    if (o.ddarr) predict(o.ddarr);
+    if (o.ddarr) predict(o.ddarr, o.su);
+    function pwhy(what) { return function (k) { return TM.pooled.why(k, G.col, G.lfc[k], what); }; }
     var docs = (d.docs['tables/drug_effects.parquet'] || {}).cols || {};
     var drugIdxOf = function (k) { return d.drugOf ? d.drugOf[k] : d.drugIdx.get(d.dd.drug[k]); };
     var nl = function (k, w) { return G.nl[k * 5 + w]; };
@@ -296,15 +307,16 @@ TM.gene = (function () {
         sortv: function (k) { return d.dd.conc[k]; }, sortNum: true, cls: 'num', doc: docs.dose || 'dose (\u00b5M)'},
       {key: 'fold', label: 'Fold', type: 'f64', simple: true, computed: true, cls: 'num',
         get: function (k) { return Math.pow(2, G.lfc[k]); }, show: function (k) { return TM.fmt.fold(G.lfc[k]); },
+        missing: pwhy('fold'),
         doc: '2^lfc, computed in the page from the stored log2 fold change (1 = no change; 2 = doubled; 0.5 = halved)'},
       {key: 'lfc', label: 'log2 FC', type: 'f32', simple: true, cls: 'num', get: function (k) { return G.lfc[k]; },
-        doc: docs.lfc || 'pooled log2 fold change'},
+        missing: pwhy('lfc'), doc: docs.lfc || 'pooled log2 fold change'},
       {key: 'z', label: 'z', type: 'f32', simple: true, cls: 'num', get: function (k) { return G.z[k]; },
-        doc: docs.z || 'pooled z'},
+        missing: pwhy('z'), doc: docs.z || 'pooled z'},
       {key: 'q_up', label: 'q rise', type: 'f32', simple: true, cls: 'num', get: function (k) { return G.qup[k]; },
-        doc: docs.q_up || 'BH q-value for an increase'},
+        missing: pwhy('q'), doc: docs.q_up || 'BH q-value for an increase'},
       {key: 'q_down', label: 'q fall', type: 'f32', simple: true, cls: 'num', get: function (k) { return G.qdn[k]; },
-        doc: docs.q_down || 'BH q-value for a decrease'},
+        missing: pwhy('q'), doc: docs.q_down || 'BH q-value for a decrease'},
       {key: 'call', label: 'Call', type: 'str', simple: true, get: function (k) { return callText(G.call[k]); },
         show: function (k) { var c = G.call[k]; return c ? TM.h('span', {class: c > 0 ? 'call-up' : 'call-down'},
             callText(c)) : '\u2013'; },
@@ -355,10 +367,10 @@ TM.gene = (function () {
           'pipeline wrote to tables/drug_effects. This column shows that storage cut; nothing here is filtered by it.'},
       {key: 'poseff', label: 'Position effect removed', type: 'f32', cls: 'num', get: xv('poseff'), missing: xmiss,
         doc: 'the well-position effect removed from this value (DD_poseff; log2), from the per-line data file'},
-      {key: 'predicted_z', label: 'Predicted z', type: 'f64', cls: 'num', computed: true,
+      {key: 'predicted_z', label: 'Predicted z (space)', type: 'f64', cls: 'num', computed: true,
         get: function (k) { return predicted ? predicted[k] : NaN; },
         missing: function () { return !G.egene.included ? 'not in the vector space' : predWhy; },
-        doc: 'gene vector \u00b7 drug-dose vector in the vector space (embed): the activity the space reproduces'},
+        doc: predictedDoc()},
       {key: 'moa', label: 'MoA', type: 'str', get: ddcol('moa_fine'), doc: 'fine mechanism of action of the drug'},
       {key: 'targets', label: 'Targets', type: 'str', get: ddcol('targets'), doc: 'the drug\u2019s listed targets'},
       {key: 'approved', label: 'Approved', type: 'str', get: ddcol('approved'), doc: 'approved drug (yes / no)'},
@@ -413,8 +425,33 @@ TM.gene = (function () {
         else el.appendChild(TM.note(G.xerr ? 'Per-line values: not reachable (' + G.xerr.message + ').' :
           'Per-line values load with the data volume.'));
       }});
-    tb.predict = function (dda) { predict(dda); tb.refresh(); };
+    tb.predict = function (dda, su) { predict(dda, su); tb.refresh(); };
     return tb;
+  }
+  function predictedDoc() {
+    var zc = ((TM.data.meta.info || {})['embed/info.json'] || {}).z_clip;
+    return 'the pooled z that the vector space reproduces, on the z scale, computed in the page: row mean + row ' +
+      'scale \u00d7 (gene vector \u00b7 drug-dose vector). The space was fitted on each gene\u2019s z standardised ' +
+      'over the drug-doses (row mean and scale, d/space/u.js), with z clipped at \u00b1' + (zc || 8) + ', so values ' +
+      'beyond that are not reproduced. Far from the observed z: the space does not capture this response.';
+  }
+  // d/space/u.js: the included genes' row mean and row scale (and unit vectors), with col -> row
+  var spU = null;
+  function spaceU() {
+    if (!spU) {
+      spU = web('space/u').then(function (u) {
+        var inc = u.a.included.v, pos = new Int32Array(TM.data.C || 1).fill(-1);
+        for (var i = 0; i < inc.length; i++) pos[inc[i]] = i;
+        return {u: u, pos: pos};
+      });
+      spU.catch(function () { spU = null; });
+    }
+    return spU;
+  }
+  // ddarr.js and space/u.js for the predicted z: [dda or null, su or null], never rejected
+  function predictInputs() {
+    return Promise.all([web('ddarr').catch(function () { return null; }), spaceU().catch(function () {
+      return null; })]);
   }
   // one row of per-line values (lfc) at drug-dose k, as a strip with the numbers
   function lineStrip(G, k) {
@@ -436,11 +473,11 @@ TM.gene = (function () {
     pane.appendChild(baselineNote());
     var holder = TM.h('div');
     pane.appendChild(holder);
-    var cached = TM.load.cached('web', 'ddarr');
-    var tb = drugsTable(G, {ddarr: cached, id: 'drugs-table'});
+    var tb = drugsTable(G, {id: 'drugs-table'});
     holder.appendChild(tb.el);
-    holder.appendChild(TM.flagLegend(Array.from(new Set(G.flag))) || '');
-    if (!cached) web('ddarr').then(tb.predict, function () { tb.predict(null); });
+    TM.append(holder, TM.flagLegend(Array.from(new Set(G.flag))));
+    predictInputs().then(function (r) { tb.predict(r[0], r[1]); });
+    if (Array.prototype.some.call(G.lfc, function (v) { return isNaN(v); })) TM.pooled.load(true).then(tb.refresh);
     xdata(G).then(function () { tb.refresh(); }, function () { tb.refresh(); });
   }
 
@@ -456,9 +493,13 @@ TM.gene = (function () {
     // 1. what moves it
     var c1 = TM.h('div', {class: 'card wide', dataset: {card: 'moves'}});
     c1.appendChild(TM.h('h3', null, 'What moves it'));
+    var nEmpty = 0;
+    for (k = 0; k < n; k++) if (isNaN(G.lfc[k])) nEmpty++;
     c1.appendChild(TM.h('p', {class: 'answer'}, TM.fmt.int(sig) + ' of ' + TM.fmt.int(n) + ' drug-doses change ' +
       G.symbol + ' significantly (q < ' + K.Q_CUT + ' and at least 1.2\u00d7): ' + up + ' raise it, ' + dn +
-      ' lower it; ' + art + ' of these carry an artifact flag.'));
+      ' lower it; ' + art + ' of these carry an artifact flag.' + (nEmpty ? ' ' + TM.fmt.plural(nEmpty, 'drug-dose') +
+      ' ha' + (nEmpty === 1 ? 's' : 've') + ' no pooled value for ' + G.symbol + ' (' + TM.pooled.rule() + '); ' +
+      'the Drugs tab lists them with the counts of each used well.' : '')));
     var ord = Array.from(TM.range(n)).sort(function (a, b) {
       var za = G.z[a], zb = G.z[b];
       if (isNaN(za)) return isNaN(zb) ? a - b : 1;
@@ -523,7 +564,7 @@ TM.gene = (function () {
           TM.fmt.num(dlt.c.z.get(r), 'f32')), TM.h('td', null, flagText(dlt.c.flags.get(r)))));
       });
       c2.appendChild(TM.h('div', {class: 'small'}, 'Strongest line-specific cells (tables/drug_line_top, by |z|):'));
-      c2.appendChild(tb);
+      c2.appendChild(TM.h('div', null, tb));                // a box that scrolls sideways on a narrow screen
       c2.appendChild(TM.h('p', {class: 'seeall'}, TM.h('span', {class: 'kofn'}, top.length + ' of ' + dlt.n +
         ' shown \u2014 '), TM.a(TM.href.gene(G.label, 'lines'), 'see all \u203a')));
     }
@@ -687,12 +728,27 @@ TM.gene = (function () {
       return 2;
     };
   }
+  // the reasons of an empty per-line value, by index: 0-2 for an empty log2 FC (lineMissing), 3 for an empty z
+  // next to a measured log2 FC
   function missingTexts() {
-    var mc = TM.data.K.min_cells;
+    var mc = TM.data.K.min_cells || 'min_cells';
     return ['the line does not truly express the gene (its level is below 25% of the median line\u2019s, or of the ' +
-      'gene\u2019s pooled level: it reads only the wells\u2019 ambient RNA)', 'fewer than ' + (mc || 'min_cells') +
-      ' cells of this line in the used wells of this drug-dose', 'below 2 expected counts of the gene in this line ' +
-      'there (too few reads to measure)'];
+      'gene\u2019s pooled level: it reads only the wells\u2019 ambient RNA)', 'no used well of this drug-dose has ' +
+      mc + ' or more cells of this line (the rule is per well)',
+      'below 2 expected counts of the gene in this line there (too few reads to measure)',
+      'no per-line z: the line\u2019s spread over the reference wells (tensor/line_scale) is empty for this gene, ' +
+      'so z cannot be computed; the log2 FC is measured'];
+  }
+  // the reason text of an empty per-line value of line l at drug-dose k (isZ: the z column), with the line's cells
+  // in each used well when the reason is the cell count
+  function lineWhy(G, miss, LF, dda) {
+    var why = missingTexts(), L = D().L;
+    TM.pooled.use(dda);
+    return function (l, k, isZ) {
+      if (isZ && !isNaN(LF.v[k * L + l])) return why[3];
+      var i = miss(l, k);
+      return why[i] + (i === 1 && TM.pooled.loaded() ? ': ' + TM.pooled.cellsText(k, l) : '');
+    };
   }
   function passes(lfc, z) {
     var t = TM.data.K.line_z_threshold, s = TM.data.K.STRONG_LFC;
@@ -752,8 +808,11 @@ TM.gene = (function () {
       TM.clear(status);
       status.appendChild(TM.h('span', {class: 'small'}, 'Per-line data: ' + (x.source ||
             '') + ' (' + Math.round(x.ms) + ' ms).'));
-      var reasons = missingTexts().concat(['the reason is still loading (linecpm.js, ddarr.js)']);
-      var missFn = function () { return 3; };
+      // 0-3 per-line reasons, 4 still loading, 5 an empty pooled value, 6 an empty group mean
+      var reasons = missingTexts().concat(['the reason is still loading (linecpm.js, ddarr.js)',
+        'pooled row: no pooled value (' + TM.pooled.rule() + '; hover the cell for the counts of each used well)',
+        'group row: none of the group\u2019s lines has a value at this drug-dose']);
+      var missFn = function () { return 4; };
       var miss = function (l, k) { return missFn(l, k); };
       var mode = 'lfc', rowsBy = 'organ', colsBy = 'pooled', extra = '';
       var orders = lineOrders(), drv = driverGenes();
@@ -817,6 +876,11 @@ TM.gene = (function () {
             la = g + '-altered'; lb = 'no recorded ' + g + ' alteration';
           }
         }
+        function count(set, k) {
+          var c = 0, a = arr().v;
+          set.forEach(function (l) { if (!isNaN(a[k * L + l])) c++; });
+          return c;
+        }
         function mean(set) {
           return function (k) {
             var s = 0, c = 0, a = arr().v;
@@ -824,13 +888,22 @@ TM.gene = (function () {
             return c ? s / c : NaN;
           };
         }
-        return [{label: '(computed) mean of ' + A.length + ' ' + la + ' lines', value: mean(A), kind: 'f64'},
-          {label: '(computed) mean of ' + B.length + ' ' + lb + ' lines', value: mean(B), kind: 'f64'}];
+        function row(set, name) {
+          return {label: '(computed) mean over the ' + name + ' lines with a value (' + set.length + ' lines)',
+            value: mean(set), kind: 'f64', missing: function () { return 6; },
+            note: function (k) { return 'mean of ' + count(set, k) + ' of ' + set.length + ' ' + name + ' lines (the ' +
+              'ones with a value here)'; },
+            why: function () { return 'none of the ' + set.length + ' ' + name + ' lines has a value here'; }};
+        }
+        return [row(A, la), row(B, lb)];
       }
       function tops() {
         var pooled = mode === 'lfc' ? G.lfc : G.z;
-        return [{label: 'pooled (all lines) ' + mode, value: function (k) { return pooled[k]; },
-            kind: 'f32'}].concat(groupRows());
+        return [{label: 'pooled (all lines) ' + mode, value: function (k) { return pooled[k]; }, kind: 'f32',
+          missing: function () { return 5; },
+          why: function (k) { return TM.pooled.why(k, G.col, G.lfc[k], mode === 'z' && !isNaN(G.lfc[k]) ? 'z' :
+            'lfc'); }}]
+          .concat(groupRows());
       }
       var tools = TM.h('span', {class: 'heat-tools'});
       var selMode = TM.h('select', {'aria-label': 'value', onchange: function () { mode = selMode.value; redraw(); }},
@@ -861,7 +934,8 @@ TM.gene = (function () {
       var hm = TM.heat({rows: L, cols: n, name: 'lines', kind: 'f16', unit: 'per-line log2 FC', clip: 2, clipMax: 10,
         value: function (l, k) { return arr().v[k * L + l]; },
         exact: function (l, k) { var a = arr(); return TM.csv.f16(a.v[k * L + l], a.raw[k * L + l]); },
-        missing: miss, reasons: reasons, mark: function (l, k) { return passes(LF.v[k * L + l], LZ.v[k * L + l]); },
+        missing: function (l, k) { return mode === 'z' && !isNaN(LF.v[k * L + l]) ? 3 : miss(l, k); },
+        reasons: reasons, mark: function (l, k) { return passes(LF.v[k * L + l], LZ.v[k * L + l]); },
         markText: 'passes the calibrated per-line cut (|z| \u2265 ' + K.line_z_threshold + ' and at least 1.5\u00d7)',
         rowLabel: function (l) { return d.line.name[l]; }, rowSub: function (l) { return d.line.organ[l] + ', TP53 ' +
           d.line.tp53[l]; },
@@ -883,10 +957,12 @@ TM.gene = (function () {
       heatHold.appendChild(hm.el);
       var lt = longTable(G, x, miss, reasons);
       longHold.appendChild(lt.el);
+      if (Array.prototype.some.call(G.lfc, function (v) { return isNaN(v); })) TM.pooled.load(true);
       return reasonsP.then(function (rr) {
         missFn = lineMissing(G, rr[0], rr[1]);
+        TM.pooled.use(rr[1]);
       }, function (e) {
-        reasons[3] = 'the reason is not known: linecpm.js or ddarr.js could not be loaded (' + e.message + ')';
+        reasons[4] = 'the reason is not known: linecpm.js or ddarr.js could not be loaded (' + e.message + ')';
       }).then(function () { hm.redraw(); lt.refresh(); });
     }, function (e) {
       TM.clear(status);
@@ -899,6 +975,11 @@ TM.gene = (function () {
     var d = D(), L = d.L, n = d.D, LF = x.a.lfc, LZ = x.a.z;
     function dd(i) { return Math.floor(i / L); }
     function ln(i) { return i % L; }
+    function why(i, isZ) {
+      if (isZ && !isNaN(LF.v[i])) return reasons[3];
+      var j = miss(ln(i), dd(i));
+      return reasons[j] + (j === 1 && TM.pooled.loaded() ? ': ' + TM.pooled.cellsText(dd(i), ln(i)) : '');
+    }
     return TM.table({key: 'long', n: n * L, csv: G.label + '_lines_x_drugdoses', id: 'long-table',
       title: 'Long table: every drug-dose \u00d7 line (' + TM.fmt.int(n * L) + ' rows)',
       intro: 'One row per (drug-dose, line), in source order (drug-dose, then line). Empty values carry their reason.',
@@ -922,8 +1003,8 @@ TM.gene = (function () {
           text: function (i) { return TM.csv.f16(LZ.v[i], LZ.raw[i]); },
           doc: 'per-line z (tensor DDL_z, exact float16; when empty, see Missing reason)'},
         {key: 'missing_why', label: 'Missing reason', type: 'str', get: function (i) {
-          return isNaN(LF.v[i]) ? reasons[miss(ln(i), dd(i))] : '';
-        }, doc: 'why the line has no value here (empty when it has one)'},
+          return isNaN(LF.v[i]) ? why(i) : isNaN(LZ.v[i]) ? why(i, 1) : '';
+        }, doc: 'why the line has no log2 FC, or no z, here (empty when it has both)'},
         {key: 'passes', label: 'Passes the calibrated cut', type: 'bool',
           get: function (i) { return passes(LF.v[i], LZ.v[i]); },
           doc: '|per-line z| \u2265 ' + d.K.line_z_threshold +
@@ -1530,6 +1611,40 @@ TM.gene = (function () {
     return TM.table({key: key, n: tab.n, title: title, caption: head, csv: (csvLabel || 'arrows') + '_direction_' + key,
       cols: main.concat(rest), filters: dirFilters, sort: [['grade_w', 'asc'], ['q_w', 'asc']]});
   }
+  // how many tests the direction stage ran (direction/info.json), and how many involved this gene when the gene's
+  // file has them (table dtest: col, kind, role, n_tests)
+  function testsText(G) {
+    var T = G.sh.t.dtest, sym = G.symbol;
+    if (T && T.n && T.c.n_tests) {
+      var src = 0, tgt = 0, parts = [];
+      for (var i = 0; i < T.n; i++) {
+        if (T.c.col.get(i) !== G.col) continue;
+        var nn = T.c.n_tests.get(i), role = T.c.role.get(i);
+        if (role === 'source') src += nn; else tgt += nn;
+        parts.push(T.c.kind.get(i) + ' as the ' + role + ' ' + TM.fmt.int(nn));
+      }
+      return sym + ' took part in ' + TM.fmt.int(src + tgt) + ' tests: ' + TM.fmt.int(src) + ' as the source and ' +
+        TM.fmt.int(tgt) + ' as the target (' + (parts.join(', ') || 'none') + '); ' +
+        TM.fmt.plural(G.t.dir.n, 'arrow') + ' passed q < 0.10.';
+    }
+    var tests = (((TM.data.meta || {}).info || {})['direction/info.json'] || {}).tests;
+    if (!tests) return 'The direction stage recorded no test counts in this run.';
+    var all = 0, parts2 = [];
+    Object.keys(tests).forEach(function (k) {
+      if (/_p_cut$/.test(k)) return;
+      var v = tests[k];
+      if (typeof v === 'number') { all += v; parts2.push(k.replace(/_/g, ' ') + ' ' + TM.fmt.int(v)); return; }
+      if (!v || typeof v !== 'object') return;
+      var sub = Object.keys(v).filter(function (j) { return typeof v[j] === 'number'; });
+      sub.forEach(function (j) { all += v[j]; });
+      parts2.push(k.replace(/_/g, ' ') + ': ' + sub.map(function (j) {
+        return j.replace(/_/g, ' ') + ' ' + TM.fmt.int(v[j]);
+      }).join(', '));
+    });
+    return 'Tests: the direction stage ran ' + TM.fmt.int(all) + ' tests over all genes (' + parts2.join('; ') +
+      ') and wrote an arrow only at q < 0.10. It does not record how many of these tests involved ' + sym + ' as the ' +
+      'source or the target, so this page cannot give that number for one gene.';
+  }
   function tDirection(G, pane) {
     var d = D(), dir = G.t.dir, ups = [], downs = [], cells = [];
     for (var i = 0; i < dir.n; i++) {
@@ -1545,6 +1660,7 @@ TM.gene = (function () {
       'its q is below 0.10; ' + G.symbol + ' defines ' + gr.n + ' comparison group' + (gr.n === 1 ? '' : 's') +
           ' (as the ' +
       'altered or lacking gene) and ' + TM.fmt.plural(dir.n, 'arrow') + ' touch' + (dir.n === 1 ? 'es' : '') + ' it.'));
+    pane.appendChild(TM.p({class: 'small', dataset: {tested: 1}}, testsText(G)));
     return TM.dirGroupHrefs().then(function (byDesc) {
       pane.appendChild(dirTable(dir, ups, 'up', 'Upstream: arrows into ' + G.symbol + ' (' + ups.length + ')',
           byDesc, G.label).el);
@@ -1595,18 +1711,51 @@ TM.gene = (function () {
         {key: 'line_measured', label: 'truly expressed', type: 'bool', get: lm,
           doc: TM.data.colDoc('tables/line_effects.parquet', 'expressed')},
         {key: 'line_center', label: 'line centre', type: 'f32', cls: 'num',
-          get: function (l) { return G.lcen ? G.lcen[l] : NaN; },
+          get: function (l) { return G.lcen ? G.lcen[l] : NaN; }, missing: function (l) { return centreWhy(l, 0); },
           doc: 'robust centre of the gene\u2019s per-line values in the line (tensor line_center)'},
         {key: 'line_scale', label: 'line scale', type: 'f32', cls: 'num',
-          get: function (l) { return G.lsc ? G.lsc[l] : NaN; },
+          get: function (l) { return G.lsc ? G.lsc[l] : NaN; }, missing: function (l) { return centreWhy(l, 1); },
           doc: 'robust spread (1.4826 MAD), the per-line z divisor (tensor line_scale)'}]}).el);
+      // why line_center / line_scale are empty (tensor.py: median and 1.4826 MAD of the line's values over the
+      // reference wells; the standard deviation when the MAD is 0; empty when neither is above 0)
+      function centreWhy(l, which) {
+        if (!G.lcen && !G.lsc) return 'not in this run\u2019s gene file';
+        if (!lm(l)) return 'the line does not truly express ' + G.symbol + ', so it has no per-line values to centre';
+        if (which === 0 || isNaN(G.lcen[l])) return 'the line has no per-line value of ' + G.symbol + ' in any ' +
+          'reference well (drug wells on reliable plates)';
+        return 'no spread: the line\u2019s values of ' + G.symbol + ' over the reference wells do not vary (MAD and ' +
+          'standard deviation are 0, or there is only one value), so per-line z cannot be computed';
+      }
     }, function (e) { top.appendChild(TM.errorBox({title: 'linecpm.js could not be loaded', message: e.message,
           path: e.path, volume: 'web'})); });
     var st = TM.h('div', {class: 'muted'}, 'Loading the per-well data file ' + TM.ids.x(G.col) + '.js\u2026');
     xs.appendChild(st);
-    var p2 = xdata(G).then(function (x) {
+    var p2 = Promise.all([xdata(G), web('linecpm').catch(function () { return null; }),
+      web('ddarr').catch(function () { return null; })]).then(function (rr) {
+      var x = rr[0], lc = rr[1], dda = rr[2];
       TM.clear(st);
       var core = d.core, P = d.P, plates = core.t.plates;
+      // plate base (tensor.py): the line's median log2 CPM over the plate's drug wells; the atlas leaves a line out
+      // where it does not express the gene (expr_mask) and where a well has fewer than min_cells cells of it
+      var emC = lc ? lc.a.expr_mask.shape[1] : 0, wt = core.t.wells, WC = dda ? dda.a.well_line_cells : null;
+      var mcells = d.K.min_cells || 0;
+      function pbaseWhy(i) {
+        var p = Math.floor(i / L), l = i % L, pn = plates.c.plate.get(p);
+        if (lc && !lc.a.expr_mask.v[l * emC + G.col]) {
+          return 'the line does not express ' + G.symbol + ' (atlas expr_mask: its level is below 25% of the ' +
+            'median line\u2019s), so the atlas leaves its values empty and there is no plate base';
+        }
+        var nd = 0, nok = 0;
+        for (var r = 0; r < wt.n; r++) {
+          if (wt.c.plate.get(r) !== pn || wt.c.is_dmso.get(r)) continue;
+          nd++;
+          if (WC && WC.v[(wt.c.w ? wt.c.w.get(r) : r) * L + l] >= mcells) nok++;
+        }
+        if (!nd) return 'the plate has no drug wells';
+        if (WC && !nok) return 'no drug well of this plate has ' + mcells + ' or more cells of the line';
+        return 'no value: the plate\u2019s drug wells give no median for this line' + (lc ? '' : ' (linecpm.js ' +
+          'could not be loaded to say more)');
+      }
       var pnames = Array.from({length: P}, function (_, p) { return plates.c.plate.get(p); });
       if (x.a.pbase) {
         var PB = x.a.pbase;
@@ -1618,7 +1767,7 @@ TM.gene = (function () {
           {key: 'line', label: 'Line', type: 'str', get: function (i) { return d.line.name[i % L]; }},
           {key: 'plate_base', label: 'plate base (log2 CPM)', type: 'f32', cls: 'num',
             get: function (i) { return PB.v[i]; },
-            missing: function () { return 'the line has no drug wells on this plate, or no value'; },
+            missing: pbaseWhy,
             doc: 'the line\u2019s median log2 CPM over the plate\u2019s drug wells (tensor/plate_base)'}]}).el);
       }
       if (x.a.poff) {
@@ -1640,22 +1789,43 @@ TM.gene = (function () {
       }
       if (x.a.psg) {
         var PS = x.a.psg, ps = core.t.plate_scale;
+        // row i of plate_scale_gene is the group with plate_scale_group_id i in tables/wells, whose name
+        // ("plate6 5") is the plate_scale.csv group
+        var gname = {}, gwells = {};
+        for (var r0 = 0; r0 < wt.n; r0++) {
+          var gid = wt.c.plate_scale_group_id ? wt.c.plate_scale_group_id.get(r0) : -1;
+          if (gid === null || gid < 0) continue;
+          gname[gid] = wt.c.plate_scale_group ? wt.c.plate_scale_group.get(r0) : '';
+          gwells[gid] = (gwells[gid] || 0) + 1;
+        }
+        var psRows = function (i) {
+          var out = [];
+          for (var r = 0; ps && r < ps.n; r++) {
+            if (ps.c.group && gname[i] !== undefined && ps.c.group.get(r) === gname[i]) {
+              out.push(ps.c.plate.get(r) + ' ' + ps.c.dose.get(r) + ' \u00b5M (' + ps.c.n_wells.get(r) + ' wells)');
+            }
+          }
+          return out.join(', ');
+        };
         xs.appendChild(TM.table({key: 'psg', n: PS.v.length, csv: G.label + '_plate_scale_gene',
               title: 'Plate scale for this gene (' + PS.v.length + ' groups)',
-          cols: [{key: 'group', label: 'plate-scale group', type: 'int', cls: 'num', get: function (i) { return i; }},
+          cols: [{key: 'group', label: 'plate-scale group', type: 'int', cls: 'num', get: function (i) { return i; },
+            doc: 'row of plate_scale_gene.npy = plate_scale_group_id of tables/wells'},
+            {key: 'group_name', label: 'group (plate and dose)', type: 'str',
+              get: function (i) { return gname[i] !== undefined ? gname[i] : ''; },
+              missing: function () { return 'no well of this run carries this group id'; },
+              doc: 'plate_scale_group of the wells with this group id (tables/wells)'},
+            {key: 'n_wells', label: 'wells', type: 'int', cls: 'num', get: function (i) { return gwells[i] || 0; },
+              doc: 'wells of tables/wells with this group id'},
             {key: 'plate_scale_gene', label: 'z divisor', type: 'f32', cls: 'num',
               get: function (i) { return PS.v[i]; },
               doc: 'the gene\u2019s z divisor in this plate-and-dose group (plate_scale_gene)'},
-            {key: 'groups', label: 'plate_scale rows', type: 'str', get: function (i) {
-              var out = [];
-              for (var r = 0; ps && r < ps.n; r++) {
-                if (ps.c.group && String(ps.c.group.get(r)) === String(i)) out.push(ps.c.plate.get(r) + ' ' +
-                  ps.c.dose.get(r));
-              }
-              return out.join(', ');
-            }}]}).el);
+            {key: 'groups', label: 'plate_scale rows', type: 'str', long: true, get: psRows,
+              missing: function (i) { return gname[i] === undefined ? 'no well of this run carries this group id' :
+                'atlas/effects/plate_scale.csv has no row of the group ' + gname[i]; },
+              doc: 'the rows of atlas/effects/plate_scale.csv (plate, dose and wells) that make up this group'}]}).el);
       }
-      xs.appendChild(wellsTable(G, x).el);
+      xs.appendChild(wellsTable(G, x, null, lc, dda).el);
     }, function (e) {
       TM.clear(st);
       st.appendChild(TM.dataError(e, 'The plate baselines and per-well values of ' + G.symbol, 'the baseline table ' +
@@ -1663,10 +1833,28 @@ TM.gene = (function () {
     });
     return Promise.all([p1, p2.catch(function () {})]);
   }
-  function wellsTable(G, x, only) {
-    var d = D(), w = d.core.t.wells, wu = d.core.a.well_umi ? d.core.a.well_umi.v : null;
+  // lc, dda: linecpm.js and ddarr.js for the reasons of empty W1, W2 and Z (taken from the cache when not given)
+  function wellsTable(G, x, only, lc, dda) {
+    var d = D(), w = d.core.t.wells, wu = d.core.a.well_umi ? d.core.a.well_umi.v : null, L = d.L;
     var rows = only || Array.from(TM.range(w.n));
     function wi(i) { return w.c.w ? w.c.w.get(rows[i]) : rows[i]; }
+    lc = lc || TM.load.cached('web', 'linecpm');
+    dda = dda || TM.load.cached('web', 'ddarr');
+    var EM = lc ? lc.a.expr_mask : null, WC = dda ? dda.a.well_line_cells : null, mc = d.K.min_cells || 0;
+    // the atlas gives a well a value for a gene only when MIN_LINES lines there have min_cells cells and express it
+    function wellWhy(i) {
+      if (!EM || !WC) return 'no value for this gene in this well (' + TM.pooled.rule() + ')';
+      var emC = EM.shape[1], ww = wi(i), nc = 0, ne = 0, n = TM.pooled.minLines();
+      for (var l = 0; l < L; l++) {
+        if (WC.v[ww * L + l] >= mc) { nc++; if (EM.v[l * emC + G.col]) ne++; }
+      }
+      if (nc < n) return 'only ' + nc + ' cell lines in this well have ' + mc + ' or more cells, and a well needs ' +
+        n + ' for a value (' + (typeof d.K.MIN_LINES === 'number' ? 'atlas MIN_LINES' : 'atlas MIN_LINES = 5') + ')';
+      if (ne < n) return 'only ' + ne + ' of the ' + nc + ' cell lines with ' + mc + ' or more cells in this well ' +
+        'express ' + G.symbol + ' (atlas expr_mask), and a well needs ' + n + ' for a value';
+      return 'no value: the atlas left this well empty for this gene although ' + ne + ' lines have cells and ' +
+        'express it';
+    }
     function wc(name) { var c = w.c[name]; return function (i) { return c ? c.get(rows[i]) : null; }; }
     function arr(name) { var a = x.a[name]; return function (i) { return a ? a.v[wi(i)] : NaN; }; }
     var wdoc = (d.docs['tables/wells.parquet'] || {}).cols || {};
@@ -1686,14 +1874,15 @@ TM.gene = (function () {
         {key: 'used', label: 'Used', type: 'bool', get: wc('used_in_drugdose'), doc: wdoc.used_in_drugdose ||
           'the well is used in its drug-dose (left-out wells stay listed)'},
         {key: 'w1', label: 'W1', type: 'f32', cls: 'num', get: arr('w1'),
-          doc: 'per well: effect before the position correction (W1)',
-          missing: function () { return 'no value for this well (DMSO, failed or not used)'; }},
+          doc: 'per well: effect before the position correction (W1)', missing: wellWhy},
         {key: 'w2', label: 'W2', type: 'f32', cls: 'num', get: arr('w2'),
           doc: 'per well: corrected effect (W2; DD_lfc is the mean over a drug-dose\u2019s used wells)',
-          missing: function () { return 'no value for this well'; }},
+          missing: function (i) { return isNaN(arr('w1')(i)) ? wellWhy(i) : 'no position-corrected value (the ' +
+            'position correction left it empty)'; }},
         {key: 'wz', label: 'Z', type: 'f32', cls: 'num', get: arr('wz'),
           doc: 'per well: robust z of the corrected effect',
-          missing: function () { return 'no value for this well'; }},
+          missing: function (i) { return isNaN(arr('w2')(i)) ? (isNaN(arr('w1')(i)) ? wellWhy(i) : 'no W2') :
+            'no z: the gene\u2019s spread over the reference wells is empty'; }},
         {key: 'counts', label: 'raw counts', type: 'f32', cls: 'num', get: arr('counts'),
           doc: 'raw UMI counts of the gene summed over the well\u2019s cells'},
         {key: 'raw_cpm', label: 'raw CPM', type: 'f64', cls: 'num', computed: true, get: function (i) {
@@ -1741,8 +1930,8 @@ TM.gene = (function () {
     var ul = TM.h('ul', {class: 'links'});
     function btn(text, fn) { return TM.h('button', {type: 'button', class: 'dl', onclick: fn}, text); }
     ul.appendChild(TM.h('li', null, btn('All ' + TM.fmt.int(d.D) + ' drug-doses (pooled values, flags)', function () {
-      web('ddarr').catch(function () { return null; }).then(function (dda) {
-        xdata(G).catch(function () {}).then(function () { drugsTable(G, {ddarr: dda, key: 'dl'}).csvAll(); });
+      Promise.all([predictInputs(), TM.pooled.load(true), xdata(G).catch(function () {})]).then(function (r) {
+        drugsTable(G, {ddarr: r[0][0], su: r[0][1], key: 'dl'}).csvAll();
       });
     }), ' ', TM.h('code', null, TM.csv.fname([G.label + '_drugdoses']))));
     ul.appendChild(TM.h('li', {dataset: {needs: 'data'}}, btn('Every drug-dose \u00d7 line (' + TM.fmt.int(d.D * d.L) +
@@ -1752,7 +1941,10 @@ TM.gene = (function () {
       }, function (e) { pane.appendChild(TM.dataError(e)); });
     }), ' (needs the data volume)'));
     ul.appendChild(TM.h('li', {dataset: {needs: 'data'}}, btn('Every well (' + TM.fmt.int(d.W) + ' rows)', function () {
-      xdata(G).then(function (x) { wellsTable(G, x).csvAll(); }, function (e) { pane.appendChild(TM.dataError(e)); });
+      Promise.all([xdata(G), web('linecpm').catch(function () { return null; }),
+        web('ddarr').catch(function () { return null; })]).then(function (r) {
+        wellsTable(G, r[0], null, r[1], r[2]).csvAll();
+      }, function (e) { pane.appendChild(TM.dataError(e)); });
     }), ' (needs the data volume)'));
     if (G.egene.included) {
       ul.appendChild(TM.h('li', null, btn('Cosine with every gene of the space', function () {
@@ -1820,8 +2012,9 @@ TM.gene = (function () {
     }
     var hold = TM.h('div', null, TM.note('Loading the per-line data file\u2026'));
     main.appendChild(hold);
-    return Promise.all([xdata(G), web('linecpm'), web('ddarr')]).then(function (rr) {
-      var x = rr[0], miss = lineMissing(G, rr[1], rr[2]), why = missingTexts(), dda = rr[2], LF = x.a.lfc, LZ = x.a.z;
+    return Promise.all([xdata(G), web('linecpm'), web('ddarr'), TM.pooled.load(true)]).then(function (rr) {
+      var x = rr[0], miss = lineMissing(G, rr[1], rr[2]), dda = rr[2], LF = x.a.lfc, LZ = x.a.z;
+      var lw = lineWhy(G, miss, LF, dda);
       TM.clear(hold);
       var Az = dda.a.DD_Az ? dda.a.DD_Az.v : null;
       hold.appendChild(TM.table({key: '', n: n, csv: G.label + '_' + nm + '_drugdoses', id: 'gl-table',
@@ -1832,24 +2025,28 @@ TM.gene = (function () {
           sortv: function (k) { return d.dd.conc[k]; }, sortNum: true},
         {key: 'lfc', label: 'per-line log2 FC', type: 'f16', cls: 'num', get: function (k) { return LF.v[k * L + l]; },
           text: function (k) { return TM.csv.f16(LF.v[k * L + l], LF.raw[k * L + l]); },
-              missing: function (k) { return why[miss(l, k)]; }},
+          missing: function (k) { return lw(l, k); }},
         {key: 'fold', label: 'fold', type: 'f64', computed: true, cls: 'num',
           get: function (k) { return Math.pow(2, LF.v[k * L + l]); },
           show: function (k) { return TM.fmt.fold(LF.v[k * L + l]); }},
         {key: 'z', label: 'per-line z', type: 'f16', cls: 'num', get: function (k) { return LZ.v[k * L + l]; },
           text: function (k) { return TM.csv.f16(LZ.v[k * L + l], LZ.raw[k * L + l]); },
-              missing: function (k) { return why[miss(l, k)]; }},
+          missing: function (k) { return lw(l, k, true); }},
         {key: 'passes', label: 'Passes the calibrated cut', type: 'bool',
           get: function (k) { return passes(LF.v[k * L + l], LZ.v[k * L + l]); }},
-        {key: 'pooled_lfc', label: 'pooled log2 FC', type: 'f32', cls: 'num', get: function (k) { return G.lfc[k]; }},
-        {key: 'pooled_z', label: 'pooled z', type: 'f32', cls: 'num', get: function (k) { return G.z[k]; }},
+        {key: 'pooled_lfc', label: 'pooled log2 FC', type: 'f32', cls: 'num', get: function (k) { return G.lfc[k]; },
+          missing: function (k) { return TM.pooled.why(k, G.col, G.lfc[k], 'lfc'); }},
+        {key: 'pooled_z', label: 'pooled z', type: 'f32', cls: 'num', get: function (k) { return G.z[k]; },
+          missing: function (k) { return TM.pooled.why(k, G.col, G.lfc[k], 'z'); }},
         {key: 'flags', label: 'Flags', type: 'str', long: true, get: function (k) { return d.flag.s[G.flag[k]]; },
           show: function (k) { return TM.flagNode(G.flag[k]); }},
         {key: 'DD_Az', label: 'cells left (DD_Az)', type: 'f32', cls: 'num',
           get: function (k) { return Az ? Az[k * L + l] : NaN; },
           doc: 'relative-abundance z of the line at this drug-dose (\u2264 ' + d.K.DEPLETE_Z + ' = depleted)'},
-        {key: 'missing_why', label: 'Missing reason', type: 'str',
-          get: function (k) { return isNaN(LF.v[k * L + l]) ? why[miss(l, k)] : ''; }},
+        {key: 'missing_why', label: 'Missing reason', type: 'str', doc: 'why the line has no per-line log2 FC, or ' +
+          'no per-line z, here (empty when it has both)', get: function (k) {
+          return isNaN(LF.v[k * L + l]) ? lw(l, k) : isNaN(LZ.v[k * L + l]) ? lw(l, k, true) : '';
+        }},
         {key: 'dd', label: 'dd', type: 'int', cls: 'num', get: function (k) { return k; },
           show: function (k) { return TM.a(TM.href.gene(G.label, null, 'dd', k), String(k)); }}],
       rowClass: function (k) { return flagClean(G.flag[k]) ? null : 'art-row'; }}).el);
@@ -1866,19 +2063,29 @@ TM.gene = (function () {
     var pooled = TM.h('table', {class: 'mini'}, TM.h('tr', null,
         ['dose', 'pooled fold', 'log2 FC', 'z', 'q rise', 'q fall', 'flags']
       .map(function (h) { return TM.h('th', null, h); })));
-    ds.forEach(function (k) {
-      pooled.appendChild(TM.h('tr', {class: flagClean(G.flag[k]) ? null : 'art-row'},
-          TM.h('td', null, TM.a(TM.href.gene(G.label, null, 'dd', k), d.dd.dose[k] + ' \u00b5M')),
-        TM.h('td', {class: 'num'}, TM.fmt.fold(G.lfc[k])), TM.h('td', {class: 'num'}, TM.fmt.num(G.lfc[k], 'f32')),
-        TM.h('td', {class: 'num'}, TM.fmt.num(G.z[k], 'f32')), TM.h('td', {class: 'num'}, TM.fmt.num(G.qup[k], 'f32')),
-        TM.h('td', {class: 'num'}, TM.fmt.num(G.qdn[k], 'f32')), TM.h('td', null, TM.flagNode(G.flag[k]))));
-    });
+    function pooledRows() {
+      while (pooled.rows.length > 1) pooled.deleteRow(1);
+      ds.forEach(function (k) {
+        var cells = isNaN(G.lfc[k]) ? [TM.h('td', {colspan: 5, class: 'na'}, '\u2013 ' + TM.pooled.why(k, G.col,
+          G.lfc[k], 'lfc'))] : [TM.h('td', {class: 'num'}, TM.fmt.fold(G.lfc[k])), TM.h('td', {class: 'num'},
+          TM.fmt.num(G.lfc[k], 'f32')), TM.h('td', {class: 'num'}, TM.fmt.num(G.z[k], 'f32') ||
+          TM.pooled.why(k, G.col, G.lfc[k], 'z')), TM.h('td', {class: 'num'}, TM.fmt.num(G.qup[k], 'f32') ||
+          TM.pooled.why(k, G.col, G.lfc[k], 'q')), TM.h('td', {class: 'num'}, TM.fmt.num(G.qdn[k], 'f32') ||
+          TM.pooled.why(k, G.col, G.lfc[k], 'q'))];
+        pooled.appendChild(TM.h('tr', {class: flagClean(G.flag[k]) ? null : 'art-row'},
+          TM.h('td', null, TM.a(TM.href.gene(G.label, null, 'dd', k), d.dd.dose[k] + ' \u00b5M')), cells,
+          TM.h('td', null, TM.flagNode(G.flag[k]))));
+      });
+    }
+    pooledRows();
+    if (ds.some(function (k) { return isNaN(G.lfc[k]); })) TM.pooled.load(true).then(pooledRows);
     main.appendChild(TM.h('h3', null, 'Pooled (all lines)'));
     main.appendChild(pooled);
     var hold = TM.h('div', null, TM.note('Loading the per-line data file\u2026'));
     main.appendChild(hold);
     return Promise.all([xdata(G), web('linecpm'), web('ddarr')]).then(function (rr) {
       var x = rr[0], miss = lineMissing(G, rr[1], rr[2]), why = missingTexts(), LF = x.a.lfc, LZ = x.a.z;
+      var lw = lineWhy(G, miss, LF, rr[2]);
       TM.clear(hold);
       hold.appendChild(TM.heat({rows: L, cols: ds.length, name: 'drug', kind: 'f16', unit: 'per-line log2 FC', clip: 2,
             zoom: 4,
@@ -1902,12 +2109,12 @@ TM.gene = (function () {
         cols.push({key: 'lfc_' + k, label: 'lfc ' + dose + ' \u00b5M', type: 'f16', cls: 'num',
             get: function (l) { return LF.v[k * L + l]; },
           text: function (l) { return TM.csv.f16(LF.v[k * L + l], LF.raw[k * L + l]); },
-              missing: function (l) { return why[miss(l, k)]; },
+          missing: function (l) { return lw(l, k); },
           doc: 'per-line log2 fold change at ' + dose + ' \u00b5M'});
         cols.push({key: 'z_' + k, label: 'z ' + dose + ' \u00b5M', type: 'f16', cls: 'num',
             get: function (l) { return LZ.v[k * L + l]; },
           text: function (l) { return TM.csv.f16(LZ.v[k * L + l], LZ.raw[k * L + l]); },
-              missing: function (l) { return why[miss(l, k)]; }});
+          missing: function (l) { return lw(l, k, true); }});
       });
       hold.appendChild(TM.table({key: '', n: L, cols: cols, csv: G.label + '_' + name + '_by_line', id: 'gd-table',
         title: 'Every line at every dose (' + L + ' rows)'}).el);
@@ -1917,15 +2124,26 @@ TM.gene = (function () {
     var d = D(), L = d.L;
     main.appendChild(crumbs(G, 'at ' + d.dd.label[k]));
     main.appendChild(TM.h('h2', null, G.symbol + ' at ' + d.dd.label[k]));
-    main.appendChild(TM.p('Pooled: fold ' + TM.fmt.fold(G.lfc[k]) + ' (log2 FC ' + TM.csv.f32(G.lfc[k]) + '), z ' +
-      TM.csv.f32(G.z[k]) + ', q rise ' + TM.csv.f32(G.qup[k]) + ', q fall ' + TM.csv.f32(G.qdn[k]) + '. Flags: ',
-    TM.flagNode(G.flag[k]) || 'none', '. ', TM.ddLink(k, 'Drug-dose page \u203a'), ' \u00b7 ',
-    TM.a(TM.href.gene(G.label, null, 'drug', d.dd.drug[k]), 'every dose of ' + d.dd.drug[k] + ' \u203a')));
+    var pooledP = TM.h('p', {dataset: {pooled: k}});
+    function pooledText() {
+      TM.clear(pooledP);
+      var v = function (x, what) { return isNaN(x) ? 'empty (' + TM.pooled.why(k, G.col, G.lfc[k], what) + ')' :
+        TM.csv.f32(x); };
+      TM.append(pooledP, [isNaN(G.lfc[k]) ? 'Pooled: no value. ' + TM.pooled.why(k, G.col, G.lfc[k], 'lfc') + '. ' :
+        'Pooled: fold ' + TM.fmt.fold(G.lfc[k]) + ' (log2 FC ' + TM.csv.f32(G.lfc[k]) + '), z ' + v(G.z[k], 'z') +
+        ', q rise ' + v(G.qup[k], 'q') + ', q fall ' + v(G.qdn[k], 'q') + '. ', 'Flags: ',
+      TM.flagNode(G.flag[k]) || 'none', '. ', TM.ddLink(k, 'Drug-dose page \u203a'), ' \u00b7 ',
+      TM.a(TM.href.gene(G.label, null, 'drug', d.dd.drug[k]), 'every dose of ' + d.dd.drug[k] + ' \u203a')]);
+    }
+    pooledText();
+    main.appendChild(pooledP);
     main.appendChild(baselineNote());
     var hold = TM.h('div', null, TM.note('Loading the per-line data file\u2026'));
     main.appendChild(hold);
-    return Promise.all([xdata(G), web('linecpm'), web('ddarr')]).then(function (rr) {
-      var x = rr[0], miss = lineMissing(G, rr[1], rr[2]), why = missingTexts(), dda = rr[2], LF = x.a.lfc, LZ = x.a.z;
+    return Promise.all([xdata(G), web('linecpm'), web('ddarr'), TM.pooled.load(true)]).then(function (rr) {
+      var x = rr[0], miss = lineMissing(G, rr[1], rr[2]), dda = rr[2], LF = x.a.lfc, LZ = x.a.z;
+      var lw = lineWhy(G, miss, LF, dda);
+      pooledText();
       TM.clear(hold);
       var A = dda.a.DD_A, Az = dda.a.DD_Az, wl = dda.a.well_line_cells, w = d.core.t.wells;
       var used = [];
@@ -1941,13 +2159,13 @@ TM.gene = (function () {
           {key: 'lfc', label: 'per-line log2 FC', type: 'f16', cls: 'num',
             get: function (l) { return LF.v[k * L + l]; },
             text: function (l) { return TM.csv.f16(LF.v[k * L + l], LF.raw[k * L + l]); },
-                missing: function (l) { return why[miss(l, k)]; }},
+            missing: function (l) { return lw(l, k); }},
           {key: 'fold', label: 'fold', type: 'f64', computed: true, cls: 'num',
             get: function (l) { return Math.pow(2, LF.v[k * L + l]); },
             show: function (l) { return TM.fmt.fold(LF.v[k * L + l]); }},
           {key: 'z', label: 'per-line z', type: 'f16', cls: 'num', get: function (l) { return LZ.v[k * L + l]; },
             text: function (l) { return TM.csv.f16(LZ.v[k * L + l], LZ.raw[k * L + l]); },
-                missing: function (l) { return why[miss(l, k)]; }},
+            missing: function (l) { return lw(l, k, true); }},
           {key: 'passes', label: 'Passes the cut', type: 'bool',
             get: function (l) { return passes(LF.v[k * L + l], LZ.v[k * L + l]); }},
           {key: 'DD_A', label: 'DD_A', type: 'f32', cls: 'num', get: function (l) { return A ? A.v[k * L + l] : NaN; },
@@ -1955,15 +2173,25 @@ TM.gene = (function () {
           {key: 'DD_Az', label: 'DD_Az', type: 'f32', cls: 'num',
             get: function (l) { return Az ? Az.v[k * L + l] : NaN; },
             doc: 'its z (\u2264 ' + d.K.DEPLETE_Z + ' = depleted)'},
-          {key: 'cells', label: 'cells in used wells', type: 'f64', cls: 'num', computed: true, get: function (l) {
-            if (!wl) return NaN;
-            var s = 0;
-            used.forEach(function (wi) { s += wl.v[wi * L + l]; });
-            return s;
-          }, doc: 'sum over the used wells of the line\u2019s cells (well_line_cells)'}]}).el);
+          {key: 'cells', label: 'cells in used wells (sum)', type: 'f64', cls: 'num', computed: true,
+            get: function (l) {
+              if (!wl) return NaN;
+              var s = 0;
+              used.forEach(function (wi) { s += wl.v[wi * L + l]; });
+              return s;
+            }, doc: 'sum over the used wells of the line\u2019s cells (well_line_cells). A per-line value needs a ' +
+              'used well with ' + (d.K.min_cells || 'min_cells') + ' or more cells of the line: see the next column'},
+          {key: 'cells_wells', label: 'cells in each used well', type: 'str', long: true,
+            get: function (l) {
+              if (!wl) return '';
+              return TM.pooled.usedWells(k).map(function (u) {
+                return TM.csv.f32(wl.v[u.w * L + l]) + ' (' + u.name + ')';
+              }).join(', ');
+            }, doc: 'the line\u2019s cells in each used well of the drug-dose (well_line_cells); a well counts ' +
+              'for the per-line value only with ' + (d.K.min_cells || 'min_cells') + ' or more'}]}).el);
       var rows = [];
       for (i = 0; i < w.n; i++) if (w.c.drugdose_row.get(i) === k) rows.push(i);
-      hold.appendChild(wellsTable(G, x, rows).el);
+      hold.appendChild(wellsTable(G, x, rows, rr[1], rr[2]).el);
     }, function (e) { TM.clear(hold); hold.appendChild(TM.dataError(e)); });
   }
 
@@ -2004,3 +2232,106 @@ TM.gene = (function () {
     caveatsOf: caveatsOf};
 })();
 TM.pages.gene = function (ctx) { return TM.gene.page(ctx); };
+
+// Why a pooled value (DD_lfc, DD_z, DD_qup, DD_qdn) is empty (R6). The atlas gives a well a value for a gene only
+// when at least MIN_LINES cell lines there have min_cells or more cells and express the gene (atlas expr_mask);
+// a drug-dose's pooled value is the mean over its used wells, so it is empty when no used well has a value.
+// why() states that rule at once; once load() has read ddarr.js (cells of each line in each well) and linecpm.js
+// (expr_mask), it gives the counts of each used well. cellsText() lists a line's cells in the used wells.
+TM.pooled = (function () {
+  var WC = null, EM = null, emC = 0, usedOf = {}, p1 = null, p2 = null;
+  function K() { return TM.data.K || {}; }
+  function minLines() { return typeof K().MIN_LINES === 'number' ? K().MIN_LINES : 5; }
+  function minName() { return 'atlas MIN_LINES' + (typeof K().MIN_LINES === 'number' ? '' : ' = 5'); }
+  function mc() { return K().min_cells || 'min_cells'; }
+  function use(dda) { if (dda && dda.a && dda.a.well_line_cells) WC = dda.a.well_line_cells; }
+  function load(expr) {
+    if (!p1) p1 = TM.load.web('ddarr').then(use, function () {});
+    if (expr && !p2) {
+      p2 = TM.load.web('linecpm').then(function (s) {
+        EM = s.a.expr_mask || null;
+        emC = EM ? EM.shape[1] : 0;
+      }, function () {});
+    }
+    return Promise.all([p1, expr ? p2 : null]);
+  }
+  function usedWells(k) {
+    if (usedOf[k]) return usedOf[k];
+    var w = TM.data.core.t.wells, out = [];
+    for (var i = 0; w && i < w.n; i++) {
+      if (w.c.drugdose_row.get(i) === k && w.c.used_in_drugdose.get(i)) {
+        out.push({w: w.c.w ? w.c.w.get(i) : i, name: w.c.plate.get(i) + ' ' + w.c.well.get(i)});
+      }
+    }
+    usedOf[k] = out;
+    return out;
+  }
+  // per used well: the lines with >= min_cells cells, and of those the lines that express column col
+  function counts(k, col) {
+    if (!WC) return null;
+    var L = TM.data.L, m = K().min_cells || 0, ex = EM && col !== null && col !== undefined && col < emC;
+    return usedWells(k).map(function (u) {
+      var nc = 0, ne = 0;
+      for (var l = 0; l < L; l++) {
+        if (WC.v[u.w * L + l] >= m) { nc++; if (ex && EM.v[l * emC + col]) ne++; }
+      }
+      return {name: u.name, cells: nc, expr: ex ? ne : null};
+    });
+  }
+  function joinAnd(a) { return a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; }
+  function rule() {
+    return 'a well has a value only when at least ' + minLines() + ' cell lines there have ' + mc() + ' or more ' +
+      'cells and express the gene (' + minName() + ')';
+  }
+  // the drug-dose has no pooled value for any gene (every used well has too few lines with cells): text, or null
+  function ddEmpty(k) {
+    var cs = counts(k, null), n = minLines();
+    if (!cs) return null;
+    if (!cs.length) return 'the drug-dose has no used well';
+    if (!cs.every(function (c) { return c.cells < n; })) return null;
+    return (cs.length === 1 ? 'its one used well (' + cs[0].name + ') has only ' + cs[0].cells : 'its ' + cs.length +
+      ' used wells have only ' + joinAnd(cs.map(function (c) { return c.cells + ' (' + c.name + ')'; }))) +
+      ' cell lines with ' + mc() + ' or more cells, and a well needs ' + n + ' for a value (' + minName() + ')';
+  }
+  // why the pooled value of column col at drug-dose k is empty; lfc: the stored pooled log2 FC there; what: 'lfc'
+  // (the full reason), 'fold', 'z' or 'q' (when the log2 FC is empty too: a short pointer to its reason)
+  function why(k, col, lfc, what) {
+    if (isNaN(lfc) && what && what !== 'lfc') return 'no pooled value (the reason is given with the pooled log2 FC)';
+    if (!isNaN(lfc) && what === 'z') {
+      return 'no pooled z: the gene’s z divisor (its robust spread over the reference wells) is empty here; ' +
+        'the log2 FC is measured';
+    }
+    if (!isNaN(lfc) && what === 'q') return 'no q: the pooled z is empty here (a q needs a z)';
+    var e = ddEmpty(k);
+    if (e) return 'no pooled value at this drug-dose: ' + e;
+    var cs = counts(k, col), n = minLines();
+    if (!cs) return 'no pooled value: no used well of this drug-dose has a value for this gene (' + rule() + ')';
+    if (cs.length && cs.every(function (c) { return c.expr !== null && c.expr < n; })) {
+      return 'no pooled value: ' + (cs.length === 1 ? 'in its one used well (' + cs[0].name + ') only ' + cs[0].expr +
+        ' of the ' + cs[0].cells : 'in its ' + cs.length + ' used wells only ' + joinAnd(cs.map(function (c) {
+        return c.expr + ' of ' + c.cells + ' (' + c.name + ')';
+      }))) + ' cell lines with ' + mc() + ' or more cells express this gene (atlas expr_mask), and a well needs ' + n +
+        ' (' + minName() + ')';
+    }
+    if (cs.some(function (c) { return c.expr === null; })) {
+      return 'no pooled value: no used well of this drug-dose has a value for this gene (' + rule() + '; the lines ' +
+        'expressing it load with linecpm.js)';
+    }
+    return 'no pooled value: the stored value is empty although a used well has ' + n + ' or more cell lines with ' +
+      mc() + ' or more cells that express the gene; the gene’s Baseline & wells tab lists W1 and W2 of every well';
+  }
+  // the cells of line l in the used wells of drug-dose k, e.g. "17 cells in 2 used wells: 9 (plate5 A10), 8 (...)"
+  function cellsText(k, l) {
+    if (!WC) return '';
+    var L = TM.data.L, us = usedWells(k), tot = 0;
+    var parts = us.map(function (u) {
+      var v = WC.v[u.w * L + l];
+      tot += v;
+      return TM.csv.f32(v) + ' (' + u.name + ')';
+    });
+    return TM.csv.f32(tot) + ' cells in ' + TM.fmt.plural(us.length, 'used well') + (us.length ? ': ' +
+      parts.join(', ') : '');
+  }
+  return {load: load, use: use, why: why, ddEmpty: ddEmpty, usedWells: usedWells, counts: counts,
+    cellsText: cellsText, minLines: minLines, rule: rule, loaded: function () { return !!WC; }};
+})();

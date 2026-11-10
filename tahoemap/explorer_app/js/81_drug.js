@@ -262,19 +262,21 @@ TM.drug = (function () {
     }
     function nl(r, w) { var v = a.nl ? a.nl.v[r * 5 + w] : 255; return v === 255 ? NaN : v; }
     var sfx = suffix ? ' ' + dose : '', key = suffix ? '_' + k : '';
+    // why a pooled value is empty (TM.pooled: no used well had enough lines with a value)
+    function why(what) { return function (r) { return TM.pooled.why(k, r, a.lfc.v[r], what); }; }
     return [
       {key: 'fold' + key, label: 'Fold' + sfx, type: 'f64', computed: true, cls: 'num', simple: simple,
         get: function (r) { return Math.pow(2, L(r)); }, show: function (r) { return TM.fmt.fold(L(r)); },
-        doc: '2^log2 FC at ' + dose + ', computed in the page'},
-      {key: 'lfc' + key, label: 'log2 FC' + sfx, type: 'f32', cls: 'num', simple: simple, get: L,
+        missing: why('fold'), doc: '2^log2 FC at ' + dose + ', computed in the page'},
+      {key: 'lfc' + key, label: 'log2 FC' + sfx, type: 'f32', cls: 'num', simple: simple, get: L, missing: why('lfc'),
         doc: (cd.lfc || 'pooled log2 fold change') + ' (at ' + dose + '; DD_lfc, exact float32)'},
       {key: 'z' + key, label: 'z' + sfx, type: 'f32', cls: 'num', simple: simple,
-        get: function (r) { return a.z.v[r]; },
+        get: function (r) { return a.z.v[r]; }, missing: why('z'),
         doc: (cd.z || 'pooled z') + ' (at ' + dose + ')'},
       {key: 'q_up' + key, label: 'q rise' + sfx, type: 'f32', cls: 'num', get: function (r) { return a.q_up.v[r]; },
-        doc: cd.q_up || 'BH q-value for an increase'},
+        missing: why('q'), doc: cd.q_up || 'BH q-value for an increase'},
       {key: 'q_down' + key, label: 'q fall' + sfx, type: 'f32', cls: 'num', get: function (r) { return a.q_dn.v[r]; },
-        doc: cd.q_down || 'BH q-value for a decrease'},
+        missing: why('q'), doc: cd.q_down || 'BH q-value for a decrease'},
       {key: 'call' + key, label: 'Call' + sfx, type: 'str', simple: simple, get: function (r) {
         var c = call(r); return c === 1 ? 'up' : c === -1 ? 'down' : '\u2013';
       }, show: function (r) {
@@ -315,6 +317,8 @@ TM.drug = (function () {
         'tables/drug_effects. A column; nothing is filtered by it.'},
       {key: 'poseff' + key, label: 'Position effect removed' + sfx, type: 'f32', cls: 'num',
         get: function (r) { return a.poseff ? a.poseff.v[r] : NaN; },
+        missing: function (r) { return a.poseff ? (isNaN(a.lfc.v[r]) ? why('lfc')(r) : 'no position effect ' +
+          'recorded') : 'not in this run\u2019s drug-dose file'; },
         doc: 'the well-position effect removed from this value (DD_poseff, log2)'}];
   }
   function patText(code) { return code >= 0 ? (TM.data.K.PATTERNS || [])[code] || String(code) : ''; }
@@ -343,13 +347,19 @@ TM.drug = (function () {
     var cols = [gc.gene, gc.col, gc.label];
     var hi = ds.length - 1;
     function zs(r) { return ps.map(function (p) { return p.a.z.v[rows[r]]; }); }
+    function noZ(r) {
+      return 'no pooled z at any dose: ' + ps.map(function (p, j) {
+        var l = p.a.lfc.v[rows[r]];
+        return d.dd.dose[ds[j]] + ' \u00b5M: ' + TM.pooled.why(ds[j], rows[r], l, isNaN(l) ? 'lfc' : 'z');
+      }).join('; ');
+    }
     cols.push({key: 'zmax', label: 'Strongest rise: max z', type: 'f32', cls: 'num', simple: true,
       get: function (r) { var m = NaN; zs(r).forEach(function (v) { if (!isNaN(v) && !(v <= m)) m = v; }); return m; },
-      doc: 'the largest z over the ' + ds.length + ' doses (the strongest rise; sort high to low for what the drug ' +
-        'raises most)'});
+      missing: noZ, doc: 'the largest z over the ' + ds.length + ' doses (the strongest rise; sort high to low for ' +
+        'what the drug raises most)'});
     cols.push({key: 'zmin', label: 'Strongest fall: min z', type: 'f32', cls: 'num', simple: true,
       get: function (r) { var m = NaN; zs(r).forEach(function (v) { if (!isNaN(v) && !(v >= m)) m = v; }); return m; },
-      doc: 'the smallest z over the doses (the strongest fall)'});
+      missing: noZ, doc: 'the smallest z over the doses (the strongest fall)'});
     ps.forEach(function (p, j) {
       var pc = pCols(p, ds[j], ds.length > 1, true);
       pc.forEach(function (c) {
@@ -421,19 +431,57 @@ TM.drug = (function () {
       st.appendChild(TM.h('span', {class: 'small'}, 'Drug-dose files: ' + (ps[0].source || '') + '.'));
       var genes = [], mods = [];
       for (var c = 0; c < d.C; c++) (c < d.G ? genes : mods).push(c);
-      pane.appendChild(genesTable(x, ps, genes, '', 'Every gene (' + TM.fmt.int(genes.length) + ') \u00d7 ' +
-        ds.length + ' dose' + (ds.length > 1 ? 's' : '')).el);
+      var tbs = [genesTable(x, ps, genes, '', 'Every gene (' + TM.fmt.int(genes.length) + ') \u00d7 ' +
+        ds.length + ' dose' + (ds.length > 1 ? 's' : ''))];
+      TM.append(pane, emptyNote(ps, ds));
+      pane.appendChild(tbs[0].el);
       var codes = new Set();
       ps.forEach(function (p) { for (var c2 = 0; c2 < d.C; c2++) codes.add(p.a.flag.v[c2]); });
-      pane.appendChild(TM.flagLegend(Array.from(codes)) || '');
+      TM.append(pane, TM.flagLegend(Array.from(codes)));
       if (mods.length) {
-        pane.appendChild(genesTable(x, ps, mods, 'mod', 'The ' + mods.length + ' summed modules (atlas columns: ' +
-          'S phase, G2/M phase, proteasome)').el);
+        tbs.push(genesTable(x, ps, mods, 'mod', 'The ' + mods.length + ' summed modules (atlas columns: ' +
+          'S phase, G2/M phase, proteasome)'));
+        pane.appendChild(tbs[1].el);
+      }
+      // the reasons of empty pooled values need ddarr.js and linecpm.js (web volume)
+      if (ps.some(function (p) { return Array.prototype.some.call(p.a.lfc.v, function (v) { return isNaN(v); }); })) {
+        TM.pooled.load(true).then(function () {
+          tbs.forEach(function (t) { t.refresh(); });
+          var nn = emptyNote(ps, ds), old = pane.querySelector('[data-empty-pooled]');
+          if (nn && old) old.replaceWith(nn);
+        });
       }
     }, function (e) {
       TM.clear(st);
       return fallback(pane, x, e);
     });
+  }
+  // why a line's response strength (beta, r) is empty at drug-dose k; u: the line's usable wells there (-1: unknown).
+  // The atlas measures it only at drug-doses with MIN_SIG_BETA (20) or more significant genes, per used well where
+  // at least 10 of those genes have a value in the line.
+  function betaWhy(k, u) {
+    var d = D(), t = d.core.t.drugdoses, ns = t.c.n_sig_genes ? t.c.n_sig_genes.get(d.dd.row[k]) : null;
+    var need = typeof d.K.MIN_SIG_BETA === 'number' ? d.K.MIN_SIG_BETA : 20;
+    if (ns !== null && ns < need) return 'only ' + ns + ' significant genes at this drug-dose; the line response ' +
+      'strength is measured only with ' + need + ' or more (atlas MIN_SIG_BETA)';
+    if (u === 0) return 'no used well of this drug-dose has ' + (d.K.min_cells || 'min_cells') + ' or more cells of ' +
+      'this line';
+    return 'fewer than 10 of the drug-dose\u2019s significant genes have a value in this line in the used wells';
+  }
+  // a note above a genes table: the drug-doses (of ds, files ps) with no pooled value for some or every column
+  function emptyNote(ps, ds) {
+    var d = D(), parts = [];
+    ps.forEach(function (p, j) {
+      var n = 0;
+      for (var c = 0; c < d.C; c++) if (isNaN(p.a.lfc.v[c])) n++;
+      if (!n) return;
+      var e = TM.pooled.ddEmpty(ds[j]);
+      parts.push(d.dd.label[ds[j]] + ': ' + (n === d.C ? 'no pooled value for any gene' : TM.fmt.int(n) + ' of ' +
+        TM.fmt.int(d.C) + ' columns have no pooled value') + (e ? ' (' + e + ')' : ''));
+    });
+    if (!parts.length) return null;
+    return TM.h('div', {class: 'callout', dataset: {emptyPooled: parts.length}}, 'Empty pooled values (each empty ' +
+      'cell says why): ' + parts.join('; ') + '. ' + TM.pooled.rule().replace(/^a well/, 'A well') + '.');
   }
   // the data volume is not reachable: the drug's tables/drug_effects rows from its own web file, with a banner
   function fallback(pane, x, e) {
@@ -474,6 +522,12 @@ TM.drug = (function () {
         NaN; }; }
     function r2(j) { var a = A.DD_r2_modules; return function (i) { var r = rows[i]; return a ? a.v[(r[0] * L + r[1]) *
       3 + j] : NaN; }; }
+    function usableOf(i) { var a = A.usable, r = rows[i]; return a ? a.v[r[0] * L + r[1]] : -1; }
+    function modWhy(i) {
+      var u = usableOf(i);
+      return u === 0 ? 'no used well of this drug-dose has ' + (K.min_cells || 'min_cells') + ' or more cells of ' +
+        'this line' : 'the line has no value for this module in the used wells';
+    }
     var cols = [];
     if (withDrug) {
       cols.push({key: 'drug', label: 'Drug', type: 'str', simple: true,
@@ -501,17 +555,17 @@ TM.drug = (function () {
       }, doc: 'the cell counts of a drug-dose with one of the flags ' + (K.ABUNDANCE_UNTRUSTED || []).join(', ') +
         ' are less trustworthy (tables.ABUNDANCE_UNTRUSTED)'},
       {key: 'DD_beta', label: 'response beta', type: 'f32', cls: 'num', simple: true, get: arr('DD_beta'),
-        missing: function () { return 'fewer than 20 significant genes at this drug-dose (no beta)'; },
+        missing: function (i) { return betaWhy(rows[i][0], usableOf(i)); },
         doc: 'how strongly the line shows the drug\u2019s consensus response (1 = a typical line, 0 = none; atlas ' +
           'DD_beta)'},
       {key: 'DD_rcor', label: 'response r', type: 'f32', cls: 'num', get: arr('DD_rcor'),
-        missing: function () { return 'fewer than 20 significant genes at this drug-dose'; },
+        missing: function (i) { return betaWhy(rows[i][0], usableOf(i)); },
         doc: 'correlation of the line\u2019s response with the consensus (atlas DD_rcor)'},
-      {key: 'S', label: 'S phase', type: 'f32', cls: 'num', get: r2(0),
+      {key: 'S', label: 'S phase', type: 'f32', cls: 'num', get: r2(0), missing: modWhy,
         doc: 'per-line S-phase module effect (atlas DD_r2_modules[..., 0])'},
-      {key: 'G2M', label: 'G2/M phase', type: 'f32', cls: 'num', get: r2(1),
+      {key: 'G2M', label: 'G2/M phase', type: 'f32', cls: 'num', get: r2(1), missing: modWhy,
         doc: 'per-line G2/M module effect (DD_r2_modules[..., 1])'},
-      {key: 'PROT', label: 'proteasome', type: 'f32', cls: 'num', get: r2(2),
+      {key: 'PROT', label: 'proteasome', type: 'f32', cls: 'num', get: r2(2), missing: modWhy,
         doc: 'per-line proteasome module effect (DD_r2_modules[..., 2])'},
       {key: 'usable', label: 'usable wells', type: 'int', cls: 'num',
         get: function (i) { var a = A.usable; var r = rows[i]; return a ? a.v[r[0] * L + r[1]] : NaN; },
@@ -771,6 +825,7 @@ TM.drug = (function () {
   }
 
   return {page: page, ddGroups: ddGroups, ddValue: ddValue, ddDoc: ddDoc, pCols: pCols, geneCols: geneCols,
+    betaWhy: betaWhy, emptyNote: emptyNote,
     abundanceCols: abundanceCols, moduleLabels: moduleLabels, untrusted: untrusted, similar: similar,
     patText: patText, eddRow: eddRow, TABS: TABS};
 })();

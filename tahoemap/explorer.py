@@ -54,13 +54,15 @@ from . import tsf_reader as TR
 from .common import (find_git, git_out, log, read_effects_index, read_stamp, remove_file, replace_file,
                      stamp_stage)
 
-VERSION = 1
+VERSION = 2                       # 2: drug pages find drug_target arrows by salt base (direction_view's rule);
+#                                   control sets matched by whole drug name; one driver row per gene
 BUCKET = 16                       # genes per gene bucket d/g/NN/BBBB.js
 DG_PER_SHARD = 32                 # direction comparisons per d/dg/KKK.js
 FLAG_CHUNK = 64                   # drug-doses per call of tables.flag_strings
 LINE_CHUNK = 256                  # genes per block of the per-line pass
 ZLIB_LEVEL = 6
-PAGES_MAX_MB = 950                # web volume above this (MiB): the size guard moves parts to the data volume
+PAGES_MAX_MB = 905                # web volume above this (MiB of 2**20 bytes = 0.949 GB, about 50 MB below GitHub
+#                                   Pages' 1 GB): the size guard moves parts to the data volume
 FILE_WARN_MB = 50                 # a file above this (MiB) is reported; GitHub warns above 50 MiB
 FILE_MAX_MB = 95                  # a file above this stops the stage (GitHub refuses files above 100 MiB)
 MAX_ENTRIES = 1000                # entries per folder
@@ -945,6 +947,38 @@ def _names(df, col):
     return df[col].fillna("").astype(str).to_numpy(dtype=object) if col in df else np.full(len(df), "", object)
 
 
+class NpyRows:
+    """A C-order .npy file read along its first axis with plain file reads (seek + readinto): rows(a, b) is a new
+    array of rows a..b-1, exact. Unlike np.load(mmap_mode='r'), the pages read do not stay mapped in the process, so
+    its peak memory counts only the blocks in use."""
+
+    def __init__(self, path):
+        self.path = path
+        self.fh = open(path, "rb")
+        version = np.lib.format.read_magic(self.fh)
+        read = {(1, 0): np.lib.format.read_array_header_1_0, (2, 0): np.lib.format.read_array_header_2_0}.get(
+            tuple(version))
+        shape, fortran, dtype = read(self.fh) if read else np.lib.format._read_array_header(self.fh, version)
+        if fortran:
+            self.fh.close()
+            raise SystemExit(f"explorer: {path} is stored in Fortran order; expected C order (the tensor stage's)")
+        self.shape, self.dtype, self.offset = tuple(shape), np.dtype(dtype), self.fh.tell()
+        self.row_bytes = int(np.prod(self.shape[1:], dtype=np.int64)) * self.dtype.itemsize
+
+    def rows(self, a, b):
+        a, b = max(0, int(a)), min(self.shape[0], int(b))
+        arr = np.empty((max(0, b - a),) + self.shape[1:], dtype=self.dtype)
+        if arr.size:
+            self.fh.seek(self.offset + a * self.row_bytes)
+            got = self.fh.readinto(memoryview(arr).cast("B"))
+            if got != arr.nbytes:
+                raise SystemExit(f"explorer: {self.path} ended early (rows {a}-{b}: {got:,} of {arr.nbytes:,} bytes)")
+        return arr
+
+    def close(self):
+        self.fh.close()
+
+
 class Build:
     """One explorer build: OUT/explorer.tmp/{web,data[,data_dd]} written step by step (A..G), then swapped in."""
 
@@ -1324,10 +1358,19 @@ class Build:
     # ---------------------------------------------------------------- step B: the per-line pass (data x/, nl)
     def step_b(self):
         S = self.S
-        gK, C, D = self.gK, self.C, self.D
-        DL, DZ = S.npy("tensor/DDL_lfc.npy"), S.npy("tensor/DDL_z.npy")
-        if DL is None or DZ is None:
+        if S.npy("tensor/DDL_lfc.npy") is None or S.npy("tensor/DDL_z.npy") is None:
             raise SystemExit("explorer: tensor/DDL_lfc.npy or DDL_z.npy is missing; run the 'tensor' stage first")
+        # the per-line tensor is read block by block with plain file reads, not mapped: a mapped file's pages stay
+        # in the process while it runs and would count in its peak memory (2 x 1.9 GB on the real data)
+        DL, DZ = NpyRows(S.path("tensor/DDL_lfc.npy")), NpyRows(S.path("tensor/DDL_z.npy"))
+        try:
+            self._step_b(S, DL, DZ)
+        finally:
+            DL.close()
+            DZ.close()
+
+    def _step_b(self, S, DL, DZ):
+        gK, C, D = self.gK, self.C, self.D
         meas = np.asarray(S.npy("tensor/line_measured.npy", mmap=False), dtype=bool)
         W1, W2, WZ = (S.npy(f"atlas/effects/{n}.npy") for n in ("W1", "W2", "Z"))
         CNT, PU = S.npy("tensor/well_counts.npy"), S.npy("atlas/effects/posunc.npy")
@@ -1349,7 +1392,7 @@ class Build:
 
         for g0 in range(0, gK, LINE_CHUNK):
             g1 = min(gK, g0 + LINE_CHUNK)
-            rl, rz = np.asarray(DL[g0:g1]), np.asarray(DZ[g0:g1])            # genes x drug-doses x lines, exact
+            rl, rz = DL.rows(g0, g1), DZ.rows(g0, g1)                        # genes x drug-doses x lines, exact
             Z, X = rz.astype(np.float32), rl.astype(np.float32)
             masks = TB.line_counts(Z, X, self.t_line, measured=meas[:, g0:g1], masks=True)
             self.NL[g0:g1] = np.stack([m.sum(axis=2) for m in masks], axis=-1).astype(np.uint8)
@@ -1764,44 +1807,57 @@ class Build:
         ctl = self.load("validation/control_sets.csv", cache=True)
         Kde = Keyed(de, "dd")
         Ked = Keyed(ed, "target_dd")
-        comps = [set(x.split("; ")) if x else set() for x in _names(ed, "compounds")]
-        is_dt = _names(ed, "kind") == "drug_target"
-        dt_rows = {}
-        for r in np.flatnonzero(is_dt):
-            for nm in comps[r]:
-                dt_rows.setdefault(nm, []).append(r)
-        ctl_txt = [" | ".join(str(v) for v in row) for row in
-                   ctl[[c for c in ("best_dd_up", "best_dd_down") if c in ctl]].fillna("").itertuples(index=False)]
+        dt_index = drug_target_index(_names(ed, "kind"), _names(ed, "compounds"))
+        ctl_lists = [list(row) for row in ctl[[c for c in ("best_dd_up", "best_dd_down") if c in ctl]].fillna("")
+                     .astype(str).itertuples(index=False)]
         edrug_of = {d: i for i, d in enumerate(_names(edr, "drug"))}
         moa_of = {m: i for i, m in enumerate(_names(moa, "moa_fine"))}
         dd_of = {}
         for i, d in enumerate(self.drug_of_dd):
             dd_of.setdefault(int(d), []).append(i)
+        dose_of_dd = _names(self.S.ix["drugdose"], "dose")
         self.want("tables/drug_effects.parquet", "dr.de")
         self.want("embed/drugs.parquet", "dr.edrug", int(np.isin(_names(edr, "drug"), self.drug_names).sum()))
         tdd = pd.to_numeric(ed["target_dd"], errors="coerce").fillna(-1).to_numpy() if len(ed) else np.zeros(0)
-        names = set(self.drug_names)
-        n_dir = int(((tdd >= 0) | np.array([is_dt[r] and bool(comps[r] & names) for r in range(len(ed))],
-                                            dtype=bool)).sum()) if len(ed) else 0
-        self.want("direction/edges.parquet", "dr.dir", n_dir)
+        # what each drug page must hold, by the rule the vault and the look-ups use (direction_view.Direction:
+        # drug_target rows whose compounds name the drug or its salt base, plus rows at one of its drug-doses);
+        # computed apart from the page's own index, so a page that misses an arrow stops the stage
+        ref = _drug_direction_reference(self.out, self.drug_names, dd_of, tdd)
         moa_col = _names(self.drugs, "moa_fine")
+        differ, on_pages = [], set()
         for i, name in enumerate(self.drug_names):
             dds = dd_of.get(i, [])
             p = np.concatenate([Kde.pos("dd", d, d + 1) for d in dds]) if dds else np.zeros(0, np.int64)
             t_de = de.iloc[np.sort(p)]
-            q = set(dt_rows.get(name, []))
+            q = drug_target_rows(dt_index, name)
             for d in dds:
                 q |= set(Ked.pos("target_dd", d, d + 1).tolist())
             t_dir = ed.iloc[sorted(q)]
+            on_pages |= q
+            if i in ref["rows"]:
+                got = set(t_dir["_row"].tolist()) if len(t_dir) else set()
+                if got != ref["rows"][i]:
+                    differ.append(f"{name}: {len(got)} on the page, {len(ref['rows'][i])} by direction_view")
             t_ed = edr.iloc[[edrug_of[name]]] if name in edrug_of else edr.iloc[0:0]
             t_moa = moa.iloc[[moa_of[moa_col[i]]]] if moa_col[i] in moa_of else moa.iloc[0:0]
-            t_ctl = ctl.iloc[[r for r, txt in enumerate(ctl_txt) if f"{name} " in txt]]
+            t_ctl = ctl.iloc[control_set_rows(ctl_lists, name, sorted({dose_of_dd[d] for d in dds}))]
             self.got("tables/drug_effects.parquet", "dr.de", t_de)
             self.got("direction/edges.parquet", "dr.dir", t_dir)
             self.got("embed/drugs.parquet", "dr.edrug", t_ed)
             self.web.shard(dr_id(i), "drug", tables={"de": t_de, "dir": t_dir, "edrug": t_ed, "moa": t_moa,
                                                      "ctl": t_ctl},
                            meta={"drug": name, "drug_index": i, "dds": dds, "vault": self.vault_path("drug", name)})
+        # the rows the drug pages must hold in all: by direction_view's rule (else, without it, the pages' own)
+        self.want("direction/edges.parquet", "dr.dir",
+                  len(set().union(*ref["rows"].values())) if ref["ok"] else len(on_pages))
+        self.checks["drug_direction"] = {
+            "drugs": len(ref["rows"]), "different": len(differ), "examples": differ[:10],
+            "rule": "each drug page holds exactly the arrows direction_view.Direction gives for the drug (drug_target "
+                    "rows whose compounds name it or its salt base, as the vault and the look-ups list them) plus the "
+                    "rows at one of its drug-doses" + ("" if ref["ok"] else f" (not compared: {ref['why']})")}
+        if differ:
+            raise SystemExit(f"explorer: {len(differ):,} drug page(s) do not hold the arrows direction_view gives "
+                             f"for the drug (" + "; ".join(differ[:5]) + "); the explorer is not written")
 
     def e_map(self):
         p = self.S.path("map/gene_map.html")
@@ -1819,6 +1875,63 @@ class Build:
         self.assets = assets_sha()
         self.app_note = write_app(self.web.copy)
         self.web.copy(None, ".nojekyll", text="")
+
+
+def drug_target_index(kinds, compounds):
+    """{drug key: edge rows} of the drug_target edges: each compound of a class ('; '-joined), under each of its names
+    (' / '-joined: one molecule under several names), is indexed by direction_view._drug_keys (its name and its salt
+    base, lower case), the rule the vault and the look-ups use."""
+    from .direction_view import _drug_keys
+    idx = {}
+    for r, (k, comps) in enumerate(zip(kinds, compounds)):
+        if k != "drug_target" or not comps:
+            continue
+        for c in str(comps).split("; "):
+            for nm in c.split(" / "):
+                for key in _drug_keys(nm):
+                    idx.setdefault(key, set()).add(r)
+    return idx
+
+
+def drug_target_rows(index, name):
+    """The drug_target edge rows (a set) whose compounds name the drug or its salt base (drug_target_index)."""
+    from .direction_view import _drug_keys
+    out = set()
+    for key in _drug_keys(name):
+        out |= index.get(key, set())
+    return out
+
+
+def _drug_direction_reference(out, drug_names, dd_of, tdd):
+    """Per drug index, the edges.parquet rows its page must hold, from direction_view.Direction (drug_targets, the
+    vault's and the look-ups' rule) and the rows at its drug-doses. {'ok', 'why', 'rows': {i: set}}."""
+    try:
+        from .direction_view import Direction
+        V = Direction(out)
+    except Exception as e:  # noqa: BLE001  (an output without direction, or an older one: nothing to compare)
+        return {"ok": False, "why": f"direction_view could not read direction/ ({type(e).__name__}: {e})", "rows": {}}
+    rows = {}
+    for i, name in enumerate(drug_names):
+        want = {int(x) for x in V.drug_targets(name, collapse=False)["edge_id"].tolist()}
+        for d in dd_of.get(i, []):
+            want |= {int(x) for x in np.flatnonzero(tdd == d)}
+        rows[i] = want
+    return {"ok": True, "why": "", "rows": rows}
+
+
+def control_set_rows(lists, name, doses):
+    """The rows of validation/control_sets.csv whose best_dd_up or best_dd_down list names one of the drug's
+    drug-doses. lists: per row, its list texts ('; '-joined items '<drug> <dose> uM (<mean z>[, flags])'). An item
+    names the drug when it starts with '<drug> <dose> uM (' for one of the drug's doses: the drug name is compared
+    whole, so 'Irinotecan' does not take the items of 'Irinotecan (hydrochloride)'."""
+    pre = tuple(f"{name} {d} uM (" for d in doses)
+    if not pre:
+        return []
+    rows = []
+    for r, texts in enumerate(lists):
+        if any(t.startswith(pre) or any(f"; {p}" in t for p in pre) for t in texts if t):
+            rows.append(r)
+    return rows
 
 
 def write_app(copy):
@@ -2078,19 +2191,35 @@ def _column_docs(S=None):
 
 
 def _drivers(ln):
+    """core.js 'drivers': one row per (line, driver gene), in the order of tables/lines 'drivers'. 'type' holds every
+    variant type recorded for the gene in the line ('; '-joined: 'Frameshift; Missense; Stopgain'), 'change' every
+    protein change of the gene ('driver_changes'; the source does not tie a change to a type, so neither does this
+    row). A gene named only in driver_changes gets a row with no type; nothing is dropped."""
     rows = []
     for li, (drv, chg) in enumerate(zip(_names(ln, "drivers"), _names(ln, "driver_changes"))):
-        ch = {}
-        for item in (x.strip() for x in chg.split("; ")):
-            parts = item.split(" ", 1)
-            if len(parts) == 2:
-                ch.setdefault(parts[0], []).append(parts[1])
+        ch, order, types = {}, [], {}
         for item in (x.strip() for x in drv.split("; ")):
             if not item:
                 continue
             m = re.match(r"^(.+?)\((.*)\)$", item)
             gene, typ = (m.group(1), m.group(2)) if m else (item, "")
-            rows.append((li, gene, typ, "; ".join(ch.get(gene, []))))
+            if gene not in types:
+                order.append(gene)
+                types[gene] = []
+            if typ and typ not in types[gene]:
+                types[gene].append(typ)
+        for item in (x.strip() for x in chg.split("; ")):
+            if not item:
+                continue
+            parts = item.split(" ", 1)
+            gene, change = (parts[0], parts[1]) if len(parts) == 2 else (item, "")
+            if gene not in types:
+                order.append(gene)
+                types[gene] = []
+            if change:
+                ch.setdefault(gene, []).append(change)
+        for gene in order:
+            rows.append((li, gene, "; ".join(types[gene]), "; ".join(ch.get(gene, []))))
     return pd.DataFrame({"line": np.array([r[0] for r in rows], dtype=np.int16),
                          "gene": pd.Series([r[1] for r in rows], dtype=object),
                          "type": pd.Series([r[2] for r in rows], dtype=object),
@@ -2150,7 +2279,8 @@ def g_core(B):
                       "ABUNDANCE_UNTRUSTED": list(TB.ABUNDANCE_UNTRUSTED), "ARTIFACT_FLAGS": list(A.ARTIFACT_FLAGS),
                       "CC_CLEARED": TB.CC_CLEARED, "PATTERNS": list(TB.PATTERNS),
                       "MAX_LINES_LISTED": TB.MAX_LINES_LISTED, "TOP_CELLS": TB.TOP_CELLS,
-                      "PLATE_SCALE_FLAG": A.PLATE_SCALE_FLAG, "BUCKET": BUCKET, "DG_PER_SHARD": DG_PER_SHARD,
+                      "PLATE_SCALE_FLAG": A.PLATE_SCALE_FLAG, "MIN_LINES": int(A.MIN_LINES),
+                      "MIN_SIG_BETA": int(A.MIN_SIG_BETA), "BUCKET": BUCKET, "DG_PER_SHARD": DG_PER_SHARD,
                       "REPRO_MIN": REL.REPRO_MIN, "REPRO_FDR": REL.REPRO_FDR, "ONE_HALF": REL.ONE_HALF,
                       "REL_TOP": REL.TOP},
         "FLAG_WORDS": FLAG_WORDS, "column_docs": _column_docs(S), "arrays": ARRAY_DOCS, "paths": PATHS,

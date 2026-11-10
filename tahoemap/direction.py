@@ -234,7 +234,8 @@ from . import tlib as T
 from .common import folder, log, replace_file, stable_seed, stamp_stage, write_json, write_parquet
 from .tensor import AMB_FRAC
 
-VERSION = 3
+VERSION = 4                    # 4: alert texts name every shared target and every co-occurring, opposite or
+#                                co-absent gene (no list is cut)
 
 K_DD = 10                      # drug-doses per gene (its strongest by pooled |z|)
 Z_CLIP = 10.0                  # per-line z clipped at +-this before any mean
@@ -1395,7 +1396,7 @@ def _genotype_groups(c):
         g["cooccur"] = [(h, j) for h, j in seen.items()]
         if g["cooccur"]:
             g["alerts"].append("co-occurs with " + ", ".join(f"{h}-altered lines (overlap {j:.2f})"
-                                                              for h, j in g["cooccur"][:3]))
+                                                              for h, j in g["cooccur"]))
         seen_a = {}
         for v, h, ni_, na_ in sorted(anti, reverse=True):
             seen_a.setdefault(h, (v, ni_, na_))
@@ -1404,8 +1405,7 @@ def _genotype_groups(c):
             n_al, n_in = int(g["alt"].sum()), int(g["inn"].sum())
             g["alerts"].append("another gene's alterations sit on the other side of the comparison: " + ", ".join(
                 f"{h} alterations are in {ni_} of the {n_in} comparison lines and {na_} of the {n_al} "
-                f"{g['gene']}-altered lines (phi -{v:.2f})" for h, (v, ni_, na_) in list(seen_a.items())[:3])
-                + (f" (and {len(seen_a) - 3} more genes)" if len(seen_a) > 3 else "")
+                f"{g['gene']}-altered lines (phi -{v:.2f})" for h, (v, ni_, na_) in seen_a.items())
                 + ": that alteration may be the cause, with the opposite sign")
         x = g["col"]
         if x >= 0:
@@ -1466,7 +1466,10 @@ def _null_groups(c, geno_groups, records):
                 jac[i - b0, i] = 0.0
                 hit = np.flatnonzero(jac[i - b0] >= JACCARD_CO)
                 hit = hit[np.lexsort((hit, -jac[i - b0, hit]))]
-                out[i]["null_co"] = [(_set_name(c, out[h]["genes"]), float(jac[i - b0, h])) for h in hit[:3]]
+                # every set is named when they are few (the reason is then an alert: a candidate co-deletion);
+                # beyond NOTE_COABSENT_SETS the reason is a note (a tissue programme): the 3 closest, and the count
+                keep = hit if hit.size <= NOTE_COABSENT_SETS else hit[:3]
+                out[i]["null_co"] = [(_set_name(c, out[h]["genes"]), float(jac[i - b0, h])) for h in keep]
                 out[i]["null_co_n"] = int(hit.size)
     return out
 
@@ -1481,8 +1484,8 @@ def _null_gene_alerts(c, g, x, records):
     al = list(g["alerts"])
     others = [c.sym[y] for y in g["genes"] if y != x]
     if others:
-        al.append(f"{len(others)} other gene(s) are absent from exactly these lines ({', '.join(others[:4])}"
-                  f"{', ...' if len(others) > 4 else ''}): any of them could be the cause")
+        al.append(f"{len(others)} other gene(s) are absent from exactly these lines ({', '.join(others)}): any of "
+                  "them could be the cause")
     rx = records.get(str(c.sym[x]).upper(), {})
     dele = np.array([any(v[1] == "Deletion" or v[0] == "LoF" for v in rx.get(i, ())) for i in range(c.L)])
     if dele.any():
@@ -1492,7 +1495,7 @@ def _null_gene_alerts(c, g, x, records):
                       "genotype evidence too")
     co = [(h, j) for h, j in g["cooccur"] if h != str(c.sym[x]).upper()]     # its own records: 'deletion recorded'
     if co:
-        al.append("co-occurs with " + ", ".join(f"{h}-altered lines (overlap {j:.2f})" for h, j in co[:3]))
+        al.append("co-occurs with " + ", ".join(f"{h}-altered lines (overlap {j:.2f})" for h, j in co))
     nco, nn = g.get("null_co") or [], int(g.get("null_co_n", 0))
     if nco:
         al.append("other genes are absent from most of these lines too: " + ", ".join(
@@ -2602,7 +2605,7 @@ def _drug_target(c):
                     ("activator", "down"): -1}.get((cls, direction), 0)
             al = [DRUG_ALERT, f"consistent across {len(sup)} compounds ({', '.join(comps[k] for k in sup)})"]
             if share:
-                al.append(f"the supporting compounds also share {', '.join(sorted(share)[:4])}: "
+                al.append(f"the supporting compounds also share {', '.join(sorted(share))}: "
                           f"{'it' if len(share) == 1 else 'any of them'} could be the cause instead")
             if cls == "unclear":
                 al.append("the compounds' mechanism (inhibitor or activator) is not recorded: sign not inferred")
@@ -3389,8 +3392,13 @@ def tier_rules_lines():
         f"{NOTE_WITHIN_ORGAN_FRAC:g} x A or i is below {NOTE_WITHIN_ORGAN_FRAC:g} x I (NOTE_WITHIN_ORGAN_FRAC); else a "
         "note (a within-organ comparison costs lines, not validity).",
         f"- 'other genes are absent from most of these lines too ... (and N more line sets)': an alert when "
-        f"{NOTE_COABSENT_SETS} or fewer line sets overlap in all (NOTE_COABSENT_SETS: a candidate co-deletion); else "
-        "a note (many genes share the pattern: a tissue programme rather than one deletion).",
+        f"{NOTE_COABSENT_SETS} or fewer line sets overlap in all (NOTE_COABSENT_SETS: a candidate co-deletion; every "
+        "one of them is then named); else a note (many genes share the pattern: a tissue programme rather than one "
+        "deletion; the 3 closest sets are named and the others counted).",
+        "- Lists in a reason are never cut: 'the supporting compounds also share ...' names every shared target, "
+        "'co-occurs with ...' every co-occurring gene (as groups.parquet cooccurs_with), 'another gene's alterations "
+        "sit on the other side ...' every such gene, 'N other gene(s) are absent from exactly these lines (...)' all "
+        "N.",
         f"- 'X itself is not expressed in k of the n altered lines': an alert when k is above "
         f"{NOTE_NOT_EXPRESSED_FRAC:g} x n (NOTE_NOT_EXPRESSED_FRAC); else a note.",
         "- Every other reason is an alert, among them: tissue-confounded; co-occurs or another gene's alterations on "

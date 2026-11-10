@@ -875,6 +875,25 @@ def https(work):
           err[:160])
 
 
+@case
+def docs(work):
+    """docs/quick-start.md for the PC: git commands work with the portable MinGit that is not on PATH; the disk the
+    published explorer needs (the upload's git copies, the previous run's data kept by the hard links) and the data
+    repository's growth are said; the pages limit is given with its unit."""
+    c = "docs"
+    with open(os.path.join(REPO, "docs", "quick-start.md"), encoding="utf-8") as fh:
+        qs = fh.read()
+    want = {"update with MinGit": '& "C:\\tahoe\\mingit\\cmd\\git.exe" -C C:\\tahoe\\repo pull',
+            "git copies": "about 4.5 GB", "kept by the hard links": "until `export --explorer --force` replaces them",
+            "repository growth": "**The data repository grows.**", "pages limit unit": "`--pages-max-mb 905` (in MiB",
+            "publishing disk row": "| publishing the explorer (optional) |"}
+    miss = [k for k, w in want.items() if w not in qs]
+    bare = [ln.strip() for ln in qs.splitlines() if "git -C C:\\tahoe\\repo pull" in ln and "on PATH" not in ln]
+    check(c, "quick-start.md: the Windows update uses the MinGit git.exe (git is not on PATH); publishing's disk "
+          "and the data repository's growth are said; --pages-max-mb has its unit", not miss and not bare,
+          f"missing {miss}; bare git lines {bare[:2]}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workdir", default=None, help="scratch folder (default: a temporary one, removed after)")
@@ -889,7 +908,7 @@ def main():
     t0 = time.time()
     try:
         for fn in (files, stream_build, pipeline_lock, git, links, keys, signals, review_bits, query, https,
-                   explorer):
+                   explorer, docs):
             d = os.path.join(work, fn.__name__)
             os.makedirs(d)
             fn(d)

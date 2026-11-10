@@ -66,8 +66,9 @@ from .common import (folder, log, marked_names, read_effects_index, replace_file
                      write_csv, write_json)
 from .embed import capped
 
-VERSION = 5                 # 3: flagged items stay in their ranked place, with an alert; 4: the direction section;
-#                             5: drug_moa.csv lists every drug of a class (was the first 12)
+VERSION = 6                 # 3: flagged items stay in their ranked place, with an alert; 4: the direction section;
+#                             5: drug_moa.csv lists every drug of a class (was the first 12); 6: module_enrichment.csv
+#                             lists every overlapping gene (was the first 25); report.md marks every cut name ('…')
 N_RANDOM = 20_000           # random gene pairs: the background of every AUROC
 N_NULL = 200                # random gene sets per set size for the empirical p of a set's AUROC
 NULL_SOURCES = ("control", "hallmark", "synthetic")
@@ -605,6 +606,25 @@ def _enrichment(sp, sets):
     return units, tsets, O, P, Q
 
 
+def _clip(text, n):
+    """A name for a report table: whole when it has n characters or fewer, else its first n - 1 and '…' (the CSV the
+    table comes from holds it whole)."""
+    t = "" if text is None or (isinstance(text, float) and not np.isfinite(text)) else str(text)
+    return t if len(t) <= n else t[:n - 1].rstrip() + "…"
+
+
+def _arm_names(top, n_arm, k=5):
+    """An arm's first k genes (marked_names: an alerted gene keeps its place), and 'k of N' when the arm has more."""
+    names = marked_names(top, k)
+    if not names:
+        return "-"
+    try:
+        n = int(n_arm)
+    except (TypeError, ValueError):
+        n = len(names)
+    return ", ".join(names) + (f" … ({len(names)} of {n})" if n > len(names) else "")
+
+
 def _enrichment_table(sp, sets, units, tsets, O, P, Q):
     ns = np.array([len(sets[j]["cols"]) for j in tsets], dtype=np.int64)
     i, j = np.nonzero((O >= 2) & ((P <= ENRICH_KEEP_P) | (Q < LABEL_Q)))
@@ -618,7 +638,7 @@ def _enrichment_table(sp, sets, units, tsets, O, P, Q):
         rows.append({"module": m, "arm": arm, "n_unit": len(mem), "source": st["source"], "set": st["set"],
                      "set_label": st["label"], "n_set": int(ns[b]), "overlap": int(O[a, b]),
                      "expected": round(exp, 3), "fold": round(O[a, b] / exp, 3) if exp > 0 else np.nan,
-                     "p": P[a, b], "q": Q[a, b], "genes": ", ".join(sp.sym[sp.inc[ov[:25]]])})
+                     "p": P[a, b], "q": Q[a, b], "genes": ", ".join(sp.sym[sp.inc[ov]])})
     cols = ["module", "arm", "n_unit", "source", "set", "set_label", "n_set", "overlap", "expected", "fold", "p",
             "q", "genes"]
     df = pd.DataFrame(rows, columns=cols)
@@ -1145,12 +1165,13 @@ def _report(path, ctx):
           f"genes in the space, Benjamini-Hochberg over all tests; module_enrichment.csv). {nlab} of {len(labels)} "
           f"modules carry a set label (q < {LABEL_Q}, >= {LABEL_MIN_OVERLAP} genes shared; the most significant "
           f"set of <= {LABEL_MAX_SET} genes when there is one); the others are named by their top genes. "
-          f"The 20 largest:", ""]
+          f"The 20 largest ({min(20, len(labels))} of {len(labels)} modules; all {len(labels)} in module_labels.csv; "
+          f"'k of N' after an arm's names: k of its N genes named, all of them in graph/nodes.parquet):", ""]
     if len(labels):
         rows = [[r["module"], r["n_genes"], f"{r['n_plus']}/{r['n_minus']}", r["label"],
                  f"{r['label_source']}{(' (' + r['label_arm'] + ')') if r['label_arm'] else ''}",
-                 _p_fmt(r["label_q"]), ", ".join(marked_names(r["top_plus"], 5)) or "-",
-                 ", ".join(marked_names(r["top_minus"], 5)) or "-"]
+                 _p_fmt(r["label_q"]), _arm_names(r["top_plus"], r.get("n_plus")),
+                 _arm_names(r["top_minus"], r.get("n_minus"))]
                 for _, r in labels.sort_values("n_genes", ascending=False).head(20).iterrows()]
         L += [_md_table(["module", "genes", "+/-", "label", "from (arm)", "q", "top + arm", "top - arm"], rows), ""]
 
@@ -1180,7 +1201,7 @@ def _report(path, ctx):
         rows = [[f"{r['symbol_a']}{' ' + ALERT if fo[r['col_a']] else ''} ({r['module_a']}{r['arm_a']})",
                  f"{r['symbol_b']}{' ' + ALERT if fo[r['col_b']] else ''} ({r['module_b']}{r['arm_b']})",
                  _f(r["cos"], "{:+.2f}"), f"{_f(r['cos_half1'], '{:+.2f}')} / {_f(r['cos_half2'], '{:+.2f}')}",
-                 _p_fmt(r["fdr"]), (str(r["name_a"])[:40] or "-") + " / " + (str(r["name_b"])[:40] or "-")]
+                 _p_fmt(r["fdr"]), (_clip(r["name_a"], 40) or "-") + " / " + (_clip(r["name_b"], 40) or "-")]
                 for _, r in edges.iloc[capped(np.arange(len(edges)), ~e_alert, 25)].iterrows()]
         L += [_md_table(["gene a (module arm)", "gene b (module arm)", "cos", "cos half1 / half2", "fdr",
                          "names"], rows), ""]
@@ -1202,8 +1223,8 @@ def _report(path, ctx):
           f"annotation):", ""]
     if len(members):
         top = top.iloc[capped(np.arange(len(top)), ~m_alert, 25)]
-        rows = [[r["symbol"] + (f" {ALERT}" if r.get("alert") else ""), (str(r["name"])[:45] or "-"),
-                 f"{r['module']}{r['arm']}", r["set_label"][:60],
+        rows = [[r["symbol"] + (f" {ALERT}" if r.get("alert") else ""), (_clip(r["name"], 45) or "-"),
+                 f"{r['module']}{r['arm']}", _clip(r["set_label"], 60),
                  f"{r['n_annotated_in_arm']}/{r['n_arm']}", _f(r["mean_cos"]),
                  f"{_f(r['mean_cos_half1'])} / {_f(r['mean_cos_half2'])}", r["n_reference_sets"]]
                 for _, r in top.iterrows()]
@@ -1317,7 +1338,7 @@ and p <= 0.05 (or q < 0.05) are kept.
 | `source`, `set`, `set_label`, `n_set` | the set and its genes in the space |
 | `overlap`, `expected`, `fold` | genes in both; expected by chance; overlap / expected |
 | `p`, `q` | hypergeometric p, BH q over all tests |
-| `genes` | overlapping genes (strongest on the module axis first, <= 25) |
+| `genes` | every overlapping gene (`overlap` of them), strongest on the module axis first |
 
 ## module_labels.csv - one row per module
 | column | meaning |

@@ -412,8 +412,13 @@ constants in `tahoemap/direction.py` and are listed in `direction/README.md` and
 | *Y measured in a of the A and i of the I lines* (*target measured in part of the lines*) | `NOTE_MEASURED_FRAC = 0.75` | fewer than 5 measured lines on a side, or fewer than 75% of a side's lines | a few lines without the target cost little when most are measured |
 | *supporting drug-doses with artifact flags (N% of the evidence)* (*artifact flags*) | `NOTE_ART_SHARE = 0.5` | the flagged drug-doses carry at least 50% of the evidence (`art_share`), or the strongest supporting drug-dose is one of them (the text then says *the strongest among them*) | the arrow rests mostly on unflagged drug-doses |
 | *compared within organs: a of the A ... and i of the I others share an organ* (*within organs, on part of the lines*) | `NOTE_WITHIN_ORGAN_FRAC = 0.5` | fewer than half of either side share an organ with the other side | a within-organ comparison costs lines, not validity |
-| *other genes are absent from most of these lines too ... (and N more line sets)* (*also absent*) | `NOTE_COABSENT_SETS = 10` | 10 or fewer line sets overlap in all: a candidate co-deletion | many genes share the pattern: a tissue programme rather than one deletion |
+| *other genes are absent from most of these lines too ... (and N more line sets)* (*also absent*) | `NOTE_COABSENT_SETS = 10` | 10 or fewer line sets overlap in all: a candidate co-deletion (every set is then named) | many genes share the pattern: a tissue programme rather than one deletion (the 3 closest sets are named, the others counted) |
 | *X itself is not expressed in k of the n altered lines* (*X not expressed in k of the n altered lines*) | `NOTE_NOT_EXPRESSED_FRAC = 0.25` | k is more than a quarter of n | a few deleted or silenced lines leave most of the comparison intact |
+
+Lists inside a reason are never cut. *The supporting compounds also share ...* names every shared target. *Co-occurs
+with ...* names every co-occurring gene (the same genes as `cooccurs_with` in `groups.parquet`). *Another gene's
+alterations sit on the other side ...* names every such gene. *N other gene(s) are absent from exactly these lines
+(...)* names all N.
 
 How `art_share` is computed: for each of the target's 10 strongest drug-doses, the contrast between the two sides (z
 units). `art_share` = the sum of |contrast| over the drug-doses with an artifact flag (toxic, transcription drop,

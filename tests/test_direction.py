@@ -18,7 +18,9 @@
    from VERSION 2's seed-0 edges: the tiers change no edge, grade, sign or q); (b) the reasons of alerts_all are
    exactly those of the four tiers, in order; (c) each graded reason is in the tier its threshold gives (read apart
    from direction.reason_tier) and art_share agrees with drugdoses_all; (d) some edges carry no alert; (e) an output
-   of VERSION 2 (no tier columns) still reads through direction_view. Unit: reason_tier at and around each threshold.
+   of VERSION 2 (no tier columns) still reads through direction_view; (f) the names in a reason equal the full set
+   it describes (every shared target, every co-occurring gene: VERSION 4 cuts no list). Unit: reason_tier at and
+   around each threshold.
    check(out) runs these on any finished output (tests/checks.py).
 2. Variants of the synthetic output: without metadata, relations, drug targets and cell numbers (the empty edges
    table keeps its column types), and with lines.csv lacking its Organ column (organs come from the metadata).
@@ -368,7 +370,66 @@ def tier_checks(out, fixture=None):
         return old_output_check(out)
     checks.append(("(e) an output of direction VERSION 2 (no tier columns) still reads through direction_view: "
                    "alerts = every reason, the other tiers empty", old_output))
+
+    def full_lists():
+        return reason_list_check(out, e, g)
+    checks.append(("(f) the names in a reason equal the full set it describes (every shared target, every "
+                   "co-occurring gene: no list is cut)", full_lists))
     return checks
+
+
+def reason_list_check(out, e, g):
+    """'the supporting compounds also share ...' names every target the supporting compounds share besides the
+    arrow's source (recomputed from atlas/effects/drugdose.csv targets, one molecule per salt base as the stage
+    counts it); 'co-occurs with ...' of a genotype group names every gene of its cooccurs_with column, and of an edge
+    every one (a natural knockout's edge: every one but the gene itself)."""
+    import re
+    from tahoemap import direction as Dm
+    from tahoemap.common import read_effects_index
+    dd = read_effects_index(os.path.join(out, "atlas", "effects"))["drugdose"]
+    tg = {}
+    for name, t in zip(dd["drug"].astype(str), dd["targets"] if "targets" in dd else [""] * len(dd)):
+        tg.setdefault(Dm._molecule_key(name), set()).update(Dm._split_targets(t))
+    head = "the supporting compounds also share "
+    bad, n_sh, n_co, longest = [], 0, 0, 0
+    for src, sup, al in zip(e["source"].astype(str), e["compounds_supporting"].fillna("").astype(str),
+                            e["alerts_all"].fillna("").astype(str)):
+        for r in _split(al):
+            if not r.startswith(head):
+                continue
+            n_sh += 1
+            got = r[len(head):].split(": ")[0].split(", ")
+            keys = [Dm._molecule_key(x.split(" / ")[0]) for x in sup.split("; ") if x]
+            want = sorted(set.intersection(*[tg.get(k, set()) for k in keys]) - {src.upper()}) if keys else []
+            longest = max(longest, len(want))
+            if got != want:
+                bad.append(f"{src}: names {got}, shares {want}")
+    co_head = "co-occurs with "
+    rx = re.compile(r"(\S+)-altered lines \(overlap [0-9.]+\)")
+    cw = dict(zip(g["description"].astype(str), g["cooccurs_with"].fillna("").astype(str)))
+    gene_of = dict(zip(g["description"].astype(str), g["gene"].astype(str)))
+    for desc, kind, al in zip(g["description"].astype(str), g["kind"].astype(str),
+                              g["alerts_all"].fillna("").astype(str)):
+        if kind.startswith("null"):        # a natural knockout names them on its edges (without the gene itself)
+            continue
+        want = [x.rsplit(" (", 1)[0] for x in cw.get(desc, "").split("; ") if x]
+        got = [m.group(1) for r in _split(al) if r.startswith(co_head) for m in rx.finditer(r)]
+        n_co += bool(want)
+        if got != want:
+            bad.append(f"group {desc}: names {got}, cooccurs_with {want}")
+    for grp, src, al in zip(e["group"].astype(str), e["source"].astype(str), e["alerts_all"].fillna("").astype(str)):
+        if grp not in cw:
+            continue
+        own = {src.upper(), gene_of.get(grp, "").upper()}
+        want_all = [x.rsplit(" (", 1)[0] for x in cw[grp].split("; ") if x]
+        for r in _split(al):
+            if r.startswith(co_head):
+                got = [m.group(1) for m in rx.finditer(r)]
+                if got != want_all and got != [x for x in want_all if x.upper() not in own]:
+                    bad.append(f"edge {src} ({grp}): names {got}, cooccurs_with {want_all}")
+    return not bad and n_sh > 0, (f"{n_sh} 'also share' reasons name every shared target (up to {longest}); "
+                                  f"{n_co} groups name every co-occurring gene" + (f"; wrong: {bad[:4]}" if bad
+                                                                                    else ""))
 
 
 def old_output_check(out):

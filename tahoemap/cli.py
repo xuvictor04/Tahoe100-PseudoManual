@@ -58,7 +58,7 @@ REMEMBERED = tuple(dict.fromkeys(k for v in RESULT_OPTIONS.values() for k in v))
 # on / off options: their two spellings
 SWITCHES = {"no_well_tensor": ("--no-well-tensor", "--well-tensor"), "line_dd": ("--with-line-dd", "--no-line-dd"),
             "pooled_r": ("--with-pooled-r", "--no-pooled-r")}
-PAGES_MAX_MB = 950.0                       # explorer.PAGES_MAX_MB: the default of --pages-max-mb (MiB)
+PAGES_MAX_MB = 905.0                       # explorer.PAGES_MAX_MB: the default of --pages-max-mb (MiB; 0.949 GB)
 RUN_OPTIONS = "run_options.json"           # in OUT: the result options given to earlier runs
 RETRY_SOURCES = ("failed", "offline")      # reference source statuses (prefixes) that a run with network retries
 REUSED = "reused_from.json"                # in OUT/atlas: the --reuse-atlas source and how it is linked
@@ -130,9 +130,11 @@ def make_parser():
     g.add_argument("--no-pooled-r", dest="pooled_r", action="store_false",
                    help="explorer: without the pooled-r helper again")
     g.add_argument("--pages-max-mb", type=float, default=None,
-                   help=f"explorer: the most the web volume may hold, in MiB (default {PAGES_MAX_MB:g}; GitHub Pages "
-                        "publishes sites up to 1 GB). Above it, parts move to the data volume; nothing is dropped. If "
-                        "moving is not enough, the stage stops and says what is too large")
+                   help=f"explorer: the most the web volume may hold, in MiB of 1,048,576 bytes (default "
+                        f"{PAGES_MAX_MB:g} MiB = {PAGES_MAX_MB * 2 ** 20 / 1e9:.3f} GB: GitHub Pages publishes sites "
+                        "up to 1 GB, so the default leaves about 50 MB to spare). Above it, parts move to the data "
+                        "volume; nothing is dropped. If moving is not enough, the stage stops and says what is too "
+                        "large")
     g = ap.add_argument_group("review (python -m tahoemap review plan|run|status|tables) and duplicate")
     g.add_argument("--kinds", default=None, help="review: which entities, a comma list of gene,drug,line (default all)")
     g.add_argument("--only", default=None, help="review: only these entities (comma list of names or ids such as "

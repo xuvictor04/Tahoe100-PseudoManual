@@ -77,7 +77,7 @@ TM.plot = (function () {
         TM.h('td', {class: 'bv num'}, isNaN(v) ? '' : TM.fmt.num(v, o.kind || 'f32'), o.unit ? ' ' + o.unit : '',
           miss ? TM.h('span', {class: 'why'}, ' ' + miss) : null)));
     }
-    return tb;
+    return TM.h('div', {class: 'plot-scroll'}, tb);
   }
 
   // Scatter on canvas. o: {x: [], y: [], w, h, xlab, ylab, hl: Set of indices (drawn larger, dark), flag(i) ->
@@ -133,7 +133,7 @@ TM.plot = (function () {
       tip.style.left = (px + 12) + 'px'; tip.style.top = (py + 12) + 'px';
     });
     cv.addEventListener('mouseleave', function () { tip.hidden = true; });
-    return root;
+    return TM.h('div', {class: 'plot-scroll'}, root);      // narrow screens scroll the plot, not the page
   }
 
   // 96-well grid (8 rows A-H x 12 columns): o: {values[96], kind, clip, labels[96] (optional), unit}

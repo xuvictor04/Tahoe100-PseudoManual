@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """test_explorer - checks of the explorer stage (OUT/explorer) on a finished synthetic run (design section 11.1,
-items 1-7): exact values, flags, records, completeness, the planted answers, determinism and sizes.
+items 1-7): exact values, flags, records (drug pages: arrows found by salt base, control sets by whole name;
+one driver row per line and gene), completeness, the planted answers, determinism, sizes, and the memory of the
+per-line pass (the tensor read in blocks, not mapped).
 
     python tests/test_explorer.py --out OUT --data DATA [--work DIR] [--keep]
 
@@ -325,6 +327,84 @@ def t_records(c):
             f"touches ({miss} misplaced)" + (f"; differences: {probs[:5]}" if probs else ""))
 
 
+def t_drug_pages(c):
+    """Drug pages (d/dr/): the arrows equal what the vault and `tahoe drug` list (direction_view: drug_target rows
+    whose compounds name the drug or its salt base, e.g. 'Pitavastatin' for 'Pitavastatin (Calcium)'), plus the rows
+    at the drug's doses; the control sets are those whose lists name one of its drug-doses, the drug name compared
+    whole ('Irinotecan' never takes 'Irinotecan (hydrochloride) 5 uM'); and the matching rule on such a pair."""
+    import re
+    from tahoemap import direction_view as DV
+    E, S = c.E, c.S
+    ed = S.df("direction/edges.parquet")
+    tdd = pd.to_numeric(ed["target_dd"], errors="coerce").fillna(-1).to_numpy()
+    V = DV.Direction(c.xo)
+    ctl = S.df("validation/control_sets.csv")
+    item = re.compile(r"^(.+) (\S+) uM \(")
+    ctl_drugs = []
+    for row in ctl[[x for x in ("best_dd_up", "best_dd_down") if x in ctl]].fillna("").astype(str).itertuples(
+            index=False):
+        ctl_drugs.append({m.group(1) for t in row for it in t.split("; ") if it for m in [item.match(it)] if m})
+    bad_dir, bad_ctl, salt_hit = [], [], []
+    for rel in c.files("web", "d/dr/"):
+        h, _a, t = c.shard("web", rel, cache=False)
+        name, dds = h["meta"]["drug"], h["meta"]["dds"]
+        want = {int(x) for x in V.drug_targets(name, collapse=False)["edge_id"]}
+        n_dt = len(want)
+        want |= {int(x) for x in np.flatnonzero(np.isin(tdd, dds))}
+        got = set(t["dir"]["_row"].tolist()) if len(t["dir"]) else set()
+        if got != want:
+            bad_dir.append(f"{name}: {len(got)} on the page, {len(want)} listed by direction_view")
+        base = str(DV.T.salt_base(name))
+        if n_dt and base.lower() != name.lower():
+            salt_hit.append(f"{name} ({n_dt})")
+        wc = {r for r, ds in enumerate(ctl_drugs) if name in ds}
+        gc = set(t["ctl"]["_row"].tolist()) if len(t["ctl"]) else set()
+        if gc != wc:
+            bad_ctl.append(f"{name}: {sorted(gc)} on the page, {sorted(wc)} name it")
+    lists = [["Irinotecan (hydrochloride) 5 uM (+3.1); Cytarabine 0.5 uM (+2.0)", ""],
+             ["Irinotecan 0.5 uM (+2.2, ⚠ toxic)", "Docetaxel (Trihydrate) 5 uM (-1.0)"]]
+    unit = (E.control_set_rows(lists, "Irinotecan", ["0.5", "5"]) == [1]
+            and E.control_set_rows(lists, "Irinotecan (hydrochloride)", ["5"]) == [0]
+            and E.control_set_rows(lists, "Docetaxel", ["5"]) == [] and E.control_set_rows(lists, "Cytarabine",
+                                                                                          ["0.5"]) == [0])
+    n_dr = len(c.files("web", "d/dr/"))
+    return (not bad_dir and not bad_ctl and unit and bool(salt_hit),
+            f"{n_dr} drug pages: arrows equal direction_view's for every drug ({len(bad_dir)} differ), salt-form "
+            f"drugs with drug_target arrows on their page: {', '.join(salt_hit[:6]) or 'none'}; control sets name the "
+            f"drug whole ({len(bad_ctl)} differ); sibling-name rule on 'Irinotecan' / 'Irinotecan (hydrochloride)': "
+            f"{unit}" + (f"; {bad_dir[:4]} {bad_ctl[:4]}" if bad_dir or bad_ctl else ""))
+
+
+def t_drivers(c):
+    """core.js drivers: one row per (line, driver gene) with every variant type of the gene ('; '-joined) and every
+    protein change of the gene, so no change is shown under a type the source does not tie it to."""
+    import re
+    t = c.core[2]["drivers"]
+    ln = c.S.df("tables/lines.parquet")
+    bad, n = [], 0
+    for li, (drv, chg) in enumerate(zip(ln["drivers"].fillna("").astype(str), ln["driver_changes"].fillna("")
+                                        .astype(str))):
+        types, changes = {}, {}
+        for it in (x for x in drv.split("; ") if x):
+            m = re.match(r"^(.+?)\((.*)\)$", it)
+            g, ty = (m.group(1), m.group(2)) if m else (it, "")
+            types.setdefault(g, [])
+            if ty and ty not in types[g]:
+                types[g].append(ty)
+        for it in (x for x in chg.split("; ") if x):
+            g, _, ch = it.partition(" ")
+            types.setdefault(g, [])
+            changes.setdefault(g, []).append(ch)
+        sub = t[t["line"] == li]
+        n += len(sub)
+        got = {g: (ty, ch) for g, ty, ch in zip(sub["gene"], sub["type"], sub["change"])}
+        want = {g: ("; ".join(types[g]), "; ".join(changes.get(g, []))) for g in types}
+        if len(sub) != len(set(sub["gene"])) or got != want:
+            bad.append((li, sorted(set(got.items()) ^ set(want.items()))[:2]))
+    return not bad, (f"{n} driver rows, one per (line, gene), each with all its types and changes"
+                     + (f"; wrong: {bad[:3]}" if bad else ""))
+
+
 # ----------------------------------------------------------------------------- 4. completeness
 def t_complete(c):
     info = c.stamp["info"]
@@ -625,12 +705,63 @@ def t_options(c):
                 f"names the data and data_dd hosts: {hosts.strip()[:160]}")
 
 
+_MEM_MAKE = """
+import sys, numpy as np
+a = np.lib.format.open_memmap(sys.argv[1], mode="w+", dtype=np.float16, shape=(6000, 500, 50))
+for i in range(0, 6000, 500):
+    a[i:i + 500] = np.random.default_rng(i).standard_normal((500, 500, 50)).astype(np.float16)
+a.flush()
+"""
+_MEM_READ = """
+import sys, json, numpy as np
+sys.path.insert(0, sys.argv[2])
+from tahoemap import explorer as E
+before = E._peak_rss_mb()
+R = E.NpyRows(sys.argv[1])
+n = 0
+for g0 in range(0, R.shape[0], E.LINE_CHUNK):
+    blk = R.rows(g0, g0 + E.LINE_CHUNK)
+    x = blk.astype(np.float32)
+    n += blk.shape[0]
+after = E._peak_rss_mb()
+ref = np.load(sys.argv[1], mmap_mode="r")
+same = all(np.array_equal(R.rows(a, a + 7).view(np.uint16), np.asarray(ref[a:a + 7]).view(np.uint16))
+           for a in (0, 255, 256, 3001, 5995))
+R.close()
+print(json.dumps({"before": before, "after": after, "rows": n, "same": same}))
+"""
+
+
+def t_memory(c):
+    """Step B reads the per-line tensor in blocks with file reads (explorer.NpyRows), not through a memory map, so
+    the peak memory it reports counts the blocks in use, not the whole file (2 x 1.9 GB on the real data): reading
+    every block of a 300 MB float16 tensor raises the process's peak by less than 100 MB, and the blocks are exact."""
+    import subprocess
+    p = os.path.join(c.work, "mem_tensor.npy")
+    os.makedirs(c.work, exist_ok=True)
+    subprocess.run([sys.executable, "-c", _MEM_MAKE, p], check=True)
+    try:
+        r = subprocess.run([sys.executable, "-c", _MEM_READ, p, REPO], check=True, capture_output=True, text=True)
+        m = json.loads(r.stdout.strip().splitlines()[-1])
+    finally:
+        os.remove(p)
+    if m["before"] is None or m["after"] is None:
+        return True, "peak memory cannot be read on this system; blocks exact: " + str(m["same"])
+    grow = m["after"] - m["before"]
+    return (m["same"] and m["rows"] == 6000 and grow < 100,
+            f"300 MB tensor read in blocks of {c.E.LINE_CHUNK} rows: peak memory {m['before']} -> {m['after']} MB "
+            f"(+{grow:.0f} MB; a memory map would add about 300 MB); blocks exact: {m['same']}")
+
+
 CHECKS = [("1 exact: pooled values in g/ and p/", t_exact_pooled), ("1 exact: per-line and per-well values in x/",
                                                                      t_exact_lines),
           ("2 flags: every (drug-dose, gene) string", t_flags), ("2 flags: every drug_effects row", t_drug_effects),
           ("2 flags: nl and line_effects counts", t_nl_counts), ("3 records equal their sources", t_records),
+          ("3 drug pages: arrows by salt base, control sets by whole name", t_drug_pages),
+          ("3 drivers: one row per line and gene", t_drivers),
           ("4 completeness: stamp row counts", t_complete), ("4 completeness: INVENTORY covers OUT", t_inventory),
           ("5 planted answers", t_planted), ("6 determinism", t_determinism), ("7 sizes and limits", t_sizes),
+          ("7 memory: the per-line tensor is read in blocks, not mapped", t_memory),
           ("7 size guard moves and loses nothing", t_guard), ("options: data_dd and pooled r", t_options)]
 
 

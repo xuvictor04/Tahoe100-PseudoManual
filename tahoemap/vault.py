@@ -121,10 +121,11 @@ from .common import cap_keep as _cap_keep, folder, log, read_effects_index, repl
 # the sentence-level rule the runner applies to the notes it stores (verify imports only the standard library)
 from .review.verify import ITEM_SECTIONS, drop_self_check as _verify_drop_self_check
 
-VERSION = 5                          # 3: nothing is left out for a flag; flagged items carry an alert (ALERT);
+VERSION = 6                          # 3: nothing is left out for a flag; flagged items carry an alert (ALERT);
 #                                      4: the direction stage's arrows (gene, drug and line notes, Probable direction)
 #                                      5: links into the explorer; every capped list says 'k of N shown' with a link
 #                                         to all N; .tahoemap-paths.json; direction notes and kind caveats
+#                                      6: Home's module table and its opposite-arm tests say 'k of N' too
 GEN = "tahoemap"
 SEED_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vault_seed")
 MANIFEST = ".tahoemap-manifest.json"
@@ -134,6 +135,8 @@ LOCAL_MAP = "map/gene_map.html"
 
 LFC_MIN = A.LFC_MIN                  # log2(1.2): the atlas's smallest counted change
 Q_CUT = A.Q_CUT                      # 0.10
+HOME_MODULES = 12                    # Home: the largest modules in its table ('k of N' and links to all N)
+ARM_NAMES = 4                        # Home: genes named per module arm ('k of N' when the arm has more)
 N_DRUGS = 15                         # drug-doses per direction in a gene note (cap_keep: + the strongest unflagged)
 N_PARTNERS = 12
 N_PRED = 5
@@ -299,6 +302,11 @@ def frontmatter(d):
     lines.append(f"generated_by: {json.dumps(GEN)}")
     lines.append("---")
     return "\n".join(lines) + "\n"
+
+
+def _short_error(t, n=120):
+    """An error message cut at n characters, ending in ' … (the full message: reference/sources.json)' when cut."""
+    return t if len(t) <= n else t[:n].rstrip() + " … (the full message: `reference/sources.json`)"
 
 
 def table(header, rows):
@@ -4495,14 +4503,29 @@ class Vault:
                 L += [f"- Opposite-arm test {op.get('a')} / {op.get('b')}: mean cross-set cos "
                       f"{fcos(op.get('mean_cross_cos'))} (expect < 0); share of cross pairs in one module "
                       f"{g3(op.get('share_same_module'))} (random pairs {g3(op.get('random_same_module'))})."]
+            if len(ops) > 3:
+                L += [f"- (3 of {len(ops)} opposite-arm tests shown; all {len(ops)}: `validation/report.md` and "
+                      "`validation/opposite_pairs.csv`)"]
             if ops:
                 L += [""]
         L += ["## Largest modules", ""]
-        top = R.modules.sort_values(["n_genes", "module"], ascending=[False, True]).head(12)
-        L += table(["Module", "Label", "Genes", "+ arm (top)", "− arm (top)"],
+        n_mod = len(R.modules)
+        top = R.modules.sort_values(["n_genes", "module"], ascending=[False, True]).head(HOME_MODULES)
+
+        def arm(txt, n_arm):
+            """The arm's first ARM_NAMES genes (the strongest; ⚠ marks kept), and '(k of N)' when the arm has more."""
+            names = [x for x in sval(txt).split(", ") if x]
+            k = min(ARM_NAMES, len(names))
+            n_arm = int(n_arm) if _finite(n_arm) else len(names)
+            return ", ".join(names[:k]) + (f" … ({k} of {n_arm:,}; all in the module note)" if n_arm > k else "")
+        L += table(["Module", "Label", "Genes", "+ arm (strongest)", "− arm (strongest)"],
                    [[self.mlink(int(r.module)), self.mod_label_text(int(r.module)) or "—", int(r.n_genes),
-                     ", ".join(sval(r.top_plus).split(", ")[:4]), ", ".join(sval(r.top_minus).split(", ")[:4])]
-                    for r in top.itertuples(index=False)]) + [""]
+                     arm(r.top_plus, getattr(r, "n_plus", np.nan)), arm(r.top_minus, getattr(r, "n_minus", np.nan))]
+                    for r in top.itertuples(index=False)])
+        if n_mod > len(top):
+            L += ["", f"({len(top)} of {n_mod:,} modules shown, the largest; all {n_mod:,}: [[Genes by module]] and "
+                      f"the explorer: {self.xl(self.xu(LK.browse, 'modules'))})"]
+        L += [""]
         L += ["## The run", "", "Stage stamps (`stages/*.json`):", ""]
         L += [f"- {k}: {v}" for k, v in stamps.items()] + [""]
         src = (R.sources or {}).get("sources") or {}
@@ -4510,7 +4533,7 @@ class Vault:
             L += ["Registry downloads (`reference/sources.json`):", ""]
             L += [f"- {k}: " + ", ".join(x for x in (sval(v.get("status")), sval(v.get("date"))[:10],
                                                       f"{fint(v.get('n_rows'))} rows" if _finite(v.get("n_rows"))
-                                                      else "", cell(sval(v.get("error")))[:120]) if x)
+                                                      else "", _short_error(cell(sval(v.get("error"))))) if x)
                   for k, v in sorted(src.items()) if isinstance(v, dict)] + [""]
         L += ["## Honesty ledger", "",
               "Corrections to the written layer are recorded, not hidden: [[Corrections and retractions]]."

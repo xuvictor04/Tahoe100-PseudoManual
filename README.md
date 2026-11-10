@@ -215,7 +215,7 @@ map, and `duplicate`; it also checks that no key reaches any file or any printed
 
 The synthetic data plant drug effects (some only in TP53-wild-type lines), co-regulated modules, pairs of modules
 moved in opposite directions, un-moved genes, and every artifact the method corrects. The tests check each stage
-against them (98 checks with Playwright installed; without it the 20 browser checks are 5 warnings): the tensor
+against them (106 checks with Playwright installed; without it the 21 browser checks are 6 warnings): the tensor
 reproduces the atlas exactly, ambient-only lines and uncountable profiles are masked, per-line effects appear only
 where planted (e.g. p53 targets in TP53-wild-type lines only), the per-line cut is calibrated, planted modules are
 tight in the space, opposite modules point opposite ways and share a nodal-map island on opposite arms, un-moved

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """test_surfaces.py - the surfaces that point into the explorer: the links (tahoemap/links.py), the map (html_map
-VERSION 7), the vault (VERSION 5) and the look-ups (query.py). Design section 11.1, item 9.
+VERSION 7 and later), the vault (VERSION 5 and later), the validation tables and the look-ups (query.py). Design
+section 11.1, item 9.
 
     python tests/test_surfaces.py [--out OUT] [--data DATA]
 
@@ -21,12 +22,16 @@ What is checked:
              page with its edge line (decoded here: = direction_view.edge_line, notes included), and every row a
              gene's capped list shows carries its reading; in a headless browser (Playwright; else 'warn') every
              preview list says 'k of N shown · all N in the explorer' with the true k and N and a link into the
-             explorer, also on a page without a site URL (links to ../explorer/web/index.html)
+             explorer, also on a page without a site URL (links to ../explorer/web/index.html); module labels are
+             whole and every fold the panel prints is 2^lfc rounded to 2 decimals (as the look-ups round it); in the
+             explorer's copy of the map, the link under a drug list opens the explorer's Drugs tab with exactly those
+             drug-doses first (browser)
   vault      .tahoemap-paths.json lists every gene, plates, drug, line, module and plate note (and only existing
              ones); every gene, drug, line and module note starts with 'Explorer: ... · Map: ...'; every
              '(k of N shown; all N in the explorer: ...)' has k <= N and points into the explorer; a gene's drug
              and partner lists say their true N; registry texts cut at 500 characters end in '…' with a link; without
-             a site URL the notes name the local explorer
+             a site URL the notes name the local explorer; Home's module table says 'k of N' (modules and arms)
+  validation module_enrichment.csv names every overlapping gene; report.md marks a cut name with '…'
   look-ups   `gene X --top 0` and --top all print every row (no '... more'); a capped list prints 'all N: <url>';
              query.parse_top; whether cli.py takes '--top all' (warn until it does)
 """
@@ -116,7 +121,7 @@ def map_stamp_checks(out):
     src = open(HM.__file__, encoding="utf-8").read()
     gone = [x for x in ("_shrink", "_shrink_steps", "MAX_BYTES") if hasattr(HM, x)] + \
         [x for x in ("def _shrink", "MAX_BYTES") if x in src]
-    ok = st.get("version") == HM.VERSION == 7 and "shortened" not in info and not gone
+    ok = st.get("version") == HM.VERSION and HM.VERSION >= 7 and "shortened" not in info and not gone
     return ok, (f"map stamp version {st.get('version')} (code {HM.VERSION}), 'shortened' in stamp: "
                 f"{'shortened' in info}, shortening symbols left: {gone}; {info.get('mb')} MB")
 
@@ -161,6 +166,141 @@ def map_snippet_checks(out):
                 bad.append((D["sym"][e], fn[:40]))
     return not bad, (f"_snippet cuts end in '…' within n; {n_fn} snippets on the page ({n_cut} cut, each ending in "
                      f"'…'); problems: {bad[:3]}")
+
+
+def map_values_checks(out):
+    """Module labels whole (validation/module_labels.csv, never cut); every fold the side panel prints (drug-dose
+    lists and line rows) equals 2^lfc of the stored log2 value rounded to 2 decimals, the look-ups' rounding."""
+    from tahoemap import html_map as HM
+    _txt, D = map_data(out)
+    bad = []
+    lab = HM._validation_labels(out)
+    p = os.path.join(out, "validation", "module_labels.csv")
+    n_lab = 0
+    if os.path.exists(p):
+        ml = pd.read_csv(p)
+        lc = next((c for c in ("label", "Label") if c in ml), None)
+        for m, t in zip(ml["module"], ml[lc] if lc else []):
+            if isinstance(t, str) and t:
+                n_lab += 1
+                page = next((x["label"] for x in D["mods"] if int(x["id"]) == int(m)), None)
+                if lab.get(int(m)) != t or (page is not None and page != t):
+                    bad.append(("label", int(m), (page or "")[-20:], t[-20:]))
+    longest = max((len(x["label"]) for x in D["mods"]), default=0)
+
+    def f2(lfc):
+        return int(round(float(f"{2.0 ** float(lfc):.2f}") * 100))
+    de = pd.read_parquet(os.path.join(out, "tables", "drug_effects.parquet"), columns=["col", "dd", "lfc"])
+    lfc = {(int(c), int(d)): float(v) for c, d, v in zip(de["col"], de["dd"], de["lfc"])}
+    n_dd = 0
+    for e, c in enumerate(D["col"]):
+        for key in ("up", "dn"):
+            a = D[key][e] if e < len(D[key]) else []
+            for t in range(0, len(a) - 4, 5):
+                n_dd += 1
+                want = f2(lfc[(int(c), int(a[t]))])
+                if a[t + 1] != want:
+                    bad.append((D["sym"][e], key, int(a[t]), a[t + 1], want))
+    le = pd.read_parquet(os.path.join(out, "tables", "line_effects.parquet"))
+    x = "_all" if "best_up_dd_all" in le else ""
+    by = {(int(c), int(l_)): r for c, l_, r in zip(le["col"], le["line"], le.to_dict("records"))}
+    W, n_ln = int(D.get("lnw") or 0), 0
+    for e, a in enumerate(D["ln"]):
+        for t in range(0, len(a) - W + 1, W):
+            r = by[(int(D["col"][e]), int(a[t]))]
+            for o, d in ((5, "up"), (12, "down")):
+                for off, sfx in ((0, x), (4, "")):
+                    if a[t + o + off] >= 0:
+                        n_ln += 1
+                        want = f2(r[f"best_{d}_lfc{sfx}"])
+                        if a[t + o + off + 1] != want:
+                            bad.append((D["sym"][e], int(a[t]), d, a[t + o + off + 1], want))
+    return not bad and n_dd > 0, (f"{n_lab} module labels whole (longest on the page {longest} characters); "
+                                  f"{n_dd} drug-dose and {n_ln} line folds equal 2^lfc rounded to 2 decimals"
+                                  + (f"; wrong: {bad[:4]}" if bad else ""))
+
+
+def map_explorer_order_checks(out):
+    """In a headless browser, in the explorer's own copy of the map (OUT/explorer/web/map/gene_map.html): the 'all N
+    in the explorer' link under a gene's drug-doses that raise / lower it opens the explorer's Drugs tab with
+    exactly those N drug-doses as its first N rows."""
+    sp = _browser()
+    if sp is None:
+        return "warn", "Playwright not installed: browser check skipped"
+    page_p = os.path.join(out, "explorer", "web", "map", "gene_map.html")
+    if not os.path.exists(page_p) or not os.path.exists(os.path.join(out, "explorer", "web", "app.js")):
+        return "warn", "no explorer (or its page files) in this output: check skipped"
+    import pathlib
+    _txt, D = map_data(out)
+    de = pd.read_parquet(os.path.join(out, "tables", "drug_effects.parquet"), columns=["col", "dd", "z"])
+    up = {c: set(g["dd"].astype(int)) for c, g in de[de["z"] > 0].groupby("col")}
+    dn = {c: set(g["dd"].astype(int)) for c, g in de[de["z"] < 0].groupby("col")}
+    n = D["n"]
+    pick = sorted((i for i in range(n) if int(D["col"][i]) in dn), key=lambda i: -len(dn[int(D["col"][i])]))[:1]
+    pick += sorted((i for i in range(n) if 0 < len(dn.get(int(D["col"][i]), ())) <= 6), key=lambda i: i)[:1]
+    pick += sorted((i for i in range(n) if int(D["col"][i]) in up), key=lambda i: -len(up[int(D["col"][i])]))[:1]
+    bad, done, errs = [], [], []
+    try:
+        with sp() as p:
+            b = p.chromium.launch()
+            try:
+                pg = b.new_page(viewport={"width": 1300, "height": 800})
+                pg.on("pageerror", lambda e_: errs.append(str(e_)))
+                for i in dict.fromkeys(pick):
+                    c = int(D["col"][i])
+                    for way, want in (("asc", dn.get(c, set())), ("desc", up.get(c, set()))):
+                        if not want:
+                            continue
+                        pg.goto(pathlib.Path(page_p).resolve().as_uri())
+                        pg.wait_for_function("() => !!window.TAHOE_MAP")
+                        pg.evaluate(f"TAHOE_MAP.select({i})")
+                        hrefs = pg.evaluate("Array.from(document.querySelectorAll('#panel a.xl')).map(a => a.href)")
+                        h = [x for x in hrefs if x.endswith(f"/drugs?f=stored&sort=z:{way}")]
+                        if not h:
+                            bad.append((D["sym"][i], way, "no link", hrefs[:3]))
+                            continue
+                        pg.goto(h[0])
+                        pg.wait_for_function("() => window.TM && TM.readyState && TM.readyState.name === "
+                                             "'gene/drugs'", timeout=30000)
+                        order = pg.evaluate("Array.from(document.querySelectorAll('[data-table=main] tbody "
+                                            "tr[data-i]')).map(tr => +tr.dataset.i)")
+                        first = set(order[:len(want)])
+                        done.append((D["sym"][i], way, len(want)))
+                        if first != want:
+                            bad.append((D["sym"][i], way, sorted(first)[:5], sorted(want)[:5]))
+            finally:
+                b.close()
+    except Exception as e:  # noqa: BLE001
+        if "Executable doesn't exist" in str(e) or "playwright install" in str(e):
+            return "warn", "Playwright's Chromium is not installed: browser check skipped"
+        raise
+    return (bool(done) and not bad and not errs,
+            f"{len(done)} lists opened in the explorer ({done}); the N listed drug-doses are its first N rows"
+            + (f"; wrong: {bad[:3]}" if bad else "") + (f"; script errors {errs[:2]}" if errs else ""))
+
+
+def validation_full_checks(out):
+    """validation/module_enrichment.csv names every overlapping gene ('genes' holds 'overlap' names, also past 25:
+    checked on a built table of 30); report.md marks every cut name with '…' (validate._clip)."""
+    from types import SimpleNamespace
+    from tahoemap import validate as VA
+    p = os.path.join(out, "validation", "module_enrichment.csv")
+    me = pd.read_csv(p) if os.path.exists(p) else pd.DataFrame(columns=["overlap", "genes"])
+    short = [(int(r.module), r.set, int(r.overlap), len(str(r.genes).split(", "))) for r in me.itertuples()
+             if len([x for x in str(r.genes).split(", ") if x]) != int(r.overlap)]
+    g = 40
+    sp = SimpleNamespace(pos=np.arange(g), axis_proj=np.linspace(1.0, 0.0, g),
+                         sym=np.array([f"G{i}" for i in range(g)], dtype=object), inc=np.arange(g), n=g)
+    sets = [{"cols": np.arange(g), "source": "hallmark", "set": "S", "label": "a set"}]
+    t = VA._enrichment_table(sp, sets, [(1, "+", np.arange(30))], [0], np.array([[30]]), np.array([[1e-6]]),
+                             np.array([[1e-5]]))
+    built = len(t) == 1 and t["genes"].iloc[0].split(", ") == [f"G{i}" for i in range(30)]
+    cut = VA._clip("x" * 50, 40)
+    clip_ok = cut.endswith("…") and len(cut) == 40 and VA._clip("short name", 40) == "short name"
+    return (not short and built and clip_ok,
+            f"{len(me)} enrichment rows, each naming all its overlapping genes ({len(short)} short: {short[:3]}); a "
+            f"built row with 30 overlapping genes names all 30: {built}; a 50-character name cut at 40 ends in "
+            f"'…': {clip_ok}")
 
 
 def map_line_checks(out):
@@ -473,6 +613,35 @@ def vault_link_checks(out):
             f"{n_cut} cut registry texts with a link; problems {bad[:3]}")
 
 
+def vault_home_checks(out):
+    """vault/Home.md 'Largest modules': when it shows fewer modules than graph/modules.parquet holds it says 'k of N
+    modules shown' with links to all N; an arm cell that names fewer genes than the arm has says 'k of N'."""
+    home = open(os.path.join(out, "vault", "Home.md"), encoding="utf-8").read()
+    mods = pd.read_parquet(os.path.join(out, "graph", "modules.parquet"))
+    sec = home.split("## Largest modules", 1)[1].split("\n## ", 1)[0] if "## Largest modules" in home else ""
+    rows = [ln for ln in sec.splitlines() if ln.startswith("| ") and not ln.startswith("| Module")]
+    n = len(mods)
+    say = re.search(r"\((\d+) of (\d+) modules shown, the largest; all \d+: \[\[Genes by module\]\] and the "
+                    r"explorer: [^)]*#/browse/modules", sec)
+    count_ok = (len(rows) == n and not say) or (say is not None and int(say.group(1)) == len(rows)
+                                               and int(say.group(2)) == n)
+    big = {int(r.module): (int(r.n_plus), int(r.n_minus)) for r in mods.itertuples()}
+    arm_bad = []
+    for ln in rows:
+        cells = [x.strip() for x in ln.strip("|").split(" | ")]
+        m = re.search(r"(\d+)", cells[0])
+        if not m or int(m.group(1)) not in big:
+            continue
+        for cell_, n_arm in zip(cells[3:5], big[int(m.group(1))]):
+            names = [x for x in cell_.split(" … ")[0].split(", ") if x and x != "—"]
+            k = re.search(r"\((\d+) of ([\d,]+); all in the module note\)", cell_)
+            if n_arm > len(names) and not (k and int(k.group(1)) == len(names) and _int(k.group(2)) == n_arm):
+                arm_bad.append((int(m.group(1)), cell_[-40:], n_arm))
+    return count_ok and not arm_bad and bool(rows), (
+        f"{len(rows)} of {n} modules in the table; says so: {bool(say)}; arm cells without 'k of N': "
+        f"{len(arm_bad)} {arm_bad[:2]}")
+
+
 def vault_nosite_checks(out):
     """Without a site URL the notes name the run folder's explorer (and the map file), never an empty link."""
     from tahoemap import vault as V
@@ -558,6 +727,10 @@ def check(out, data=None):
              ("map: the explorer_base key", lambda: map_base_checks(out)),
              ("map: function snippets end in '…' when cut", lambda: map_snippet_checks(out)),
              ("map: line rows carry the strongest drug-dose up AND down", lambda: map_line_checks(out)),
+             ("map: module labels whole; folds rounded from the stored value", lambda: map_values_checks(out)),
+             ("map: the explorer links of the drug lists open those drug-doses first (browser)",
+              lambda: map_explorer_order_checks(out)),
+             ("validation: every overlapping gene; cut names marked", lambda: validation_full_checks(out)),
              ("map: every direction row with its edge line; capped rows with their reading",
               lambda: map_direction_checks(out)),
              ("map: 'k of N shown · all N in the explorer' on every preview list (browser)",
@@ -565,6 +738,7 @@ def check(out, data=None):
              ("vault: .tahoemap-paths.json lists every note", lambda: vault_paths_checks(out)),
              ("vault: explorer links and counts", lambda: vault_link_checks(out)),
              ("vault: without a site URL the notes name the local explorer", lambda: vault_nosite_checks(out)),
+             ("vault: Home's module table says 'k of N'", lambda: vault_home_checks(out)),
              ("look-ups: --top all prints every row; capped lists print 'all N: <url>'",
               lambda: query_checks(out, data))]
     res = []

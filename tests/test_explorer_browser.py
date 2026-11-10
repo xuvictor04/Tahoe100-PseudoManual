@@ -158,7 +158,10 @@ ANN_FIXTURE = {   # a small annotations fixture (the synthetic run's reference s
                "matched_by": "symbol"},
     "NQO1": {"hgnc_id": "HGNC:2874", "hgnc_symbol": "NQO1", "name": "NAD(P)H quinone dehydrogenase 1",
              "aliases": "DTD|QR1|DHQU", "prev_symbols": "DIA4|NMOR1", "location": "16q22.1", "chrom": "16",
-             "matched_by": "symbol"}}
+             "matched_by": "symbol"},
+    # a gene with the alias "HDAC", as HDAC9 has in the real annotations: "HDAC inhibitor" must open the four drugs
+    # whose mechanism is exactly that, never one gene x drug page
+    "POLH": {"aliases": "HDAC|XPV|RAD30A", "matched_by": "symbol"}}
 
 
 def _alias_out(out, dst):
@@ -384,6 +387,10 @@ def t_modes(c):
         else:
             m_ok = heat is None and "this data is from run fedcba987654" in txt and "re-published" in txt
         m_ok = m_ok and p_ok
+        if mode == "5b":                 # a web gene file of another run: the refusal, then a clean banner elsewhere
+            b_ok, b_txt = _banner_after_failure(c, pg)
+            m_ok = m_ok and b_ok
+            out.append(b_txt)
         ok &= m_ok and not bad
         c.shot(pg, f"mode{mode}_lines")
         out.append(f"mode {mode}: data {st['state']}{' via ' + str(st.get('label')) if st.get('label') else ''}, "
@@ -394,6 +401,31 @@ def t_modes(c):
                    + (f", unexpected console: {bad[:3]}" if bad else ""))
         pg.close()
     return ok, "; ".join(out)
+
+
+def _banner_after_failure(c, pg):
+    """Mode 5b: one gene file of the web volume from another run. Its page says so (and never shows the words
+    "[object Object]"); the red banner lists the failure there, and is empty again on the next pages."""
+    col = c.G - 1
+    if col // 16 == c.col["CDKN1A"] // 16:
+        col = 0
+    gid = c.E.g_id(col // 16)
+    p = os.path.join(c.modes["5b"][0], "d", *gid.split("/")) + ".js"
+    h, a, t = c.E.read_shard(p)
+    os.remove(p)
+    c.E.write_shard(p, gid, "fedcba987654", h["kind"], arrays=a, tables=t, meta=h["meta"])
+    pg.evaluate("h => { location.hash = h; }", "#/gene/col:" + str(col))
+    pg.wait_for_function("() => (TM.readyState.name || '').indexOf('gene:error') === 0", timeout=30000)
+    txt = pg.inner_text("#main")
+    b1 = c.banner(pg)
+    c.go(pg, "#/", "home")
+    b2 = c.banner(pg)
+    c.go(pg, "#/gene/" + c.label[c.col["CDKN1A"]], "gene/overview")
+    b3 = c.banner(pg)
+    ok = "this data is from run fedcba987654" in txt and "[object Object]" not in txt and "Page gene failed" in b1 \
+        and b2 == "" and b3 == ""
+    return ok, (f"mode 5b gene file of another run: refused with its reason {'[object Object]' not in txt}, banner "
+                f"there {bool(b1)}, empty on the next two pages {b2 == '' and b3 == ''}")
 
 
 def _py_search_counts(c, q):
@@ -474,10 +506,65 @@ def t_search(c):
     out.append(f"results page 'Lung': {secs}; TRIM72 below the detection cut (search and #/gene/TRIM72): "
                f"{below and below2}; 'NQO1 A549' -> {two[:2]}; 'NQO1 idarubicin' -> {two_d[:1]}; Enter opened "
                f"{pg.evaluate('location.hash')} ({time.time() - t0:.2f} s); keystroke {ks} ms")
+    o2, ok2 = _search_many(c, pg)
+    out += o2
+    ok &= ok2
     bad = c.unexpected(pg)
     ok &= not bad
     pg.close()
     return ok, "; ".join(out) + (f"; console {bad[:3]}" if bad else "")
+
+
+def _enter(c, pg, q):
+    """Type q in the home search box and press Enter: the address it opens."""
+    c.go(pg, "#/", "home")
+    pg.fill("#main .sq", q)
+    pg.wait_for_selector("#main .sdrop:not([hidden])", timeout=5000)
+    seq = pg.evaluate("TM.readyState.seq")
+    pg.press("#main .sq", "Enter")
+    pg.wait_for_function("s => TM.readyState.seq > s && TM.readyState.name", arg=seq, timeout=30000)
+    return pg.evaluate("location.hash")
+
+
+def _search_many(c, pg):
+    """A word that matches many entities is never turned into one of them: "BBC3 bowel" lists BBC3 in each bowel
+    line and Enter opens the results page; an organ ("Lung") opens the results page with the lines first; the counts
+    include the genes below the cut and the combined views; "No match" when nothing matches."""
+    out, ok = [], True
+    bowel = sorted(c.lines.loc[c.lines["Organ"] == "Bowel", "cell_name"].astype(str))
+    r = pg.evaluate("q => { const r = TM.search.run(q); return {two: r.two.length, multi: r.multi.map(g => "
+                    "[g.type, g.items.map(i => i.href)]), first: TM.search.first(r), all: r.all}; }", "BBC3 bowel")
+    want = sorted("#/gene/BBC3/line/" + _q(x) for x in bowel)
+    m_ok = r["two"] == 0 and len(r["multi"]) == 1 and r["multi"][0][0] == "line" and \
+        sorted(r["multi"][0][1]) == want and r["first"] is None
+    h = _enter(c, pg, "BBC3 bowel")
+    sec = pg.evaluate("(() => { const s = document.querySelector('[data-multi=line]'); return s ? "
+                      "[+s.dataset.count, s.querySelectorAll('tbody a').length] : null; })()")
+    m_ok = m_ok and h == "#/search/BBC3%20bowel" and sec == [len(bowel), len(bowel)]
+    ok &= m_ok
+    out.append(f"'BBC3 bowel': BBC3 in each of the {len(bowel)} bowel lines listed {m_ok} (Enter opened {h}, "
+               f"section {sec})")
+    h2 = _enter(c, pg, "Lung")
+    order = pg.eval_on_selector_all("[data-group]", "els => els.map(e => e.dataset.group)")
+    l_ok = h2 == "#/search/Lung" and order[:1] == ["line"]
+    ok &= l_ok
+    out.append(f"'Lung' + Enter: {h2}, groups {order} {l_ok}")
+    c.go(pg, "#/search/TRIM72", "search")
+    t1 = pg.inner_text(".counts")
+    c.go(pg, "#/search/QQZZXX", "search")
+    t2 = pg.inner_text(".counts")
+    pg.fill("#main .sq", "TRIM72")
+    try:                                 # the drop-down of the box (it showed the page's own query first)
+        pg.wait_for_function("() => /^1 match/.test((document.querySelector('#main .sdrop:not([hidden]) .sd-all') "
+                             "|| {}).textContent || '')", timeout=5000)
+    except Exception:  # noqa: BLE001
+        pass
+    t3 = pg.inner_text("#main .sd-all")
+    c_ok = t1.startswith("1 match: below the detection cut 1") and t2.startswith("No match") and \
+        "0 matches" not in t1 + t2 + t3 and t3.startswith("1 match")
+    ok &= c_ok
+    out.append(f"counts: TRIM72 '{t1[:40]}', nothing '{t2[:10]}', drop-down '{t3[:30]}' {c_ok}")
+    return out, ok
 
 
 def t_alias(c):
@@ -499,13 +586,27 @@ def t_alias(c):
     head = pg.inner_text(".ghead")
     al = all(x in head for x in ANN_FIXTURE["CDKN1A"]["aliases"].split("|"))
     cnt = pg.evaluate("TM.search.run('WAF1').groups.gene.map(h => h.e.name + ':' + h.field)")
+    # "HDAC inhibitor": HDAC is an alias of POLH here; the drugs whose mechanism is "HDAC inhibitor" come first and
+    # Enter opens the results page, not POLH under one drug
+    dd = c.core[2]["drugs"]
+    n_moa = int((dd["moa_fine"].astype(str).str.lower() == "hdac inhibitor").sum())
+    r = pg.evaluate("q => { const r = TM.search.run(q); return {two: r.two.map(s => s.href), first: TM.search.first(r),"
+                    " drugs: (r.groups.drug || []).filter(h => h.tier === 1).length, order: r.order, "
+                    "multi: r.multi.map(g => g.gene)}; }", "HDAC inhibitor")
+    h3 = _enter(c, pg, "HDAC inhibitor")
+    secs = pg.eval_on_selector_all("[data-group], [data-multi]", "els => els.map(e => e.dataset.group || "
+                                   "'combined ' + e.dataset.multi)")
+    hd_ok = n_moa > 0 and r["two"] == [] and r["first"] is None and r["drugs"] == n_moa and \
+        r["order"][:1] == ["drug"] and r["multi"] == ["POLH"] and h3 == "#/search/HDAC%20inhibitor" and \
+        secs[:1] == ["drug"]
     ok = h.startswith("#/gene/CDKN1A") and "P21 is an alias of CDKN1A" in note and h2 == "#/gene/CDKN1A/annotation" \
-        and "previous symbol" in note2 and full and al and cnt == ["CDKN1A:aliases"] and not c.unexpected(pg)
+        and "previous symbol" in note2 and full and al and cnt == ["CDKN1A:aliases"] and hd_ok and not c.unexpected(pg)
     c.shot(pg, "alias_annotation")
     pg.close()
     return ok, (f"#/gene/P21 -> {h} with '{note.strip()[:60]}'; #/gene/CDKN1 -> {h2} with '{note2.strip()[:60]}'; "
                 f"annotation function and summary in full: {full}; every alias in the header: {al}; "
-                f"'WAF1' finds {cnt}")
+                f"'WAF1' finds {cnt}; 'HDAC inhibitor' (HDAC an alias of POLH): {r['drugs']} drugs of that mechanism "
+                f"(Python {n_moa}) first, Enter opened {h3}, sections {secs[:3]}: {hd_ok}")
 
 
 def _q(s):
@@ -555,6 +656,8 @@ def t_routes(c):
         try:
             c.go(pg, r, name)
             c.shot(pg, "route_" + re.sub(r"[^A-Za-z0-9]+", "_", r.strip("#/"))[:60] or "home")
+            if "[object Object]" in pg.inner_text("#main"):
+                bad.append(f"{r}: the page shows [object Object]")
         except Exception as e:  # noqa: BLE001
             bad.append(f"{r}: {e}"[:200])
     pg.go_back()
@@ -715,7 +818,9 @@ def t_downloads(c):
     di, li = d2["dd"].astype(int).to_numpy(), d2["line_index"].astype(int).to_numpy()
     e2 = _bits_eq([_f16(x) for x in d2["lfc"]], L[di, li], np.float16) and \
         _bits_eq([_f16(x) for x in d2["z"]], Z[di, li], np.float16)
-    miss_ok = all((r == "") == (v != "") for r, v in zip(d2["lfc"], d2["missing_why"]))
+    miss_ok = all(((r == "") or (zz == "")) == (v != "") for r, zz, v in zip(d2["lfc"], d2["z"], d2["missing_why"]))
+    miss_ok = miss_ok and all("line_scale" in v for r, zz, v in zip(d2["lfc"], d2["z"], d2["missing_why"])
+                              if r != "" and zz == "")
     ok &= e2 and len(d2) == c.D * c.L and miss_ok
     out.append(f"{len(d2):,} drug-dose x line rows: float16 lfc and z {'exact' if e2 else 'DIFFERENT'}, every empty "
                f"value has its reason: {miss_ok}")
@@ -1220,25 +1325,241 @@ def t_pages(c):
     nl = pg.evaluate("document.querySelectorAll('[data-browse] ul.organs a').length")
     ok &= nl == c.L
     out.append(f"home: {nl} lines by organ")
+    o2, ok2 = _reasons(c, pg)
+    out += o2
+    ok &= ok2
     bad = c.unexpected(pg)
     pg.close()
     return ok and not bad, "; ".join(out) + (f"; console {bad[:3]}" if bad else "")
 
 
+LAYOUT_JS = """() => { const t = document.querySelector('nav.tabs');
+  const box = e => { let p = e.parentElement;
+    while (p && getComputedStyle(p).overflowX === 'visible') p = p.parentElement;
+    return p; };
+  const over = Array.from(document.querySelectorAll('td.flagcell')).filter(td => { const p = box(td);
+    return p && td.getBoundingClientRect().right > p.getBoundingClientRect().right + 1; }).length;
+  return [document.documentElement.scrollWidth, t ? t.scrollWidth - t.clientWidth : 0, over]; }"""
+
+
+def _csv_of(c, pg, sel):
+    """The CSV of every row of the table sel, as a DataFrame."""
+    _n, head, rows = c.download(pg, sel + " [data-csv=all]")
+    return pd.DataFrame(rows, columns=head)
+
+
+def _pooled_loaded(pg):
+    """Wait until the files behind the reasons of empty pooled values are read (ddarr.js, linecpm.js)."""
+    pg.evaluate("TM.pooled.load(true).then(() => 1)")
+    time.sleep(0.3)
+
+
+def _reasons(c, pg):
+    """Every empty value says why (R6) and the computed columns are right: a drug-dose with no pooled values (header
+    and every gene), a gene with no pooled value at one drug-dose, the pooled heatmap row, a per-line z that is empty
+    next to a measured log2 FC, a line with no used well of min_cells cells (with the cells of each well), the plate
+    base, line centre and plate-scale rows of a gene, the wells x lines of a drug-dose; the predicted z on the z
+    scale; the group rows count the lines with a value; the direction tab states the tests and names its arrows."""
+    out, ok = [], True
+    E = c.E
+    lfc = c.DD["lfc"]
+    mc = c.K["min_cells"]
+    gk = c.genes["symbol"].astype(str).tolist()
+    empty_dd = [k for k in range(c.D) if np.isnan(lfc[k]).all()]
+    # (a) a drug-dose with no pooled value at all: the header says so, every gene's empty cells say why
+    if empty_dd:
+        k = empty_dd[0]
+        c.go(pg, f"#/dd/{k}/genes", "dd/genes")
+        head = pg.inner_text(".ghead")
+        d = _csv_of(c, pg, "#dd-genes")
+        a_ok = "no pooled values at this drug-dose" in head and len(d) == c.G and \
+            all("lfc: no pooled value at this drug-dose" in m and "z: no pooled value" in m
+                for m in d["missing_reason"])
+        ok &= a_ok
+        out.append(f"drug-dose {k} (no pooled values: {len(empty_dd)} such drug-doses): header and the reason of "
+                   f"all {len(d)} genes {a_ok}")
+    # (b) one gene empty at a drug-dose that has values: the counts of lines that express it in each used well
+    nan = np.argwhere(np.isnan(lfc[:, :c.G]))
+    one = [(int(k), int(g)) for k, g in nan if int(k) not in empty_dd]
+    if one:
+        k, g = one[0]
+        lab = c.label[g]
+        c.go(pg, f"#/gene/{_q(lab)}/drugs", "gene/drugs")
+        _pooled_loaded(pg)
+        d = _csv_of(c, pg, "#drugs-table")
+        rows = d[d["lfc"] == ""]
+        r = d[d["dd"] == str(k)]["missing_reason"].iloc[0]
+        b_ok = len(rows) == int(np.isnan(lfc[:, g]).sum()) and all("lfc: no pooled value" in m
+                                                                    for m in rows["missing_reason"]) and \
+            "express this gene" in r
+        ok &= b_ok
+        out.append(f"{gk[g]} at drug-dose {k}: '{r.split('; ')[0][:90]}...' and every empty row has a reason {b_ok}")
+        # the pooled row of its heatmap says why too
+        c.go(pg, f"#/gene/{_q(lab)}/lines", "gene/lines")
+        pg.wait_for_function("() => !!document.querySelector('[data-heat=lines] canvas.heat-canvas')", timeout=10000)
+        _pooled_loaded(pg)
+        tip = pg.evaluate("k => document.querySelector('[data-heat=lines] canvas.heat-canvas')"
+                          ".tmDescribe({part: 'top', t: 0, c: k})", k)
+        h_ok = "empty: no pooled value" in tip
+        ok &= h_ok
+        out.append(f"pooled heatmap row there: '{tip[:70]}...' {h_ok}")
+    # (c) predicted z on the z scale: row mean + row scale x (gene vector . drug-dose vector)
+    inc = np.load(os.path.join(c.out, "embed", "included_cols.npy"))
+    gv = np.load(os.path.join(c.out, "embed", "gene_vectors.npy")).astype(np.float64)
+    dv = np.load(os.path.join(c.out, "embed", "drugdose_vectors.npy")).astype(np.float64)
+    mu = np.load(os.path.join(c.out, "embed", "gene_row_mean.npy")).astype(np.float64)
+    sc = np.load(os.path.join(c.out, "embed", "gene_row_scale.npy")).astype(np.float64)
+    j = 0
+    g = int(inc[j])
+    c.go(pg, f"#/gene/{_q(c.label[g])}/drugs", "gene/drugs")
+    pg.evaluate("Promise.all([TM.load.web('ddarr'), TM.load.web('space/u')]).then(() => 1)")
+    time.sleep(0.5)
+    d = _csv_of(c, pg, "#drugs-table")
+    want = mu[j] + sc[j] * (dv[d["dd"].astype(int).to_numpy()] @ gv[g])
+    got = np.array([float(x) if x != "" else np.nan for x in d["predicted_z"]])
+    p_ok = bool(np.allclose(got, want, rtol=1e-5, atol=1e-5))
+    k = c.dd_tox
+    c.go(pg, f"#/dd/{k}/genes", "dd/genes")
+    _n, head, rows = c.download(pg, "#main [data-csv=allgenes]")
+    d2 = pd.DataFrame(rows, columns=head)
+    cc = d2["col"].astype(int).to_numpy()
+    pos = {int(x): i for i, x in enumerate(inc)}
+    w2 = np.array([mu[pos[x]] + sc[pos[x]] * float(dv[k] @ gv[x]) if x in pos else np.nan for x in cc])
+    g2 = np.array([float(x) if x != "" else np.nan for x in d2["predicted_z"]])
+    mods = d2[cc >= c.G]["missing_reason"].tolist()
+    p2_ok = bool(np.allclose(g2, w2, rtol=1e-5, atol=1e-5, equal_nan=True)) and \
+        all("predicted_z: a summed module" in m for m in mods)
+    ok &= p_ok and p2_ok
+    out.append(f"predicted z = row mean + row scale x (g . d): {gk[g]} {len(d)} drug-doses {p_ok}; drug-dose {k} "
+               f"all-genes CSV {int(np.isfinite(g2).sum())} values, modules say why {p2_ok}")
+    # (d) per-line: an empty z next to a measured lfc; a line with no used well of min_cells cells
+    L = np.load(os.path.join(c.out, "tensor", "DDL_lfc.npy"), mmap_mode="r")
+    Z = np.load(os.path.join(c.out, "tensor", "DDL_z.npy"), mmap_mode="r")
+    zo = np.argwhere(np.isfinite(L) & ~np.isfinite(Z))
+    if len(zo):
+        g, k, l = (int(x) for x in zo[0])
+        nm = str(c.lines.loc[c.lines["line"] == l, "cell_name"].iloc[0])
+        c.go(pg, f"#/gene/{_q(c.label[g])}/line/{_q(nm)}", "gene/line")
+        d = _csv_of(c, pg, "#gl-table")
+        r = d[d["dd"] == str(k)].iloc[0]
+        z_ok = r["z"] == "" and r["lfc"] != "" and "line_scale" in r["missing_reason"] and \
+            "line_scale" in r["missing_why"]
+        ok &= z_ok
+        out.append(f"{gk[g]} in {nm} at drug-dose {k}: z empty next to lfc {r['lfc']}, reason names line_scale {z_ok}")
+    _h, da, _t = E.read_shard(os.path.join(c.src, "web", "d", "ddarr.js"))
+    _h, la, _t = E.read_shard(os.path.join(c.src, "web", "d", "linecpm.js"))
+    us, lm, wlc = da["usable"], la["line_measured"].astype(bool), da["well_line_cells"]
+    cand = []
+    for g in range(c.G):
+        hit = np.argwhere((us == 0) & lm[:, g][None, :] & np.isnan(np.asarray(L[g], dtype=np.float32)))
+        if len(hit):
+            cand = [(g, int(hit[0][0]), int(hit[0][1]))]
+            break
+    if cand:
+        g, k, l = cand[0]
+        nm = str(c.lines.loc[c.lines["line"] == l, "cell_name"].iloc[0])
+        w = c.core[2]["wells"]
+        used = w[(w["drugdose_row"] == k) & w["used_in_drugdose"].astype(bool)]
+        cells = [wlc[int(r.w), l] for r in used.itertuples()]
+        c.go(pg, f"#/gene/{_q(c.label[g])}/dd/{k}", "gene/dd")
+        d = _csv_of(c, pg, "#gdd-table")
+        r = d[d["line"] == nm].iloc[0]
+        cw = [float(x.split(" (")[0]) for x in r["cells_wells"].split(", ")]
+        c_ok = "no used well of this drug-dose has" in r["missing_reason"] and cw == [float(x) for x in cells] and \
+            all(x < mc for x in cw)
+        ok &= c_ok
+        out.append(f"{gk[g]} in {nm} at drug-dose {k}: no used well with {mc} cells, cells of each used well "
+                   f"{r['cells_wells']} {c_ok}")
+    # (e) a gene's baseline: plate base, line centre and scale, plate-scale rows
+    mt = "MTAP" if "MTAP" in c.col else gk[0]
+    g = c.col[mt]
+    c.go(pg, f"#/gene/{_q(c.label[g])}/baseline", "gene/baseline")
+    pg.wait_for_selector("[data-table=psg]", timeout=10000)
+    pb = _csv_of(c, pg, "[data-table=pbase]")
+    em = la["expr_mask"].astype(bool)
+    lidx = {str(n): int(i) for n, i in zip(c.lines["cell_name"], c.lines["line"])}
+    pbe = pb[pb["plate_base"] == ""]
+    e_ok = all(("does not express" in m) == (not em[lidx[ln], g]) for ln, m in zip(pbe["line"],
+                                                                                 pbe["missing_reason"]))
+    bs = _csv_of(c, pg, "[data-table=base]")
+    bse = bs[(bs["line_center"] == "") | (bs["line_scale"] == "")]
+    e_ok = e_ok and all(m != "" for m in bse["missing_reason"])
+    ps = _csv_of(c, pg, "[data-table=psg]")
+    psc = c.core[2]["plate_scale"]
+    names = c.core[2]["wells"].drop_duplicates("plate_scale_group_id").set_index("plate_scale_group_id")[
+        "plate_scale_group"].to_dict()
+
+    def js(x):                           # a number as the page writes it (JavaScript String(x))
+        return str(int(x)) if float(x) == int(x) else repr(float(x))
+    s_ok = True
+    for r in ps.itertuples():
+        nm = names.get(int(r.group))
+        want = ", ".join(f"{a.plate} {js(a.dose)} \u00b5M ({int(a.n_wells)} wells)"
+                         for a in psc[psc["group"] == nm].itertuples()) if nm is not None else ""
+        s_ok &= r.groups == want and (r.groups != "" or nm is None)
+    ok &= e_ok and s_ok
+    out.append(f"{mt} baseline: {len(pbe)} empty plate bases and {len(bse)} empty centre/scale rows with their reason "
+               f"{e_ok}; plate-scale rows of all {len(ps)} groups {s_ok}")
+    # (f) the wells x lines of a drug-dose: every empty value has its reason
+    k = c.dd_tox
+    c.go(pg, f"#/dd/{k}/wells", "dd/wells")
+    pg.wait_for_selector("#dd-well-lines", timeout=10000)
+    d = _csv_of(c, pg, "#dd-well-lines")
+    emp = d[(d["beta"] == "") | (d["S"] == "")]
+    w_ok = "missing_reason" in d.columns and all(m != "" for m in emp["missing_reason"])
+    ok &= w_ok
+    out.append(f"drug-dose {k} wells x lines: {len(emp)} rows with empty values, each with its reason {w_ok}")
+    # (g) group rows: the mean counts only the lines with a value
+    g = c.col["CDKN1A"]
+    c.go(pg, f"#/gene/{_q(c.label[g])}/lines", "gene/lines")
+    pg.wait_for_function("() => !!document.querySelector('[data-heat=lines] canvas.heat-canvas')", timeout=10000)
+    pg.select_option("select[aria-label='group contrast rows']", "tp53")
+    wt = c.lines.loc[c.lines["tp53_status"] == "wild type", "line"].astype(int).to_numpy()
+    k = int(np.argmin([np.isfinite(L[g, kk, wt].astype(np.float64)).sum() for kk in range(c.D)]))
+    n_wt = int(np.isfinite(L[g, k, wt].astype(np.float64)).sum())
+    tip = pg.evaluate("k => document.querySelector('[data-heat=lines] canvas.heat-canvas')"
+                      ".tmDescribe({part: 'top', t: 2, c: k})", k)
+    gr_ok = f"mean of {n_wt} of {len(wt)} TP53 wild type lines" in tip
+    ok &= gr_ok
+    out.append(f"group row at drug-dose {k}: '{tip[-60:]}' (Python {n_wt} of {len(wt)}) {gr_ok}")
+    # (h) the direction tab: the tests, and the tab label in words
+    info = json.load(open(os.path.join(c.out, "direction", "info.json"), encoding="utf-8")).get("tests", {})
+    tot = 0
+    for kk, v in info.items():
+        if kk.endswith("_p_cut"):
+            continue
+        tot += v if isinstance(v, (int, float)) else sum(x for x in v.values() if isinstance(x, (int, float)))
+    c.go(pg, f"#/gene/{_q(c.label[c.col['NFE2L2'] if 'NFE2L2' in c.col else 0])}/direction", "gene/direction")
+    tt = pg.inner_text("[data-tested]")
+    tab = pg.inner_text("nav.tabs a[data-tab=direction]")
+    d_ok = f"ran {tot:,} tests" in tt and \
+        re.search(r"\d+ into \u00b7 \d+ from \u00b7 \d+ to cell numbers", tab) is not None
+    ok &= d_ok
+    out.append(f"direction: '{tt[:60]}...' (Python {tot:,}); tab '{tab}' {d_ok}")
+    return out, ok
+
+
 def t_layout(c):
-    """At 1280 px and at a narrow 420 px the pages do not overflow sideways (wide tables scroll in their box)."""
+    """At 1280 px and at narrow 420 and 390 px the pages do not overflow sideways (wide tables and plots scroll in
+    their box), the tab bar wraps instead of hiding tabs off-screen, and at 1280 px the overview's flag text stays
+    inside its card."""
     lab = c.label[c.col["CDKN1A"]]
     out, ok = [], True
-    for w in (1280, 420):
-        for route, name in ((f"#/gene/{lab}/drugs", "gene/drugs"), (f"#/dd/{c.dd_tox}/genes", "dd/genes"),
+    for w in (1280, 420, 390):
+        for route, name in ((f"#/gene/{lab}", "gene/overview"), (f"#/gene/{lab}/drugs", "gene/drugs"),
+                            (f"#/dd/{c.dd_tox}", "dd/qc"), (f"#/dd/{c.dd_tox}/genes", "dd/genes"),
                             ("#/drug/" + _q(c.drug_tox), "drug/overview"), ("#/line/A549", "line/identity"),
                             ("#/plate/plate3", "plate")):
             pg = c.page(1, route, width=w)
             c.wait(pg, name)
-            sw = pg.evaluate("document.documentElement.scrollWidth")
+            time.sleep(0.3)
+            sw, tabs, over = pg.evaluate(LAYOUT_JS)
             c.shot(pg, f"layout_{w}_{name.replace('/', '_')}")
-            ok &= sw <= w + 1
-            out.append(f"{w} px {name}: width {sw}")
+            good = sw <= w + 1 and tabs <= 1 and (w < 1000 or over == 0)
+            ok &= good
+            out.append(f"{w} px {name}: width {sw}" + (f", tabs hidden {tabs} px" if tabs > 1 else "") +
+                       (f", {over} flag cells past their box" if over and w >= 1000 else "") +
+                       ("" if good else " WRONG"))
             pg.close()
     return ok, "; ".join(out)
 
@@ -1285,7 +1606,7 @@ CHECKS = [("modes: local, raw-like host, Pages-like, unreachable, other run", t_
           ("size guard: moved parts load from the data volume, or say they cannot", t_moved), ("map link", t_map),
           ("per-line values of a drug-dose: gene by gene, and from data_dd", t_perline),
           ("page contents against the sources", t_pages),
-          ("layout at 1280 and 420 px", t_layout), ("timings (design 5.6)", t_timings)]
+          ("layout at 1280, 420 and 390 px", t_layout), ("timings (design 5.6)", t_timings)]
 
 
 def check(out, data=None, report=None, work=None, keep=False, shots=None):

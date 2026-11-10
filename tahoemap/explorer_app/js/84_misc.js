@@ -427,25 +427,41 @@
       {key: 'dd', label: 'Drug-dose', type: 'str', get: function (k) { return d.dd.label[k]; },
         show: function (k) { return TM.ddLink(k); }},
       {key: 'prod', label: 'z \u00d7 z', type: 'f64', cls: 'num', computed: true,
-        get: function (k) { return a.z[k] * b.z[k]; }, doc: 'the product of the two z: high = both move the same way'}];
+        get: function (k) { return a.z[k] * b.z[k]; }, doc: 'the product of the two z: high = both move the same way',
+        missing: function (k) {
+          return [a, b].filter(function (G) { return isNaN(G.z[k]); }).map(function (G) {
+            return G.symbol + ': ' + TM.pooled.why(k, G.col, G.lfc[k], isNaN(G.lfc[k]) ? 'lfc' : 'z');
+          }).join('; ');
+        }}];
     [a, b].forEach(function (G, j) {
       var s = G.symbol, kk = j ? 'b' : 'a';
       cols.push({key: 'lfc_' + kk, label: s + ' log2 FC', type: 'f32', cls: 'num',
-          get: function (k) { return G.lfc[k]; }},
-        {key: 'z_' + kk, label: s + ' z', type: 'f32', cls: 'num', get: function (k) { return G.z[k]; }},
+          get: function (k) { return G.lfc[k]; },
+          missing: function (k) { return TM.pooled.why(k, G.col, G.lfc[k], 'lfc'); }},
+        {key: 'z_' + kk, label: s + ' z', type: 'f32', cls: 'num', get: function (k) { return G.z[k]; },
+          missing: function (k) { return TM.pooled.why(k, G.col, G.lfc[k], 'z'); }},
         {key: 'flags_' + kk, label: s + ' flags', type: 'str', long: true,
           get: function (k) { return d.flag.s[G.flag[k]]; },
           show: function (k) { return TM.flagNode(G.flag[k]); }});
     });
     cols.push({key: 'active', label: 'active, trustworthy', type: 'bool', get: function (k) { return act[k] === 1; }});
     var both = function (k) { return Math.abs(a.z[k]) >= PAIR_Z && Math.abs(b.z[k]) >= PAIR_Z; };
-    sec.appendChild(TM.table({key: 'dd', n: n, id: 'pair-dd', csv: a.label + '_' + b.label + '_drugdoses', cols: cols,
+    var nEmpty = 0;
+    for (i = 0; i < n; i++) if (isNaN(a.lfc[i]) || isNaN(b.lfc[i])) nEmpty++;
+    if (nEmpty) {
+      sec.appendChild(TM.note(TM.fmt.plural(nEmpty, 'drug-dose') + ' of ' + TM.fmt.int(n) + ' have no pooled value ' +
+        'for one or both genes; they are left out of the r values above and stay in the table below with the reason ' +
+        'in each empty cell.'));
+    }
+    var ptb = TM.table({key: 'dd', n: n, id: 'pair-dd', csv: a.label + '_' + b.label + '_drugdoses', cols: cols,
       title: 'Every drug-dose (' + TM.fmt.int(n) + ')', sort: [['prod', 'desc']],
       filters: [{key: 'both', label: 'moves both (|z| \u2265 ' + PAIR_Z + ' for each)', test: both},
         {key: 'same', label: 'both, same direction', test: function (k) { return both(k) && a.z[k] * b.z[k] > 0; }},
         {key: 'opp', label: 'both, opposite directions', test: function (k) { return both(k) &&
             a.z[k] * b.z[k] < 0; }}],
-      rowClass: function (k) { return flagged(k) ? 'art-row' : null; }}).el);
+      rowClass: function (k) { return flagged(k) ? 'art-row' : null; }});
+    sec.appendChild(ptb.el);
+    if (nEmpty) TM.pooled.load(true).then(ptb.refresh);
   }
   function pairLines(sec, a, b) {
     var d = D(), L = d.L, n = d.D, act = activeDD();

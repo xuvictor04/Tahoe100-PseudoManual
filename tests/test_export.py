@@ -554,6 +554,7 @@ def explorer_export(base, out):
              "publish.ps1", "-ExecutionPolicy Bypass", "--force", "pages-build-deployment", "never touch"]
     check("explorer", "PUBLISH.md: the one-time GitHub steps (data repository, Pages from branch site / root), the "
           "upload and every later run", all(w in md for w in words), f"missing {[w for w in words if w not in md]}")
+    publish_texts(out, dest, rec, md)
     with open(os.path.join(dest, "RELEASE_ASSETS.txt"), encoding="utf-8") as fh:
         ra = fh.read()
     npys = sorted(f for f in os.listdir(os.path.join(out, "atlas", "effects")) if f.endswith(".npy"))
@@ -593,6 +594,27 @@ def explorer_export(base, out):
         res.append((k, bool(msg and word in msg and not os.path.exists(d)), (msg or "")[:90]))
     check("explorer", "small caps are refused before anything is written: the pages over --pages-max-mb, a file over "
           "the file limit, a file larger than an upload list", all(r[1] for r in res), res)
+    # the pages limit: GitHub Pages publishes sites up to 1 GB (10^9 bytes); the default keeps about 50 MB to spare
+    from tahoemap import cli as CLI, explorer as XP
+    lims = {"explorer.PAGES_MAX_MB": XP.PAGES_MAX_MB, "cli.PAGES_MAX_MB": CLI.PAGES_MAX_MB,
+            "export.SITE_MAX_MB": X.SITE_MAX_MB}
+    check("explorer", "the default pages limit is at most 0.95 GB (10^9-byte GB: the --pages-max-mb MiB times "
+          "1,048,576 bytes), the same in the stage, the command line and the export",
+          len(set(lims.values())) == 1 and XP.PAGES_MAX_MB * 2 ** 20 <= 0.95e9,
+          f"{lims}: {XP.PAGES_MAX_MB * 2 ** 20:,} bytes")
+    # free space: the copies AND the git copies the upload makes (about 0.8 x what it uploads) must fit
+    vol = sum(n for v in ("web", "data") for n, _h in _vol_manifest(os.path.join(xo, v)).values())
+    copies = sum(n for n, _h in _vol_manifest(web).values()) + 50 * 2 ** 20
+    real_free = X._free_bytes
+    X._free_bytes = lambda _p: int(copies * 1.05 + 0.4 * vol)       # the copies fit, the git copies do not
+    d_sp = os.path.join(base, "pub_space")
+    try:
+        msg = refused(quiet, X.explorer_export, out, d_sp, github="tahoe-test/Tahoe100-PseudoManual")
+    finally:
+        X._free_bytes = real_free
+    check("explorer", "free space: the export counts the git copies the upload makes (about 0.8 x the files "
+          "uploaded) and stops before writing anything when they do not fit",
+          bool(msg and "git copies" in msg and not os.path.exists(d_sp)), (msg or "not refused")[:200])
     stamp_p = os.path.join(out, "stages", "explorer.json")
     keep = open(stamp_p, "rb").read()
     st = json.loads(keep)
@@ -669,6 +691,62 @@ def explorer_export(base, out):
     return dsm
 
 
+def publish_texts(out, dest, rec, md):
+    """The upload scripts never repack (gc.auto 0 in every repository they make). PUBLISH.md: the commands of 'Every
+    later run' work as written (they go to the code folder first, use the export's Python and give --data when the
+    build read a local folder: the first two lines run here from DEST, with `status` for `run`); the full resume
+    command, the pages-only part; the git commands with the git the export found; the disk the upload's git copies
+    take and the previous run's data the hard links keep; the data repository's growth and what to do. The same in
+    the Windows form (PowerShell)."""
+    import ntpath
+    import re
+    import shlex
+    scripts = {n: open(os.path.join(dest, n), encoding="utf-8").read() for n in ("publish.ps1", "publish.sh")}
+    gc_ok = (re.search(r"function New-Repo.*config gc\.auto 0.*function Push-Data", scripts["publish.ps1"], re.S)
+             is not None and re.search(r"new_repo\(\).*config gc\.auto 0.*push_data\(\)", scripts["publish.sh"],
+                                       re.S) is not None)
+    check("explorer", "publish.ps1 / publish.sh turn off git's automatic repack (gc.auto 0) in every repository they "
+          "make: no part pays for a repack of everything before it", gc_ok)
+    blk = md.split("## Every later run", 1)[1].split("```", 2)[1].splitlines()[1:]
+    n = rec["parts"]["data"]["lists"]
+    bi = (json.load(open(os.path.join(out, "stages", "build.json"), encoding="utf-8")).get("info") or {})
+    data = bi.get("data") if os.path.abspath(str(bi.get("data"))) != os.path.join(os.path.abspath(out), "hf") else None
+    want = [f"cd {shlex.quote(rec['repo_dir'])}",
+            f"{shlex.quote(rec['python'])} -m tahoemap run" + (f" --data {shlex.quote(data)}" if data else "")
+            + f" --out {shlex.quote(rec['source'])}"]
+    words = [f"--from-part {n + 1}", "--from-part 2", "## Disk space", "data/.git", "until `export --explorer "
+             "--force` replaces the links", "## Size of the data repository", "Delete this repository",
+             "keep reading the previous data commit"]
+    r = subprocess.run(["bash", "-c", blk[0] + " && " + blk[1].replace(" -m tahoemap run", " -m tahoemap status")],
+                       cwd=dest, capture_output=True, text=True) if shutil.which("bash") and len(blk) > 1 else None
+    runs = r is None or (r.returncode == 0 and "No module named" not in (r.stderr or ""))
+    check("explorer", "PUBLISH.md: 'Every later run' goes to the code folder, uses the export's Python and the "
+          "build's --data, and its first commands run from the export folder; the resume and pages-only commands; "
+          "the upload's disk and the data repository's growth",
+          blk[:2] == want and all(w in md for w in words) and runs and data is not None,
+          f"block {blk[:2]} (want {want}); missing {[w for w in words if w not in md]}; ran from DEST: "
+          f"{'skipped' if r is None else (r.returncode, (r.stderr or '')[-160:])}")
+    win = dict(rec, destination="C:\\tahoe\\pub", source="C:\\tahoe\\out", repo_dir="C:\\tahoe\\repo",
+               python="C:\\tahoe\\.venv\\Scripts\\python.exe", git="C:\\tahoe\\mingit\\cmd\\git.exe",
+               data_folder="C:\\tahoe\\Tahoe-100M")
+    real = os.path
+    os.path = ntpath
+    try:
+        wmd = X.publish_md(win)
+    finally:
+        os.path = real
+    wb = wmd.split("## Every later run", 1)[1].split("```", 2)[1].splitlines()[1:]
+    wwant = ['Set-Location "C:\\tahoe\\repo"',
+             '& "C:\\tahoe\\.venv\\Scripts\\python.exe" -m tahoemap run --data "C:\\tahoe\\Tahoe-100M" --out '
+             '"C:\\tahoe\\out"']
+    wwords = ['& "C:\\tahoe\\mingit\\cmd\\git.exe" config --global user.name',
+              'powershell -ExecutionPolicy Bypass -File "C:\\tahoe\\pub\\publish.ps1" -FromPart 2',
+              f"`-FromPart {n + 1}`", "data\\.git"]
+    check("explorer", "PUBLISH.md, Windows form: Set-Location to the code folder, --data, git by its full path, the "
+          "full resume command", wb[:2] == wwant and all(w in wmd for w in wwords),
+          f"block {wb[:2]}; missing {[w for w in wwords if w not in wmd]}")
+
+
 @case
 def results_readme_explorer(base, out):
     dest = os.path.join(base, "dest_x")
@@ -682,6 +760,10 @@ def results_readme_explorer(base, out):
           "says the explorer and tensor/ are published with export --explorer",
           all(w in rd for w in want) and ("explorer" not in os.listdir(out) or "--explorer" in lo.get("explorer", ""))
           and "explorer" in X.LEFT_OUT["tensor"], f"missing {[w for w in want if w not in rd]}")
+
+
+def n_parts_now(dest):
+    return json.load(open(os.path.join(dest, "EXPLORER_EXPORT.json"), encoding="utf-8"))["parts"]["data"]["lists"]
 
 
 @case
@@ -702,6 +784,10 @@ def publish_end_to_end(base, out, dest):
         return subprocess.run([git, *args], cwd=cwd, capture_output=True, text=True, env=env)
     g("config", "--global", "user.name", "tahoemap test")
     g("config", "--global", "user.email", "test@example.invalid")
+    # git on Windows cannot run its automatic repack in the background: a low threshold in the foreground makes
+    # every commit after the first repack everything before it, unless the scripts turn it off (gc.auto 0)
+    g("config", "--global", "gc.auto", "20")
+    g("config", "--global", "gc.autoDetach", "false")
     site_r, data_r = os.path.join(e2e, "site.git"), os.path.join(e2e, "data.git")
     g("init", "-q", "--bare", site_r)
     g("init", "-q", "--bare", data_r)
@@ -732,6 +818,12 @@ def publish_end_to_end(base, out, dest):
         hosts = g("show", "site:d/hosts.js", cwd=site_r).stdout
         n_site = len([x for x in g("ls-tree", "-r", "--name-only", "site", cwd=site_r).stdout.split("\n") if x])
         n_data = len([x for x in g("ls-tree", "-r", "--name-only", "main", cwd=data_r).stdout.split("\n") if x])
+        co = dict(ln.split(": ", 1) for ln in g("count-objects", "-v", cwd=os.path.join(dest, "data")).stdout
+                  .splitlines() if ": " in ln)
+        check("publish", f"publish.sh: no repack while the {n_parts_now(dest)} data parts are committed (gc.auto 0 in "
+              "the data repository; the git copies stay loose objects)",
+              g("config", "gc.auto", cwd=os.path.join(dest, "data")).stdout.strip() == "0" and co.get("packs") == "0"
+              and int(co.get("count", 0)) > 0, f"{co}")
         dm = _vol_manifest(os.path.join(out, "explorer", "data"))
         wm = _vol_manifest(os.path.join(out, "explorer", "web"))
         kept = [ln for ln in before.split("\n") if ln and ln not in refs1.split("\n")]

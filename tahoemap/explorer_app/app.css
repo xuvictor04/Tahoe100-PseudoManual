@@ -99,8 +99,9 @@ select, input[type=number], input[type=search] { font: inherit; font-size: 0.9re
 
 /* sections */
 .sec { margin: 1rem 0 1.6rem; }
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(34rem, 1fr)); gap: 1rem; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 0.8rem 1rem; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(34rem, 100%), 1fr)); gap: 1rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 0.8rem 1rem;
+  min-width: 0; }
 .card h3 { margin-top: 0; }
 .answer { font-size: 1.02rem; }
 .more { color: var(--muted); }
@@ -245,6 +246,7 @@ table.plate96 { border-collapse: collapse; font-size: 0.72rem; font-family: var(
 table.plate96 td { width: 3.2rem; height: 1.6rem; text-align: center; border: 1px solid #fff; }
 table.plate96 th { font-weight: 600; color: var(--ink2); padding: 0 0.3rem; }
 .scatter { position: relative; display: inline-block; }
+.plot-scroll { max-width: 100%; overflow-x: auto; }
 .linestrip td { padding: 0; }
 
 /* overview lists */
@@ -262,7 +264,7 @@ pre.doctext { white-space: pre-wrap; word-break: break-word; background: var(--s
   html { font-size: 14px; }
   .top-row { padding: 0.4rem 0.6rem; gap: 0.5rem; }
   main { padding: 0.6rem 0.6rem 2rem; }
-  .cards { grid-template-columns: 1fr; }
+  .cards { grid-template-columns: minmax(0, 1fr); }
   dl.fields, dl.docs { grid-template-columns: 1fr; }
   .heat-labels { width: 9rem; }
   .tabs a { padding: 0.3rem 0.5rem; }
@@ -279,10 +281,21 @@ table.grid td.long { white-space: normal; min-width: 16rem; max-width: 40rem; }
 table.grid td .why { white-space: normal; display: inline-block; max-width: 16rem; text-align: left;
   vertical-align: top; }
 .cards .card.wide { grid-column: 1 / -1; }
-table.mini td.flagcell { min-width: 12rem; }
+/* flag text in the overview lists wraps inside its card: never cut at the card's edge */
+table.mini td.flagcell { min-width: 8rem; white-space: normal; overflow-wrap: break-word; }
 @media (max-width: 760px) {
-  .tabs { flex-wrap: nowrap; overflow-x: auto; }
+  .tabs { flex-wrap: wrap; }
   .sticky { position: static; }
+  /* a box wider than the screen scrolls sideways; a shadow at its edge says there is more */
+  .card > div, .card .cards > div, .plot-scroll {
+    background: linear-gradient(to right, var(--surface) 30%, rgba(255, 255, 255, 0)) left center,
+      linear-gradient(to left, var(--surface) 30%, rgba(255, 255, 255, 0)) right center,
+      radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0)) left center,
+      radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0)) right center;
+    background-repeat: no-repeat;
+    background-size: 2.5rem 100%, 2.5rem 100%, 0.9rem 100%, 0.9rem 100%;
+    background-attachment: local, local, scroll, scroll;
+  }
 }
 .card > div, .card .cards > div { overflow-x: auto; min-width: 0; }
 table.grid tr.drawer > td { white-space: normal; }

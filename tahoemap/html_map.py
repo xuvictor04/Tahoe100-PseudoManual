@@ -133,7 +133,8 @@ the panel, the help and the (disabled) arrow toggles say that the stage has not 
 
 The embedded JSON (<script id="tm-data" type="application/json">; "<" is written as \\u003c). Entries 0..n-1 are
 the genes on the map in graph/nodes.parquet order, entries n..n_all-1 the genes that are not on the map (by col).
-Scaled integers: cos x100, fdr x100 (-1 = none), lfc x100 (log2), z x10.
+Scaled integers: cos x100, fdr x100 (-1 = none), fold x100 (2^lfc of the stored log2 fold change, rounded to 2
+decimals in Python as the vault and the look-ups round it: _fold100), z x10.
     v, title, made, n, scale       version, title, date, number of map genes, the integer scales
     col, sym                       per entry: gene col (atlas/effects/genes.csv row), label (unique symbol)
     x, y, xs, ys                   per map gene: nodal and signed layout, rounded to 2 decimals
@@ -161,21 +162,21 @@ Scaled integers: cos x100, fdr x100 (-1 = none), lfc x100 (log2), z x10.
     reln                           per map gene: flat [partners in relations, how many of them with an alert (the
                                    partners' reasons, as in rel)]
     pw                             shared pathway names (rel flags point here)
-    up, dn                         per entry: flat [dd, lfc, z, lines moving, flag code] x top drug-doses (every row
-                                   of tables/drug_effects, strongest first, cut by cap_keep at n_drugs); in dn lfc
-                                   and z are stored NEGATED (positive, saves the signs)
+    up, dn                         per entry: flat [dd, fold, z, lines moving, flag code] x top drug-doses (every
+                                   row of tables/drug_effects, strongest first, cut by cap_keep at n_drugs); in dn z
+                                   is stored NEGATED (positive, saves the sign); fold is the fold itself (below 1)
     dct                            per entry: flat [rows up, of them with an alert, rows down, with an alert]
     ln                             per entry: flat [line, n dd up, of them flagged, n dd down, of them flagged,
-                                   up dd, up lfc, up z, up flag code, up clean dd, up clean lfc, up clean z,
-                                   down dd, down lfc, down z, down flag code, down clean dd, down clean lfc, down
+                                   up dd, up fold, up z, up flag code, up clean dd, up clean fold, up clean z,
+                                   down dd, down fold, down z, down flag code, down clean dd, down clean fold, down
                                    clean z] x top lines (LN_WIDTH = lnw = 19 ints; measured lines only; the lines
                                    with the most responding drug-doses, plus any of the n_lines with the most clean
                                    ones beyond them; n dd up / down at the calibrated per-line cut, over all
-                                   drug-doses when ln_all, else over the clean ones). BOTH directions: up dd, lfc, z
+                                   drug-doses when ln_all, else over the clean ones). BOTH directions: up dd, fold, z
                                    = the line's strongest drug-dose raising it, flagged or not when ln_all (dd -1 =
-                                   none at |z| >= line_z); up clean dd, lfc, z = when that one carries an alert, the
+                                   none at |z| >= line_z); up clean dd, fold, z = when that one carries an alert, the
                                    line's strongest raising drug-dose without one at |z| >= line_z (else -1, 0, 0);
-                                   the same for down (lfc and z keep their sign)
+                                   the same for down (z keeps its sign)
     lnn                            per entry: flat [measured lines (tables/line_effects expressed), lines where a
                                    drug-dose moves it at the per-line cut]: the N of the lines' 'k of N shown'
     ln_all                         whether tables/line_effects has the *_all columns (else counts are clean only)
@@ -269,12 +270,14 @@ from . import links as LK
 from . import vault as V
 from .common import ALERT, cap_keep as cap_rule, folder, log, marked_names, replace_file, stamp_stage
 
-VERSION = 7                    # 3: tabs, the physics simulations, graph/edges.parquet embedded; 4: a slow
+VERSION = 8                    # 3: tabs, the physics simulations, graph/edges.parquet embedded; 4: a slow
                                # double-click pins, at most 120 steps a second, literature badges with their check;
                                # 5: alerts instead of removal, the Spread slider, the k-D tour, neighbourhood depth 4;
                                # 6: probable direction (direction stage): side-panel lists and arrows;
                                # 7: never shortened to fit a size; 'k of N shown · all N in the explorer'; both the up
-                               # and the down strongest drug-dose per line; direction notes and kind caveats
+                               # and the down strongest drug-dose per line; direction notes and kind caveats;
+                               # 8: folds rounded from the stored value (fold x100), module labels whole, the
+                               # explorer links of the drug lists open the listed drug-doses first
 N_PARTNERS = 15
 N_DRUGS = 8
 N_LINES = 5
@@ -322,6 +325,20 @@ def _scaled(x, scale, fill=0):
     x = np.asarray(x, dtype=np.float64) * scale
     ok = np.isfinite(x)
     return np.where(ok, np.rint(np.where(ok, x, 0.0)), fill).astype(np.int64)
+
+
+def _fold100(lfc, fill=0):
+    """The fold change 2^lfc as the page prints it (2 decimals), x100, as int: rounded here, from the stored log2 value
+    (float64 of the float32), the way the vault and the look-ups round it ('{:.2f}'), so the page shows the same
+    digits; NaN / inf -> fill."""
+    x = np.asarray(lfc, dtype=np.float64)
+    out = np.full(x.shape, fill, dtype=np.int64)
+    ok = np.isfinite(x)
+    if ok.any():
+        with np.errstate(over="ignore"):
+            f = np.exp2(x[ok])
+        out[ok] = [int(round(float(f"{v:.2f}") * 100)) if np.isfinite(v) else fill for v in f.tolist()]
+    return out
 
 
 def _str(v):
@@ -404,7 +421,7 @@ def _validation_labels(out):
     for m, lab in zip(pd.to_numeric(df[mcol], errors="coerce"), df[lcol]):
         lab = _str(lab)
         if np.isfinite(m) and lab and int(m) not in out_:
-            out_[int(m)] = lab[:90]
+            out_[int(m)] = lab                      # the whole label: the panel never cuts it
     return out_
 
 
@@ -955,7 +972,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
         idx, e = idx[kk], e[kk]
         sub = de.iloc[idx]
         f = ft.codes(de_flags[idx], de_alert[idx], _num(sub, "cc_share"))
-        mat = np.column_stack([_num(sub, "dd").astype(np.int64), _scaled(sign * _num(sub, "lfc"), 100),
+        mat = np.column_stack([_num(sub, "dd").astype(np.int64), _fold100(_num(sub, "lfc")),
                                _scaled(sign * _num(sub, "z"), 10), _scaled(_num(sub, nl_col), 1), f])
         store.extend(_lists(e, mat, na))
     log(f"  drug-doses: {len(de):,} rows ({int(de_alert.sum()):,} with an artifact flag) -> the {drugs} strongest up / "
@@ -1016,9 +1033,9 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
             (np.abs(np.nan_to_num(cz)) >= line_z) & (cdd != bdd)
         n_named += int(has_c.sum())
         blocks.append(np.column_stack([
-            np.where(has_best, bdd, -1).astype(np.int64), _scaled(np.where(has_best, blfc, 0.0), 100),
+            np.where(has_best, bdd, -1).astype(np.int64), _fold100(np.where(has_best, blfc, 0.0)),
             _scaled(np.where(has_best, bz, 0.0), 10), bf.astype(np.int64),
-            np.where(has_c, cdd, -1).astype(np.int64), _scaled(np.where(has_c, clfc, 0.0), 100),
+            np.where(has_c, cdd, -1).astype(np.int64), _fold100(np.where(has_c, clfc, 0.0)),
             _scaled(np.where(has_c, cz, 0.0), 10)]))
     lmat = np.column_stack([_num(le, "line")[idx].astype(np.int64), nu[idx].astype(np.int64),
                             (nu - nu_c)[idx].astype(np.int64), nd[idx].astype(np.int64),
@@ -1114,7 +1131,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
         log("  no direction/edges.parquet (the direction stage has not run): the page says so")
     return {
         "v": VERSION, "title": "Tahoe-100M gene map", "made": time.strftime("%Y-%m-%d"),
-        "n": n, "scale": {"cos": 100, "fdr": 100, "lfc": 100, "z": 10},
+        "n": n, "scale": {"cos": 100, "fdr": 100, "fold": 100, "z": 10},
         "col": order.tolist(), "sym": sym,
         "x": xy("x"), "y": xy("y"), "xs": xy("xs"), "ys": xy("ys"), **spread,
         "mod": nodes["module"].fillna(0).astype(np.int64).tolist(), "arm": arm,
@@ -3507,7 +3524,8 @@ function select(i, centre, origin) {
   if (TOUR) TOUR.onSelect();
 }
 const ddLabel = d => (d >= 0 && D.dd[d]) ? D.dd[d] : (d >= 0 ? "drug-dose " + d : "");
-const foldOf = l100 => Math.pow(2, l100 / 100);
+// a fold change as the page holds it: x100, rounded in Python to 2 decimals from the stored log2 value (_fold100)
+const foldOf = f100 => f100 / 100;
 const fdrTxt = f => f == null ? "" : (f < 0.01 ? "&lt;0.01" : f.toFixed(2));
 // ---------------------------------------------------------------- links into the explorer (tahoemap/links.py): the
 // searchable site that holds every list of this panel in full. explorer_base = its site URL ("../" in the explorer's
@@ -3610,18 +3628,22 @@ function drugTable(i, dir) {
   for (let t = 0; t + 4 < a.length; t += 5) {
     const f = a[t + 4];
     rows++;
-    h += "<tr" + flagTitle(f) + "><td>" + esc(ddLabel(a[t])) + flagHtml(f) + "</td><td class='r'>" + foldOf(dir * a[t + 1]).toFixed(2) + "&times;</td><td class='r'>" +
+    h += "<tr" + flagTitle(f) + "><td>" + esc(ddLabel(a[t])) + flagHtml(f) + "</td><td class='r'>" +
+      foldOf(a[t + 1]).toFixed(2) + "&times;</td><td class='r'>" +
       (dir * a[t + 2] / 10).toFixed(1) + "</td><td class='r'>" + a[t + 3] + "</td></tr>";
   }
+  // the explorer's Drugs tab with the rows of tables/drug_effects only ('in tables/drug_effects', the rows this
+  // list draws from), sorted by z the list's way: the N drug-doses of this list are its first N rows
   return h + "</table>" + kOfN(rows, c[0], "drug-doses " + (dir > 0 ? "raising" : "lowering") +
-    " it", xGene(i, "drugs")) +
+    " it", xGene(i, "drugs") + "?f=stored&sort=z:" + (dir > 0 ? "desc" : "asc")) +
     "<p class='note'>" + cntTxt(c[0], c[1], (c[0] === 1 ? "drug-dose " +
       (dir > 0 ? "raises" : "lowers") : "drug-doses " + (dir > 0 ? "raise" : "lower")) +
       " it (pooled |z| &ge; 3 or q &lt; 0.1)") +
     capNote(rows, c[1], D.n_drugs || 8) +
       ". &#9888; = the drug-dose carries an artifact flag for this gene (named under it): it keeps its place in the " +
       "ranking; read it with that in mind. The explorer's Drugs tab lists every one of the " + fmtN(D.dd.length) +
-      " drug-doses, with the exact fold, z and q.</p>";
+      " drug-doses, with the exact fold, z and q. The link opens it on the rows of tables/drug_effects, sorted by z " +
+      "so that these " + fmtN(c[0]) + " come first; clear its filter to see all " + fmtN(D.dd.length) + ".</p>";
 }
 function lineTable(i) {
   const a = D.ln[i], nn = D.lnn ? [D.lnn[2 * i], D.lnn[2 * i + 1]] : null;
@@ -3636,8 +3658,8 @@ function lineTable(i) {
     "here</th><th>strongest drug-dose lowering it here</th></tr>";
   const W = D.lnw || 19;
   let nClean = 0, rows = 0;
-  // one direction's strongest drug-dose (o = its offset in the row): dd, lfc, z, flag code, then the strongest
-  // without an alert when that one carries one (dd, lfc, z)
+  // one direction's strongest drug-dose (o = its offset in the row): dd, fold, z, flag code, then the strongest
+  // without an alert when that one carries one (dd, fold, z)
   const best = (t, o) => {
     if (a[t + o] < 0) return "&ndash;";
     const v = (k_, s_) => " <span class='note'>" + foldOf(a[t + k_]).toFixed(2) + "&times;, z " +

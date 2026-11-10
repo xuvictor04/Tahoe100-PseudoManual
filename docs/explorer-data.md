@@ -138,7 +138,9 @@ Paths (zero-padded numbers): `d/g/{b//100:02d}/{b:04d}.js` with b = col // 16; `
   (atlas/effects/plate_scale.csv), `failed_wells` (atlas/effects/failed_wells.csv), `sample_map`
   (atlas/sample_map.csv), `modules` (graph/modules.parquet), `mlabels` (validation/module_labels.csv), `components`
   (embed/components.parquet), `broad` (embed/broad_components.csv), `fdr_curve` (relations/fdr_curve.csv); and
-  `drivers` (line, gene, type, change: tables/lines.parquet drivers and driver_changes split per gene).
+  `drivers` (line, gene, type, change: tables/lines.parquet drivers and driver_changes, one row per line and gene;
+  `type` holds every variant type of the gene and `change` every protein change of it, '; '-joined, because the
+  source does not tie a change to a type).
 - meta: `run`, `explorer_version`, `versions` (per stage), `commit`, `site_url`, `data_url`, `repo`, `results_url`,
   `counts`, `constants` (Q_CUT, LFC_MIN, KEEP_Z, LINE_Z, STRONG_LFC, line_z_threshold, min_cells,
   unreliable_plates, DEPLETE_Z, ABUNDANCE_UNTRUSTED, ARTIFACT_FLAGS, CC_CLEARED, PATTERNS, MAX_LINES_LISTED,
@@ -247,9 +249,12 @@ direction/groups.parquet rows, plus `_cmp`) and `edges` (every arrow of these co
 
 **`dr/III.js`** (`drug`; meta `drug`, `drug_index`, `dds`, `vault`): tables `de` (every tables/drug_effects.parquet
 row of the drug's doses, every column), `dir` (direction/edges.parquet rows that are drug_target arrows naming the
-drug in `compounds`, or whose target_dd is one of its doses), `edrug` (embed/drugs.parquet row), `moa`
-(validation/drug_moa.csv row of its moa_fine), `ctl` (validation/control_sets.csv rows whose best_dd_up or
-best_dd_down name the drug).
+drug in `compounds` by its name or its salt base, as direction_view does for the vault and the look-ups: 'Pitavastatin'
+for 'Pitavastatin (Calcium)', each name of 'A / A citrate'; or whose target_dd is one of its doses; the stage stops
+when a page differs from direction_view), `edrug` (embed/drugs.parquet row), `moa` (validation/drug_moa.csv row of
+its moa_fine), `ctl` (validation/control_sets.csv rows whose best_dd_up or best_dd_down list an item
+'<drug> <dose> uM (' of one of its doses: the name compared whole, so 'Irinotecan' never takes the items of
+'Irinotecan (hydrochloride)').
 
 ### Data volume
 
@@ -281,7 +286,8 @@ The stage stops, and leaves the previous explorer as it was, when:
 - a file is above 95 MiB, a folder holds more than 1,000 entries, or a path is longer than 80 characters;
 - the self-check finds a difference: every 97th data file and every top-level web file are decoded and compared
   with the sources (arrays bit for bit, tables row by row through `_row`);
-- the web volume is above `--pages-max-mb` (default 950 MiB) after every move (section 7).
+- the web volume is above `--pages-max-mb` (default 905 MiB, which is 0.949 GB: about 50 MB below GitHub Pages'
+  1 GB) after every move (section 7).
 
 `stages/explorer.json` info: `run`, `assets_sha` (sha256 of tahoemap/explorer_app), `volumes` (files and bytes),
 `web_bytes_before_moves`, `moves`, `parts` (bytes per folder), `complete` ({source: {"rows", "views": {view: [held,
