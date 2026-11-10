@@ -14,15 +14,20 @@ TM.search = (function () {
   var TYPE_LABEL = {gene: 'Genes', drug: 'Drugs', line: 'Cell lines', module: 'Modules', set: 'Gene sets',
     group: 'Direction comparison groups', below: 'Below the detection cut'};
   // fields per type: [field, role] role: id (exact tier 0), alias (tier 1 exact, 3 prefix), name (tier 0 exact,
-  // 2 prefix), word (tier 4 on a whole word), other (substring only)
+  // 2 prefix), word (tier 4 on a whole word), other (substring only), phrase (a query of 2 or more words that starts
+// the field: the line's 'TP53 not recorded (presumed wild type)'; never a piece of one word)
   var FIELDS = {
     gene: [['symbol', 'id'], ['label', 'id'], ['ensembl_id', 'id'], ['hgnc_id', 'id'], ['hgnc_symbol', 'id'],
       ['aliases', 'alias'], ['prev_symbols', 'alias'], ['name', 'word'], ['entrez_id', 'id'], ['uniprot', 'id'],
       ['location', 'id']],
-    drug: [['drug', 'name'], ['salt_base', 'alias'], ['targets', 'word'], ['moa_fine', 'word'], ['moa_broad', 'word']],
+    drug: [['drug', 'name'], ['salt_base', 'alias'], ['targets', 'word'], ['moa_fine', 'word'], ['moa_broad', 'word'],
+      ['chembl_name', 'alias'], ['chembl_mechanisms', 'word'], ['chembl_targets', 'word'],
+      ['mechanism_classes', 'word']],
     line: [['cell_name', 'name'], ['compact_name', 'alias'], ['cell_line_id', 'id'], ['Cell_ID_DepMap', 'id'],
-      ['Organ', 'word'], ['drivers', 'word'], ['driver_changes', 'word'], ['tp53_status', 'other']],
-    module: [['module', 'id'], ['label', 'word'], ['top_plus', 'word'], ['top_minus', 'word']],
+      ['Organ', 'word'], ['drivers', 'word'], ['driver_changes', 'word'], ['tp53_status', 'other'],
+      ['TP53', 'phrase']],
+    module: [['module', 'id'], ['label', 'word'], ['label_display', 'word'], ['covariate_tag', 'word'],
+      ['top_plus', 'word'], ['top_minus', 'word']],
     set: [['set', 'name'], ['source', 'other'], ['set_id', 'id']],
     group: [['group_id', 'id'], ['gene', 'id'], ['description', 'word']]};
   var ents = null, below = null, byType = {};
@@ -43,7 +48,8 @@ TM.search = (function () {
         e.type = type;
         e.f = [];
         FIELDS[type].forEach(function (fr) {
-          var raw = fr[0] === 'compact_name' ? compactName(e.raw.cell_name) : e.raw[fr[0]];
+          var raw = fr[0] === 'compact_name' ? compactName(e.raw.cell_name) : fr[0] === 'TP53' ?
+            (e.raw.tp53_status ? 'TP53 ' + TM.tp53Text(e.raw.tp53_status) : '') : e.raw[fr[0]];
           if (raw === null || raw === undefined || raw === '') return;
           var lv = low(raw);
           e.f.push({name: fr[0], role: fr[1], low: lv, raw: String(raw),
@@ -60,15 +66,20 @@ TM.search = (function () {
       return {raw: r, id: r.label, name: r.label, col: r.col, sub: r.symbol !== r.label ? r.symbol : ''};
     });
     add('drug', d,
-      function (i) { var r = TM.tsf.row(d, i); return {raw: r, id: r.drug, name: r.drug, sub: r.moa_fine || ''}; });
+      function (i) {
+        var r = TM.tsf.row(d, i);
+        return {raw: r, id: r.drug, name: r.drug, sub: (r.moa_fine || '') + (r.mechanism_classes ? ' \u00b7 ' +
+          r.mechanism_classes : '') + (r.annotation_alert ? ' \u00b7 \u26a0 annotations disagree' : '')};
+      });
     add('line', l, function (i) {
       var r = TM.tsf.row(l, i);
       return {raw: r, id: r.cell_name, name: r.cell_name, sub: (r.Organ || '') + (r.tp53_status ? ', TP53 ' +
-          r.tp53_status : '')};
+          TM.tp53Text(r.tp53_status) : '')};
     });
     add('module', m, function (i) {
       var r = TM.tsf.row(m, i);
-      return {raw: r, id: String(r.module), name: 'module ' + r.module, sub: r.label || ''};
+      return {raw: r, id: String(r.module), name: 'module ' + r.module, sub: (r.label_display || r.label || '') +
+        (r.covariate_tag ? ' \u00b7 ' + r.covariate_tag : '')};
     });
     add('set', s,
       function (i) { var r = TM.tsf.row(s, i); return {raw: r, id: [r.source, r.set], name: r.set, sub: r.source}; });
@@ -93,6 +104,7 @@ TM.search = (function () {
     for (var j = 0; j < e.f.length; j++) {
       var f = e.f[j], t = 9, qq = f.name === 'compact_name' ? qc : q;
       if (!qq || f.low.indexOf(qq) < 0) continue;
+      if (f.role === 'phrase' && !(qq.indexOf(' ') > 0 && f.low.indexOf(qq) === 0)) continue;
       if ((f.role === 'id' || f.role === 'name') && (f.low === qq || f.items.indexOf(qq) >= 0)) t = 0;
       else if (f.role === 'alias' && f.items.indexOf(qq) >= 0) t = 1;
       else if (f.role === 'word' && (f.low === qq || f.items.indexOf(qq) >= 0)) t = 1;   // a whole field or item

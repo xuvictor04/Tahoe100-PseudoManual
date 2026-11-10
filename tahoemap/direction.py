@@ -138,12 +138,22 @@ Evidence kinds (edge kind = column 'kind'):
    Computed in blocks of 64 drug-doses (float32), keeping only the candidates p < 0.10 (BH with the family size is
    exact below 0.10). Controls: the same tests with every gene's level permuted over its lines (Freedman-Lane, one
    permutation), counted at the real BH cut.
-4. drug_target (no mutation; grade B). A target X annotated for >= 2 distinct compounds (one molecule counts once:
-   salt forms merged with tlib.salt_base, then letter case and trailing salt words - 'Ixazomib' / 'Ixazomib
-   citrate', 'crizotinib' / 'Crizotinib (hydrochloride)'; its names ' / '-joined) of one mechanism class
-   (moa-broad: inhibitor/antagonist, activator/agonist, unclear): Y is
-   significant (pooled q < 0.1 and >= 1.2x, at any dose) in the same direction for k >= 2 of X's N compounds;
-   one-sided hypergeometric test against Y's rate over all compounds (Fisher's exact test); BH over all such tests.
+4. drug_target (no mutation; grade B, C for trap classes). A target X annotated for >= 2 distinct compounds (one
+   molecule counts once: mechanisms.molecule_key - salt forms, letter case and trailing salt words merged, 'Ixazomib' /
+   'Ixazomib citrate', 'crizotinib' / 'Crizotinib (hydrochloride)'; its names ' / '-joined) of one class. VERSION 5:
+   memberships per (compound, target) from Tahoe (targets, moa_broad: inhibitor/antagonist, activator/agonist,
+   unclear) and ChEMBL (drug_mechanisms, target types CHEMBL_MEMBER_TYPES, action types through
+   mechanisms.action_direction): one source lists the target - its action; Tahoe 'unclear' and ChEMBL gives one -
+   ChEMBL's; different actions - 'unclear', alerted; a member whose two annotations list different targets alerts
+   every edge of the class (compounds_source). The class of (compound, target) is a 'trap' class when
+   mechanisms.trap_class says so (TOP1 / TOP2 poisons, PARP trappers, microtubule stabilisers: the drugs trap the
+   target on DNA or freeze microtubules, so the target gene follows the damage or the arrest, not less of the target:
+   sign 0, grade C), 'inhibitor (microtubule destabiliser)' for a tubulin destabiliser, else the action. The test
+   (top-j, VERSION 5): per compound its strongest pooled z that way over its drug-doses (E), M = how many compounds
+   move Y at least as strongly; for j = 2..k (k: the class's compounds significant that way, pooled q < 0.1 and
+   >= 1.2x at any dose), m_j = the j-th smallest M among them and p_j = P(>= j of the N class compounds among the
+   m_j strongest of the screen) (hypergeometric); p = min(1, (N - 1) min_j p_j) (topj_p). A test counts where >= 2
+   compounds of the screen move Y that way (elsewhere no class can reach k >= 2; DT_BH_ALL); BH over all of them.
    Sign relative to X's activity: inhibitors raising Y -> -1 (X activity lowers Y), activators raising Y -> +1.
    Sign of the response kinds (genotype_response, null_response, level): how STRONGLY Y responds in its own pooled
    direction (r = per-line z x the sign of the pooled z), so +1 reads 'strengthens Y's drug response' - for a Y that
@@ -151,6 +161,28 @@ Evidence kinds (edge kind = column 'kind'):
    Columns compounds (the class's compounds, '; '-joined), compounds_supporting (those moving Y that way) and
    drug_effect ('raises' / 'lowers': what the compounds do to Y) record it for the look-ups (direction_view.py).
 5. The sensitivity kinds above are the gene -> phenotype edges: the target is 'cells under DRUG DOSE' (target_dd).
+6. genotype_selectivity, null_selectivity (VERSION 5): the same groups and test as sensitivity on how strongly each
+   line responds to a drug-dose (tables/drug_line_response rel_log2: genes beyond the per-line cut against the line's
+   typical drug-dose), for the drug-doses with >= 1 selective line; target 'response to DRUG DOSE' (target_type
+   'response'). Per compound the other doses with q_group < 0.10 are support ('also at'); none: 'one dose only' (an
+   alert, no grade A). direction/selectivity.parquet: per drug-dose its selective lines, organs and groups.
+
+VERSION 5 groups and rules. Allele groups (D12): exact changes ('KRAS p.G12C'), codons, cited hotspots (HOTSPOTS) and
+amplifications recorded in >= MIN_SIDE lines, against every other recorded line; a group whose line set equals the
+gene's group is not added (its words gain the composition). Group words (D15) give the altered lines' composition, and
+a loss-of-function group where >= 1/3 of the lines carry a missense change has a note. Heavily mutated lines (D7: >=
+HYPERMUT_MIN_GENES recorded driver genes) concentrated on the altered side: an alert, no grade A. Same locus (D9):
+source and target within SAME_LOCUS_BP (distance_bp): sign 0, grade C; a genotype group's target absent from most
+altered lines: grade C when it lies within CODELETION_BP of the source on one chromosome or without coordinates
+(VERSION 6; version 5: whatever the distance), else an alert that names lineage or the loss of the source (and a known
+target of the source: P53_TARGETS, NRF2_TARGETS). VERSION 6 also blocks a genotype baseline arrow from grade A when the
+target is not expressed in >= BASE_ABSENT_A of either side's lines, and writes a note on every arrow that a changed
+rule reads differently (_changed_note, _blocked_note: the 'notes' tier). Expression programme (D10): a natural
+knockout whose lines overlap > NOTE_COABSENT_SETS other line sets: sign 0, grade C. Natural knockouts and drug
+targets are worded 'may' (D16). Translation inhibitors' share of a response's evidence (D17: ti_share). The group's
+expected false share from the pseudo-groups (D6: false_share; >= FALSE_SHARE_ALERT blocks A) and the family caveat;
+the natural knockouts' random controls (D11: nonspecific_share).
+test_id / n_same_test (D2): edges that are one test. gene_tests.parquet (D14): each gene's tests per kind and role.
 
 Organs: from lines.csv, else the cell-line metadata. A group is compared within organs when the labels have >= 100
 arrangements there; then the organ composition is the same in every permutation and no tissue alert is raised, but
@@ -161,8 +193,12 @@ alert names the most over-represented organ with its counts. Unknown organs: no 
 
 Grades. A: a recorded genotype with >= 5 lines on each side (measured lines, for a response; within organs: those
 sharing an organ with the other side), q < 0.05 (and q_group < 0.10), compared within organs, no co-occurrence alert
-(another gene's altered lines overlapping the altered side, or sitting on the other side: anti-occurrence), and for a
-response not resting on the correction nor mostly uncorrected. B: any other genotype edge with q < 0.10 (alerts, or
+(another gene's altered lines overlapping the altered side, or sitting on the other side: anti-occurrence), no heavily
+mutated lines concentrated on the altered side, the group's expected false share below FALSE_SHARE_ALERT, and for a
+response not resting on the correction nor mostly uncorrected, the mean over all its drug-doses going its way with and
+without the correction, less than BOTH_WAYS_A of the evidence the other way, not a floor (mostly falls and >= 2x
+lower at baseline in the altered lines), measured in >= MEASURED_A of each side's lines; for a selectivity edge seen
+at >= 2 doses (_grade_genotype). B: any other genotype edge with q < 0.10 (alerts, or
 3-4 lines) that is not tissue-confounded; expression-null with >= 5 lines lacking X and >= 5 expressing it, not
 tissue-confounded; drug_target. C: level and level_sensitivity; a genotype edge significant only within its group, or
 tissue-confounded; expression-null with 3-4 lines, tissue-confounded, co-absent, or resting on the correction. Alerts
@@ -190,8 +226,11 @@ programme); 'X itself is not expressed in k of the n altered lines' when k > NOT
 Otherwise each is a note. Every other reason is an alert. The tiers change no edge, grade, sign or number (the grade
 rules read the groups and tests, not the texts). drugdoses_all lists every drug-dose behind an edge with its flags.
 
-Controls (controls.json). Positive: TP53 groups -> p53 target genes (recovered with the right sign, their ranks),
-TP53 -> cells under DNA-damaging drugs, KEAP1 -> NRF2 target genes (baseline) when KEAP1 is recorded in enough lines.
+Controls (controls.json). Positive: TP53 groups -> p53 target genes (counted when sign +1, evidence from rises and the
+mean contrast agreeing; the others with why_not), TP53 -> cells under DNA-damaging drugs (a Tahoe target or a poison /
+DNA class), TP53 -> response strength to them, KRAS p.G12C -> response to Adagrasib, KEAP1 -> NRF2 target genes
+(baseline) when KEAP1 is recorded in enough lines. The natural knockouts (null_controls): random non-partner genes per
+overlap bin (baseline, response) and random line sets (cells, response strength).
 Negative: N_PSEUDO = 60 random pseudo-genotype groups with sizes spread over the real groups' size distribution
 (quantiles; lines drawn at random, rejected while they resemble a recorded group, |phi| >= 0.3, or an expression-null
 line set with >= 5 lines on each side, |phi| >= 0.5: a random set overlapping a real effect would find it), tested
@@ -203,7 +242,8 @@ edges in 60 pseudo-groups still allows ~3 per 60 groups). Level kinds: the permu
 the same upper bound). The estimates can be low when real groups overlap other alterations or tissue programmes,
 which random groups do not. Pseudo-group edges are not written.
 
-Outputs in OUT/direction/: edges.parquet, groups.parquet, controls.json, info.json, README.md (every column).
+Outputs in OUT/direction/: edges.parquet, groups.parquet, selectivity.parquet, gene_tests.parquet, controls.json,
+info.json, README.md (every column).
 Memory: the tensor is read in gene chunks sized by mem_gb (plain file reads, not a memory map, so the pages read do
 not stay resident); what is kept is genes x K x lines (a few float32 arrays, ~35 MB each at full scale) plus the
 pooled matrices (~75 MB each); level_sensitivity runs in drug-dose blocks. info.json peak_rss_mb is the stage's own
@@ -229,13 +269,20 @@ import pandas as pd
 import scipy.sparse as sp
 from scipy import stats
 
-from . import atlas_core as A
+from . import mechanisms as MX
 from . import tlib as T
-from .common import folder, log, replace_file, stable_seed, stamp_stage, write_json, write_parquet
+from .common import folder, has_artifact, log, replace_file, stable_seed, stamp_stage, write_json, write_parquet
+from .mechanisms import SALT_WORDS, molecule_key  # noqa: F401  (SALT_WORDS: one list, read by direction too)
 from .tensor import AMB_FRAC
 
-VERSION = 4                    # 4: alert texts name every shared target and every co-occurring, opposite or
-#                                co-absent gene (no list is cut)
+VERSION = 6                    # 6: a baseline arrow's grade A needs the target expressed in most lines of each side
+#                                (BASE_ABSENT_A); a co-absent target reads 'a shared deletion' (grade C) only near the
+#                                source on one chromosome; every arrow a changed rule reads differently says so (a note)
+#                                5: poison classes, top-j drug_target test, ChEMBL classes, stricter grade A, group
+#                                false shares, heavily mutated lines, same-locus and programme rules, null controls,
+#                                allele groups, selectivity kinds, gene_tests, plain verbs
+#                                (4: alert texts name every shared target and every co-occurring, opposite or co-absent
+#                                gene: no list is cut)
 
 K_DD = 10                      # drug-doses per gene (its strongest by pooled |z|)
 Z_CLIP = 10.0                  # per-line z clipped at +-this before any mean
@@ -290,9 +337,56 @@ TOP_DD = 3                     # supporting drug-doses listed per edge
 MIXED = 0.25                   # a response target rises and falls: each direction carries >= this share
 GC_MIN = 200                   # inflation correction needs this many tested targets
 ALERT = "⚠"
+# ---- VERSION 5 rules (docs/direction.md says for each the old rule, the new rule and the evidence)
+BOTH_WAYS_A = 0.5              # response: grade A needs < this share of the evidence going the other way
+MEASURED_A = 0.5               # response: grade A needs the target measured in >= this share of each side's lines
+FALSE_SHARE_ALERT = 0.2        # a group's expected false share (pseudo-groups) at or above this: an alert, blocks A
+HYPERMUT_MIN_GENES = 15        # a line recording alterations in >= this many driver genes is 'heavily mutated'
+SAME_LOCUS_BP = 1_000_000      # source and target within this distance on one chromosome: 'same locus' (sign 0, C)
+# ---- VERSION 6 rules (docs/direction.md, 'Changed in direction version 6': the old rule, the new rule and why)
+BASE_ABSENT_A = 0.25           # baseline (genotype): grade A needs the target expressed in more than (1 - this) of
+#                                each side's lines. Version 5 graded TP53 -> GRIN2C (not expressed in 13 of 33 TP53-
+#                                altered and 1 of 17 other lines) and TP53 -> ACTA2 (11 of 33 and 0 of 17) A: a level
+#                                difference made by lines that lack the gene can be lineage, not regulation
+CODELETION_BP = SAME_LOCUS_BP  # a genotype target absent from most altered lines (D9): 'a shared deletion can explain
+#                                it' (grade C) only when it lies within this distance of the source on one chromosome.
+#                                Version 5 said so whatever the distance: TP53 (17p13) -> EDA2R (Xq12, a p53 target)
+CHANGED = "rule changed in direction version {v}"   # a note on every arrow that a changed rule reads differently
+NULL_CONTROL_SETS = 200        # null kinds' random-gene control: real null line sets drawn (evenly over NULL_BINS)
+NULL_CONTROL_GENES = 300       # ... random non-partner genes per set
+N_PSEUDO_NULL = 60             # null_sensitivity / null_selectivity: random pseudo line sets
+NULL_BINS = (10, 50, 200, 600)  # overlap bins of a null line set: other sets overlapping it (null_co_n) <= 10, 11-50,
+#                                51-200, 201-600, > 600
+NOTE_TI_SHARE = 0.5            # response: translation-inhibitor drug-doses carry >= this share: an alert, else a note
+# hotspots of the allele groups (D12), cited code constants: (gene) -> (codons or changes, citation)
+HOTSPOTS = {
+    "PIK3CA": {"changes": ("E542K", "E545K", "H1047R", "H1047L"), "missense_codons": (),
+               "source": "Samuels Y et al. 2004, Science 304:554 (doi:10.1126/science.1096502, PMID 15016963)"},
+    "TP53": {"changes": (), "missense_codons": ("R175", "G245", "R248", "R249", "R273", "R282"),
+             "source": "Baugh EH et al. 2018, Cell Death Differ 25:154 (doi:10.1038/cdd.2017.180, PMID 29099487)"}}
+# the variant types read as truncating (with splice and deletion) for the group words (D15); 'Missense' apart
+TRUNCATING = ("Frameshift", "Stopgain", "Splice_site", "Deletion", "Synonymous_splicing", "Nonsense")
+# trap classes (mechanisms.trap_class): their name in the readings and what follows the drug (D1)
+TRAP_NAMES = {"TOP1_POISON": ("TOP1 poison", "TOP1 poisons"), "TOP2_POISON": ("TOP2 poison", "TOP2 poisons"),
+              "PARP_TRAPPER": ("PARP trapper", "PARP trappers"),
+              "TUBULIN_STABILISER": ("microtubule stabiliser", "microtubule stabilisers")}
+TRAP_CAUSE = {"TOP1_POISON": ("the DNA damage they cause", "they trap {t} on DNA and break the DNA",
+                              "the target follows the damage"),
+              "TOP2_POISON": ("the DNA damage they cause", "they trap {t} on DNA and break the DNA",
+                              "the target follows the damage"),
+              "PARP_TRAPPER": ("the DNA damage they cause", "they trap {t} on DNA, which harms more than {t} loss",
+                               "the target follows the damage"),
+              "TUBULIN_STABILISER": ("the frozen microtubules (mitotic arrest)",
+                                     "they freeze microtubules and arrest mitosis", "the target follows the arrest")}
+DESTAB_CLASS = "inhibitor (microtubule destabiliser)"
+# D4: the ChEMBL target types whose genes count as a compound's targets for drug_target. A protein complex (the 26S
+# proteasome: 38 subunits; the ribosome: up to 78) lists every subunit, while the drug binds one of them, so complexes
+# give no membership (Tahoe's own target list still does).
+CHEMBL_MEMBER_TYPES = ("SINGLE PROTEIN", "PROTEIN FAMILY", "CHIMERIC PROTEIN")
+ADAGRASIB_REF = "Hallin J et al. 2020, Cancer Discov 10:54 (doi:10.1158/2159-8290.cd-19-1167, PMID 31658955)"
 
-KINDS = ("genotype_response", "genotype_baseline", "genotype_sensitivity", "null_response", "null_baseline",
-         "null_sensitivity", "drug_target", "level", "level_sensitivity")
+KINDS = ("genotype_response", "genotype_baseline", "genotype_sensitivity", "genotype_selectivity", "null_response",
+         "null_baseline", "null_sensitivity", "null_selectivity", "drug_target", "level", "level_sensitivity")
 TISSUE_ALERT = "from natural expression differences between lines; tissue and other differences can mimic it"
 DRUG_ALERT = "drugs can act on other proteins too"
 PRECISION_ALERT = ("a stronger correlation one way can reflect how precisely, or how closely to a shared cause, each "
@@ -624,6 +718,20 @@ _RX_MORE_SETS = re.compile(r" \(and (\d+) more line sets\)$")
 _RX_NOT_EXPR = re.compile(r"^\S+ itself is not expressed in (\d+) of the (\d+) altered lines")
 _RX_ART = re.compile(r"^supporting drug-doses with artifact flags \((?:\d+% of the evidence|share of the evidence not "
                      r"measurable|(\d+) of the (\d+) supporting compounds)(, the strongest among them)?\): ")
+# VERSION 5 reasons (a '; ' inside a reason is written ', ' by _join, so both are accepted)
+_RX_CAVEAT5 = (re.compile(r"^over the whole table the controls expect "),)
+_RX_SUPPORT5 = (re.compile(r"^also at .+ \(q "),)
+_RX_NOTE5 = (re.compile(r"^\d+ of the \d+ comparison lines are heavily mutated"),
+             re.compile(r"^loss of function is the metadata's inference"),
+             re.compile(r"^one test for \d+ (?:targets|genes absent from the same lines) \("))
+_RX_FALSE = re.compile(r"^random comparison groups give about [0-9.]+ such (?:within-group )?arrows per group \(up to "
+                       r"[0-9.]+\)[;,] this comparison gives \d+: (?:about )?(under 1|\d+)% of them may be false")
+_RX_NONSPEC = re.compile(r"would appear for any gene \((under 1|\d+)%\)$")
+_RX_NONSPEC_SET = re.compile(r"^random line sets give about [0-9.]+ such arrows per set \(up to [0-9.]+\)[;,] this set "
+                             r"gives \d+: (?:about )?(under 1|\d+)% of them would appear for any set of lines")
+_RX_CHANGED = re.compile(r"^(?:rule changed in direction version \d+|grade A blocked since direction version \d+)")
+_RX_TI = re.compile(r"^drug-doses of translation inhibitors carry (?:(\d+)% of the evidence|a share of the evidence "
+                    r"that could not be measured)(, the strongest among them)?")
 
 
 def reason_tier(reason, art_share=np.nan):
@@ -634,10 +742,22 @@ def reason_tier(reason, art_share=np.nan):
     float32), of a drug_target edge from its share of the supporting compounds. A reason this code does not know stays
     an alert."""
     r = str(reason)
-    if r in _CAVEAT_TEXTS:
+    if r in _CAVEAT_TEXTS or any(rx.search(r) for rx in _RX_CAVEAT5):
         return "caveats"
-    if any(rx.search(r) for rx in _RX_SUPPORT):
+    if any(rx.search(r) for rx in _RX_SUPPORT + _RX_SUPPORT5):
         return "support"
+    if any(rx.search(r) for rx in _RX_NOTE5) or _RX_CHANGED.search(r):    # VERSION 6: what a changed rule did
+        return "notes"
+    for rx in (_RX_FALSE, _RX_NONSPEC, _RX_NONSPEC_SET):          # expected false / non-specific shares (D6, D11)
+        m = rx.search(r)
+        if m:
+            pct = 0 if m.group(1) == "under 1" else int(m.group(1))
+            return "alerts" if pct >= round(100 * FALSE_SHARE_ALERT) else "notes"
+    m = _RX_TI.search(r)                                         # translation inhibitors (D17)
+    if m:
+        if m.group(2) or m.group(1) is None:
+            return "alerts"
+        return "alerts" if int(m.group(1)) >= round(100 * NOTE_TI_SHARE) else "notes"
     m = _RX_MEASURED.search(r)
     if m:
         a, na, i, ni = (int(x) for x in m.groups())
@@ -815,8 +935,9 @@ def _load(out, data):
     c.dd = dd
     c.drug = dd["drug"].astype(str).to_numpy(dtype=object)
     c.dose = dd["dose"].astype(str).to_numpy(dtype=object)
-    c.dd_flags = dd["flags"].fillna("").astype(str).to_numpy(dtype=object)
-    c.dd_art = np.array([A.has_artifact(f) for f in c.dd_flags], dtype=bool)
+    c.dd_flags = _flags_of_record(out, dd)
+    c.dd_art = np.array([has_artifact(f) for f in c.dd_flags], dtype=bool)
+    c.n_wells = _n_wells(dd)
     c.dd_label = np.array([_dd_label(a, b) for a, b in zip(c.drug, c.dose)], dtype=object)
     p = os.path.join(out, "tables", "drugdoses.parquet")
     salt = None
@@ -903,7 +1024,134 @@ def _load(out, data):
         c.partners = m
     else:
         c.partners = sp.csr_matrix((gK, gK), dtype=np.float32)
+    _load_mechanisms(c, out)
+    _load_coords(c, out)
+    _load_selectivity(c, out, lines)
     return c
+
+
+def _flags_of_record(out, dd):
+    """The drug-doses' flags of record (tables.dd_flags_of_record: the atlas flags, the neighbouring-well and the
+    translation-inhibitor tokens), else drugdose.csv's own flags (an output without the tables stage)."""
+    try:
+        from .tables import dd_flags_of_record
+        f = dd_flags_of_record(out)
+        if len(f) == len(dd):
+            return np.asarray(f, dtype=object)
+    except Exception as e:  # noqa: BLE001  (an older output: the atlas flags)
+        log(f"  flags of record not readable ({e}); the atlas flags are used")
+    return dd["flags"].fillna("").astype(str).to_numpy(dtype=object)
+
+
+def _n_wells(dd):
+    """Wells behind each drug-dose (drugdose.csv n_wells, else the ','-joined wells), -1 when unknown."""
+    if "n_wells" in dd:
+        v = pd.to_numeric(dd["n_wells"], errors="coerce").fillna(-1).to_numpy()
+        return v.astype(np.int64)
+    if "wells" in dd:
+        return np.array([len([w for w in str(x).split(",") if w.strip()]) if str(x).strip() and str(x) != "nan"
+                         else -1 for x in dd["wells"]], dtype=np.int64)
+    return np.full(len(dd), -1, dtype=np.int64)
+
+
+def _load_mechanisms(c, out):
+    """The mechanism classes (mechanisms.classes_by_drug, drug_classes) and ChEMBL's mechanisms of the drugs
+    (drug_mechanisms; no rows without ChEMBL), and per drug-dose: in a translation-inhibitor class (c.ti_dd) with the
+    class's words and sources (c.ti_src). Every use names its source."""
+    c.cls_by_drug, c.cls_rows, c.mech = {}, pd.DataFrame(columns=MX.CLASS_COLUMNS), pd.DataFrame(
+        columns=MX.MECH_COLUMNS)
+    try:
+        c.cls_by_drug = MX.classes_by_drug(out)
+        c.cls_rows = MX.drug_classes(out)
+        c.mech = MX.drug_mechanisms(out)
+    except Exception as e:  # noqa: BLE001  (no classes: Tahoe's annotation alone)
+        log(f"  mechanism classes not readable ({e}): Tahoe's annotation alone")
+    c.chembl = bool(len(c.mech))
+    # the source of each (drug, class) membership, as the reference stage wrote it
+    c.cls_src = {(str(d), str(k)): str(s_ or "") for d, k, s_ in zip(c.cls_rows.get("drug", []),
+                                                                      c.cls_rows.get("class", []),
+                                                                      c.cls_rows.get("source", []))}
+    tl = {d: [k for k in ks if MX.class_info(k).get("effect") == "translation"] for d, ks in c.cls_by_drug.items()}
+    c.ti_dd = np.array([bool(tl.get(str(d))) for d in c.drug], dtype=bool)
+    c.ti_src_by_drug = {}
+    for d in sorted({str(x) for x in c.drug[c.ti_dd]}):
+        c.ti_src_by_drug[d] = ", ".join(
+            f"{MX.class_info(k).get('label', k)}, {(c.cls_src.get((d, k), '') or 'code constant').replace('; ', ', ')}"
+            for k in tl.get(d, []))
+
+
+def _load_coords(c, out):
+    """Gene coordinates (D9 same locus): reference/annotations.parquet by gene col (the measured genes) and
+    reference/gene_coords.parquet by symbol (genes Tahoe does not measure, e.g. drivers). c.coord_col: per col
+    (chrom, start, end) or None; c.coord_sym: {SYMBOL: (chrom, start, end)}."""
+    c.coord_col = [None] * c.gK
+    c.loc_col = [""] * c.gK                                  # cytogenetic band (HGNC location), '' when unknown
+    c.coord_sym = {}
+    rd = os.path.join(out, "reference")
+    p = os.path.join(rd, "annotations.parquet")
+    if os.path.exists(p):
+        try:
+            import pyarrow.parquet as pq
+            have = set(pq.read_schema(p).names)
+            a = pd.read_parquet(p, columns=[x for x in ("col", "chrom", "start", "end", "location") if x in have])
+            for col, ch, st, en in zip(a["col"], a["chrom"], a["start"], a["end"]):
+                if 0 <= int(col) < c.gK and _coord_ok(ch, st, en):
+                    c.coord_col[int(col)] = (str(ch), int(st), int(en))
+            if "location" in a:
+                for col, lo in zip(a["col"], a["location"].fillna("").astype(str)):
+                    if 0 <= int(col) < c.gK and lo.strip() and lo not in ("nan", "<NA>"):
+                        c.loc_col[int(col)] = lo.strip()
+        except Exception as e:  # noqa: BLE001
+            log(f"  gene coordinates (annotations) not readable ({e})")
+    p = os.path.join(rd, "gene_coords.parquet")
+    if os.path.exists(p):
+        try:
+            a = pd.read_parquet(p, columns=["symbol", "chrom", "start", "end"])
+            for sy, ch, st, en in zip(a["symbol"], a["chrom"], a["start"], a["end"]):
+                if _coord_ok(ch, st, en):
+                    c.coord_sym.setdefault(str(sy).upper(), (str(ch), int(st), int(en)))
+        except Exception as e:  # noqa: BLE001
+            log(f"  gene coordinates (gene_coords) not readable ({e})")
+
+
+def _coord_ok(ch, st, en):
+    try:
+        return bool(str(ch).strip()) and str(ch) not in ("nan", "None", "<NA>") and np.isfinite(float(st)) and \
+            np.isfinite(float(en))
+    except (TypeError, ValueError):
+        return False
+
+
+def _load_selectivity(c, out, lines):
+    """D13's input: per (drug-dose, line) how strongly the line responds against its typical drug-dose (rel_log2), its
+    genes beyond the per-line cut (n_genes) and 'selective', from tables/drug_line_response.parquet; None when the
+    table is missing (then _responses computes them from the tensor, as the tables stage does). Lines outside the
+    growth analysis are left out (NaN), as for the cell numbers."""
+    c.Rsel = c.Nsel = c.sel_line = c.Ssel = None
+    c.sel_from = "none"
+    p = os.path.join(out, "tables", "drug_line_response.parquet")
+    if os.path.exists(p):
+        try:
+            t = pd.read_parquet(p, columns=["dd", "line", "measured", "n_genes", "rel_log2", "sel_z", "selective"])
+            dd_ = t["dd"].to_numpy(np.int64)
+            ln = t["line"].to_numpy(np.int64)
+            ok = (dd_ >= 0) & (dd_ < c.Dn) & (ln >= 0) & (ln < c.L)
+            R = np.full((c.Dn, c.L), np.nan)
+            N = np.full((c.Dn, c.L), -1, dtype=np.int64)
+            S = np.zeros((c.Dn, c.L), dtype=bool)
+            meas = t["measured"].to_numpy(bool)
+            R[dd_[ok], ln[ok]] = np.where(meas[ok], t["rel_log2"].to_numpy(np.float64)[ok], np.nan)
+            N[dd_[ok], ln[ok]] = t["n_genes"].to_numpy(np.int64)[ok]
+            S[dd_[ok], ln[ok]] = t["selective"].to_numpy(bool)[ok] & meas[ok]
+            Z = np.full((c.Dn, c.L), np.nan)
+            Z[dd_[ok], ln[ok]] = np.where(meas[ok], t["sel_z"].to_numpy(np.float64)[ok], np.nan)
+            c.Rsel, c.Nsel, c.sel_line, c.Ssel = R, N, S, Z
+            c.sel_from = "tables/drug_line_response.parquet"
+        except Exception as e:  # noqa: BLE001  (computed from the tensor instead)
+            log(f"  tables/drug_line_response.parquet not readable ({e}): selectivity from the tensor")
+    c.in_growth = np.ones(c.L, dtype=bool)
+    if "in_growth_analysis" in lines:
+        c.in_growth = lines["in_growth_analysis"].astype(str).str.lower().isin(["true", "1", "1.0"]).to_numpy()
 
 
 def _line_wide(c, srows, sdd):
@@ -993,6 +1241,9 @@ def _responses(c, chunk, mem_gb, k):
         chunk = max(1, min(gK, int(mem_gb * 1e9 / (Dn * L * 4.0 * 3.0))))
     c.chunk = int(chunk)
     meas = c.measured.T                                                        # genes x lines
+    sel_fallback = getattr(c, "Rsel", None) is None                            # no drug_line_response table
+    if sel_fallback:
+        t_line, ng_sel, nm_sel = _line_cut(c.out), np.zeros((Dn, L), np.int64), np.zeros((Dn, L), bool)
     log(f"  streaming the per-line tensor: {gK:,} genes in chunks of {chunk} (K = {k} drug-doses per gene; "
         f"{mg.size:,} reference values)")
     t0 = time.time()
@@ -1002,6 +1253,10 @@ def _responses(c, chunk, mem_gb, k):
         Z = c.DZ.read(g0, g1).astype(np.float32, copy=False)                  # c x Dn x L
         Z = np.where(meas[g0:g1, None, :], Z, np.nan)
         np.clip(Z, -Z_CLIP, Z_CLIP, out=Z)
+        if sel_fallback:                                                       # genes beyond the per-line cut
+            with np.errstate(invalid="ignore"):
+                ng_sel += (np.abs(Z) >= t_line).sum(axis=0)
+            nm_sel |= np.isfinite(Z).any(axis=0)
         Rz[g0:g1] = Z[rows, sel[g0:g1]] * sgn[g0:g1, :, None]
         i0, i1 = np.searchsorted(mg, g0), np.searchsorted(mg, g1)
         if i1 > i0:
@@ -1012,6 +1267,7 @@ def _responses(c, chunk, mem_gb, k):
         del X
         if (g0 // chunk) % 20 == 0 or g1 == gK:
             log(f"    genes {g0:,}-{g1:,} of {gK:,} ({(time.time() - t0) / 60:.1f} min)")
+    _selectivity_input(c, (t_line, ng_sel, nm_sel) if sel_fallback else None)
     # global-sensitivity reference per (Y, k): mean over the drug-dose's responsive genes minus Y and its partners
     Pm = (c.partners + sp.identity(gK, dtype=np.float32, format="csr")).tocsr()
     Pm.data[:] = 1.0
@@ -1097,6 +1353,37 @@ def _responses(c, chunk, mem_gb, k):
         f"the drug-dose's other responsive genes, {nk[1]:,} line-wide only, {nk[0]:,} none; line-wide "
         f"responsiveness {'used' if wc['used'] else 'NOT used'} ({wc['why']}); {int(c.M.any(axis=1).sum()):,} genes "
         "with usable lines")
+
+
+def _line_cut(out):
+    """The per-line |z| cut of the tables stage (tables/info.json line_z_threshold), else Z_SIG."""
+    try:
+        with open(os.path.join(out, "tables", "info.json"), encoding="utf-8") as fh:
+            t = float(json.load(fh).get("line_z_threshold"))
+        return t if np.isfinite(t) and t > 0 else Z_SIG
+    except (OSError, ValueError, TypeError):
+        return Z_SIG
+
+
+def _selectivity_input(c, fallback=None):
+    """D13: c.Rsel (rel_log2, drug-doses x lines; NaN outside the growth analysis), c.Nsel (genes beyond the per-line
+    cut; -1 not measured), c.sel_line (selective, growth-analysis lines only) and c.sel_dd (drug-doses with >= 1
+    selective line: the ones tested). fallback = (cut, counts, measured) from the tensor when tables/
+    drug_line_response.parquet is missing: rel_log2 and 'selective' then come from tables.line_selectivity and
+    selective_mask on genes with |per-line z| >= the cut (the tables stage also asks a 1.5x fold)."""
+    if fallback is not None:
+        from .tables import line_selectivity, selective_mask
+        t, ng, nm = fallback
+        n_genes = np.where(nm, ng, -1)
+        rel, selz = line_selectivity(n_genes, nm)
+        c.Rsel, c.Nsel, c.sel_line, c.Ssel = rel, n_genes, selective_mask(selz, n_genes) & nm, selz
+        c.sel_from = (f"the per-line tensor (genes with |per-line z| >= {t:g}; tables/drug_line_response.parquet was "
+                      "missing)")
+    c.Rsel = np.asarray(c.Rsel, dtype=np.float64).copy()
+    c.Rsel[:, ~c.in_growth] = np.nan
+    c.Ssel = np.where(np.isfinite(c.Rsel), np.asarray(c.Ssel, dtype=np.float64), np.nan)
+    c.sel_line = np.asarray(c.sel_line, dtype=bool) & c.in_growth[None, :] & np.isfinite(c.Rsel)
+    c.sel_dd = c.sel_line.any(axis=1)
 
 
 # ----------------------------------------------------------------------------- permutation machinery
@@ -1300,9 +1587,10 @@ def _organ_enrichment(c, idx, lab, seed):
     return p, (str(u[j]), int(a[j]), int(tot[j] - a[j]))
 
 
-def _genotype_groups(c):
-    """Groups from the recorded driver alterations (module docstring, 1). Returns (groups, records), records =
-    {gene: {line index: set of (mechanism, variant type)}}."""
+def _records(c):
+    """The recorded driver alterations: rec = {GENE: {line index: set of (mechanism, variant type, change)}} (mechanism
+    'LoF' / 'GoF' / '?'; change = the metadata's Driver_ProtEffect_or_CdnaEffect, '' when absent), recorded (lines with
+    any record) and the source text."""
     L = c.L
     rec = {}
     recorded = np.zeros(L, dtype=bool)
@@ -1319,11 +1607,13 @@ def _genotype_groups(c):
         mech = m["Driver_Mech_InferDM"].astype(str).to_numpy() if "Driver_Mech_InferDM" in m else \
             np.array(["nan"] * len(m))
         vt = m["Driver_VarType"].astype(str).to_numpy() if "Driver_VarType" in m else np.array(["nan"] * len(m))
+        ch = m["Driver_ProtEffect_or_CdnaEffect"].fillna("").astype(str).to_numpy() \
+            if "Driver_ProtEffect_or_CdnaEffect" in m else np.array([""] * len(m))
         for i in range(len(m)):
             if li[i] < 0 or gs[i] in ("", "NAN", "NONE"):
                 continue
             mm = mech[i] if mech[i] in ("LoF", "GoF") else "?"
-            rec.setdefault(gs[i], {}).setdefault(int(li[i]), set()).add((mm, vt[i]))
+            rec.setdefault(gs[i], {}).setdefault(int(li[i]), set()).add((mm, vt[i], ch[i].strip()))
     elif "drivers" in c.lines:
         src = "lines.csv drivers (no mechanism)"
         for i, s in enumerate(c.lines["drivers"].fillna("").astype(str)):
@@ -1333,7 +1623,193 @@ def _genotype_groups(c):
             for p in parts:
                 gname = p.split("(")[0].strip().upper()
                 vt = p.split("(")[1].rstrip(")") if "(" in p else "nan"
-                rec.setdefault(gname, {}).setdefault(i, set()).add(("?", vt))
+                rec.setdefault(gname, {}).setdefault(i, set()).add(("?", vt, ""))
+    return rec, recorded, src
+
+
+_RX_SUB = re.compile(r"^([A-Z])(\d+)([A-Z*])$")
+
+
+def allele_change(x):
+    """A recorded protein change as an allele: 'p.G12C' -> 'G12C' (simple substitutions only, '*' a stop); None for a
+    synonymous change ('p.T125T'), a frameshift ('p.S90fs'), a deletion ('DEL') or anything else."""
+    s = str(x or "").strip()
+    if s.startswith("p."):
+        s = s[2:]
+    m = _RX_SUB.match(s)
+    if not m or m.group(1) == m.group(3):
+        return None
+    return s
+
+
+def _line_category(recs):
+    """A line's records of one gene in the group words (D15): 'missense' (any missense record; a line with missense
+    and other records counts as missense), 'truncating' (Frameshift, Stopgain, Splice_site, Deletion,
+    Synonymous_splicing, Nonsense), else its variant type in lower case ('promoter')."""
+    vts = {str(v[1]) for v in recs}
+    if "Missense" in vts:
+        return "missense"
+    if vts & set(TRUNCATING):
+        return "truncating"
+    other = sorted(x for x in vts if x and x.lower() != "nan")
+    return other[0].lower().replace("_", " ") if other else "type not recorded"
+
+
+def _composition(lines_of, alt):
+    """'8 with a missense change, 2 truncating, splice or deletion only' (categories with a line, in this order:
+    missense, truncating, then the others by count) and the counts {category: n}."""
+    cats = pd.Series([_line_category(lines_of[i]) for i in np.flatnonzero(alt)], dtype=object).value_counts()
+    n = {str(k): int(v) for k, v in cats.items()}
+    parts = []
+    if n.get("missense"):
+        parts.append(f"{n['missense']} with a missense change")
+    if n.get("truncating"):
+        parts.append(f"{n['truncating']} truncating, splice or deletion only")
+    for k, v in sorted(((k, v) for k, v in n.items() if k not in ("missense", "truncating")),
+                       key=lambda kv: (-kv[1], kv[0])):
+        parts.append(f"{v} {k}")
+    return ", ".join(parts), n
+
+
+def _hotspot_lines(gene, lines_of, idx):
+    """The lines (of idx) whose records of the gene hit a hotspot of HOTSPOTS (a listed change, or a missense change at
+    a listed codon)."""
+    h = HOTSPOTS.get(gene)
+    if not h:
+        return []
+    out = []
+    for i in idx:
+        chs = [allele_change(v[2]) for v in lines_of.get(int(i), ()) if str(v[1]) == "Missense" or
+               allele_change(v[2])]
+        if any(a and (a in h["changes"] or a[:-1] in h["missense_codons"]) for a in chs):
+            out.append(int(i))
+    return out
+
+
+def _gene_desc(c, gene, mech, alt, inn, lines_of):
+    """The words of a gene-level group (D15): 'TP53 recorded as loss of function (10 lines: 8 with a missense change,
+    2 truncating, splice or deletion only) vs not recorded (8)'; gain of function the same; 'altered (any record)'."""
+    comp, n = _composition(lines_of, alt)
+    head = {"LoF": "recorded as loss of function", "GoF": "recorded as gain of function",
+            "any": "altered (any record)"}[mech]
+    return f"{gene} {head} ({int(alt.sum())} lines: {comp}) vs not recorded ({int(inn.sum())})", n
+
+
+def _allele_groups(c, rec, recorded, groups):
+    """Allele groups (D12): exact changes (gene, 'G12C') recorded in >= MIN_SIDE lines; codons ('G12') in >= MIN_SIDE
+    lines whose line set differs from every exact group of the gene; hotspots of HOTSPOTS; amplifications (variant
+    type 'Gain', >= MIN_SIDE lines). The comparison: every other recorded line, other alleles of the gene included. A
+    group whose line set equals an existing group (gene-level or allele) is not added; a gene-level group then gains
+    the composition in its words ('(7 lines: ...; all p.V600E)'). Returns (new groups, not testable texts)."""
+    L = c.L
+    out, not_testable = [], []
+    existing = [(g["alt"], g) for g in groups]
+    for gene in sorted(rec):
+        lines_of = rec[gene]
+        by_change, mech_of = {}, {}
+        for li_, s in lines_of.items():
+            for (mm, vt, ch) in s:
+                a = allele_change(ch)
+                if a:
+                    by_change.setdefault(a, set()).add(li_)
+                    mech_of.setdefault(a, set()).add(mm)
+        cands = []
+        exact_sets = []
+        for a in sorted(by_change, key=lambda x: (int(re.sub(r"\D", "", x) or 0), x)):
+            if len(by_change[a]) >= MIN_SIDE:
+                cands.append((a, f"p.{a}", sorted(by_change[a]), mech_of[a]))
+                exact_sets.append(frozenset(by_change[a]))
+        codon = {}
+        for a, ls in by_change.items():
+            codon.setdefault(a[:-1], set()).update(ls)
+        for cd in sorted(codon, key=lambda x: (int(re.sub(r"\D", "", x) or 0), x)):
+            ls = codon[cd]
+            if len(ls) >= MIN_SIDE and frozenset(ls) not in exact_sets:
+                mm = set().union(*[mech_of[a] for a in by_change if a[:-1] == cd])
+                cands.append((f"{cd} (codon)", f"codon {cd}", sorted(ls), mm))
+        hs = _hotspot_lines(gene, lines_of, list(lines_of))
+        if gene in HOTSPOTS and len(hs) >= MIN_SIDE:
+            h = HOTSPOTS[gene]
+            what = ", ".join(h["changes"]) if h["changes"] else "missense at " + ", ".join(h["missense_codons"])
+            mm = {v[0] for i in hs for v in lines_of[i]}
+            cands.append(("hotspot", f"hotspot ({what})", hs, mm))
+        gain = sorted(i for i, s in lines_of.items() if any(str(v[1]) == "Gain" for v in s))
+        if len(gain) >= MIN_SIDE:
+            cands.append(("amplification", "amplification", gain, {v[0] for i in gain for v in lines_of[i]}))
+        elif gain:
+            not_testable.append(f"{gene} amplification: {len(gain)} line{'s' if len(gain) > 1 else ''} "
+                                f"({', '.join(str(c.line_name[i]) for i in gain)}), fewer than {MIN_SIDE}")
+        for label, words, ls, mm in cands:
+            alt = np.zeros(L, dtype=bool)
+            alt[ls] = True
+            inn = recorded & ~alt
+            if inn.sum() < MIN_SIDE:
+                continue
+            same = [g for a_, g in existing if g["gene"] == gene and np.array_equal(a_, alt)]
+            keep = (lambda a_: a_ in HOTSPOTS.get(gene, {}).get("changes", ()) or
+                    a_[:-1] in HOTSPOTS.get(gene, {}).get("missense_codons", ())) if label == "hotspot" else \
+                (lambda a_: a_[:-1] == label.split(" ")[0]) if label.endswith("(codon)") else None
+            comp = _allele_comp(alt, lines_of, keep) if label != "amplification" else "every one amplified"
+            if same:
+                for g in same:
+                    if not g.get("allele") and "composition" not in g and label != "amplification":
+                        g["composition"] = comp
+                        g["desc"] = re.sub(r"^(.*? \(\d+ lines: [^)]*)\)", lambda m_: f"{m_.group(1)}; {comp})",
+                                           g["desc"], count=1)
+                continue
+            mmc = {x for x in mm if x in ("LoF", "GoF")}
+            mech = mmc.pop() if len(mmc) == 1 and "?" not in mm else "any"
+            other = int((inn & np.isin(np.arange(L), list(lines_of))).sum())
+            # an exact change names itself; a codon or hotspot group gives its alleles
+            extra = f": {comp}" if label == "hotspot" or label.endswith("(codon)") else ""
+            desc = (f"{gene} {words} ({int(alt.sum())} lines{extra}) vs other lines ({int(inn.sum())}; {other} of "
+                    f"them with another {gene} change)")
+            g = _group_common(c, f"genotype:{gene}:{label}", "genotype", gene, mech, alt, inn, desc)
+            g["allele"] = label
+            g["actor"] = gene if label == "amplification" else f"{gene} {words.split(' (')[0]}"
+            g["side_words"] = f"{gene}-amplified lines" if label == "amplification" else \
+                f"{gene} {words.split(' (')[0]} lines"
+            g["composition"] = comp
+            g["variants"] = "; ".join(f"{k} {v}" for k, v in pd.Series(
+                [v[1] for li_ in ls for v in lines_of[li_]]).value_counts().items())
+            if mech == "any":
+                g["alerts"].append(f"the {int(alt.sum())} lines' records of {gene} do not agree on one mechanism "
+                                   "(loss or gain of function, or none recorded): the sign of the gene's activity is "
+                                   "not inferred")
+            if label == "hotspot":
+                g["note"] = f"hotspot list: {HOTSPOTS[gene]['source']}"
+            out.append(g)
+            existing.append((alt, g))
+    return out, not_testable
+
+
+def _allele_comp(alt, lines_of, keep=None):
+    """The alleles of a group's lines: 'all p.V600E', or 'G12C 2, G12D 2, G12S 1, G12V 1' (keep: only the alleles of
+    the group, e.g. its codon or hotspots)."""
+    cnt = {}
+    for i in np.flatnonzero(alt):
+        al = sorted({a for a in (allele_change(v[2]) for v in lines_of.get(int(i), ())) if a and (keep is None or
+                                                                                                  keep(a))})
+        for a in al or ["no simple change recorded"]:
+            cnt[a] = cnt.get(a, 0) + 1
+    if len(cnt) == 1:
+        a = next(iter(cnt))
+        return f"all p.{a}" if a != "no simple change recorded" else a
+    return ", ".join(f"{k} {v}" for k, v in sorted(cnt.items(), key=lambda kv: (-kv[1], kv[0])))
+
+
+def _genotype_groups(c):
+    """Groups from the recorded driver alterations (module docstring, 1): gene-level groups (LoF / GoF / any) and the
+    allele groups (D12). Returns (groups, records, source, recorded); records = {gene: {line index: set of (mechanism,
+    variant type, change)}}. Sets c.n_driver_genes, c.heavy (D7) and c.allele_not_testable."""
+    L = c.L
+    rec, recorded, src = _records(c)
+    nd = np.zeros(L, dtype=np.int64)
+    for gene, lines_of in rec.items():
+        for li_ in lines_of:
+            nd[li_] += 1
+    c.n_driver_genes = nd
+    c.heavy = nd >= HYPERMUT_MIN_GENES
     groups = []
     for gene in sorted(rec):
         lines_of = rec[gene]
@@ -1356,9 +1832,10 @@ def _genotype_groups(c):
             cands.append(("any", anyl))
         for mech, alt in cands:
             inn_g = inn.copy()
-            desc = f"{gene} {MECH_WORDS[mech]} ({int(alt.sum())} lines) vs not recorded ({int(inn_g.sum())})"
+            desc, comp_n = _gene_desc(c, gene, mech, alt, inn_g, lines_of)
             g = _group_common(c, f"genotype:{gene}:{mech}", "genotype", gene, mech, alt, inn_g, desc)
-            vts = pd.Series([v for li_ in np.flatnonzero(alt) for (_, v) in lines_of[li_]]).value_counts()
+            g["allele"] = ""
+            vts = pd.Series([x[1] for li_ in np.flatnonzero(alt) for x in lines_of[li_]]).value_counts()
             g["variants"] = "; ".join(f"{k} {v}" for k, v in vts.items())
             n_unknown = sum(all(x[0] == "?" for x in lines_of[li_]) for li_ in np.flatnonzero(alt))
             n_mixed = int((lof & gof & alt).sum())
@@ -1369,11 +1846,22 @@ def _genotype_groups(c):
             elif n_mixed:
                 g["alerts"].append(f"{n_mixed} of the lines also carry a {'gain' if mech == 'LoF' else 'loss'}-of-"
                                    f"function record of {gene}")
+            nmis = int(comp_n.get("missense", 0))
+            if mech == "LoF" and nmis * 3 >= int(alt.sum()) and nmis:
+                hs = _hotspot_lines(gene, lines_of, np.flatnonzero(alt))
+                hot = (f" ({len(hs)} of them at hotspot codons {', '.join(HOTSPOTS[gene]['missense_codons'])}: "
+                       f"{HOTSPOTS[gene]['source']})" if hs and HOTSPOTS.get(gene, {}).get("missense_codons") else "")
+                g["alerts"].append(f"loss of function is the metadata's inference; {nmis} of the {int(alt.sum())} "
+                                   f"lines carry a missense change{hot}, and missense changes can also act "
+                                   "dominant-negative or gain new functions")
             g["deleted"] = np.array([any(x[1] == "Deletion" for x in lines_of.get(i, ())) for i in range(L)])
             groups.append(g)
+    alle, c.allele_not_testable = _allele_groups(c, rec, recorded, groups)
+    groups.extend(alle)
     # co-occurrence between the altered sets of different genes (Jaccard), and anti-occurrence: another gene's
     # altered lines sit on the OTHER side of the comparison (phi <= -JACCARD_CO over the lines both compare) - as
-    # much a confounder as co-occurrence, with the opposite sign; both block grade A
+    # much a confounder as co-occurrence, with the opposite sign; both block grade A. Groups of the same gene (its
+    # mechanisms and alleles) are skipped.
     for g in groups:
         best, anti = [], []
         for h in groups:
@@ -1407,6 +1895,7 @@ def _genotype_groups(c):
                 f"{h} alterations are in {ni_} of the {n_in} comparison lines and {na_} of the {n_al} "
                 f"{g['gene']}-altered lines (phi -{v:.2f})" for h, (v, ni_, na_) in seen_a.items())
                 + ": that alteration may be the cause, with the opposite sign")
+        _heavy_alerts(c, g)
         x = g["col"]
         if x >= 0:
             na = int(g["alt"].sum())
@@ -1420,6 +1909,30 @@ def _genotype_groups(c):
         else:
             g["x_lost"], g["x_base_diff"] = -1, np.nan
     return groups, rec, src, recorded
+
+
+def _heavy_alerts(c, g):
+    """D7: heavily mutated lines (alterations recorded in >= HYPERMUT_MIN_GENES driver genes) concentrated on a side.
+    The altered side holding >= 2 of them at >= 2x their share among the other lines: an alert (blocks grade A,
+    g['heavy_alert']); the comparison side so enriched: a note."""
+    hv = getattr(c, "heavy", None)
+    g["n_heavy_alt"], g["n_heavy_inn"], g["heavy_alert"] = 0, 0, False
+    if hv is None:
+        return
+    ha, hi = hv & g["alt"], hv & g["inn"]
+    na, ni = int(g["alt"].sum()), int(g["inn"].sum())
+    ka, ki = int(ha.sum()), int(hi.sum())
+    g["n_heavy_alt"], g["n_heavy_inn"] = ka, ki
+    side = _sides(g)[0]
+    if ka >= 2 and na and (ki == 0 or ka / na >= 2.0 * ki / max(ni, 1)):
+        g["heavy_alert"] = True
+        g["alerts"].append(f"heavily mutated lines: {ka} of the {na} {side} ({', '.join(c.line_name[ha])}) record "
+                           f"alterations in {HYPERMUT_MIN_GENES} or more driver genes, against {ki} of the {ni} "
+                           "others: such lines carry many recorded and unrecorded changes, and any of them, or the "
+                           "mutation load itself, could be the cause")
+    elif ki >= 2 and ni and (ka == 0 or ki / ni >= 2.0 * ka / max(na, 1)):
+        g["alerts"].append(f"{ki} of the {ni} comparison lines are heavily mutated ({', '.join(c.line_name[hi])}): "
+                           f"they record alterations in {HYPERMUT_MIN_GENES} or more driver genes")
 
 
 def _null_groups(c, geno_groups, records):
@@ -1441,6 +1954,7 @@ def _null_groups(c, geno_groups, records):
         desc = f"{name} not expressed ({int(alt.sum())} lines) vs expressed ({int(inn.sum())})"
         g = _group_common(c, f"null:{c.sym[x0]}", "null", str(c.sym[x0]), "null", alt, inn, desc)
         g["genes"] = genes
+        g["null_co"], g["null_co_n"] = [], 0
         g["level_ratio"] = float(np.median(c.line_cpm[alt][:, genes].mean(axis=1) /
                                            np.maximum(c.pooled_cpm[genes].mean(), 1e-9)))
         co = []
@@ -1642,15 +2156,20 @@ def _test_group(c, g, kinds, P, targets=None, dd_mask=None):
         Tp[~ok] = np.nan
         res["baseline"] = {"t": tg, "T": np.where(ok, Tobs, np.nan), "Tp": Tp, "D": D, "na": na, "ni": ni,
                            "n_arr": _row_arrangements(g, np.isfinite(c.B[tg]))}
-    if "sensitivity" in kinds:
-        dsel = np.arange(c.Dn) if dd_mask is None else np.flatnonzero(dd_mask)
+    # cells (sensitivity: DD_A, the drug-doses of dd_mask) and response strength (selectivity: rel_log2 of
+    # tables/drug_line_response, the drug-doses with >= 1 selective line): the same test on drug-dose rows
+    for kk, V, msk in (("sensitivity", c.Aab, dd_mask), ("selectivity", getattr(c, "Rsel", None),
+                                                          getattr(c, "sel_dd", None))):
+        if kk not in kinds or V is None:
+            continue
+        dsel = np.arange(c.Dn) if msk is None else np.flatnonzero(msk)
         if dsel.size:
-            D, Zt, na, ni = _contrast(c.Aab[dsel], None, alt, inn)
+            D, Zt, na, ni = _contrast(V[dsel], None, alt, inn)
             Tobs, Tp = _standardise(Zt)
             ok = (na >= MIN_SIDE) & (ni >= MIN_SIDE) & np.isfinite(Tobs)
             Tp[~ok] = np.nan
-            res["sensitivity"] = {"t": dsel, "T": np.where(ok, Tobs, np.nan), "Tp": Tp, "D": D,
-                                  "na": na, "ni": ni, "n_arr": _row_arrangements(g, np.isfinite(c.Aab[dsel]))}
+            res[kk] = {"t": dsel, "T": np.where(ok, Tobs, np.nan), "Tp": Tp, "D": D,
+                       "na": na, "ni": ni, "n_arr": _row_arrangements(g, np.isfinite(V[dsel]))}
     return res
 
 
@@ -1760,25 +2279,37 @@ def _response_dd(c, g, y, sign_d):
 
 
 def _flags_text(c, d):
-    """A drug-dose's flags for a drug-dose list: ' [artifact flags: a, b]' (one of atlas_core.ARTIFACT_FLAGS among
-    them), ' [flags: a, b]' (other flags), '' (none)."""
+    """A drug-dose's flags for a drug-dose list: ' [artifact flags: a, b]' (one of common.ARTIFACT_FLAGS among them:
+    the atlas's seven and the neighbouring-well flag), ' [flags: a, b]' (other flags), '' (none)."""
     f = str(c.dd_flags[d] or "").replace("; ", ", ")
     if not f:
         return ""
     return f" [{'artifact flags' if c.dd_art[d] else 'flags'}: {f}]"
 
 
+def _ti_reason(c, labels, share, strong, drugs):
+    """D17: the translation-inhibitor reason of a response edge (or of a drug_target edge whose supporting compounds
+    are all members: share 1)."""
+    head = f"{int(math.floor(float(share) * 100))}% of the evidence" if np.isfinite(share) else \
+        "a share of the evidence that could not be measured"
+    src = "; ".join(f"{d}: {c.ti_src_by_drug.get(d, 'translation inhibitor')}" for d in dict.fromkeys(drugs))
+    return (f"drug-doses of translation inhibitors carry {head}{', the strongest among them' if strong else ''} "
+            f"({', '.join(labels)}; {src}): blocking translation stabilises short-lived mRNAs, so a rise there may not "
+            "be more transcription")
+
+
 def _response_all(c, g, y, sign_d, items):
     """A response edge's drugdoses_all (every one of Y's K drug-doses: contrast, folds and flags; strongest in the
     edge's direction first, those without a value on a side last), its art_share (the share of sum |contrast| over the
-    K drug-doses carried by artifact-flagged ones; NaN without any contrast) and its artifact-flag reason ('' when none
+    K drug-doses carried by artifact-flagged ones; NaN without any contrast), its artifact-flag reason ('' when none
     of the K drug-doses with a value is flagged): '(N% of the evidence[, the strongest among them]): every flagged
-    one' - the strongest = the first of top_drugdoses (items), the one the reading names."""
+    one' - the strongest = the first of top_drugdoses (items), the one the reading names -, and the same for the
+    drug-doses of translation inhibitors (D17: ti_share and its reason)."""
     pd_ = _response_dd(c, g, y, sign_d)
     if pd_ is None:
-        return "", np.nan, ""
+        return "", np.nan, "", np.nan, ""
     con, fi, fa, sc, o = pd_
-    parts, flagged = [], []
+    parts, flagged, ti = [], [], []
     for k in o:
         d = int(c.sel[y, k])
         if np.isfinite(con[k]):
@@ -1786,12 +2317,17 @@ def _response_all(c, g, y, sign_d, items):
                          + _flags_text(c, d))
             if c.dd_art[d]:
                 flagged.append(d)
+            if c.ti_dd[d]:
+                ti.append(d)
         else:
             parts.append(f"{c.dd_label[d]}: no value on one side" + _flags_text(c, d))
     fin = np.isfinite(con)
     tot = float(np.abs(con[fin]).sum())
-    art = np.array([c.dd_art[int(c.sel[y, k])] for k in range(con.size)], dtype=bool)
+    dds = np.array([int(c.sel[y, k]) for k in range(con.size)])
+    art = c.dd_art[dds]
     share = np.float32(np.abs(con[fin & art]).sum() / tot) if tot > 0 else np.float32(np.nan)
+    tim = c.ti_dd[dds]
+    ti_share = np.float32(np.abs(con[fin & tim]).sum() / tot) if tot > 0 else np.float32(np.nan)
     reason = ""
     if flagged:
         head = (f"{int(math.floor(float(share) * 100))}% of the evidence" if np.isfinite(share) else
@@ -1799,7 +2335,11 @@ def _response_all(c, g, y, sign_d, items):
         strong = bool(items) and bool(c.dd_art[items[0][0]])
         reason = (f"supporting drug-doses with artifact flags ({head}{', the strongest among them' if strong else ''}"
                   "): " + "; ".join(f"{c.dd_label[d]} ({c.dd_flags[d]})" for d in flagged))
-    return "; ".join(parts), share, reason
+    ti_reason = ""
+    if ti:
+        strong = bool(items) and bool(c.ti_dd[items[0][0]])
+        ti_reason = _ti_reason(c, [c.dd_label[d] for d in ti], ti_share, strong, [str(c.drug[d]) for d in ti])
+    return "; ".join(parts), share, reason, ti_share, ti_reason
 
 
 def _top_dd_response(c, g, y, sign_d, rise=np.nan):
@@ -1826,10 +2366,19 @@ def _top_dd_response(c, g, y, sign_d, rise=np.nan):
 
 
 def _sides(g):
+    """(the altered side, the other side) in words: 'TP53-LoF lines', 'the other lines'; 'KRAS p.G12C lines'; for a
+    natural knockout 'lines without X', 'lines expressing X'."""
     if g["mech"] == "null":
         return f"lines without {g['gene']}", f"lines expressing {g['gene']}"
+    if g.get("side_words"):
+        return g["side_words"], "the other lines"
     tag = g["mech"] if g["mech"] in ("LoF", "GoF") else "altered"
     return f"{g['gene']}-{tag} lines", "the other lines"
+
+
+def _actor(g):
+    """Whose activity a genotype edge speaks of: 'TP53', or an allele group's 'KRAS p.G12C'."""
+    return g.get("actor") or g["gene"]
 
 
 def _activity_words(sign, what, response=False):
@@ -1843,16 +2392,33 @@ def _activity_words(sign, what, response=False):
     return ""
 
 
+def _may(sign, response=False, cells=False):
+    """D16, natural knockouts: 'may raise' / 'may lower' (a level), 'may strengthen' / 'may weaken' (a response),
+    'may protect the cells' / 'may make the cells more sensitive' (cells): the lines without X are not an experiment
+    on X, so the words say what X may do."""
+    if cells:
+        return "may protect the cells" if sign > 0 else "may make the cells more sensitive"
+    if response:
+        return "may strengthen" if sign > 0 else "may weaken"
+    return "may raise" if sign > 0 else "may lower"
+
+
 def _grade_genotype(g, na, ni, q, block=False):
-    """A: >= FULL_SIDE lines on each side (measured; within organs: those sharing an organ with the other side),
-    q < Q_A, compared within organs, no co-occurrence alert (another gene's altered lines overlapping the altered
-    side, or sitting on the other side: anti-occurrence), and nothing kind-specific that blocks it (block: a response
-    edge that rests on the global-sensitivity correction, or whose evidence comes mostly from drug-doses without any
-    correction). C when tissue-confounded (compared across organs and the sides' organs differ: the comparison
+    """A (VERSION 5): >= FULL_SIDE lines on each side (measured; within organs: those sharing an organ with the other
+    side), q < Q_A, compared within organs, no co-occurrence alert (another gene's altered lines overlapping the altered
+    side, or sitting on the other side: anti-occurrence), no heavily mutated lines concentrated on the altered side
+    (D7), and nothing kind-specific that blocks it (block). For a response, block holds: it rests on the global-
+    sensitivity correction or its evidence comes mostly from drug-doses without any correction (VERSION 2), and
+    (VERSION 5, D5) the mean over all its drug-doses, with and without the correction, goes the edge's way; less than
+    BOTH_WAYS_A of the evidence goes the other way; not a floor (a target that mostly falls and is >= 2x lower at
+    baseline in the altered lines); the target measured in >= MEASURED_A of each side's lines. A selectivity edge seen
+    at one dose only is blocked too (D13). The group's expected false share (D6) is applied after the rows are built
+    (_false_shares). C when tissue-confounded (compared across organs and the sides' organs differ: the comparison
     cannot separate the gene from the tissue - graded as for a natural knockout). Else B."""
     if g["tissue"]:
         return "C"
     ok = (na >= FULL_SIDE and ni >= FULL_SIDE and q < Q_A and not g["cooccur"] and not g.get("anti")
+          and not g.get("heavy_alert")
           and g["stratified"] and g["n_alt_mixed"] >= FULL_SIDE and g["n_inn_mixed"] >= FULL_SIDE and not block)
     return "A" if ok else "B"
 
@@ -1915,8 +2481,52 @@ def _mixed_alert(target, rise, where):
             "says how strongly it responds, not whether the source induces or represses it")
 
 
+def _changed_note(v, before, now, why):
+    """The note on an arrow that a rule changed in direction version v reads differently (VERSION 6): 'rule changed
+    in direction version v: before, <before>; now <now>, because <why>' (no '; ' inside: _join would rewrite it)."""
+    return CHANGED.format(v=v) + f": before, {before}. Now {now}, because {why}".replace("; ", ", ")
+
+
+def _blocked_note(v, why):
+    """'grade A blocked since direction version v: <conditions>' for an arrow that the version's stricter grade-A
+    rules keep from grade A (without them it would be A)."""
+    return (f"grade A blocked since direction version {v}: " + ", ".join(why)
+            + " (without this rule the arrow would be grade A)").replace("; ", ", ")
+
+
+def _absence(c, g, y):
+    """(lines of the altered side, of them not expressing y, lines of the other side, of them not expressing y): the
+    tensor's line_measured mask (tables line_effects 'expressed')."""
+    na, ni = int(g["alt"].sum()), int(g["inn"].sum())
+    ka = int((~c.measured[g["alt"], y]).sum()) if na else 0
+    ki = int((~c.measured[g["inn"], y]).sum()) if ni else 0
+    return na, ka, ni, ki
+
+
+def _known_target(src, y_sym):
+    """' (a known target of SRC: tahoemap/data/control_sets.json ...)' when the target is in the source's curated
+    target list of this module (P53_TARGETS for TP53, NRF2_TARGETS for KEAP1), else ''."""
+    sets = {"TP53": ("P53_TARGETS", P53_TARGETS), "KEAP1": ("NRF2_TARGETS", NRF2_TARGETS)}
+    hit = sets.get(str(src).upper())
+    if hit and str(y_sym) in hit[1]:
+        return f", a known target of {src} (tahoemap/direction.py {hit[0]})"
+    return ""
+
+
 def _grade_null(g, na, ni, extra_c=False):
     return "B" if (na >= FULL_SIDE and ni >= FULL_SIDE and not g["tissue"] and not extra_c) else "C"
+
+
+def _programme(g):
+    """D10: a natural knockout inside an expression programme: more than NOTE_COABSENT_SETS other line sets overlap
+    the lines lacking the gene (Jaccard >= JACCARD_CO). Returns the number of such sets (0 when none)."""
+    return int(g.get("null_co_n", 0) or 0) if g["kind"] == "null" else 0
+
+
+def _programme_alert(g, x_name):
+    n = _programme(g)
+    return (f"an expression programme: {n} other line sets overlap the lines lacking {x_name} (overlap "
+            f"{JACCARD_CO:g} or more): the direction is not identifiable")
 
 
 def _base_row():
@@ -1927,7 +2537,20 @@ def _base_row():
             "direction_clear": None, "p_direction": np.nan, "n_compounds": -1, "n_supporting": -1,
             "background_rate": np.nan, "compounds": "", "compounds_supporting": "", "drug_effect": "", "T": np.nan,
             "p": np.nan, "q": np.nan, "q_group": np.nan, "alerts": "", "top_drugdoses": "", "art_share": np.nan,
-            "drugdoses_all": ""}
+            "drugdoses_all": "",
+            # VERSION 5
+            "mechanism_class": "", "mechanism_source": "", "compounds_source": "", "n_top": -1, "m_top": -1,
+            "class_size": -1, "share_supporting": np.nan, "ti_share": np.nan, "expected_false_group": np.nan,
+            "group_edges": -1, "false_share": np.nan, "false_share_upper": np.nan, "distance_bp": np.nan,
+            "same_locus": False, "programme_sets": -1, "nonspecific_share": np.nan, "allele": "",
+            "doses_supporting": "", "n_doses_supporting": -1, "test_id": -1, "n_same_test": -1}
+
+
+INT_COLS = ("source_col", "target_col", "target_dd", "n_altered", "n_intact", "n_lines", "n_compounds",
+            "n_supporting", "sign", "n_top", "m_top", "class_size", "group_edges", "programme_sets",
+            "n_doses_supporting", "test_id")
+F32_COLS = ("share_supporting", "ti_share", "expected_false_group", "false_share", "false_share_upper",
+            "nonspecific_share")
 
 
 def _empty_edges():
@@ -1937,10 +2560,16 @@ def _empty_edges():
     for k, v in b.items():
         if k == "direction_clear":
             cols[k] = pd.Series(dtype="boolean")
+        elif isinstance(v, bool):
+            cols[k] = pd.Series(dtype=bool)
         elif isinstance(v, str):
             cols[k] = pd.Series(dtype="string")
+        elif k == "n_same_test":
+            cols[k] = pd.Series(dtype=np.int16)
         elif isinstance(v, (int, np.integer)):
             cols[k] = pd.Series(dtype=np.int32)
+        elif k in F32_COLS:
+            cols[k] = pd.Series(dtype=np.float32)
         else:
             cols[k] = pd.Series(dtype=np.float64)
     return pd.DataFrame(cols)
@@ -1969,15 +2598,27 @@ def _table_check(c, g, r, i, kind):
                        f"whole table of genotype groups (q {_q2(q)}): a lead, not a finding{exp}")
 
 
+def _source_of(c, g, x_for_alerts):
+    if g["kind"] != "null":
+        return g["gene"], int(g["col"])
+    return str(c.sym[x_for_alerts]), int(x_for_alerts)
+
+
 def _response_rows(c, g, r, kind, base_res, x_for_alerts, extra_alerts_fn=None):
     rows = []
     hit = _hits(r)
     alt_w, inn_w = _sides(g)
+    geno = g["kind"] == "genotype"
+    src, scol = _source_of(c, g, x_for_alerts)
+    prog_n = _programme(g) if not geno else 0
+    prog = prog_n if prog_n > NOTE_COABSENT_SETS else 0
+    nK = int(c.sel.shape[1])
     for i in hit:
         y = int(r["t"][i])
         if y == x_for_alerts:
             continue
         D = float(r["D"][i])
+        Draw = float(r["D_raw"][i])
         sgn_z = float(r["dir"][i])
         table, qg, tal = _table_check(c, g, r, i, kind)
         sf = g["sign_factor"]
@@ -1987,18 +2628,39 @@ def _response_rows(c, g, r, kind, base_res, x_for_alerts, extra_alerts_fn=None):
         items = _top_dd_response(c, g, y, sgn_z, rise)
         al = list(extra_alerts_fn(y) if extra_alerts_fn else g["alerts"])
         na, ni = int(r["na"][i]), int(r["ni"][i])
+        block_a, why_a = False, []
         if na < g["n_alt"] or ni < g["n_inn"]:
             al.append(f"{c.sym[y]} measured in {na} of the {g['n_alt']} and {ni} of the {g['n_inn']} lines")
+        if na < MEASURED_A * g["n_alt"] or ni < MEASURED_A * g["n_inn"]:
+            block_a = True                                                    # D5 (d)
+            why_a.append(f"{c.sym[y]} is measured in fewer than {MEASURED_A:.0%} of a side's lines (MEASURED_A)")
         bd = np.nan
         if base_res is not None:
             j = np.flatnonzero(base_res["t"] == y)
             bd = float(base_res["D"][j[0]]) if j.size else np.nan
         if np.isfinite(bd) and sgn_z > 0 and bd >= BASE_LOW:
-            al.append(f"{c.sym[y]} is {2 ** bd:.1f}x lower at baseline in the {alt_w}: a weaker response may be "
-                      "lower expression")
+            if np.isfinite(rise) and rise < 0.5:                              # D5 (c): a floor
+                al.append(f"{c.sym[y]} mostly falls under these drugs and is {2 ** bd:.1f}x lower at baseline in the "
+                          f"{alt_w}: a smaller fall there can be a floor (less left to lose), not less regulation")
+                block_a = True
+                why_a.append("a smaller fall in the altered lines can be a floor")
+            else:
+                al.append(f"{c.sym[y]} is {2 ** bd:.1f}x lower at baseline in the {alt_w}: a weaker response may be "
+                          "lower expression")
         if r["opp"][i] >= 0.25:
             al.append(f"the difference goes the other way at some of its drug-doses ({r['opp'][i]:.0%} of the "
                       "evidence)")
+        if r["opp"][i] >= BOTH_WAYS_A:                                         # D5 (b)
+            block_a = True
+            why_a.append(f"{BOTH_WAYS_A:.0%} or more of the evidence goes the other way (BOTH_WAYS_A)")
+        if not (np.sign(D) == sgn_z and np.sign(Draw) == sgn_z):              # D5 (a)
+            ret = float(r["ret"][i])
+            rt = f"; the {alt_w} respond {ret:.2f}x as strongly overall" if np.isfinite(ret) else ""
+            al.append(f"the mean over all {nK} of its drug-doses goes the other way (contrast {D:+.2f}, without the "
+                      f"correction {Draw:+.2f}{rt}): the arrow rests on its strongest drug-doses ("
+                      + ", ".join(c.dd_label[d] for d, _, _, _ in items) + ")")
+            block_a = True
+            why_a.append("the mean over all its drug-doses goes the other way")
         if mixed:
             al.append(_mixed_alert(c.sym[y], rise, "of the drug-doses carrying the difference"))
         cal, block = _correction_alerts(c, g, r, i, y, alt_w)
@@ -2008,9 +2670,13 @@ def _response_rows(c, g, r, kind, base_res, x_for_alerts, extra_alerts_fn=None):
         if r.get("own") is not None and bool(r["own"][i]):
             al.append(f"{c.sym[y]}'s own shuffles of the labels spread differently from the other genes': its own "
                       "permutation p is used")
-        dd_all, art_share, art_reason = _response_all(c, g, y, sgn_z, items)
+        dd_all, art_share, art_reason, ti_share, ti_reason = _response_all(c, g, y, sgn_z, items)
         if art_reason:
             al.append(art_reason)
+        if ti_reason:
+            al.append(ti_reason)
+        if prog:
+            al.append(_programme_alert(g, src))
         if tal:
             al.insert(0, tal)
         row = _base_row()
@@ -2028,22 +2694,42 @@ def _response_rows(c, g, r, kind, base_res, x_for_alerts, extra_alerts_fn=None):
                     d2, _, fi2, fa2 = oth[0]
                     rd += f" ({_rise_word(up0)}), {_fmt_fold(fa2)} vs {_fmt_fold(fi2)} at {c.dd_label[d2]} " \
                           f"({_rise_word(not up0)})"
-        aw = _activity_words(sign, f"{g['gene']} activity", response=True)
-        if aw:
-            rd += f"; {aw} {c.sym[y]}'s drug response"
-        grade = _grade_genotype(g, na, ni, float(r["q"][i]), block) if g["kind"] == "genotype" else \
-            _grade_null(g, na, ni, block)
+        rd0 = rd                                                            # without the sign's words (D9)
+        if prog:
+            sign = 0
+            rd += (f"; {src} belongs to an expression programme ({prog} other line sets overlap the lines lacking it; "
+                   "genes co-expressed across lines): which gene of it acts cannot be told")
+        elif geno:
+            aw = _activity_words(sign, f"{_actor(g)} activity", response=True)
+            if aw:
+                rd += f"; {aw} {c.sym[y]}'s drug response"
+        elif sign:
+            rd += f" ({src} {_may(sign, response=True)} its drug response)"
+        if geno:
+            grade = _grade_genotype(g, na, ni, float(r["q"][i]), block or block_a)
+            why5 = why_a + (["heavily mutated lines are concentrated on the altered side"] if g.get("heavy_alert")
+                            else [])
+            if table and grade != "A" and why5 and _grade_genotype(dict(g, heavy_alert=False), na, ni,
+                                                                   float(r["q"][i]), block) == "A":
+                al.append(_blocked_note(5, why5))                              # what the version 5 rules blocked
+        else:
+            grade = _grade_null(g, na, ni, block or bool(prog))
+            if prog and table and int(sgn_z * sf if sf else 0):
+                al.append(_changed_note(5, f"this arrow had sign {int(sgn_z * sf):+d} and grade "
+                                        f"{_grade_null(g, na, ni, block)}", "sign 0 and grade C",
+                                        f"{src} belongs to an expression programme (more than {NOTE_COABSENT_SETS} "
+                                        "other line sets overlap): which gene acts cannot be told"))
         grade = grade if table else "C"
-        row.update({"source": g["gene"] if g["kind"] != "null" else str(c.sym[x_for_alerts]),
-                    "source_col": int(g["col"] if g["kind"] != "null" else x_for_alerts),
+        row.update({"source": src, "source_col": scol,
                     "target": str(c.sym[y]), "target_col": y, "kind": kind, "grade": grade, "sign": sign,
                     "reading": rd, "group": g["desc"], "mechanism": MECH_WORDS[g["mech"]], "n_altered": na,
-                    "n_intact": ni, "contrast": D, "D_raw": float(r["D_raw"][i]),
+                    "n_intact": ni, "contrast": D, "D_raw": Draw,
                     "retained_fraction": float(r["ret"][i]), "raw_share": float(r["raw_share"][i]),
                     "rise_share": rise,
                     "baseline_log2_diff": bd, "T": float(r["T"][i]), "p": float(r["p"][i]), "q": float(r["q"][i]),
                     "q_group": qg, "alerts": _join(al), "top_drugdoses": top, "art_share": art_share,
-                    "drugdoses_all": dd_all})
+                    "drugdoses_all": dd_all, "ti_share": ti_share, "allele": g.get("allele", ""),
+                    "programme_sets": prog_n if not geno else -1, "_rd0": rd0})
         rows.append(row)
     return rows
 
@@ -2052,6 +2738,10 @@ def _baseline_rows(c, g, r, kind, x_for_alerts, extra_alerts_fn=None, coabsent=N
     rows = []
     hit = _hits(r)
     alt_w, inn_w = _sides(g)
+    geno = g["kind"] == "genotype"
+    src, scol = _source_of(c, g, x_for_alerts)
+    prog_n = _programme(g) if not geno else 0
+    prog = prog_n if prog_n > NOTE_COABSENT_SETS else 0
     for i in hit:
         y = int(r["t"][i])
         if y == x_for_alerts:
@@ -2062,28 +2752,79 @@ def _baseline_rows(c, g, r, kind, x_for_alerts, extra_alerts_fn=None, coabsent=N
         table, qg, tal = _table_check(c, g, r, i, kind)
         al = ([tal] if tal else []) + list(extra_alerts_fn(y) if extra_alerts_fn else g["alerts"])
         co = bool(coabsent(y)) if coabsent else False
-        if co:
+        near_co, block_abs, notes6 = False, False, []
+        if geno:                                                               # VERSION 6: where the target is absent
+            n_a, k_a, n_i, k_i = _absence(c, g, y)
+            block_abs = k_a >= BASE_ABSENT_A * max(n_a, 1) or k_i >= BASE_ABSENT_A * max(n_i, 1)
+        if co and geno:                                                        # D9: genotype co-absence
+            ca, cb = _coord(c, -1 if scol is None else scol, src), _coord(c, y, c.sym[y])
+            dist = _gap(ca, cb)
+            if ca is None or cb is None:                                       # no coordinates: as in version 5
+                near_co = True
+                al.append(f"{c.sym[y]} is also absent from most of the {alt_w}: a shared deletion can explain it "
+                          "(no coordinates to check how far apart the two genes lie)")
+            elif np.isfinite(dist) and dist <= CODELETION_BP:
+                near_co = True
+                al.append(f"{c.sym[y]} is also absent from most of the {alt_w} and lies {_bp_words(dist)} from "
+                          f"{src}: a shared deletion can explain it")
+            else:
+                where = f"{_bp_words(dist)} apart" if np.isfinite(dist) else "on different chromosomes"
+                al.append(f"{c.sym[y]} is also absent from most of the {alt_w} ({k_a} of the {n_a}, and {k_i} of the "
+                          f"{n_i} others){_known_target(src, c.sym[y])}: lineage, or the loss of {src} itself, can "
+                          f"explain it (the two genes lie {where}: not one shared deletion)")
+                notes6.append(_changed_note(6, "version 5 graded every target absent from most altered lines C "
+                                            "and read it as a shared deletion", "the grade stays (at most B)",
+                                            f"a shared deletion needs the two genes within {_bp_words(CODELETION_BP)} "
+                                            "of each other on one chromosome"))
+        if block_abs and not co:
+            al.append(f"{c.sym[y]} is not expressed in {k_a} of the {n_a} {alt_w} and {k_i} of the {n_i} others: "
+                      "present in some lines and absent in others, so the level difference can follow lineage "
+                      "rather than regulation")
+        elif co and not geno:
             al.append(f"{c.sym[y]} is also absent from most of these lines: which of the two drives the other cannot "
                       "be told")
         if r.get("own") is not None and bool(r["own"][i]):
             al.append(f"{c.sym[y]}'s own shuffles of the labels spread differently from the other genes': its own "
                       "permutation p is used")
-        rd = f"{c.sym[y]} is {_fmt_fold(2 ** abs(D))} {'lower' if D > 0 else 'higher'} at baseline in the {alt_w} " \
-             f"than in {inn_w}"
-        aw = _activity_words(sign, f"{g['gene']} activity")
-        if aw:
-            rd += f"; {aw} {c.sym[y]}'s level"
+        if prog:
+            al.append(_programme_alert(g, src))
+        fold = _fmt_fold(2 ** abs(D))
+        rd0 = f"{c.sym[y]} is {fold} {'lower' if D > 0 else 'higher'} at baseline in the {alt_w} than in {inn_w}"
+        if geno:
+            rd = f"{c.sym[y]} is {fold} {'lower' if D > 0 else 'higher'} at baseline in the {alt_w} than in {inn_w}"
+            aw = _activity_words(sign, f"{_actor(g)} activity")
+            if aw:
+                rd += f"; {aw} {c.sym[y]}'s level"
+        elif prog:
+            sign = 0
+            rd = (f"{c.sym[y]} is {fold} {'lower' if D > 0 else 'higher'} at baseline in the {alt_w} than in {inn_w}; "
+                  f"these lines also lack the genes of {prog} other line sets (a shared expression programme): {src} "
+                  f"and {c.sym[y]} are co-expressed across lines, and which acts on which cannot be told")
+        else:
+            rd = (f"{alt_w} have {fold} {'less' if D > 0 else 'more'} {c.sym[y]} at baseline than {inn_w}"
+                  + (f" ({src} {_may(sign)} {c.sym[y]}'s level)" if sign else ""))
         na, ni = int(r["na"][i]), int(r["ni"][i])
-        grade = _grade_genotype(g, na, ni, float(r["q"][i])) if g["kind"] == "genotype" else \
-            _grade_null(g, na, ni, co)
+        if geno:
+            grade = _grade_genotype(g, na, ni, float(r["q"][i]), block_abs)
+            if table and grade != "A" and block_abs and _grade_genotype(g, na, ni, float(r["q"][i])) == "A":
+                notes6.append(_blocked_note(6, [f"{c.sym[y]} is not expressed in {BASE_ABSENT_A:.0%} or more of a "
+                                                "side's lines (BASE_ABSENT_A)"]))
+            if table and grade != "A" and g.get("heavy_alert") and _grade_genotype(
+                    dict(g, heavy_alert=False), na, ni, float(r["q"][i]), block_abs) == "A":
+                notes6.append(_blocked_note(5, ["heavily mutated lines are concentrated on the altered side"]))
+            if co and near_co:
+                grade = "C"
+            al.extend(notes6)
+        else:
+            grade = _grade_null(g, na, ni, co or bool(prog))
         grade = grade if table else "C"
         row = _base_row()
-        row.update({"source": g["gene"] if g["kind"] != "null" else str(c.sym[x_for_alerts]),
-                    "source_col": int(g["col"] if g["kind"] != "null" else x_for_alerts),
+        row.update({"source": src, "source_col": scol,
                     "target": str(c.sym[y]), "target_col": y, "kind": kind, "grade": grade, "sign": sign,
                     "reading": rd, "group": g["desc"], "mechanism": MECH_WORDS[g["mech"]], "n_altered": na,
                     "n_intact": ni, "contrast": D, "baseline_log2_diff": D, "T": float(r["T"][i]),
-                    "p": float(r["p"][i]), "q": float(r["q"][i]), "q_group": qg, "alerts": _join(al)})
+                    "p": float(r["p"][i]), "q": float(r["q"][i]), "q_group": qg, "alerts": _join(al),
+                    "allele": g.get("allele", ""), "programme_sets": prog_n if not geno else -1, "_rd0": rd0})
         rows.append(row)
     return rows
 
@@ -2092,6 +2833,10 @@ def _sens_rows(c, g, r, kind, x_for_alerts, extra_alerts_fn=None):
     rows = []
     hit = _hits(r)
     alt_w, inn_w = _sides(g)
+    geno = g["kind"] == "genotype"
+    src, scol = _source_of(c, g, x_for_alerts)
+    prog_n = _programme(g) if not geno else 0
+    prog = prog_n if prog_n > NOTE_COABSENT_SETS else 0
     for i in hit:
         d = int(r["t"][i])
         D = float(r["D"][i])
@@ -2106,23 +2851,129 @@ def _sens_rows(c, g, r, kind, x_for_alerts, extra_alerts_fn=None):
         if r.get("own") is not None and bool(r["own"][i]):
             al.append("this drug-dose's own shuffles of the labels spread differently from the other drug-doses': its "
                       "own permutation p is used")
+        if prog:
+            al.append(_programme_alert(g, src))
         mi = _nanmean_side(c.Aab[d], g["inn"])
         ma = _nanmean_side(c.Aab[d], g["alt"])
         rd = f"cells under {c.dd_label[d]}: {_fmt_fold(2 ** ma)} in the {alt_w} vs {_fmt_fold(2 ** mi)} in " \
              f"{inn_w} (relative to the other lines in the same wells)"
-        if sign:
-            rd += f"; {g['gene']} activity {'protects the cells' if sign > 0 else 'makes the cells more sensitive'}"
+        if prog:
+            sign = 0
+            rd += (f"; {src} belongs to an expression programme ({prog} other line sets overlap the lines lacking it; "
+                   "genes co-expressed across lines): any gene of it, or the lineage, can set the cells' numbers")
+        elif geno and sign:
+            rd += f"; {_actor(g)} activity {'protects the cells' if sign > 0 else 'makes the cells more sensitive'}"
+        elif sign:
+            rd += f" ({src} {_may(sign, cells=True)})"
         na, ni = int(r["na"][i]), int(r["ni"][i])
-        grade = _grade_genotype(g, na, ni, float(r["q"][i])) if g["kind"] == "genotype" else _grade_null(g, na, ni)
+        grade = _grade_genotype(g, na, ni, float(r["q"][i])) if geno else _grade_null(g, na, ni, bool(prog))
         grade = grade if table else "C"
         row = _base_row()
-        row.update({"source": g["gene"] if g["kind"] != "null" else str(c.sym[x_for_alerts]),
-                    "source_col": int(g["col"] if g["kind"] != "null" else x_for_alerts),
+        row.update({"source": src, "source_col": scol,
                     "target": f"cells under {c.dd_label[d]}", "target_dd": d, "target_type": "cells",
                     "kind": kind, "grade": grade, "sign": sign, "reading": rd, "group": g["desc"],
                     "mechanism": MECH_WORDS[g["mech"]], "n_altered": na, "n_intact": ni, "contrast": D,
                     "T": float(r["T"][i]), "p": float(r["p"][i]), "q": float(r["q"][i]), "q_group": qg,
-                    "alerts": _join(al),
+                    "alerts": _join(al), "allele": g.get("allele", ""), "programme_sets": prog_n if not geno else -1,
+                    "top_drugdoses": c.dd_label[d], "drugdoses_all": c.dd_label[d] + _flags_text(c, d)})
+        rows.append(row)
+    return rows
+
+
+def _dose_words(c, d):
+    """'5 µM' of a drug-dose (its dose alone, for 'also at ... 5 µM')."""
+    s = str(c.dose[d]).strip()
+    return f"{s} µM" if s and s != "nan" else c.dd_label[d]
+
+
+def _sel_doses(c, g, full, d):
+    """D13 dose consistency of a selectivity edge at drug-dose d: the compound's other drug-doses and their result in
+    this group (full: {drug-dose: (p, q of the edge's family)}; q_group for a genotype group, q for a natural
+    knockout). Returns (doses with q < Q_SIG besides d, the others' (dose, p) or None when not tested)."""
+    comp = c.salt[d]
+    same = [int(x) for x in np.flatnonzero(c.salt == comp) if int(x) != d]
+    sup, other = [], []
+    for x in sorted(same, key=lambda x_: float(c.dd["conc"].iloc[x_]) if "conc" in c.dd else x_):
+        p_, q_ = full.get(x, (np.nan, np.nan))
+        if np.isfinite(q_) and q_ < Q_SIG:
+            sup.append((x, q_))
+        else:
+            other.append((x, p_))
+    return sup, other
+
+
+def _sel_rows(c, g, r, kind, x_for_alerts, full, extra_alerts_fn=None):
+    """D13: selectivity edges - how strongly the lines respond to a drug-dose (rel_log2 of tables/
+    drug_line_response: genes beyond the per-line cut against the line's typical drug-dose) differs between the
+    sides. Target 'response to DRUG DOSE' (target_type 'response'). Dose consistency per compound: the other doses
+    with q (q_group for a genotype group) < Q_SIG are support ('also at ...'); none: 'one dose only' (an alert; no
+    grade A)."""
+    rows = []
+    hit = _hits(r)
+    alt_w, inn_w = _sides(g)
+    geno = g["kind"] == "genotype"
+    src, scol = _source_of(c, g, x_for_alerts)
+    prog_n = _programme(g) if not geno else 0
+    prog = prog_n if prog_n > NOTE_COABSENT_SETS else 0
+    for i in hit:
+        d = int(r["t"][i])
+        D = float(r["D"][i])
+        sf = g["sign_factor"]
+        sign = int(np.sign(D) * sf) if sf else 0
+        table, qg, tal = _table_check(c, g, r, i, kind)
+        al = ([tal] if tal else []) + list(extra_alerts_fn(None) if extra_alerts_fn else g["alerts"])
+        if r.get("own") is not None and bool(r["own"][i]):
+            al.append("this drug-dose's own shuffles of the labels spread differently from the other drug-doses': its "
+                      "own permutation p is used")
+        sup, other = _sel_doses(c, g, full, d)
+        one = not sup
+        if sup:
+            al.append(f"also at {c.drug[d]} " + " and ".join(f"{_dose_words(c, x)} (q {_q2(q_)})" for x, q_ in sup))
+        else:
+            nw = int(c.n_wells[d])
+            wtxt = "is a single well" if nw == 1 else (f"rests on {nw} wells" if nw > 1 else "has no well count")
+            tested = [(x, p_) for x, p_ in other if np.isfinite(p_)]
+            untested = [x for x, p_ in other if not np.isfinite(p_)]
+            oth = []
+            if tested:
+                oth.append("its other doses do not show it (" + ", ".join(
+                    f"p {p_:.2g} at {_dose_words(c, x)}" for x, p_ in tested) + ")")
+            if untested:
+                oth.append("not tested at " + ", ".join(_dose_words(c, x) for x in untested)
+                           + " (no line responds selectively there)")
+            al.append(f"one dose only: {c.dd_label[d]} {wtxt}" + ("; " + "; ".join(oth) if oth else ""))
+        if prog:
+            al.append(_programme_alert(g, src))
+        na_ = np.where(g["alt"] & np.isfinite(c.Rsel[d]) & (c.Nsel[d] >= 0), c.Nsel[d], -1)
+        ni_ = np.where(g["inn"] & np.isfinite(c.Rsel[d]) & (c.Nsel[d] >= 0), c.Nsel[d], -1)
+        ma = float(np.median(na_[na_ >= 0])) if (na_ >= 0).any() else np.nan
+        mi = float(np.median(ni_[ni_ >= 0])) if (ni_ >= 0).any() else np.nan
+        how = "more" if D < 0 else "less"
+        rd = (f"the {alt_w} respond {how} strongly to {c.dd_label[d]} than {inn_w} (median {ma:.0f} vs {mi:.0f} genes "
+              "beyond the per-line cut)")
+        if prog:
+            sign = 0
+            rd += (f"; {src} belongs to an expression programme ({prog} other line sets overlap the lines lacking it; "
+                   "genes co-expressed across lines): any gene of it, or the lineage, can set the response")
+        elif geno and sign:
+            rd += f"; {_actor(g)} activity {'strengthens' if sign > 0 else 'weakens'} the response"
+        elif sign:
+            rd += f" ({src} {_may(sign, response=True)} the response)"
+        na, ni = int(r["na"][i]), int(r["ni"][i])
+        if geno:
+            grade = _grade_genotype(g, na, ni, float(r["q"][i]), one)
+        else:
+            grade = _grade_null(g, na, ni, bool(prog))
+        grade = grade if table else "C"
+        row = _base_row()
+        row.update({"source": src, "source_col": scol,
+                    "target": f"response to {c.dd_label[d]}", "target_dd": d, "target_type": "response",
+                    "kind": kind, "grade": grade, "sign": sign, "reading": rd, "group": g["desc"],
+                    "mechanism": MECH_WORDS[g["mech"]], "n_altered": na, "n_intact": ni, "contrast": D,
+                    "T": float(r["T"][i]), "p": float(r["p"][i]), "q": float(r["q"][i]), "q_group": qg,
+                    "alerts": _join(al), "allele": g.get("allele", ""), "programme_sets": prog_n if not geno else -1,
+                    "doses_supporting": "; ".join(f"{c.dd_label[x]} (q {_q2(q_)})" for x, q_ in sup),
+                    "n_doses_supporting": len(sup) + 1,
                     "top_drugdoses": c.dd_label[d], "drugdoses_all": c.dd_label[d] + _flags_text(c, d)})
         rows.append(row)
     return rows
@@ -2393,6 +3244,7 @@ def _level_tests(c, C, k_cov, seed=0):
     yi = np.r_[und[:, 1], und[:, 0]]
     nu = und.shape[0]                                            # row i's reverse is row i +- nu
     r, n, dof, ok, Tv = _pair_corr(c.Xres, c.Yres, xi, yi, k_cov)
+    c.level_tested = (xi[ok], yi[ok])                            # D14: the directed pairs tested
     rng = np.random.default_rng(stable_seed("level-null", seed))
     pick = np.flatnonzero(ok)
     if pick.size > LEVEL_NULL_PAIRS:
@@ -2488,8 +3340,11 @@ def _level_sensitivity(c, C, k_cov, dvar, seed=0):
     lam, cal = _t_calibration(null, np.full(null.size, max(c.L - k_cov - 1, 1), dtype=np.float64))
     del vals, null
 
-    def scan(X):
-        """(tests per drug-dose, candidates: gene idx, drug-dose idx, r, n, T, p with p < Q_SIG)"""
+    per_gene = np.zeros(gk.size, dtype=np.int64)
+
+    def scan(X, count=False):
+        """(tests per drug-dose, candidates: gene idx, drug-dose idx, r, n, T, p with p < Q_SIG); count: the tests
+        per gene too (D14)"""
         m, out = np.zeros(ds.size, dtype=np.int64), []
         for b0 in range(0, ds.size, LEVEL_BLOCK):
             b1 = min(ds.size, b0 + LEVEL_BLOCK)
@@ -2497,6 +3352,8 @@ def _level_sensitivity(c, C, k_cov, dvar, seed=0):
             dof = n - k_cov - 1
             ok = (n >= LEVEL_MIN_LINES) & (dof >= 3) & np.isfinite(r)
             m[b0:b1] = ok.sum(axis=0)
+            if count:
+                per_gene[:] += ok.sum(axis=1)
             gi, dj = np.nonzero(ok)
             T = _r_to_t(r[gi, dj], dof[gi, dj]).astype(np.float64)
             p = _t_pvalue(T, dof[gi, dj], lam)
@@ -2512,7 +3369,8 @@ def _level_sensitivity(c, C, k_cov, dvar, seed=0):
             w = dj == j
             qg[w] = _bh(p[w], m[int(j)])
         return qg
-    m, (gi, dj, r, n, T, p) = scan(Xg)
+    m, (gi, dj, r, n, T, p) = scan(Xg, count=True)
+    c.levsens_tested = {int(gk[i]): int(per_gene[i]) for i in np.flatnonzero(per_gene)}
     q = _bh(p, int(m.sum()))
     qg = per_dd_q(dj, p, m)
     cut = _bh_cut(p, int(m.sum()))
@@ -2537,13 +3395,18 @@ def _level_sensitivity(c, C, k_cov, dvar, seed=0):
 
 
 # ----------------------------------------------------------------------------- drug targets
-def _drug_target(c):
-    """Edges 'inhibiting / activating X raises / lowers Y' (module docstring, 4). Returns (rows, n_tests)."""
-    dd = c.dd
-    tcol = "targets" if "targets" in dd else None
-    mcol = next((x for x in ("moa_broad", "moa-broad") if x in dd), None)
-    # one compound = one molecule: names that differ only in letter case or a trailing salt word ('Ixazomib' /
-    # 'Ixazomib citrate', 'crizotinib' / 'Crizotinib (hydrochloride)') count once; its names, ' / '-joined, name it
+# drug_target BH family (as before version 5): a (class, direction, gene) test counts where >= 2 compounds of the screen
+# move the gene that way (elsewhere no labelling of the compounds can give >= 2: p would be 1 whatever the class).
+# True: every gene (p = 1 where fewer than 2 compounds move it) - how the reviewers' numbers were made (50,970 real
+# edges); on the synthetic data it leaves no drug_target arrow without ChEMBL (docs/direction.md). Kept for the proxy.
+DT_BH_ALL = False
+DT_DEDUP = False               # True: each distinct test once (the same compounds for several targets); not used
+
+
+def _compounds(c):
+    """One compound = one molecule: names that differ only in letter case or a trailing salt word ('Ixazomib' /
+    'Ixazomib citrate', 'crizotinib' / 'Crizotinib (hydrochloride)') count once; its names, ' / '-joined, name it.
+    Returns (compound names, compound of each drug-dose, the Tahoe drug names of each compound)."""
     keys = [_molecule_key(x) for x in c.salt]
     kn = {}
     for k_, nm in zip(keys, c.salt):
@@ -2554,113 +3417,383 @@ def _drug_target(c):
     comps = [" / ".join(kn[k_]) for k_ in order_k]
     ci = {x: i for i, x in enumerate(order_k)}
     comp_of = np.array([ci[k_] for k_ in keys], dtype=np.int64)
+    drugs_of = [sorted({str(c.drug[d]) for d in np.flatnonzero(comp_of == k)}) for k in range(len(comps))]
+    return comps, comp_of, drugs_of
+
+
+def _chembl_targets(c, drugs):
+    """ChEMBL's targets of a compound (its Tahoe drug names): {GENE: (directions {'up', 'down', ''}, mechanism texts,
+    action types)} from mechanisms.drug_mechanisms (target_genes, action_type through mechanisms.action_direction)."""
+    out = {}
+    m = c.mech
+    if m is None or not len(m):
+        return out
+    sub = m[m["drug"].astype(str).isin(drugs)]
+    if "target_type" in sub:                     # a complex's subunits are not each a target (CHEMBL_MEMBER_TYPES)
+        sub = sub[sub["target_type"].fillna("").astype(str).str.upper().isin(CHEMBL_MEMBER_TYPES)]
+    for genes, act, text in zip(sub["target_genes"].fillna("").astype(str), sub["action_type"].fillna("").astype(str),
+                                sub["mechanism_of_action"].fillna("").astype(str)):
+        for gname in [x.strip().upper() for x in genes.split(",") if x.strip()]:
+            dirs, texts, acts = out.setdefault(gname, (set(), [], []))
+            dirs.add(MX.action_direction(act))
+            if text and text not in texts:
+                texts.append(text)
+            if act and act.lower() not in acts:
+                acts.append(act.lower())
+    return out
+
+
+def _chembl_action(dirs):
+    d = {x for x in dirs if x}
+    if d == {"up"}:
+        return "activator"
+    if d == {"down"}:
+        return "inhibitor"
+    return "unclear"
+
+
+def _memberships(c, comps, comp_of, drugs_of):
+    """D4: per compound k, its (target, action, source words) from Tahoe (targets, moa_broad as before) and ChEMBL
+    (drug_mechanisms target_genes, action_type): one source lists the target - its action, labelled; Tahoe 'unclear'
+    and ChEMBL gives one - ChEMBL's ('action from ChEMBL'); both give different actions - 'unclear', with an alert;
+    and the disagreements of the compound's two annotations (texts for the alerts). Returns (members: list of
+    {target: (action, words)}, tahoe target sets, ChEMBL target dicts, alerts: list of {target: [texts]})."""
+    dd = c.dd
+    tcol = "targets" if "targets" in dd else None
+    mcol = next((x for x in ("moa_broad", "moa-broad") if x in dd), None)
     nC = len(comps)
-    targets = [set() for _ in range(nC)]
-    moa = ["unclear"] * nC
+    t_tg = [[] for _ in range(nC)]
+    t_act = ["unclear"] * nC
     for d in range(c.Dn):
         k = comp_of[d]
         if tcol:
-            targets[k].update(_split_targets(dd[tcol].iloc[d]))
-        if mcol and moa[k] == "unclear":
-            moa[k] = _moa_class(dd[mcol].iloc[d])
+            for t in _split_targets(dd[tcol].iloc[d]):
+                if t not in t_tg[k]:
+                    t_tg[k].append(t)
+        if mcol and t_act[k] == "unclear":
+            t_act[k] = _moa_class(dd[mcol].iloc[d])
+    members, chem, alerts = [], [], []
+    for k in range(nC):
+        ch = _chembl_targets(c, drugs_of[k])
+        chem.append(ch)
+        mem, al = {}, {}
+        tset = set(t_tg[k])
+        ch_names = sorted(ch)
+        for t in list(dict.fromkeys(t_tg[k] + ch_names)):
+            in_t, in_c = t in tset, t in ch
+            if in_t and in_c:
+                ca = _chembl_action(ch[t][0])
+                if t_act[k] == "unclear" and ca != "unclear":
+                    mem[t] = (ca, "Tahoe target, action from ChEMBL")
+                elif ca == "unclear" or ca == t_act[k]:
+                    mem[t] = (t_act[k], "Tahoe and ChEMBL")
+                else:
+                    mem[t] = ("unclear", "Tahoe and ChEMBL, actions differ")
+                    al.setdefault(t, []).append(
+                        f"{comps[k]}: Tahoe and ChEMBL give different actions on {t} (Tahoe: {t_act[k]}, ChEMBL: "
+                        f"{', '.join(ch[t][2]) or 'no action type'}): counted as unclear")
+            elif in_t:
+                mem[t] = (t_act[k], "Tahoe")
+            else:
+                mem[t] = (_chembl_action(ch[t][0]), f"ChEMBL ({', '.join(ch[t][1]) or 'no mechanism text'})")
+            if t_tg[k] and ch and (in_t != in_c):                  # the two annotations list different targets
+                acts = sorted({x for v in ch.values() for x in v[2]})
+                al.setdefault(t, []).append(
+                    f"{comps[k]}: Tahoe lists {', '.join(t_tg[k])} ({t_act[k]}); ChEMBL lists {', '.join(ch_names)} "
+                    f"({', '.join(acts) or 'no action type'})")
+        members.append(mem)
+        alerts.append(al)
+    return members, t_tg, chem, alerts
+
+
+def _class_key(c, drugs, t, action):
+    """D1: the class of (compound, target): a 'trap' class (mechanisms.trap_class: TOP1 / TOP2 poisons, PARP trappers,
+    microtubule stabilisers) - sign not inferred -; tubulin destabilisers apart ('inhibitor (microtubule
+    destabiliser)'); else the action (inhibitor / activator / unclear). Returns (key, class key of mechanisms or '')."""
+    keys = []
+    for d in drugs:
+        for k_ in c.cls_by_drug.get(d, []):
+            if k_ not in keys:
+                keys.append(k_)
+    tc = MX.trap_class(keys, t)
+    if tc:
+        return TRAP_NAMES.get(tc, (MX.class_info(tc).get("label", tc).split(" (")[0],))[0], tc
+    if MX.DESTAB in keys and MX._targets_match(MX.class_info(MX.DESTAB).get("targets"), t):
+        return DESTAB_CLASS, MX.DESTAB
+    return action, ""
+
+
+def _class_members_src(c, drugs_of, ks, cls_key, comps):
+    """mechanism_source: per compound of a trap or destabiliser class, its membership's sources ('Amsacrine: code
+    constant (...), ChEMBL 37: DNA topoisomerase II inhibitor (CHEMBL...)')."""
+    if not cls_key:
+        return ""
+    out = []
+    for k in ks:
+        src = [c.cls_src.get((d, cls_key), "") for d in drugs_of[k]]
+        src = [x.replace("; ", ", ") for x in dict.fromkeys(src) if x]
+        out.append(f"{comps[k]}: {', '.join(src) or 'class of the reference stage'}")
+    return "; ".join(out)
+
+
+def _class_effects(c, drugs, effect):
+    """[(label, source)] of the compound's classes with this effect ('dna', 'translation')."""
+    out = []
+    for d in drugs:
+        for k_ in c.cls_by_drug.get(d, []):
+            info = MX.class_info(k_)
+            if info.get("effect") == effect:
+                out.append((info.get("label", k_), c.cls_src.get((d, k_), "").replace("; ", ", ")))
+    return list(dict.fromkeys(out))
+
+
+def topj_p(mm, kk, N, nC):
+    """D3, the top-j test of one class and direction for a set of genes. mm (N x genes): for each compound of the class,
+    M = how many compounds of the screen move the gene at least as strongly (ties counted), nC + 1 where the compound is
+    not significant that way; kk: the class's compounds significant that way (>= 2); N the class's compounds, nC the
+    screen's. For j = 2..kk, m_j = the j-th smallest M among the significant ones and p_j = the hypergeometric chance
+    that >= j of the N class compounds fall among the m_j strongest of the nC; p = min(1, (N - 1) x min_j p_j)
+    (Bonferroni over the thresholds). Returns (p, j*, m_j*)."""
+    mm = np.sort(np.asarray(mm), axis=0)
+    kk = np.asarray(kk)
+    n = kk.size
+    best = np.ones(n)
+    bj = np.zeros(n, dtype=np.int32)
+    bm = np.zeros(n, dtype=np.int32)
+    for j in range(2, int(N) + 1):
+        ok = kk >= j
+        if not ok.any():
+            break
+        mj = mm[j - 1]
+        pj = np.ones(n)
+        pj[ok] = stats.hypergeom.sf(j - 1, nC, mj[ok], N)
+        better = pj < best
+        best = np.where(better, pj, best)
+        bj = np.where(better, j, bj)
+        bm = np.where(better, mj, bm)
+    return np.minimum(1.0, best * (N - 1)), bj, bm
+
+
+def _dt_defaults(c):
+    """The VERSION 5 inputs of _drug_target, empty when a caller's context lacks them (no classes, no ChEMBL)."""
+    for k_, v in (("cls_by_drug", {}), ("cls_src", {}), ("chembl", False), ("ti_src_by_drug", {})):
+        if not hasattr(c, k_):
+            setattr(c, k_, v)
+    if not hasattr(c, "mech"):
+        c.mech = pd.DataFrame(columns=MX.MECH_COLUMNS)
+    if not hasattr(c, "ti_dd"):
+        c.ti_dd = np.zeros(c.Dn, dtype=bool)
+    if not hasattr(c, "drug"):
+        c.drug = c.dd["drug"].astype(str).to_numpy(dtype=object)
+
+
+def _drug_target(c):
+    """Edges 'compounds annotated to inhibit / activate X raise / lower Y' (module docstring, 4; VERSION 5: the top-j
+    test, poison classes, ChEMBL memberships). Returns (rows, n_tests)."""
+    from scipy.stats import rankdata
+    _dt_defaults(c)
+    comps, comp_of, drugs_of = _compounds(c)
+    nC = len(comps)
+    members, t_tg, chem, dis_alerts = _memberships(c, comps, comp_of, drugs_of)
+    by_t, cls_of = {}, {}
+    for k in range(nC):
+        for t, (action, _w) in members[k].items():
+            key, ckey = _class_key(c, drugs_of[k], t, action)
+            by_t.setdefault((t, key), []).append(k)
+            cls_of[(t, key)] = ckey
+    c.dt_classes = {f"{t} ({key})": len(ks) for (t, key), ks in sorted(by_t.items()) if len(ks) >= 2}
+    c.dt_class_members = {f"{t} ({key})": [comps[k] for k in ks] for (t, key), ks in sorted(by_t.items())}
     up = np.zeros((nC, c.gK), dtype=bool)
     dn = np.zeros((nC, c.gK), dtype=bool)
     np.logical_or.at(up, comp_of, c.sig_up)
     np.logical_or.at(dn, comp_of, c.sig_dn)
-    Kup, Kdn = up.sum(axis=0), dn.sum(axis=0)
-    by_t = {}
+    # E: each compound's strongest pooled z that way over its drug-doses (NaN -> -inf); M: how many compounds move
+    # the gene at least as strongly (ties counted)
+    Zf = np.where(np.isfinite(c.Zp), c.Zp, -np.inf).astype(np.float32)
+    Zn = np.where(np.isfinite(c.Zp), -c.Zp, -np.inf).astype(np.float32)
+    E = {"up": np.full((nC, c.gK), -np.inf, np.float32), "down": np.full((nC, c.gK), -np.inf, np.float32)}
     for k in range(nC):
-        for t in targets[k]:
-            by_t.setdefault((t, moa[k]), []).append(k)
+        ds = np.flatnonzero(comp_of == k)
+        E["up"][k] = Zf[ds].max(axis=0)
+        E["down"][k] = Zn[ds].max(axis=0)
+    del Zf, Zn
+    M = {dr: rankdata(-E[dr], axis=0, method="max").astype(np.int32) for dr in ("up", "down")}
+    SIG = {"up": up, "down": dn}
+    K = {"up": up.sum(axis=0), "down": dn.sum(axis=0)}
     tests = []
-    for (t, cls), ks in sorted(by_t.items()):
-        if len(ks) < 2:
-            continue
+    for (t, key), ks in sorted(by_t.items()):
         N = len(ks)
-        for direction, M_, K_ in (("up", up, Kup), ("down", dn, Kdn)):
-            kk = M_[ks].sum(axis=0)
-            test = K_ >= 2
+        if N < 2:
+            continue
+        for dr in ("up", "down"):
+            S = SIG[dr][ks]
+            kk = S.sum(axis=0)
             p = np.ones(c.gK)
-            p[test] = stats.hypergeom.sf(kk[test] - 1, nC, K_[test], N)
-            p[~test] = np.nan
-            p[test & (kk < 2)] = 1.0
-            tests.append((t, cls, ks, direction, kk, K_, p))
+            if not DT_BH_ALL:                    # a gene fewer than 2 compounds of the screen move that way: no test
+                p[K[dr] < 2] = np.nan
+            bj = np.zeros(c.gK, dtype=np.int32)
+            bm = np.zeros(c.gK, dtype=np.int32)
+            cand = np.flatnonzero(kk >= 2)
+            if cand.size:
+                p[cand], bj[cand], bm[cand] = topj_p(np.where(S[:, cand], M[dr][ks][:, cand], nC + 1), kk[cand],
+                                                     N, nC)
+            tests.append((t, key, ks, dr, kk, p, bj, bm))
+    c.dt_tests = tests
     if not tests:
         return [], 0
-    allp = np.concatenate([x[-1] for x in tests])
-    allq = _bh(allp)
+    # BH over every test (DT_DEDUP: a test repeated for several targets - the same compounds - counted once)
+    if DT_DEDUP:
+        first = {}
+        for i, x in enumerate(tests):
+            first.setdefault((tuple(sorted(x[2])), x[3]), i)
+        uniq = sorted(set(first.values()))
+        upos = {i: j for j, i in enumerate(uniq)}
+        uq = _bh(np.concatenate([tests[i][5] for i in uniq]))
+        qs = [uq[upos[first[(tuple(sorted(x[2])), x[3])]] * c.gK:(upos[first[(tuple(sorted(x[2])), x[3])]] + 1) * c.gK]
+              for x in tests]
+        allp = np.concatenate([tests[i][5] for i in uniq])
+    else:
+        allp = np.concatenate([x[5] for x in tests])
+        allq = _bh(allp)
+        qs = [allq[i * c.gK:(i + 1) * c.gK] for i in range(len(tests))]
     rows = []
-    off = 0
-    for t, cls, ks, direction, kk, K_, p in tests:
-        q = allq[off:off + c.gK]
-        off += c.gK
+    for (t, key, ks, dr, kk, p, bj, bm), q in zip(tests, qs):
         hit = np.flatnonzero(np.isfinite(q) & (q < Q_SIG) & (kk >= 2))
-        names = [comps[k] for k in ks]
         for y in hit:
             if str(c.sym[y]).upper() == t:
                 continue
-            sup = [k for k in ks if (up if direction == "up" else dn)[k, y]]
-            share = set.intersection(*[targets[k] for k in sup]) - {t} if sup else set()
-            sign = {("inhibitor", "up"): -1, ("inhibitor", "down"): 1, ("activator", "up"): 1,
-                    ("activator", "down"): -1}.get((cls, direction), 0)
-            al = [DRUG_ALERT, f"consistent across {len(sup)} compounds ({', '.join(comps[k] for k in sup)})"]
-            if share:
-                al.append(f"the supporting compounds also share {', '.join(sorted(share))}: "
-                          f"{'it' if len(share) == 1 else 'any of them'} could be the cause instead")
-            if cls == "unclear":
-                al.append("the compounds' mechanism (inhibitor or activator) is not recorded: sign not inferred")
-            # the strongest drug-dose of each supporting compound; every significant one (drugdoses_all)
-            tops, flagged, every, best = [], [], [], (-1.0, -1)
-            M_ = c.sig_up if direction == "up" else c.sig_dn
-            for k in sup:
-                ds = np.flatnonzero((comp_of == k) & M_[:, y])
-                if not ds.size:
-                    continue
-                az = np.abs(c.Zp[ds, y])
-                d = ds[np.argmax(az)]
-                tops.append(f"{c.dd_label[d]} {_fmt_fold(2 ** float(c.lfc_p[d, y]))}")
-                if float(np.max(az)) > best[0]:
-                    best = (float(np.max(az)), int(d))
-                if c.dd_art[d]:
-                    flagged.append(f"{c.dd_label[d]} ({c.dd_flags[d]})")
-                for d2 in ds[np.argsort(-az, kind="stable")]:
-                    every.append(f"{c.dd_label[d2]} {_fmt_fold(2 ** float(c.lfc_p[d2, y]))} (z "
-                                 f"{float(c.Zp[d2, y]):+.1f})" + _flags_text(c, int(d2)))
-            if flagged:
-                strong = best[1] >= 0 and bool(c.dd_art[best[1]])
-                al.append(f"supporting drug-doses with artifact flags ({len(flagged)} of the {len(tops)} supporting "
-                          f"compounds{', the strongest among them' if strong else ''}): " + "; ".join(flagged))
-            verb = {"inhibitor": "inhibiting", "activator": "activating"}.get(cls, "drugs targeting")
-            rd = f"{verb} {t} {'raises' if direction == 'up' else 'lowers'} {c.sym[y]} ({int(kk[y])} of {len(ks)} " \
-                 f"compounds; {K_[y] / nC:.0%} of all compounds)"
-            row = _base_row()
-            row.update({"source": t, "source_col": c.col_of.get(t, -1), "target": str(c.sym[y]), "target_col": int(y),
-                        "kind": "drug_target", "grade": "B", "sign": sign, "reading": rd,
-                        "group": f"{t} {cls}s: {', '.join(names)} ({len(ks)} compounds)", "mechanism": cls,
-                        "n_compounds": len(ks), "n_supporting": int(kk[y]), "background_rate": float(K_[y] / nC),
-                        "compounds": "; ".join(names), "compounds_supporting": "; ".join(comps[k] for k in sup),
-                        "drug_effect": "raises" if direction == "up" else "lowers",
-                        "contrast": float(kk[y] / len(ks)), "p": float(p[y]), "q": float(q[y]),
-                        "alerts": _join(al), "top_drugdoses": "; ".join(tops), "drugdoses_all": "; ".join(every)})
-            rows.append(row)
+            rows.append(_dt_row(c, t, key, cls_of[(t, key)], ks, dr, int(y), kk, p, q, bj, bm, comps, comp_of,
+                                drugs_of, members, t_tg, chem, dis_alerts, M, K, nC))
     return rows, int(np.isfinite(allp).sum())
 
 
-SALT_WORDS = ("acetate", "besylate", "bitartrate", "bromide", "calcium", "chloride", "citrate", "dihydrochloride",
-              "dimaleate", "dimesylate", "disodium", "ditosylate", "fumarate", "hemifumarate", "hydrobromide",
-              "hydrochloride", "hydrate", "lactate", "maleate", "malate", "mesylate", "monohydrate", "phosphate",
-              "potassium", "sesquihydrate", "sodium", "succinate", "sulfate", "tartrate", "tosylate",
-              "trifluoroacetate", "trihydrochloride", "hcl", "tfa")
+def _dt_row(c, t, key, ckey, ks, dr, y, kk, p, q, bj, bm, comps, comp_of, drugs_of, members, t_tg, chem,
+            dis_alerts, M, K, nC):
+    """One drug_target edge (VERSION 5)."""
+    up = dr == "up"
+    SIG = c.sig_up if up else c.sig_dn
+    sup = [k for k in ks if SIG[comp_of == k, y].any()]
+    sup = sorted(sup, key=lambda k: (int(M[dr][k, y]), sup.index(k)))      # strongest first
+    j, m = int(bj[y]), int(bm[y])
+    top, rest = sup[:j], sup[j:]
+    N = len(ks)
+    lf = []
+    for k in top:
+        v = c.lfc_p[comp_of == k, y]
+        v = v[np.isfinite(v)]
+        if v.size:
+            lf.append(float(v.max() if up else v.min()))
+    contrast = float(np.median(lf)) if lf else np.nan
+    raise_w = "raise" if up else "lower"
+    bg = float(K[dr][y] / nC)
+    topj = (f"{int(kk[y])} of {N} compounds, {'all ' + str(j) if j == int(kk[y]) else f'{j} of them'} among the {m} of "
+            f"{nC} compounds that {raise_w} it most (median {_fmt_fold(2 ** contrast)}; {bg:.0%} of all compounds "
+            f"{raise_w} it)")
+    names = [comps[k] for k in ks]
+    sign = 0
+    if key in ("inhibitor", DESTAB_CLASS):
+        sign = -1 if up else 1
+    elif key == "activator":
+        sign = 1 if up else -1
+    act = "" if not sign else f" ({t} activity may {'raise' if sign > 0 else 'lower'} it)"
+    if ckey and MX.class_info(ckey).get("effect") == "trap":
+        tn = TRAP_NAMES.get(ckey, (key, key + "s"))
+        verb = (MX.class_info(ckey).get("verb") or "act on {target}").format(target=t)
+        cause = TRAP_CAUSE.get(ckey, ("the damage they cause", "", ""))[0]
+        rd = (f"compounds that {verb} ({tn[1]}: {', '.join(names)}) {raise_w} {c.sym[y]} ({topj}): an effect of "
+              f"{cause}, not of less {t} activity")
+        grade = "C"
+    elif key == DESTAB_CLASS:
+        rd = f"compounds annotated to inhibit {t} (microtubule destabilisers) {raise_w} {c.sym[y]}: {topj}{act}"
+        grade = "B"
+    elif key == "inhibitor":
+        rd = f"compounds annotated to inhibit {t} {raise_w} {c.sym[y]}: {topj}{act}"
+        grade = "B"
+    elif key == "activator":
+        rd = f"compounds annotated to activate {t} {raise_w} {c.sym[y]}: {topj}{act}"
+        grade = "B"
+    else:
+        rd = f"compounds annotated to target {t} {raise_w} {c.sym[y]}: {topj}"
+        grade = "B"
+    al = [DRUG_ALERT, f"consistent across {len(sup)} compounds ({', '.join(comps[k] for k in sup)})"]
+    tg_all = [set(t_tg[k]) | set(chem[k]) for k in sup]
+    share = set.intersection(*tg_all) - {t} if tg_all else set()
+    if share:
+        al.append(f"the supporting compounds also share {', '.join(sorted(share))}: "
+                  f"{'it' if len(share) == 1 else 'any of them'} could be the cause instead")
+    if key == "unclear":
+        al.append("the compounds' mechanism (inhibitor or activator) is not recorded: sign not inferred")
+    if ckey and MX.class_info(ckey).get("effect") == "trap":
+        tn = TRAP_NAMES.get(ckey, (key, key + "s"))
+        _c, how, follows = TRAP_CAUSE.get(ckey, ("", "they act on {t}", "the target follows them"))
+        al.append(f"the compounds are {tn[1]} ({MX.class_info(ckey).get('source', '')}): {how.format(t=t)}, so "
+                  f"{follows}, not a loss of {t} activity; the sign of {t}'s own effect is not inferred")
+        old = -1 if up else 1                                  # version 4 read them as inhibitors of the target
+        al.append(_changed_note(5, f"these compounds were read as inhibitors of {t}: '{t} activity "
+                                f"{'lowers' if old < 0 else 'raises'} {c.sym[y]}' (sign {old:+d}, grade B)",
+                                "the sign is not inferred (sign 0, grade C)",
+                                f"{tn[1]} act through {TRAP_CAUSE.get(ckey, ('the damage they cause',))[0]}, not "
+                                f"through less {t}"))
+    dna = [(comps[k], _class_effects(c, drugs_of[k], "dna")) for k in sup]
+    dna = [(nm, ef) for nm, ef in dna if ef]
+    if dna:
+        al.append(f"{', '.join(nm for nm, _ in dna)} also act on DNA directly (" + ", ".join(
+            f"{nm}: " + ", ".join(f"{lab} ({src})" if src else lab for lab, src in ef) for nm, ef in dna)
+            + "): the change can follow DNA damage rather than the listed target")
+    if j == 2:
+        al.append(f"supported by 2 compounds only ({', '.join(comps[k] for k in top)}): shared chemistry or another "
+                  "shared target can explain it")
+    for k in ks:
+        al.extend(dis_alerts[k].get(t, []))
+    tops, flagged, every, best = [], [], [], (-1.0, -1)
+    for k in sup:
+        ds = np.flatnonzero((comp_of == k) & SIG[:, y])
+        if not ds.size:
+            continue
+        az = np.abs(c.Zp[ds, y])
+        d = ds[np.argmax(az)]
+        tops.append(f"{c.dd_label[d]} {_fmt_fold(2 ** float(c.lfc_p[d, y]))}")
+        if float(np.max(az)) > best[0]:
+            best = (float(np.max(az)), int(d))
+        if c.dd_art[d]:
+            flagged.append(f"{c.dd_label[d]} ({c.dd_flags[d]})")
+        for d2 in ds[np.argsort(-az, kind="stable")]:
+            every.append(f"{c.dd_label[d2]} {_fmt_fold(2 ** float(c.lfc_p[d2, y]))} (z "
+                         f"{float(c.Zp[d2, y]):+.1f})" + _flags_text(c, int(d2)))
+    if flagged:
+        strong = best[1] >= 0 and bool(c.dd_art[best[1]])
+        al.append(f"supporting drug-doses with artifact flags ({len(flagged)} of the {len(tops)} supporting "
+                  f"compounds{', the strongest among them' if strong else ''}): " + "; ".join(flagged))
+    ti = [k for k in sup if any(c.ti_dd[d] for d in np.flatnonzero(comp_of == k))]
+    if sup and len(ti) == len(sup):                                           # D17: every supporting compound
+        tdd = [int(d) for k in sup for d in np.flatnonzero((comp_of == k) & SIG[:, y]) if c.ti_dd[d]]
+        al.append(_ti_reason(c, [c.dd_label[d] for d in tdd], 1.0, True, [str(c.drug[d]) for d in tdd]))
+    words = {"inhibitor": "inhibitors", "activator": "activators", "unclear": "compounds of unclear action",
+             DESTAB_CLASS: "microtubule destabilisers (inhibitors)"}
+    gname = TRAP_NAMES[ckey][1] if ckey in TRAP_NAMES else words.get(key, key)
+    csrc = "; ".join(f"{comps[k]}: {members[k][t][1]}" for k in ks) if c.chembl else ""
+    mcl = TRAP_NAMES[ckey][0] if ckey in TRAP_NAMES else ("microtubule destabiliser" if key == DESTAB_CLASS else "")
+    sup_txt = "; ".join(comps[k] for k in top) + (f"; also significant: {', '.join(comps[k] for k in rest)}"
+                                                    if rest else "")
+    row = _base_row()
+    row.update({"source": t, "source_col": c.col_of.get(t, -1), "target": str(c.sym[y]), "target_col": int(y),
+                "kind": "drug_target", "grade": grade, "sign": sign, "reading": rd,
+                "group": f"{t} {gname}: {', '.join(names)} ({N} compounds)", "mechanism": key,
+                "n_compounds": N, "n_supporting": int(kk[y]), "background_rate": bg,
+                "compounds": "; ".join(names), "compounds_supporting": sup_txt,
+                "drug_effect": "raises" if up else "lowers", "contrast": contrast, "p": float(p[y]),
+                "q": float(q[y]), "alerts": _join(al), "top_drugdoses": "; ".join(tops),
+                "drugdoses_all": "; ".join(every), "mechanism_class": mcl,
+                "mechanism_source": _class_members_src(c, drugs_of, ks, ckey, comps), "compounds_source": csrc,
+                "n_top": j, "m_top": m, "class_size": N, "share_supporting": float(kk[y] / N)})
+    return row
 
 
 def _molecule_key(name):
-    """A compound's molecule: its salt base (tlib.salt_base: a trailing bracketed salt removed), case-folded, with
-    trailing salt and hydrate words removed ('Ixazomib citrate' -> 'ixazomib', 'Crizotinib (hydrochloride)' ->
-    'crizotinib'). '(S)-Crizotinib' stays apart (another molecule)."""
-    w = str(T.salt_base(name)).casefold().split()
-    while len(w) > 1 and w[-1].strip(",.") in SALT_WORDS:
-        w.pop()
-    return " ".join(w)
+    """A compound's molecule (mechanisms.molecule_key, case-folded): its salt base (tlib.salt_base: a trailing
+    bracketed salt removed) with trailing salt and hydrate words removed (mechanisms.SALT_WORDS; 'Ixazomib citrate'
+    -> 'ixazomib', 'Crizotinib (hydrochloride)' -> 'crizotinib'). '(S)-Crizotinib' stays apart (another molecule)."""
+    return molecule_key(name).casefold()
 
 
 # ----------------------------------------------------------------------------- the stage
@@ -2708,12 +3841,15 @@ def _family_q(items, kind):
     return m, _bh_cut(p, m)
 
 
-GENO_KINDS = ("response", "baseline", "sensitivity")
+GENO_KINDS = ("response", "baseline", "sensitivity", "selectivity")
 EXPECTED_FALSE_HOW = (
     "expected_false: the controls' estimate of the false edges among the written ones; expected_false_upper: its 95% "
     "upper bound (Poisson: the controls are a small sample - 0 edges in 60 pseudo-groups still allows about 3 per 60 "
     "groups, and the level controls are one permutation each). The estimate can be low when real groups overlap "
-    "other recorded or unrecorded alterations, tissue programmes or each other, which random groups do not.")
+    "other recorded or unrecorded alterations, tissue programmes or each other, which random groups do not. "
+    "expected_nonspecific (null_baseline, null_response): the arrows that random genes which are not partners would "
+    "give as often (nonspecific_share summed over the written arrows): not false tests, but differences between the "
+    "lines that are not specific to the partners.")
 
 
 def _poisson_upper(k, conf=0.95):
@@ -2721,30 +3857,145 @@ def _poisson_upper(k, conf=0.95):
     return float(stats.chi2.ppf(conf, 2 * (int(k) + 1)) / 2.0)
 
 
+def _pct(x, about=False):
+    """A share as the readings print it: 'under 1%' below 0.005, else whole percent (rounded); about=True: 'about 20%'
+    (never 'about under 1%')."""
+    x = float(x)
+    if not np.isfinite(x):
+        return "NA"
+    if x < 0.005:
+        return "under 1%"
+    return f"{'about ' if about else ''}{int(round(100 * x))}%"
+
+
+def _pct_alert(x):
+    """The printed share (whole percent) is at or above FALSE_SHARE_ALERT: an alert (and no grade A)."""
+    x = float(x)
+    return bool(np.isfinite(x) and x >= 0.005 and round(100 * x) >= round(100 * FALSE_SHARE_ALERT))
+
+
+class _GeneTests:
+    """D14: per gene and kind, the tests it took part in, as the source (the group's gene, a natural knockout's genes,
+    a drug class's target, a level's gene) or as the target (a gene whose level or response was tested); finite p
+    only, counted before the candidates are trimmed. Real groups only (not the controls)."""
+
+    def __init__(self, c):
+        self.c = c
+        self.tgt = {}
+        self.src = {}
+
+    def add_src(self, kind, col, sym, n):
+        if n:
+            d = self.src.setdefault(kind, {})
+            key = (int(col), str(sym))
+            d[key] = d.get(key, 0) + int(n)
+
+    def add_tgt(self, kind, cols):
+        cols = np.asarray(cols, dtype=np.int64)
+        if cols.size:
+            a = self.tgt.setdefault(kind, np.zeros(self.c.gK, dtype=np.int64))
+            np.add.at(a, cols, 1)
+
+    def genotype(self, g, res):
+        for kk, v in res.items():
+            kind = f"genotype_{kk}"
+            fin = np.isfinite(v["p"])
+            self.add_src(kind, g["col"], g["gene"], int(fin.sum()))
+            if kk in ("response", "baseline"):
+                self.add_tgt(kind, v["t"][fin])
+
+    def null(self, g, res, partners_of):
+        c = self.c
+        for kk, v in res.items():
+            kind = f"null_{kk}"
+            fin = np.isfinite(v["p"])
+            if kk in ("response", "baseline"):
+                tf = v["t"][fin]
+                for x in g["genes"]:
+                    sel = tf[np.isin(tf, list(partners_of(x) - {x}))]
+                    self.add_src(kind, x, c.sym[x], sel.size)
+                    self.add_tgt(kind, sel)
+            else:
+                for x in g["genes"]:
+                    self.add_src(kind, x, c.sym[x], int(fin.sum()))
+
+    def n_src(self, kind, col, sym):
+        return int(self.src.get(kind, {}).get((int(col), str(sym)), 0))
+
+    def table(self, edges, family):
+        """direction/gene_tests.parquet (GENE_TESTS_DOCS): one row per (gene, kind, role) with a test."""
+        c = self.c
+        rows = []
+        e = edges
+        src_n = e.groupby(["source_col", "source", "kind"]).size().to_dict() if len(e) else {}
+        src_ab = e[e["grade"].isin(["A", "B"])].groupby(["source_col", "source", "kind"]).size().to_dict() \
+            if len(e) else {}
+        gt_ = e[e["target_type"] == "gene"] if len(e) else e
+        tgt_n = gt_.groupby(["target_col", "kind"]).size().to_dict() if len(gt_) else {}
+        tgt_ab = gt_[gt_["grade"].isin(["A", "B"])].groupby(["target_col", "kind"]).size().to_dict() \
+            if len(gt_) else {}
+        for kind, d in self.src.items():
+            for (col, sym), n in d.items():
+                rows.append((col, sym, kind, "source", n, int(src_n.get((col, sym, kind), 0)),
+                             int(src_ab.get((col, sym, kind), 0)), int(family.get(kind, 0))))
+        for kind, a in self.tgt.items():
+            for col in np.flatnonzero(a):
+                rows.append((int(col), str(c.sym[col]), kind, "target", int(a[col]),
+                             int(tgt_n.get((int(col), kind), 0)), int(tgt_ab.get((int(col), kind), 0)),
+                             int(family.get(kind, 0))))
+        df = pd.DataFrame(rows, columns=["col", "symbol", "kind", "role", "n_tests", "n_edges", "n_edges_ab",
+                                         "family_tests"])
+        for k_ in ("col", "n_tests", "n_edges", "n_edges_ab"):
+            df[k_] = df[k_].astype(np.int32)
+        df["family_tests"] = df["family_tests"].astype(np.int64)
+        ko = {k_: i for i, k_ in enumerate(KINDS)}
+        df = df.assign(_k=df["kind"].map(ko)).sort_values(["col", "_k", "role", "symbol"], kind="stable")
+        return df.drop(columns="_k").reset_index(drop=True)
+
+
+def _full_of(v):
+    """{target or drug-dose: (p, q of the family the edge is written in)} over every test of one group's kind
+    (v['full']: its targets and p before the candidates were trimmed)."""
+    t, p = v.get("full", (np.zeros(0, np.int64), np.zeros(0)))
+    qq = v["q_group"] if "q_group" in v else v["q"]
+    pos = {int(x): float(q_) for x, q_ in zip(v["t"], qq)}
+    return {int(x): (float(p_), pos.get(int(x), np.nan)) for x, p_ in zip(t, p)}
+
+
 def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
     od = folder(out, "direction")
     c = _load(out, data)
     log(f"Direction: {c.gK:,} genes x {c.Dn:,} drug-doses x {c.L} lines; cell-line genetics: {c.meta_src}")
     _responses(c, chunk, mem_gb, k)
+    log(f"  selectivity (response strength): {int(c.sel_dd.sum())} drug-doses with >= 1 selective line, from "
+        f"{c.sel_from}")
     geno, records, gsrc, recorded = _genotype_groups(c)
-    log(f"  genotype groups: {len(geno)} (driver genes recorded in >= {MIN_SIDE} lines, LoF / GoF / any)")
+    n_allele = sum(1 for g in geno if g.get("allele"))
+    log(f"  genotype groups: {len(geno)} ({len(geno) - n_allele} by gene: driver genes recorded in >= {MIN_SIDE} "
+        f"lines, LoF / GoF / any; {n_allele} by allele, codon, hotspot or amplification); heavily mutated lines: "
+        f"{int(c.heavy.sum())}")
+    gtests = _GeneTests(c)
     rows = []
 
     # ---- 1. genotype groups: p per group (its pooled null), q over the family of each kind (every group), rows
-    def test_all(groups):
+    def test_all(groups, count=False):
         res_all = []
         for g in groups:
             res = _finish(_test_group(c, g, GENO_KINDS, perms), stable_seed(g["gid"], 1))
             g["lambda"] = {kk: round(float(v["lambda"]), 3) for kk, v in res.items()}
             g["res"] = None
-            if g["kind"] == "genotype" and g["gene"] in ("TP53", "KEAP1"):
+            if g["kind"] == "genotype" and g["gene"] in ("TP53", "KEAP1") and not g.get("allele"):
                 g["res"] = {kk: {a: (b.copy() if isinstance(b, np.ndarray) else b) for a, b in v.items()}
                             for kk, v in res.items()}
-            for v in res.values():
+            if count:
+                gtests.genotype(g, res)
+            for kk, v in res.items():
+                if kk == "selectivity":
+                    v["full"] = (v["t"].copy(), v["p"].copy())
                 _trim(v)
             res_all.append((g, res))
         return res_all
-    real = test_all(geno)
+    real = test_all(geno, count=True)
     fam = {kk: _family_q([r for _, r in real], kk) for kk in GENO_KINDS}
     cuts = {kk: fam[kk][1] for kk in GENO_KINDS}
     for _, res in real:                                       # and within each group (q_group)
@@ -2769,6 +4020,7 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
     c.pseudo_group_rate = {kk: (float(np.mean([x[3].get(kk, 0) for x in pseudo_counts if kk in x[2]]))
                                 if any(kk in x[2] for x in pseudo_counts) else None) for kk in GENO_KINDS}
     c.n_geno_groups = len(geno)
+    c.false_rates = _false_rates(pseudo_counts)
     real_counts = []
     for g, res in real:
         nr = {kk: int(np.nansum((v["q"] < Q_SIG) & (v["q_group"] < Q_SIG))) for kk, v in res.items()}
@@ -2788,9 +4040,14 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
                 v["q"], v["q_group"] = q, qg
         x = g["col"]
         g["n_written"] = {}                                   # groups.parquet: the edges written (any grade)
+
+        def coab_geno(y, g=g):                                 # D9: the target absent from most altered lines
+            na_ = int(g["alt"].sum())
+            return na_ > 0 and int((c.null[g["alt"], y]).sum()) >= JACCARD_CO * na_
         for kk, fn in (("response", lambda v: _response_rows(c, g, v, "genotype_response", res.get("baseline"), x)),
-                       ("baseline", lambda v: _baseline_rows(c, g, v, "genotype_baseline", x)),
-                       ("sensitivity", lambda v: _sens_rows(c, g, v, "genotype_sensitivity", x))):
+                       ("baseline", lambda v: _baseline_rows(c, g, v, "genotype_baseline", x, coabsent=coab_geno)),
+                       ("sensitivity", lambda v: _sens_rows(c, g, v, "genotype_sensitivity", x)),
+                       ("selectivity", lambda v: _sel_rows(c, g, v, "genotype_selectivity", x, _full_of(v)))):
             if kk in res:
                 new = fn(res[kk])
                 g["n_written"][kk] = len(new)
@@ -2801,31 +4058,33 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
             quiet += 1
             continue
         extra = {kk: ng.get(kk, 0) - nr.get(kk, 0) for kk in GENO_KINDS}
-        log(f"    {g['desc']}: edges response {nr.get('response', 0)} (+{extra['response']} within the group only), "
-            f"baseline {nr.get('baseline', 0)} (+{extra['baseline']}), sensitivity {nr.get('sensitivity', 0)} "
-            f"(+{extra['sensitivity']})" + ("" if g["stratified"] else " (across organs)"))
+        log(f"    {g['desc']}: edges " + ", ".join(f"{kk} {nr.get(kk, 0)} (+{extra[kk]})" for kk in GENO_KINDS)
+            + " (+: within the group only)" + ("" if g["stratified"] else " (across organs)"))
     log(f"    ({quiet} of {len(real_counts)} groups without an edge; q over every group of a kind: "
         + ", ".join(f"{kk} {fam[kk][0]:,} tests" for kk in GENO_KINDS) + ")")
 
-    # ---- 2. expression-null groups (related pairs; variable drug-doses)
+    # ---- 2. expression-null groups (related pairs; variable drug-doses; selective drug-doses)
     log(f"    ({(time.time() - t0) / 60:.1f} min so far)")
     dvar, dvar_p = _variable_dd(c)
     log(f"  expression-null groups: {len(ngroups)} line sets ({sum(len(g['genes']) for g in ngroups)} genes); "
         f"{int(dvar.sum())} drug-doses with line-to-line differences in cell numbers (chi-square p < {VAR_P})")
     Pm = c.partners
+
+    def partners_of(x):
+        return set(Pm.indices[Pm.indptr[x]:Pm.indptr[x + 1]].tolist())
     null_res = []
     pools = {kk: [] for kk in GENO_KINDS}
     cap = max(500, NULL_MAX // max(1, len(ngroups)))
     for g in ngroups:
         part = set()
         for x in g["genes"]:
-            part.update(Pm.indices[Pm.indptr[x]:Pm.indptr[x + 1]].tolist())
+            part.update(partners_of(x))
         part -= set(g["genes"])
         tg = np.array(sorted(part), dtype=np.int64)
         # baseline / response of the partners: within organs; across organs (a separate BH family) only when the
         # lines lacking X are not concentrated in organs - else X's absence cannot be told from the tissue there
         across_ok = g["stratified"] or not g["tissue"]
-        kinds = GENO_KINDS if tg.size and across_ok else ("sensitivity",)
+        kinds = GENO_KINDS if tg.size and across_ok else ("sensitivity", "selectivity")
         g["partners_withheld"] = bool(tg.size and not across_ok)
         if tg.size and not g["stratified"]:
             g["note"] = ("baseline and response compared across organs (no within-organ comparison possible; the "
@@ -2846,21 +4105,27 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
              for kk, v in pools.items()}
     del pools
     for g, res in null_res:
+        g["tested"] = {}
         for kk, v in res.items():
             v["p"], v["own"] = _guard_p(nulls[kk].p(v["T"]), v.pop("own_s"), v["n_arr"])
+            g["tested"][kk] = v["t"][np.isfinite(v["p"])].copy()
+            v["full"] = (v["t"].copy(), v["p"].copy())
+        gtests.null(g, res, partners_of)
+        for v in res.values():
             _trim(v)
-    n_null_tests = {}
+    n_null_tests, null_cut = {}, {}
     for kk in GENO_KINDS:                                      # BH over the kind: within / across organs apart
         for st in (True, False):
-            m, _ = _family_q([r for g, r in null_res if bool(g["stratified"]) == st], kk)
+            m, cut = _family_q([r for g, r in null_res if bool(g["stratified"]) == st], kk)
             n_null_tests[f"{kk}_{'within' if st else 'across'}_organs"] = m
+            null_cut[(kk, st)] = cut
     null_absent = c.null.T                                       # genes x lines
     for g, res in null_res:
         g["n_edges"] = {}
         for x in g["genes"]:
             def alerts_fn(_y, g=g, x=x):
                 return _null_gene_alerts(c, g, x, records)
-            px = set(Pm.indices[Pm.indptr[x]:Pm.indptr[x + 1]].tolist())
+            px = partners_of(x)
 
             def coab(y, g=g):
                 inter = int((null_absent[y] & g["alt"]).sum())
@@ -2868,6 +4133,8 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
             for kk, v in res.items():
                 if kk == "sensitivity":
                     new = _sens_rows(c, g, v, "null_sensitivity", x, alerts_fn)
+                elif kk == "selectivity":
+                    new = _sel_rows(c, g, v, "null_selectivity", x, _full_of(v), alerts_fn)
                 else:
                     keep = np.isin(v["t"], list(px))
                     vv = {a: (b[keep] if isinstance(b, np.ndarray) and b.shape[:1] == keep.shape else b)
@@ -2878,8 +4145,11 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
                         new = _baseline_rows(c, g, vv, "null_baseline", x, alerts_fn, coab)
                 g["n_edges"][kk] = g["n_edges"].get(kk, 0) + len(new)
                 rows.extend(new)
-
     log(f"    expression-null tests done ({(time.time() - t0) / 60:.1f} min so far)")
+    t_nc = time.time()
+    nctl = _null_controls(c, ngroups, null_res, nulls, null_cut, partners_of, dvar)
+    nctl["minutes"] = round((time.time() - t_nc) / 60, 2)
+    log(f"  null controls (random non-partner genes, random line sets): {nctl['minutes']} min")
 
     # ---- 3. level (related pairs) and level_sensitivity
     C, cov_names, k_cov = _covariates(c)
@@ -2916,9 +4186,15 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
                         "T": float(t.T),
                         "p": float(t.p), "q": float(t.q), "alerts": _join(al), "drugdoses_all": _level_dd(c, y)})
             rows.append(row)
+    lx, ly = getattr(c, "level_tested", (np.zeros(0, np.int64), np.zeros(0, np.int64)))
+    for x_, n_ in zip(*np.unique(lx, return_counts=True)):
+        gtests.add_src("level", int(x_), c.sym[int(x_)], int(n_))
+    gtests.add_tgt("level", ly)
     log(f"  level: {level_info.get('tests', 0):,} directed related pairs, {level_info.get('edges', 0)} edges "
         f"({(time.time() - t0) / 60:.1f} min so far)")
     ls, ls_info = _level_sensitivity(c, C, k_cov, dvar)
+    for x_, n_ in getattr(c, "levsens_tested", {}).items():
+        gtests.add_src("level_sensitivity", x_, c.sym[x_], n_)
     log(f"  level_sensitivity: {ls_info.get('tests', 0):,} (gene, drug-dose) tests, {ls_info.get('edges', 0)} "
         f"edges over the table, {ls_info.get('edges_within_drugdose_only', 0)} within their drug-dose only")
     if ls is not None:
@@ -2951,20 +4227,33 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
     # ---- 4. drug targets
     drows, n_dt_tests = _drug_target(c)
     rows.extend(drows)
+    for t, key, ks, dr, kk, p, bj, bm in getattr(c, "dt_tests", []):
+        fin = np.isfinite(p)
+        gtests.add_src("drug_target", c.col_of.get(t, -1), t, int(fin.sum()))
+        gtests.add_tgt("drug_target", np.flatnonzero(fin))
+
+    # ---- rules applied over the rows (VERSION 5)
+    locus = _same_locus(c, rows)                                # D9
+    _false_shares(c, rows)                                      # D6
+    _nonspecific(c, rows, nctl, gtests)                         # D11
 
     # ---- tables
     if rows:
         edges = pd.DataFrame(rows, columns=list(_base_row()))
         ko = {kk: i for i, kk in enumerate(KINDS)}
         edges["_k"] = edges["kind"].map(ko)
-        edges = edges.sort_values(["_k", "grade", "q", "p", "source", "target"], kind="stable").drop(columns="_k")
-        edges = edges.reset_index(drop=True)
-        for cname in ("source_col", "target_col", "target_dd", "n_altered", "n_intact", "n_lines", "n_compounds",
-                      "n_supporting", "sign"):
+        edges["_e"] = -pd.to_numeric(edges["contrast"], errors="coerce").abs().fillna(-np.inf)
+        edges = edges.sort_values(["_k", "grade", "q", "_e", "p", "source", "target"], kind="stable")
+        edges = edges.drop(columns=["_k", "_e"]).reset_index(drop=True)
+        for cname in INT_COLS:
             edges[cname] = edges[cname].astype(np.int32)
-        edges["direction_clear"] = edges["direction_clear"].astype(object)
+        for cname in F32_COLS:
+            edges[cname] = pd.to_numeric(edges[cname], errors="coerce").astype(np.float32)
+        edges["same_locus"] = edges["same_locus"].astype(bool)
+        edges["direction_clear"] = edges["direction_clear"].astype("boolean")   # typed even when all empty
     else:
         edges = _empty_edges()
+    edges = _test_ids(edges)                                    # D2
     edges = _add_tiers(edges)
     write_parquet(edges, os.path.join(od, "edges.parquet"))
 
@@ -2973,17 +4262,32 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
     groups_df = _add_group_tiers(groups_df)
     write_parquet(groups_df, os.path.join(od, "groups.parquet"))
 
-    controls = _controls(c, geno, real_counts, pseudo_counts, edges, cuts, fam, level_info, ls_info)
+    sel_df = _selectivity_table(c, real, null_res, edges)
+    write_parquet(sel_df, os.path.join(od, "selectivity.parquet"))
+
+    family = {f"genotype_{kk}": fam[kk][0] for kk in GENO_KINDS}
+    family.update({f"null_{kk}": n_null_tests[f"{kk}_within_organs"] + n_null_tests[f"{kk}_across_organs"]
+                   for kk in GENO_KINDS})
+    family.update({"level": level_info.get("tests", 0), "level_sensitivity": ls_info.get("tests", 0),
+                   "drug_target": n_dt_tests})
+    gt_df = gtests.table(edges, family)
+    write_parquet(gt_df, os.path.join(od, "gene_tests.parquet"))
+
+    controls = _controls(c, geno, real_counts, pseudo_counts, edges, cuts, fam, level_info, ls_info, nctl)
     write_json(controls, os.path.join(od, "controls.json"))
     counts = {kk: {gr: int(((edges["kind"] == kk) & (edges["grade"] == gr)).sum()) for gr in ("A", "B", "C")}
               for kk in KINDS}
     n_across = sum(1 for g in ngroups if not g["stratified"])
     nt_sets = [g for g in ngroups if g.get("partners_withheld")]       # partners existed, not tested (note says why)
+    tw = {kk: int(edges.loc[edges["kind"] == kk, "test_id"].nunique()) for kk in KINDS}
     info = {"version": VERSION, "genes": c.gK, "drugdoses": c.Dn, "lines": c.L, "k_drugdoses": int(c.sel.shape[1]),
             "chunk": c.chunk, "permutations": int(perms), "permutations_null_groups": PERMS_NULL,
             "cell_line_genetics": gsrc, "lines_with_genetics_record": int(recorded.sum()),
+            "heavily_mutated_lines": {str(c.line_name[i]): int(c.n_driver_genes[i]) for i in np.flatnonzero(c.heavy)},
             "organs_from": c.organ_src, "lines_with_organ": int(c.organ_known.sum()),
-            "groups_tested": {"genotype": len(geno), "expression_null_line_sets": len(ngroups),
+            "groups_tested": {"genotype": len(geno), "genotype_by_allele": n_allele,
+                              "allele_groups_not_testable": list(c.allele_not_testable),
+                              "expression_null_line_sets": len(ngroups),
                               "expression_null_line_sets_across_organs": n_across,
                               "expression_null_genes": int(sum(len(g["genes"]) for g in ngroups)),
                               "expression_null_genes_across_organs": int(sum(len(g["genes"]) for g in ngroups
@@ -2991,12 +4295,20 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
                               "expression_null_line_sets_not_tested_partners": len(nt_sets),
                               "expression_null_genes_not_tested_partners": int(sum(len(g["genes"])
                                                                                    for g in nt_sets)),
+                              "expression_null_line_sets_in_a_programme": int(sum(
+                                  1 for g in ngroups if _programme(g) > NOTE_COABSENT_SETS)),
                               "pseudo_controls": len(pseudo)},
             "global_sensitivity_correction": c.adj_counts,
+            "selectivity_input": {"from": c.sel_from, "drugdoses_with_a_selective_line": int(c.sel_dd.sum()),
+                                  "selective_line_cells": int(c.sel_line.sum())},
             "tests": {"genotype": {kk: fam[kk][0] for kk in GENO_KINDS},
                       "genotype_p_cut": {kk: cuts[kk] for kk in GENO_KINDS},
                       "expression_null": n_null_tests, "level_pairs": level_info.get("tests", 0),
-                      "level_sensitivity": ls_info.get("tests", 0), "drug_target": n_dt_tests},
+                      "level_sensitivity": ls_info.get("tests", 0), "drug_target": n_dt_tests,
+                      "drug_target_classes": len(getattr(c, "dt_classes", {}))},
+            "tests_written_by_kind": tw,
+            "same_locus_check": locus,
+            "gene_tests_rows": int(len(gt_df)),
             "null_tail": {kk: v.describe() for kk, v in nulls.items()},
             "level_calibration": {"level": level_info.get("calibration"),
                                   "level_sensitivity": ls_info.get("calibration")},
@@ -3014,18 +4326,429 @@ def _run(out, data, chunk, mem_gb, perms, k, n_pseudo, t0, meter=None):
                                             "NOTE_WITHIN_ORGAN_FRAC": NOTE_WITHIN_ORGAN_FRAC,
                                             "NOTE_COABSENT_SETS": NOTE_COABSENT_SETS,
                                             "NOTE_NOT_EXPRESSED_FRAC": NOTE_NOT_EXPRESSED_FRAC,
+                                            "NOTE_TI_SHARE": NOTE_TI_SHARE, "FALSE_SHARE_ALERT": FALSE_SHARE_ALERT,
                                             "FULL_SIDE": FULL_SIDE}},
+            "grade_a_rules": {"BOTH_WAYS_A": BOTH_WAYS_A, "MEASURED_A": MEASURED_A,
+                              "FALSE_SHARE_ALERT": FALSE_SHARE_ALERT, "HYPERMUT_MIN_GENES": HYPERMUT_MIN_GENES,
+                              "BASE_LOW": BASE_LOW},
             "false_positive_rate": controls["negative"]["summary"],
             "expected_false_edges": controls["expected_false_edges"],
+            "null_controls_minutes": nctl["minutes"],
             "minutes": round((time.time() - t0) / 60, 2)}
     info["peak_rss_mb"], info["peak_rss_how"] = meter.stop() if meter is not None else (
         _peak_rss_mb(), "the process's peak (it may include earlier stages of the same run)")
     write_json(info, os.path.join(od, "info.json"))
-    text, undocumented = readme(edges, groups_df, info)
+    text, undocumented = readme(edges, groups_df, info, sel_df, gt_df)
     _write_text(os.path.join(od, "README.md"), text)
     if undocumented:
         log(f"  WARNING: columns without a description in README.md: {', '.join(undocumented)}")
     return info
+
+
+# ----------------------------------------------------------------------------- rules over the rows (VERSION 5)
+LOCUS_KINDS = ("genotype_response", "genotype_baseline", "null_response", "null_baseline")
+LOCUS_ENRICHMENT = ("in this screen, genes absent from the same lines are 3 to 109 times more often within 1 Mb of "
+                    "each other than by chance")
+
+
+def _family(r):
+    """'table' (q < Q_SIG and q_group < Q_SIG: grades A / B possible) or 'within' (significant within its group
+    only)."""
+    q, qg = float(r["q"]), float(r["q_group"]) if r["q_group"] is not None else np.nan
+    return "table" if np.isfinite(q) and q < Q_SIG and (not np.isfinite(qg) or qg < Q_SIG) else "within"
+
+
+def _add_reasons(r, reasons):
+    r["alerts"] = _join(split_reasons(r["alerts"]) + [x for x in reasons if x])
+
+
+def _false_rates(pseudo_counts):
+    """D6: per genotype kind, the random pseudo-groups' arrows per group - 'table' (at the real family's cut and
+    within the group) and 'within' (within the group only) -, each (mean per group, 95% upper bound per group:
+    Poisson over all pseudo-groups)."""
+    out = {}
+    for kk in GENO_KINDS:
+        nr = [x[1].get(kk, 0) for x in pseudo_counts if kk in x[2]]
+        ng = [x[3].get(kk, 0) for x in pseudo_counts if kk in x[2]]
+        n = len(nr)
+        if not n:
+            out[kk] = None
+            continue
+        w = [max(0, b - a) for a, b in zip(nr, ng)]
+        out[kk] = {"groups": n, "table": (float(np.mean(nr)), _poisson_upper(sum(nr)) / n),
+                   "within": (float(np.mean(w)), _poisson_upper(sum(w)) / n), "n_table": int(sum(nr)),
+                   "n_within": int(sum(w))}
+    return out
+
+
+def _false_shares(c, rows):
+    """D6: per genotype arrow, the share of its group's arrows of the kind (and family: over the whole table, or
+    within the group only) that random comparison groups would give: expected_false_group (their arrows per group),
+    group_edges, false_share = min(1, expected / group_edges) and its upper bound. The reason is an alert at or above
+    FALSE_SHARE_ALERT (as printed, whole percent; and the arrow is then not grade A), else a note. Every genotype
+    arrow also carries its family's caveat: the arrows of the kind the controls expect to be false over the table."""
+    import collections
+    fr = getattr(c, "false_rates", {}) or {}
+    G = int(getattr(c, "n_geno_groups", 0))
+    gk = [r for r in rows if str(r["kind"]).startswith("genotype_")]
+    cnt = collections.Counter((r["group"], r["kind"], _family(r)) for r in gk)
+    tot = collections.Counter((r["kind"], _family(r)) for r in gk)
+    for r in gk:
+        kk = r["kind"].split("_", 1)[1]
+        f = _family(r)
+        rate = fr.get(kk)
+        if not rate:
+            continue
+        e, u = rate[f]
+        n = cnt[(r["group"], r["kind"], f)]
+        share, up = min(1.0, e / n), min(1.0, u / n)
+        r.update({"expected_false_group": e, "group_edges": n, "false_share": share, "false_share_upper": up})
+        what = "such arrows" if f == "table" else "such within-group arrows"
+        reason = (f"random comparison groups give about {e:.2f} {what} per group (up to {u:.2f}); this comparison "
+                  f"gives {n}: {_pct(share, True)} of them may be false (up to {_pct(up)})")
+        N = tot[(r["kind"], f)]
+        cav = (f"over the whole table the controls expect {e * G:.1f} (up to {u * G:.1f}) of the {N} arrows of this "
+               f"kind{'' if f == 'table' else ' significant only within their group'} to be false "
+               f"({_pct(min(1.0, e * G / N))})")
+        _add_reasons(r, [reason, cav])
+        if _pct_alert(share) and r["grade"] == "A":
+            r["grade"] = "B"
+            _add_reasons(r, [_blocked_note(5, [f"random groups expect {_pct(share, True)} of this comparison's "
+                                               f"arrows to be false ({_pct(FALSE_SHARE_ALERT)} or more: "
+                                               "FALSE_SHARE_ALERT)"])])
+
+
+def _coord(c, col, sym):
+    col = int(col)
+    if 0 <= col < c.gK and c.coord_col[col] is not None:
+        return c.coord_col[col]
+    return c.coord_sym.get(str(sym).upper())
+
+
+def _gap(a, b):
+    """Base pairs between two genes on one chromosome (0 when they overlap); NaN on different chromosomes or
+    without coordinates."""
+    if a is None or b is None or str(a[0]) != str(b[0]):
+        return np.nan
+    return float(max(0, max(a[1], b[1]) - min(a[2], b[2])))
+
+
+def _bp_words(d):
+    d = int(d)
+    if d < 1000:
+        return f"{d} bp"
+    return f"{d / 1000:.0f} kb" if d < 1_000_000 else f"{d / 1e6:.1f} Mb"
+
+
+def _same_locus(c, rows):
+    """D9: for gene-target arrows of genotype_response, genotype_baseline, null_response, null_baseline: distance_bp
+    (the gap between source and target on one chromosome) and same_locus (<= SAME_LOCUS_BP): sign 0, grade C, the
+    reading says which acts on which cannot be told, and an alert says why. Returns the check's numbers for info.json
+    ('coordinates for N of M genes'; it could not run without coordinates)."""
+    genes, have, n_chk, n_same = set(), set(), 0, 0
+    for r in rows:
+        if r["kind"] not in LOCUS_KINDS or r["target_type"] != "gene":
+            continue
+        n_chk += 1
+        a = _coord(c, r["source_col"], r["source"])
+        b = _coord(c, r["target_col"], r["target"])
+        for key, x in (((int(r["source_col"]), str(r["source"]).upper()), a),
+                       ((int(r["target_col"]), str(r["target"]).upper()), b)):
+            genes.add(key)
+            if x is not None:
+                have.add(key)
+        d = _gap(a, b)
+        r["distance_bp"] = d
+        if np.isfinite(d) and d <= SAME_LOCUS_BP:
+            n_same += 1
+            before = (r["sign"], r["grade"])
+            r["same_locus"] = True
+            r["sign"] = 0
+            r["grade"] = "C"
+            r["reading"] = r.get("_rd0", r["reading"]) + "; same locus: which acts on which cannot be told"
+            col = int(r["target_col"])
+            band = c.loc_col[col] if 0 <= col < c.gK and c.loc_col[col] else f"chromosome {b[0]}"
+            lies = "overlaps" if d == 0 else f"lies {_bp_words(d)} from"
+            _add_reasons(r, [f"same locus: {r['target']} {lies} {r['source']} ({band}); genes this close are deleted "
+                             f"or gained together ({LOCUS_ENRICHMENT}), so the difference can be a shared deletion, "
+                             "not regulation"]
+                         + ([_changed_note(5, f"this arrow had sign {int(before[0]):+d} and grade {before[1]}",
+                                           "sign 0 and grade C", f"source and target lie within "
+                                           f"{_bp_words(SAME_LOCUS_BP)} (same locus)")]
+                            if int(before[0]) or before[1] != "C" else []))
+    ran = bool(have)
+    return {"ran": ran, "genes": len(genes), "genes_with_coordinates": len(have), "edges_checked": n_chk,
+            "edges_same_locus": n_same, "max_bp": SAME_LOCUS_BP,
+            "text": (f"coordinates for {len(have)} of {len(genes)} genes" if ran else
+                     "could not run: no gene coordinates (reference/annotations.parquet, "
+                     "reference/gene_coords.parquet)")}
+
+
+def _null_bin(n):
+    """The overlap bin of a null line set (NULL_BINS): 0 for <= 10 overlapping sets, ... 4 for > 600."""
+    return int(np.searchsorted(NULL_BINS, int(n), side="left"))
+
+
+def _bin_names():
+    lo = [0] + [b + 1 for b in NULL_BINS]
+    return [f"{a}-{b}" for a, b in zip(lo, NULL_BINS)] + [f"more than {NULL_BINS[-1]}"]
+
+
+def _null_p(nulls, kk, v):
+    """p of a control's tests from the real kind's pooled null, guarded per target as the real tests are."""
+    two = kk != "response"
+    own = _own_stats(v["T"], v["Tp"], two)
+    p, _ = _guard_p(nulls[kk].p(v["T"]), own, v["n_arr"])
+    return p
+
+
+def _null_controls(c, ngroups, null_res, nulls, null_cut, partners_of, dvar):
+    """D11, the natural knockouts' random controls (controls.json null_controls).
+    (a) null_baseline / null_response: NULL_CONTROL_SETS real line sets, drawn evenly over the overlap bins
+    (NULL_BINS); per set NULL_CONTROL_GENES random genes that are not partners of any of its genes (nor its genes),
+    measured in >= MIN_SIDE lines on each side, matched to its tested partners by pooled-CPM decile, tested exactly as
+    the partners (same permutations, the kind's pooled null, the same per-target guard) and counted at the family's BH
+    cut: rate[bin, kind] = hits / tests - how often a gene that is not a partner differs as much between these lines.
+    (b) null_sensitivity / null_selectivity: N_PSEUDO_NULL random line sets with the real sets' sizes (quantiles),
+    |phi| < PSEUDO_PHI_NULL to every real set with >= FULL_SIDE lines on each side, tested on the same drug-doses with
+    the pooled null at the family's cut: the arrows a set without any real effect gives."""
+    rng = np.random.default_rng(stable_seed("null-controls", c.gK, c.L))
+    nb = len(NULL_BINS) + 1
+    cands = [[] for _ in range(nb)]
+    for g, res in null_res:
+        if any(kk in res for kk in ("response", "baseline")):
+            cands[_null_bin(g.get("null_co_n", 0))].append(g)
+    per = max(1, NULL_CONTROL_SETS // nb)
+    logc = np.log10(np.maximum(c.pooled_cpm, 0.0) + 1.0)
+    edges_q = np.quantile(logc, np.linspace(0, 1, 11)[1:-1]) if logc.size else np.zeros(9)
+    dec = np.digitize(logc, edges_q)
+    acc = {kk: {"tests": np.zeros(nb, np.int64), "hits": np.zeros(nb, np.int64), "sets": np.zeros(nb, np.int64)}
+           for kk in ("response", "baseline")}
+    for b in range(nb):
+        gs = cands[b]
+        if len(gs) > per:
+            gs = [gs[i] for i in sorted(rng.choice(len(gs), size=per, replace=False))]
+        for g in gs:
+            kinds = tuple(kk for kk in ("response", "baseline") if kk in g.get("tested", {}))
+            tested = np.unique(np.concatenate([g["tested"][kk] for kk in kinds])) if kinds else np.zeros(0, int)
+            if not tested.size:
+                continue
+            part = set(g["genes"])
+            for x in g["genes"]:
+                part |= partners_of(x)
+            ok = (c.measured[g["alt"]].sum(axis=0) >= MIN_SIDE) & (c.measured[g["inn"]].sum(axis=0) >= MIN_SIDE)
+            ok[np.array(sorted(part), dtype=np.int64)] = False
+            want = np.bincount(dec[tested], minlength=10).astype(np.float64)
+            want = np.rint(want / want.sum() * NULL_CONTROL_GENES).astype(int)
+            pick = []
+            for d_ in range(10):
+                pool = np.flatnonzero(ok & (dec == d_))
+                if want[d_] and pool.size:
+                    pick.extend(rng.choice(pool, size=min(int(want[d_]), pool.size), replace=False).tolist())
+            if not pick:
+                continue
+            res = _test_group(c, g, kinds, PERMS_NULL, targets=np.array(sorted(pick), dtype=np.int64))
+            for kk, v in res.items():
+                p = _null_p(nulls, kk, v)
+                fin = np.isfinite(p)
+                acc[kk]["tests"][b] += int(fin.sum())
+                acc[kk]["hits"][b] += int((fin & (p <= null_cut[(kk, bool(g["stratified"]))])).sum())
+                acc[kk]["sets"][b] += 1
+    rates = {}
+    for kk, a in acc.items():
+        pooled = float(a["hits"].sum() / a["tests"].sum()) if a["tests"].sum() else np.nan
+        rates[kk] = [float(h / t) if t else pooled for h, t in zip(a["hits"], a["tests"])]
+    # (b) random line sets for the drug-dose kinds
+    sizes = sorted((g["n_alt"], g["n_inn"]) for g in ngroups) or [(min(5, c.L // 3), min(10, c.L - c.L // 3))]
+    pick_i = np.rint(np.linspace(0, len(sizes) - 1, N_PSEUDO_NULL)).astype(int)
+    refs = [(g["alt"], g["inn"]) for g in ngroups if g["n_alt"] >= FULL_SIDE and g["n_inn"] >= FULL_SIDE]
+    sens = {kk: [] for kk in ("sensitivity", "selectivity")}
+    for i in range(N_PSEUDO_NULL if ngroups else 0):
+        na, ni = sizes[int(pick_i[i])]
+        if na + ni > c.L:
+            continue
+        perm = np.argsort(rng.random((200, c.L)), axis=1)
+        alt = np.zeros((200, c.L), dtype=bool)
+        inn = np.zeros((200, c.L), dtype=bool)
+        np.put_along_axis(alt, perm[:, :na], True, axis=1)
+        np.put_along_axis(inn, perm[:, na:na + ni], True, axis=1)
+        ph = _phi_max(alt.astype(np.float64), refs)
+        okk = np.flatnonzero(ph < PSEUDO_PHI_NULL)
+        j = int(okk[0]) if okk.size else int(np.argmin(ph))
+        g = _group_common(c, f"pseudo-null:{i + 1}", "pseudo", f"PSEUDONULL{i + 1}", "pseudo", alt[j], inn[j],
+                          f"random line set {i + 1} ({na} lines) vs ({ni})")
+        res = _test_group(c, g, ("sensitivity", "selectivity"), PERMS_NULL, dd_mask=dvar)
+        for kk, v in res.items():
+            p = _null_p(nulls, kk, v)
+            sens[kk].append(int((np.isfinite(p) & (p <= null_cut[(kk, bool(g["stratified"]))])).sum()))
+    real_sets = {kk: sum(1 for _, res in null_res if kk in res) for kk in sens}
+    pls = {}
+    for kk, h in sens.items():
+        n = len(h)
+        rate = float(np.mean(h)) if n else np.nan
+        up = _poisson_upper(sum(h)) / n if n else np.nan
+        pls[f"null_{kk}"] = {"pseudo_sets": n, "arrows": int(sum(h)), "rate_per_set": rate, "upper_per_set": up,
+                             "real_sets_tested": real_sets[kk],
+                             "expected_false": None if not n else round(rate * real_sets[kk], 2),
+                             "expected_false_upper": None if not n else round(up * real_sets[kk], 2)}
+    return {"bins": _bin_names(),
+            "sets": {f"null_{kk}": a["sets"].tolist() for kk, a in acc.items()},
+            "tests": {f"null_{kk}": a["tests"].tolist() for kk, a in acc.items()},
+            "hits": {f"null_{kk}": a["hits"].tolist() for kk, a in acc.items()},
+            "rates": {f"null_{kk}": [round(x, 6) if np.isfinite(x) else None for x in v] for kk, v in rates.items()},
+            "_rates": {f"null_{kk}": v for kk, v in rates.items()},
+            "line_sets": pls,
+            "how": (f"(a) null_baseline / null_response: up to {NULL_CONTROL_SETS} real line sets drawn evenly over "
+                    f"the overlap bins ({', '.join(_bin_names())} other line sets overlapping), {NULL_CONTROL_GENES} "
+                    "random genes per set that are not partners of its genes, measured in at least 3 lines on each "
+                    "side and matched to its tested partners by pooled-CPM decile, tested exactly as the partners "
+                    "and counted at the family's BH cut: rates = hits / tests per bin (a bin without a set uses the "
+                    "pooled rate). "
+                    f"(b) null_sensitivity / null_selectivity: {N_PSEUDO_NULL} random line sets with the real sets' "
+                    f"sizes (|phi| < {PSEUDO_PHI_NULL} to every real set with at least {FULL_SIDE} lines on each "
+                    "side), tested on the same drug-doses and counted at the family's cut")}
+
+
+def _nonspecific(c, rows, nctl, gtests):
+    """D11 per natural-knockout arrow: nonspecific_share and its reason. Baseline / response: rate[bin, kind] x the
+    source gene's partner tests of the kind / its written arrows of the kind ('would appear for any gene'). Cells /
+    response strength: the random line sets' arrows per set / this set's arrows of the kind ('would appear for any set
+    of lines'). An alert at or above FALSE_SHARE_ALERT (printed whole percent), else a note."""
+    import collections
+    nl = [r for r in rows if str(r["kind"]).startswith("null_")]
+    per_src = collections.Counter((r["kind"], int(r["source_col"])) for r in nl)
+    per_set = collections.defaultdict(set)
+    for r in nl:
+        if r["kind"] in ("null_sensitivity", "null_selectivity"):
+            per_set[(r["kind"], r["group"])].add(int(r["target_dd"]))
+    rates = nctl.get("_rates", {})
+    pls = nctl.get("line_sets", {})
+    for r in nl:
+        kind = r["kind"]
+        if kind in ("null_baseline", "null_response"):
+            rr = rates.get(kind)
+            if not rr:
+                continue
+            rate = rr[_null_bin(max(0, int(r["programme_sets"])))]
+            if not np.isfinite(rate):
+                continue
+            tests = gtests.n_src(kind, r["source_col"], r["source"])
+            n = per_src[(kind, int(r["source_col"]))]
+            exp = rate * tests
+            share = min(1.0, exp / n) if n else np.nan
+            r["nonspecific_share"] = share
+            _add_reasons(r, [f"random genes that are not partners differ as much between these lines in "
+                             f"{100 * rate:.2g}% of tests: about {exp:.1f} of the {n} arrows of this gene would "
+                             f"appear for any gene ({_pct(share)})"])
+        else:
+            x = pls.get(kind) or {}
+            rate, up = x.get("rate_per_set"), x.get("upper_per_set")
+            if rate is None or not np.isfinite(rate):
+                continue
+            n = max(1, len(per_set[(kind, r["group"])]))
+            share, sup = min(1.0, rate / n), min(1.0, up / n)
+            r["nonspecific_share"] = share
+            _add_reasons(r, [f"random line sets give about {rate:.2f} such arrows per set (up to {up:.2f}); this set "
+                             f"gives {n}: {_pct(share, True)} of them would appear for any set of lines (up to "
+                             f"{_pct(sup)})"])
+
+
+def _test_ids(e):
+    """D2: test_id (one per distinct test: the same kind, compounds or class, mechanism class, drug effect, target and
+    p for drug_target; the same group, target and p for the natural knockouts; every other edge its own) and
+    n_same_test; an edge whose test stands for several sources gets a note naming them all."""
+    if not len(e):
+        e["test_id"] = pd.Series(dtype=np.int32)
+        e["n_same_test"] = pd.Series(dtype=np.int16)
+        return e
+    kind = e["kind"].astype(str)
+    dt = (kind == "drug_target").to_numpy()
+    nl = kind.str.startswith("null").to_numpy()
+    own = np.arange(len(e)).astype(str)
+    key = pd.DataFrame({
+        "k": kind.to_numpy(),
+        "a": np.where(dt, e["compounds"].astype(str).to_numpy(), np.where(nl, e["group"].astype(str).to_numpy(), own)),
+        "m": np.where(dt, (e["mechanism_class"].astype(str) + "|" + e["mechanism"].astype(str)).to_numpy(), ""),
+        "f": np.where(dt, e["drug_effect"].astype(str).to_numpy(), ""),
+        "t": e["target"].astype(str).to_numpy(), "d": e["target_dd"].to_numpy(),
+        "p": [repr(float(x)) for x in e["p"]]})
+    tid = key.groupby(list(key.columns), sort=False).ngroup().to_numpy()
+    n = np.bincount(tid)[tid]
+    e = e.copy()
+    e["test_id"] = tid.astype(np.int32)
+    e["n_same_test"] = n.astype(np.int16)
+    multi = np.flatnonzero(n > 1)
+    if multi.size:
+        src = e["source"].astype(str).to_numpy()
+        members = {}
+        for i in multi:
+            members.setdefault(int(tid[i]), []).append(src[i])
+        al = e["alerts"].astype(str).to_numpy(dtype=object).copy()
+        for i in multi:
+            names = sorted(dict.fromkeys(members[int(tid[i])]), key=_natural_key)
+            if dt[i]:
+                note = (f"one test for {len(names)} targets ({', '.join(names)}): the same compounds give one result "
+                        "for each; the arrows are the same evidence, counted once")
+            else:
+                note = (f"one test for {len(names)} genes absent from the same lines ({', '.join(names)}): the arrows "
+                        "are the same evidence, counted once")
+            al[i] = _join(split_reasons(al[i]) + [note])
+        e["alerts"] = al
+    return e
+
+
+def _natural_key(s):
+    return [int(t) if t.isdigit() else t.lower() for t in re.split(r"(\d+)", str(s))]
+
+
+def _selectivity_table(c, real, null_res, edges):
+    """direction/selectivity.parquet (SELECTIVITY_DOCS): one row per drug-dose - its selective lines, how selective
+    it is (the 3rd-largest sel_z), the organs its selective lines concentrate in (Fisher p < 0.05) and every
+    comparison group with a selectivity arrow to it (q, and whether other doses agree)."""
+    rows = []
+    sel = c.sel_line
+    S = getattr(c, "Ssel", None)
+    org = c.organ
+    e = edges[edges["kind"].isin(["genotype_selectivity", "null_selectivity"])] if len(edges) else edges
+    by_dd = {}
+    for r in e.itertuples(index=False):
+        qq = r.q_group if r.kind == "genotype_selectivity" else r.q
+        txt = (f"{r.group} [{r.kind}] (q {_q2(qq)}; sign {int(r.sign):+d}; "
+               + (f"{int(r.n_doses_supporting)} doses agree" if int(r.n_doses_supporting) > 1 else "one dose only")
+               + ")")
+        by_dd.setdefault(int(r.target_dd), [])
+        if txt not in by_dd[int(r.target_dd)]:
+            by_dd[int(r.target_dd)].append(txt)
+    for d in range(c.Dn):
+        lines_ = np.flatnonzero(sel[d])
+        z = S[d] if S is not None else np.full(c.L, np.nan)
+        zz = np.sort(z[np.isfinite(z) & c.in_growth])[::-1]
+        third = float(zz[2]) if zz.size >= 3 else np.nan
+        enr = []
+        have = np.isfinite(c.Rsel[d])
+        if lines_.size:
+            for o in sorted(set(org[have])):
+                a = int((sel[d] & (org == o)).sum())
+                if not a:
+                    continue
+                b = int((~sel[d] & have & (org == o)).sum())
+                cc = int((sel[d] & (org != o)).sum())
+                dd_ = int((~sel[d] & have & (org != o)).sum())
+                pv = float(stats.fisher_exact([[a, cc], [b, dd_]], alternative="greater")[1])
+                if pv < 0.05:
+                    enr.append(f"{o} (p {pv:.2g}; {a} of the {lines_.size} selective lines, {a + b} of the "
+                               f"{int(have.sum())} lines)")
+        gl = by_dd.get(d, [])
+        rows.append({"dd": d, "drug": str(c.drug[d]), "dose": str(c.dose[d]), "n_selective_lines": int(lines_.size),
+                     "selective_lines": ", ".join(str(c.line_name[i]) for i in lines_), "selectivity": third,
+                     "tested": bool(c.sel_dd[d]), "organs_enriched": "; ".join(enr), "n_groups": len(gl),
+                     "groups": "; ".join(gl)})
+    df = pd.DataFrame(rows, columns=list(SELECTIVITY_DOCS))
+    df["dd"] = df["dd"].astype(np.int32)
+    df["n_selective_lines"] = df["n_selective_lines"].astype(np.int32)
+    df["n_groups"] = df["n_groups"].astype(np.int32)
+    df["selectivity"] = df["selectivity"].astype(np.float32)
+    return df
 
 
 TIER_COLS = ("n_alerts", "notes", "caveats", "support", "alerts_all", "n_notes", "n_caveats", "n_support")
@@ -3073,8 +4796,9 @@ def _group_row(c, g):
     nm = c.line_name
     ne = g["n_written"] if "n_written" in g else (g.get("n_edges") or {})
     return {"group_id": g["gid"], "kind": g["kind"], "gene": g["gene"], "gene_col": int(g["col"]),
-            "mechanism": MECH_WORDS[g["mech"]], "description": g["desc"], "n_altered": g["n_alt"],
-            "n_intact": g["n_inn"], "altered_lines": ", ".join(nm[g["alt"]]), "intact_lines": ", ".join(nm[g["inn"]]),
+            "mechanism": MECH_WORDS[g["mech"]], "allele": g.get("allele", ""), "description": g["desc"],
+            "n_altered": g["n_alt"], "n_intact": g["n_inn"], "altered_lines": ", ".join(nm[g["alt"]]),
+            "intact_lines": ", ".join(nm[g["inn"]]),
             "organs_altered": g["organs_alt"], "organs_intact": g["organs_inn"], "stratified": bool(g["stratified"]),
             "n_arrangements": int(g["n_arr"]), "n_altered_shared_organs": int(g["n_alt_mixed"]),
             "n_intact_shared_organs": int(g["n_inn_mixed"]),
@@ -3082,24 +4806,49 @@ def _group_row(c, g):
             "tissue_confounded": bool(g["tissue"]),
             "cooccurs_with": "; ".join(f"{h} ({j:.2f})" for h, j in g["cooccur"]),
             "anti_occurs_with": "; ".join(f"{h} (phi -{v:.2f})" for h, v in g.get("anti", [])),
+            "n_heavily_mutated_altered": int(g.get("n_heavy_alt", 0)),
+            "n_heavily_mutated_intact": int(g.get("n_heavy_inn", 0)),
             "variants": g.get("variants", ""), "x_not_expressed_in_altered": int(g.get("x_lost", -1)),
             "x_baseline_log2_diff": float(g.get("x_base_diff", np.nan)),
             "genes_same_lines": ", ".join(str(c.sym[x]) for x in g.get("genes", [])) if g["kind"] == "null" else "",
+            "overlapping_line_sets": int(g.get("null_co_n", 0) or 0) if g["kind"] == "null" else -1,
             "max_phi_to_real": float(g.get("max_phi", np.nan)),
             "max_phi_to_null_sets": float(g.get("max_phi_null", np.nan)), "alerts": _join(g["alerts"]),
             "inflation": "; ".join(f"{k} {v:.2f}" for k, v in (g.get("lambda") or {}).items()),
             "note": g.get("note", ""), "n_edges_response": int(ne.get("response", 0)),
             "n_edges_baseline": int(ne.get("baseline", 0)),
-            "n_edges_sensitivity": int(ne.get("sensitivity", 0))}
+            "n_edges_sensitivity": int(ne.get("sensitivity", 0)),
+            "n_edges_selectivity": int(ne.get("selectivity", 0))}
 
 
-def _controls(c, geno, real_counts, pseudo_counts, edges, cuts, fam, level_info, ls_info):
-    """controls.json: positive controls (TP53 -> p53 targets and DNA-damage sensitivity; KEAP1 -> NRF2 targets),
-    the negative controls (pseudo-groups, counted at the real family's BH cut) next to the real groups' counts, and
-    the expected false edges per kind (pseudo rate x real groups; permuted-level controls for the level kinds)."""
+def _dna_damage_dd(c):
+    """The drug-doses of DNA-damaging drugs for the positive controls, each with why: a Tahoe target in
+    DNA_DAMAGE_TARGETS, or (D4) a TOP1 / TOP2 poison or a class acting on DNA (mechanisms, with its source).
+    Returns {drug-dose: reason}."""
+    out = {}
+    for d in range(c.Dn):
+        tg = set(_split_targets(c.dd["targets"].iloc[d])) if "targets" in c.dd else set()
+        hit = sorted(tg & DNA_DAMAGE_TARGETS)
+        why = [f"Tahoe target {', '.join(hit)}"] if hit else []
+        for k_ in c.cls_by_drug.get(str(c.drug[d]), []):
+            info = MX.class_info(k_)
+            if k_ in ("TOP1_POISON", "TOP2_POISON") or info.get("effect") == "dna":
+                why.append(f"{info.get('label', k_)} ({c.cls_src.get((str(c.drug[d]), k_), '') or 'class'})")
+        if why:
+            out[d] = "; ".join(why)
+    return out
+
+
+def _controls(c, geno, real_counts, pseudo_counts, edges, cuts, fam, level_info, ls_info, nctl=None):
+    """controls.json: positive controls (TP53 -> p53 targets and DNA-damage sensitivity; KEAP1 -> NRF2 targets; KRAS
+    p.G12C -> response to adagrasib; TP53 -> response strength to DNA-damaging drugs), the negative controls
+    (pseudo-groups, counted at the real family's BH cut) next to the real groups' counts, the natural knockouts'
+    random controls (null_controls) and the expected false edges per kind (pseudo rate x real groups; permuted-level
+    controls for the level kinds; random non-partner genes and random line sets for the natural knockouts)."""
     pos = {}
-    tp = [g for g in geno if g["gene"] == "TP53"]
+    tp = [g for g in geno if g["gene"] == "TP53" and not g.get("allele")]
     present = [s for s in P53_TARGETS if s in c.col_of]
+    dmg = _dna_damage_dd(c)
     for g in tp:
         r = g.get("res", {}).get("response") if g.get("res") else None
         if r is None:
@@ -3116,27 +4865,67 @@ def _controls(c, geno, real_counts, pseudo_counts, edges, cuts, fam, level_info,
             j = j[0]
             e = edges[(edges["kind"] == "genotype_response") & (edges["source"] == "TP53") &
                       (edges["target"] == str(c.sym[y])) & (edges["group"] == g["desc"])]
+            rise, con, draw = float(r["rise"][j]), float(r["D"][j]), float(r["D_raw"][j])
+            edge = bool(len(e))
+            sign = int(e["sign"].iloc[0]) if edge else 0
+            why = ""
+            if np.isfinite(rise) and rise < 0.5:
+                why = f"evidence from falls (rise_share {rise:.2f}): the p53 targets rise under DNA damage"
+            elif not (np.isfinite(con) and con > 0):
+                why = f"the mean contrast goes the other way ({con:+.2f})"
+            elif edge and sign != 1:
+                why = "wrong sign" if sign == -1 else "sign not inferred"
+            elif not edge:
+                why = f"not an edge (q {_q2(r['q'][j])})"
             per.append({"gene": s, "tested": bool(np.isfinite(r["T"][j])), "T": float(r["T"][j]),
-                        "p": float(r["p"][j]), "q": float(r["q"][j]), "rank": int(rank[j]), "D": float(r["D"][j]),
-                        "edge": bool(len(e)), "grade": e["grade"].iloc[0] if len(e) else "",
-                        "sign": int(e["sign"].iloc[0]) if len(e) else 0,
-                        "alert": bool(len(e) and str(e["alerts"].iloc[0] or ""))})
-        rec = [x for x in per if x["edge"] and x["sign"] == 1]
+                        "p": float(r["p"][j]), "q": float(r["q"][j]), "rank": int(rank[j]), "D": con,
+                        "contrast": con, "D_raw": draw, "rise_share": rise,
+                        "edge": edge, "grade": e["grade"].iloc[0] if edge else "", "sign": sign,
+                        "counted": bool(edge and not why), "why_not": why,
+                        "alert": bool(edge and str(e["alerts"].iloc[0] or ""))})
+        rec = [x for x in per if x["counted"]]
         pos[f"TP53 ({g['desc']}) -> p53 targets (response)"] = {
-            "expected": "sign +1: the targets respond less where TP53 is lost", "targets_present": len(per),
+            "expected": ("sign +1 and evidence from rises (rise_share >= 0.5) with the mean contrast agreeing: the "
+                         "targets rise less where TP53 is lost"), "targets_present": len(per),
             "recovered_right_sign": len(rec), "wrong_sign": sum(x["edge"] and x["sign"] == -1 for x in per),
+            "edge_not_counted": [{"gene": x["gene"], "why_not": x["why_not"]} for x in per
+                                 if x["edge"] and not x["counted"]],
             "median_rank": float(np.median([x["rank"] for x in per])) if per else None,
             "genes_ranked": int(np.isfinite(r["T"]).sum()), "per_gene": per,
             "note": "q is null where it is >= 0.10 (only candidates p < 0.10 enter the family's BH)"}
-        dmg = [d for d in range(c.Dn) if set(_split_targets(c.dd["targets"].iloc[d]) if "targets" in c.dd else [])
-               & DNA_DAMAGE_TARGETS]
         e = edges[(edges["kind"] == "genotype_sensitivity") & (edges["source"] == "TP53") &
-                  (edges["group"] == g["desc"]) & (edges["target_dd"].isin(dmg))]
+                  (edges["group"] == g["desc"]) & (edges["target_dd"].isin(list(dmg)))]
         pos[f"TP53 ({g['desc']}) -> cells under DNA-damaging drugs (sensitivity)"] = {
             "expected": "sign -1: TP53 activity makes the cells more sensitive", "drugdoses_tested": len(dmg),
             "edges": int(len(e)), "right_sign": int((e["sign"] == -1).sum()),
-            "drugdoses": e["target"].tolist()[:30], "drugdoses_alert": (e["alerts"] != "").tolist()[:30]}
-    kp = [g for g in geno if g["gene"] == "KEAP1"]
+            "drugdoses": e["target"].tolist(), "drugdoses_alert": (e["alerts"] != "").tolist(),
+            "drugdoses_why": [dmg[int(d)] for d in e["target_dd"]]}
+        es = edges[(edges["kind"] == "genotype_selectivity") & (edges["source"] == "TP53") &
+                   (edges["group"] == g["desc"]) & (edges["target_dd"].isin(list(dmg)))]
+        pos[f"TP53 ({g['desc']}) -> response strength to DNA-damaging drugs (selectivity)"] = {
+            "expected": "sign +1: intact lines respond more", "drugdoses_tested": int(sum(
+                1 for d in dmg if c.sel_dd[d])), "edges": int(len(es)), "right_sign": int((es["sign"] == 1).sum()),
+            "wrong_sign": int((es["sign"] == -1).sum()), "drugdoses": es["target"].tolist(),
+            "drugdoses_alert": (es["alerts"] != "").tolist(), "drugdoses_why": [dmg[int(d)] for d in es["target_dd"]]}
+    ada = [d for d in range(c.Dn) if "ADAGRASIB" in molecule_key(c.drug[d])]
+    kg = [g for g in geno if g["gid"] == "genotype:KRAS:G12C"]
+    key = f"KRAS p.G12C -> response to Adagrasib (selectivity; expected sign +1 at >= 2 doses; {ADAGRASIB_REF})"
+    if not ada:
+        pos[key] = {"assessable": False, "why": "Adagrasib is not among the screened drugs"}
+    elif not kg:
+        n = sum(1 for i in range(c.L) if any(allele_change(v[2]) == "G12C"
+                                             for v in (_records(c)[0].get("KRAS", {}).get(i, ()))))
+        pos[key] = {"assessable": False, "why": f"no KRAS p.G12C group ({n} line{'s' if n != 1 else ''} recorded, "
+                                                f"fewer than {MIN_SIDE})"}
+    else:
+        e = edges[(edges["kind"] == "genotype_selectivity") & (edges["group"] == kg[0]["desc"]) &
+                  edges["target_dd"].isin(ada)]
+        right = e[e["sign"] == 1]
+        pos[key] = {"assessable": True, "drugdoses_tested": int(sum(1 for d in ada if c.sel_dd[d])),
+                    "edges": int(len(e)), "right_sign_doses": int(right["target_dd"].nunique()),
+                    "recovered": bool(right["target_dd"].nunique() >= 2), "drugdoses": e["target"].tolist(),
+                    "signs": e["sign"].astype(int).tolist(), "drugdoses_alert": (e["alerts"] != "").tolist()}
+    kp = [g for g in geno if g["gene"] == "KEAP1" and not g.get("allele")]
     if not kp:
         pos["KEAP1 -> NRF2 targets (baseline)"] = {"assessable": False,
                                                    "why": f"KEAP1 is not recorded as altered in >= {MIN_SIDE} lines"}
@@ -3214,6 +5003,23 @@ def _controls(c, geno, real_counts, pseudo_counts, edges, cuts, fam, level_info,
             "how": "edges significant only within their group (grade C): pseudo-group within-group edges per group "
                    f"x the real groups, minus the table-wide ones ({max(0, tot_g - tot)} edges in {n_ps} "
                    "pseudo-groups)"}
+    nctl = nctl or {}
+    for kind in ("null_baseline", "null_response"):
+        sel = edges[edges["kind"] == kind] if len(edges) else edges
+        ns = pd.to_numeric(sel["nonspecific_share"], errors="coerce") if len(sel) else pd.Series(dtype=float)
+        exp[kind] = {"edges": int(len(sel)), "expected_nonspecific": round(float(ns.fillna(0).sum()), 2),
+                     "how": "the arrows that random genes which are not partners would give as often: per source gene "
+                            "the random genes' rate in its overlap bin x its partner tests, at most its arrows "
+                            "(nonspecific_share summed); not false tests, but differences between these lines that "
+                            "are not specific to the partners"}
+    for kind in ("null_sensitivity", "null_selectivity"):
+        x = (nctl.get("line_sets") or {}).get(kind) or {}
+        n_e = int((edges["kind"] == kind).sum()) if len(edges) else 0
+        exp[kind] = {"edges": n_e, "expected_false": x.get("expected_false"),
+                     "expected_false_upper": x.get("expected_false_upper"),
+                     "how": f"{x.get('pseudo_sets', 0)} random line sets with the real sets' sizes: their arrows per "
+                            f"set x the {x.get('real_sets_tested', 0)} real line sets tested (counted at the family's "
+                            "cut); per line set, not per gene (genes absent from the same lines share their arrows)"}
     for kk, inf in (("level", level_info), ("level_sensitivity", ls_info)):
         cn = inf.get("control_permuted_levels_edges")
         exp[kk] = {"edges": int(inf.get("edges", 0)), "expected_false": cn,
@@ -3226,35 +5032,49 @@ def _controls(c, geno, real_counts, pseudo_counts, edges, cuts, fam, level_info,
         "expected_false_upper": None if cg is None else round(_poisson_upper(cg), 2),
         "how": "edges significant only among the genes tested for their drug-dose: the same count with the levels "
                "permuted (one permutation)"}
+    nc_out = {k: v for k, v in nctl.items() if not k.startswith("_")}
     return {"positive": pos, "negative": neg, "level_controls": {"level": level_info,
                                                                  "level_sensitivity": ls_info},
-            "expected_false_edges": exp, "expected_false_how": EXPECTED_FALSE_HOW}
+            "null_controls": nc_out, "expected_false_edges": exp, "expected_false_how": EXPECTED_FALSE_HOW}
 
 
 # ----------------------------------------------------------------------------- README
 EDGE_DOCS = {
     "source": "the upstream gene: the genotype's gene, the gene that is absent, whose level varies, or that the "
               "compounds target",
-    "source_col": "its gene col (genes.csv; -1 = a drug target that is not a measured gene)",
-    "target": "the gene that changes, or 'cells under DRUG DOSE' (the cells' growth: sensitivity kinds)",
-    "target_col": "the target gene's col (-1 for cells)", "target_dd": "the drug-dose row for a cells target (-1)",
-    "target_type": "gene or cells",
-    "kind": "the evidence: genotype_response / genotype_baseline / genotype_sensitivity (recorded mutation), "
-            "null_response / null_baseline / null_sensitivity (the gene is not expressed in some lines), "
-            "drug_target (compounds that target it), level / level_sensitivity (its natural level)",
-    "grade": "A (recorded genotype, >= 5 lines each side, q < 0.05, compared within organs, no co-occurrence or "
-             "anti-occurrence alert, and for a response not resting on the global-sensitivity correction), B, C (a "
-             "glimpse; also a tissue-confounded genotype edge) - see 'How to read a grade'",
+    "source_col": "its gene col (genes.csv; -1 = a drug target or driver gene that is not a measured gene)",
+    "target": "the gene that changes, 'cells under DRUG DOSE' (the cells' growth: sensitivity kinds) or 'response to "
+              "DRUG DOSE' (how strongly the lines respond: selectivity kinds)",
+    "target_col": "the target gene's col (-1 for cells and response targets)",
+    "target_dd": "the drug-dose row of a cells or response target (-1)",
+    "target_type": "gene, cells or response",
+    "kind": "the evidence: genotype_response / genotype_baseline / genotype_sensitivity / genotype_selectivity "
+            "(recorded mutation), null_response / null_baseline / null_sensitivity / null_selectivity (the gene is "
+            "not expressed in some lines), drug_target (compounds that target it), level / level_sensitivity (its "
+            "natural level)",
+    "grade": "A (recorded genotype, >= 5 lines each side measured, q < 0.05, compared within organs, no co-occurrence, "
+             "anti-occurrence or heavily-mutated-lines alert, expected false share of the group below 20%; for a "
+             "response also: not resting on the global-sensitivity correction, the mean over all its drug-doses going "
+             "its way with and without the correction, under half of the evidence the other way, not a floor, "
+             "measured in at least half of each side's lines; for a selectivity arrow: seen at >= 2 doses), B, C (a "
+             "glimpse: also tissue-confounded, same locus, co-absent, an expression programme, a drug class that "
+             "traps its target) - see 'How to read a grade'",
     "sign": "+1: the source's activity raises the target's level or the cell numbers, or strengthens the target's "
-            "drug response in its own direction (for a target that falls under the drugs: a deeper fall); -1: lowers "
-            "it / weakens it; 0: not inferred (mechanism unknown) - see 'How to read a sign'",
-    "reading": "the edge in words", "group": "the comparison ('TP53 loss of function (10 lines) vs not recorded (8)')",
-    "mechanism": "loss of function / gain of function / altered (any record) / not expressed / level / inhibitor ...",
+            "drug response in its own direction (for a target that falls under the drugs: a deeper fall) or the lines' "
+            "response strength; -1: lowers it / weakens it; 0: not inferred (mechanism unknown, a trap class, same "
+            "locus, an expression programme) - see 'How to read a sign'",
+    "reading": "the edge in words",
+    "group": "the comparison ('TP53 recorded as loss of function (10 lines: ...) vs not recorded (8)')",
+    "mechanism": "loss of function / gain of function / altered (any record) / not expressed / level / for drug_target "
+                 "the class's action: inhibitor, activator, unclear, 'inhibitor (microtubule destabiliser)' or a trap "
+                 "class ('TOP2 poison', ...)",
     "n_altered": "lines on the altered (or lacking) side with a value for the target (-1: not applicable)",
     "n_intact": "lines on the other side with a value", "n_lines": "lines in a level correlation",
     "contrast": "the tested effect: response kinds mean corrected response (z units) intact - altered; baseline "
-                "log2 level intact - altered; sensitivity log2 relative cell number intact - altered; level r; "
-                "drug_target the share of the compounds that move the target",
+                "log2 level intact - altered; sensitivity log2 relative cell number intact - altered; selectivity "
+                "rel_log2 (genes beyond the per-line cut against the line's typical drug-dose) intact - altered; level "
+                "r; drug_target the median log2 fold of the supporting compounds (the n_top strongest; each compound's "
+                "strongest fold in the edge's direction, signed)",
     "D_raw": "response kinds: the same contrast without the global-sensitivity correction",
     "retained_fraction": "response kinds: the altered lines' mean raw response / the intact lines' (1 = unchanged, "
                          "0 = lost, < 0 = reversed)",
@@ -3275,11 +5095,13 @@ EDGE_DOCS = {
                    "once the forward has passed the same cut (the edge was selected because |r| is large, which "
                    "inflates it; the largest p over the common strength); 1 when the reverse is at least as strong",
     "n_compounds": "drug_target: compounds of the class",
-    "n_supporting": "drug_target: of them, those that move the target that way",
-    "background_rate": "drug_target: share of all compounds that move the target that way",
+    "n_supporting": "drug_target: of them, those significant that way (pooled q < 0.1 and >= 1.2x at any dose)",
+    "background_rate": "drug_target: share of all compounds significant that way for the target",
     "compounds": "drug_target: every compound of the class, '; '-joined; one molecule counts once (salt forms, "
                  "letter case and salt words merged; its names ' / '-joined) ('' for other kinds)",
-    "compounds_supporting": "drug_target: those of them that move the target that way, '; '-joined",
+    "compounds_supporting": "drug_target: the n_top compounds of the test, strongest first ('; '-joined), then "
+                            "'also significant: ...' (', '-joined) for the class's other compounds significant that "
+                            "way",
     "drug_effect": "drug_target: what the compounds do to the target's level, 'raises' or 'lowers' (sign is relative "
                    "to the source's activity: an inhibitor that raises the target gives sign -1)",
     "T": "the tested statistic: permutation-standardised (and divided by the group's inflation) for the group "
@@ -3288,10 +5110,12 @@ EDGE_DOCS = {
          "below the target's own permutation p where its own shuffles disagree with the pool, nor below 1 / its "
          "number of label arrangements; two-sided, except the response kinds (one-sided upper tail of the omnibus "
          "S). Level kinds: two-sided, from the t distribution (calibrated by a Freedman-Lane null). drug_target: "
-         "one-sided hypergeometric",
+         "the top-j test - for each j from 2 to the class's significant compounds, the hypergeometric chance that j "
+         "of the class's N compounds are among the m_j compounds of the screen that move the target at least as "
+         "strongly as the class's j-th strongest; the smallest, times N - 1 (Bonferroni over the thresholds)",
     "q": "BH q over the kind's whole family: every genotype group of the kind; every expression-null test of the "
          "kind (within-organ and across-organ comparisons as two families); every level pair; every (gene, "
-         "drug-dose) level_sensitivity test; every drug_target test",
+         "drug-dose) level_sensitivity test; every drug_target test (every class, direction and gene)",
     "q_group": "genotype kinds: BH q within the edge's own group (its tests of the kind); level_sensitivity: within "
                "the drug-dose (the genes tested for it). These edges are written when q_group < 0.10 (significant in "
                "their own family); grade A / B also need q < 0.10 over the whole table; with q >= 0.10 the edge is "
@@ -3302,33 +5126,77 @@ EDGE_DOCS = {
     "top_drugdoses": "response: the drug-doses carrying the difference, each as 'fold in the altered lines vs fold in "
                      "the other lines (z diff: corrected contrast)', the strongest first within the target's main "
                      "direction (rise_share), then the other direction; when mixed, the strongest of each; "
-                     "drug_target: each supporting compound's "
-                     "strongest drug-dose",
+                     "drug_target: each supporting compound's strongest drug-dose, strongest compound first; "
+                     "sensitivity and selectivity: the drug-dose",
     "art_share": "response kinds (genotype_response, null_response): the share of the evidence (sum of |contrast| over "
                  "the target's 10 drug-doses) carried by drug-doses with an artifact flag (toxic, transcription drop, "
-                 "cell-cycle shift, ...); float32; empty for the other kinds",
+                 "cell-cycle shift, like a neighbouring well, ...); float32; empty for the other kinds",
     "drugdoses_all": "every drug-dose behind the edge, each with its flags ('[artifact flags: ...]' or '[flags: "
                      "...]'): response kinds - all 10 of the target's drug-doses, as in top_drugdoses (fold in the "
                      "altered lines vs the other lines, z diff), strongest in the edge's direction first; drug_target "
-                     "- every significant drug-dose of each supporting compound (pooled fold and z); sensitivity kinds "
-                     "- the drug-dose of the cells; level - the target's 10 drug-doses (pooled fold and z); '' for the "
-                     "baseline kinds. top_drugdoses keeps the first few",
+                     "- every significant drug-dose of each supporting compound (pooled fold and z); sensitivity and "
+                     "selectivity kinds - the drug-dose; level - the target's 10 drug-doses (pooled fold and z); '' "
+                     "for the baseline kinds. top_drugdoses keeps the first few",
+    "mechanism_class": "drug_target: the mechanism class that set the test's class (D1): 'TOP1 poison', 'TOP2 poison', "
+                       "'PARP trapper', 'microtubule stabiliser' (trap classes: sign not inferred, grade C) or "
+                       "'microtubule destabiliser'; '' for a class by action (inhibitor / activator / unclear)",
+    "mechanism_source": "drug_target with a mechanism class: per compound, the source of its membership "
+                        "(tahoemap/data/drug_classes.json code constant with its citation, ChEMBL mechanism, WHO ATC), "
+                        "'; '-joined",
+    "compounds_source": "drug_target: per compound of the class, where its membership comes from ('Tahoe', 'ChEMBL "
+                        "(mechanism)', 'Tahoe and ChEMBL', 'Tahoe target, action from ChEMBL', 'Tahoe and ChEMBL, "
+                        "actions differ'), '; '-joined; '' when ChEMBL is not loaded",
+    "n_top": "drug_target: j, the number of compounds the test's best threshold uses (the strongest j)",
+    "m_top": "drug_target: m_j, how many compounds of the screen move the target at least as strongly as the class's "
+             "j-th strongest (ties counted)",
+    "class_size": "drug_target: N, the compounds of the class (as n_compounds)",
+    "share_supporting": "drug_target: n_supporting / class_size (the old count test's share), float32",
+    "ti_share": "response kinds: the share of the evidence carried by drug-doses of translation inhibitors (a class "
+                "of tahoemap/data/drug_classes.json with effect 'translation'), float32; empty for the other kinds",
+    "expected_false_group": "genotype kinds: random comparison groups' arrows of the kind per group, in the edge's "
+                            "family (over the whole table, or within the group only)",
+    "group_edges": "genotype kinds: the edge's group's arrows of the kind in the same family (-1 for other kinds)",
+    "false_share": "genotype kinds: min(1, expected_false_group / group_edges): the share of the group's arrows of "
+                   "this kind that may be false; at or above 20% (as printed) an alert and no grade A; float32",
+    "false_share_upper": "the same with the controls' 95% upper bound, float32",
+    "distance_bp": "genotype and null response / baseline arrows to a gene: base pairs between source and target on "
+                   "one chromosome (0 = they overlap); empty on different chromosomes or without coordinates",
+    "same_locus": "distance_bp <= 1,000,000 (SAME_LOCUS_BP): sign 0, grade C (genes this close are deleted or gained "
+                  "together)",
+    "programme_sets": "natural knockouts: how many other line sets overlap the lines lacking the source (Jaccard >= "
+                      "0.5); more than 10 = an expression programme (sign 0, grade C); -1 for other kinds",
+    "nonspecific_share": "natural knockouts: the share of the source's arrows of the kind that random genes which are "
+                         "not partners (baseline, response) or random line sets (cells, response strength) would give "
+                         "as well, float32",
+    "allele": "genotype kinds: '' for a gene-level group, else the allele group: a change ('G12C'), a codon "
+              "('G12 (codon)'), 'hotspot' or 'amplification'",
+    "doses_supporting": "selectivity kinds: the compound's other doses significant in the same group, with their q "
+                        "(the 'also at' support)",
+    "n_doses_supporting": "selectivity kinds: doses of the compound significant in the group, this one included (1 = "
+                          "one dose only: an alert, no grade A); -1 for other kinds",
+    "test_id": "one id per distinct test: edges with the same id are the same evidence for several sources (drug "
+               "targets sharing compounds; genes absent from the same lines), int32",
+    "n_same_test": "edges sharing the test_id (1 = its own test), int16",
     "n_alerts": "number of reasons in alerts (int16; an edge with 0 carries no warning sign)",
     "notes": "reasons kept below their thresholds (see 'Alerts, notes, caveats and support'), '; '-joined, no sign: "
              "read them, they are context rather than doubt about this arrow",
     "caveats": "the reasons every edge of its kind carries (drug_target: drugs can act on other proteins too; level: "
-               "tissue can mimic it, and the precision caveat; level_sensitivity: tissue can mimic it), '; '-joined",
+               "tissue can mimic it, and the precision caveat; level_sensitivity: tissue can mimic it; genotype "
+               "kinds: the false arrows the controls expect over the whole table), '; '-joined",
     "support": "reasons that support the edge (drug_target: the supporting compounds; expression-null: a recorded loss "
-               "of the gene in the same lines), '; '-joined",
+               "of the gene in the same lines; selectivity: the other doses that agree), '; '-joined",
     "alerts_all": "every reason of the edge (alerts, notes, caveats and support together) in the order the stage wrote "
                   "them, '; '-joined, no sign",
     "n_notes": "number of notes (int16)", "n_caveats": "number of caveats (int16)",
     "n_support": "number of support reasons (int16)",
 }
 GROUP_DOCS = {
-    "group_id": "kind:gene:mechanism", "kind": "genotype, null (expression-null line set) or pseudo (control)",
+    "group_id": "kind:gene:mechanism or kind:gene:allele ('genotype:KRAS:G12C', 'genotype:KRAS:G12 (codon)')",
+    "kind": "genotype, null (expression-null line set) or pseudo (control)",
     "gene": "the gene", "gene_col": "its col (-1 = not measured)", "mechanism": "as in edges",
-    "description": "the comparison", "n_altered": "lines altered / lacking the gene", "n_intact": "lines compared",
+    "allele": "'' (by gene), a change ('G12C'), a codon ('G12 (codon)'), 'hotspot' or 'amplification'",
+    "description": "the comparison, in words with the composition of the altered lines (D15)",
+    "n_altered": "lines altered / lacking the gene", "n_intact": "lines compared",
     "altered_lines": "their names", "intact_lines": "their names", "organs_altered": "organs (count)",
     "organs_intact": "organs (count)", "stratified": "permuted within organs",
     "n_arrangements": "distinct arrangements of the labels the permutations draw from (within organs when "
@@ -3342,24 +5210,49 @@ GROUP_DOCS = {
     "cooccurs_with": "other genes' altered sets overlapping this one (Jaccard >= 0.5; blocks grade A)",
     "anti_occurs_with": "genes whose altered lines sit on the other side of the comparison (phi <= -0.5): a "
                         "confounder with the opposite sign (an alert; blocks grade A)",
+    "n_heavily_mutated_altered": "altered lines recording alterations in >= 15 driver genes (HYPERMUT_MIN_GENES)",
+    "n_heavily_mutated_intact": "the same among the comparison lines",
     "variants": "variant types of the altered lines' records", "x_not_expressed_in_altered":
         "altered lines where the gene itself is not expressed (-1: not measured)",
     "x_baseline_log2_diff": "the gene's own level, intact - altered (log2)",
-    "genes_same_lines": "null: every gene absent from exactly these lines", "max_phi_to_real":
-        "pseudo: largest |phi| to a recorded group (drawn below 0.3)",
+    "genes_same_lines": "null: every gene absent from exactly these lines",
+    "overlapping_line_sets": "null: other line sets overlapping these lines (Jaccard >= 0.5); more than 10 = an "
+                             "expression programme; -1 for other kinds",
+    "max_phi_to_real": "pseudo: largest |phi| to a recorded group (drawn below 0.3)",
     "max_phi_to_null_sets": "pseudo: largest |phi| to an expression-null line set with >= 5 lines each side (drawn "
                             "below 0.5)",
     "alerts": "the group's reasons to doubt its comparison (warning sign; '' or '⚠ ' + '; '-joined); every edge of "
               "the group carries them too",
     "notes": "the group's reasons kept below their thresholds (within organs on most lines; the gene itself not "
-             "expressed in a few altered lines), '; '-joined",
+             "expressed in a few altered lines; loss of function inferred from missense changes; heavily mutated "
+             "comparison lines), '; '-joined",
     "alerts_all": "every reason of the group, alerts and notes, in the original order, '; '-joined",
     "inflation": "per test, the genomic-control factor its statistics were divided by (>= 1; how much wider than the "
                  "permutation null the bulk of all targets' statistics spread for this grouping)",
     "note": "null: how its partners' baseline and response were compared (across organs: a separate BH family), or "
-            "why they were not tested (lines concentrated in organs)",
+            "why they were not tested (lines concentrated in organs); a hotspot group: the cited hotspot list",
     "n_edges_response": "edges written (pseudo: tests at or below the real family's BH cut, counted, not written)",
-    "n_edges_baseline": "same", "n_edges_sensitivity": "same",
+    "n_edges_baseline": "same", "n_edges_sensitivity": "same", "n_edges_selectivity": "same",
+}
+SELECTIVITY_DOCS = {
+    "dd": "the drug-dose row (atlas/effects/drugdose.csv)", "drug": "the drug", "dose": "its dose (µM)",
+    "n_selective_lines": "lines where the drug-dose is selective (tables/drug_line_response.parquet selective: sel_z "
+                         ">= 3 and >= 20 genes beyond the per-line cut; lines in the growth analysis)",
+    "selective_lines": "their names, every one", "selectivity": "the 3rd-largest sel_z over the lines (float32)",
+    "tested": "tested by the selectivity kinds (>= 1 selective line)",
+    "organs_enriched": "organs its selective lines concentrate in: one-sided Fisher p < 0.05, each with its counts",
+    "n_groups": "comparison groups with a selectivity arrow to it",
+    "groups": "every such group: description, kind, q (q_group for a genotype group), sign, and whether other doses "
+              "agree ('N doses agree') or 'one dose only'",
+}
+GENE_TESTS_DOCS = {
+    "col": "the gene's col (int32; -1 for a source that is not a measured gene, e.g. a drug target or driver)",
+    "symbol": "the gene", "kind": "the kind of evidence (as edges.parquet)",
+    "role": "'source' (the group's gene, a natural knockout's genes, a drug class's target, a level's gene) or "
+            "'target' (a gene whose level or response was tested)",
+    "n_tests": "tests with a finite p it took part in, in that role (int32; real groups only, not the controls)",
+    "n_edges": "edges written with it in that role (any grade; int32)", "n_edges_ab": "of them grade A or B (int32)",
+    "family_tests": "the tests of the kind over the run, its BH families together (int64)",
 }
 
 
@@ -3376,10 +5269,12 @@ def tier_rules_lines():
         "- **notes**: a graded reason below its threshold, and context. Shown muted, in full: read them.",
         "- **caveats**: the same text on every arrow of a kind (drug_target: drugs can act on other proteins too; "
         "level: tissue and other differences between lines can mimic it, and a stronger correlation one way can "
-        "reflect how precisely each level is measured; level_sensitivity: tissue can mimic it). Stated once above "
-        "each list.",
+        "reflect how precisely each level is measured; level_sensitivity: tissue can mimic it; genotype kinds: how "
+        "many of the kind's arrows the controls expect to be false over the whole table). Stated once above each "
+        "list.",
         "- **support**: evidence for the arrow ('consistent across N compounds'; for a gene missing from some lines: "
-        "'the lines lacking X carry a recorded loss of X: genotype evidence too').",
+        "'the lines lacking X carry a recorded loss of X: genotype evidence too'; for a selectivity arrow: 'also at "
+        "... (q ...)').",
         "", "The graded reasons, and when each is an alert rather than a note:",
         f"- 'Y measured in a of the A and i of the I lines': an alert when a or i is below {FULL_SIDE}, or a is below "
         f"{NOTE_MEASURED_FRAC:g} x A, or i is below {NOTE_MEASURED_FRAC:g} x I (NOTE_MEASURED_FRAC); else a note.",
@@ -3388,6 +5283,12 @@ def tier_rules_lines():
         "supporting drug-dose (the first of top_drugdoses) is one of them ('the strongest among them'); else a note. "
         "It lists every flagged drug-dose among the target's 10. For drug_target: the share of the supporting "
         "compounds whose strongest drug-dose is flagged, or the strongest of all is.",
+        f"- 'drug-doses of translation inhibitors carry N% of the evidence': an alert when they carry at least "
+        f"{NOTE_TI_SHARE:.0%} (ti_share, NOTE_TI_SHARE) or the strongest supporting drug-dose is one of them; else a "
+        "note. A drug_target arrow whose supporting compounds are all translation inhibitors carries it as an alert.",
+        f"- 'random comparison groups give about E such arrows per group ... about N% of them may be false' (D6) and "
+        f"the natural knockouts' 'would appear for any gene (N%)' / 'would appear for any set of lines' (D11): an "
+        f"alert at or above {FALSE_SHARE_ALERT:.0%} as printed (FALSE_SHARE_ALERT), else a note.",
         f"- 'compared within organs: a of the A ... and i of the I others share an organ': an alert when a is below "
         f"{NOTE_WITHIN_ORGAN_FRAC:g} x A or i is below {NOTE_WITHIN_ORGAN_FRAC:g} x I (NOTE_WITHIN_ORGAN_FRAC); else a "
         "note (a within-organ comparison costs lines, not validity).",
@@ -3398,14 +5299,21 @@ def tier_rules_lines():
         "- Lists in a reason are never cut: 'the supporting compounds also share ...' names every shared target, "
         "'co-occurs with ...' every co-occurring gene (as groups.parquet cooccurs_with), 'another gene's alterations "
         "sit on the other side ...' every such gene, 'N other gene(s) are absent from exactly these lines (...)' all "
-        "N.",
+        "N, 'heavily mutated lines: ...' every such line, 'one test for N targets (...)' every target.",
         f"- 'X itself is not expressed in k of the n altered lines': an alert when k is above "
         f"{NOTE_NOT_EXPRESSED_FRAC:g} x n (NOTE_NOT_EXPRESSED_FRAC); else a note.",
+        "- Always notes: 'loss of function is the metadata's inference; ... lines carry a missense change ...' (a "
+        "loss-of-function group where at least a third of the lines carry a missense change), 'k of the n comparison "
+        "lines are heavily mutated (...)', 'one test for N targets (...)' / 'one test for N genes absent from the "
+        "same lines (...)' (the arrows are the same evidence, counted once).",
         "- Every other reason is an alert, among them: tissue-confounded; co-occurs or another gene's alterations on "
-        "the other side; compared across organs; few lines; organs not known; significant within its group or "
-        "drug-dose only (a lead); direction unclear; both ways; rises at some drug-doses and falls at others; lower "
+        "the other side; heavily mutated lines on the altered side; compared across organs; few lines; organs not "
+        "known; significant within its group or drug-dose only (a lead); direction unclear; both ways; the mean "
+        "over all drug-doses going the other way; a floor; rises at some drug-doses and falls at others; lower "
         "baseline; the correction alerts; its own permutation p; 'any of them could be the cause'; maybe low rather "
-        "than absent; cell counts less trustworthy."]
+        "than absent; cell counts less trustworthy; same locus; co-absent with the target; an expression programme; "
+        "the compounds are poisons (trap their target); they also act on DNA; supported by 2 compounds only; the "
+        "annotations of Tahoe and ChEMBL disagree; one dose only."]
 
 
 def _tier_run_line(info):
@@ -3419,54 +5327,147 @@ def _tier_run_line(info):
                 f"{k} {v:,}" for k, v in t["edges_without_alert_by_kind"].items() if info["edges_by_kind"].get(k)))
 
 
-def readme(edges, groups, info):
-    und = [x for x in edges.columns if x not in EDGE_DOCS] + [x for x in groups.columns if x not in GROUP_DOCS]
-    cnt = info["edges_by_kind_and_grade"]
-    fp = info["false_positive_rate"]
-    ef = info["expected_false_edges"]
-    gt = info["groups_tested"]
-    adj = info["global_sensitivity_correction"]
-    lines = [
-        "# direction/ - probable direction between genes", "",
-        "Directed edges SOURCE -> TARGET, each from a statistical test (p, BH q < 0.10), with an evidence grade and "
-        "its reasons for doubt. Nothing that passes is dropped because of doubt: it keeps its place with its alerts "
-        "(the `alerts` text starts with ⚠) and a lower grade. A pair without such a test result is not an edge. "
-        "Every reason is kept, in one of four tiers (next section). Method: tahoemap/direction.py (module "
-        "docstring); a user-facing explanation: docs/direction.md.", "",
-        *tier_rules_lines(), "",
-        "## What direction means here - and what it does not", "",
-        "- The source is what the test conditions on: a recorded mutation of the source gene (fixed before the "
-        "experiment, so not a consequence of the target), its absence from some lines, its natural level, or "
-        "compounds that target its protein. The target is what differs with it: its level, its drug response, or the "
-        "cells' growth under a drug.",
-        "- It is not proof of direct regulation: A -> B -> C looks like A -> C; another alteration carried by the "
-        "same lines can be the cause (see the co-occurrence alerts); 'not recorded' is not proof of wild type.",
-        "- One time point (~24 h): fast and slow effects are mixed; compensation and feedback are not seen.",
-        "- Drugs act on proteins, not on mRNA; a compound can act on other proteins than its listed target.",
-        "- Level edges come from natural differences between lines; tissue and other differences can mimic them, "
-        "and a stronger correlation one way can reflect how precisely each gene's level is measured.", "",
+def _expected_line(k, v):
+    if "expected_nonspecific" in v:
+        return f"{k} {v['expected_nonspecific']} of {v['edges']} would appear for any gene (non-specific)"
+    return f"{k} {v.get('expected_false')} (up to {v.get('expected_false_upper')}) of {v['edges']}"
+
+
+def grade_lines():
+    """README 'How to read a grade' (VERSION 5: the conditions, the old rule and why)."""
+    return [
         "## How to read a grade", "",
         "- **A**: a recorded genotype, >= 5 lines on each side (within organs: lines sharing an organ with the other "
         "side), q < 0.05, compared within organs, no co-occurrence alert (another gene's altered lines on the same "
-        "side, or on the other side); for a response, not resting on the global-sensitivity correction and not "
-        "mostly from drug-doses without any correction.",
+        "side, or on the other side), no heavily mutated lines concentrated on the altered side (alterations "
+        f"recorded in >= {HYPERMUT_MIN_GENES} driver genes), and an expected false share of the group's arrows of the "
+        f"kind below {FALSE_SHARE_ALERT:.0%}. For a response also: not resting on the global-sensitivity correction "
+        "and not mostly from drug-doses without any correction; the mean over all its drug-doses going the arrow's "
+        f"way, with and without the correction; less than {BOTH_WAYS_A:.0%} of the evidence the other way "
+        f"(BOTH_WAYS_A); not a floor (a target that mostly falls and is >= 2x lower at baseline in the altered lines); "
+        f"measured in at least {MEASURED_A:.0%} of each side's lines (MEASURED_A). For a baseline arrow: the target "
+        f"expressed in more than {1 - BASE_ABSENT_A:.0%} of each side's lines (BASE_ABSENT_A, version 6). For a "
+        "selectivity arrow: seen at 2 or more doses of the compound.",
+        "  Changed in direction version 5. Old rule: the lines, q, within organs, no co-occurrence, and not resting "
+        "on the correction. Why: on the real data ZMAT3 and DDB2 were grade A while the mean over all their "
+        "drug-doses went the other way (the arrow rested on its strongest drug-doses) or a smaller fall in the "
+        "altered lines could be a floor (2.7x lower at baseline), and GRIN2C was measured in fewer than half of a "
+        "side's lines; POLE -> PSPC1 came from a comparison whose random-group false share is 20% and whose altered "
+        "side holds three heavily mutated lines. Not adopted: '|retained - 1| >= 0.2' and 'other way < 25%' "
+        "(they would demote the core p53 targets CDKN1A, RRM2B and FDXR).",
+        f"  Changed in direction version 6. Old rule: a baseline arrow had no such condition. New rule: grade A needs "
+        f"the target expressed in more than {1 - BASE_ABSENT_A:.0%} of each side's lines. Why: on the real data TP53 "
+        "-> GRIN2C (not expressed in 13 of the 33 TP53-altered lines and 1 of the 17 others) and TP53 -> ACTA2 (11 of "
+        "33 and 0 of 17) were grade A, although lines that lack a gene altogether can make a level difference by "
+        "lineage. An arrow this rule keeps from A says so in its notes ('grade A blocked since direction version "
+        "6').",
         "- **B**: other genotype edges (with alerts, or 3-4 lines) that are not tissue-confounded; expression-null "
-        "with >= 5 lines lacking the gene (not tissue-confounded); drug_target.",
+        "with >= 5 lines lacking the gene (not tissue-confounded, not in an expression programme); drug_target by "
+        "action (inhibitor, activator, unclear).",
         "- **C**: a glimpse: level and level_sensitivity; expression-null with 3-4 lines, tissue-confounded, co-"
-        "absent, or resting on the correction; a genotype edge that is tissue-confounded or significant only within "
-        "its own group (q_group < 0.10, table-wide q >= 0.10).", "",
+        f"absent, resting on the correction, or a natural knockout inside an expression programme (more than "
+        f"{NOTE_COABSENT_SETS} other line sets overlap: the direction is not identifiable); a genotype edge that is "
+        "tissue-confounded, significant only within its own group, or whose target is absent from most altered "
+        f"lines and lies within {CODELETION_BP:,} bp of the source on one chromosome (or without coordinates: a "
+        f"shared deletion; version 6); any genotype or null arrow whose source and target lie within "
+        f"{SAME_LOCUS_BP:,} bp (same locus); a "
+        "drug_target class that traps its target (TOP1 / TOP2 poisons, PARP trappers, microtubule stabilisers).", ""]
+
+
+def sign_lines():
+    return [
         "## How to read a sign", "",
         "- The sign is the effect of the SOURCE's activity. For a level or the cells: +1 raises it, -1 lowers it.",
         "- For a drug response (genotype_response, null_response, level): +1 strengthens the target's response, -1 "
         "weakens it, in the target's own direction at each drug-dose - where the target falls under the drugs, "
         "'strengthens' means it falls further (the source deepens the fall). Read which from all of top_drugdoses "
         "and from rise_share; a target that rises at some drug-doses and falls at others is alerted, and the sign "
-        "then says how strongly it responds, not whether the source induces or represses it.", "",
+        "then says how strongly it responds, not whether the source induces or represses it.",
+        "- For a response strength (selectivity kinds): +1 = the lines respond more strongly to the drug-dose where "
+        "the source is active.",
+        "- Natural knockouts and drug targets are worded 'may': 'lines without X have less Y (X may raise Y's level)', "
+        "'compounds annotated to inhibit X lower Y (X activity may raise it)'. A natural knockout is not an "
+        "experiment on X, and a compound acts on more than its listed target.",
+        "- 0 = not inferred: the mechanism is not recorded; the compounds trap their target (a TOP2 poison raises "
+        "TP53 through the DNA damage it causes, not through less TOP2A); same locus; an expression programme.", ""]
+
+
+def readme(edges, groups, info, sel=None, gene_tests=None):
+    und = [x for x in edges.columns if x not in EDGE_DOCS] + [x for x in groups.columns if x not in GROUP_DOCS]
+    if sel is not None:
+        und += [x for x in sel.columns if x not in SELECTIVITY_DOCS]
+    if gene_tests is not None:
+        und += [x for x in gene_tests.columns if x not in GENE_TESTS_DOCS]
+    cnt = info["edges_by_kind_and_grade"]
+    fp = info["false_positive_rate"]
+    ef = info["expected_false_edges"]
+    gt = info["groups_tested"]
+    adj = info["global_sensitivity_correction"]
+    tw = info.get("tests_written_by_kind") or {}
+    ne = info["edges_by_kind"]
+    loc = info.get("same_locus_check") or {}
+    nd = ne.get("drug_target", 0)
+    nt_dt = tw.get("drug_target", 0)
+    sel_in = info.get("selectivity_input") or {}
+    lines = [
+        "# direction/ - probable direction between genes", "",
+        "Directed edges SOURCE -> TARGET, each from a statistical test (p, BH q < 0.10), with an evidence grade and "
+        "its reasons for doubt. Nothing that passes is dropped because of doubt: it keeps its place with its alerts "
+        "(the `alerts` text starts with ⚠) and a lower grade. A pair without such a test result is not an edge. "
+        "Every reason is kept, in one of four tiers (next section). Method: tahoemap/direction.py (module "
+        "docstring); a user-facing explanation, with every rule changed in version 5 (old rule, new rule, why): "
+        "docs/direction.md.", "",
+        *tier_rules_lines(), "",
+        "## What direction means here - and what it does not", "",
+        "- The source is what the test conditions on: a recorded mutation of the source gene (fixed before the "
+        "experiment, so not a consequence of the target), its absence from some lines, its natural level, or "
+        "compounds that target its protein. The target is what differs with it: its level, its drug response, the "
+        "lines' response strength to a drug, or the cells' growth under a drug.",
+        "- It is not proof of direct regulation: A -> B -> C looks like A -> C; another alteration carried by the "
+        "same lines can be the cause (see the co-occurrence and heavily-mutated-lines alerts); 'not recorded' is not "
+        "proof of wild type.",
+        "- One time point (~24 h): fast and slow effects are mixed; compensation and feedback are not seen.",
+        "- Drugs act on proteins, not on mRNA; a compound can act on other proteins than its listed target, and a "
+        "poison that traps its target on DNA acts through the damage, not through less of the target.",
+        "- Level edges come from natural differences between lines; tissue and other differences can mimic them, "
+        "and a stronger correlation one way can reflect how precisely each gene's level is measured.", "",
+        *grade_lines(), *sign_lines(),
+        "## Changed in direction version 5", "",
+        "- drug_target: the top-j test replaces 'k of N vs all compounds' (it uses how strongly each compound moves "
+        "the target, not only whether it is significant); trap classes (TOP1 / TOP2 poisons, PARP trappers, "
+        "microtubule stabilisers) are classes of their own with sign 0 and grade C; destabilisers apart from "
+        "stabilisers; memberships from Tahoe and ChEMBL side by side; the words say 'compounds annotated to ...' and "
+        "'may'.",
+        "- genotype: allele, codon, hotspot and amplification groups; group words with the composition of the lines; "
+        "stricter grade A; the group's expected false share; heavily mutated lines; same locus and co-absence; the "
+        "response-strength kinds (selectivity).",
+        "- natural knockouts: an expression programme (more than 10 overlapping line sets) gives sign 0 and grade C; "
+        "random non-partner genes and random line sets give each arrow its non-specific share; the words say 'may'.",
+        "- every test has an id (test_id); gene_tests.parquet counts each gene's tests.", "",
+        "## Changed in direction version 6", "",
+        f"- baseline grade A: the target must be expressed in more than {1 - BASE_ABSENT_A:.0%} of each side's lines "
+        "(BASE_ABSENT_A). Old rule: no such condition (TP53 -> GRIN2C and TP53 -> ACTA2 were grade A with the gene "
+        "absent from a third of the TP53-altered lines). The arrow gets an alert: present in some lines and absent "
+        "in others, so the level difference can follow lineage.",
+        f"- a genotype target absent from most altered lines reads 'a shared deletion can explain it' and is grade C "
+        f"only when it lies within {CODELETION_BP:,} bp of the source on one chromosome (or when coordinates are "
+        "missing). Old rule: always, whatever the distance (TP53 on 17p13 -> EDA2R on Xq12, a p53 target, read as a "
+        "shared deletion). Now such an arrow says that lineage, or the loss of the source itself, can explain it, "
+        "names a known target of the source, and keeps its grade (at most B).",
+        "- every arrow that a rule changed in version 5 or 6 reads differently says so in its notes: 'rule changed "
+        "in direction version N: before, ... Now ..., because ...' (trap classes, same locus, expression "
+        "programmes, co-absence) or 'grade A blocked since direction version N: ...' (the stricter grade-A rules), "
+        "with the same constants as this README.", "",
         "## This run", "",
-        f"- {info['edges']:,} edges; groups tested: {gt['genotype']} genotype groups, {gt['pseudo_controls']} "
+        f"- {info['edges']:,} edges; groups tested: {gt['genotype']} genotype groups ({gt.get('genotype_by_allele', 0)}"
+        f" by allele, codon, hotspot or amplification), {gt['pseudo_controls']} "
         f"pseudo-groups, {gt['expression_null_line_sets']:,} expression-null line sets "
         f"({gt['expression_null_genes']:,} genes; {gt['expression_null_line_sets_across_organs']:,} sets / "
-        f"{gt['expression_null_genes_across_organs']:,} genes could not be compared within organs)",
+        f"{gt['expression_null_genes_across_organs']:,} genes could not be compared within organs; "
+        f"{gt.get('expression_null_line_sets_in_a_programme', 0):,} sets in an expression programme)",
+        "- allele groups not testable: " + ("; ".join(gt.get("allele_groups_not_testable") or []) or "none"),
+        f"- heavily mutated lines (alterations recorded in >= {HYPERMUT_MIN_GENES} driver genes): " + (", ".join(
+            f"{k} {v}" for k, v in (info.get("heavily_mutated_lines") or {}).items()) or "none"),
         (f"- ⚠ expression-null: for {gt['expression_null_genes_not_tested_partners']:,} genes "
          f"({gt['expression_null_line_sets_not_tested_partners']:,} line sets) absent from lines concentrated in "
          "organs, their partners' baseline and response were not tested (absence and tissue cannot be told apart "
@@ -3477,14 +5478,23 @@ def readme(edges, groups, info):
          "within-organ comparison across organs, as a separate BH family; sets whose lines are concentrated in organs "
          "would have been left out, and groups.parquet's note would say so)"),
         "- by kind and grade: " + "; ".join(f"{k} " + "/".join(f"{g}{v[g]}" for g in "ABC") for k, v in cnt.items()),
+        f"- drug_target: {nd:,} edges = {nt_dt:,} distinct tests ({nd - nt_dt:,} edges repeat a test for another "
+        f"listed target); {info['tests'].get('drug_target_classes', 0)} classes tested",
+        "- distinct tests among the edges, by kind: " + ", ".join(f"{k} {v:,}" for k, v in tw.items() if ne.get(k)),
+        (f"- same-locus check: {loc.get('text')}; same locus (source and target within {SAME_LOCUS_BP:,} bp): "
+         f"{loc.get('edges_same_locus', 0):,} of the {loc.get('edges_checked', 0):,} genotype and null arrows to a gene"
+         if loc.get("ran") else f"- ⚠ same-locus check: {loc.get('text', 'not run')}"),
+        f"- response strength (selectivity): {sel_in.get('drugdoses_with_a_selective_line', 0)} drug-doses with a "
+        f"selective line tested, from {sel_in.get('from', '?')}",
         _tier_run_line(info),
         f"- global-sensitivity correction of the (gene, drug-dose) responses: {adj['drug_specific']:,} against the "
         f"drug-dose's other responsive genes, {adj['line_wide']:,} line-wide only, {adj['none']:,} without; the "
         f"lines' overall responsiveness was {'used' if adj['line_wide_check']['used'] else 'not used'} "
         f"({adj['line_wide_check']['why']})",
         "- expected false edges (negative controls; in brackets the 95% upper bound): " + "; ".join(
-            f"{k} {v['expected_false']} (up to {v.get('expected_false_upper')}) of {v['edges']}"
-            for k, v in ef.items()) + ". " + EXPECTED_FALSE_HOW,
+            _expected_line(k, v) for k, v in ef.items()) + ". " + EXPECTED_FALSE_HOW,
+        "- drug_target has no random control: each arrow's alerts say what to doubt.",
+        f"- the natural knockouts' random controls took {info.get('null_controls_minutes')} min",
         "- pseudo-groups, edges per group vs real groups: " + "; ".join(
             f"{k} {v['pseudo_edges_mean_per_group']} vs {v['real_edges_mean_per_group']}" for k, v in fp.items())]
     for k, v in fp.items():
@@ -3493,20 +5503,30 @@ def readme(edges, groups, info):
                          f"({v['pseudo_edges_mean_per_group']} vs {v['real_edges_mean_per_group']}): most of these "
                          "edges may be false; read them as leads")
     for k, v in ef.items():
-        if v["expected_false"] is not None and v["edges"] and v["expected_false"] >= 0.5 * v["edges"]:
+        if v.get("expected_false") is not None and v["edges"] and v["expected_false"] >= 0.5 * v["edges"]:
             lines.append(f"- ⚠ {k}: the controls expect {v['expected_false']} false edges among the {v['edges']} "
                          "written")
     lines += ["", "## edges.parquet", ""]
     lines += [f"- `{k}`: {v}" for k, v in EDGE_DOCS.items()]
     lines += ["", "## groups.parquet", ""]
     lines += [f"- `{k}`: {v}" for k, v in GROUP_DOCS.items()]
+    lines += ["", "## selectivity.parquet", "", "One row per drug-dose: which lines respond selectively to it, and "
+              "which comparison groups explain how strongly the lines respond.", ""]
+    lines += [f"- `{k}`: {v}" for k, v in SELECTIVITY_DOCS.items()]
+    lines += ["", "## gene_tests.parquet", "", "One row per gene, kind and role with a test: how often each gene was "
+              "tested, so an arrow can be read against the gene's tests (counted before the candidates were "
+              f"trimmed; {info.get('gene_tests_rows', 0):,} rows).", ""]
+    lines += [f"- `{k}`: {v}" for k, v in GENE_TESTS_DOCS.items()]
     lines += ["", "## controls.json, info.json", "",
-              "- controls.json: positive controls (TP53 -> p53 targets with sign and rank; TP53 -> cells under DNA-"
-              "damaging drugs; KEAP1 -> NRF2 targets when KEAP1 is recorded in enough lines); negative controls "
-              "(pseudo-groups counted at the real family's BH cut: the false edges a group without any effect "
-              "adds); permuted-level controls for the level kinds; the expected false edges per kind.",
-              "- info.json: counts per kind and grade, groups and tests, the BH cuts, the fitted null tails, the "
-              "level kinds' calibration, settings, peak memory, minutes.", ""]
+              "- controls.json: positive controls (TP53 -> p53 targets with sign, rank, counted or why not; TP53 -> "
+              "cells under DNA-damaging drugs; TP53 -> response strength to DNA-damaging drugs; KRAS p.G12C -> "
+              "response to Adagrasib; KEAP1 -> NRF2 targets when KEAP1 is recorded in enough lines); negative "
+              "controls (pseudo-groups counted at the real family's BH cut: the false edges a group without any "
+              "effect adds); null_controls (random non-partner genes per overlap bin, random line sets); "
+              "permuted-level controls for the level kinds; the expected false edges per kind.",
+              "- info.json: counts per kind and grade, groups and tests, distinct tests by kind, the same-locus "
+              "check, the BH cuts, the fitted null tails, the level kinds' calibration, the grade-A constants, "
+              "settings, peak memory, minutes.", ""]
     return "\n".join(lines), und
 
 

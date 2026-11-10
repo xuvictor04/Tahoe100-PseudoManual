@@ -5,7 +5,7 @@ drug, drug-dose, line, browse), exact downloads (gene, drug, drug-dose and line 
 correlations against the relations stage, the MG53-like first rows, the per-line values of a drug-dose (gene by gene,
 and from the optional data_dd volume), page contents against the sources, layout, and timings.
 
-    python tests/test_explorer_browser.py --out OUT [--data DATA] [--work DIR] [--keep] [--shots DIR]
+    python tests/test_explorer_browser.py --out OUT [--data DATA] [--work DIR] [--keep] [--shots DIR] [--only TEXT]
 
 check(out, data=None, report=None, work=None, keep=False) runs every check. report: run_tests.py's
 check(stage, name, fn) (each fn returns (ok, detail); ok "warn" is a warning); without it each result is printed.
@@ -33,6 +33,7 @@ import tempfile
 import threading
 import time
 import traceback
+from urllib.parse import unquote
 
 import numpy as np
 import pandas as pd
@@ -433,10 +434,12 @@ def _py_search_counts(c, q):
     _h, _a, t = c.E.read_shard(os.path.join(c.src, "web", "d", "search.js"))
     fields = {"g": ("gene", ["symbol", "label", "ensembl_id", "hgnc_id", "hgnc_symbol", "aliases", "prev_symbols",
                              "name", "entrez_id", "uniprot", "location"]),
-              "d": ("drug", ["drug", "salt_base", "targets", "moa_fine", "moa_broad"]),
+              "d": ("drug", ["drug", "salt_base", "targets", "moa_fine", "moa_broad", "chembl_name",
+                             "chembl_mechanisms", "chembl_targets", "mechanism_classes"]),
               "l": ("line", ["cell_name", "compact_name", "cell_line_id", "Cell_ID_DepMap", "Organ", "drivers",
-                             "driver_changes", "tp53_status"]),
-              "m": ("module", ["module", "label", "top_plus", "top_minus"]), "s": ("set", ["set", "source", "set_id"]),
+                             "driver_changes", "tp53_status", "TP53"]),
+              "m": ("module", ["module", "label", "label_display", "covariate_tag", "top_plus", "top_minus"]),
+              "s": ("set", ["set", "source", "set_id"]),
               "q": ("group", ["group_id", "gene", "description"])}
     ql = q.strip().lower()
     qc = re.sub(r"[^a-z0-9]+", "", ql)
@@ -451,6 +454,13 @@ def _py_search_counts(c, q):
                     v = re.sub(r"[^a-z0-9]+", "", str(r["cell_name"]).lower())
                     if qc and qc in v:
                         hit = True
+                    continue
+                if f == "TP53":                  # a phrase field: 'TP53 <status>' matches a query of 2+ words that
+                    st = r.get("tp53_status")    # starts it ('TP53 not recorded'), never a piece of one word
+                    if isinstance(st, str) and st:
+                        st = "not recorded (presumed wild type)" if st == "not recorded" else st
+                        if " " in ql and ("tp53 " + st.lower()).startswith(ql):
+                            hit = True
                     continue
                 v = r.get(f)
                 if v is None or (not isinstance(v, str) and pd.isna(v)) or v == "":
@@ -1227,11 +1237,14 @@ def t_pages(c):
     gs_ = pg.get_attribute("#line-comp [data-filter=sens]", "data-count")
     ok &= gs_ == str(nsens)
     out.append(f"A549 among the most sensitive lines of {gs_} components (Python {nsens})")
-    # plate3: the failed well
-    c.go(pg, "#/plate/plate3", "plate")
-    fw = pg.query_selector("[data-failed=smp_1727]") is not None
+    # the failed well of the source table (atlas/effects/failed_wells.csv: plate3 smp_1727 on seed 0)
+    fwp = os.path.join(c.out, "atlas", "effects", "failed_wells.csv")
+    fwt = pd.read_csv(fwp) if os.path.exists(fwp) else pd.DataFrame({"sample": ["smp_1727"], "plate": ["plate3"]})
+    fs, fp = str(fwt["sample"].iloc[0]), str(fwt["plate"].iloc[0])
+    c.go(pg, f"#/plate/{fp}", "plate")
+    fw = pg.query_selector(f"[data-failed={fs}]") is not None
     ok &= fw
-    out.append(f"plate3 grid shows failed well smp_1727: {fw}")
+    out.append(f"{fp} grid shows failed well {fs}: {fw}")
     # pair: per-line r over the active drug-doses
     a, b = c.col["CDKN1A"], c.col["NQO1"]
     c.go(pg, f"#/pair/{c.label[a]}/{c.label[b]}", "pair")
@@ -1328,6 +1341,325 @@ def t_pages(c):
     o2, ok2 = _reasons(c, pg)
     out += o2
     ok &= ok2
+    bad = c.unexpected(pg)
+    pg.close()
+    return ok and not bad, "; ".join(out) + (f"; console {bad[:3]}" if bad else "")
+
+
+def t_wave2(c):
+    """The second wave's blocks and tabs against the sources: the drug page's Annotations block (Tahoe and ChEMBL
+    side by side, the mechanism classes with their sources; the disagreement line on a drug whose annotations
+    disagree), the neighbouring-well block on the drug-dose page of the planted copy (tier, alert, a link to its
+    partner), the 'Similar drug-doses' tab (every stored row, the resemblance box), the 'Lines: response and growth'
+    tab (every line, sel_z bit for bit, the selective rows marked) and the line page's tab (every drug-dose), the
+    home page's citation, the search for 'TP53 not recorded', and a q of 0 with its title."""
+    out, ok = [], True
+    S = c.out
+    ann_p = os.path.join(S, "reference", "drug_annotations.parquet")
+    if not os.path.exists(ann_p):
+        return "warn", "this run has no reference/drug_annotations.parquet (reference stage older than version 2)"
+    ann = pd.read_parquet(ann_p)
+    cls = pd.read_parquet(os.path.join(S, "reference", "drug_classes.parquet"))
+    dds = c.core[2]["drugdoses"]
+    pg = c.page(1, "#/")
+    c.wait(pg, "home")
+    # (a) the Annotations block: a drug in the translation class, and a drug whose annotations disagree
+    tl = cls[cls["effect"] == "translation"]
+    drug = str(tl["drug"].iloc[0]) if len(tl) else str(ann["drug"].iloc[0])
+    c.go(pg, "#/drug/" + _q(drug), "drug/overview")
+    a_txt = pg.inner_text("[data-annotations]")
+    want_lab = [str(x) for x in cls.loc[cls["drug"] == drug, "label"]]
+    want_src = [str(x).split(";")[0][:40] for x in cls.loc[cls["drug"] == drug, "source"]]
+    a_ok = "Tahoe" in a_txt and "ChEMBL" in a_txt and all(x in a_txt for x in want_lab + want_src)
+    ok &= a_ok
+    out.append(f"{drug}: Annotations block with both sources and its classes {want_lab} with their sources {a_ok}")
+    dis = ann[ann["annotation_alert"].fillna("") != ""]
+    if len(dis):
+        d2 = str(dis["drug"].iloc[0])
+        c.go(pg, "#/drug/" + _q(d2), "drug/overview")
+        line = pg.inner_text("[data-ann-disagree]") if pg.query_selector("[data-ann-disagree]") else ""
+        d_ok = line.startswith("\u26a0 The two annotations disagree: ") and str(dis["annotation_alert"].iloc[0]) in line
+        ok &= d_ok
+        out.append(f"{d2}: '{line[:70]}...' {d_ok}")
+    # (b) the neighbouring-well block of the planted copy (tier artifact) and its partner link
+    if "nb_tier" in dds:
+        art = dds[dds["nb_tier"] == "artifact"]
+        if len(art):
+            r = art.iloc[0]
+            k, pdd = int(r["dd"]), int(r["nb_partner_dd"])
+            c.go(pg, f"#/dd/{k}", "dd/qc")
+            blk = pg.query_selector(".nbblock")
+            tier = blk.get_attribute("data-nb") if blk else None
+            txt = blk.inner_text() if blk else ""
+            link = pg.evaluate(f"!!document.querySelector('.nbblock a[href=\"#/dd/{pdd}\"]')")
+            b_ok = tier == "artifact" and str(r["nb_alert"]) in txt and link
+            ok &= b_ok
+            out.append(f"{r['drug']} {r['dose']}: neighbouring-well block tier {tier}, alert written, link to "
+                       f"drug-dose {pdd}: {b_ok}")
+    # (c) Similar drug-doses: every stored row of the drug-dose, and the resemblance box
+    simp = os.path.join(S, "embed", "drug_similarity.parquet")
+    if os.path.exists(simp):
+        sim = pd.read_parquet(simp)
+        k = int(sim["dd"].iloc[0])
+        c.go(pg, f"#/dd/{k}/similar", "dd/similar")
+        n = pg.get_attribute("#dd-similar", "data-n")
+        s_ok = n == str(int((sim["dd"] == k).sum())) and pg.query_selector("[data-resembles]") is not None
+        ok &= s_ok
+        out.append(f"drug-dose {k}: Similar drug-doses {n} rows (source {int((sim['dd'] == k).sum())}) {s_ok}")
+    # (d) Lines: response and growth (the KRAS drug's top dose when the truth names it, else the first drug-dose)
+    dlrp = os.path.join(S, "tables", "drug_line_response.parquet")
+    if os.path.exists(dlrp):
+        dlr = pd.read_parquet(dlrp)
+        kd = dds[dds["drug"].astype(str).str.startswith("Trametinib")]
+        k = int(kd.sort_values("conc")["dd"].iloc[-1]) if len(kd) else int(dlr["dd"].iloc[0])
+        c.go(pg, f"#/dd/{k}/response", "dd/response")
+        _name, head, rows = c.download(pg, "#dd-response [data-csv=all]")
+        d = pd.DataFrame(rows, columns=head)
+        src = dlr[dlr["dd"] == k]
+        sel_rows = pg.evaluate("document.querySelectorAll('#dd-response tr[data-selective]').length")
+        bits = _bits_eq([_f32(x) for x in d["sel_z"]], src.set_index("cell_name").loc[d["cell_name"], "sel_z"]
+                        .to_numpy(np.float32), np.float32)
+        r_ok = len(d) == c.L == len(src) and bits and sel_rows == int(src["selective"].sum())
+        ok &= r_ok
+        out.append(f"{dds.loc[dds['dd'] == k, 'drug'].iloc[0]} {dds.loc[dds['dd'] == k, 'dose'].iloc[0]}: Lines: "
+                   f"response and growth {len(d)} lines, sel_z {'exact' if bits else 'DIFFERENT'}, {sel_rows} marked "
+                   f"selective (source {int(src['selective'].sum())}) {r_ok}")
+        c.go(pg, f"#/line/{_q('A549')}/response", "line/response")
+        nl = pg.get_attribute("#line-response", "data-n")
+        l_ok = nl == str(int((dlr["cell_name"] == "A549").sum())) == str(c.D)
+        ok &= l_ok
+        out.append(f"A549 Response and growth: {nl} drug-doses {l_ok}")
+    # (e) How to cite
+    c.go(pg, "#/", "home")
+    cite = pg.inner_text("[data-cite]")
+    h_ok = "CC0-1.0" in cite and "doi:10.1101/2025.02.20.639398" in cite and "tahoebio/Tahoe-100M" in cite
+    ok &= h_ok
+    out.append(f"How to cite: licence and doi {h_ok}")
+    # (f) the search finds the lines whose TP53 status is not recorded
+    n_nr = int((c.lines["tp53_status"] == "not recorded").sum())
+    c.go(pg, "#/search/" + _q("TP53 not recorded"), "search")
+    got = pg.evaluate("document.querySelectorAll('[data-table] tbody tr[data-i]').length")
+    t_ok = n_nr > 0 and got == n_nr
+    ok &= t_ok
+    out.append(f"search 'TP53 not recorded': {got} lines (Python {n_nr}) {t_ok}")
+    # (g) a q of 0 keeps the stored 0 and says why in its title
+    qz = np.argwhere((c.DD["qup"][:, :c.G] == 0) | (c.DD["qdn"][:, :c.G] == 0))
+    if len(qz):
+        k, g = (int(x) for x in qz[0])
+        c.go(pg, f"#/gene/{_q(c.label[g])}/drugs", "gene/drugs")
+        t0 = pg.evaluate("(() => { const e = document.querySelector('[data-qzero]'); return e ? e.title : ''; })()")
+        q_ok = t0 == "q below 1e-45 (stored as 0)"
+        ok &= q_ok
+        out.append(f"q = 0 at {c.label[g]}: title '{t0}' {q_ok}")
+    else:
+        out.append("no q of 0 in this run (the title is not exercised)")
+    bad = c.unexpected(pg)
+    pg.close()
+    return ok and not bad, "; ".join(out) + (f"; console {bad[:3]}" if bad else "")
+
+
+# the cells of one column of a table (by its shown label, without the sort arrow and the "?"), as text
+COL_TEXT_JS = """([sel, label]) => { const t = document.querySelector(sel); if (!t) return null;
+  const hs = Array.from(t.querySelectorAll('thead th')).map(h => h.innerText
+    .replace(/\\s*[\\u25b2\\u25bc]?\\s*\\?$/, '').trim());
+  const j = hs.indexOf(label); if (j < 0) return null;
+  return Array.from(t.querySelectorAll('tbody tr[data-i]')).map(r => r.children[j] ? r.children[j].innerText : ''); }"""
+HEADS_JS = """sel => Array.from(document.querySelectorAll(sel + ' thead th')).map(h => h.innerText
+  .replace(/\\s*[\\u25b2\\u25bc]?\\s*\\?$/, '').trim())"""
+
+
+def t_review(c):
+    """The third wave's review fixes against the sources. F8/R6: a q of 0 reads '< 1e-45' in the table cell and the
+    overview (title 'stored as 0'), '0 (< 1e-45)' in the row drawer, and the CSV keeps the stored 0. R2: the
+    drug-dose header names each mechanism with its source (Tahoe, ChEMBL) and carries the disagreement alert with a
+    link to the drug's Annotations section (?at=annotations scrolls there); the browse drug-doses list and the gene's
+    Drugs tab have ChEMBL's mechanism and the alert for every row (CSV equals tables/drugs), and the Tahoe class
+    filter names the drugs ChEMBL disagrees with. R3: a drug-dose with no pooled signature says so above its stored
+    similarity rows, in its tab label and in every empty cos_pooled; one with a signature keeps "most like". R4: the
+    rough DMSO-referenced value is a shown column of the drug-dose, drug and gene gene tables, and the drug-dose CSV
+    equals tables/drug_effects lfc_vs_dmso bit for bit. R8: no alert-reason label of the arrow lists is a compound's
+    name. R10: the top-dose neighbouring-well tier is an alert (not an artifact flag) with a non-red marker on the
+    drug-dose and drug headers and in its block; the artifact tier keeps the red sign."""
+    out, ok = [], True
+    S = c.out
+    dds = c.core[2]["drugdoses"]
+    drugs = pd.read_parquet(os.path.join(S, "tables", "drugs.parquet"))
+    pg = c.page(1, "#/")
+    c.wait(pg, "home")
+
+    def txt(sel):                        # the text of an element, '' when the page has none
+        e0 = pg.query_selector(sel)
+        return e0.inner_text() if e0 else ""
+    # ---- F8 / R6: q = 0
+    zq = c.DD["qup"][:, :c.G] == 0
+    if zq.any():
+        # a gene whose strongest rise has q 0 (so the overview shows it too), else any gene with a q of 0
+        zmax = np.nanargmax(np.where(np.isnan(c.DD["z"][:, :c.G]), -np.inf, c.DD["z"][:, :c.G]), axis=0)
+        top = [g0 for g0 in np.flatnonzero(zq.any(axis=0)) if zq[zmax[g0], g0]]
+        g = int(top[0]) if top else int(np.flatnonzero(zq.any(axis=0))[0])
+        k = int(zmax[g]) if top else int(np.flatnonzero(zq[:, g])[0])
+        c.go(pg, f"#/gene/{_q(c.label[g])}/drugs?sort=q_up:asc", "gene/drugs")
+        cells = pg.evaluate(COL_TEXT_JS, ["#drugs-table", "q rise"]) or []
+        title = pg.evaluate("(() => { const e = document.querySelector('#drugs-table [data-qzero]'); "
+                            "return e ? [e.textContent, e.title] : null; })()")
+        drawer = []
+        if pg.query_selector(f"#drugs-table tbody tr[data-i='{k}']"):
+            pg.click(f"#drugs-table tbody tr[data-i='{k}']")
+            drawer = pg.evaluate("Array.from(document.querySelectorAll('#drugs-table tr.drawer [data-qzero]'))"
+                                 ".map(e => e.textContent)")
+        _n, head, rr = c.download(pg, "#drugs-table [data-csv=all]")
+        dcsv = pd.DataFrame(rr, columns=head)
+        q_csv = dcsv.loc[dcsv["dd"].astype(int) == k, "q_up"].tolist()
+        c.go(pg, f"#/gene/{_q(c.label[g])}", "gene/overview")
+        ov = pg.evaluate("Array.from(document.querySelectorAll('table.mini [data-qzero]')).map(e => e.textContent)")
+        q_ok = ("< 1e-45" in cells and title == ["< 1e-45", "q below 1e-45 (stored as 0)"] and "0" not in cells
+                and (not top or ov.count("< 1e-45") >= 1) and "0 (< 1e-45)" in drawer and q_csv == ["0"])
+        ok &= q_ok
+        out.append(f"F8/R6 q = 0 at {c.label[g]} drug-dose {k}: {cells.count('< 1e-45')} cells '< 1e-45' and "
+                   f"{cells.count('0')} '0', title {title}, overview {ov[:2]}, drawer {drawer[:1]}, CSV {q_csv}: "
+                   f"{q_ok}")
+    else:
+        out.append("F8/R6: no q of 0 in this run (not exercised)")
+    # ---- R2: the two annotations on the drug-dose header, the browse list and the gene Drugs tab
+    dis = drugs[drugs["annotation_alert"].fillna("") != ""] if "annotation_alert" in drugs else drugs.iloc[:0]
+    if len(dis):
+        r = dis.iloc[0]
+        name = str(r["drug"])
+        k = int(dds.loc[dds["drug"] == name, "dd"].iloc[-1])
+        c.go(pg, f"#/dd/{k}", "dd/qc")
+        sub = txt(".ghead [data-ann]")
+        badge = pg.query_selector(".ghead [data-ann-alert]")
+        btxt = badge.inner_text() if badge else ""
+        href = pg.evaluate("(() => { const a = document.querySelector('.ghead [data-ann-alert] a'); "
+                           "return a ? a.getAttribute('href') : null; })()")
+        h_ok = (f"mechanism (Tahoe): {r['moa_fine']}" in sub and f"mechanism (ChEMBL): {r['chembl_mechanisms']}" in sub
+                and btxt.startswith("\u26a0 Tahoe and ChEMBL disagree") and str(r["annotation_alert"]) in btxt
+                and unquote(href or "") == "#/drug/" + name + "?at=annotations")
+        ok &= h_ok
+        out.append(f"R2 drug-dose {k} header '{sub[:90]}...', alert badge with link {href}: {h_ok}")
+        at = "#/drug/" + _q(name) + "?at=annotations"
+        c.go(pg, at, "drug/overview")
+        time.sleep(0.4)
+        top = pg.evaluate("(() => { const e = document.querySelector('[data-annotations]'); "
+                          "return e ? e.getBoundingClientRect().top : -1; })()")
+        s_ok = 0 <= top < 300
+        ok &= s_ok
+        out.append(f"R2 {unquote(at)} scrolls to the Annotations section (top at {top:.0f} px): {s_ok}")
+        # browse drug-doses: ChEMBL's mechanism and the alert on every row, equal to tables/drugs
+        c.go(pg, "#/browse/drugdoses", "browse/drugdoses")
+        heads = pg.evaluate(HEADS_JS, "#browse-drugdoses")
+        _n, head, rr = c.download(pg, "#browse-drugdoses [data-csv=all]")
+        b = pd.DataFrame(rr, columns=head)
+        want = drugs.set_index("drug")["annotation_alert"].fillna("").astype(str)
+        b_ok = ("annotation_alert (from tables/drugs)" in heads and "moa_fine (Tahoe)" in heads and
+                "annotation_alert" in b and len(b) == c.D and
+                [str(x) for x in b["annotation_alert"]] == want.loc[b["drug"]].tolist())
+        ok &= b_ok
+        out.append(f"R2 browse drug-doses: shown {[h for h in heads if 'Tahoe' in h or 'tables/drugs' in h]}, "
+                   f"the alert of all {len(b)} rows equals tables/drugs: {b_ok}")
+        # the gene Drugs tab: the column, the alert per row, the Tahoe class filter naming the drug
+        g = int(np.argmax(np.nan_to_num(np.abs(c.DD["z"][k, :c.G]))))
+        c.go(pg, f"#/gene/{_q(c.label[g])}/drugs", "gene/drugs")
+        opts = pg.evaluate("Array.from(document.querySelectorAll('#drugs-table select[data-filter=moa] option'))"
+                           ".map(o => o.textContent)")
+        _n, head, rr = c.download(pg, "#drugs-table [data-csv=all]")
+        gd = pd.DataFrame(rr, columns=head)
+        g_ok = (any(o.startswith(f"{r['moa_fine']} \u2014 \u26a0 ChEMBL disagrees for ") and name in o
+                    for o in opts)
+                and "annotation_alert" in gd and "chembl_mechanisms" in gd
+                and [str(x) for x in gd["annotation_alert"]] == want.loc[gd["drug"]].tolist()
+                and [str(x) for x in gd["chembl_mechanisms"]] ==
+                drugs.set_index("drug")["chembl_mechanisms"].fillna("").astype(str).loc[gd["drug"]].tolist()
+                and pg.query_selector("#drugs-table select[data-filter=mclass]") is not None)
+        ok &= g_ok
+        out.append(f"R2 gene {c.label[g]} Drugs tab: Tahoe class option "
+                   f"'{next((o for o in opts if name in o), '')}', alert and ChEMBL mechanism of all {len(gd)} rows "
+                   f"equal tables/drugs, class filter: {g_ok}")
+    else:
+        out.append("R2: no drug whose annotations disagree in this run (not exercised)")
+    # ---- R3: no pooled signature
+    simp = os.path.join(S, "embed", "drug_similarity.parquet")
+    if os.path.exists(simp):
+        sim = pd.read_parquet(simp)
+        nos = sim.groupby("dd")["cos_pooled"].apply(lambda x: bool(x.isna().all()))
+        if nos.any():
+            k = int(nos[nos].index[0])
+            c.go(pg, f"#/dd/{k}/similar", "dd/similar")
+            call = pg.query_selector("[data-no-signature]")
+            ctext = call.inner_text() if call else ""
+            tab = txt("nav.tabs a[data-tab=similar]")
+            cells = pg.evaluate(COL_TEXT_JS, ["#dd-similar", "cos_pooled"]) or []
+            r_ok = (ctext.startswith("No similarity ranking for ") and "not the most similar" in ctext and
+                    "no pooled signature" in tab and len(cells) == int((sim["dd"] == k).sum()) and
+                    all(x.startswith("\u2013 no similarity: ") for x in cells))
+            ok &= r_ok
+            out.append(f"R3 drug-dose {k} (no pooled signature; {int(nos.sum())} such): '{ctext[:80]}...', tab "
+                       f"'{tab}', {sum(x.startswith(chr(8211) + ' no similarity') for x in cells)} of {len(cells)} "
+                       f"cos_pooled cells say why: {r_ok}")
+        k2 = int(nos[~nos].index[0])
+        c.go(pg, f"#/dd/{k2}/similar", "dd/similar")
+        p_ok = pg.query_selector("[data-no-signature]") is None and "drug-doses most like" in txt("[data-kofn]")
+        ok &= p_ok
+        out.append(f"R3 drug-dose {k2} (with a signature): 'most like' kept: {p_ok}")
+    # ---- R4: the rough DMSO-referenced value next to each value
+    de = c.de
+    if "lfc_vs_dmso" in de:
+        k = int(de["dd"].value_counts().index[0])
+        c.go(pg, f"#/dd/{k}/genes", "dd/genes")
+        heads = pg.evaluate(HEADS_JS, "#dd-genes")
+        _n, head, rr = c.download(pg, "#main [data-csv=allgenes]")
+        a = pd.DataFrame(rr, columns=head).set_index("col")
+        sub = de[de["dd"] == k]
+        v_ok = bool("vs DMSO (rough)" in heads and "lvd" in a and
+                _bits_eq([_f32(x) for x in a.loc[sub["col"].astype(str), "lvd"]],
+                         sub["lfc_vs_dmso"].to_numpy(np.float32), np.float32))
+        name = str(dds.loc[k, "drug"])
+        c.go(pg, "#/drug/" + _q(name) + "/genes", "drug/genes")
+        dh = pg.evaluate(HEADS_JS, "#drug-genes")
+        g = int(sub["col"].iloc[0])
+        c.go(pg, f"#/gene/{_q(c.label[g])}/drugs", "gene/drugs")
+        gh = pg.evaluate(HEADS_JS, "#drugs-table")
+        v_ok &= any(h.startswith("vs DMSO (rough)") for h in dh) and "vs DMSO (rough)" in gh and "wells" in gh
+        ok &= v_ok
+        out.append(f"R4 vs DMSO: drug-dose {k} shown and its CSV equals drug_effects lfc_vs_dmso on {len(sub)} rows; "
+                   f"drug {name} shown {[h for h in dh if 'DMSO' in h]}; gene {c.label[g]} shows vs DMSO and wells: "
+                   f"{v_ok}")
+    # ---- R8: alert-reason labels never a compound's name
+    ep = os.path.join(S, "direction", "edges.parquet")
+    if os.path.exists(ep):
+        e = pd.read_parquet(ep, columns=["alerts"])
+        rs = sorted({x for s0 in e["alerts"].fillna("") for x in re.sub(r"^\u26a0\s*", "", s0).split("; ") if x})
+        labs = pg.evaluate("rs => rs.map(r => TM.gene.shortLabel(r))", rs)
+        names = set(drugs["drug"].astype(str)) | set(drugs["salt_base"].fillna("").astype(str)) - {""}
+        bad = sorted({lab for lab in labs if lab in names or any(lab.startswith(n0 + ",") for n0 in names)})
+        tl = [lab for rr0, lab in zip(rs, labs) if ": Tahoe lists " in rr0]
+        l_ok = not bad and all(lab == "targets differ (Tahoe vs ChEMBL)" for lab in tl)
+        ok &= l_ok
+        out.append(f"R8 {len(rs)} distinct alert reasons -> {len(set(labs))} labels; labels that are a compound's "
+                   f"name: {bad[:5]}; {len(tl)} Tahoe/ChEMBL target reasons labelled "
+                   f"'{tl[0] if tl else ''}': {l_ok}")
+    # ---- R10: the neighbouring-well tiers
+    if "nb_tier" in dds:
+        for tier, sign, cls in (("top dose", "\u25b3 ", "topb"), ("artifact", "\u26a0 ", "warnb")):
+            rr0 = dds[dds["nb_tier"] == tier]
+            if not len(rr0):
+                continue
+            k, name = int(rr0["dd"].iloc[0]), str(rr0["drug"].iloc[0])
+            c.go(pg, f"#/dd/{k}", "dd/qc")
+            b = pg.query_selector(f".ghead [data-nb-tier='{tier}']")
+            bt, bc = (b.inner_text(), b.get_attribute("class")) if b else ("", "")
+            blk = txt(".nbblock")
+            c.go(pg, "#/drug/" + _q(name), "drug/overview")
+            db = pg.query_selector(f".ghead [data-nb-tier='{tier}']")
+            if tier == "top dose":
+                t_ok = (bt.startswith(sign) and "alert, not an artifact flag" in bt and cls in bc and "warnb" not in bc
+                        and blk.startswith(sign + 'Neighbouring wells, tier "top dose" (an alert, not an artifact '
+                                           'flag)') and "a note" not in blk and db is not None)
+            else:
+                t_ok = bt.startswith(sign) and cls in bc and blk.startswith(sign) and db is not None
+            ok &= t_ok
+            out.append(f"R10 tier {tier} at drug-dose {k}: header '{bt}', block '{blk[:60]}...', drug header badge "
+                       f"{db is not None}: {t_ok}")
     bad = c.unexpected(pg)
     pg.close()
     return ok and not bad, "; ".join(out) + (f"; console {bad[:3]}" if bad else "")
@@ -1514,12 +1846,13 @@ def _reasons(c, pg):
     c.go(pg, f"#/gene/{_q(c.label[g])}/lines", "gene/lines")
     pg.wait_for_function("() => !!document.querySelector('[data-heat=lines] canvas.heat-canvas')", timeout=10000)
     pg.select_option("select[aria-label='group contrast rows']", "tp53")
-    wt = c.lines.loc[c.lines["tp53_status"] == "wild type", "line"].astype(int).to_numpy()
+    # tables 5: 'not recorded' (no TP53 alteration in the metadata: presumed wild type); older tables: 'wild type'
+    wt = c.lines.loc[c.lines["tp53_status"].isin(["not recorded", "wild type"]), "line"].astype(int).to_numpy()
     k = int(np.argmin([np.isfinite(L[g, kk, wt].astype(np.float64)).sum() for kk in range(c.D)]))
     n_wt = int(np.isfinite(L[g, k, wt].astype(np.float64)).sum())
     tip = pg.evaluate("k => document.querySelector('[data-heat=lines] canvas.heat-canvas')"
                       ".tmDescribe({part: 'top', t: 2, c: k})", k)
-    gr_ok = f"mean of {n_wt} of {len(wt)} TP53 wild type lines" in tip
+    gr_ok = f"mean of {n_wt} of {len(wt)} TP53 not recorded (presumed wild type) lines" in tip
     ok &= gr_ok
     out.append(f"group row at drug-dose {k}: '{tip[-60:]}' (Python {n_wt} of {len(wt)}) {gr_ok}")
     # (h) the direction tab: the tests, and the tab label in words
@@ -1529,13 +1862,25 @@ def _reasons(c, pg):
         if kk.endswith("_p_cut"):
             continue
         tot += v if isinstance(v, (int, float)) else sum(x for x in v.values() if isinstance(x, (int, float)))
-    c.go(pg, f"#/gene/{_q(c.label[c.col['NFE2L2'] if 'NFE2L2' in c.col else 0])}/direction", "gene/direction")
+    gcol = c.col['NFE2L2'] if 'NFE2L2' in c.col else 0
+    c.go(pg, f"#/gene/{_q(c.label[gcol])}/direction", "gene/direction")
     tt = pg.inner_text("[data-tested]")
     tab = pg.inner_text("nav.tabs a[data-tab=direction]")
-    d_ok = f"ran {tot:,} tests" in tt and \
-        re.search(r"\d+ into \u00b7 \d+ from \u00b7 \d+ to cell numbers", tab) is not None
+    gtp = os.path.join(c.out, "direction", "gene_tests.parquet")
+    if os.path.exists(gtp):                  # direction 5: the gene's own tests, by kind, and a table of every row
+        gt = pd.read_parquet(gtp)
+        mine = gt[gt["col"] == gcol]
+        n_t = int(mine["n_tests"].sum())
+        n_rows = pg.get_attribute("#gene-dtest", "data-n") if pg.query_selector("#gene-dtest") else None
+        d_ok = f"was tested in {n_t:,} comparison" in tt and n_rows == str(len(mine)) and \
+            all(k in tt for k in set(mine["kind"]))
+        what = f"{n_t:,} tests in {len(mine)} gene_tests rows, table {n_rows}"
+    else:
+        d_ok = f"ran {tot:,} tests" in tt
+        what = f"{tot:,} tests over all genes"
+    d_ok &= re.search(r"\d+ into \u00b7 \d+ from \u00b7 \d+ to cell numbers", tab) is not None
     ok &= d_ok
-    out.append(f"direction: '{tt[:60]}...' (Python {tot:,}); tab '{tab}' {d_ok}")
+    out.append(f"direction: '{tt[:70]}...' (Python {what}); tab '{tab}' {d_ok}")
     return out, ok
 
 
@@ -1606,10 +1951,13 @@ CHECKS = [("modes: local, raw-like host, Pages-like, unreachable, other run", t_
           ("size guard: moved parts load from the data volume, or say they cannot", t_moved), ("map link", t_map),
           ("per-line values of a drug-dose: gene by gene, and from data_dd", t_perline),
           ("page contents against the sources", t_pages),
+          ("second wave: annotations, neighbouring wells, similar drug-doses, line response, citation", t_wave2),
+          ("review fixes: q below 1e-45, both annotations, no pooled signature, vs DMSO, alert labels, top dose",
+           t_review),
           ("layout at 1280, 420 and 390 px", t_layout), ("timings (design 5.6)", t_timings)]
 
 
-def check(out, data=None, report=None, work=None, keep=False, shots=None):
+def check(out, data=None, report=None, work=None, keep=False, shots=None, only=None):
     """Run every check on OUT (a finished synthetic run; its explorer is built in a copy when missing). report:
     run_tests.py's check(stage, name, fn); else each result is printed. Returns [(name, PASS / WARN / FAIL, detail)]."""
     results = []
@@ -1652,6 +2000,8 @@ def check(out, data=None, report=None, work=None, keep=False, shots=None):
         emit("set-up: copies for the five modes, the app files, the servers, Chromium", setup)
         if "c" in holder:
             for name, fn in CHECKS:
+                if only and only not in name:
+                    continue
                 emit(name, lambda fn=fn: fn(holder["c"]))
     finally:
         if "c" in holder:
@@ -1672,8 +2022,9 @@ def main():
     ap.add_argument("--work", default=None, help="scratch folder (default: next to OUT, removed at the end)")
     ap.add_argument("--keep", action="store_true", help="keep the scratch folder")
     ap.add_argument("--shots", default=None, help="write screenshots here")
+    ap.add_argument("--only", default=None, help="run only the checks whose name contains this text (and the set-up)")
     a = ap.parse_args()
-    res = check(a.out, a.data, work=a.work, keep=a.keep, shots=a.shots)
+    res = check(a.out, a.data, work=a.work, keep=a.keep, shots=a.shots, only=a.only)
     n = {s: sum(r[1] == s for r in res) for s in ("PASS", "WARN", "FAIL")}
     print(f"\nexplorer-browser: {n['PASS']} passed, {n['WARN']} warnings, {n['FAIL']} failed")
     sys.exit(1 if n["FAIL"] else 0)

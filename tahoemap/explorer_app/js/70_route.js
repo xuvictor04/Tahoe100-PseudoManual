@@ -329,7 +329,28 @@ TM.pages.home = function (ctx) {
       m.data_url ? ': per-line and per-well values (one file per gene and per drug-dose).' : '']];
   ln.appendChild(TM.h('ul', {class: 'links'}, items.map(function (x) { return TM.h('li', null, x); })));
   main.appendChild(ln);
+  main.appendChild(TM.citeSection());
   TM.ready('home');
+};
+// "How to cite": the data set, its licence and its paper (core.js meta citation; explorer.CITATION)
+TM.citeSection = function () {
+  var ci = (TM.data.meta || {}).citation || {};
+  var sec = TM.section('How to cite');
+  sec.dataset.cite = 1;
+  if (!ci.dataset) {
+    sec.appendChild(TM.p('This explorer was made by an older explorer stage that did not record the citation. The ' +
+      'data set is Tahoe-100M (Hugging Face tahoebio/Tahoe-100M).'));
+    return sec;
+  }
+  sec.appendChild(TM.p('The data: ', ci.url ? TM.ext(ci.url, ci.dataset) : ci.dataset, ', licence ' + ci.licence +
+    '.'));
+  sec.appendChild(TM.p('The paper: ' + ci.paper + (ci.doi ? ' ' : ''), ci.doi ? TM.ext('https://doi.org/' + ci.doi,
+    'doi.org/' + ci.doi) : ''));
+  sec.appendChild(TM.p({class: 'small muted'}, 'As text: ' + ci.dataset + ', licence ' + ci.licence + '. ' +
+    ci.paper));
+  sec.appendChild(TM.p({class: 'small'}, 'Cite the data set and its paper when you use these numbers. The numbers ' +
+    'on these pages were computed from it by this pipeline (see About for how).'));
+  return sec;
 };
 
 // ----------------------------------------------------------------------------- boot

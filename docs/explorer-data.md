@@ -13,7 +13,7 @@ The stage writes `OUT/explorer/`:
 
 | Folder | What | Published as |
 |---|---|---|
-| `web/` | the page (`index.html`, `app.js`, `app.css`), `d/` (data files), `map/gene_map.html` | GitHub Pages branch `site` |
+| `web/` | the page (`index.html`, `app.js`, `app.css`), `d/` (data files), `map/gene_map.html`, `schema.json`, `gmt/` (copies of the run's gene-set files) | GitHub Pages branch `site` |
 | `data/` | `x/` one file per gene, `p/` one file per drug-dose, `w/` parts moved by the size guard | repository `<repo>-data` |
 | `data_dd/` | only with `--with-line-dd`: `y/` one file per drug-dose with every gene's per-line values | repository `<repo>-data-dd` |
 | `manifest.json` | every file with its volume and bytes, the run id, the moves of the size guard | not published |
@@ -89,8 +89,16 @@ returns `(header, arrays, tables)` with tables as pandas DataFrames.
   column with the source's values.
 - **Text is never shortened.** Strings are stored whole.
 - **Flags.** `flag` arrays are codes into `d/flags.js`. Each code's string is exactly what `tables.flag_strings`
-  writes for that (drug-dose, gene); the stage stops unless these strings equal `tables/drug_effects.parquet`
-  `flags` on every row.
+  writes for that (drug-dose, gene) from the drug-doses' flags of record, with the per-gene readings of
+  `tables.gene_flag_inputs` (`nb`: whether a neighbouring well moves this gene the same way, `rise`: whether the gene
+  rises; for the 3 summed modules `explorer.module_readings`, the same rule on their columns). The stage stops unless
+  these strings equal `tables/drug_effects.parquet` `flags` on every row, and `tables/drug_line_top` (flags, clean)
+  and `tables/line_effects` (best_up / best_down `_flags_all`, `_clean_all`) at their drug-doses, and unless
+  `tables/drug_line_response` flags equal the drug-dose's flags of record. Artifact flags are
+  `common.ARTIFACT_FLAGS` (the atlas's seven and "like a neighbouring well"); the caveat tokens
+  (`common.CAVEAT_FLAGS`) are never artifact flags.
+- **Column definitions.** Every column of every table a page shows has its meaning in `core.js` `column_docs`; the
+  stage stops on an undocumented one (stamp `columns_undocumented`). `web/schema.json` lists them all.
 
 ## 4. Small files
 
@@ -111,6 +119,17 @@ TAHOE_PROBE({"counts":{"columns":C,"drugdoses":D,"genes":G,"lines":L},"explorer_
 ```
 
 A page loads a volume's `probe.js` from each source in turn and keeps the first one whose `run` is right.
+
+### `web/schema.json` (plain JSON)
+
+`{"run", "explorer_version", "tables": [{"table", "intro", "shown", "columns": [{"column", "meaning"}]}]}`: every
+column of every table the pages show (`shown` true) and of every other documented table, with its meaning, from the
+same definitions as `core.js` `column_docs`.
+
+### `web/gmt/`
+
+Copies of `tables/drugdose_signatures.gmt` (each drug-dose's up and down call sets) and `graph/modules.gmt` (each
+module arm), for enrichment tools; the Downloads page links them.
 
 ### `OUT/explorer/manifest.json`
 
@@ -143,13 +162,17 @@ Paths (zero-padded numbers): `d/g/{b//100:02d}/{b:04d}.js` with b = col // 16; `
   source does not tie a change to a type).
 - meta: `run`, `explorer_version`, `versions` (per stage), `commit`, `site_url`, `data_url`, `repo`, `results_url`,
   `counts`, `constants` (Q_CUT, LFC_MIN, KEEP_Z, LINE_Z, STRONG_LFC, line_z_threshold, min_cells,
-  unreliable_plates, DEPLETE_Z, ABUNDANCE_UNTRUSTED, ARTIFACT_FLAGS, CC_CLEARED, PATTERNS, MAX_LINES_LISTED,
-  TOP_CELLS, PLATE_SCALE_FLAG, BUCKET, DG_PER_SHARD, and the relations rules REPRO_MIN, REPRO_FDR, ONE_HALF,
-  REL_TOP), `FLAG_WORDS` (plain words for every flag token), `column_docs` ({"<file>": {"intro", "cols"}} for
-  tables/*, direction/edges and groups, relations/gene_relations and fdr_curve, graph/nodes, edges and modules,
-  reference/annotations, gene_sets and string_pairs, embed/genes, drugs, drugdoses, contexts, components and
-  broad_components, and every validation CSV, read from validation/README.md; explorer.EXTRA_DOCS holds the ones
-  whose stage writes no column docs),
+  unreliable_plates, DEPLETE_Z, ABUNDANCE_UNTRUSTED, ARTIFACT_FLAGS (common.ARTIFACT_FLAGS), CC_CLEARED, PATTERNS,
+  MAX_LINES_LISTED, TOP_CELLS, PLATE_SCALE_FLAG, BUCKET, DG_PER_SHARD, the relations rules REPRO_MIN, REPRO_FDR,
+  ONE_HALF, REL_TOP, and NB_FLAG, CAVEAT_FLAGS, Q_ZERO, Q_ZERO_TEXT), `FLAG_WORDS` (plain words for every flag
+  token, the five tokens of the tables stage from common.FLAG_TEXT), `column_docs` ({"<file>": {"intro", "cols"}}
+  for tables/* (tables.DOCS), direction/edges, groups, selectivity and gene_tests (direction EDGE_DOCS, GROUP_DOCS,
+  SELECTIVITY_DOCS, GENE_TESTS_DOCS), relations/gene_relations and fdr_curve, graph/nodes, edges and modules,
+  embed/genes, drugs, drugdoses, drug_similarity, contexts, components and broad_components (the stages'
+  COLUMN_DOCS merged over explorer.EXTRA_DOCS), reference/annotations, gene_sets, string_pairs, drug_annotations,
+  drug_mechanisms and drug_classes, the atlas tables of core.js, and every validation CSV, read from
+  validation/README.md), `gmt` ({source file: its copy in web/gmt/}), `citation` (explorer.CITATION: the data set,
+  its licence, its paper and doi),
   `arrays` (what each array of g/, x/, p/, y/ holds), `paths`, `where` ({move: "data"}), `moves`, `missing`
   (source files that were not there), `stamps` (every other stage's stamp), `info` (the info.json files of the run),
   `vault` ({available, home, plate}), `map`, `app`, `baseline_note`, `line_dd`, `pooled_r`.
@@ -162,9 +185,10 @@ words; empty), `dtype` (`u16`, or `u32` above 65,536 strings).
 **`search.js`** (`search`): tables `g` (genes: col, symbol, label, ensembl_id, noise_rna, and from
 reference/annotations: hgnc_id, hgnc_symbol, name, aliases, prev_symbols, entrez_id, uniprot, location, chrom,
 biotype, locus_type; included from embed/genes; module (0 = in the space, in no module; empty = not in the space)
-and arm from graph/nodes), `d` (drugs: drug, salt_base, targets, moa_fine, moa_broad,
-approved), `l` (lines: line, cell_name, cell_line_id, Cell_ID_DepMap, Organ, drivers, driver_changes, tp53_status),
-`m` (modules: module, n_genes, top_plus, top_minus, label), `s` (gene sets: source, set, set_id, set_size,
+and arm from graph/nodes), `d` (drugs: drug, salt_base, targets, moa_fine, moa_broad, approved, and from
+tables/drugs chembl_name, chembl_mechanisms, chembl_targets, mechanism_classes, annotation_alert), `l` (lines: line,
+cell_name, cell_line_id, Cell_ID_DepMap, Organ, drivers, driver_changes, tp53_status), `m` (modules: module,
+n_genes, top_plus, top_minus, covariate_tag, and from validation/module_labels label, label_display, label_alert), `s` (gene sets: source, set, set_id, set_size,
 n_present), `q` (direction groups: group_id, kind, gene, gene_col, description).
 
 **`below.js`** (`below`): table `b` (symbol, ensembl_id, token_id): the Tahoe genes below the atlas's detection cut,
@@ -191,12 +215,15 @@ from the Tahoe gene metadata (atlas/file_index.json). Meta `available` False wit
 
 **`groups.js`** (`groups`): table `groups` (direction/groups.parquet, every row and column, plus `_cmp` its
 comparison number, `_dg` its `d/dg/` file, `_n_edges` its arrows); table `cmp` (the comparisons that only arrows
-name, such as drug targets and gene levels: `_cmp`, `text` (the edges' `group` text), `kinds`, `n_edges`, `_dg`).
+name, such as drug targets and gene levels: `_cmp`, `text` (the edges' `group` text), `kinds`, `n_edges`, `_dg`);
+table `dtestx` (the direction/gene_tests.parquet rows whose `col` is no measured gene, e.g. a recorded driver the
+screen does not measure; the gene buckets' `dtest` tables hold the others).
 Comparisons are numbered: every group by `group_id`, then every other `group` text by text. An arrow belongs to the
 group whose `description` equals its `group` text.
 
 **`val.js`** (`val`): tables `control_sets`, `drug_moa`, `module_enrichment`, `module_labels`, `novel_edges`,
-`novel_members`, `opposite_pairs` (validation/*.csv) and `well_position_check` (atlas/well_position_check.csv).
+`novel_members`, `opposite_pairs`, `line_controls` (validation/*.csv) and `well_position_check`
+(atlas/well_position_check.csv).
 Meta: `metrics` (validation/metrics.json), `report` (validation/report.md), `direction_controls`
 (direction/controls.json).
 
@@ -224,7 +251,9 @@ a ranking helper for pooled-profile r against every gene.
   rows with col_a in the bucket, every column), `relb` (rows with col_b in the bucket: col_a, col_b, rank, cos,
   evidence, alert), `node` (graph/nodes.parquet), `gedge` (graph/edges.parquet touching), `dir`
   (direction/edges.parquet rows with source_col or target_col in the bucket, every column, plus `_role` = source /
-  target / both), `dgrp` (direction/groups.parquet with gene_col in the bucket), `nmem`
+  target / both), `dgrp` (direction/groups.parquet with gene_col in the bucket), `dtest`
+  (direction/gene_tests.parquet rows with col in the bucket: per gene, kind and role, the tests it took part in),
+  `nmem`
   (validation/novel_members.csv), `nedge` (validation/novel_edges.csv touching), `vault` (col, gene, plates: the
   gene's vault notes, from vault/.tahoemap-paths.json; vault/Home.md without that file).
 - `tables/drug_effects.parquet` rows are not stored here: the arrays reproduce every one of them (notable =
@@ -236,7 +265,8 @@ a ranking helper for pooled-profile r against every gene.
 **`l/LL.js`** (`line`; meta `line`, `cell_name`, `cell_line_id`, `vault`): array `ms` f16 [M, D]
 (graph/module_scores.npy at the line); tables `le` (every line_effects row of the line), `grp` (`_grp` row of
 direction/groups.parquet, group_id, side altered / intact: every group whose altered_lines or intact_lines name the
-line), `comp` (atlas/effects/composition_shift.parquet rows of the line).
+line), `comp` (atlas/effects/composition_shift.parquet rows of the line), `dlr` (every tables/drug_line_response
+row of the line: one per drug-dose).
 
 **`m/MMM.js`** (`module`; meta `module`, `vault`): arrays `pz` f32 [D] (module_pooled_z row), `ms` f16 [D, L]
 (module_scores row); tables `module` (graph/modules.parquet row), `label` (validation/module_labels.csv row),
@@ -254,18 +284,26 @@ for 'Pitavastatin (Calcium)', each name of 'A / A citrate'; or whose target_dd i
 when a page differs from direction_view), `edrug` (embed/drugs.parquet row), `moa` (validation/drug_moa.csv row of
 its moa_fine), `ctl` (validation/control_sets.csv rows whose best_dd_up or best_dd_down list an item
 '<drug> <dose> uM (' of one of its doses: the name compared whole, so 'Irinotecan' never takes the items of
-'Irinotecan (hydrochloride)').
+'Irinotecan (hydrochloride)'); and, by the drug's doses (`dd`), `dlr` (tables/drug_line_response: every line at each
+dose), `sim` (embed/drug_similarity: each dose's 50 most similar drug-doses), `sel` (direction/selectivity),
+`lctl` (validation/line_controls rows of its doses); by the drug's name, `ann` (reference/drug_annotations: Tahoe's
+and ChEMBL's annotation), `mech` (reference/drug_mechanisms: every ChEMBL mechanism row) and `cls`
+(reference/drug_classes: every mechanism class with its source). `moa` holds every validation/drug_moa.csv row of the
+drug: Tahoe's class by its moa_fine (class_source 'Tahoe'), and the mechanism-class rows whose class is one of its
+mechanism_classes labels or ChEMBL mechanism texts.
 
 ### Data volume
 
 **`x/NN/CCCCC.js`** (`gene-lines`; meta `col`, `symbol`, `label`): `lfc`, `z` f16 [D, L] (tensor/DDL_lfc.npy,
-DDL_z.npy at the gene, exact); `poseff` f32 [D] (DD_poseff); `w1`, `w2`, `wz` f32 [W] (W1, W2, Z); `counts` f32 [W]
+DDL_z.npy at the gene, exact); `poseff` f32 [D] (DD_poseff); `lvd` f32 [D] (the rough DMSO-referenced log2 fold
+change: DD_lfc + the mean plate_offset of the drug-dose's used wells, computed by tables._dmso_offset, the same
+float32 as tables/drug_effects lfc_vs_dmso); `w1`, `w2`, `wz` f32 [W] (W1, W2, Z); `counts` f32 [W]
 (tensor/well_counts.npy; raw CPM = counts / well_umi x 1e6); `wpu` u8 [W] (posunc); `pbase` f32 [P, L]
 (tensor/plate_base.npy); `poff` f32 [P] (plate_offset); `slot` f32 [96] (slot_median); `psg` f32 [plate-scale
 groups] (plate_scale_gene). The 3 module columns have no `lfc`, `z`, `counts`, `pbase` (meta `module`, `absent`).
 
 **`p/NN/DDDD.js`** (`drugdose`; meta `dd`, `drug`, `dose`): every column at the drug-dose: `lfc`, `z`, `q_up`,
-`q_dn`, `poseff` f32 [C]; `flag` u16 [C]; `nl` u8 [C, 5] (255 for the modules); `pat` i8 [C, 2] (the drug's
+`q_dn`, `poseff` f32 [C]; `lvd` f32 [C] (lfc_vs_dmso, NaN for the 3 summed modules); `flag` u16 [C]; `nl` u8 [C, 5] (255 for the modules); `pat` i8 [C, 2] (the drug's
 pattern; -1 for the modules); `cc` f32 [C] (only at a cell-cycle-flagged drug-dose); `ms` f16 [M, L].
 
 **`w/<web id>.js`** (`moved`; meta `from`, `part`, `move`): a part the size guard moved out of web file
@@ -280,7 +318,11 @@ the drug-dose, exact).
 
 The stage stops, and leaves the previous explorer as it was, when:
 - any `tables/drug_effects.parquet` row differs from the explorer's values (lfc, fold, z, q, flags, clean, cc_share,
-  n_lines_*, pattern_*, symbol, drug, dose, conc), or the rows are not exactly the notable pairs;
+  n_lines_*, pattern_*, symbol, drug, dose, conc, lfc_vs_dmso, n_wells), or the rows are not exactly the notable
+  pairs;
+- the flags of `tables/drug_line_top`, `tables/line_effects` (best drug-doses) or `tables/drug_line_response` differ
+  from the explorer's (section 3);
+- a column of a shown table has no definition (section 3);
 - the lines_up / lines_down names (12 at most) differ from the names the per-line values give;
 - a view lacks a source row it must hold (R1);
 - a file is above 95 MiB, a folder holds more than 1,000 entries, or a path is longer than 80 characters;
@@ -292,7 +334,9 @@ The stage stops, and leaves the previous explorer as it was, when:
 `stages/explorer.json` info: `run`, `assets_sha` (sha256 of tahoemap/explorer_app), `volumes` (files and bytes),
 `web_bytes_before_moves`, `moves`, `parts` (bytes per folder), `complete` ({source: {"rows", "views": {view: [held,
 must hold]}}}), `complete_ok`, `checks` (drug_effects, lines_up_down, limits, self_check), `warnings`, `missing`,
-`unmapped_files`, `flag_words_missing`, `map`, `app`, `steps_s` (seconds per step), `peak_rss_mb`, `minutes`.
+`unmapped_files`, `flag_words_missing`, `columns_undocumented`, `map`, `app`, `steps_s` (seconds per step),
+`peak_rss_mb`, `minutes`. `checks` holds `drug_effects`, `flag_tables` (rows compared and differing per table),
+`lines_up_down`, `drug_direction`, `limits` and `self_check`.
 
 ## 7. The size guard
 
@@ -315,4 +359,7 @@ large, the stage stops with the size of each part. It never drops data.
 Measured on the published real tables and on arrays at the real dimensions (16,643 genes, 1,132 drug-doses, 50
 lines, 1,329 wells, 14 plates): web volume about 0.66 GB (gene buckets 0.48 GB, of which records 0.19 GB), about
 1,970 files; data volume about 5.2 GB (x/ 4.8 GB, p/ 0.43 GB), 17,782 files; data_dd about 4.3 GB. The largest web
-file is the map (about 25 MB); the largest data files are about 0.3 MB (x/) and 0.4 MB (p/).
+file is the map (about 27 MB on the published tables); the largest data files are about 0.3 MB (x/) and 0.4 MB (p/).
+Explorer version 3 adds the second wave's tables (drug_line_response twice, drug_similarity, the drug annotations,
+gene_tests, selectivity: about 60 MB, the web volume projected at about 0.72 GB by tests/test_explorer.py) and the
+`lvd` arrays of x/ and p/ (about 0.1 GB more in the data volume).

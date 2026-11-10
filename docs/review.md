@@ -29,16 +29,22 @@ For each entity the runner builds a **dossier** from the run's own outputs (tabl
 reference annotations, vector space) — for a gene: its identity, expression, the drug-doses that raise and lower it,
 its module and arm, its 25 strongest partners each way with their evidence, the literature-known partners that are
 *not* among its data partners, and its novel candidate pairs. Nothing is left out of a dossier for a flag: a drug-dose
-with an artifact flag for the gene, a single-line cell at such a drug-dose, or a partner not replicated in both
-halves keeps its ranked place, marked ⚠ with the reason in plain words (for a cell-cycle shift: how much of this
-gene's change it would explain), and each list says how many items carry an alert; a list capped at N shows the N
-strongest plus any of the N strongest without an alert that would fall below them. For a drug: targets, mechanism,
-the genes each dose moves (the full lists at the best trustworthy dose - an active dose without an artifact flag -
-and, marked as flagged, at the drug's vector dose when that one carries a flag; when no dose is trustworthy the
-dossier says so and lists the flags), the lines it depletes, the nearest drugs; for a cell line: organ, drivers,
-TP53, its Cellosaurus links (written out, because web fetch opens only URLs that appear in the
-conversation), the genes specifically high or low, the drugs that deplete it. `tahoe review run --dry-run` writes
-the dossiers so you can read them.
+with an artifact flag for the gene (the tables stage's flags of record, which include `like a neighbouring well`), a
+single-line cell at such a drug-dose, or a partner without the same sign in both halves of the compounds (or a
+lineage pair, or read-sharing copies) keeps its ranked place, marked ⚠ with the reason in plain words (for a
+cell-cycle shift: how much of this gene's change it would explain), and each list says how many items carry an
+alert; a list capped at N shows the N strongest plus any of the N strongest without an alert that would fall below
+them. The words of the neighbouring-well and translation-inhibitor flags stand under the list that shows them; the
+`lines moved / measured` count names the drug-dose's wells (`· one well`: the lines are not replicate treatments).
+For a drug: Tahoe's annotation (targets, mechanism) and ChEMBL's (with the release, the matched molecule, its
+mechanisms and targets) side by side, ⚠ where they disagree, the drug's mechanism classes with their sources, the
+dose table with each dose's plate and well and its neighbouring-well reading, the genes each dose moves (the full
+lists at the best trustworthy dose - an active dose without an artifact flag - and, marked as flagged, at the drug's
+vector dose when that one carries a flag; when no dose is trustworthy the dossier says so and lists the flags), the
+lines it depletes, the nearest drugs; for a cell line: organ, drivers, TP53 (`not recorded` = no TP53 alteration in
+the metadata: presumed wild type, not confirmed), its Cellosaurus links (written out, because web fetch opens only
+URLs that appear in the conversation), the genes specifically high or low, the drugs that deplete it.
+`tahoe review run --dry-run` writes the dossiers so you can read them.
 
 A gene's dossier also has its **probable direction** (from the direction stage, [direction.md](direction.md)): the
 arrows that point to it, those that go from it, and those to the cells under a drug, each with its grade, what the
@@ -73,12 +79,15 @@ the Anthropic API; search queries go to NCBI E-utilities, Europe PMC and Crossre
 
 ## The agents and skills
 
-| Agent (`tahoemap/review/agents/`) | Reviews | Default model, effort | Per-entity cap |
+'default' is the model `DEFAULT_MODEL` of `tahoemap/review/definitions.py` (an agent file's `model:` line or `--model`
+overrides it).
+
+| Agent (`tahoemap/review/agents/`) | Reviews | Model, effort | Per-entity cap |
 |---|---|---|---|
-| `gene-reviewer.md` | one gene: drug responses, partners, missing / contradicted connections | `claude-opus-5-5`, high | $3.00 |
-| `drug-reviewer.md` | one drug: mechanism vs response, genes, modules, depleted lines, similar drugs | `claude-opus-5-5`, high | $3.00 |
-| `line-reviewer.md` | one cell line: identity, drivers, specific genes, drugs that deplete it | `claude-opus-5-5`, high | $3.00 |
-| `citation-checker.md` | the claims of a submitted review against their abstracts | `claude-opus-5-5`, medium | $0.50 |
+| `gene-reviewer.md` | one gene: drug responses, partners, missing / contradicted connections | default, high | $3.00 |
+| `drug-reviewer.md` | one drug: mechanism vs response, genes, modules, depleted lines, similar drugs | default, high | $3.00 |
+| `line-reviewer.md` | one cell line: identity, drivers, specific genes, drugs that deplete it | default, high | $3.00 |
+| `citation-checker.md` | the claims of a submitted review against their abstracts | default, medium | $0.50 |
 
 | Skill (`tahoemap/review/skills/<name>/SKILL.md`) | What it teaches |
 |---|---|
@@ -88,35 +97,30 @@ the Anthropic API; search queries go to NCBI E-utilities, Europe PMC and Crossre
 | `citations` | which papers may be cited for what, PMID / DOI formats, retractions |
 | `writing-the-note` | the vault section: structure, length, tone, links |
 
-The files are in **Claude Code's markdown format**: YAML frontmatter, then the text. An agent's frontmatter has
+The files are in the usual **agent-file markdown format**: YAML frontmatter, then the text. An agent's frontmatter has
 `name`, `description`, `model`, `effort`, `tools`, `skills`, `max_turns` (requests per attempt) and `max_usd` (the
 per-entity cap); its body is the system prompt, and the runner appends the bodies of its skills, always in the same
 order (so the prompt is cached between requests and entities). To change what the agents do, edit these files: the
 next run uses them (the history of each review records the sha256 of the exact system prompt it got). Keep the
 changes in git (or in the clone of the [duplicate workflow](#the-duplicate-workflow)) so you know which prompt wrote
-which review. `--model` and `--effort` override the files for one run, for all reviewers (`--model
-claude-sonnet-5-5`) or per agent (`--model gene=claude-sonnet-5-5,checker=claude-haiku-5-5`; agents: gene, drug,
-line, checker, reviewers, all).
+which review. `--model` and `--effort` override the files for one run, for all reviewers (`--model MODEL`) or per
+agent (`--model gene=MODEL,checker=MODEL`, with the model identifiers of `PRICES` in `tahoemap/review/runner.py`;
+agents: gene, drug, line, checker, reviewers, all).
 
-**Using them interactively in Claude Code**: copy `tahoemap/review/agents/*.md` into a project's `.claude/agents/`
-and the `tahoemap/review/skills/*` folders into `.claude/skills/`. Claude Code does not have tahoemap's own tools
-(`pubmed_search`, `pubmed_abstracts`, `europepmc_search`, `tahoe_lookup`, `submit_review`), so in the copies replace
-the `tools:` line with Claude Code's (for example `tools: Read, Grep, Bash, WebSearch, WebFetch`) or delete it, and
-delete any field your Claude Code version does not accept (`effort`, `max_turns`, `max_usd` are for tahoemap's
-runner). Give the agent a dossier — `tahoe review run --dry-run --only NQO1 --limit 1` writes
+**Using them interactively in a coding assistant** that reads agent and skill files in this format: copy
+`tahoemap/review/agents/*.md` into the project's agents folder of that assistant and the `tahoemap/review/skills/*`
+folders into its skills folder. Such an assistant does not have tahoemap's own tools (`pubmed_search`,
+`pubmed_abstracts`, `europepmc_search`, `tahoe_lookup`, `submit_review`), so in the copies replace the `tools:` line
+with the assistant's own (for example `tools: Read, Grep, Bash, WebSearch, WebFetch`) or delete it, and delete any
+field it does not accept (`effort`, `max_turns`, `max_usd` are for tahoemap's runner). Give the agent a dossier — `tahoe review run --dry-run --only NQO1 --limit 1` writes
 `review/dry_run/gene/NQO1.dossier.md` — and the look-ups (`tahoe gene NQO1`, `tahoe pair NQO1 HMOX1`). A review
 written that way is not verified and not spliced into the vault; only `tahoe review run` does both.
 
 ## Costs
 
-**Prices** the runner counts with (USD per million tokens; `PRICES` in `tahoemap/review/runner.py`; check the
-current price list before a large run):
-
-| Model | Input | Output | Cache write (5 min) | Cache read |
-|---|---|---|---|---|
-| `claude-opus-5-5` (default) | 4.00 | 20.00 | 5.00 (1.25x input) | 0.20 |
-| `claude-sonnet-5-5` | 2.00 | 10.00 | 2.50 | 0.20 |
-| `claude-haiku-5-5` (prompts ≤ 100K tokens) | 0.10 | 0.50 | 0.125 | 0.01 |
+**Prices** the runner counts with: `PRICES` in `tahoemap/review/runner.py`, per model, in USD per million tokens
+(input, output, cache write for 5 minutes at 1.25x the input price, cache read); the default model costs 4.00 per
+million input and 20.00 per million output tokens. Check the provider's current price list before a large run.
 
 Web searches cost $0.01 each. The cost of every response is computed from its `usage` (each `usage.iterations`
 entry at its own model, so a response finished by a fallback model is counted at that model's price) and stored in
@@ -143,8 +147,8 @@ web searches and the citation check. Once 3 entities of a kind are reviewed with
 `--verify` mode the plan or run asks for now, the mean of their **real** cost (every attempt but `--recheck` ones)
 replaces the estimate; reviews made with other settings are not counted (the projection says how many there are).
 `tahoe review plan` prints the projection per kind and in total; `tahoe review status` projects the rest. On the
-synthetic test data the estimate is ~$1.17 per gene and ~$1.16 per drug or line (Opus 5.5, effort high, `--verify
-llm`); `--model claude-sonnet-5-5 --verify ids` roughly halves it.
+synthetic test data the estimate is ~$1.17 per gene and ~$1.16 per drug or line (the default model, effort high,
+`--verify llm`); a model at half the price (`--model MODEL`) with `--verify ids` roughly halves it.
 
 **How many**: the queue holds every gene with a response or a place in the vector space — about **15,000 genes** on
 the full data — plus ~379 drugs and 50 lines. At ~$1.2 an entity, **a full gene pass costs on the order of $18,000**;
@@ -155,7 +159,8 @@ the drugs and lines together ~$500. So start small and project from real costs:
 3. `tahoe review run --limit 20` (or `--only NQO1,HMOX1,TP53` / `--only @genes.txt`): ~$25; then
    `tahoe review status` shows the real cost per entity, and the projection of the rest uses it.
 4. Then by priority: the queue puts the 50 lines first, then the drugs, then the genes in order of interest (novel
-   candidate pairs, strong reproducible partners, labelled modules, many clean drug responses). `--kinds line,drug`,
+   candidate pairs, strong partners with the same sign in both halves of the compounds, modules labelled by a strong
+   gene set or by the drug class that drives them, many clean drug responses). `--kinds line,drug`,
    then `--kinds gene --limit 500 --max-usd 600`, and so on: each run continues where the last stopped.
 
 **Caps**: `--per-entity-usd Y` (default: the agent file's `max_usd`, $3.00): an attempt that has spent it stops

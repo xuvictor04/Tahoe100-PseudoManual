@@ -32,6 +32,9 @@ std handles that are not the console - and checks what tahoemap does then:
              skips a signal the system lacks); the test harness copies (hard links) where it cannot make symlinks
   query      a closed pipe that Windows reports as EINVAL ends a look-up quietly; the FULL TABLES row of DDL_*.npy
              keeps its ' / DDL_z.npy' out of the path (ntpath.relpath)
+  second     `signature --up @FILE` reads a list PowerShell or Notepad wrote (UTF-16 / UTF-8 with a BOM, CRLF); the
+  wave       new words print on a cp1252 console; the new output and cache files have valid Windows names; the test
+             runner's fresh copy of the reference fixture replaces an earlier copy with read-only files
   https      downloads are verified by Windows itself (truststore), a certificate failure is tried once against
              certifi's roots and is not retried by the reference stage, and its message says what to do
   explorer   long base paths: every file the explorer export writes goes through the extended-length path helper,
@@ -815,6 +818,84 @@ def explorer(work):
           and "$PSScriptRoot" in ps1 and "core.autocrlf false" in ps1, f"unchecked git calls: {unchecked[:2]}")
 
 
+# ----------------------------------------------------------------------------- the second wave
+@case
+def second_wave(work):
+    """The second wave's inputs and outputs on Windows: a gene list for `signature --up @FILE` written by PowerShell
+    (UTF-16 with a BOM, CRLF) or Notepad (UTF-8 with a BOM) reads as the plain list; the new words (the
+    neighbouring-well and translation-inhibitor flags, '< 1e-45', µM, ≥, ×) print on a cp1252 console without an
+    error, ⚠ and → as '!' and '->'; every new output and cache file is a valid Windows file name, short enough
+    under OUT; the fresh copy of the reference fixture (tests/run_tests.py fresh_cache) replaces an earlier copy
+    whose files are read-only (a Windows file system refuses to remove those without an error handler)."""
+    c = "second wave"
+    from tahoemap import query as Q
+    want = ["CDKN1A", "MDM2", "BAX"]
+    got = {}
+    for name, raw in (("utf-16", "\ufeffCDKN1A\r\nMDM2\r\nBAX\r\n".encode("utf-16-le")),
+                      ("utf-8-sig", "\ufeffCDKN1A, MDM2,BAX\r\n".encode("utf-8")),
+                      ("plain", b"CDKN1A\nMDM2\nBAX")):
+        pth = os.path.join(work, f"genes_{name}.txt")
+        with open(pth, "wb") as fh:
+            fh.write(raw)
+        with windows():
+            got[name] = Q._gene_list("@" + pth)
+    check(c, "signature --up @FILE: a list written by PowerShell (UTF-16, BOM, CRLF) or Notepad (UTF-8 with a BOM) "
+          "reads as the plain list", all(v == want for v in got.values()), got)
+    words = [C.FLAG_TEXT[k] for k in (C.NB_FLAG, C.NB_TOP, C.NB_CLEARED, C.TL_DD, C.TL_RISE)]
+    words += ["⚠ Like a neighbouring well: 60 of its 60 significant genes ...", f"q {C.Q_ZERO}", C.Q_ZERO_TEXT,
+              "Darinaparsin 0.5 µM; per-line |z| ≥ 5.90; 1.62× (z +4.1)", "TP53 → CDKN1A  [B]  ⚠ same locus"]
+
+    class Cp1252:
+        encoding = "cp1252"
+    bad = []
+    for w in words:
+        t = C.printable(w, Cp1252())
+        try:
+            t.encode("cp1252")
+        except UnicodeEncodeError as e:
+            bad.append((w[:40], str(e)[:60]))
+            continue
+        if ("⚠" in w and "!" not in t) or ("→" in w and "->" not in t):
+            bad.append((w[:40], t[:40]))
+    check(c, "the new words print on a cp1252 console (⚠ -> '!', → -> '->'; µ, ≥ and × as the code page can)",
+          not bad, bad[:3] or f"{len(words)} texts")
+    names = ["reference/drug_annotations.parquet", "reference/drug_mechanisms.parquet",
+             "reference/drug_classes.parquet", "reference/gene_coords.parquet", "reference/paralogues.parquet",
+             "reference/downloads/chembl_drugs.json",
+             "reference/downloads/chembl_drugs.json.meta.json", "reference/downloads/compara_human_paralogues.tsv.gz",
+             "tables/drug_line_response.parquet", "tables/drugdose_signatures.gmt", "embed/drug_similarity.parquet",
+             "direction/gene_tests.parquet", "direction/selectivity.parquet", "graph/modules.gmt",
+             "validation/line_controls.csv"]
+    reserved = {"CON", "PRN", "AUX", "NUL"} | {f"COM{i}" for i in range(1, 10)} | {f"LPT{i}" for i in range(1, 10)}
+    badn = [n for n in names for part in n.split("/")
+            if set(part) & set('<>:"\\|?*') or part.endswith((".", " ")) or part.split(".")[0].upper() in reserved]
+    longp = [n for n in names if len(n) > 80]
+    check(c, "every new output and cache file is a valid Windows name (no reserved character or device name, no "
+          "trailing dot or space) and at most 80 characters under OUT", not badn and not longp,
+          f"{len(names)} files; bad {badn}; long {longp}")
+    from tests import run_tests as RT
+    if os.path.isdir(RT.FIXTURES):
+        first = RT.fresh_cache(work, 9)
+        ro = [os.path.join(first, f) for f in os.listdir(first)]
+        for f in ro:
+            os.chmod(f, stat.S_IREAD)
+        real = os.unlink
+
+        def unlink_win(path, *a, dir_fd=None, **k):       # Windows: a read-only file cannot be removed
+            if not os.stat(path, dir_fd=dir_fd).st_mode & stat.S_IWRITE:
+                raise PermissionError(errno.EACCES, "Access is denied", path)
+            return real(path, *a, dir_fd=dir_fd, **k)
+        try:
+            with patched(os, unlink=unlink_win, remove=unlink_win):
+                again = RT.fresh_cache(work, 9)
+            ok = again == first and sorted(os.listdir(again)) == sorted(os.listdir(RT.FIXTURES))
+            err = ""
+        except OSError as e:
+            ok, err = False, f"{type(e).__name__}: {e}"
+        check(c, "run_tests.fresh_cache copies the reference fixture afresh over an earlier copy with read-only "
+              "files (a Windows file system refuses to remove them)", ok, err or f"{len(ro)} read-only files")
+
+
 # ----------------------------------------------------------------------------- https (the PC's Ensembl / NCBI failure)
 @case
 def https(work):
@@ -886,11 +967,15 @@ def docs(work):
     want = {"update with MinGit": '& "C:\\tahoe\\mingit\\cmd\\git.exe" -C C:\\tahoe\\repo pull',
             "git copies": "about 4.5 GB", "kept by the hard links": "until `export --explorer --force` replaces them",
             "repository growth": "**The data repository grows.**", "pages limit unit": "`--pages-max-mb 905` (in MiB",
-            "publishing disk row": "| publishing the explorer (optional) |"}
+            "publishing disk row": "| publishing the explorer (optional) |",
+            "the new look-ups on Windows": "-m tahoemap similar Dexamethasone 5",
+            "a PowerShell gene list": "signature --up @FILE` can be written by PowerShell",
+            "the stage order": "build → effects → tensor → reference → tables"}
     miss = [k for k, w in want.items() if w not in qs]
     bare = [ln.strip() for ln in qs.splitlines() if "git -C C:\\tahoe\\repo pull" in ln and "on PATH" not in ln]
     check(c, "quick-start.md: the Windows update uses the MinGit git.exe (git is not on PATH); publishing's disk "
-          "and the data repository's growth are said; --pages-max-mb has its unit", not miss and not bare,
+          "and the data repository's growth are said; --pages-max-mb has its unit; the new look-ups in PowerShell "
+          "form; the stage order (reference before tables)", not miss and not bare,
           f"missing {miss}; bare git lines {bare[:2]}")
 
 
@@ -907,8 +992,8 @@ def main():
     work = tempfile.mkdtemp(prefix="tahoemap_win_", dir=a.workdir)
     t0 = time.time()
     try:
-        for fn in (files, stream_build, pipeline_lock, git, links, keys, signals, review_bits, query, https,
-                   explorer, docs):
+        for fn in (files, stream_build, pipeline_lock, git, links, keys, signals, review_bits, query, second_wave,
+                   https, explorer, docs):
             d = os.path.join(work, fn.__name__)
             os.makedirs(d)
             fn(d)

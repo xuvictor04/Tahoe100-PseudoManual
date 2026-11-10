@@ -191,6 +191,21 @@ def map_gene(site, label=None):
     return f"{site}map/gene_map.html" + (f"#{q(label)}" if label is not None and label != "" else "")
 
 
+def vault_base(code_root=None):
+    """https://github.com/<owner>/<repo>/blob/results/ (the results branch, where the export puts the vault notes),
+    or None without a GitHub remote. A note's address is this base + its path ('vault/Drugs/X.md')."""
+    r = github_repo(code_root)
+    return f"https://github.com/{r[0]}/{r[1]}/blob/results/" if r else None
+
+
+def vault_note(base, path):
+    """A vault note's address: base (vault_base) + the note's path with each segment percent-encoded; None without a
+    base or a path."""
+    if not base or not path:
+        return None
+    return base + "/".join(q(p) for p in str(path).replace("\\", "/").split("/"))
+
+
 def data_gene_path(col):
     """A gene's per-line file in the data repository (explorer data volume): x/NN/CCCCC.js, NN = col // 1000."""
     col = int(col)

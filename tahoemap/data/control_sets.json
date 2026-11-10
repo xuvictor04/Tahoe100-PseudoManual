@@ -24,5 +24,23 @@
  "opposite_pairs": [
   {"a": "P53_TARGETS_UP", "b": "DREAM_G2M_DOWN", "note": "p53 induces its targets and, through p21-DREAM, represses G2/M genes"},
   {"a": "ISR_ATF4", "b": "RIBOSOME_BIOGENESIS", "note": "stress responses that raise ATF4 targets typically lower ribosome biogenesis (exploratory)"}
+ ],
+ "line_controls_about": "Positive controls for line-selective responses (validation report section 8): lines with a recorded change (or a measured trait) that the literature says makes them respond more strongly to a drug. 'lines' picks the group: driver_change (tables/lines.parquet driver_changes holds the pattern), baseline_high (the gene's baseline CPM, tables/line_effects.parquet, is at least fold_of_median times its median over the lines), line_names, or tp53 (tables/lines.parquet tp53_status). 'drugs' picks the drugs: names (the Tahoe drug name or its name without the salt, case ignored), class (a class of tahoemap/data/drug_classes.json, its members from tahoemap/mechanisms.py) or targets_any (Tahoe's targets or ChEMBL's target genes include one of them). 'expect': 'higher' = the group's lines respond more selectively (tables/drug_line_response.parquet sel_z) than the other lines. Every citation was confirmed in Europe PMC.",
+ "line_controls": [
+  {"name": "KRAS p.G12C lines x Adagrasib", "lines": {"rule": "driver_change", "pattern": "KRAS p.G12C"}, "drugs": {"names": ["Adagrasib"]}, "expect": "higher",
+   "note": "adagrasib binds only the G12C form of KRAS",
+   "source": "Hallin J et al. 2020, Cancer Discov 10:54 (doi:10.1158/2159-8290.cd-19-1167, PMID 31658955)"},
+  {"name": "BRAF p.V600E lines x BRAF V600E inhibitors", "lines": {"rule": "driver_change", "pattern": "BRAF p.V600E"}, "drugs": {"names": ["Vemurafenib", "Dabrafenib", "Encorafenib"]}, "expect": "higher",
+   "note": "these RAF inhibitors block signalling from BRAF V600E; in lines with normal BRAF they can even raise it",
+   "source": "Bollag G et al. 2010, Nature 467:596 (doi:10.1038/nature09454, PMID 20823850)"},
+  {"name": "NR3C1-high lines x glucocorticoid receptor agonists", "lines": {"rule": "baseline_high", "gene": "NR3C1", "fold_of_median": 1.5}, "drugs": {"class": "GR_AGONIST"}, "expect": "higher",
+   "note": "the amount of glucocorticoid receptor limits how strongly cells respond to a glucocorticoid",
+   "source": "Vanderbilt JN et al. 1987, Mol Endocrinol 1:68 (doi:10.1210/mend-1-1-68, PMID 2842660)"},
+  {"name": "ERBB2-amplified BT-474 x drugs targeting ERBB2", "lines": {"rule": "line_names", "names": ["BT-474"]}, "drugs": {"targets_any": ["ERBB2"]}, "expect": "higher",
+   "note": "HER2-overexpressing breast cancer lines such as BT-474 respond to ERBB2 inhibitors",
+   "source": "Konecny GE et al. 2006, Cancer Res 66:1630 (doi:10.1158/0008-5472.can-05-1182, PMID 16452222)"},
+  {"name": "TP53 not recorded x TOP1 / TOP2 poisons", "lines": {"rule": "tp53", "status": "not recorded"}, "drugs": {"class": ["TOP1_POISON", "TOP2_POISON"]}, "expect": "higher",
+   "note": "DNA damage makes intact p53 switch on its target genes (p21/WAF1 first among them); lines without a recorded TP53 change are mostly TP53 wild type",
+   "source": "el-Deiry WS et al. 1993, Cell 75:817 (doi:10.1016/0092-8674(93)90500-p, PMID 8242752)"}
  ]
 }

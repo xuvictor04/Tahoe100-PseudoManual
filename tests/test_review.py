@@ -53,7 +53,10 @@ reviews of one gene (the latest's verdicts in the vault and the map alike), the 
 (retracted-only verdicts too), unread papers the id check removed, and ids not looked up but graded by the checker.
 The direction stage in the review: a gene dossier's 'Probable direction' (direction_view's rows, order, cap rule and
 words; data['direction']; the size bound), the short dossier and the pair look-up, an output without the stage, the
-reviewer's and the checker's instructions, and a direction verdict as an ordinary connection verdict.
+reviewer's and the checker's instructions, and a direction verdict as an ordinary connection verdict. The second
+wave: a drug dossier's two annotations (Tahoe's and ChEMBL's), the disagreement alert, the classes with their sources
+and each dose's neighbouring-well reading; a module counted as labelled in the gene priority only for a strong gene-set
+label or a driving drug class.
 Prints PASS / FAIL per check; exit code 1 if anything fails. Takes well under a minute.
 """
 
@@ -2143,6 +2146,60 @@ def drug_dossier_trustworthy_dose(view, ents):
 
 
 @case
+def drug_dossier_annotations(view, ents):
+    """A drug dossier shows both annotations (Tahoe's verbatim, ChEMBL's with its release, the molecule and how it was
+    matched), an alert where they disagree, the mechanism classes with their sources, and each dose's
+    neighbouring-well reading (tables/drugdoses.parquet nb_alert: tier 'artifact' marked with the alert sign); the
+    same in data['annotations'] and data['per_dose']. A gene dossier's module is called labelled only for a strong
+    gene-set label or a driving drug class (validate version 7)."""
+    c = "drug_dossier_annotations"
+    dr = pd.read_parquet(os.path.join(view, "tables", "drugs.parquet"))
+    dd = pd.read_parquet(os.path.join(view, "tables", "drugdoses.parquet"))
+    if "annotation_status" not in dr or "nb_tier" not in dd:
+        check(c, "the tables have the annotation and neighbouring-well columns (tables version 5)", False,
+              "an older tables stage")
+        return
+    wrong, n_alert, n_nb = [], 0, 0
+    for _, r in dr.iterrows():
+        nb = dd[(dd["drug"] == r["drug"]) & (dd["nb_tier"].fillna("") != "")]
+        if not (str(r.get("annotation_alert") or "") or len(nb) or r["drug"] in ("Harringtonine", "Dexamethasone")):
+            continue
+        dos = D.build(view, "drug", r["drug"])
+        t, a = dos.text, dos.data.get("annotations") or {}
+        ok = ("## Annotations: Tahoe's and ChEMBL's, side by side" in t and "- Tahoe: targets " in t
+              and a.get("chembl_id", "") == str(r.get("chembl_id") or ""))
+        if str(r.get("chembl_id") or ""):
+            ok = ok and f"({r['chembl_id']}); mechanisms " in t
+        if str(r.get("mechanism_classes") or ""):
+            ok = ok and f"): {r['mechanism_classes']}" in t
+        if str(r.get("annotation_alert") or ""):
+            n_alert += 1
+            ok = ok and f"- \u26a0 The two annotations disagree: {r['annotation_alert']}" in t
+        for _, x in nb.iterrows():
+            n_nb += 1
+            head = "\u26a0 Like a neighbouring well" if x["nb_tier"] == "artifact" else "Neighbouring well (tier"
+            ok = ok and f"- {x['dose']} uM: {head}" in t and str(x["nb_alert"]) in t and any(
+                p["nb_alert"] == x["nb_alert"] for p in dos.data.get("per_dose") or [])
+        if not ok:
+            wrong.append(r["drug"])
+    check(c, "drug dossiers: Tahoe's and ChEMBL's annotations side by side, the disagreement alert, the classes with "
+             "their sources, and each dose's neighbouring-well reading", not wrong and (n_alert or n_nb),
+          wrong[:5] or f"{n_alert} drugs with an annotation alert, {n_nb} doses with a neighbouring-well reading")
+    lab = pd.read_csv(os.path.join(view, "validation", "module_labels.csv")) \
+        if os.path.exists(os.path.join(view, "validation", "module_labels.csv")) else None
+    if lab is not None and "label_weak" in lab:
+        src = lab["label_source"].fillna("").astype(str)
+        good = set(int(m) for m in lab["module"][((src.isin(["control", "hallmark", "reactome"])
+                                                    & ~lab["label_weak"].fillna(False).astype(bool))
+                                                   | (src == "drug class")).to_numpy()])
+        e = D.entities(view)
+        g = e[e["kind"] == "gene"]
+        bad = g[g["labelled"].astype(bool) != g["module"].astype(int).isin(good)]
+        check(c, "gene priority: a module counts as labelled for a strong gene-set label or a driving drug class",
+              not len(bad), f"{len(g)} genes; {len(good)} such modules" if not len(bad) else bad.head(3).to_dict())
+
+
+@case
 def gene_dossier_alerts(view, ents):
     """The user's rule ('flagging should not remove things; add an alert'): a gene dossier ranks every drug-dose of
     tables/drug_effects.parquet, a flagged one in its ranked place with '⚠' + its flags in plain words, capped at
@@ -2238,7 +2295,7 @@ def gene_dossier_direction(view, ents, work):
           f"{len(up)} upstream rows; {rec.get('arrow')} {rec.get('grade')}; dossier {len(t):,} characters")
     # TP53: the cap rule on its downstream and cells lists, at full size and at a tight size bound
     probs = []
-    for max_chars in (D.MAX_CHARS, 9_000):
+    for max_chars in (D.MAX_CHARS, 10_000):    # the tight bound: the lists shrink (TP53's full dossier is ~21,000)
         d = D.build(view, "gene", "TP53", max_chars=max_chars)
         dd = d.data.get("direction") or {}
         n = len(dd.get("downstream") or [])
@@ -2252,7 +2309,7 @@ def gene_dossier_direction(view, ents, work):
             probs.append((max_chars, "size", len(d.text)))
     check(c, "TP53's dossier: downstream and cells rows by the cap rule (at the full size and at a tight size bound, "
              "where the lists shrink)", not probs, probs or f"{len(dv.downstream('TP53'))} downstream, "
-                                                         f"{len(dv.cells('TP53'))} cells rows; at 9,000 characters "
+                                                         f"{len(dv.cells('TP53'))} cells rows; at 10,000 characters "
                                                          f"{n} downstream rows shown")
     # a gene without arrows
     has = set(int(x) for x in dv.rows["target_col"]) | {int(x) for s in dv.rows["source_cols"] for x in s}
@@ -3781,6 +3838,7 @@ def main():
     retractions_shown(work, src, ents)
     vault_round5(work, src, ents)
     drug_dossier_trustworthy_dose(view, ents)
+    drug_dossier_annotations(view, ents)
     gene_dossier_alerts(view, ents)
     gene_dossier_direction(view, ents, work)
     cellosaurus_url_in_dossier(view, ents, work)

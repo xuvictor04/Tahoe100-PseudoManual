@@ -30,8 +30,20 @@ tahoe drug Bortezomib  # what a drug does, at each dose, and which drugs act ali
 tahoe line A549        # what is special about a cell line
 tahoe pair MDM2 CDKN1A # how two genes relate, and under which drugs
 tahoe module 12        # one module of the nodal map
+tahoe similar Dexamethasone 5            # the drug-doses most like one drug-dose (its 50 nearest; --top all)
+tahoe signature --up FKBP5,TSC22D3,PER1  # the drug-doses that mimic (or reverse) a gene signature, with a p
 tahoe open             # the explorer in a browser; also where the map, the vault and the report are
 ```
+
+`tahoe similar DRUG [DOSE] [--top N|all]` reads `embed/drug_similarity.parquet`: the cosine of the pooled signatures
+and over the per-line contexts, the significant genes they share, the other drug-dose's classes and flags ('k of 50
+shown'). Without DOSE: the drug's best dose. `tahoe signature --up A,B[,...] [--down C,D] [--top N|all] [--lines]`
+(or `--up @FILE`, one name per line or comma-separated) scores each drug-dose by the mean z of the up genes minus the
+down genes (each clipped at ±10; `atlas/effects/DD_z.npy`, else the drug_effects rows with z = 0 elsewhere, which the
+output says). The p comes from 1,000 random gene sets of the same sizes matched by pooled-CPM decile (a stable seed);
+rows are ranked by p, then score, 25 each way by default. About 5% of the drug-doses reach p ≤ 0.05 for a random
+signature: there is no correction across the 1,132 drug-doses. `--lines` names the lines that show the 5 strongest
+mimics most. Both work on an exported results folder too (tables only).
 
 Open the explorer by opening `<output>/explorer/web/index.html` in a browser (next section). Open the vault in
 Obsidian with *Open folder as vault* on `<output>/vault`, and the map by opening `<output>/map/gene_map.html` in a
@@ -109,9 +121,13 @@ upload, the branch `main` holds only part of the new data, but the pages online 
 commit by its id.
 
 Nothing is left out of these answers because of a flag. A drug-dose with an artifact flag (toxic, transcription
-drop, cell-cycle shift, ...), a partner not replicated in both halves of the compounds, or a gene in the vector space
-only through flagged drug-doses keeps its ranked place, marked `⚠` with the reason (e.g. `⚠ cell-cycle shift, explains
-~60% of this change`); each list says how many items carry an alert. In the map, the **Spread** slider pulls the
+drop, cell-cycle shift, like a neighbouring well, ...), a partner without the same sign in both halves of the
+compounds (or a lineage pair, or a read-sharing copy), or a gene in the vector space only through flagged drug-doses
+keeps its ranked place, marked `⚠` with the reason (e.g. `⚠ cell-cycle shift, explains ~60% of this change`); each
+list says how many items carry an alert. Caveats are shown with their words, not as alerts: 'like a neighbouring well
+(top dose)', 'translation inhibitor' and 'rise under a translation inhibitor' (a rise under a drug that stops protein
+synthesis may be mRNA stabilisation). Each drug shows Tahoe's annotation and ChEMBL's side by side, with an alert
+where they disagree. In the map, the **Spread** slider pulls the
 modules apart, the **k-D tour** tab turns the vectors through all dimensions, and the neighbourhood view goes to
 depth 4 (its help panel explains every control).
 
@@ -124,7 +140,8 @@ direction). You find them in a gene note's **Direction (probable)** section
 neighbourhood view, and in `validation/report.md`. They are a probable direction, from cell lines: not proof of direct
 regulation. [direction.md](direction.md) explains how to read them.
 
-`tahoe gene X` lists them too (PROBABLE DIRECTION), and `tahoe line`, `tahoe drug` and `tahoe pair` show theirs.
+`tahoe gene X` lists them too (PROBABLE DIRECTION, with how often the gene was tested when no arrow passed), and
+`tahoe line`, `tahoe drug` and `tahoe pair` show theirs.
 
 ## Literature review by AI agents (optional)
 
@@ -157,14 +174,16 @@ tahoe run --reuse-atlas ~/Tahoe-100M/atlas
 `tahoe update` fetches the newest code. On Windows, with the portable MinGit, that is
 `& "C:\tahoe\mingit\cmd\git.exe" -C C:\tahoe\repo pull` (or `git -C C:\tahoe\repo pull` when git is on PATH).
 Then `tahoe run` (Windows: the same `python -m tahoemap run --out ...` as before, from `C:\tahoe\repo`) redoes only
-the stages whose method changed, and the stages after them. `tahoe` alone shows the plan first. An output that finished
-before the **explorer** stage existed runs it (and any stage whose method changed before it: after this update,
-direction, validate, vault and map too). The explorer takes about 15–25 minutes on the full data. When only the
-explorer's page files changed in an update, `tahoe run` copies just those (seconds). An output that finished before the
-**direction** stage existed runs `direction`, `validate`, `vault` and `map`, and also any earlier stage whose method
-changed since the output was made (the plan says which and why: an output made with older code, for example, may also
-redo `tables`, `embed`, `reference`, `relations` and `graph`: about 15–25 minutes in all on the full data, with embed's
-~6.8 GB of memory). The build, the effects and the tensor are kept unless the plan names them. The vault keeps your
+the stages whose method changed, and the stages after them. `tahoe` alone shows the plan first. **After this update**
+(reference version 3, tables 6, embed 5, relations 5, graph 6, direction 6, validate 8, vault 8, map 10, explorer 4)
+any output made before it, including one made before the explorer or the direction stage existed, redoes reference
+and every stage after it: `next: reference -> tables -> embed -> relations -> graph -> direction -> validate -> vault
+-> map -> explorer`. The build, the effects and the tensor are kept. The reference stage runs right after tensor
+(build → effects → tensor → reference → tables → embed → relations → graph → direction → validate → vault → map →
+explorer), because tables shows each drug's ChEMBL annotation. About 45–60 minutes on the full data (the explorer
+alone about 15–25 minutes, embed with ~6.8 GB of memory), plus the first ChEMBL and Compara downloads (below: up to
+about 40 minutes on a slow link). When only the explorer's page files changed in an update, `tahoe run` copies just
+those (seconds). The vault keeps your
 Obsidian settings; in its graph view the new note *Probable direction*, which every gene note links, shows as a hub
 until you add `-file:"Probable direction"` to the graph's filter (a new vault has it).
 
@@ -184,8 +203,8 @@ Options go through `tahoe run` to `python -m tahoemap run` (all of them: `python
 `--offline` (no annotation downloads), `--dims 64` (vector space size), `--from STAGE` / `--to STAGE`, `--redo`
 (every stage again; the build then sums every plate again), `--tensor-dtype float16` (halves the 4.4 GB per-well
 tensor), `--no-well-tensor`, `--workers N`, `--unreliable-plates plate13|none`, `--min-cells 30`. For the explorer:
-`--site-url URL` (where it is published; the vault, the map and the look-ups link there; default
-`https://<owner>.github.io/<repo>/` of this code's GitHub repository; `none` for no site), `--data-url URL`,
+`--site-url URL` (where it is published; the validation report, the vault, the map and the look-ups link there;
+default `https://<owner>.github.io/<repo>/` of this code's GitHub repository; `none` for no site), `--data-url URL`,
 `--with-line-dd` (also every gene's per-line values per drug-dose, about 4.3 GB more), `--pages-max-mb 905` (in MiB
 of 1,048,576 bytes: 905 MiB is 0.949 GB, about 50 MB below GitHub Pages' 1 GB limit; above it, parts of the pages
 move to the data folder; nothing is dropped). Look-ups take `--top N` or `--top all`.
@@ -197,7 +216,21 @@ later `tahoe run` without them keeps them, and giving one with another value red
 stage after it (`tahoe` says which stage is out of date and why). The public annotations are downloaded once and
 cached; a source that failed to download is retried by the next `tahoe run` with network (`--offline` keeps the run
 as it is), and `tahoe run --from reference` (or `tahoe run --refresh-reference`, which downloads even what is cached)
-fetches them again and redoes the stages that use them, the vault included.
+fetches them again and redoes the stages that use them: since reference runs before tables, that is tables, embed and
+every later stage.
+
+The reference stage downloads, the first time: HGNC, the Ensembl r112 GTF, UniProt, NCBI, Reactome, Hallmark and
+STRING (~200 MB, ~3 min); each drug's ChEMBL record (www.ebi.ac.uk web services: about 52 requests for the 379
+drugs, 2.5 to 10 minutes depending on how fast the EBI server answers, one log line per request; a few MB, cached in
+`reference/downloads/chembl_drugs.json`); and the Ensembl Compara paralogues (ftp.ensembl.org, a ~140 MB file
+streamed; only the human paralogue rows are kept, in `reference/downloads/compara_human_paralogues.tsv.gz`). The
+Compara time depends on the link to ftp.ensembl.org: about 2 minutes on a fast link, up to about 30 minutes at the
+speed the PC's own GTF download showed (55.5 MB in 12 minutes); it logs its progress every 10 MB, and a dropped
+connection starts the file again (up to 4 tries). Later runs use the cache. If PubChem cannot be reached, ChEMBL
+matches the drugs by name only; `reference/sources.json` then says 'failed (PubChem not reached ...)' for ChEMBL, each
+drug's note says so, and the next run with network fetches ChEMBL again. Offline without the cache, the drug
+classes come from the code constants only (every drug reads 'ChEMBL not loaded') and the paralogue table is not
+written.
 
 ## Windows
 
@@ -222,10 +255,12 @@ a leftover worker: `taskkill /T /F /PID <pid>`). Then, from `C:\tahoe\repo`, wit
 ```powershell
 C:\tahoe\.venv\Scripts\python.exe -m tahoemap status --out C:\tahoe\out
 C:\tahoe\.venv\Scripts\python.exe -m tahoemap gene MDM2 --out C:\tahoe\out
+C:\tahoe\.venv\Scripts\python.exe -m tahoemap similar Dexamethasone 5 --out C:\tahoe\out
+C:\tahoe\.venv\Scripts\python.exe -m tahoemap signature --up "@C:\tahoe\genes.txt" --out C:\tahoe\out
 Start-Process C:\tahoe\out\explorer\web\index.html     # the explorer, in the default browser
 ```
 
-To check the install first (about 5 minutes, synthetic data, no download), from `C:\tahoe\repo`:
+To check the install first (about 7 minutes, synthetic data, no download), from `C:\tahoe\repo`:
 
 ```powershell
 C:\tahoe\.venv\Scripts\python.exe tests\run_tests.py --workdir C:\tahoe\test
@@ -234,9 +269,11 @@ C:\tahoe\.venv\Scripts\python.exe tests\test_windows.py
 C:\tahoe\.venv\Scripts\python.exe tests\test_review.py --out C:\tahoe\test\out_seed0   # the review agents, fake API
 ```
 
-- `run_tests.py` (about 6 minutes) should end with "85 passed, 6 warnings, 0 failed" when Playwright is not
-  installed, or "106 passed, 0 warnings, 0 failed" with it; `test_review.py` (a few minutes, offline, no key) with
-  "0 failed". It works in a folder of its own in the temp folder and only reads `--out`.
+- `run_tests.py` (about 7 minutes) should end with "165 passed, 8 warnings, 0 failed" when Playwright is not
+  installed, or "189 passed, 1 warnings, 0 failed" with it (the one warning with Playwright: the 'lowered by mTOR
+  inhibitors' module label, a planted effect below what its rule can call on seed 0); `test_review.py` (a few
+  minutes, offline, no key) with "0 failed". It works in a folder of its own in the temp folder and only reads
+  `--out`.
 - The warnings say the browser checks were skipped: those checks open the map and the explorer in a headless
   browser and need Playwright. They are optional. To include them, run
   `C:\tahoe\.venv\Scripts\python.exe -m pip install playwright`, then
@@ -251,7 +288,9 @@ C:\tahoe\.venv\Scripts\python.exe tests\test_review.py --out C:\tahoe\test\out_s
 - With Windows Smart App Control on, Windows may block a library file the first time Python loads it ("An
   Application Control policy has blocked this file"). Running the same command again usually works. A stopped
   run continues from its finished stages.
-- Downloads (the reference stage: HGNC, Ensembl, UniProt, NCBI, Reactome, STRING ...) are verified by Windows
+- A gene list for `signature --up @FILE` can be written by PowerShell (`>` writes UTF-16) or Notepad: both read
+  as plain names.
+- Downloads (the reference stage: HGNC, Ensembl, UniProt, NCBI, Reactome, STRING, ChEMBL, Compara ...) are verified by Windows
   itself through `truststore` when it is installed; `requirements.txt` installs it on Windows. Without it, Python on
   Windows cannot verify some servers' certificates (Ensembl's and NCBI's, whose root certificate Windows adds to its
   store only when one of its own programs first needs it) and those sources fail with "certificate verify failed".
@@ -278,7 +317,10 @@ graph, the relations, the vector space, the stage records, the derived reference
 with a `README.md` (what each folder
 holds, the code version and commit, the date, the sizes, what was left out and why), a `MANIFEST.tsv` (size and
 sha256 of every file) and a `.gitattributes` that stops git from changing line ends. It never copies the build, the
-per-line arrays, the downloads or API-key records, and it refuses while a run works on the output.
+per-line arrays, the downloads or API-key records, and it refuses while a run works on the output. A few text files
+name the folders of your computer (the stage records, `reference/sources.json`, `run.log`, the vault's `Home.md`):
+their copies say `<out>` (the output folder), `<data>` (the data folder) and `<cache>` (the reference cache)
+instead, and the export's `README.md` lists them; the files in the output folder are not changed.
 
 - **GitHub refuses files over 100 MB.** A file over 95 MiB is not copied; the command and `README.md` list it (use
   Git LFS or a GitHub release for it). GitHub also refuses one push over 2 GB: when the total is larger, the
@@ -356,9 +398,11 @@ powershell -ExecutionPolicy Bypass -File C:\tahoe\pub\publish.ps1
 
 ## Resources
 
-Measured on the full data (95.6M cells) on a 4-core machine with 15 GB of memory (the direction stage, and what it
-adds to the vault and the map, are estimates: they were measured on generated outputs of the full size, because the
-stage has not yet run on the real data):
+Measured on the full data (95.6M cells) on a 4-core machine with 15 GB of memory. The direction stage was measured
+on the user's PC at direction version 2 (the code of d523eae: 3.3 min, peak 1.7 GB); version 6 adds tests and is
+estimated at about 6 minutes. The vault was measured there too (34,281 notes, 0.73 GB); the newer gene notes add about
+a fifth. The explorer's figures are estimates from generated outputs of the full size (it has not yet run on the real
+data):
 
 | Stage | Time | Disk it adds | Peak memory |
 |---|---|---|---|
@@ -366,20 +410,20 @@ stage has not yet run on the real data):
 | build, local files | faster than streaming (disk-bound); one worker per plate | 20 GB | ~2.6–3 GB per worker |
 | effects | 10 min | 0.7 GB | 4.6 GB |
 | tensor | 9 min | 3.7 GB, plus 4.4 GB for the per-well tensor (2.2 GB with `--tensor-dtype float16`, none with `--no-well-tensor`) | ~3 GB |
+| reference (now right after tensor) | ~3 min the first time (downloads ~200 MB), plus ChEMBL (2.5–10 min, a few MB) and the Compara paralogues (~140 MB streamed: ~2 min on a fast link, up to ~30 min on a slow one); seconds after | 0.2 GB | ~1 GB |
 | tables, embed | 2 + 2 min | < 0.1 GB | 6.8 GB (embed) |
-| reference | ~3 min the first time (downloads ~200 MB), seconds after | 0.2 GB | ~1 GB |
 | relations, graph, validate | 1 + 2 + 1 min | 0.15 GB | ~3 GB |
-| direction | ~6–7 min (estimated) | < 0.1 GB | 1.3–1.8 GB (estimated) |
-| vault, map | 2 min + seconds | 0.6 GB (35,000 notes; the direction sections add ~0.06 GB), about 26 MB for the map (nothing is left out to make it smaller; the stage warns above 25 MB) | ~1.5 GB, plus up to ~1 GB to read the direction arrows (estimated) |
-| explorer | ~15–25 min (estimated) | ~5.9 GB: pages 0.67 GB, data 5.2 GB (+4.3 GB with `--with-line-dd`); the stage checks for 1.3 times its estimate of free space first | ~2.5–3 GB (estimated; the per-line tensor is read in blocks, so the peak the stage reports is the memory it really uses) |
-| publishing the explorer (optional) | upload time | ~5.2 GB in the export folder: the page copies (0.67 GB) and the upload's git copies (~4.5 GB, which can be deleted once the pages are live); plus ~5.2 GB for a while after a later run (the previous run's data, kept by the hard links until `export --explorer --force`) | small |
+| direction | 3.3 min measured at version 2 (PC); ~6 min estimated at version 6 | < 0.1 GB | 1.7 GB measured at version 2 |
+| vault, map | 2 min + seconds | about 0.9 GB (0.73 GB measured on the PC for 34,281 notes at an earlier vault version, plus about 22% for the newer gene-note sections), about 26 MB for the map (nothing is left out to make it smaller; the stage warns above 25 MB) | ~1.5 GB, plus up to ~1 GB to read the direction arrows (estimated) |
+| explorer | ~15–25 min (estimated) | ~5.9 GB: pages about 0.73 GB, data 5.2 GB (+4.3 GB with `--with-line-dd`); the stage first checks for 1.3 times its estimate (about 5.4 GB), so it needs about 7 GB free | ~2.5–3 GB (estimated; the per-line tensor is read in blocks, so the peak the stage reports is the memory it really uses) |
+| publishing the explorer (optional) | upload time | ~5.2 GB in the export folder: the page copies (0.73 GB) and the upload's git copies (~4.5 GB, which can be deleted once the pages are live); plus ~5.2 GB for a while after a later run (the previous run's data, kept by the hard links until `export --explorer --force`) | small |
 
 So: about 36 GB of disk in all and ~1 hour after the build; about 41 GB with the published explorer, and up to
 about 47 GB between a later `run` and its `export --explorer --force`. Build workers are sized from free memory; if one
 is killed for lack of memory the build stops and says so (finished plates are kept): rerun with fewer `--workers`.
 
-## Test it first (3–5 minutes, no download)
+## Test it first (about 7 minutes, no download)
 
 ```bash
-tahoe test             # synthetic Tahoe-100M with planted answers, the whole pipeline, and 106 checks
+tahoe test             # synthetic Tahoe-100M with planted answers, the whole pipeline, and 190 checks
 ```

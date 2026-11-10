@@ -23,12 +23,70 @@ log = T.log
 #                  can be reused);  <out>/tensor  per-cell-line layer;  <out>/tables  fold-change tables;
 # <out>/embed      gene / drug / line vectors;  <out>/relations  gene-gene relations;  <out>/graph  nodal map;
 # <out>/direction  probable direction between genes (which acts on which; from the cell lines);
-# <out>/reference  public annotations;  <out>/validation;  <out>/vault  Obsidian;  <out>/map  interactive map;
+# <out>/reference  public annotations (genes, and the drugs' mechanisms from ChEMBL);  <out>/validation;
+# <out>/vault  Obsidian;  <out>/map  interactive map;
 # <out>/explorer   the explorer: searchable web pages over every result, with complete and exact data (web/ for
 #                  GitHub Pages, data/ for its data repository; tahoemap/explorer.py);
 # <out>/stages     one stamp per finished stage.
-STAGES = ["build", "effects", "tensor", "tables", "embed", "reference", "relations", "graph", "direction",
+# reference runs right after tensor (it reads atlas/ only): tables and every later stage show Tahoe's and ChEMBL's
+# drug annotations side by side and use the drug mechanism classes (tahoemap/mechanisms.py).
+STAGES = ["build", "effects", "tensor", "reference", "tables", "embed", "relations", "graph", "direction",
           "validate", "vault", "map", "explorer"]
+
+# ----------------------------------------------------------------------------- flag tokens
+# The artifact flags of a drug-dose (or of a gene under it). The first seven are atlas_core.ARTIFACT_FLAGS, copied
+# verbatim: atlas_core is a verbatim port of the old method and cannot change (tests/test_port.py checks both). The
+# eighth, NB_FLAG, is set by the tables stage: the signal may have come from a neighbouring well.
+NB_FLAG = "like a neighbouring well"
+NB_TOP = "like a neighbouring well (top dose)"
+NB_CLEARED = "like a neighbouring well (not this gene)"
+TL_DD = "translation inhibitor"
+TL_RISE = "rise under a translation inhibitor"
+ARTIFACT_FLAGS = ("toxic", "transcription drop", "cell-cycle shift", "unreliable plate only",
+                  "position not correctable", "position correction uncertain", "wells disagree", NB_FLAG)
+# soft tokens: shown as caveats next to the value, never counted as artifact flags
+CAVEAT_FLAGS = (NB_TOP, NB_CLEARED, TL_DD, TL_RISE)
+# the plain words of the new tokens (the explorer, the vault and the look-ups show them)
+FLAG_TEXT = {
+    NB_FLAG: "Many genes this drug-dose changes are changed the same way, more strongly, in a well right next to it on "
+             "the same plate (another compound), and the drug's higher doses do not change them. The signal may have "
+             "come from that well (carried over, or a local problem on that part of the plate). Artifact flag for "
+             "these genes.",
+    NB_CLEARED: "This drug-dose shares much of its signature with a neighbouring well, but the neighbour does not "
+                "change this gene the same way, so this value is not under that suspicion. Not an artifact flag.",
+    NB_TOP: "At the drug's top dose many genes it changes are changed the same way in a neighbouring well (another "
+            "compound), and its lower doses do not change them. With no higher dose to check, the data cannot tell a "
+            "carried-over signal from a real effect. Not an artifact flag.",
+    TL_DD: "The drug stops protein synthesis (tahoemap/data/drug_classes.json). Not an artifact flag.",
+    TL_RISE: "Rise under a translation inhibitor: the drug stops protein synthesis, which raises many short-lived "
+             "mRNAs whatever their pathway (the proteins that switch their genes off or break them down are no longer "
+             "made). Read it as possible mRNA stabilisation, not as activation of the gene's pathway. Not an artifact "
+             "flag.",
+}
+
+
+def has_artifact(flags):
+    """True when any token of a '; '-joined flag string is one of ARTIFACT_FLAGS (the caveat tokens are not)."""
+    return any(t in ARTIFACT_FLAGS for t in str(flags or "").split("; "))
+
+
+# a q of exactly 0: below the smallest number a float32 can hold (the tables store q as float32)
+Q_ZERO = "< 1e-45"
+Q_ZERO_TEXT = "below 1e-45, the smallest number a float32 can hold (stored as 0)"
+
+
+def fmt_q(q, fmt="{:.0e}"):
+    """A q value as text: '' for None or NaN, Q_ZERO for exactly 0, else fmt.format(q)."""
+    if q is None:
+        return ""
+    try:
+        if q != q:
+            return ""
+        if q == 0:
+            return Q_ZERO
+    except (TypeError, ValueError):
+        return ""
+    return fmt.format(q)
 
 
 def folder(out, name):

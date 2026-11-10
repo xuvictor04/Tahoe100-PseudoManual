@@ -7,7 +7,8 @@
 
 Re-runs tools/port_from_old.py on the old tahoe_atlas.py / tahoe_mtap_gankyrin.py and compares the result with the
 committed modules character for character (line endings aside: a checkout with Windows CRLF line endings is the same
-text). Any hand edit of a ported function makes this fail.
+text). Any hand edit of a ported function makes this fail. Also checks that tahoemap/common.py's ARTIFACT_FLAGS is
+atlas_core's list, verbatim, plus the neighbouring-well flag (common.NB_FLAG).
 """
 
 import argparse
@@ -60,6 +61,16 @@ def main():
         print("FAIL: differs from a fresh port of the old scripts:", ", ".join(bad))
         sys.exit(1)
     print("PASS: atlas_core.py, tlib.py and PORT_MANIFEST.tsv are a verbatim port of the old method")
+    # the shared artifact-flag list (common.ARTIFACT_FLAGS) starts with atlas_core's, verbatim, and adds the
+    # neighbouring-well flag: atlas_core cannot change, so every reader takes the list from common
+    from tahoemap import atlas_core as A
+    from tahoemap import common as C
+    if not (C.ARTIFACT_FLAGS[:7] == tuple(A.ARTIFACT_FLAGS) and C.ARTIFACT_FLAGS[7] == C.NB_FLAG
+            and len(C.ARTIFACT_FLAGS) == 8):
+        print(f"FAIL: common.ARTIFACT_FLAGS {C.ARTIFACT_FLAGS} is not atlas_core.ARTIFACT_FLAGS "
+              f"{tuple(A.ARTIFACT_FLAGS)} + common.NB_FLAG")
+        sys.exit(1)
+    print("PASS: common.ARTIFACT_FLAGS = atlas_core.ARTIFACT_FLAGS + the neighbouring-well flag")
 
 
 if __name__ == "__main__":

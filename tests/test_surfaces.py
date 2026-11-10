@@ -34,6 +34,17 @@ What is checked:
   validation module_enrichment.csv names every overlapping gene; report.md marks a cut name with '…'
   look-ups   `gene X --top 0` and --top all print every row (no '... more'); a capped list prints 'all N: <url>';
              query.parse_top; whether cli.py takes '--top all' (warn until it does)
+  second wave (tables VERSION 5 and later; 'warn' on an older output)
+             vault: a translation inhibitor's class line with its source and both annotations; every
+             neighbouring-well drug-dose named in its drug's note with its alert and a link to the neighbour; gene
+             notes with 'Pattern over the doses (each on its own plate)', 'vs DMSO (rough)' and the wells; no
+             '0e+00'; the per-line cut with 2 decimals; TP53 never 'wt'; the lineage module's tag; 'false (group)'
+             look-ups: within 120 characters, no '0e+00'; the class and both annotations; TP53 'not recorded
+             (presumed wild type, not confirmed)'; `similar` (the other glucocorticoids first); `signature` (the
+             planted glucocorticoid genes rank the glucocorticoids first; random signatures give ~5% at p <= 0.05)
+             map: no '0e+00'; TP53 values; 'wild type' only in the caveat; the flag words; partner preservation;
+             in a browser: Spread 1 at load, search of drugs, drug-doses and lines with their panels, the help and
+             the tour's axis names
 """
 
 import argparse
@@ -718,6 +729,274 @@ def query_checks(out, data=None):
                 f"problems {bad[:3]}")
 
 
+# ----------------------------------------------------------------------------- the second wave (vault 7, map 9)
+TP53_VALUES = {"altered", "not recorded", "unknown"}           # tables lines.parquet tp53_status (never 'wild type')
+# where the words 'wild type' may appear on the map: the caveat that 'not recorded' is not 'wild type', and the
+# presumed status of a line without a TP53 record
+WILD_TYPE_OK = ("'Not recorded' is not 'wild type'", "presumed wild type", "not recorded is not wild type")
+
+
+def _second_wave(out):
+    """(drugdoses.parquet, drugs.parquet, tables/info.json) of a tables VERSION 5 output, else None."""
+    tb = os.path.join(out, "tables")
+    if not os.path.exists(os.path.join(tb, "drug_line_response.parquet")):
+        return None
+    info = json.load(open(os.path.join(tb, "info.json"), encoding="utf-8"))
+    return (pd.read_parquet(os.path.join(tb, "drugdoses.parquet")), pd.read_parquet(os.path.join(tb, "drugs.parquet")),
+            info)
+
+
+def _tl_drug(info):
+    """The first translation inhibitor of the run (tables/info.json translation_inhibitors), '' when none."""
+    return next(iter(sorted((info.get("translation_inhibitors") or {}).get("members") or {})), "")
+
+
+def vault_wave2_checks(out):
+    """The vault's second-wave texts: a translation inhibitor's note has its class line with the source and both
+    annotations; each neighbouring-well drug-dose is named in its drug's note ('⚠ Like a neighbouring well: <the
+    alert>' for the artifact tier, 'Neighbouring well: ...' for the top-dose tier) with a link to the neighbour's
+    drug; gene notes have 'Pattern over the doses (each on its own plate)', the 'vs DMSO (rough)' column and the
+    wells ('· 2 wells', '· one well'); no note prints '0e+00' (a q of 0 is '< 1e-45'); the per-line cut prints with 2
+    decimals; no line note's TP53 cell reads 'wt' or 'wild type'; the lineage-restricted module's title carries its
+    tag and its alert line; the direction tables have 'false (group)', and a tested gene without arrows says so."""
+    sw = _second_wave(out)
+    vt = os.path.join(out, "vault")
+    if sw is None or not os.path.isdir(vt):
+        return "warn", "an older output (no tables VERSION 5 or no vault): not checked"
+    dd, drugs, info = sw
+    bad, notes = [], {}
+    for root, _d, files in os.walk(vt):
+        if ".obsidian" in root:
+            continue
+        for f in files:
+            if f.endswith(".md"):
+                notes[os.path.join(root, f)] = open(os.path.join(root, f), encoding="utf-8").read()
+
+    def note(rel):
+        return notes.get(os.path.join(vt, *rel.split("/")), "")
+    tl = _tl_drug(info)
+    t = note(f"Drugs/{tl} (drug).md") if tl else ""
+    cls = [x for x in t.splitlines() if x.startswith("- Class: ")]
+    chembl = str(drugs.set_index("drug").get("chembl_id", pd.Series(dtype=str)).get(tl, "")) if tl else ""
+    if tl and not (cls and "translation inhibitor" in cls[0] and "(code constant (" in cls[0] and "- Tahoe: " in t
+                   and (not chembl or re.search(r"- ChEMBL \d+: .+ \(CHEMBL\d+\)", t))):
+        bad.append(f"{tl}: class line / annotations")
+    by_dd = dd.set_index("dd")
+    n_nb = 0
+    for r in dd[dd["nb_tier"] != ""].itertuples(index=False):
+        n_nb += 1
+        t = note(f"Drugs/{r.drug} (drug).md")
+        partner = str(by_dd.at[int(r.nb_partner_dd), "drug"]) if int(r.nb_partner_dd) >= 0 else ""
+        head = "⚠ Like a neighbouring well: " if r.nb_tier == "artifact" else "Neighbouring well: "
+        if not (f"{head}{r.nb_alert}" in t and f"[[{partner} (drug)]]" in t):
+            bad.append(f"{r.drug} {r.dose}: '{head}...' with the link to {partner}")
+    gn = {p: x for p, x in notes.items() if f"{os.sep}Genes{os.sep}" in p and not p.endswith(" — plates.md")}
+    n_pat = sum("Pattern over the doses (each on its own plate)" in x for x in gn.values())
+    n_dmso = sum("| vs DMSO (rough) |" in x for x in gn.values())
+    wells = (any("· 2 wells" in x for x in gn.values()), any("· one well" in x for x in gn.values()))
+    if n_pat < 100 or n_dmso < 100 or not all(wells):
+        bad.append(f"gene notes: pattern header {n_pat}, 'vs DMSO (rough)' {n_dmso}, wells {wells}")
+    zero = [os.path.relpath(p, vt) for p, x in notes.items() if "0e+00" in x]
+    if zero:
+        bad.append(f"'0e+00' in {zero[:3]}")
+    cuts = set(re.findall(r"per-line \|z\| ≥ (\d+\.?\d*)", "\n".join(gn.values())))
+    want_cut = f"{float(info.get('line_z_threshold', float('nan'))):.2f}"
+    if not cuts or cuts != {want_cut}:
+        bad.append(f"per-line cuts {sorted(cuts)} (want {want_cut})")
+    ln = [x for p, x in notes.items() if f"{os.sep}Cell lines{os.sep}" in p]
+    tp = [m.group(1).strip() for x in ln for m in [re.search(r"\| TP53 status \| ([^|]+) \|", x)] if m]
+    if len(tp) != len(ln) or not all("not recorded" in x or x == "altered" or x == "unknown" for x in tp) \
+            or any("| wt |" in x for x in gn.values()):
+        bad.append(f"line notes' TP53 status {sorted(set(tp))}")
+    lab = os.path.join(out, "validation", "module_labels.csv")
+    lin = pd.read_csv(lab).fillna("") if os.path.exists(lab) else pd.DataFrame(columns=["label_source"])
+    lin = lin[lin["label_source"] == "lineage"]
+    for m in lin["module"].astype(int).tolist()[:3]:
+        t = note(f"Modules/Module {m:03d}.md")
+        title = t.split("\n# ", 1)[1].split("\n", 1)[0] if "\n# " in t else ""
+        if "⚠ lineage-restricted" not in title or "> ⚠ lineage-restricted:" not in t:
+            bad.append(f"Module {m:03d}: title '{title[:80]}'")
+    n_false = sum("| false (group) |" in x for x in gn.values())
+    n_none = sum("no arrow passed." in x for x in gn.values())
+    if os.path.exists(os.path.join(out, "direction", "edges.parquet")) and (n_false < 10 or n_none < 1):
+        bad.append(f"direction tables with 'false (group)' {n_false}, genes 'tested ... no arrow passed.' {n_none}")
+    return not bad, (f"{len(notes):,} notes: {tl or 'no translation inhibitor'}'s class line "
+                     f"{cls[0][:70] if cls else '-'}"
+                     f"...; {n_nb} neighbouring-well drug-doses named in their drug notes; gene notes with the pattern "
+                     f"header {n_pat}, 'vs DMSO (rough)' {n_dmso}; '0e+00' nowhere; per-line cut {sorted(cuts)}; TP53 "
+                     f"status in line notes {sorted(set(tp))}; 'false (group)' in {n_false} gene notes; 'no arrow "
+                     f"passed.' in {n_none}; problems {bad[:4]}")
+
+
+def lookup_wave2_checks(out, data=None):
+    """The look-ups' second-wave texts: `gene`, `drug`, `line` and `module` stay within 120 characters and never
+    print '0e+00'; `drug` of a translation inhibitor names its class and both annotations; `line` of a line without a
+    TP53 record says 'not recorded (presumed wild type, not confirmed)'; `similar` of a glucocorticoid at 5 µM lists
+    the other glucocorticoid receptor agonists first; `signature` with the planted glucocorticoid genes ranks the
+    four glucocorticoids at 5 µM first (p <= 0.001); random 20-gene signatures give about 5% of the drug-doses at
+    p <= 0.05 (the null is calibrated)."""
+    sw = _second_wave(out)
+    if sw is None:
+        return "warn", "an older output (no tables VERSION 5): not checked"
+    dd, drugs, info = sw
+    from tahoemap import mechanisms as MC
+    from tahoemap import query as Q
+    bad, res = [], {}
+    lines = pd.read_parquet(os.path.join(out, "tables", "lines.parquet"))
+    nr = lines[lines["tp53_status"] == "not recorded"]["cell_name"].tolist()
+    tl = _tl_drug(info)
+    runs = [("gene", "CDKN1A"), ("module", "1")] + ([("drug", tl)] if tl else []) + ([("line", nr[0])] if nr else [])
+    for args in runs:
+        code, txt, err = _run_lookup(out, data, *args)
+        wide = max((len(x) for x in txt.splitlines()), default=0)
+        res[" ".join(args)] = (code, len(txt.splitlines()), wide)
+        if code != 0 or wide > 120 or "0e+00" in txt:
+            bad.append((" ".join(args), code, wide, "0e+00" in txt, err[-200:]))
+        if args[0] == "drug" and not ("class: translation inhibitor" in txt and "Tahoe: targets" in txt):
+            bad.append(f"drug {tl}: class and annotations")
+        if args[0] == "line" and ("TP53: not recorded (presumed wild type, not confirmed)" not in txt
+                                  or re.search(r"TP53: (wild type|wt)\b", txt)):
+            bad.append(f"line {nr[0]}: TP53 words")
+    gr = [d for d in MC.members(out, "GR_AGONIST") if ((dd["drug"] == d) & (dd["dose"] == "5")).any()]
+    if len(gr) >= 2:
+        q0 = "Dexamethasone" if "Dexamethasone" in gr else gr[0]
+        others = [x for x in gr if x != q0]
+        code, txt, _e = _run_lookup(out, data, "similar", q0, "5")
+        first = re.findall(r"^\s+\d+\s+(.+?) \d", txt, re.M)[:len(others)]
+        res["similar"] = first
+        if code != 0 or not first or not all(any(r_.startswith(o) for o in others) for r_ in first):
+            bad.append(f"similar {q0} 5: {first} (want {others} first)")
+    truth = os.path.join(data, "ground_truth.json") if data else ""
+    if truth and os.path.exists(truth):
+        gl = json.load(open(truth, encoding="utf-8"))["extra_not_in_panel_spec"]["synthetic gene sets"].get("GLUCO")
+        if gl and len(gr) >= 2:
+            code, txt, _e = _run_lookup(out, data, "signature", "--up", ",".join(gl))
+            sec = txt.split("DRUG-DOSES THAT MIMIC IT", 1)[1].split("DRUG-DOSES THAT REVERSE", 1)[0] \
+                if "DRUG-DOSES THAT MIMIC IT" in txt else ""
+            top = re.findall(r"^\s+\d+\s+(.+?)\s+[+-]\d+\.\d+\s+[+-]?\S+\s+(\S+)", sec, re.M)[:len(gr)]
+            want = {f"{d} 5" for d in gr}
+            res["signature"] = top
+            if code != 0 or {x[0].strip() for x in top} != want or not all(float(x[1]) <= 0.001 for x in top):
+                bad.append(f"signature GLUCO: {top}")
+    o = Q.Out(out)
+    g = o.genes()
+    Z, _src = Q._sig_matrix(o, [])
+    rng = np.random.default_rng(7)
+    fr = []
+    for k in range(30):
+        up = list(rng.choice(len(g), 20, replace=False))
+        s = Q.signature_scores(Z, up, [])
+        N = Q.signature_null(Z, up, [], g["pooled_cpm"].to_numpy(), seed=k)
+        fr.append(float(((1 + (N >= s[:, None] - 1e-12).sum(1)) / (N.shape[1] + 1) <= 0.05).mean()))
+    res["calibration"] = (round(float(np.mean(fr)), 3), round(min(fr), 3), round(max(fr), 3))
+    if not 0.02 <= np.mean(fr) <= 0.09:
+        bad.append(f"signature null: {res['calibration']}")
+    return not bad, (f"look-ups (exit, lines, widest) {res}; problems {bad[:4]}")
+
+
+def map_wave2_checks(out):
+    """The map's second-wave data: no '0e+00' anywhere on the page (a q of 0 is '< 1e-45'); the lines' TP53 values
+    are 'altered' / 'not recorded' / 'unknown', and 'wild type' appears only in the caveat that 'not recorded' is not
+    'wild type'; the flag words of the five new tokens; the partner-preservation figures of graph/info.json; every
+    drug, drug-dose and line searchable. In a headless browser: the page opens at Spread 1; the search finds a
+    translation inhibitor, a drug-dose and a line; the drug's panel shows both annotations and its class with the
+    source, a drug whose annotations disagree says so, a drug-dose highlights its genes, a line says 'TP53: not
+    recorded (presumed wild type)'; the help gives the measured partner preservation and never says 'replicated' or
+    'faithfully'; the tour's axes are named by drug-doses; no script errors."""
+    sw = _second_wave(out)
+    if sw is None:
+        return "warn", "an older output (no tables VERSION 5): not checked"
+    dd, drugs, info = sw
+    from tahoemap import common as CM
+    txt, D = map_data(out)
+    bad = []
+    if "0e+00" in txt:
+        bad.append("'0e+00' on the page")
+    tp = {str(x.get("tp", "")) for x in D.get("lnx") or []}
+    if not D.get("lnx") or not tp <= TP53_VALUES:
+        bad.append(f"TP53 values {sorted(tp)}")
+    rest = txt
+    for w in WILD_TYPE_OK:
+        rest = rest.replace(w, "")
+    if "wild type" in rest.replace("Wild type", "wild type"):
+        i = rest.find("wild type")
+        bad.append(f"'wild type' outside the caveat: ...{rest[max(0, i - 80):i + 20]}")
+    flw = D.get("flw") or {}
+    if any(flw.get(k) != CM.FLAG_TEXT[k] for k in (CM.NB_FLAG, CM.NB_TOP, CM.NB_CLEARED, CM.TL_DD, CM.TL_RISE)):
+        bad.append("flag words differ from common.FLAG_TEXT")
+    gi = os.path.join(out, "graph", "info.json")
+    pp = (json.load(open(gi, encoding="utf-8")).get("partner_preservation") if os.path.exists(gi) else None) or {}
+    if (D.get("pp") or {}).get("layouts") != pp.get("layouts"):
+        bad.append(f"partner preservation {D.get('pp')} vs graph/info.json {pp}")
+    if len(D.get("drg") or []) != drugs["drug"].nunique():
+        bad.append(f"{len(D.get('drg') or [])} drugs searchable of {drugs['drug'].nunique()}")
+    sp = _browser()
+    if sp is None:
+        return ("warn" if not bad else False), f"Playwright not installed: browser part skipped; problems {bad[:3]}"
+    import pathlib
+    tl = _tl_drug(info)
+    dis = drugs[drugs["annotation_alert"] != ""]["drug"].tolist()
+    lines = pd.read_parquet(os.path.join(out, "tables", "lines.parquet"))
+    nr = lines[lines["tp53_status"] == "not recorded"]["cell_name"].tolist()
+    named = dd[(dd["top_up"].fillna("") != "") | (dd["top_down"].fillna("") != "")]   # a drug-dose with genes to show
+    ddlab = f"{named['drug'].iloc[0]} {named['dose'].iloc[0]} uM" if len(named) else ""
+    res, errs = {}, []
+    try:
+        with sp() as p:
+            b = p.chromium.launch()
+            try:
+                pg = b.new_page(viewport={"width": 1300, "height": 850})
+                pg.on("pageerror", lambda e_: errs.append(str(e_)))
+                pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
+                pg.goto(pathlib.Path(os.path.join(out, "map", "gene_map.html")).resolve().as_uri())
+                pg.wait_for_function("() => !!window.TAHOE_MAP")
+                res["spread"] = (pg.evaluate("TAHOE_MAP.hasSpread()"), pg.evaluate("TAHOE_MAP.spread()"))
+
+                def card(kind, q):
+                    items = pg.evaluate(f"TAHOE_MAP.searchItems({json.dumps(q)})")
+                    it = next((x for x in items if x["kind"] == kind and x["name"] == q), None) or \
+                        next((x for x in items if x["kind"] == kind), None)
+                    if it is None:
+                        return None
+                    pg.evaluate(f"TAHOE_MAP.extra('{kind}', {it['k']})")
+                    return pg.evaluate("TAHOE_MAP.panel()")
+                t = card("drug", tl) if tl else ""
+                res["drug"] = bool(t) and ("Annotations: Tahoe and ChEMBL" in t and "Tahoe (never changed)" in t
+                                           and "Mechanism classes the rules use: translation inhibitor" in t)
+                t = card("drug", dis[0]) if dis else ""
+                res["disagree"] = (not dis) or ("⚠ The two annotations disagree: " in (t or ""))
+                t = card("dd", ddlab) if ddlab else ""
+                res["dd"] = (not ddlab) or (bool(t) and "highlighted on the map" in t
+                                            and len(pg.evaluate("TAHOE_MAP.highlighted()")) > 0)
+                res["dd_name"] = ddlab
+                t = card("line", nr[0]) if nr else ""
+                res["line"] = (not nr) or ("TP53: not recorded (presumed wild type)" in (t or ""))
+                pg.evaluate("TAHOE_MAP.tab('help')")
+                pg.wait_for_timeout(300)
+                h = pg.inner_text("body")
+                nod = (pp.get("layouts") or {}).get("x,y")
+                res["help"] = ((nod is None or f"On the nodal map, {round(100 * nod)}% of a gene's 15 strongest "
+                                f"partners" in h) and "replicated" not in h and "faithfully" not in h)
+                pg.evaluate("TAHOE_MAP.tab('tour')")
+                pg.wait_for_timeout(500)
+                opts = pg.evaluate("Array.from(document.querySelectorAll('.tsel[data-k=ai] option')).slice(0, 3)"
+                                   ".map(o => o.textContent)")
+                res["tour"] = bool(opts) and all(o.startswith(f"axis {i + 1} (") and "µM" in o
+                                                 for i, o in enumerate(opts))
+            finally:
+                b.close()
+    except Exception as e:  # noqa: BLE001
+        if "Executable doesn't exist" in str(e) or "playwright install" in str(e):
+            return "warn", "Playwright's Chromium is not installed: browser part skipped"
+        raise
+    if res.get("spread") and res["spread"][0] and res["spread"][1] != 1:
+        bad.append(f"opens at Spread {res['spread'][1]}")
+    bad += [k for k in ("drug", "disagree", "dd", "line", "help", "tour") if not res.get(k)]
+    return not bad and not errs, (f"page {len(txt) / 1e6:.2f} MB, no '0e+00'; TP53 values {sorted(tp)}; partner "
+                                  f"preservation {pp.get('layouts')}; browser (opens at Spread, panels, help, tour) "
+                                  f"{res}; problems {bad[:4]}; script errors {errs[:2]}")
+
+
 # ----------------------------------------------------------------------------- driver
 def check(out, data=None):
     """Every check of this file on a finished output: [(name, ok, detail)], ok True, False or 'warn'."""
@@ -740,7 +1019,13 @@ def check(out, data=None):
              ("vault: without a site URL the notes name the local explorer", lambda: vault_nosite_checks(out)),
              ("vault: Home's module table says 'k of N'", lambda: vault_home_checks(out)),
              ("look-ups: --top all prints every row; capped lists print 'all N: <url>'",
-              lambda: query_checks(out, data))]
+              lambda: query_checks(out, data)),
+             ("vault: second-wave texts (classes, annotations, neighbouring wells, wells, DMSO, q, cut, TP53, module "
+              "alerts, false (group))", lambda: vault_wave2_checks(out)),
+             ("look-ups: second-wave texts (classes, TP53 not recorded, no '0e+00'), similar and signature",
+              lambda: lookup_wave2_checks(out, data)),
+             ("map: second-wave data and panels (q, TP53, flag words, partner preservation, search of drugs, "
+              "drug-doses and lines, help, tour axes; browser)", lambda: map_wave2_checks(out))]
     res = []
     try:
         for name, fn in tests:

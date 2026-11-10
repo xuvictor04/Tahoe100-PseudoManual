@@ -10,19 +10,39 @@ Two different questions give two different maps:
 
 Both are t-SNE layouts of the top-90 neighbour distances (sklearn, precomputed sparse metric, the same PCA-based
 start, a fixed seed). Modules are Louvain communities (networkx) of the kNN graph that links each gene to its 15
-strongest partners by |cos| >= 0.3 whose relation is replicated ("both halves", i.e. fdr <= 0.10) or very strong in
-one half of the compounds (|cos| >= 0.5) (weight |cos|, sign kept). Inside a module, each gene's side of the
-module's main direction gives its arm; a module has a real "-" arm only when >= 5 genes sit on that side AND the two
-sides anti-correlate (mean cosine between them <= -0.2): then the + arm and the - arm move opposite to each other
-under the same drugs. Otherwise every member is "+" (a single-armed module). Modules larger than 300 genes or
+strongest partners by |cos| >= 0.3 whose relation has the same sign in both halves of the compounds ("both halves",
+fdr <= 0.10) or is very strong in one half (|cos| >= 0.5) (weight |cos|, sign kept). Inside a module, each gene's
+side of the module's main direction gives its arm; a module has a real "-" arm only when >= 5 genes sit on that side
+AND the two sides anti-correlate (mean cosine between them <= -0.2): then the + arm and the - arm move opposite to
+each other under the same drugs. Otherwise every member is "+" (a single-armed module). Modules larger than 300 genes or
 looser than a mean member |cosine| of 0.3 are split again by Louvain on their own subgraph (up to 4 levels): at full
 scale the first pass returns programme-sized communities of 1,000+ loosely related genes. modules.parquet records the
 mean cosine within each arm and between the arms. Module scores per (drug-dose, line) = mean z of the + arm minus
 mean z of the - arm (the + arm alone in single-armed modules), from tensor DDL_z; pooled scores likewise from atlas
 DD_z. A module's responsive lines are those with the largest mean |score| over its 8 strongest drug-doses. Its drug
 lists (drugs_up / drugs_down) are the 8 strongest pooled module z, flagged drug-doses included in their ranked
-place: a drug-dose with an artifact flag (atlas_core.has_artifact) reads '... (+4.2) (⚠ toxic; transcription drop)'
-(its flags), and any of the 8 strongest without an alert that falls beyond the first 8 is listed too.
+place: a drug-dose with an artifact flag (common.has_artifact on its flags of record, tables.dd_flags_of_record, so
+'like a neighbouring well' counts) reads '... (+4.2) (⚠ toxic; transcription drop)' (its flags of record), and any of
+the 8 strongest without an alert that falls beyond the first 8 is listed too.
+
+Module covariates (graph version 6). A module whose pooled score rises and falls with a technical measure of the
+wells, or with the cell-cycle shift, may be partly that measure. For each module and each covariate of
+tables/drugdoses.parquet - UMI per cell, genes per cell, cells per well (cell loss), the composition shift (technical),
+the S-phase shift, the G2/M shift (cell cycle) - modules.parquet gives cov_<k>_r (Pearson) and cov_<k>_rho
+(Spearman) over the trusted drug-doses (not 'unreliable plate only', 'position not correctable' or 'wells disagree').
+covariate_tag lists 'moves with <covariate> across drug-doses (r .., rank r ..)' for each covariate with
+min(|r|, |rank r|) >= 0.3 ('' when none); covariate_kinds says 'technical', 'cell cycle' or both. A note, not an
+alert: a cell-cycle module is expected to move with the cell-cycle shift. info.json covariate_null_max_r: per
+covariate, the 99% quantile over 200 shuffles of the largest |r| over the modules (about 0.12-0.16 on the real
+data), so 0.3 is well above chance.
+
+Partner preservation (graph version 6). info.json partner_preservation: for each layout (x,y; xs,ys; xm,ym; xsm,ysm),
+the share of the genes' 15 strongest relation partners (both on the map) that are among the gene's 50 nearest genes
+on that layout, and chance = 50 / (genes - 1). On the real data 0.358 (nodal), 0.357 (signed), 0.314 (nodal spread)
+and 0.310 (signed spread), against 0.0033 by chance: a flat map keeps about a third of each gene's closest partners
+nearby, far more than chance but far from all. Read the partner lists (relations), not the distance on the map.
+
+graph/modules.gmt: one gene set per module arm ('module <m> +', 'module <m> -'), members ordered by |projection|.
 
 Spread layouts (xm, ym on the nodal map; xsm, ysm on the signed map). t-SNE keeps each gene's near neighbours but
 packs the groups against each other, so on the 2D maps the modules look mushed. The spread layouts keep each group's
@@ -63,12 +83,14 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from . import atlas_core as A
-from .common import folder, log, read_effects_index, save_npy, stable_seed, stamp_stage, write_json, \
-    write_parquet
+from .common import folder, has_artifact, log, read_effects_index, replace_file, save_npy, stable_seed, \
+    stamp_stage, write_json, write_parquet
 
-VERSION = 5                # 4: spread layouts (xm, ym, xsm, ysm); flagged drug-doses marked in the module drug lists
+VERSION = 6                # 4: spread layouts (xm, ym, xsm, ysm); flagged drug-doses marked in the module drug lists
 #                            5: genes without a module move with one group; top_plus / top_minus marked and capped
+#                            6: the drug lists read the flags of record (common.has_artifact); module covariates
+#                               (cov_<k>_r / _rho, covariate_kinds, covariate_tag); info.json partner_preservation;
+#                               graph/modules.gmt
 K_EDGES = 15
 K_LAYOUT = 90
 MIN_MODULE = 5
@@ -85,6 +107,33 @@ SPREAD_FILL = 0.4        # groups packed until their discs cover this share of t
 SPREAD_FILL_ISLANDS = 0.6  # the same for the islands of one group
 SPREAD_NEAR = 5          # a gene without a module moves with one group, chosen among this many nearest module genes
 ALERT = "⚠"
+UNTRUSTED = ("unreliable plate only", "position not correctable", "wells disagree")    # as embed.UNTRUSTED
+# module covariates (module docstring): key, tables/drugdoses.parquet column, words, kind
+COVARIATES = (("umi_per_cell", "umi_per_cell_log2_vs_plate", "UMI per cell", "technical"),
+              ("genes_per_cell", "genes_per_cell_log2_vs_plate", "genes per cell", "technical"),
+              ("cells", "cells_log2_vs_plate", "cells per well (cell loss)", "technical"),
+              ("composition", "composition_shift_log2", "the composition shift", "technical"),
+              ("S_phase", "S_PHASE_lfc", "the S-phase shift", "cell cycle"),
+              ("G2M_phase", "G2M_PHASE_lfc", "the G2/M shift", "cell cycle"))
+COV_MIN = 0.3            # a module is tagged when min(|r|, |rank r|) >= this for a covariate
+COV_PERM = 200           # shuffles of the permutation null (info.json covariate_null_max_r)
+COV_NULL_Q = 0.99        # ... its reported quantile of the largest |r| over the modules
+COV_TEXT = "moves with {name} across drug-doses (r {r:+.2f}, rank r {rho:+.2f})"
+PRESERVE_TOP = 15        # partner preservation: each gene's 15 strongest partners ...
+PRESERVE_K = 50          # ... found among its 50 nearest genes on a 2-D layout
+LAYOUTS = (("x", "y"), ("xs", "ys"), ("xm", "ym"), ("xsm", "ysm"))
+
+# the words of the columns this stage adds (graph version 6); the explorer and the docs show them
+COLUMN_DOCS = {"graph/modules.parquet": {
+    **{f"cov_{k}_r": f"Pearson r between the module's pooled score and {w} ({c}) over the trusted drug-doses"
+       for k, c, w, _ in COVARIATES},
+    **{f"cov_{k}_rho": f"Spearman (rank) r between the module's pooled score and {w} over the trusted drug-doses"
+       for k, _, w, _ in COVARIATES},
+    "covariate_kinds": "'technical', 'cell cycle' or 'technical and cell cycle': the kinds of covariate in the tag",
+    "covariate_tag": f"'moves with <covariate> across drug-doses (r .., rank r ..)' for each covariate with "
+                     f"min(|r|, |rank r|) >= {COV_MIN:g}, '; '-joined; a note, not an alert; '' none"}}
+FILE_DOCS = {"graph/modules.gmt": "one gene set per module arm ('module <m> +' / 'module <m> -'), members by "
+                                  "|projection|"}
 
 
 def _layout(n, rows, cols, dist, init, seed):
@@ -356,6 +405,111 @@ def spread_layout(xy, unit, dirs, signed, vecs=None):
                                     "free_sim_spread": _free_sim(out, unit, vecs, signed)}
 
 
+# ----------------------------------------------------------------------------- module covariates
+def _pearson(a, b):
+    """Pearson r over the entries where both are finite (NaN with < 3 such entries or no spread)."""
+    ok = np.isfinite(a) & np.isfinite(b)
+    if ok.sum() < 3:
+        return float("nan")
+    x, y = a[ok] - a[ok].mean(), b[ok] - b[ok].mean()
+    d = np.sqrt((x @ x) * (y @ y))
+    return float(x @ y / d) if d > 0 else float("nan")
+
+
+def _spearman(a, b):
+    from scipy.stats import rankdata
+    ok = np.isfinite(a) & np.isfinite(b)
+    if ok.sum() < 3:
+        return float("nan")
+    return _pearson(rankdata(a[ok]), rankdata(b[ok]))
+
+
+def module_covariates(pooled, cov, trusted, seed=None, n_perm=COV_PERM):
+    """Per module: Pearson r and Spearman rho of its pooled score (pooled: modules x drug-doses) with each covariate
+    of COVARIATES (cov: {key: values per drug-dose}) over the trusted drug-doses; covariate_kinds and covariate_tag
+    (COV_TEXT for each covariate with min(|r|, |rho|) >= COV_MIN, '; '-joined; '' when none). Also the permutation
+    null: per covariate, the COV_NULL_Q quantile over n_perm shuffles of the covariate (among the trusted drug-doses
+    with a value) of the largest |r| over the modules. Returns (DataFrame, {key: null max |r|})."""
+    pooled = np.asarray(pooled, dtype=np.float64)
+    nm = pooled.shape[0]
+    tr = np.asarray(trusted, dtype=bool)
+    cols, null = {}, {}
+    rng = np.random.default_rng(stable_seed("module covariates") if seed is None else seed)
+    tags = [[] for _ in range(nm)]
+    kinds = [[] for _ in range(nm)]
+    for key, _col, name, kind in COVARIATES:
+        x = np.asarray(cov.get(key, np.full(pooled.shape[1], np.nan)), dtype=np.float64)
+        sel = tr & np.isfinite(x)
+        r = np.array([_pearson(pooled[m, sel], x[sel]) for m in range(nm)])
+        rho = np.array([_spearman(pooled[m, sel], x[sel]) for m in range(nm)])
+        cols[f"cov_{key}_r"] = r.astype(np.float32)
+        cols[f"cov_{key}_rho"] = rho.astype(np.float32)
+        hit = np.minimum(np.abs(np.nan_to_num(r)), np.abs(np.nan_to_num(rho))) >= COV_MIN
+        for m in np.flatnonzero(hit):
+            tags[m].append(COV_TEXT.format(name=name, r=r[m], rho=rho[m]))
+            if kind not in kinds[m]:
+                kinds[m].append(kind)
+        if sel.sum() >= 3 and nm and n_perm:              # the null: shuffle the covariate, keep the modules
+            Z = pooled[:, sel]
+            Z = Z - np.nanmean(Z, axis=1, keepdims=True)
+            Z = np.nan_to_num(Z)
+            zn = np.sqrt((Z ** 2).sum(axis=1))
+            xs = x[sel] - x[sel].mean()
+            xn = float(np.sqrt(xs @ xs))
+            mx = []
+            for _ in range(n_perm):
+                xp = rng.permutation(xs)
+                with np.errstate(invalid="ignore", divide="ignore"):
+                    rr = (Z @ xp) / np.maximum(zn * xn, 1e-12)
+                mx.append(float(np.abs(rr).max()))
+            null[key] = round(float(np.quantile(mx, COV_NULL_Q)), 4)
+        else:
+            null[key] = None
+    order = {"technical": 0, "cell cycle": 1}
+    df = pd.DataFrame(cols)
+    df["covariate_kinds"] = [" and ".join(sorted(k_, key=order.get)) for k_ in kinds]
+    df["covariate_tag"] = ["; ".join(t) for t in tags]
+    return df, null
+
+
+# ----------------------------------------------------------------------------- partner preservation
+def partner_preservation(nodes, rel, top=PRESERVE_TOP, k=PRESERVE_K):
+    """For each layout of LAYOUTS: the share of the genes' top-`top` relation partners (rank <= top; both genes on
+    the map) that are among the gene's k nearest genes on that 2-D layout, over all such (gene, partner) rows; chance
+    = k / (genes - 1). How faithfully a flat map keeps the vector space's near neighbours."""
+    from scipy.spatial import cKDTree
+    cols = nodes["col"].to_numpy(np.int64)
+    pos = pd.Series(np.arange(len(cols)), index=cols)
+    r = rel[rel["rank"] <= top]
+    r = r[r["col_a"].isin(pos.index) & r["col_b"].isin(pos.index)]
+    a = pos.reindex(r["col_a"]).to_numpy(np.int64)
+    b = pos.reindex(r["col_b"]).to_numpy(np.int64)
+    n = len(cols)
+    kk = int(min(k, n - 1))
+    res = {"top": int(top), "k": kk, "genes": int(n), "rows": int(len(a)),
+           "chance": round(kk / max(n - 1, 1), 4), "layouts": {}}
+    for xc, yc in LAYOUTS:
+        if xc not in nodes or yc not in nodes or not len(a) or kk < 1:
+            continue
+        P = nodes[[xc, yc]].to_numpy(np.float64)
+        _, nn = cKDTree(P).query(P, k=kk + 1)
+        nn = nn[:, 1:]                                    # the gene itself first (distinct positions)
+        key_nn = np.sort((np.arange(n)[:, None] * n + nn).ravel())
+        hit = np.isin(a * n + b, key_nn, assume_unique=False)
+        res["layouts"][f"{xc},{yc}"] = round(float(hit.mean()), 4)
+    return res
+
+
+def write_gmt(path, rows):
+    """graph/modules.gmt: one gene set per module arm ('module <m> +' / 'module <m> -'), its member symbols; rows:
+    (name, description, symbols)."""
+    text = "".join("\t".join([nm, desc] + list(g)) + "\n" for nm, desc, g in rows if len(g))
+    tmp = path + ".part"
+    with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(text)
+    replace_file(tmp, path)
+
+
 def run(out, k_edges=K_EDGES, resolution=1.0):
     import networkx as nx
     t0 = time.time()
@@ -478,8 +632,9 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
     scores = np.zeros((nm, Dn, L), dtype=np.float32)
     pooled = np.zeros((nm, Dn), dtype=np.float32)
     dlabel = (dd["drug"].astype(str) + " " + dd["dose"].astype(str) + " uM").to_numpy()
-    dflags = dd["flags"].fillna("").astype(str).to_numpy() if "flags" in dd else np.array([""] * Dn, dtype=object)
-    dalert = np.array([A.has_artifact(f) for f in dflags], dtype=bool)
+    from .tables import dd_flags_of_record                # the flags of record (+ neighbouring-well, translation)
+    dflags = np.asarray(dd_flags_of_record(out), dtype=object) if "flags" in dd else np.array([""] * Dn, dtype=object)
+    dalert = np.array([has_artifact(f) for f in dflags], dtype=bool)
 
     def dlist(m, order):
         return "; ".join(f"{dlabel[i]} ({pooled[m - 1, i]:+.1f})" + (f" (⚠ {dflags[i]})" if dalert[i] else "")
@@ -518,14 +673,58 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
                      "xs": float(xys[c, 0].mean()), "ys": float(xys[c, 1].mean()),
                      "drugs_up": dlist(m, o), "drugs_down": dlist(m, o[::-1]),
                      "responsive_lines": ", ".join(cell[ol[:8]]), **arm_stats[m]})
-    write_parquet(pd.DataFrame(rows), os.path.join(gd, "modules.parquet"))
+    mods = pd.DataFrame(rows)
+    # technical and cell-cycle covariates of each module's pooled score (module docstring)
+    tp = os.path.join(out, "tables", "drugdoses.parquet")
+    cov, trusted, cov_src = {}, np.array([not any(u in f for u in UNTRUSTED) for f in dflags], dtype=bool), ""
+    if os.path.exists(tp):
+        tdd = pd.read_parquet(tp)
+        if len(tdd) == Dn:
+            cov = {k: pd.to_numeric(tdd[c], errors="coerce").to_numpy(np.float64) if c in tdd else
+                   np.full(Dn, np.nan) for k, c, _, _ in COVARIATES}
+            cov_src = "tables/drugdoses.parquet"
+    if not cov:
+        cov = {k: pd.to_numeric(dd[c], errors="coerce").to_numpy(np.float64) if c in dd else np.full(Dn, np.nan)
+               for k, c, _, _ in COVARIATES}
+        cov_src = "atlas/effects/drugdose.csv"
+    cdf, cov_null = module_covariates(pooled, cov, trusted)
+    for c in cdf.columns:
+        mods[c] = cdf[c].to_numpy() if nm else []
+    write_parquet(mods, os.path.join(gd, "modules.parquet"))
     save_npy(os.path.join(gd, "module_scores.npy"), scores.astype(np.float16))
     save_npy(os.path.join(gd, "module_pooled_z.npy"), pooled)
+    gmt = []
+    for m, c in enumerate(comms, 1):
+        for a_, word in (("+", "+"), ("-", "-")):
+            mem = sorted((cc for cc in c if arm[cc] == a_), key=lambda i: -abs(axis_proj[i]))
+            if mem:
+                gmt.append((f"module {m} {word}", f"graph module {m}, {word} arm: {len(mem)} genes (by |projection|)",
+                            [str(x) for x in sym[inc[mem]]]))
+    write_gmt(os.path.join(gd, "modules.gmt"), gmt)
+    preserve = partner_preservation(nodes, rel)
+    n_tag = int((cdf["covariate_tag"] != "").sum()) if nm else 0
+    cov_counts = {k: int((np.minimum(cdf[f"cov_{k}_r"].abs().fillna(0), cdf[f"cov_{k}_rho"].abs().fillna(0))
+                          >= COV_MIN).sum()) if nm else 0 for k, *_ in COVARIATES}
+    log(f"  module covariates: {n_tag} of {nm} modules move with a technical or cell-cycle covariate "
+        f"(min(|r|, |rank r|) >= {COV_MIN:g}: " + ", ".join(f"{k} {v}" for k, v in cov_counts.items()) + ")")
+    log("  partner preservation (a gene's 15 strongest partners among its 50 nearest on the map): " +
+        ", ".join(f"{k} {v:.3f}" for k, v in preserve["layouts"].items()) + f" (chance {preserve['chance']:.4f})")
     info = {"version": VERSION, "genes": int(n), "modules": nm, "unassigned": int((module == 0).sum()),
             "modules_split": int(n_split), "max_module": MAX_MODULE, "loose_cos": LOOSE_COS,
             "edges": int(len(edges)), "k_edges": k_edges, "k_layout": K_LAYOUT, "resolution": resolution,
             "min_edge": MIN_EDGE, "one_half_edge": ONE_HALF_EDGE, "min_module": MIN_MODULE,
             "arms_opposite_cos": ARMS_OPPOSITE, "split_depth": SPLIT_DEPTH, "spread": spread_info,
+            "covariates": {"source": cov_src, "columns": {k: c for k, c, _, _ in COVARIATES},
+                           "words": {k: w for k, _, w, _ in COVARIATES}, "kinds": {k: t for k, _, _, t in COVARIATES},
+                           "trusted_drugdoses": int(trusted.sum()), "min_abs_r": COV_MIN,
+                           "rule": f"tagged when min(|r|, |rank r|) >= {COV_MIN:g} between the module's pooled score "
+                                   "and the covariate over the trusted drug-doses (not " +
+                                   ", ".join(f"'{u}'" for u in UNTRUSTED) + "); a note, not an alert",
+                           "modules_tagged": n_tag, "modules_per_covariate": cov_counts},
+            "covariate_null_max_r": cov_null,
+            "covariate_null_rule": f"{COV_NULL_Q:.0%} quantile, over {COV_PERM} shuffles of the covariate among the "
+                                   "trusted drug-doses, of the largest |r| over the modules",
+            "partner_preservation": preserve, "gmt": {"file": "modules.gmt", "sets": len(gmt)},
             "minutes": round((time.time() - t0) / 60, 2)}
     write_json(info, os.path.join(gd, "info.json"))
     stamp_stage(out, "graph", VERSION, info)

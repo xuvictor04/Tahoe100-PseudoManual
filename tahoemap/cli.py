@@ -4,6 +4,9 @@
     build ... map, explorer     one stage (and nothing else)
     status      what is done, what is out of date (and why), what runs next
     gene SYMBOL | drug NAME | line NAME | pair A B | module N     look-ups on a finished run
+    similar DRUG [DOSE]     the drug-doses most similar to one drug-dose (embed/drug_similarity.parquet)
+    signature --up A,B [--down C,D] [--lines]     which drug-doses mimic or reverse a gene signature (a null of
+                random gene sets matched by expression level)
     review plan|run|status|tables|stop   the literature-review agents (tahoemap/review; docs/review.md)
     duplicate DEST [--repo DIR]     copy a finished output folder for review work (big arrays hard-linked)
     export DEST [--with-effects] [--include FILE ...] [--force]     the shareable results, ready to be committed and
@@ -14,7 +17,8 @@
 A stage is out of date when it never finished, its method changed, it ran with other values of the options that
 change its results (--dims, --min-cells, ...: once given they stay in force for the output folder, so a stopped run
 resumes with the settings it started with), or (reference, on a run with network) a source did not load last time.
-`run --from reference` or `run --refresh-reference` fetches the public annotations again.
+`run --from reference` or `run --refresh-reference` fetches the public annotations again. The reference stage runs
+right after tensor, so that also redoes tables, embed and every later stage.
 """
 
 import argparse
@@ -39,7 +43,7 @@ from .common import (GIT_MISSING, STAGES, PipelineLock, clear_stamps_from, find_
 STAGE_MODULE = {"tensor": "tensor", "tables": "tables", "embed": "embed", "reference": "reference",
                 "relations": "relations", "graph": "graph", "direction": "direction", "validate": "validate",
                 "vault": "vault", "map": "html_map", "explorer": "explorer"}
-LOOKUPS = ("gene", "drug", "line", "pair", "module")
+LOOKUPS = ("gene", "drug", "line", "pair", "module", "similar", "signature")
 EXTRA_COMMANDS = ("review", "duplicate", "export")   # not stages: they read a finished output (never run the
                                                      # pipeline)
 
@@ -48,7 +52,7 @@ EXTRA_COMMANDS = ("review", "duplicate", "export")   # not stages: they read a f
 # output folder (RUN_OPTIONS) and used by later runs that do not give them.
 RESULT_OPTIONS = {"build": ("layout",), "effects": ("min_cells", "unreliable_plates"),
                   "tensor": ("tensor_dtype", "no_well_tensor"), "embed": ("dims", "min_active", "min_responsive"),
-                  "vault": ("site_url",), "map": ("site_url",),
+                  "validate": ("site_url",), "vault": ("site_url",), "map": ("site_url",),
                   "explorer": ("site_url", "data_url", "line_dd", "pooled_r")}
 # Recorded too, but compared differently: --limit-files as it is (a trial build is redone by a run without it);
 # --offline never forces a redo (it reads the same cache), but a run with network retries the sources that failed;
@@ -70,9 +74,9 @@ def make_parser():
     ap = argparse.ArgumentParser(prog="tahoemap", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("command", choices=["run", "status"] + STAGES + list(LOOKUPS) + list(EXTRA_COMMANDS))
-    ap.add_argument("names", nargs="*", help="look-ups: the gene / drug / line / module (pair: two genes); review: "
-                                             "plan, run, status, tables or stop; duplicate, export: the destination "
-                                             "folder")
+    ap.add_argument("names", nargs="*", help="look-ups: the gene / drug / line / module (pair: two genes; similar: a "
+                                             "drug and, optionally, a dose); review: plan, run, status, tables or "
+                                             "stop; duplicate, export: the destination folder")
     ap.add_argument("--data", default=None, help="Tahoe-100M folder (default $TAHOE_DATA or ~/Tahoe-100M)")
     ap.add_argument("--out", default=None, help="output folder (default <data>/tahoemap)")
     ap.add_argument("--stream", action="store_true",
@@ -109,11 +113,17 @@ def make_parser():
     ap.add_argument("--top", type=top_value, default=None,
                     help="look-ups: rows per table (default 15; the probable-direction lists show 10 unless --top is "
                          "given); --top all (or 0) shows every row")
+    ap.add_argument("--up", default=None, help="signature: the genes that go up (comma list, or @FILE with one name "
+                                               "a line or comma separated)")
+    ap.add_argument("--down", default=None, help="signature: the genes that go down (comma list, or @FILE)")
+    ap.add_argument("--lines", action="store_true", help="signature: also the cell lines that show the strongest "
+                                                         "mimics most (needs the tensor stage)")
     ap.add_argument("--truth", default=None, help="validate: ground_truth.json of synthetic test data (tests only)")
     g = ap.add_argument_group("explorer (the searchable web pages over every result: OUT/explorer; "
                               "docs/explorer.md)")
     g.add_argument("--site-url", default=None,
-                   help="the explorer's web address, which the vault, the map, the look-ups and the explorer link to "
+                   help="the explorer's web address, which the validation report, the vault, the map, the look-ups and "
+                        "the explorer link to "
                         "(default: the GitHub Pages address of this code's repository, https://OWNER.github.io/REPO/, "
                         "read from `git remote get-url origin`; 'none': no site, the links name the local files)")
     g.add_argument("--data-url", default=None,
@@ -543,8 +553,12 @@ def _run_stage(stage, a):
         # the cell lines' genetics: the Tahoe metadata under the data folder (a streamed build's OUT/hf too), else
         # the files atlas/file_index.json lists
         kw = {"data": a.data_in}
-    elif stage == "validate" and a.truth:
-        kw = {"truth": a.truth}
+    elif stage == "validate":
+        # site_url: the explorer's address that report section 4 links to (None: the GitHub Pages address of this
+        # code, links.py; '' / 'none': the run folder's own explorer)
+        kw = {"site_url": a.site_url}
+        if a.truth:
+            kw["truth"] = a.truth
     elif stage in ("vault", "map"):
         kw = {"site_url": a.site_url}                 # None: the GitHub Pages address of this code (links.py)
     elif stage == "explorer":

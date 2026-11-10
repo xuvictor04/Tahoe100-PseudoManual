@@ -10,9 +10,12 @@ read: the test copies it to DIR/export_test/out (without the big per-well and pe
 stand-ins) and adds what an export must leave alone - review caches, key state, lock and stop files, temporary files,
 raw reference downloads, hf/ - and a few literature-review results it must copy. No network; a few seconds.
 
-Checks: the folders and files copied (direction/ whole, and described) and the ones never copied; --include;
-MANIFEST.tsv (every file, bytes and sha256, nothing else in DEST); .gitattributes ('* -text'); README.md (folders,
-provenance, stage states, what was left out and why, the files too large for GitHub); a file over the limit skipped
+Checks: the folders and files copied (direction/ whole, and described; the second wave's files: the drugs' ChEMBL
+annotations, mechanisms and classes, gene coordinates, drug_line_response, the GMT files, drug_similarity,
+gene_tests, selectivity, line_controls) and the ones never copied; --include; MANIFEST.tsv (every file, bytes and
+sha256, nothing else in DEST); .gitattributes ('* -text'); README.md (folders, provenance, stage states, what was
+left out and why, the files too large for GitHub, how to cite the dataset, the output folder named `<out>`, never by
+its local path); a file over the limit skipped
 and listed (a 96 MiB sparse file at the default 95 MiB, and a lowered --max-file-mb); a DEST inside OUT (or holding
 OUT) refused, also with other letter case on a case-insensitive system; a non-empty DEST refused without --force;
 --force: unchanged files kept, files the source no longer has removed, the user's own files (a .git folder, notes)
@@ -55,7 +58,7 @@ DEFAULT_WORKDIR = "/tmp/tahoemap_test" if os.name != "nt" else os.path.join(temp
 sys.path.insert(0, REPO)
 
 from tahoemap import export as X  # noqa: E402
-from tahoemap.common import find_git  # noqa: E402
+from tahoemap.common import STAGES, find_git, read_stamp  # noqa: E402
 
 RESULTS = []
 
@@ -135,6 +138,13 @@ NEVER = ["tensor/DDL_z.npy", "atlas/pseudobulk/group000.npy", "hf/data/train-000
          "review/.stop", "tables/genes.parquet.tmp", "vault/Home.md.part", ".pipeline.lock", ".job.pid"]
 DIRECTION = ["direction/edges.parquet", "direction/groups.parquet", "direction/controls.json", "direction/info.json",
              "direction/README.md"]
+# the files the second wave added (each exported whenever the output has it; reference/paralogues.parquet only exists
+# with the Compara file, graph/modules.gmt when the graph stage wrote it)
+SECOND_WAVE = ["reference/drug_annotations.parquet", "reference/drug_mechanisms.parquet",
+               "reference/drug_classes.parquet", "reference/gene_coords.parquet", "reference/paralogues.parquet",
+               "tables/drug_line_response.parquet", "tables/drugdose_signatures.gmt", "embed/drug_similarity.parquet",
+               "direction/gene_tests.parquet", "direction/selectivity.parquet", "graph/modules.gmt",
+               "validation/line_controls.csv"]
 REVIEW = ["review/reviews/gene/TP53.json", "review/notes/gene/TP53.md", "review/history/gene/TP53/20261109-0001.jsonl",
           "review/ledger.jsonl", "review/queue.parquet", "review/connections.parquet", "review/findings.parquet",
           "review/review.log"]
@@ -205,6 +215,13 @@ def basic(base, out):
     miss = [m for m in must if m not in got]
     check("basic", "the shareable results are copied (vault, map, tables, validation, direction, graph, relations, "
           "embed, reference tables, stages, run files, review results, --include)", not miss, f"missing {miss}")
+    have2 = [m for m in SECOND_WAVE if os.path.exists(os.path.join(out, *m.split("/")))]
+    miss2 = [m for m in have2 if m not in got]
+    check("basic", "the second wave's files are copied: the drugs' ChEMBL annotations, mechanisms and classes, gene "
+          "coordinates (and paralogues), drug_line_response, the GMT files, drug_similarity, gene_tests, "
+          "selectivity, line_controls", bool(have2) and not miss2,
+          f"{len(have2)} of the {len(SECOND_WAVE)} in this output ({sorted(set(SECOND_WAVE) - set(have2))} not "
+          f"made by it); missing from DEST {miss2}")
     have_dir = all(os.path.exists(os.path.join(out, *m.split("/"))) for m in DIRECTION)
     n_dir = sum(1 for f in files_under(os.path.join(out, "direction"))) if have_dir else 0
     check("basic", "direction/ is copied whole (edges, groups, controls, info, README) and described in README.md",
@@ -226,9 +243,24 @@ def basic(base, out):
     wrong = [p for p, (n, h) in man.items() if os.path.getsize(os.path.join(dest, *p.split("/"))) != n
              or sha(os.path.join(dest, *p.split("/"))) != h]
     check("manifest", "every size and sha256 matches the file", not wrong, f"{wrong[:5]}")
-    same = [p for p in man if p not in X.WRITTEN and p != "RUN_REPORT.md"
+    rn = set(rec.get("local_names_replaced") or [])
+    roots = X.local_roots(os.path.abspath(out), {s_: read_stamp(out, s_) for s_ in STAGES})
+    same = [p for p in man if p not in X.WRITTEN and p != "RUN_REPORT.md" and p not in rn
             and sha(os.path.join(out, *p.split("/"))) != man[p][1]]
-    check("manifest", "the copies are byte for byte the output's files", not same, f"{same[:5]}")
+    check("manifest", "the copies are byte for byte the output's files (but the local folder names, below)", not same,
+          f"{same[:5]}")
+    # the text files that named this computer's folders: the copy is the file with them replaced, and no copy names
+    # the output folder any more
+    bad_rn = [p for p in rn if X._scrubbed(os.path.join(out, *p.split("/")), p, roots)
+              != open(os.path.join(dest, *p.split("/")), "rb").read()]
+    named = [p for p in man if p.endswith(X.SCRUB_SUFFIX)
+             and os.path.abspath(out) in open(os.path.join(dest, *p.split("/")), encoding="utf-8",
+                                              errors="replace").read()]
+    check("manifest", "local folder names: the copies of the text files that name the output, data or cache folder "
+          "say <out> / <data> / <cache> instead (README.md lists them); no copy names the output folder",
+          not bad_rn and not named and (not rn or "Local folder names:" in open(os.path.join(dest, "README.md"),
+                                                                              encoding="utf-8").read()),
+          f"{len(rn)} file(s) changed {sorted(rn)[:6]}; wrong copies {bad_rn[:3]}; still naming the folder {named[:3]}")
     with open(os.path.join(dest, ".gitattributes"), encoding="utf-8") as fh:
         ga = [ln.strip() for ln in fh if ln.strip() and not ln.startswith("#")]
     check("gitattributes", "'* -text' (git stores every file byte for byte)", ga == ["* -text"], f"{ga}")
@@ -243,6 +275,15 @@ def basic(base, out):
           "out and why", all(w in rd for w in want), f"missing {[w for w in want if w not in rd]}")
     check("readme", "README.md names the code commit (or says git was not found)",
           (rec["code"]["commit"] or "unknown") in rd, f"{rec['code']['commit']}")
+    order = [ln.split("|")[1].strip() for ln in rd.split("Stage stamps", 1)[-1].splitlines()
+             if ln.startswith("| ") and not ln.startswith("| stage")]
+    check("readme", "README.md: the stage stamps in the pipeline's order (reference right after tensor)",
+          order == list(STAGES) and STAGES.index("reference") == STAGES.index("tensor") + 1, f"{order}")
+    cite = ["## How to cite", "CC0-1.0", "doi:10.1101/2025.02.20.639398", "Tahoe-100M"]
+    check("readme", "README.md: 'How to cite' (the dataset, its licence CC0-1.0, the paper's doi); the output folder "
+          "is called `<out>`, never by its local path", all(w in rd for w in cite) and "`<out>`" in rd
+          and out not in rd and os.path.abspath(out) not in rd,
+          f"missing {[w for w in cite + ['`<out>`'] if w not in rd]}; local path in it: {out in rd}")
     with open(os.path.join(dest, "RUN_REPORT.md"), "rb") as fh:
         check("include", "--include FILE: copied to the top of DEST byte for byte (CRLF kept)",
               fh.read() == b"# Run report\r\nwith Windows line ends\r\n")

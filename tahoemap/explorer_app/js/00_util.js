@@ -133,6 +133,32 @@ TM.fmt.fold = function (lfc) {               // fold = 2^lfc, computed in the pa
   return TM.state.short ? TM.fmt.short(f) + '\u00d7' : String(+f.toPrecision(6)) + '\u00d7';
 };
 TM.fmt.pct = function (x) { return isNaN(x) ? '' : Math.round(100 * x) + '%'; };
+// a q value of a column named q / q_up / q_down / q_group / label_q ...: stored 0 means below 1e-45 (the smallest
+// float32). A table cell writes '< 1e-45' (common.Q_ZERO, as the vault, the look-ups and the map write it), so the
+// meaning is visible without a hover; the row drawer and records write '0 (< 1e-45)'; the title says it was stored
+// as 0, and every CSV keeps the exact stored 0.
+TM.Q_ZERO = '< 1e-45';
+TM.Q_ZERO_TITLE = 'q below 1e-45 (stored as 0)';
+TM.Q_ZERO_EXACT = '0 (< 1e-45)';
+TM.isQName = function (name) { return /(^|_)q(_|$)/.test(String(name || '')); };
+TM.fmt.qNode = function (v, text) {
+  return TM.h('span', {class: 'qzero', title: TM.Q_ZERO_TITLE, dataset: {qzero: 1}},
+    text === undefined ? TM.Q_ZERO : text);
+};
+// a q value for display: a node '< 1e-45' for a stored 0, else the number text ('' for NaN). exact: write the stored
+// 0 too ('0 (< 1e-45)'), for records and sentences.
+TM.fmt.q = function (v, kind, exact) {
+  if (v === 0) return TM.fmt.qNode(0, exact ? TM.Q_ZERO_EXACT : TM.Q_ZERO);
+  return TM.fmt.num(v, kind || 'f64');
+};
+// the same as text (for a sentence built as one string)
+TM.fmt.qText = function (v, kind) { return v === 0 ? TM.Q_ZERO_EXACT : TM.fmt.num(v, kind || 'f64'); };
+// TP53 status as the pages write it: 'not recorded' (no TP53 alteration in the line's metadata) is presumed wild type
+TM.TP53_DOC = 'TP53 status (tables/lines tp53_status): "altered" (a TP53 alteration recorded in the line\u2019s ' +
+  'metadata), "not recorded" (none recorded: presumed wild type, not tested here)';
+TM.tp53Text = function (s) {
+  return s === 'not recorded' ? 'not recorded (presumed wild type)' : (s || '');
+};
 TM.fmt.bytes = function (b) {
   if (b === null || b === undefined || isNaN(b)) return '';
   if (b < 1024) return b + ' B';

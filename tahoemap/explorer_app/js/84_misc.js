@@ -69,9 +69,21 @@
       box.appendChild(TM.h('div', null, TM.h('h1', null, 'Module ' + m), TM.h('span', {class: 'sym-sub'}, m === 0 ?
         sh.meta.what || 'the genes of the space that no module took' : lab || 'no label')));
       var mr = sh.t.module && sh.t.module.n ? TM.tsf.row(sh.t.module, 0) : {};
-      box.appendChild(TM.h('div', {class: 'badges'}, TM.h('span', {class: 'badge'}, TM.fmt.int(sh.t.members.n) +
+      var lr = sh.t.label && sh.t.label.n ? TM.tsf.row(sh.t.label, 0) : {};
+      var bd = TM.h('div', {class: 'badges'}, TM.h('span', {class: 'badge'}, TM.fmt.int(sh.t.members.n) +
         ' members' + (mr.n_plus !== undefined ? ' (' + mr.n_plus + ' on the + arm, ' + mr.n_minus + ' on the \u2212 ' +
-        'arm)' : ''))));
+        'arm)' : '')));
+      if (lr.label_alert) {
+        bd.appendChild(TM.h('span', {class: 'badge warnb', dataset: {labelAlert: 1}}, '\u26a0 ' + lr.label_alert));
+      }
+      if (lr.label_weak) bd.appendChild(TM.h('span', {class: 'badge'}, 'weak label: ' + (lr.label_weak_why || 'yes')));
+      if (mr.covariate_tag) {
+        bd.appendChild(TM.h('span', {class: 'badge', dataset: {covariate: mr.covariate_kinds || 1},
+          title: 'graph/modules covariate_tag: the module score moves with this per-well measure across drug-doses'},
+        (mr.covariate_kinds ? mr.covariate_kinds + ': ' : '') + mr.covariate_tag));
+      }
+      if (lr.label_drugs) bd.appendChild(TM.h('span', {class: 'badge'}, 'drugs: ' + lr.label_drugs));
+      box.appendChild(bd);
       var vp = sh.meta.vault ? TM.vaultUrl(sh.meta.vault) : null;
       if (vp) box.appendChild(TM.h('div', {class: 'extlinks'}, TM.ext(vp, 'vault note')));
       main.appendChild(box);
@@ -96,14 +108,15 @@
       'is the mean z of the + arm minus the mean z of the \u2212 arm.'));
     if (sh.t.module && sh.t.module.n) {
       var s1 = TM.section('The module (graph/modules, every column)');
-      s1.appendChild(TM.recordOf(sh.t.module, 0, {top_plus: 'the + arm\u2019s strongest members',
+      s1.appendChild(TM.recordOf(sh.t.module, 0, Object.assign({top_plus: 'the + arm\u2019s strongest members',
         top_minus: 'the \u2212 arm\u2019s strongest members', drugs_up: 'drug-doses that raise its score most',
-        drugs_down: 'drug-doses that lower it most', responsive_lines: 'lines where it responds most'}));
+        drugs_down: 'drug-doses that lower it most', responsive_lines: 'lines where it responds most'},
+      docsOf('graph/modules.parquet'))));
       p.appendChild(s1);
     }
     if (sh.t.label && sh.t.label.n) {
       var s2 = TM.section('Its label (validation/module_labels, every column)');
-      s2.appendChild(TM.recordOf(sh.t.label, 0));
+      s2.appendChild(TM.recordOf(sh.t.label, 0, docsOf('validation/module_labels.csv')));
       p.appendChild(s2);
     }
   }
@@ -269,6 +282,19 @@
           return gc >= 0 ? TM.href.gene(d.labelOf[gc] || v) : null;
         }}));
         main.appendChild(sec);
+        // a gene the screen does not measure: its rows of direction/gene_tests are in groups.js (dtestx)
+        var tx = gs.t.dtestx, gname = g.c.gene ? g.c.gene.get(row) : '';
+        if (tx && gname && !(gc >= 0)) {
+          var trows = TM.subTable(tx, TM.rowsWhere(tx, function (i) { return tx.c.symbol.get(i) === gname; }));
+          if (trows.n) {
+            main.appendChild(TM.p({class: 'small', dataset: {tested: 1}}, TM.dirTestedText(gname + ' (not a ' +
+              'measured gene of this screen)', trows, TM.colValues(trows, 'n_edges').reduce(function (a, b) {
+              return a + (b > 0 ? b : 0); }, 0))));
+            main.appendChild(TM.table({key: 'dtest', n: trows.n, id: 'group-dtest', csv: gname + '_direction_tests',
+              title: 'Tests ' + gname + ' took part in (direction/gene_tests: ' + trows.n + ' rows)',
+              cols: TM.tableCols(trows, docsOf('direction/gene_tests.parquet'))}).el);
+          }
+        }
       }
       return web(TM.ids.dg(dg)).then(function (sh) {
         var e = sh.t.edges, rows = TM.rowsWhere(e, function (i) { return e.c._cmp.get(i) === cmp; });
@@ -699,12 +725,33 @@
     })));
     var pane = TM.h('div', {class: 'tabpane', dataset: {tab: kind}});
     main.appendChild(pane);
-    function show(tab, file, links, simple, csv, extra) {
+    // more: {after: column name, cols: [column]} adds columns after that one (values from another table, labelled)
+    function show(tab, file, links, simple, csv, extra, more) {
       var cols = TM.tableCols(tab, docsOf(file), {links: links, simple: simple, negNone: true});
       cols.forEach(function (cc) {
         if (/flags/.test(cc.key) &&
           cc.type === 'str') { var g = cc.get; cc.show = function (i) { return TM.gene.flagText(g(i)); }; }
+        if (cc.key === 'moa_fine' || cc.key === 'moa_broad' || cc.key === 'targets') {
+          cc.label = cc.key + ' (Tahoe)';
+          cc.doc = (cc.doc || '') + ' Tahoe\u2019s own annotation, as recorded (never changed); ChEMBL\u2019s is ' +
+            'in chembl_mechanisms and chembl_targets, the disagreement in annotation_alert.';
+        }
+        if (cc.key === 'nb_tier') {
+          var gt = cc.get;
+          cc.show = function (i) {
+            var t = gt(i), m = TM.drug.nbMark(t);
+            return t ? TM.h('span', {class: m.cls}, m.sign + t + (t === 'artifact' ? '' : ' (' + m.word + ')')) : '';
+          };
+        }
+        if (cc.key === 'annotation_alert') {
+          var ga = cc.get;
+          cc.show = function (i) { var a = ga(i); return a ? TM.h('span', {class: 'alert-text'}, '\u26a0 ' + a) : ''; };
+        }
       });
+      if (more) {
+        var at = cols.findIndex(function (cc) { return cc.key === more.after; });
+        Array.prototype.splice.apply(cols, [at < 0 ? cols.length : at + 1, 0].concat(more.cols));
+      }
       var o = Object.assign({key: '', n: tab.n, csv: csv || kind, cols: cols, id: 'browse-' + kind}, extra || {});
       pane.appendChild(TM.table(o).el);
       TM.ready('browse/' + kind);
@@ -727,12 +774,39 @@
     }
     if (kind === 'drugs') {
       return show(c.drugs, 'tables/drugs.parquet', {drug: drug, best_dd: dd},
-        ['drug', 'targets', 'moa_fine', 'approved',
-        'n_doses', 'doses', 'n_sig_by_dose', 'max_sig', 'flags_by_dose'], 'drugs');
+        ['drug', 'targets', 'moa_fine', 'chembl_mechanisms', 'approved', 'mechanism_classes', 'annotation_alert',
+        'n_doses', 'doses', 'n_sig_by_dose', 'max_sig', 'flags_by_dose'], 'drugs',
+        {filters: c.drugs.c.annotation_alert ? [{key: 'anndis', label: '\u26a0 Tahoe and ChEMBL disagree',
+          test: function (i) { return !!c.drugs.c.annotation_alert.get(i); }}] : []});
     }
     if (kind === 'drugdoses') {
-      return show(c.drugdoses, 'tables/drugdoses.parquet', {dd: dd, drug: drug}, ['dd', 'drug', 'dose', 'moa_fine',
-        'n_wells', 'n_genes_up', 'n_genes_down', 'replicate_r', 'flags', 'top_up', 'top_down'], 'drugdoses');
+      // the drug's ChEMBL mechanism and the disagreement alert, from tables/drugs (the same for each dose)
+      var dcol = function (name) {
+        var cc = c.drugs.c[name];
+        return function (i) {
+          var k = c.drugdoses.c.dd.get(i), di = d.drugOf ? d.drugOf[k] : d.drugIdx.get(d.dd.drug[k]);
+          return cc && di !== undefined && di >= 0 ? cc.get(di) : null;
+        };
+      };
+      var dds = c.drugdoses, more = [];
+      if (c.drugs.c.chembl_mechanisms) {
+        var am = dcol('annotation_alert');
+        more = [{key: 'chembl_mechanisms', label: 'chembl_mechanisms (from tables/drugs)', type: 'str', simple: true,
+          get: dcol('chembl_mechanisms'), missing: function (i) {
+            var k = dds.c.dd.get(i);
+            return TM.drug.chemblText(TM.drug.annOf(d.drugOf ? d.drugOf[k] : d.drugIdx.get(d.dd.drug[k])));
+          }, doc: 'ChEMBL\u2019s mechanisms of the drug (tables/drugs chembl_mechanisms, from ' +
+            'reference/drug_annotations); the same for each of its doses'},
+        {key: 'annotation_alert', label: 'annotation_alert (from tables/drugs)', type: 'str', simple: true, long: true,
+          get: am, show: function (i) { var a = am(i); return a ? TM.h('span', {class: 'alert-text'}, '\u26a0 ' +
+            a) : ''; }, doc: 'where Tahoe\u2019s and ChEMBL\u2019s annotations of the drug disagree (tables/drugs ' +
+            'annotation_alert); empty: they do not disagree. Tahoe\u2019s annotation is never changed.'}];
+      }
+      return show(dds, 'tables/drugdoses.parquet', {dd: dd, drug: drug, nb_partner_dd: dd}, ['dd', 'drug',
+        'dose', 'moa_fine', 'n_wells', 'n_genes_up', 'n_genes_down', 'replicate_r', 'flags', 'nb_tier',
+        'selective_lines', 'top_up', 'top_down'], 'drugdoses',
+      {filters: more.length ? [{key: 'anndis', label: '\u26a0 Tahoe and ChEMBL disagree', test: function (i) {
+        return !!more[1].get(i); }}] : []}, {after: 'moa_fine', cols: more});
     }
     if (kind === 'lines') {
       var og = {};
@@ -759,10 +833,12 @@
         return [j ? ', ' : '', TM.a(TM.href.module(a), a)];
       }), '.'));
       var cols = [{key: 'label', label: 'label', type: 'str', long: true, simple: true,
-        get: function (r) { return lab[mt.c.module.get(r)] || ''; }, doc: 'validation/module_labels label'}]
+        get: function (r) { return lab[mt.c.module.get(r)] || ''; }, doc: 'validation/module_labels label_display: ' +
+          'the label with its alert tags (\u26a0 read-sharing copies, lineage-restricted, Y-chromosome genes)'}]
         .concat(TM.tableCols(mt, docsOf('graph/modules.parquet'),
             {links: {module: function (v) { return TM.href.module(v); }},
-          simple: ['module', 'n_genes', 'n_plus', 'n_minus', 'top_plus', 'top_minus', 'drugs_up', 'drugs_down']}));
+          simple: ['module', 'n_genes', 'n_plus', 'n_minus', 'top_plus', 'top_minus', 'drugs_up', 'drugs_down',
+            'covariate_tag']}));
       cols.unshift(cols.splice(1, 1)[0]);
       pane.appendChild(TM.table({key: '', n: mt.n, csv: 'modules', cols: cols, id: 'browse-modules'}).el);
       TM.ready('browse/modules');
@@ -899,6 +975,37 @@
         .join(', ')], ['site URL', m.site_url || ''], ['data URL', m.data_url || ''], ['repository', m.repo || ''],
       ['results branch', m.results_url ? TM.ext(m.results_url, m.results_url) : '']]));
     main.appendChild(s5);
+    var rinfo = (m.info || {})['relations/info.json'] || {}, ginfo = (m.info || {})['graph/info.json'] || {};
+    var s7 = TM.section('Partners: how many, in both units');
+    s7.dataset.relcounts = 1;
+    if (rinfo.rows_total !== undefined) {
+      s7.appendChild(TM.p('The partner table holds ' + TM.fmt.int(rinfo.rows_total) + ' rows (each gene\u2019s ' +
+        'partners, so a pair of genes that list each other is 2 rows) for ' + TM.fmt.int(rinfo.pairs_total) +
+        ' pairs. With the same sign in both halves of the compounds: ' + TM.fmt.int(rinfo.rows_both_halves) +
+        ' rows, ' + TM.fmt.int(rinfo.pairs_both_halves) + ' pairs. Lineage pairs: ' + TM.fmt.int(rinfo.rows_lineage) +
+        ' rows, ' + TM.fmt.int(rinfo.pairs_lineage) + ' pairs. Read-sharing copies: ' +
+        TM.fmt.int(rinfo.rows_read_sharing) + ' rows, ' + TM.fmt.int(rinfo.pairs_read_sharing) + ' pairs. Novel ' +
+        'candidates: ' + TM.fmt.int(rinfo.rows_novel_candidate) + ' rows, ' + TM.fmt.int(rinfo.pairs_novel_candidate) +
+        ' pairs.'));
+    } else {
+      s7.appendChild(TM.p('This run\u2019s relations stage did not record counts in both units (relations older ' +
+        'than version 5).'));
+    }
+    var pp = ginfo.partner_preservation;
+    if (pp && pp.layouts) {
+      var LN = {'x,y': 'nodal map', 'xs,ys': 'signed map', 'xm,ym': 'nodal map, spread', 'xsm,ysm': 'signed map, ' +
+        'spread'};
+      s7.appendChild(TM.p({dataset: {preservation: 1}}, 'How much a flat map keeps: of each gene\u2019s ' + pp.top +
+        ' strongest partners, the share among its ' + pp.k + ' nearest genes on the map is ' +
+        Object.keys(pp.layouts).map(function (k) {
+          var v = pp.layouts[k];
+          return (LN[k] || k) + ' ' + (typeof v === 'number' ? TM.fmt.pct(v) : v && typeof v.share === 'number' ?
+            TM.fmt.pct(v.share) : '?');
+        }).join(', ') + ' (chance ' + (typeof pp.chance === 'number' ? (100 * pp.chance).toFixed(2) + '%' : '?') +
+        '). Near on the map usually means related, but most partners sit elsewhere: read the partner lists.'));
+    }
+    main.appendChild(s7);
+    main.appendChild(TM.citeSection());
     var s6 = TM.section('Documents');
     s6.appendChild(TM.h('ul', {class: 'links'}, ['tables/README.md', 'direction/README.md', 'validation/README.md',
       'validation/report.md', 'docs/explorer.md', 'docs/explorer-data.md'].map(function (p) {
@@ -925,7 +1032,13 @@
       TM.h('li', null, TM.a('tsf_reader.py', 'tsf_reader.py'), ': reads any data file in Python (numpy only): ',
         TM.h('code', null, 'python tsf_reader.py d/core.js'), '.'),
       TM.h('li', null, TM.a('MANIFEST.tsv', 'MANIFEST.tsv'), ': every file of this site with its bytes and sha256; ',
-        TM.a('README.md', 'README.md'), '.')));
+        TM.a('README.md', 'README.md'), '.'),
+      TM.h('li', {dataset: {schema: 1}}, TM.a('schema.json', 'schema.json'), ': every column of every table the ' +
+        'explorer shows, with its meaning (table, column, meaning).'),
+      Object.keys(m.gmt || {}).length ? TM.h('li', {dataset: {gmt: 1}}, 'Gene sets (GMT, for enrichment tools): ',
+        Object.keys(m.gmt).map(function (src, j) {
+          return [j ? ', ' : '', TM.a(m.gmt[src], m.gmt[src].replace(/^gmt\//, '')), ' (' + src + ')'];
+        }), '.') : TM.h('li', null, 'Gene sets (GMT): not in this run (tables 5 and graph 6 write them).')));
     main.appendChild(s1);
     var s2 = TM.section('Where the volumes are');
     s2.appendChild(TM.record([['web volume (this site)', 'd/ (pooled values of every gene, every record, the ' +

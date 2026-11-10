@@ -6,8 +6,8 @@
 // shifts.
 TM.line = (function () {
   var TABS = [['identity', 'Identity'], ['genetics', 'Genetics'], ['sensitivity', 'Sensitivity'],
-    ['genes', 'Genes'], ['baseline', 'Baseline'], ['modules', 'Modules'], ['space', 'Vector space'],
-    ['wells', 'Wells'], ['downloads', 'Downloads']];
+    ['response', 'Response and growth'], ['genes', 'Genes'], ['baseline', 'Baseline'], ['modules', 'Modules'],
+    ['space', 'Vector space'], ['wells', 'Wells'], ['downloads', 'Downloads']];
   function D() { return TM.data; }
   function web(id) { return TM.load.web(id); }
   function docsOf(file) { return (TM.data.docs[file] || {}).cols || {}; }
@@ -42,9 +42,11 @@ TM.line = (function () {
           href: function (t) { return TM.href.line(name, t === 'identity' ? null : t); },
           counts: {genetics: sh ? TM.fmt.int(sh.t.grp.n) + ' groups' : 'not loaded', sensitivity: TM.fmt.int(d.D),
             genes: sh ? TM.fmt.int(sh.t.le.n) : 'not loaded', baseline: TM.fmt.int(d.G),
-            modules: TM.fmt.int(M) + ' \u00d7 ' + TM.fmt.int(d.D), wells: TM.fmt.int(d.W)},
+            modules: TM.fmt.int(M) + ' \u00d7 ' + TM.fmt.int(d.D), wells: TM.fmt.int(d.W),
+            response: sh && sh.t.dlr ? TM.fmt.int(sh.t.dlr.n) : sh ? 'not in this run' : 'not loaded'},
           fns: {identity: function (p) { return tIdentity(p, x); }, genetics: function (p) { return tGenetics(p, x); },
             sensitivity: function (p) { return tSensitivity(p, x); }, genes: function (p) { return tGenes(p, x); },
+            response: function (p) { return tResponse(p, x); },
             baseline: function (p) { return tBaseline(p, x); }, modules: function (p) { return tModules(p, x); },
             space: function (p) { return tSpace(p, x); }, wells: function (p) { return tWells(p, x); },
             downloads: function (p) { return tDownloads(p, x); }}});
@@ -66,7 +68,8 @@ TM.line = (function () {
     var box = TM.h('div', {class: 'ghead', dataset: {line: x.name}});
     var id = d.line.id[l], dm = d.line.depmap[l];
     box.appendChild(TM.h('div', null, TM.h('h1', null, x.name), TM.h('span', {class: 'sym-sub'}, [d.line.organ[l],
-      id, dm, d.line.tp53[l] ? 'TP53 ' + d.line.tp53[l] : null].filter(function (s) { return s; }).join(' \u00b7 '))));
+      id, dm, d.line.tp53[l] ? 'TP53 ' + TM.tp53Text(d.line.tp53[l]) : null].filter(function (s) { return s; })
+      .join(' \u00b7 '))));
     var dv = drivers(l);
     box.appendChild(TM.h('div', {class: 'aliases'}, 'Drivers (' + dv.length + '): ',
         dv.length ? dv.map(function (i, j) {
@@ -279,6 +282,25 @@ TM.line = (function () {
           test: function (i) { return le.c.expressed.get(i) === true; }},
         {key: 'notexp', label: 'not truly expressed',
           test: function (i) { return le.c.expressed.get(i) === false; }}]});
+  }
+  // every drug-dose of tables/drug_line_response for this line (the line's own file, table dlr)
+  function tResponse(pane, x) {
+    var d = D(), t = x.sh ? x.sh.t.dlr : null;
+    if (!t) {
+      pane.appendChild(TM.p(x.sh ? 'This run has no tables/drug_line_response.parquet (a tables stage older than ' +
+        'version 5). The Sensitivity tab has the growth (DD_A, DD_Az) and response strength at every drug-dose.' :
+        'The line\u2019s own file could not be loaded (see above).'));
+      return;
+    }
+    var nSel = 0;
+    for (var i = 0; i < t.n; i++) if (t.c.selective.get(i)) nSel++;
+    pane.appendChild(TM.p('Every drug-dose (' + TM.fmt.int(t.n) + ') in ' + x.name + ': how many genes the line ' +
+      'moves on its own there, how that compares with the other lines (rel_log2, sel_z), how strongly it shows the ' +
+      'drug\u2019s consensus response, and how many of its cells are left. Sorted by sel_z; ' + TM.fmt.int(nSel) +
+      ' drug-dose' + (nSel === 1 ? '' : 's') + ' at which the line is selective (\u2605) keep their place in every ' +
+      'order.'));
+    pane.appendChild(TM.dd.dlrTable(t, '', 'line-response', x.csv + '_response_growth', 'Every drug-dose in ' +
+      x.name + ' (tables/drug_line_response: ' + TM.fmt.int(t.n) + ' rows)', true).el);
   }
   function tGenes(pane, x) {
     var d = D();

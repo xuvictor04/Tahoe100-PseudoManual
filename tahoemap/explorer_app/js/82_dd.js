@@ -4,9 +4,10 @@
 // modules, perline (every gene in every line: the optional data_dd volume, otherwise gene by gene), direction,
 // space (nearest drug-doses, contexts), downloads.
 TM.dd = (function () {
-  var TABS = [['qc', 'QC'], ['genes', 'All genes'], ['lines', 'Cell lines'], ['wells', 'Wells'],
-    ['modules', 'Modules'], ['perline', 'Per-line values'], ['direction', 'Direction'], ['space', 'Vector space'],
-    ['downloads', 'Downloads']];
+  var TABS = [['qc', 'QC'], ['genes', 'All genes'], ['lines', 'Cell lines'],
+    ['response', 'Lines: response and growth'], ['wells', 'Wells'], ['modules', 'Modules'],
+    ['perline', 'Per-line values'], ['direction', 'Direction'], ['space', 'Vector space'],
+    ['similar', 'Similar drug-doses'], ['downloads', 'Downloads']];
   var moduleOf = null;                      // gene column -> [module, arm] (when loaded)
   function D() { return TM.data; }
   function web(id) { return TM.load.web(id); }
@@ -45,6 +46,14 @@ TM.dd = (function () {
         x.dr = r.dr || null;
         var dir = x.dr ? x.dr.t.dir : null;
         x.dirRows = dir ? TM.rowsWhere(dir, function (i) { return dir.c.target_dd.get(i) === k; }) : [];
+        function mine(name) {
+          var t = x.dr && x.dr.t[name];
+          return t && t.c.dd ? TM.subTable(t, TM.rowsWhere(t, function (i) { return t.c.dd.get(i) === k; })) : null;
+        }
+        x.dlr = mine('dlr');
+        x.sim = mine('sim');
+        x.sel = mine('sel');
+        x.lctl = mine('lctl');
         main.appendChild(header(x));
         if (r.err) {
           main.appendChild(TM.errorBox({title: 'The drug\u2019s own file could not be loaded', message: r.err.message,
@@ -55,11 +64,14 @@ TM.dd = (function () {
           href: function (t) { return TM.href.dd(k, t === 'qc' ? null : t); },
           counts: {genes: TM.fmt.int(d.G) + ' + ' + (d.C - d.G), lines: d.L, wells: x.wells.length,
             modules: TM.fmt.int(M), perline: TM.fmt.int(d.G) + ' \u00d7 ' + d.L,
-            direction: dir ? x.dirRows.length : 'not loaded', space: TM.fmt.int(d.D - 1)},
+            direction: dir ? x.dirRows.length : 'not loaded', space: TM.fmt.int(d.D - 1),
+            response: x.dlr ? x.dlr.n : 'not loaded', similar: x.sim ? (simNoSig(x.sim) ? 'none: no pooled ' +
+              'signature' : x.sim.n) : 'not loaded'},
           fns: {qc: function (p) { return tQC(p, x); }, genes: function (p) { return tGenes(p, x); },
             lines: function (p) { return tLines(p, x); }, wells: function (p) { return tWells(p, x); },
             modules: function (p) { return tModules(p, x); }, perline: function (p) { return tPerline(p, x); },
             direction: function (p) { return tDirection(p, x); }, space: function (p) { return tSpace(p, x); },
+            response: function (p) { return tResponse(p, x); }, similar: function (p) { return tSimilar(p, x); },
             downloads: function (p) { return tDownloads(p, x); }}});
       });
   }
@@ -67,9 +79,12 @@ TM.dd = (function () {
     var d = D(), k = x.k, t = d.core.t.drugdoses, r = d.dd.row[k];
     var box = TM.h('div', {class: 'ghead', dataset: {dd: k}});
     function v(n) { return t.c[n] ? t.c[n].get(r) : null; }
-    box.appendChild(TM.h('div', null, TM.h('h1', null, x.label), TM.h('span', {class: 'sym-sub'}, 'drug-dose ' + k +
-      ' \u00b7 ' + (v('moa_fine') || 'mechanism not recorded') + (v('targets') ? ' \u00b7 targets: ' + v('targets') :
-      ''))));
+    // the mechanism of both annotations, each labelled with its source (Tahoe's is never changed)
+    var an = TM.drug.annOf(x.di);
+    box.appendChild(TM.h('div', null, TM.h('h1', null, x.label), TM.h('span', {class: 'sym-sub', dataset: {ann: 1}},
+      'drug-dose ' + k + ' \u00b7 mechanism (Tahoe): ' + (an.tahoe || v('moa_fine') || 'not recorded') +
+      ((an.targets || v('targets')) ? ' \u00b7 targets (Tahoe): ' + (an.targets || v('targets')) : '') +
+      ' \u00b7 mechanism (ChEMBL): ' + TM.drug.chemblText(an))));
     var ds = d.dosesOf[x.di] || [k];
     box.appendChild(TM.p('Drug: ', TM.drugLink(x.drug), ' \u00b7 its doses: ', ds.map(function (o, j) {
       return [j ? ', ' : '', o === k ? TM.h('strong', null, d.dd.dose[o] + ' \u00b5M') :
@@ -91,6 +106,10 @@ TM.dd = (function () {
       badges.appendChild(TM.h('span', {class: 'badge' + (ft.className.indexOf('has-art') >= 0 ? ' warnb' : '')},
         'flags: ', ft));
     }
+    var nbb = TM.drug.nbBadge(k);
+    if (nbb) badges.appendChild(nbb);
+    var ab = TM.drug.annBadge(x.di, x.drug);
+    if (ab) badges.appendChild(ab);
     var fs = TM.drug.eddRow(k) >= 0 ? d.core.t.edd.c.fit_status.get(TM.drug.eddRow(k)) : null;
     if (fs) badges.appendChild(TM.h('span', {class: 'badge'}, 'vector space: ' + fs));
     box.appendChild(badges);
@@ -113,6 +132,7 @@ TM.dd = (function () {
           TM.fmt.int(v('n_wells_all')) +
       (v('replicate_r') !== null && !isNaN(v('replicate_r')) ? '; the replicate wells agree with r = ' +
         TM.csv.num(v('replicate_r')) : '') + '. Flags: ' + (d.dd.flags[k] || 'none') + '.'));
+    pane.appendChild(TM.drug.nbBlock(k));
     pane.appendChild(TM.p('Every column the pipeline recorded for ' + x.label + ' (tables/drugdoses and ' +
       'embed/drugdoses), in groups, each with its definition. Then a volcano plot of every gene.'));
     var grid = TM.h('div', {class: 'qcgrid'});
@@ -399,8 +419,8 @@ TM.dd = (function () {
       K.Q_CUT + '); all ' + TM.fmt.int(d.G) + ' genes need the data volume (' + reason + ').'));
     var cols = TM.tableCols(sub, (d.docs['tables/drug_effects.parquet'] || {}).cols || {}, {links: {
       symbol: function (v, r) { return TM.href.gene(d.labelOf[sub.c.col.get(r)] || v, null, 'dd', x.k); }},
-    simple: ['symbol', 'fold', 'lfc', 'z', 'q_up', 'q_down', 'flags', 'n_lines_up', 'n_lines_down', 'lines_up',
-      'lines_down', 'pattern_up', 'pattern_down']});
+    simple: ['symbol', 'fold', 'lfc', 'lfc_vs_dmso', 'z', 'q_up', 'q_down', 'flags', 'n_lines_up', 'n_lines_down',
+      'lines_up', 'lines_down', 'n_wells', 'pattern_up', 'pattern_down']});
     cols.forEach(function (c) {
       if (c.key === 'flags') c.show = function (r) { return TM.gene.flagText(sub.c.flags.get(r)); };
     });
@@ -832,6 +852,171 @@ TM.dd = (function () {
   }
 
   // ------------------------------------------------------------------- Vector space
+  // ------------------------------------------------------------------- Lines: response and growth
+  // tables/drug_line_response rows of this drug-dose (every line), direction/selectivity and the line-selective
+  // positive controls (validation/line_controls) that name it
+  function dlrTable(t, key, id, csv, title, withDrug) {
+    var d = D(), docs = (d.docs['tables/drug_line_response.parquet'] || {}).cols || {};
+    var cols = TM.tableCols(t, docs, {links: {cell_name: function (v) { return TM.href.line(v); },
+      dd: function (v) { return TM.href.dd(v); }, drug: function (v) { return TM.href.drug(v); }},
+    simple: (withDrug ? ['drug', 'dose'] : ['cell_name']).concat(['measured', 'n_genes', 'n_up', 'n_down',
+      'rel_log2', 'sel_z', 'selective', 'response_strength', 'log2_rel_abundance', 'abundance_z', 'depleted',
+      'flags'])});
+    cols.forEach(function (c) {
+      var g = c.get;
+      if (['n_genes', 'n_up', 'n_down'].indexOf(c.key) >= 0) {
+        c.get = function (i) { var v = g(i); return v < 0 ? null : v; };
+        c.missing = function (i) { return t.c.measured && t.c.measured.get(i) === false ? 'the line has no ' +
+          'per-line values here (not measured: -1 in the table)' : ''; };
+        c.text = function (i) { var v = g(i); return v === null || v === undefined ? '' : String(v); };
+      }
+      if (['sel_z', 'rel_log2', 'rms_z'].indexOf(c.key) >= 0) {
+        c.missing = function (i) { return t.c.measured && t.c.measured.get(i) === false ? 'not measured in this ' +
+          'line at this drug-dose' : ''; };
+      }
+      if (c.key === 'response_strength' || c.key === 'response_r') {
+        c.missing = function (i) {
+          return t.c.dd ? TM.drug.betaWhy(t.c.dd.get(i), -1) : 'not measured here';
+        };
+      }
+      if (['log2_rel_abundance', 'abundance_z'].indexOf(c.key) >= 0) {
+        c.missing = function (i) { return t.c.in_growth_analysis && t.c.in_growth_analysis.get(i) === false ?
+          'the line is not in the growth analysis' : 'no abundance value (no usable well)'; };
+      }
+      if (c.key === 'selective') {
+        c.show = function (i) { return t.c.selective.get(i) ? TM.h('strong', {class: 'selmark'}, '\u2605 selective') :
+          'no'; };
+      }
+      if (c.key === 'flags') c.show = function (i) { return TM.gene.flagText(t.c.flags.get(i)); };
+    });
+    return TM.table({key: key, n: t.n, cols: cols, id: id, csv: csv, title: title, sort: [['sel_z', 'desc']],
+      sortPresets: [{label: 'most selective first (sel_z)', sort: [['sel_z', 'desc']]},
+        {label: 'strongest response first', sort: [['response_strength', 'desc']]},
+        {label: 'most depleted first', sort: [['abundance_z', 'asc']]}],
+      filters: [{key: 'selective', label: 'selective', test: function (i) { return t.c.selective.get(i) === true; }},
+        {key: 'measured', label: 'measured', test: function (i) { return t.c.measured.get(i) === true; }}],
+      rowClass: function (i) { return t.c.selective && t.c.selective.get(i) ? 'sel-row' : null; },
+      rowAttrs: function (i) { return t.c.selective && t.c.selective.get(i) ? {'data-selective': '1'} : {}; }});
+  }
+  function tResponse(pane, x) {
+    var d = D();
+    if (!x.dlr) {
+      pane.appendChild(TM.p(x.dr ? 'This run has no tables/drug_line_response.parquet (a tables stage older than ' +
+        'version 5): the Cell lines tab has the growth (DD_A, DD_Az) and response strength (beta) of every line.' :
+        'The drug\u2019s own file could not be loaded (see above).'));
+      return;
+    }
+    var docs = (d.docs['tables/drug_line_response.parquet'] || {}).cols || {};
+    var nSel = 0;
+    for (var i = 0; i < x.dlr.n; i++) if (x.dlr.c.selective.get(i)) nSel++;
+    pane.appendChild(TM.p('Every line (' + x.dlr.n + ') at ' + x.label + ': how many genes it moves on its own ' +
+      '(beyond the calibrated per-line cut), how that compares with the other lines (rel_log2 and the line ' +
+      'selectivity sel_z), how strongly it shows the drug\u2019s consensus response, and how many of its cells ' +
+      'are left (growth). Sorted by sel_z, most selective first; the ' + nSel + ' selective line' + (nSel === 1 ?
+      '' : 's') + ' (\u2605) keep their place in every order.'));
+    pane.appendChild(TM.note('selective: ' + (docs.selective || 'sel_z \u2265 3 and at least 20 genes beyond the ' +
+      'per-line cut') + '. A line that is not selective is still listed with its values.'));
+    if (x.sel && x.sel.n) {
+      var ss = TM.section('Its selectivity (direction/selectivity)');
+      ss.dataset.selectivity = 1;
+      ss.appendChild(TM.recordOf(x.sel, 0, (d.docs['direction/selectivity.parquet'] || {}).cols || {}));
+      pane.appendChild(ss);
+    }
+    pane.appendChild(dlrTable(x.dlr, '', 'dd-response', x.csv + '_lines_response_growth', 'Every line at ' +
+      x.label + ' (tables/drug_line_response: ' + x.dlr.n + ' rows)', false).el);
+    if (x.lctl && x.lctl.n) {
+      pane.appendChild(TM.table({key: 'lctl', n: x.lctl.n, id: 'dd-line-controls', csv: x.csv + '_line_controls',
+        title: 'Line-selective positive controls that test it (validation/line_controls: ' + x.lctl.n + ')',
+        cols: TM.tableCols(x.lctl, (d.docs['validation/line_controls.csv'] || {}).cols || {})}).el);
+    }
+  }
+
+  // ------------------------------------------------------------------- Similar drug-doses
+  // true when every stored cos_pooled of the drug-dose is NaN: it has no pooled signature, so no ranking
+  function simNoSig(sim) {
+    var cp = sim && sim.c.cos_pooled;
+    if (!cp || !sim.n) return false;
+    for (var i = 0; i < sim.n; i++) if (!isNaN(cp.get(i))) return false;
+    return true;
+  }
+  function tSimilar(pane, x) {
+    var d = D(), k = x.k, ed = d.core.t.edd, er = TM.drug.eddRow(k);
+    var ev = function (n) { return ed && er >= 0 && ed.c[n] ? ed.c[n].get(er) : null; };
+    var note = ev('resembles_note');
+    var box = TM.h('div', {dataset: {resembles: note ? 1 : 0}});
+    if (note) {
+      box.appendChild(TM.h('p', {class: 'callout warnbox'}, '\u26a0 ' + note));
+    } else {
+      box.appendChild(TM.p({class: 'muted'}, ev('resembles_class') !== null ? 'No unexpected resemblance noted for ' +
+        x.label + ' (embed/drugdoses resembles_note is empty).' : 'This run has no resemblance note (an embed ' +
+        'stage older than version 5).'));
+    }
+    if (ev('resembles_drugdoses')) {
+      box.appendChild(TM.p({class: 'small'}, 'It resembles: ' + ev('resembles_drugdoses') +
+        (ev('resembles_class') ? ' (class: ' + ev('resembles_class') + ', ' + ev('resembles_n') + ' drug-doses)' :
+          '')));
+    }
+    pane.appendChild(box);
+    if (!x.sim) {
+      pane.appendChild(TM.p(x.dr ? 'This run has no embed/drug_similarity.parquet (an embed stage older than ' +
+        'version 5). The Vector space tab has the cosine with every other drug-dose.' : 'The drug\u2019s own file ' +
+        'could not be loaded (see above).'));
+      return;
+    }
+    var docs = (d.docs['embed/drug_similarity.parquet'] || {}).cols || {};
+    // embed ranks by cos_pooled, the cosine of the pooled signatures (z on the tables/drug_effects rows: |z| >= 3 or
+    // q < 0.10, noise-class RNAs left out). A drug-dose with no such gene has no signature: every cosine with it is
+    // NaN and its stored rows are the first other drug-doses in row order, not a ranking. Said so, never as "most
+    // similar"; the rows stay listed as stored.
+    var cp = x.sim.c.cos_pooled, nFin = 0;
+    for (var i = 0; cp && i < x.sim.n; i++) if (!isNaN(cp.get(i))) nFin++;
+    var noSig = simNoSig(x.sim);
+    var de = x.dr && x.dr.t.de, nde = de ? TM.rowsWhere(de, function (r) { return de.c.dd.get(r) === k; }).length :
+      null;
+    var cut = '|z| \u2265 ' + d.K.KEEP_Z + ' or q < ' + d.K.Q_CUT;
+    var noSigWhy = 'no similarity: ' + x.label + ' moves no gene at ' + cut + (nde ? ' other than noise-class RNAs (' +
+      'its ' + nde + ' row' + (nde === 1 ? '' : 's') + ' of tables/drug_effects, which the signature leaves out)' :
+      ' (no row in tables/drug_effects)') + ', so it has no pooled signature';
+    var allLink = TM.a(TM.href.dd(k, 'space'), 'All ' + TM.fmt.int(d.D - 1) + ' other drug-doses by the cosine of ' +
+      'their vectors \u203a');
+    if (noSig) {
+      pane.appendChild(TM.h('p', {class: 'callout', dataset: {kofn: x.sim.n + '/' + (d.D - 1), noSignature: 1}},
+        'No similarity ranking for ' + x.label + ': it moves no gene at ' + cut + (nde ? ' other than noise-class ' +
+        'RNAs' : '') + ', so it has no pooled signature and every cosine with it is undefined. The ' + x.sim.n +
+        ' rows that embed/drug_similarity stores for it (' + TM.fmt.kofn(x.sim.n, d.D - 1, 'other drug-doses') +
+        ') are not the most similar: they are the first ' + x.sim.n + ' other drug-doses in row order, and rank is ' +
+        'that order. They are listed below as stored. ', allLink));
+    } else {
+      pane.appendChild(TM.p({dataset: {kofn: x.sim.n + '/' + (d.D - 1)}}, 'The ' + x.sim.n + ' drug-doses most like ' +
+        x.label + ' (' + TM.fmt.kofn(x.sim.n, d.D - 1, 'other drug-doses') + ': the embed stage stores the ' +
+        x.sim.n + ' nearest), by the cosine of their pooled signatures, with the cosine over the (drug-dose, line) ' +
+        'contexts and the genes both move. ' + (cp && nFin < x.sim.n ? (x.sim.n - nFin) + ' of them have no pooled ' +
+        'signature (the cosine says why): they come last, in row order. ' : ''), allLink));
+    }
+    var cols = TM.tableCols(x.sim, docs, {links: {other_dd: function (v) { return TM.href.dd(v); },
+      other_drug: function (v) { return TM.href.drug(v); }},
+    simple: ['rank', 'other_drug', 'other_dose', 'cos_pooled', 'cos_contexts', 'n_shared_sig', 'same_salt_base',
+      'other_moa_fine', 'other_classes', 'other_flags']});
+    cols.forEach(function (c) {
+      if (c.key === 'other_flags') c.show = function (i) { return TM.gene.flagText(x.sim.c.other_flags.get(i)); };
+      if (c.key === 'cos_contexts') c.missing = function () { return 'one of the two has no context vectors (not ' +
+        'an active, trustworthy drug-dose)'; };
+      if (c.key === 'cos_pooled') {
+        c.missing = function () { return noSig ? noSigWhy : 'no similarity: the other drug-dose moves no gene at ' +
+          cut + ' (no pooled signature)'; };
+      }
+      if (c.key === 'rank' && noSig) {
+        c.doc = (c.doc || '') + ' Here: the order of the stored rows (the other drug-doses in row order), not a ' +
+          'ranking, as ' + x.label + ' has no pooled signature.';
+      }
+    });
+    pane.appendChild(TM.table({key: '', n: x.sim.n, id: 'dd-similar', csv: x.csv + '_similar_drugdoses', cols: cols,
+      title: noSig ? 'The rows stored for ' + x.label + ' (embed/drug_similarity: ' + x.sim.n + ' rows; no ranking: ' +
+        'no pooled signature)' : 'Similar drug-doses (embed/drug_similarity: ' + x.sim.n + ' rows)',
+      sort: [['rank', 'asc']],
+      rowClass: function (i) { return TM.hasArt(x.sim.c.other_flags.get(i)) ? 'art-row' : null; }}).el);
+  }
+
   function tSpace(pane, x) {
     var d = D(), k = x.k, er = TM.drug.eddRow(k), ed = d.core.t.edd;
     pane.appendChild(TM.p('Where ' + x.label + ' sits in the vector space of drug responses: the cosine of its ' +
@@ -947,6 +1132,6 @@ TM.dd = (function () {
     pane.appendChild(files);
   }
 
-  return {page: page, TABS: TABS, genesTable: genesTable, loadModuleFiles: loadModuleFiles};
+  return {page: page, TABS: TABS, genesTable: genesTable, loadModuleFiles: loadModuleFiles, dlrTable: dlrTable};
 })();
 TM.pages.dd = function (ctx) { return TM.dd.page(ctx); };

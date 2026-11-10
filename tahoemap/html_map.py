@@ -43,10 +43,11 @@ What the page shows
     without re-centring), click to select, pan / zoom, pause (space), re-heat, reset, fit; sliders for repulsion,
     springs and minimum |cos|; an evidence filter (both halves / also one half / every relation; the neighbourhood's
     info box counts the selected gene's listed partners it leaves out, and a spring's tooltip shows an alert when it
-    is not replicated); colour by module or arm; labels for the selected gene, its partners, pinned genes and (zoomed
-    in) everyone. Each tab runs at most 120 steps a second (so a small simulation plays a re-heat or the sign switch
-    over ~2 s instead of settling in a few frames) and as many per frame as fit in a ~13 ms budget (one step every
-    other frame when one step takes > 45 ms: the all-genes tab at 15,000 genes).
+    has not the same sign in both halves of the compounds); colour by module or arm; labels for the selected gene,
+    its partners, pinned genes and (zoomed in) everyone. Each tab runs at most 120 steps a second (so a small
+    simulation plays a re-heat or the sign switch over ~2 s instead of settling in a few frames) and as many per
+    frame as fit in a ~13 ms budget (one step every other frame when one step takes > 45 ms: the all-genes tab at
+    15,000 genes).
     window.TAHOE_MAP exposes, for tests (tests/checks.py drives the page with Playwright when it is installed):
     select(i), search(q), data, tab(name), bench(n), state(), sim(tab), screen(tab, i), stats(tab), benchTick(tab, n);
     spread(v) (set the Spread slider; no argument: read it), hasSpread(), positions() (the map's drawn positions),
@@ -116,7 +117,7 @@ the Evidence filter (computing, not showing): the info box says how many listed 
 
 What the page says is the stages' own rule, never more: the per-line counts and 'strongest' use the per-line |z| cut
 the tables stage calibrated (tables/info.json; '-' below it); 'both' halves = same sign with fdr <= 0.10 in two random
-halves of the compounds, 'one' = strong in one random half only (not replicated); 'novel?' only when
+halves of the compounds, 'one' = strong in one random half only (not the same sign in both); 'novel?' only when
 relations/info.json says novelty could be assessed (else which sources were missing); a module's arms are called
 opposite only when graph/modules.parquet says so (arms_opposite), and its drug lists are the pooled module z
 (graph/module_pooled_z.npy) with |z| >= 1; the help's account of how modules are made uses graph/info.json's numbers.
@@ -158,7 +159,8 @@ decimals in Python as the vault and the look-ups round it: _fold100), z x10.
                                    reasons without the gene's own).
                                    flags = evidence (0 not reproduced, 1 one half, 2 both halves) + 4 locus +
                                    8 readthrough_risk + 16 shared_gene_group + 32 known + 64 novel_candidate +
-                                   256 * round(STRING score / 10) + 32768 * (index into pw + 1)
+                                   128 lineage_pair + 256 * round(STRING score / 10) + 32768 * read-sharing kind (1
+                                   paralogue, 2 pseudogene, 3 read-through) + 131072 * (index into pw + 1)
     reln                           per map gene: flat [partners in relations, how many of them with an alert (the
                                    partners' reasons, as in rel)]
     pw                             shared pathway names (rel flags point here)
@@ -177,6 +179,10 @@ decimals in Python as the vault and the look-ups round it: _fold100), z x10.
                                    none at |z| >= line_z); up clean dd, fold, z = when that one carries an alert, the
                                    line's strongest raising drug-dose without one at |z| >= line_z (else -1, 0, 0);
                                    the same for down (z keeps its sign)
+    lnc                            per entry: flat [up clean flag code, down clean flag code] per ln row: the flags
+                                   of the strongest without an artifact flag (tables line_effects best_up_flags /
+                                   best_down_flags: its caveats, e.g. a rise under a translation inhibitor read
+                                   from the line's own change; 0 = none, or no such drug-dose)
     lnn                            per entry: flat [measured lines (tables/line_effects expressed), lines where a
                                    drug-dose moves it at the per-line cut]: the N of the lines' 'k of N shown'
     ln_all                         whether tables/line_effects has the *_all columns (else counts are clean only)
@@ -184,11 +190,23 @@ decimals in Python as the vault and the look-ups round it: _fold100), z x10.
                                    ../explorer/web/index.html); the explorer stage rewrites it to "../" in its copy
     fl                             the flag texts the rows point to (flag code c > 0: fl[c - 1] = [text, kind]; kind
                                    1 = alert (an artifact flag: ⚠ + text), 2 = a cell-cycle shift that is no
-                                   artifact flag here (a grey note), 0 = other flags (tooltip); FlagTable)
+                                   artifact flag here (a grey note), 3 = a caveat token (common.CAVEAT_FLAGS: a grey
+                                   note, its words in the tooltip), 0 = other flags (tooltip); FlagTable)
+    flw, q_zero                    the plain words of the neighbouring-well and translation tokens (common.FLAG_TEXT);
+                                   how a q of 0 is written ('< 1e-45')
+    pwords                         the words of the lineage and read-sharing partner badges
+    pp                             graph/info.json partner_preservation (the help's "Distances"), or null
+    drg, ddx, lnx, vault_base      the search's drugs (name, doses, Tahoe's and ChEMBL's annotations, the alert where
+                                   they disagree, the mechanism classes with their sources, the vault note), drug-doses
+                                   (genes up / down, the neighbouring-well tier and alert, the resemblance note, the
+                                   entries of top_up / top_down) and lines (drivers, TP53, selective drug-doses, vault
+                                   note); vault_base = the results branch's address of the notes ('' = this folder)
     dd, ddf, lines, organ          labels: drug-dose by dd row ("Drug dose uM") and its own flags (flag code),
                                    cell line by line index, organ
     mods                           per module: id, n, np, nm, label, genes (top-gene label), plus, minus, opp
-                                   (arms_opposite), cb (mean cos between the sides), up, dn (flat [dd, pooled module
+                                   (arms_opposite), cb (mean cos between the sides), disp, lal (module_labels
+                                   label_display and label_alert), cov, covk (graph covariate_tag and
+                                   covariate_kinds), up, dn (flat [dd, pooled module
                                    z x 10] with z >= 1 / <= -1, cut by cap_keep at n_mod_drugs), nup, ndn ([how many
                                    reach |z| >= 1, of them flagged]), lines (graph/modules); an older graph stage
                                    without module_pooled_z.npy: up_txt, dn_txt (its lists as text) instead
@@ -211,15 +229,17 @@ decimals in Python as the vault and the look-ups round it: _fold100), z x10.
     tour                           the vector-space tour (_tour_block): {"k", "n", "sc": per-axis scale, "q": base64
                                    of int8 round(127 x v / sc) of the map genes' unit vectors (n x k, row-major; ~1.3
                                    MB at 15,000 x 64), "ax": per-axis top genes (+ / −, embed/components.parquet),
+                                   "axd": per-axis the 2 drug-doses at each end (top_pos / top_neg_drugdoses),
                                    "var": per-axis % of the space}, or {} without embed/gene_unit.npy
     dir                            the probable direction (DirBlock.encode): {"ok": false, "why"} without the
                                    stage; else EVERY display row of direction_view (collapsed, in ORDER) that touches
-                                   a gene of the page, as "r": flat ints, w = DIR_FIELDS = 10 per row: [kind + 16 x
+                                   a gene of the page, as "r": flat ints, w = DIR_FIELDS = 11 per row: [kind + 16 x
                                    grade + 64 x (sign + 1) + 256 x has_alert + 512 x full + 1024 x n_notes (kind,
                                    grade: indices into "kinds", "grades"; full: below), source set (index into
                                    "ss"), target name (index into "nm"), target entry (gene targets; -1 = not a
                                    gene of the page) or drug-dose row (cells targets: target_dd), sign_text,
-                                   kind_text, q_text, alert_short, reading, notes_short (indices into "tx"; -1 =
+                                   kind_text, q_text, alert_short, reading, notes_short, false share text (the
+                                   explorer's 'false (group)': html_map.false_words) (indices into "tx"; -1 =
                                    none)]. Every row has its edge line
                                    (direction_view.edge_line: sign, kind, q, the short labels of its alerts and
                                    notes; n_notes in kgs); the reading is written for the rows a gene's capped list
@@ -264,20 +284,27 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from . import atlas_core as A
+from . import common as CM
 from . import direction_view as DV
 from . import links as LK
 from . import vault as V
 from .common import ALERT, cap_keep as cap_rule, folder, log, marked_names, replace_file, stamp_stage
 
-VERSION = 8                    # 3: tabs, the physics simulations, graph/edges.parquet embedded; 4: a slow
+VERSION = 10                   # 3: tabs, the physics simulations, graph/edges.parquet embedded; 4: a slow
                                # double-click pins, at most 120 steps a second, literature badges with their check;
                                # 5: alerts instead of removal, the Spread slider, the k-D tour, neighbourhood depth 4;
                                # 6: probable direction (direction stage): side-panel lists and arrows;
                                # 7: never shortened to fit a size; 'k of N shown · all N in the explorer'; both the up
                                # and the down strongest drug-dose per line; direction notes and kind caveats;
                                # 8: folds rounded from the stored value (fold x100), module labels whole, the
-                               # explorer links of the drug lists open the listed drug-doses first
+                               # explorer links of the drug lists open the listed drug-doses first;
+                               # 9: the flags of record (common.ARTIFACT_FLAGS; caveat tokens shown as notes with their
+                               # words), lineage and read-sharing partner alerts, drug / drug-dose / line search,
+                               # tour axes named by drug-doses, Spread 1 by default, the measured partner preservation
+                               # in the help, label_display and covariate tags, 'false (group)' on arrow rows
+                               # 10: a line card lists the drug-doses at which the line is selective (tables
+                               # drug_line_response; version 9 read none); the strongest per-line value without an
+                               # artifact flag shows its caveats (lnc); the help names every flag word from the code
 N_PARTNERS = 15
 N_DRUGS = 8
 N_LINES = 5
@@ -288,8 +315,17 @@ LINE_Z_FALLBACK = 4.0          # per-line |z| cut when tables/info.json has none
 FN_CHARS = 110                 # function snippet: its first sentences up to this many characters, '…' when cut
 WARN_MB = 25                   # run() warns above this size (nothing is ever dropped to stay under it)
 N_DIR = 8                      # side panel: probable-direction rows per list (upstream, downstream, cells), cap rule
-DIR_FIELDS = 10                # ints per row of the `dir` block's r (module docstring)
+DIR_FIELDS = 11                # ints per row of the `dir` block's r (module docstring)
 EVIDENCE = {"not reproduced": 0, "one half": 1, "both halves": 2}
+# relations' read_sharing kinds, as the partner flags code them (1..3; 0 = none)
+RS_KINDS = {"paralogue": 1, "pseudogene": 2, "read-through": 3}
+# the words of the two partner alerts relations 5 adds (the panel's badge tooltips; the explorer has each pair's own)
+LINEAGE_WORDS = ("lineage pair: both genes are expressed in few cell lines, mostly the same ones, and such genes often "
+                 "move together whatever their regulation; the explorer gives this pair's lines and its lineage_p")
+READSHARE_WORDS = {1: "near-identical paralogues: reads can be counted for either gene",
+                   2: "a pseudogene and its parent gene (or two copies of one parent): reads can be counted for either "
+                      "gene", 3: "one is a read-through transcript that contains the other: reads can be counted "
+                                 "for either gene"}
 # 20 colours for modules (cycled: module m gets PALETTE[(m - 1) % 20]); the first 8 are a CVD-checked categorical
 # set on the light surface, the next 12 darker / other hues. Modules are numbered by size, so the big ones get these.
 PALETTE = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948",
@@ -425,6 +461,23 @@ def _validation_labels(out):
     return out_
 
 
+def _label_display(out):
+    """{module: (label_display, label_alert)} from validation/module_labels.csv (validate 7: the label with its alert
+    tags '⚠ read-sharing copies', '⚠ lineage-restricted', '⚠ Y-chromosome genes'), {} without those columns."""
+    p = os.path.join(out, "validation", "module_labels.csv")
+    if not os.path.exists(p):
+        return {}
+    try:
+        df = pd.read_csv(p, usecols=lambda c: c in ("module", "label_display", "label_alert"))
+    except (OSError, ValueError, pd.errors.ParserError):
+        return {}
+    if "module" not in df or "label_display" not in df:
+        return {}
+    al = df["label_alert"] if "label_alert" in df else pd.Series([""] * len(df))
+    return {int(m): (_str(d), _str(a)) for m, d, a in zip(df["module"], df["label_display"], al)
+            if np.isfinite(_num1(m))}
+
+
 def _top_genes_label(plus, minus, k_plus=3, k_minus=2):
     """'A, B, C | − D, E' from a module's top_plus / top_minus, each cut with the cap rule (a member with an alert,
     'SYMBOL ⚠', keeps its place, and the strongest without one are not pushed out)."""
@@ -474,10 +527,17 @@ def flag_text(flags, cc_share=np.nan):
     return "; ".join(out)
 
 
+def _caveat(flags):
+    """True when a flags string holds a caveat token (common.CAVEAT_FLAGS: a neighbouring well at the top dose or not
+    this gene, a translation inhibitor): shown as a note next to the value, never as an artifact flag."""
+    return any(t in CM.CAVEAT_FLAGS for t in _str(flags).split("; "))
+
+
 class FlagTable:
     """The flag texts the page shows, numbered once (data block `fl`): code 0 = no flags, else 1 + index into rows;
     rows[i] = [text, kind], kind 1 = an alert (the row holds an artifact flag: '⚠' + the text, visible), 2 = a
-    cell-cycle shift that is not the explanation (visible, muted), 0 = other flags (in the row's tooltip)."""
+    cell-cycle shift that is not the explanation (visible, muted), 3 = a caveat token (common.CAVEAT_FLAGS: visible,
+    muted, its plain words in the tooltip: data block `flw`), 0 = other flags (in the row's tooltip)."""
 
     def __init__(self):
         self.rows, self._ix = [], {}
@@ -487,7 +547,7 @@ class FlagTable:
         if not text and not alert:
             return 0
         text = text or "artifact flag"
-        kind = 1 if alert else (2 if "cell-cycle shift" in text else 0)
+        kind = 1 if alert else (2 if "cell-cycle shift" in text else (3 if _caveat(flags) else 0))
         key = (text, kind)
         if key not in self._ix:
             self._ix[key] = len(self.rows)
@@ -542,7 +602,7 @@ def _module_drugs(z, dalert, sign, k=N_MOD_DRUGS, zmin=MOD_Z):
 
 
 # ----------------------------------------------------------------------------- the vector-space tour
-def _tour_block(out, cols, k_axes_genes=3):
+def _tour_block(out, cols, k_axes_genes=3, k_axes_dd=2):
     """The unit gene vectors of the map genes (embed/gene_unit.npy rows `cols`, map order), quantised per axis:
     {"k", "n", "sc": per-axis scale, "q": base64 of int8 round(127 x v / sc) row-major (n x k), "ax": per-axis
     label from embed/components.parquet, "var": per-axis % of the space's variance}; {} without the embed vectors."""
@@ -561,21 +621,26 @@ def _tour_block(out, cols, k_axes_genes=3):
     k = V.shape[1]
     sc = np.maximum(np.abs(V).max(axis=0), 1e-9)
     q = np.clip(np.rint(V / sc * 127), -127, 127).astype(np.int8)
-    ax, var = [""] * k, [None] * k
+    ax, var, axd = [""] * k, [None] * k, [""] * k
     cp = os.path.join(ed, "components.parquet")
     if os.path.exists(cp):
-        comp = _read(cp, ["component", "variance_pct_of_space", "top_pos_genes", "top_neg_genes"])
+        comp = _read(cp, ["component", "variance_pct_of_space", "top_pos_genes", "top_neg_genes",
+                          "top_pos_drugdoses", "top_neg_drugdoses"])
         for r in comp.to_dict("records"):
             j = int(r.get("component", 0)) - 1
             if 0 <= j < k:
                 pos = [g.strip() for g in _str(r.get("top_pos_genes")).split(",") if g.strip()][:k_axes_genes]
                 neg = [g.strip() for g in _str(r.get("top_neg_genes")).split(",") if g.strip()][:k_axes_genes]
                 ax[j] = "+ " + ", ".join(pos) + (" | − " + ", ".join(neg) if neg else "") if pos else ""
+                # the axis named by the drug-doses at its two ends (embed components, their order; flags kept)
+                dp_ = [x.strip() for x in _str(r.get("top_pos_drugdoses")).split("; ") if x.strip()][:k_axes_dd]
+                dn_ = [x.strip() for x in _str(r.get("top_neg_drugdoses")).split("; ") if x.strip()][:k_axes_dd]
+                axd[j] = ("+ " + ", ".join(dp_) if dp_ else "") + (" · − " + ", ".join(dn_) if dn_ else "")
                 v = r.get("variance_pct_of_space")
                 var[j] = round(float(v), 2) if v is not None and np.isfinite(float(v)) else None
     log(f"  tour: {len(cols):,} genes x {k} dimensions ({q.nbytes / 1e6:.2f} MB as int8)")
     return {"k": int(k), "n": int(len(cols)), "sc": [float(f"{s:.6g}") for s in sc], "q": _b64(q), "ax": ax,
-            "var": var}
+            "axd": axd, "var": var}
 
 
 # ----------------------------------------------------------------------------- graph edges (physics tabs)
@@ -607,7 +672,7 @@ def _edge_block(gd, ent, gK, n, pair_keys, pair_ev):
     key, lo, hi, c = key[o], lo[o], hi[o], c[o]
     first = np.r_[True, key[1:] != key[:-1]] if len(key) else np.zeros(0, dtype=bool)
     key, lo, hi, c = key[first], lo[first], hi[first], c[first]
-    ev = np.full(len(key), 2, dtype=np.uint8)                 # a graph edge missing from relations: as replicated
+    ev = np.full(len(key), 2, dtype=np.uint8)                 # a graph edge missing from relations: as both halves
     if len(pair_keys) and len(key):
         pos = np.clip(np.searchsorted(pair_keys, key), 0, len(pair_keys) - 1)
         hit = pair_keys[pos] == key
@@ -647,6 +712,45 @@ def dir_missing(why):
     return {"ok": False, "why": why}
 
 
+DRUGDOSE_TARGETS = tuple(getattr(DV, "DRUGDOSE_TARGETS", ("cells",)))
+_E00 = re.compile(r"(?<![\d.])0e\+00\b")
+
+
+def _pct_text(x):
+    """A share as the page prints it: 'under 1%' below 1% (and above 0), else a whole percentage."""
+    return "under 1%" if 0 < x < 0.005 else f"{int(round(100 * x))}%"
+
+
+def q_words(r):
+    """A display row's q text (direction_view.q_text), with a q of exactly 0 written '< 1e-45' (stored 0: below the
+    smallest float32) instead of '0e+00'."""
+    return _E00.sub(CM.Q_ZERO, DV.q_text(r))
+
+
+def false_words(r):
+    """The explorer's 'false (group)' column in words: the share of the group's arrows of the kind that may be false
+    (genotype kinds: false_share, up to false_share_upper, of group_edges arrows), or the share random genes or line
+    sets give as well (natural knockouts: nonspecific_share); '' for the other kinds."""
+    fs, fu = _num1(getattr(r, "false_share", None)), _num1(getattr(r, "false_share_upper", None))
+    out = []
+    if np.isfinite(fs):
+        ge = _num1(getattr(r, "group_edges", None))
+        out.append(f"false (group) {_pct_text(fs)}" + (f" (up to {_pct_text(fu)})" if np.isfinite(fu) else "")
+                   + (f" of {int(ge)} arrows" if np.isfinite(ge) and ge >= 0 else ""))
+    ns = _num1(getattr(r, "nonspecific_share", None))
+    if np.isfinite(ns):
+        out.append(f"non-specific {_pct_text(ns)}")
+    return "; ".join(out)
+
+
+def _num1(v):
+    try:
+        x = float(v)
+    except (TypeError, ValueError):
+        return float("nan")
+    return x
+
+
 class DirBlock:
     """The direction stage's display rows (direction_view: collapsed, in ORDER, with its wording) that touch a gene of
     the page (on the map or searchable), as the `dir` block (encode; module docstring). A row is a gene's upstream row
@@ -669,7 +773,7 @@ class DirBlock:
         rows = dv.rows
         self.n_stage = len(rows)
         self.n_edges_stage = len(dv.edges)
-        sens = set(DV.SENSITIVITY)
+        sens = set(DV.SENSITIVITY) | set(getattr(DV, "SELECTIVITY", ()))
         kix = {k: i for i, k in enumerate(DV.KINDS)}
         gix = {g: i for i, g in enumerate(DV.GRADES)}
 
@@ -687,7 +791,8 @@ class DirBlock:
         lists = {}                                          # (entry, list) -> row indices, in ORDER
         for r in rows.itertuples(index=False):
             kind = str(r.kind)
-            cells = kind in sens or str(r.target_type) == "cells"
+            # a drug-dose target: the cells under it, or (selectivity kinds) the response to it
+            cells = kind in sens or str(r.target_type) in DRUGDOSE_TARGETS
             srcs = [str(x) for x in (r.sources or (r.source,))]
             se = [entry(c) for c in (r.source_cols or (r.source_col,))]
             tgt = str(r.target)
@@ -711,8 +816,8 @@ class DirBlock:
                 "grade": str(r.grade), "alert": bool(r.has_alert), "srcs": list(zip(srcs, se)), "s": s, "tgt": tgt,
                 "te": te, "edges": len(r.members or (0,)),
                 "sign": _templ(DV.sign_text(r), s, t), "kind": _templ(DV.kind_text(r), s, t),
-                "q": DV.q_text(r), "ash": _templ(ash, s, t), "rd": _templ(str(r.reading or ""), s, t),
-                "nsh": _templ(nsh, s, t)})
+                "q": q_words(r), "ash": _templ(ash, s, t), "rd": _templ(str(r.reading or ""), s, t),
+                "nsh": _templ(nsh, s, t), "fg": false_words(r)})
             for n_, e in zip(srcs, se):
                 if e >= 0:
                     lists.setdefault((e, "ce" if cells else "dn"), []).append(k)
@@ -739,7 +844,7 @@ class DirBlock:
             nm_c[r["tgt"]] += 1
             for n_, _e in r["srcs"]:
                 nm_c[n_] += 1
-            for f in ("sign", "kind", "q", "ash", "nsh"):
+            for f in ("sign", "kind", "q", "ash", "nsh", "fg"):
                 tx_c[r[f]] += 1
             if r["full"]:
                 tx_c[r["rd"]] += 1
@@ -759,7 +864,7 @@ class DirBlock:
                 ss.append(v)
 
             flat += [r["kgs"], ssi[key], nmi[r["tgt"]], r["te"], txi[r["sign"]], txi[r["kind"]], txi[r["q"]],
-                     txi[r["ash"]], txi[r["rd"]] if r["full"] and r["rd"] else -1, txi[r["nsh"]]]
+                     txi[r["ash"]], txi[r["rd"]] if r["full"] and r["rd"] else -1, txi[r["nsh"]], txi[r["fg"]]]
         dv = self.dv
         nd = sum(r["edges"] for r in use)
         out_names = sorted({str(r.source) for r in self.out_rows})
@@ -767,7 +872,8 @@ class DirBlock:
             "ok": True, "w": DIR_FIELDS, "r": flat, "nm": nm, "tx": tx, "ss": ss, "cap": N_DIR,
             "full": int(sum(1 for r in use if r["full"])),
             "kinds": list(DV.KINDS), "kshort": [DV.KIND_SHORT[k] for k in DV.KINDS],
-            "kwords": [DV.KIND_WORDS[k] for k in DV.KINDS], "sens": [k in DV.SENSITIVITY for k in DV.KINDS],
+            "kwords": [DV.KIND_WORDS[k] for k in DV.KINDS],
+            "sens": [k in DV.SENSITIVITY or k in getattr(DV, "SELECTIVITY", ()) for k in DV.KINDS],
             "kcav": [DV.caveat_header([k]) for k in DV.KINDS],
             "grades": list(DV.GRADES), "gwords": [DV.GRADE_WORDS[g] for g in DV.GRADES],
             "gshort": [DV.GRADE_SHORT[g] for g in DV.GRADES], "signw": [DV.sign_word(s) for s in (-1, 0, 1)],
@@ -903,7 +1009,8 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
     # ---- relations: top partners per map gene (by the relations rank)
     rel = _read(os.path.join(out, "relations", "gene_relations.parquet"),
                 ["col_a", "col_b", "rank", "cos", "abs_cos", "evidence", "fdr", "locus", "readthrough_risk",
-                 "shared_gene_group", "shared_pathway", "string_score", "known", "novel_candidate", "alert"])
+                 "shared_gene_group", "shared_pathway", "string_score", "known", "novel_candidate", "alert",
+                 "lineage_pair", "read_sharing", "read_sharing_risk"])
     a = rel["col_a"].to_numpy(dtype=np.int64)
     b = rel["col_b"].to_numpy(dtype=np.int64)
     ok = (a >= 0) & (a < gK) & (b >= 0) & (b < gK)
@@ -921,7 +1028,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
     rank = _num(rel, "rank") if "rank" in rel else -np.abs(_num(rel, "cos"))
     o = np.lexsort((np.nan_to_num(rank, nan=1e9), ea))
     rel, ea, eb = rel.iloc[o].reset_index(drop=True), ea[o], eb[o]
-    # a partner's alert (the reasons of relations' 'alert' column): not replicated in both halves, a genomic reason
+    # a partner's alert (the reasons of relations' 'alert' column): not the same sign in both halves, a genomic reason
     # (same locus, read-through) for the correlation, or the PARTNER in the space only through flagged drug-doses.
     # The selected gene's own such reason is in every one of its rows; it is stated once in the panel instead, so it
     # neither marks every partner nor stops the cap from adding the strongest partners without an alert.
@@ -929,7 +1036,9 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
         np.zeros(len(rel), dtype=np.int64)
     efo_m = np.zeros(na, dtype=bool)
     efo_m[efo] = True
-    r_alert = (ev < 2) | _bool(rel, "locus") | _bool(rel, "readthrough_risk") | efo_m[eb]
+    # relations 5: a lineage pair and read-sharing copies are reasons too (the 'alert' column names them)
+    r_alert = (ev < 2) | _bool(rel, "locus") | _bool(rel, "readthrough_risk") | efo_m[eb] | \
+        _bool(rel, "lineage_pair") | _bool(rel, "read_sharing_risk")
     reln = np.zeros((n, 2), dtype=np.int64)                  # per map gene: partners in relations, with an alert
     np.add.at(reln, ea, np.column_stack([np.ones(len(ea), dtype=np.int64), r_alert.astype(np.int64)]))
     k = cap_keep(ea, ~r_alert, partners)
@@ -937,9 +1046,12 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
     pw_names = rel["shared_pathway"].map(_str) if "shared_pathway" in rel else pd.Series([""] * len(rel))
     codes, pw = pd.factorize(pw_names.where(pw_names != "", None))
     sscore = np.clip(_scaled(_num(rel, "string_score"), 0.1, 0), 0, 127)
+    rs_kind = rel["read_sharing"].map(lambda v: RS_KINDS.get(_str(v), 0)).to_numpy(dtype=np.int64) \
+        if "read_sharing" in rel else np.zeros(len(rel), dtype=np.int64)
+    rs_kind = np.where(_bool(rel, "read_sharing_risk") & (rs_kind == 0), 1, rs_kind)
     flags = (ev + 4 * _bool(rel, "locus") + 8 * _bool(rel, "readthrough_risk") + 16 * _bool(rel, "shared_gene_group")
-             + 32 * _bool(rel, "known") + 64 * _bool(rel, "novel_candidate") + 256 * sscore
-             + 32768 * (codes.astype(np.int64) + 1))
+             + 32 * _bool(rel, "known") + 64 * _bool(rel, "novel_candidate") + 128 * _bool(rel, "lineage_pair")
+             + 256 * sscore + 32768 * rs_kind + 131072 * (codes.astype(np.int64) + 1))
     rmat = np.column_stack([eb, _scaled(_num(rel, "cos"), 100), _scaled(_num(rel, "fdr"), 100, -1), flags])
     rel_lists = _lists(ea, rmat, n)
     shown_pairs = np.unique(np.minimum(ea, eb) * n + np.maximum(ea, eb))   # the side panel's partner pairs
@@ -958,7 +1070,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
     de_ent = np.where((dc >= 0) & (dc < gK), ent[np.clip(dc, 0, gK - 1)], -1)
     z = _num(de, "z")
     de_flags = de["flags"].map(_str).to_numpy() if "flags" in de else np.array([""] * len(de), dtype=object)
-    de_alert = ~_bool(de, "clean") if "clean" in de else np.array([A.has_artifact(f) for f in de_flags], dtype=bool)
+    de_alert = ~_bool(de, "clean") if "clean" in de else np.array([CM.has_artifact(f) for f in de_flags], dtype=bool)
     up_lists, dn_lists, dct = [], [], np.zeros((na, 4), dtype=np.int64)
     for t, (sign, nl_col, store) in enumerate(((1, "n_lines_up", up_lists), (-1, "n_lines_down", dn_lists))):
         m = (de_ent >= 0) & np.isfinite(z) & (sign * z > 0)
@@ -1015,7 +1127,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
     sub = le.iloc[idx]
     # per direction: the line's strongest drug-dose (over all of them when ln_all, flagged or not; dd -1 = none at
     # |z| >= line_z) and, when that one carries an alert, its strongest without one (the clean best_* columns)
-    blocks, n_named = [], 0
+    blocks, cblocks, n_named = [], [], 0
     for d in ("up", "down"):
         bdd, blfc, bz = (_num(le, f"best_{d}_{c}{x}")[idx] for c in ("dd", "lfc", "z"))
         has_best = np.isfinite(bdd) & np.isfinite(bz) & (np.abs(np.nan_to_num(bz)) >= line_z)
@@ -1023,7 +1135,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
             bfl = sub[f"best_{d}_flags_all"].map(_str).to_numpy() if f"best_{d}_flags_all" in sub else \
                 np.array([""] * len(idx), dtype=object)
             bal = ~_bool(sub, f"best_{d}_clean_all") if f"best_{d}_clean_all" in sub else \
-                np.array([A.has_artifact(f_) for f_ in bfl], dtype=bool)
+                np.array([CM.has_artifact(f_) for f_ in bfl], dtype=bool)
             bf = np.where(has_best, ft.codes(bfl, bal, _num(le, f"best_{d}_cc_share{x}")[idx]), 0)
         else:
             bal = np.zeros(len(idx), dtype=bool)
@@ -1032,6 +1144,9 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
         has_c = bool(ln_all) & has_best & bal & np.isfinite(cdd) & np.isfinite(cz) & \
             (np.abs(np.nan_to_num(cz)) >= line_z) & (cdd != bdd)
         n_named += int(has_c.sum())
+        cfl = sub[f"best_{d}_flags"].map(_str).to_numpy() if f"best_{d}_flags" in sub else \
+            np.array([""] * len(idx), dtype=object)                 # the clean best's caveats (tables version 6)
+        cblocks.append(np.where(has_c, ft.codes(cfl, np.zeros(len(idx), dtype=bool)), 0).astype(np.int64))
         blocks.append(np.column_stack([
             np.where(has_best, bdd, -1).astype(np.int64), _fold100(np.where(has_best, blfc, 0.0)),
             _scaled(np.where(has_best, bz, 0.0), 10), bf.astype(np.int64),
@@ -1047,6 +1162,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
     np.add.at(lnn, (le_ent[okm], 0), 1)
     np.add.at(lnn, (le_ent[okm], 1), (score[okm] > 0).astype(np.int64))
     ln_lists = _lists(e, lmat, na)
+    lnc_lists = _lists(e, np.column_stack(cblocks), na)
     log(f"  cell lines: {len(le):,} gene x line rows -> up to {lines} lines per gene, each with its strongest "
         "drug-dose up AND down"
         + (f" (counts over all drug-doses, flagged ones counted apart; {n_named:,} shown strongest drug-doses that "
@@ -1065,7 +1181,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
         fl = dd["flags"].map(_str) if "flags" in dd else pd.Series([""] * len(dd))
         for i, d_, s_, f_ in zip(ddi.tolist(), dd["drug"].map(_str), dd["dose"].map(_str), fl):
             dlab[i] = f"{d_} {s_} uM".strip()
-            dart[i] = A.has_artifact(f_)
+            dart[i] = CM.has_artifact(f_)
             ddf[i] = ft.code(f_, dart[i])                     # the drug-dose's own flags (module card)
     llab, organ = [], []
     lp = os.path.join(td, "lines.parquet")
@@ -1081,6 +1197,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
             llab[i], organ[i] = c_ or d_ or f"line {i}", o_
 
     vlab = _validation_labels(out)
+    vdisp = _label_display(out)
     mods = []
     mp = os.path.join(gd, "modules.parquet")
     if os.path.exists(mp):
@@ -1106,7 +1223,9 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
                          "nm": int(r.get("n_minus", 0)), "label": vlab.get(mid) or fallback,
                          "genes": fallback, "plus": _arm_text(r.get("top_plus"), fo_sym),
                          "minus": _arm_text(r.get("top_minus"), fo_sym),
-                         "opp": opp, "cb": cb, **drugs_, "lines": _str(r.get("responsive_lines"))})
+                         "opp": opp, "cb": cb, **drugs_, "lines": _str(r.get("responsive_lines")),
+                         "disp": (vdisp.get(mid) or ("", ""))[0], "lal": (vdisp.get(mid) or ("", ""))[1],
+                         "cov": _str(r.get("covariate_tag")), "covk": _str(r.get("covariate_kinds"))})
     labels_from = "validation" if vlab else "graph"
 
     def xy(c):
@@ -1122,6 +1241,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
     grule = {k: ginfo.get(k) for k in ("k_edges", "min_edge", "one_half_edge", "max_module", "loose_cos",
                                         "split_depth", "min_module", "arms_opposite_cos", "spread")}
     tour = _tour_block(out, on)
+    extras = _search_extras(out, tg, ent, gK, len(dlab))
     dblock = DirBlock(out, ent, gK)
     if dblock.ok:
         log(f"  direction: {len(dblock.rows):,} of the stage's {dblock.n_stage:,} display rows touch a gene of the "
@@ -1139,7 +1259,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
         "cpm": cpm, "nup": nup, "nupa": nupa, "ndn": ndn, "ndna": ndna, "nlx": nlx, "why": why, "efo": efo,
         "rel": rel_lists, "reln": reln.ravel().tolist(), "pw": [str(p) for p in pw],
         "up": up_lists, "dn": dn_lists, "dct": dct.ravel().tolist(), "ln": ln_lists, "lnw": LN_WIDTH,
-        "lnn": lnn.ravel().tolist(),
+        "lnn": lnn.ravel().tolist(), "lnc": lnc_lists,
         "ln_all": bool(ln_all),
         "fl": ft.rows, "dd": dlab, "ddf": ddf, "lines": llab, "organ": organ, "mods": mods,
         "palette": PALETTE, "ref": bool(have_ref), "labels_from": labels_from, "min_responsive": min_resp,
@@ -1151,8 +1271,157 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
         "halves": bool(einfo.get("halves", True)),
         "n_mod_drugs": N_MOD_DRUGS,
         "dir": dblock.encode(), "explorer_base": site_url or "",
+        "pp": ginfo.get("partner_preservation") or None,
+        "flw": {t: CM.FLAG_TEXT[t] for t in (CM.NB_FLAG,) + tuple(CM.CAVEAT_FLAGS) if t in CM.FLAG_TEXT},
+        "afl": list(CM.ARTIFACT_FLAGS), "cfl": list(CM.CAVEAT_FLAGS),
+        "pwords": {"lineage": LINEAGE_WORDS, "rs": {str(k_): v for k_, v in READSHARE_WORDS.items()}},
+        "q_zero": CM.Q_ZERO,
+        **extras,
         **lit,
     }
+
+
+_TOPG = re.compile(r"^(.*?) \([^()]*x\)$")
+
+
+def _top_entries(text, by):
+    """The page entries of a drugdoses top_up / top_down list ('SYM (2.16x); SYM2 (1.99x)'): every named gene that is
+    an entry of the page, in the list's order."""
+    out = []
+    for it in (x.strip() for x in _str(text).split("; ")):
+        m = _TOPG.match(it)
+        k = (m.group(1) if m else it).strip().upper()
+        if k in by:
+            out.append(by[k])
+    return out
+
+
+def _vault_paths(out):
+    """vault/.tahoemap-paths.json (the vault stage's note paths by kind), {} without it."""
+    try:
+        with open(os.path.join(out, "vault", ".tahoemap-paths.json"), encoding="utf-8") as fh:
+            d = json.load(fh) or {}
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def selective_by_line(td, dd=None):
+    """{cell name: [(dd, sel_z), ...]}: the drug-doses at which each line is selective, highest sel_z first (ties by
+    dd). From tables/drug_line_response.parquet (selective == True), else from drugdoses.parquet selective_lines
+    ('A549 (24.2), MIA PaCa-2 (24.1)': the name is the text before ' (', the number its sel_z). Nothing is cut."""
+    out = {}
+    rp = os.path.join(td, "drug_line_response.parquet")
+    if os.path.exists(rp):
+        r = _read(rp, ["dd", "cell_name", "sel_z", "selective"])
+        if {"dd", "cell_name", "selective"} <= set(r.columns):
+            r = r[r["selective"].fillna(False).astype(bool)]
+            z = pd.to_numeric(r["sel_z"], errors="coerce") if "sel_z" in r else pd.Series(np.nan, index=r.index)
+            for d_, nm, zz in sorted(zip(r["dd"].astype(int), r["cell_name"].map(_str), z.astype(float)),
+                                     key=lambda t: (-(t[2] if np.isfinite(t[2]) else -np.inf), t[0])):
+                out.setdefault(nm, []).append((int(d_), float(zz)))
+            return out
+    if dd is None or "selective_lines" not in dd or "dd" not in dd:
+        return out
+    for k, txt in zip(dd["dd"].astype(int), dd["selective_lines"].map(_str)):
+        for item in (x.strip() for x in txt.split(",")):
+            if not item:
+                continue
+            nm, _, rest = item.rpartition(" (") if item.endswith(")") else (item, "", "")
+            try:
+                zz = float(rest.rstrip(")")) if rest else float("nan")
+            except ValueError:
+                nm, zz = item, float("nan")
+            out.setdefault(nm.strip(), []).append((int(k), zz))
+    for nm in out:
+        out[nm].sort(key=lambda t: (-(t[1] if np.isfinite(t[1]) else -np.inf), t[0]))
+    return out
+
+
+def _search_extras(out, tg, ent, gK, n_dd):
+    """What the map's search shows for a drug, a drug-dose or a cell line (module docstring: drg, ddx, lnx; the
+    explorer holds every list in full): per drug its doses, Tahoe's and ChEMBL's annotations with the disagreement
+    alert, its mechanism classes with their sources (mechanisms.class_text) and its vault note; per drug-dose its
+    significant genes up and down, the neighbouring-well tier and alert, the unexpected-resemblance note and the page
+    entries of its top_up / top_down genes; per line its drivers, TP53 status, the drug-doses where it is selective
+    and its vault note."""
+    td = os.path.join(out, "tables")
+    vp = _vault_paths(out)
+    vnote = lambda kind, key: ("vault/" + str((vp.get(kind) or {}).get(str(key)))  # noqa: E731
+                               if (vp.get(kind) or {}).get(str(key)) else "")
+    by = {}
+    labels = tg["label"] if "label" in tg else tg["symbol"]
+    for c, s_, lab in zip(tg["col"].to_numpy(dtype=np.int64), tg["symbol"].map(_str), labels.map(_str)):
+        e = int(ent[c]) if 0 <= c < gK else -1
+        if e >= 0:
+            for k in (lab, s_):
+                if k:
+                    by.setdefault(k.upper(), e)
+    ddx = {"n": [], "nb": [], "nba": [], "res": [], "tu": [], "td": []}
+    dp = os.path.join(td, "drugdoses.parquet")
+    dd = _read(dp, ["dd", "drug", "n_genes_up", "n_genes_down", "nb_tier", "nb_alert", "top_up", "top_down",
+                    "selective_lines"]) if os.path.exists(dp) else pd.DataFrame()
+    ep = os.path.join(out, "embed", "drugdoses.parquet")
+    res = {}
+    if os.path.exists(ep):
+        ed = _read(ep, ["dd", "resembles_note"])
+        if "resembles_note" in ed:
+            res = {int(a): _str(b) for a, b in zip(ed["dd"], ed["resembles_note"]) if _str(b)}
+    rows = {int(r["dd"]): r for r in dd.to_dict("records")} if "dd" in dd else {}
+    sel_of = {}
+    for k in range(n_dd):
+        r = rows.get(k, {})
+        ddx["n"].append([int(_num1(r.get("n_genes_up")) if np.isfinite(_num1(r.get("n_genes_up"))) else -1),
+                         int(_num1(r.get("n_genes_down")) if np.isfinite(_num1(r.get("n_genes_down"))) else -1)])
+        ddx["nb"].append(_str(r.get("nb_tier")))
+        ddx["nba"].append(_str(r.get("nb_alert")))
+        ddx["res"].append(res.get(k, ""))
+        ddx["tu"].append(_top_entries(r.get("top_up"), by))
+        ddx["td"].append(_top_entries(r.get("top_down"), by))
+    sel_of = selective_by_line(td, dd)
+    ddx["has_nb"] = "nb_tier" in dd
+    ddx["has_sel"] = "selective_lines" in dd
+    ddx["has_res"] = bool(res) or (os.path.exists(ep) and "resembles_note" in _read(ep, ["resembles_note"]))
+    drg = []
+    dr = _read(os.path.join(td, "drugs.parquet"), ["drug", "salt_base", "targets", "moa_fine", "moa_broad",
+                                                    "chembl_id", "chembl_name", "chembl_mechanisms",
+                                                    "chembl_targets", "annotation_status", "annotation_alert",
+                                                    "annotation_note", "dose_plates"]) \
+        if os.path.exists(os.path.join(td, "drugs.parquet")) else pd.DataFrame()
+    dds_of = {}
+    for k, r in rows.items():
+        dds_of.setdefault(_str(r.get("drug")), []).append(k)
+    try:
+        from . import mechanisms as MC
+        cls_text = lambda name: MC.class_text(out, name)  # noqa: E731
+    except Exception as e:  # noqa: BLE001  (the classes are optional on the map; the explorer has them)
+        log(f"  drug classes not read ({type(e).__name__}: {e})")
+        cls_text = lambda name: ""  # noqa: E731
+    for r in dr.to_dict("records"):
+        name = _str(r.get("drug"))
+        drg.append({"n": name, "d": sorted(dds_of.get(name, [])), "moa": _str(r.get("moa_fine")),
+                    "tg": _str(r.get("targets")), "cid": _str(r.get("chembl_id")), "cn": _str(r.get("chembl_name")),
+                    "cm": _str(r.get("chembl_mechanisms")), "ct": _str(r.get("chembl_targets")),
+                    "st": _str(r.get("annotation_status")), "al": _str(r.get("annotation_alert")),
+                    "nt": _str(r.get("annotation_note")), "cls": cls_text(name), "pl": _str(r.get("dose_plates")),
+                    "v": vnote("drug", name)})
+    lnx = []
+    lp = os.path.join(td, "lines.parquet")
+    if os.path.exists(lp):
+        li = _read(lp, ["line", "cell_name", "drivers", "driver_changes", "tp53_status", "Organ"])
+        size = int(li["line"].max()) + 1 if len(li) else 0
+        lnx = [None] * size
+        for r in li.to_dict("records"):
+            nm_ = _str(r.get("cell_name"))
+            sl = sel_of.get(nm_, [])
+            lnx[int(r["line"])] = {"dr": _str(r.get("drivers")), "ch": _str(r.get("driver_changes")),
+                                   "tp": _str(r.get("tp53_status")), "sel": [a for a, _ in sl],
+                                   "sz": [round(b, 1) if np.isfinite(b) else None for _, b in sl],
+                                   "v": vnote("line", int(r["line"])) or vnote("line", nm_)}
+        lnx = [x or {} for x in lnx]
+    n_top = sum(len(a) + len(b) for a, b in zip(ddx["tu"], ddx["td"]))
+    log(f"  search: {len(drg):,} drugs, {n_dd:,} drug-doses ({n_top:,} top genes on the page), {len(lnx)} lines")
+    return {"drg": drg, "ddx": ddx, "lnx": lnx, "vault_base": LK.vault_base() or ""}
 
 
 def _literature(out, tg, ent, gK, n, shown_pairs):
@@ -1416,7 +1685,7 @@ a:hover,.lk:hover{text-decoration:underline}
     <button role="tab" data-tab="all" aria-selected="false" title="A live force simulation of every gene on the map, started from the nodal-map positions"><span class="ph">Physics:</span> all genes</button>
     <button role="tab" data-tab="help" aria-selected="false">How to read this</button>
   </nav>
-  <div class="grp" id="sw"><input id="q" type="search" placeholder="Search a gene (symbol, alias, name)" autocomplete="off" spellcheck="false" aria-label="Search a gene"><div id="ac" role="listbox"></div></div>
+  <div class="grp" id="sw"><input id="q" type="search" placeholder="Search a gene, drug, drug-dose or cell line" autocomplete="off" spellcheck="false" aria-label="Search a gene, drug, drug-dose or cell line"><div id="ac" role="listbox"></div></div>
 </header>
 <main>
   <section id="stage">
@@ -1424,7 +1693,7 @@ a:hover,.lk:hover{text-decoration:underline}
       <div class="bar">
         <div class="grp">Colour <span class="seg"><button id="c0" aria-pressed="true">Module</button><button id="c1" aria-pressed="false">Arm (+ / &minus;)</button></span></div>
         <button class="btn" id="fitb" title="Show every gene">Reset view</button>
-        <label class="rng" id="sprl" title="0 = the t-SNE layout; 1 = every module moved apart as a block, keeping its own arrangement, to a place set by how far apart the modules are in the full vector space">Spread <input type="range" id="spr" min="0" max="100" step="1" value="0" aria-label="Spread the modules apart"><output id="spro">0.00</output></label>
+        <label class="rng" id="sprl" title="0 = the t-SNE layout; 1 = every module moved apart as a block, keeping its own arrangement, to a place set by how far apart the modules are in the full vector space">Spread <input type="range" id="spr" min="0" max="100" step="1" value="100" aria-label="Spread the modules apart"><output id="spro">1.00</output></label>
         <button class="btn" id="sprb" title="Animate between the t-SNE layout (0) and the spread layout (1)">Spread &#8644;</button>
         <label class="grp" id="dirml" title="Draw the selected gene's probable-direction arrows (direction stage) to and from the genes on the map: the rows its side-panel lists show"><input type="checkbox" id="dirm" checked> Direction arrows</label>
         <span class="note" id="mapnote"></span>
@@ -1466,6 +1735,7 @@ const isMap = t => t === "nodal" || t === "signed";
 
 // ---------------------------------------------------------------- shared by every tab: the selection and the highlighted module
 let sel = -1, hlMod = -1, P = [], pset = new Set(), focus = "gene", active = "nodal", mapSelPending = false, selGen = 0;
+let hlSet = null, extraSel = null;               // a drug-dose's top genes highlighted; a drug, drug-dose or line shown
 const PHYS = {};                                   // the three physics tabs, by key
 let TOUR = null;                                   // the vector-space tour tab
 function partnersOf(i) {
@@ -1473,8 +1743,8 @@ function partnersOf(i) {
   for (let t = 0; t + 3 < a.length; t += 4) {
     const f = a[t + 3];
     out.push({j: a[t], cos: a[t + 1] / 100, fdr: a[t + 2] < 0 ? null : a[t + 2] / 100, ev: f & 3,
-      locus: !!(f & 4), rt: !!(f & 8), group: !!(f & 16), known: !!(f & 32), novel: !!(f & 64),
-      string: (Math.floor(f / 256) % 128) * 10, pw: Math.floor(f / 32768) - 1});
+      locus: !!(f & 4), rt: !!(f & 8), group: !!(f & 16), known: !!(f & 32), novel: !!(f & 64), lin: !!(f & 128),
+      string: (Math.floor(f / 256) % 128) * 10, rs: Math.floor(f / 32768) % 4, pw: Math.floor(f / 131072) - 1});
   }
   return out;
 }
@@ -1610,7 +1880,7 @@ function dirRow(k) {
   return {k: k, kind: kind, gi: gi, grade: DR.grades[gi] || "?", sign: sign, cells: cells, S: S, src: src, tgt: tgt,
     te: cells ? -1 : r[b + 3], dd: cells ? r[b + 3] : -1, signText: tx(r[b + 4]), kindText: tx(r[b + 5]), q: tx(r[b + 6]),
     alShort: tx(r[b + 7]), reading: tx(r[b + 8]), ntShort: tx(r[b + 9]), nNotes: kgs >> 10, alert: (kgs & 256) !== 0,
-    full: (kgs & 512) !== 0};
+    full: (kgs & 512) !== 0, falseText: DW > 10 ? tx(r[b + 10]) : ""};
 }
 // direction_view.edge_line(row):
 // 'TP53 → CDKN1A  [A]  TP53 activity raises ... (mutation: response; q 0.025)  ⚠ ...  · notes: ...'
@@ -1744,7 +2014,8 @@ const LAY = [norm(D.x, D.y), norm(D.xs, D.ys)];
 // the spread layouts (graph xm, ym / xsm, ysm): every module moved apart as a block; the Spread slider mixes them in
 const HAS_SPREAD = !!(has(D.xm) && D.xm.length === N && has(D.xsm) && D.xsm.length === N);
 const LAYM = HAS_SPREAD ? [norm(D.xm, D.ym), norm(D.xsm, D.ysm)] : LAY;
-let spread = 0;
+// the map opens with the modules spread apart (Spread 1: t-SNE packs them against each other); the slider goes to 0
+let spread = HAS_SPREAD ? 1 : 0;
 const MIX = [0, 1].map(() => ({x: new Float32Array(N), y: new Float32Array(N), s: -1}));
 function lay(l) {                                  // layout l at the current spread
   const t = MIX[l];
@@ -1756,7 +2027,7 @@ function lay(l) {                                  // layout l at the current sp
   return t;
 }
 const PX = new Float32Array(N), PY = new Float32Array(N);
-PX.set(LAY[0].x); PY.set(LAY[0].y);
+{ const L0 = lay(0); PX.set(L0.x); PY.set(L0.y); }
 let layout = 0, anim = null;
 const cv = $("cv"), ctx = cv.getContext("2d"), wrap = $("mapwrap"), tip = $("tip"), mapLayer = PointLayer(cv, ctx);
 
@@ -1795,6 +2066,7 @@ function regroup() {
   for (let i = 0; i < N; i++) {
     let a = 1;
     if (hlMod >= 0 && D.mod[i] !== hlMod) a = 0.13;
+    if (hlSet && !hlSet.has(i)) a = Math.min(a, 0.13);
     if (selOn && i !== sel && !pset.has(i)) a = Math.min(a, 0.4);
     const c = colourOf(i), key = a + c;
     let e = g.get(key);
@@ -1867,7 +2139,7 @@ function drawModuleLabels() {
       const X = s[0] / s[2] * V.k + V.tx, Y = -s[1] / s[2] * V.k + V.ty;
       if (X < 0 || Y < 0 || X > W || Y > H) continue;
       // the full label only for the highlighted module; otherwise the module number (muted while a gene is selected)
-      let text = hlMod === m.id ? "M" + m.id + suffix + " " + m.label : "M" + m.id + suffix;
+      let text = hlMod === m.id ? "M" + m.id + suffix + " " + (m.disp || m.label) : "M" + m.id + suffix;
       if (text.length > 60) text = text.slice(0, 58) + "…";
       halo(ctx, text, X, Y, "600 11px " + FF, selOn && hlMod !== m.id ? "#898781" : "#2b2b2a");
     }
@@ -2094,8 +2366,8 @@ function buildLegend() {
     "<div class='note' style='margin-top:3px'>A module has a &minus; arm only where its two sides move in opposite directions under the same drugs (mean cos between them &le; &minus;0.2); otherwise all its genes are +.</div>";
   let h = "";
   for (const m of D.mods) {
-    h += "<div class='li' data-m='" + m.id + "' title='" + esc("M" + m.id + ": " + m.label + " (" + m.n + " genes)") + "'>" +
-      "<span class='sw' style='background:" + modColour(m.id) + "'></span><span class='t'><b>M" + m.id + "</b> " + esc(m.label) +
+    h += "<div class='li' data-m='" + m.id + "' title='" + esc("M" + m.id + ": " + (m.disp || m.label) + " (" + m.n + " genes)" + (m.cov ? "; " + m.cov : "")) + "'>" +
+      "<span class='sw' style='background:" + modColour(m.id) + "'></span><span class='t'><b>M" + m.id + "</b> " + esc(m.disp || m.label) + (m.cov ? " <span class='bd' title='" + esc(m.cov) + "'>" + esc(m.covk || "covariate") + "</span>" : "") +
       "</span><span class='n'>" + (counts.get(m.id) || m.n) + "</span></div>";
   }
   if (counts.get(0)) h += "<div class='li' data-m='0'><span class='sw' style='background:" + GREY + "'></span><span class='t'>no module</span><span class='n'>" + counts.get(0) + "</span></div>";
@@ -2108,7 +2380,7 @@ function buildLegend() {
   });
 }
 function highlight(m) {
-  hlMod = m; focus = "module"; srcSel = "";
+  hlMod = m; focus = "module"; srcSel = ""; extraSel = null; hlSet = null;
   for (const li of document.querySelectorAll("#lgbody .li")) li.classList.toggle("on", +li.dataset.m === m);
   if (m >= 0) { const li = document.querySelector("#lgbody .li[data-m='" + m + "']"); if (li) li.scrollIntoView({block: "nearest"}); }
   regroup(); renderPanel(); status();
@@ -2395,7 +2667,7 @@ function physBar(kind) {
   h += rng("rep", "Repulsion", 0, 150, 5, 30, "Strength of the push between every pair of genes") +
     rng("spr", "Springs", 0, 300, 10, 100, "Strength of the springs, in % of the default") +
     rng("min", "Min |cos|", 0, 95, 5, 30, "Relations weaker than this are not springs");
-  h += "<label class='grp' title='both halves: same sign with fdr &lt;= 0.10 in two random halves of the compounds; one half: strong in one random half only (not replicated); not reproduced: neither. Relations left out are still listed, with an alert, in the side panel'>Evidence <select data-k='ev'>" +
+  h += "<label class='grp' title='both halves: same sign with fdr &lt;= 0.10 in two random halves of the compounds; one half: strong in one random half only (not the same sign in both halves of the compounds); not reproduced: neither. Relations left out are still listed, with an alert, in the side panel'>Evidence <select data-k='ev'>" +
     "<option value='1'>both or one half</option><option value='2'>both halves only</option><option value='0'>every relation (also not reproduced)</option></select></label>";
   return h + "</div></div>";
 }
@@ -2510,7 +2782,7 @@ function PhysPane(kind) {
       sp.ea = ea; sp.eb = eb; sp.ec = ec; sp.ev = ev;
     }
     const md = MODS.get(m);
-    let info = "<b>M" + m + "</b> " + esc(md ? md.label : "") + "<br>";
+    let info = "<b>M" + m + "</b> " + esc(md ? md.disp || md.label : "") + "<br>";
     if (md) info += md.opp ? md.np + " genes in the <b style='color:" + ARMC["+"] + "'>+ arm</b>, " + md.nm + " in the <b style='color:" + ARMC["-"] + "'>&minus; arm</b>: the arms move opposite" +
       (md.cb != null ? " (mean cos between them " + (md.cb > 0 ? "+" : "") + md.cb.toFixed(2) + ")" : "") : md.n + " genes, single-armed";
     info += " &middot; " + sp.ea.length + " springs" + (ids.length > nIn ? " &middot; " + (ids.length - nIn) + " outside genes (dimmed)" : "");
@@ -3153,7 +3425,8 @@ function svd2(a, b, c, d) {                         // [[a, b], [c, d]] = R(ph) 
 function TourPane() {
   const pane = $("pane-tour"), TD = D.tour || {}, K = TD.k || 0, n = Math.min(N, TD.n || 0);
   const opt = labels => labels.map((l, t) => "<option value='" + t + "'>" + l + "</option>").join("");
-  const axl = a => "axis " + (a + 1) + (TD.var && TD.var[a] != null ? " (" + TD.var[a] + "%)" : "");
+  const axl = a => "axis " + (a + 1) + (TD.var && TD.var[a] != null ? " (" + TD.var[a] + "%)" : "") +
+    (TD.axd && TD.axd[a] ? ": " + esc(TD.axd[a]) : "");
   let h = "<div class='bars'><div class='bar'>" +
     "<span class='seg'><button data-k='play' aria-pressed='true' title='Play / pause the tour (space)'>Pause</button>" +
     "<button data-k='new' title='Turn toward a new random direction'>New direction</button></span>" +
@@ -3385,7 +3658,8 @@ function TourPane() {
   function showText() {
     if (!K || !n) { itxt.innerHTML = ""; return; }
     const desc = a => "<b>axis " + (a + 1) + "</b>" + (TD.var && TD.var[a] != null ? " (" + TD.var[a] + "% of the space)" : "") +
-      (TD.ax && TD.ax[a] ? " <span class='note'>" + esc(TD.ax[a]) + "</span>" : "");
+      (TD.axd && TD.axd[a] ? ": drug-doses " + esc(TD.axd[a]) : "") +
+      (TD.ax && TD.ax[a] ? " <span class='note'>genes " + esc(TD.ax[a]) + "</span>" : "");
     itxt.innerHTML = "<b>" + n.toLocaleString() + "</b> genes in the " + K + "-dimensional vector space (unit gene vectors, embed stage), " +
       (st.mode === 0 ? "seen through a 2D window that turns slowly through the whole space: every view is a true projection, so genes that stay together while it turns are close in all " + K + " dimensions." :
         "projected onto two of its axes:<br>&rarr; x: " + desc(st.ai) + "<br>&uarr; y: " + desc(st.aj)) +
@@ -3511,7 +3785,7 @@ function TourPane() {
 
 // ================================================================ selection (shared by every tab) and the side panel
 function select(i, centre, origin) {
-  sel = i; focus = "gene"; selGen++; dirAll = {}; mapArrowsDirty(); mapKeyN = -1; srcSel = "";
+  sel = i; focus = "gene"; selGen++; dirAll = {}; mapArrowsDirty(); mapKeyN = -1; srcSel = ""; extraSel = null; hlSet = null;
   P = partnersOf(i); pset = new Set(P.map(p => p.j));
   qi.value = i >= 0 ? D.sym[i] : "";
   if (i >= 0 && i < N) {
@@ -3553,19 +3827,30 @@ function kOfN(k, n, what, href) {
 // ranked place and says why ("⚠" + the reason in plain words); lists capped at N also hold any of the N strongest
 // items without an alert that fall beyond the first N
 const EV_ALERT = [D.halves === false ? "reproducibility not tested (no half spaces)" : "not reproduced in the two random halves of the compounds",
-  "seen in one random half of the compounds only: not replicated"];
+  "seen in one random half of the compounds only: not the same sign in both halves of the compounds"];
 // relations' alert rule, without the selected gene's own reason (the panel states that once)
-const pAlert = p => p.ev < 2 || p.locus || p.rt || EFO.has(p.j);
+const pAlert = p => p.ev < 2 || p.locus || p.rt || p.lin || p.rs > 0 || EFO.has(p.j);
 const flagRow = f => (f > 0 && D.fl && D.fl[f - 1]) ? D.fl[f - 1] : null;   // [text, kind]: 1 alert, 2 note, 0 other
 const isAlert = f => { const r = flagRow(f); return !!r && r[1] === 1; };
+// the plain words of the caveat tokens in a flag text (D.flw: common.FLAG_TEXT), for the tooltips
+const flagWords = t => !D.flw ? "" : Object.keys(D.flw).filter(k => String(t).split("; ").indexOf(k) >= 0)
+  .map(k => k + ": " + D.flw[k]).join(" ");
 function flagHtml(f) {
   const r = flagRow(f);
   if (!r) return "";
   if (r[1] === 1) return "<div class='al'>&#9888; " + esc(r[0]) + "</div>";
   if (r[1] === 2) return "<div class='fnote'>" + esc(r[0]) + " (so it is no artifact flag here)</div>";
+  if (r[1] === 3) {
+    return "<div class='fnote' title='" + esc(flagWords(r[0])) + "'>" + esc(r[0]) +
+      " (a caveat, not an artifact flag)</div>";
+  }
   return "";
 }
-const flagTitle = f => { const r = flagRow(f); return r ? " title='" + esc((r[1] === 1 ? "alert: " : "flags: ") + r[0]) + "'" : ""; };
+const flagTitle = f => {
+  const r = flagRow(f);
+  return r ? " title='" + esc((r[1] === 1 ? "alert: " : "flags: ") + r[0] + (r[1] === 3 ? " (" + flagWords(r[0]) +
+    ")" : "")) + "'" : "";
+};
 const cntTxt = (nAll, nAl, what) => nAll + " " + what + (nAl ? ", <span class='alc'>" + nAl + " with &#9888;</span>" : "");
 function capNote(shown, nAl, cap) {
   // how the list was cut: the cap, and the unflagged rows added beyond it
@@ -3604,7 +3889,9 @@ function moduleCard(m) {
   return "<div class='mcard'><div><span class='sw' style='background:" + modColour(m) + "'></span> <b>Module " + m + "</b> " +
     "<span class='note'>" + md.n + " genes: " + arms + "</span>" +
     " <span class='lk' data-hl='-1' style='float:right'>clear</span></div>" +
-    "<div class='row'><b>" + esc(md.label) + "</b> <span class='lk' data-mtab='" + m + "'>simulate</span></div>" +
+    "<div class='row'><b>" + esc(md.disp || md.label) + "</b> <span class='lk' data-mtab='" + m + "'>simulate</span></div>" +
+    (md.lal ? "<div class='row al'>&#9888; " + esc(md.lal) + "</div>" : "") +
+    (md.cov ? "<div class='row note' data-cov='" + esc(md.covk || 1) + "'><span class='bd'>" + esc(md.covk || "covariate") + "</span> " + esc(md.cov) + "</div>" : "") +
     (md.plus ? "<div class='row'><span class='lbl'>" + (md.opp ? "+ arm" : "genes") + ":</span> " + esc(md.plus) +
       armKofN(md.plus, md.np, m) + "</div>" : "") +
     (md.minus ? "<div class='row'><span class='lbl'>&minus; arm:</span> " + esc(md.minus) +
@@ -3623,7 +3910,7 @@ function moduleCard(m) {
 function drugTable(i, dir) {
   const a = dir > 0 ? D.up[i] : D.dn[i], c = D.dct ? D.dct.slice(4 * i + (dir > 0 ? 0 : 2), 4 * i + (dir > 0 ? 2 : 4)) : [0, 0];
   if (!has(a)) return "<p class='note'>No drug-dose " + (dir > 0 ? "raises" : "lowers") + " it pooled over the cell lines (median; |z| &ge; 3 or q &lt; 0.1). A response in fewer than about half of the lines does not reach the pooled data: see the cell lines below.</p>";
-  let h = "<table><tr><th>Drug-dose</th><th class='r' title='fold change pooled over the cell lines (median)'>fold</th><th class='r'>z</th><th class='r' title='cell lines that move the same way (per-line z &ge; 2 and &ge; 1.2x)'>lines</th></tr>";
+  let h = "<table><tr><th>Drug-dose</th><th class='r' title='fold change pooled over the cell lines (median)'>fold</th><th class='r'>z</th><th class='r' title='cell lines that move the same way (per-line z &ge; 2 and &ge; 1.2x), counted inside the drug-dose&#39;s well(s): most drug-doses are one well, so the lines are not replicate treatments'>lines</th></tr>";
   let rows = 0;
   for (let t = 0; t + 4 < a.length; t += 5) {
     const f = a[t + 4];
@@ -3634,11 +3921,11 @@ function drugTable(i, dir) {
   }
   // the explorer's Drugs tab with the rows of tables/drug_effects only ('in tables/drug_effects', the rows this
   // list draws from), sorted by z the list's way: the N drug-doses of this list are its first N rows
+  const nCall = dir > 0 ? D.nup[i] : D.ndn[i], kCall = (dir > 0 ? D.nupa : D.ndna) ? (dir > 0 ? D.nupa : D.ndna)[i] : 0;
   return h + "</table>" + kOfN(rows, c[0], "drug-doses " + (dir > 0 ? "raising" : "lowering") +
     " it", xGene(i, "drugs") + "?f=stored&sort=z:" + (dir > 0 ? "desc" : "asc")) +
-    "<p class='note'>" + cntTxt(c[0], c[1], (c[0] === 1 ? "drug-dose " +
-      (dir > 0 ? "raises" : "lowers") : "drug-doses " + (dir > 0 ? "raise" : "lower")) +
-      " it (pooled |z| &ge; 3 or q &lt; 0.1)") +
+    "<p class='note' data-count-rule='" + (dir > 0 ? "up" : "down") + "'>" + (dir > 0 ? "Raised" : "Lowered") + " significantly by " + fmtN(nCall) +
+      " (q &lt; 0.10 and at least 1.2x; " + fmtN(kCall) + " with &#9888;). The list holds " + fmtN(c[0]) + " drug-doses (|z| &ge; 3 or q &lt; 0.10), " + fmtN(c[1]) + " with &#9888;" +
     capNote(rows, c[1], D.n_drugs || 8) +
       ". &#9888; = the drug-dose carries an artifact flag for this gene (named under it): it keeps its place in the " +
       "ranking; read it with that in mind. The explorer's Drugs tab lists every one of the " + fmtN(D.dd.length) +
@@ -3656,17 +3943,20 @@ function lineTable(i) {
     D.line_z + ", &ge; 1.5x)" + (all ? "; how many of them carry an artifact flag in brackets" : "") +
     "'>&uarr;</th><th class='r' title='... lowering it'>&darr;</th><th>strongest drug-dose raising it " +
     "here</th><th>strongest drug-dose lowering it here</th></tr>";
-  const W = D.lnw || 19;
+  const W = D.lnw || 19, lc = D.lnc ? D.lnc[i] : null;
   let nClean = 0, rows = 0;
-  // one direction's strongest drug-dose (o = its offset in the row): dd, fold, z, flag code, then the strongest
-  // without an alert when that one carries one (dd, fold, z)
+  // one direction's strongest drug-dose (o = its offset in the row): dd, fold, z, flag code (its alert and its
+  // caveats), then the strongest without an artifact flag when that one carries one (dd, fold, z; its caveats from
+  // D.lnc: two codes per row, up then down)
   const best = (t, o) => {
     if (a[t + o] < 0) return "&ndash;";
     const v = (k_, s_) => " <span class='note'>" + foldOf(a[t + k_]).toFixed(2) + "&times;, z " +
       (a[t + k_ + 1] / 10).toFixed(1) + "</span>" + s_;
     let h_ = esc(ddLabel(a[t + o])) + v(o + 1, flagHtml(a[t + o + 3]));
     if (a[t + o + 4] >= 0) {
-      h_ += "<span class='note'>no alert: </span>" + esc(ddLabel(a[t + o + 4])) + v(o + 5, "");
+      const cf = lc ? (lc[2 * Math.floor(t / W) + (o > 5 ? 1 : 0)] || 0) : 0;
+      h_ += "<span class='note'>without an artifact flag: </span>" + esc(ddLabel(a[t + o + 4])) +
+        v(o + 5, flagHtml(cf));
       nClean++;
     }
     return h_;
@@ -3688,8 +3978,9 @@ function lineTable(i) {
     " chance calls per gene and line among the clean drug-doses" : "") + ")" :
     " (not calibrated in this run: a per-line z of 4-5 can arise by chance)";
   const how = all ? "; (&#9888;n) = n of them carry an artifact flag; the strongest each way is shown, flagged or " +
-    "not (&#9888; and the flag under it)" + (nClean ? "; when it carries an alert, the line's strongest drug-dose " +
-    "that way without one follows ('no alert:')" : "") :
+    "not (&#9888; and the flag under it; a caveat, no artifact flag, in grey: e.g. a rise under a translation " +
+    "inhibitor, read from that line's own change)" + (nClean ? "; when it carries an alert, the line's strongest " +
+    "drug-dose that way without an artifact flag follows ('without an artifact flag:', with its caveats)" : "") :
     "; the strongest of them each way is shown (an older tables stage: flagged drug-doses are not counted here)";
   return h + "<p class='note'>&uarr; / &darr; = " + what + " moving it &ge; 1.5&times; at per-line |z| &ge; " +
     D.line_z + cal + how +
@@ -3709,7 +4000,7 @@ function litBadge(i, j) {
 function partnerTable() {
   if (!P.length) return "<p class='note'>No partners recorded.</p>" +
     (sel >= 0 && D.reln ? kOfN(0, D.reln[2 * sel], "partners", xGene(sel, "partners")) : "");
-  let h = "<table class='pt'><tr><th>Gene</th><th class='r' title='signed cosine: +1 = same direction, -1 = opposite'>cos</th><th title='both = same sign with fdr &le; 0.10 in two random halves of the compounds; one = strong in one random half only (not replicated, no error estimate); none = neither'>halves</th><th class='r' title='estimated share of false relations among pairs at least this strong in both halves'>fdr</th><th>flags</th></tr>";
+  let h = "<table class='pt'><tr><th>Gene</th><th class='r' title='signed cosine: +1 = same direction, -1 = opposite'>cos</th><th title='both = same sign with fdr &le; 0.10 in two random halves of the compounds; one = strong in one random half only (not the same sign in both halves, no error estimate); none = neither'>halves</th><th class='r' title='estimated share of false relations among pairs at least this strong in both halves'>fdr</th><th>flags</th></tr>";
   let nLit = 0;
   for (const p of P) {
     let f = LIT.size ? litBadge(sel, p.j) : "";
@@ -3719,6 +4010,11 @@ function partnerTable() {
     if (p.locus) f += "<span class='bd loc' title='within 50 kb of each other: neighbouring genes can correlate for genomic reasons'>&#9888; same locus</span>";
     if (p.rt) f += "<span class='bd rt' title='same strand, <= 20 kb, the 5-prime gene much more expressed: read-through can make them correlate'>&#9888; read-through risk</span>";
     if (EFO.has(p.j)) f += "<span class='bd warn' title='" + esc(D.sym[p.j]) + " is " + EFO_TXT + "'>&#9888; via flagged drug-doses</span>";
+    const PW = D.pwords || {};
+    if (p.lin) f += "<span class='bd warn' title='" + esc(PW.lineage || "") + "'>&#9888; lineage pair</span>";
+    if (p.rs > 0) {
+      f += "<span class='bd warn' title='" + esc((PW.rs || {})[p.rs] || "") + "'>&#9888; read-sharing copy</span>";
+    }
     if (p.known) {
       if (p.string) f += "<span class='bd' title='known: STRING combined score " + p.string + "'>STRING " + p.string + "</span>";
       if (p.pw >= 0 && D.pw[p.pw]) f += "<span class='bd' title='known: shared pathway " + esc(D.pw[p.pw]) + "'>pathway</span>";
@@ -3733,7 +4029,7 @@ function partnerTable() {
   h += kOfN(P.length, rn[0], "partners", xGene(sel, "partners")).replace("</p>",
     " <span class='note'>(and its correlation with every other gene: the explorer's Correlations tab)</span></p>");
   h += "<p class='note'>" + P.length + " shown (" + (nAl ? "<span class='alc'>" + nAl + " with &#9888;</span>" : "none with &#9888;") + ") of its " + rn[0] + " strongest partners in the relations table (" + rn[1] + " with &#9888;)" +
-    capNote(P.length, nAl, D.n_partners || 15) + ". &#9888; = a reason for doubt: not replicated in both random halves of the compounds, the two genes are neighbours in the genome, or the partner is in the vector space only through flagged drug-doses; such a relation keeps its place in the ranking." +
+    capNote(P.length, nAl, D.n_partners || 15) + ". &#9888; = a reason for doubt: not the same sign in both halves of the compounds, the two genes are neighbours in the genome, a lineage pair (both expressed in few, mostly the same lines), read-sharing copies (paralogues, pseudogenes, read-through), or the partner is in the vector space only through flagged drug-doses; such a relation keeps its place in the ranking." +
     (EFO.has(sel) ? " <span class='alc'>&#9888; " + esc(D.sym[sel]) + " itself is " + EFO_TXT + ", so all its partners rest on those drug-doses (said here once, not counted on each row).</span>" : "") + "</p>";
   if (nLit) h += "<p class='note'><span class='bd lit'>lit:</span> = the verdict of an AI-agent literature review on the pair (established, indirect, plausible, unexpected, contradicted) and its check: supported / partly supported (the citation checker read the cited abstracts), not checked (ids exist, claim not checked), ids not checked (not looked up); <i>unverified</i> = the abstracts do not support it, none of its papers exists, or all of them are retracted; (cites a retracted paper) = a paper it cites is retracted, which is no support. Not checked by a person; hover for details. The review itself is in the gene's vault note.</p>";
   if (!D.novel_ok) h += "<p class='note'>Novelty not assessed: " + esc((D.novel_blocked || []).join(", ") || "reference sources") + " missing, so no pair is called novel.</p>";
@@ -3750,7 +4046,7 @@ function whyOut(w) {
   h += "; that count is not enough on its own: the space also needs a significant " + (E.n_genes_evidence_flagged_only != null ?
     "pooled drug-dose (q &lt; 0.1, &ge; 1.2&times;; one that carries an alert counts too, and a gene whose evidence all carries an alert is marked &#9888;)" :
     "clean pooled drug-dose (q &lt; 0.1, &ge; 1.2&times;)") +
-    (E.line_z_responsive != null ? " or a per-line |z| &ge; " + (+E.line_z_responsive).toFixed(1) + " in &ge; 2 lines of one drug-dose" : "") + ", and it has neither";
+    (E.line_z_responsive != null ? " or a per-line |z| &ge; " + (+E.line_z_responsive).toFixed(2) + " in &ge; 2 lines of one drug-dose" : "") + ", and it has neither";
   if (E.null_rate != null) h += " (chance rate of |z| &ge; 3 per context " + (+E.null_rate).toPrecision(2) + ")";
   if (E.n_genes_excluded_chance != null) h += "; " + E.n_genes_excluded_chance.toLocaleString() + " genes of this run reach the count without either";
   return h + ".";
@@ -3777,6 +4073,10 @@ function dirRowHtml(k, i) {
     "<div class='dtx'>" + esc(w.signText) + "</div>";
   if (w.alShort) h += "<div class='al'>" + esc(w.alShort) + "</div>";
   if (w.ntShort) h += "<div class='dnt'>notes (" + w.nNotes + "): " + esc(w.ntShort) + "</div>";
+  if (w.falseText) {
+    h += "<div class='dnt' title='random comparison groups (genotype kinds) or random genes and line sets (natural " +
+      "knockouts) give such arrows too: the share that may be false'>" + esc(w.falseText) + "</div>";
+  }
   // the evidence, on click: the kind, the reading (rows of the capped list), and where every reason is in full
   const xh = i >= 0 ? xGene(i, "direction") : xSearch(srcSel || w.S);
   h += "<div class='dx'><div>" + esc(w.kindText) + "</div>" + (w.full && w.reading ? "<div>" + esc(w.reading) +
@@ -3833,7 +4133,7 @@ function geneCard(i) {
   if (i < N) {
     const m = D.mod[i], arm = D.arm[i], md = MODS.get(m);
     h += "<p><span class='k' style='background:" + modColour(m) + "'></span>" + (m > 0 ? "<span class='lk' data-hl='" + m + "'>Module " + m + "</span>" +
-      (md && !md.opp ? ", single-armed" : arm !== "." ? ", " + (arm === "-" ? "&minus;" : "+") + " arm" : "") + (md ? " &middot; " + esc(md.label) : "") : "No module") + "</p>";
+      (md && !md.opp ? ", single-armed" : arm !== "." ? ", " + (arm === "-" ? "&minus;" : "+") + " arm" : "") + (md ? " &middot; " + esc(md.disp || md.label) + (md.cov ? " <span class='bd' title='" + esc(md.cov) + "'>" + esc(md.covk || "covariate") + "</span>" : "") : "") : "No module") + "</p>";
     if (EFO.has(i)) h += "<p class='al'>&#9888; " + EFO_TXT + ": its place on the map and its partners rest on those drug-doses.</p>";
   } else {
     const w = D.why[i - N];
@@ -3844,7 +4144,7 @@ function geneCard(i) {
   const nl = D.nlx[i];
   const na = (v, w) => v + (w ? " (<span class='alc'>" + w + " with &#9888;</span>)" : "");
   h += "<p class='note'>Level " + (c == null ? "?" : c.toLocaleString()) + " CPM (pooled)" + (nl >= 0 ? ", expressed in " + nl + " of " + D.lines.length + " cell lines" : "") +
-    ". Raised significantly by " + na(D.nup[i], D.nupa ? D.nupa[i] : 0) + " and lowered by " + na(D.ndn[i], D.ndna ? D.ndna[i] : 0) + " drug-doses (q &lt; 0.1, &ge; 1.2x; &#9888; = an artifact flag for this gene).</p>";
+    ". Every fold change below is against the typical drug well on the same plate, not DMSO.</p>";
   if (i < N) {
     h += "<h3>Moves with (<span style='color:" + WITH + "'>green</span>) or opposite to (<span style='color:" + OPP +
       "'>red</span>) &mdash; the strongest " + P.length + "</h3>" + partnerTable();
@@ -3853,11 +4153,12 @@ function geneCard(i) {
   h += "<h3>Drug-doses that raise it</h3>" + drugTable(i, 1);
   h += "<h3>Drug-doses that lower it</h3>" + drugTable(i, -1);
   h += "<h3>Cell lines where it responds most</h3>" + lineTable(i);
-  h += "<p class='note' style='margin-top:12px'>Fold = vs the same cell line's typical treated well on the plate (not DMSO), pooled over the cell lines (median). Drug-doses with a technical-artifact flag are listed in their ranked place, marked &#9888; with the flag. <span class='lk' data-help='1'>How to read this</span></p>";
+  h += "<p class='note' style='margin-top:12px'>Fold = the drug-dose vs the same cell line's typical drug well on the plate, pooled over the cell lines (median). Drug-doses with a technical-artifact flag are listed in their ranked place, marked &#9888; with the flag. <span class='lk' data-help='1'>How to read this</span></p>";
   return h;
 }
 function renderPanel() {
   if (srcSel && sel < 0) { $("panel").innerHTML = srcCard(srcSel); $("panel").scrollTop = 0; return; }
+  if (extraSel && sel < 0) { $("panel").innerHTML = extraCard(extraSel); $("panel").scrollTop = 0; return; }
   const g = sel >= 0 ? geneCard(sel) : "", m = hlMod >= 0 ? moduleCard(hlMod) : "";
   let h = (focus === "module" || !g) ? m + g : g + (m ? "<h3>Highlighted module</h3>" + m : "");
   if (!h) h = "<p class='note'>Click a gene on the map or search for one. <span class='lk' data-help='1'>How to read this</span></p>" + HOWTO_MAPS;
@@ -3867,6 +4168,9 @@ function renderPanel() {
 $("panel").addEventListener("click", e => {
   const g = e.target.closest("[data-g]"), m = e.target.closest("[data-hl]"), hp = e.target.closest("[data-help]"), mt = e.target.closest("[data-mtab]");
   const da = e.target.closest("[data-dall]"), dr = e.target.closest(".dr");
+  const xd = e.target.closest("[data-xdd]"), xg = e.target.closest("[data-xdrug]");
+  if (xd) { showExtra("dd", +xd.dataset.xdd); return; }
+  if (xg) { showExtra("drug", +xg.dataset.xdrug); return; }
   if (g) select(+g.dataset.g, true, "panel");
   else if (mt) { if (+mt.dataset.mtab !== hlMod) highlight(+mt.dataset.mtab); showTab("mod"); }
   else if (m) highlight(+m.dataset.hl === hlMod ? -1 : +m.dataset.hl);
@@ -3905,7 +4209,166 @@ function search(q) {
   for (const [nm, ks] of dirSources()) { const l = nm.toLowerCase(); if (l === q || l.startsWith(q)) srcs.push({i: -1, src: nm, n: ks.length, ex: l === q}); }
   srcs.sort((a, b) => (b.ex - a.ex) || (a.src.length - b.src.length) || (a.src < b.src ? -1 : 1));
   for (const r of srcs) if (out.length < MAX || r.ex) out.splice(r.ex ? 0 : out.length, 0, r);
-  return out.slice(0, Math.max(MAX, 1));
+  // drugs, drug-doses and cell lines: an exact name comes right after an exact gene, the rest after the genes, and
+  // up to 6 of them are always listed (the explorer's search lists every match)
+  const ext = extraMatches(q), nExact = out.filter(r => r.i >= 0 && SYM_L[r.i] === q).length;
+  const exE = ext.filter(r => r.ex), exR = ext.filter(r => !r.ex);
+  let res = out.slice(0, MAX);
+  res.splice(nExact, 0, ...exE);
+  const room = Math.max(6 - exE.length, MAX - res.length);
+  res = res.concat(exR.slice(0, Math.max(0, room)));
+  return res.slice(0, Math.max(MAX + exE.length, MAX));
+}
+// ---------------------------------------------------------------- drugs, drug-doses and cell lines (search extras)
+const DRG = D.drg || [], DRG_L = DRG.map(x => x.n.toLowerCase());
+const DD_L = (D.dd || []).map(x => String(x).toLowerCase());
+const LN_L = (D.lines || []).map(x => String(x).toLowerCase());
+const LN_C = LN_L.map(x => x.replace(/[^a-z0-9]/g, ""));
+const DRG_OF = new Map(DRG.map((x, t) => [x.n, t]));
+const KIND_RANK = {drug: 0, line: 1, dd: 2};
+function extraMatches(q) {
+  // a drug by name (exact, start, or a piece of 3+ letters), a line by name (also without punctuation), a
+  // drug-dose by its label ('Trametinib 5' finds 'Trametinib 5 uM'); exact names first
+  const out = [], qc = q.replace(/[^a-z0-9]/g, "");
+  const add = (kind, k, name, ex) => out.push({i: -1, kind: kind, k: k, name: name, ex: ex});
+  DRG_L.forEach((l, t) => {
+    if (l === q) add("drug", t, DRG[t].n, true);
+    else if (l.startsWith(q) || (q.length >= 3 && l.includes(q))) add("drug", t, DRG[t].n, false);
+  });
+  LN_L.forEach((l, t) => {
+    if (!l) return;
+    if (l === q || (qc && LN_C[t] === qc)) add("line", t, D.lines[t], true);
+    else if (q.length >= 2 && l.startsWith(q)) add("line", t, D.lines[t], false);
+  });
+  if (q.length >= 3) {
+    const q0 = q.replace(/\s*(µm|um)$/, "");
+    DD_L.forEach((l, t) => {
+      if (!l) return;
+      const ex = l === q || l === q0 + " um";
+      if (ex || l.startsWith(q)) add("dd", t, D.dd[t], ex);
+    });
+  }
+  out.sort((a, b) => (b.ex - a.ex) || (KIND_RANK[a.kind] - KIND_RANK[b.kind]) || (a.name.length - b.name.length) ||
+    (a.name < b.name ? -1 : 1));
+  return out;
+}
+const xDrug = name => XB + "#/drug/" + xq(name), xDd = (k, tab) => XB + "#/dd/" + k + (tab ? "/" + tab : ""),
+  xLine = (name, tab) => XB + "#/line/" + xq(name) + (tab ? "/" + tab : "");
+function vaultLink(path, text) {
+  // a vault note: on the results branch when the code has a GitHub remote, else this output's vault folder
+  if (!path) return "";
+  const parts = path.split("/");
+  const u = D.vault_base ? D.vault_base + parts.map(xq).join("/") : "../" + parts.map(encodeURIComponent).join("/");
+  return "<a class='xl' href='" + esc(u) + "' target='_blank' rel='noopener'>" + esc(text || "vault note") +
+    " &#8599;</a>" + (D.vault_base ? "" : " <span class='note'>(this output's vault folder)</span>");
+}
+const tp53Words = t => t === "not recorded" ? "not recorded (presumed wild type)" : (t || "not recorded in this run");
+function nbHtml(k) {
+  // the drug-dose's neighbouring-well tier and alert (tables/drugdoses nb_tier, nb_alert)
+  const X = D.ddx || {}, t = X.nb ? X.nb[k] : "", a = X.nba ? X.nba[k] : "";
+  if (!t) return "";
+  const art = t === "artifact";
+  return "<div class='" + (art ? "al" : "fnote") + "' title='" + esc(a) + "'>" + (art ? "&#9888; " : "") +
+    "neighbouring well (" + esc(t) + "): " + esc(a) + "</div>";
+}
+function resHtml(k) {
+  const X = D.ddx || {}, r = X.res ? X.res[k] : "";
+  return r ? "<div class='al'>&#9888; " + esc(r) + "</div>" : "";
+}
+function ddCountTxt(k) {
+  const X = D.ddx || {}, n = X.n ? X.n[k] : null;
+  return n && n[0] >= 0 ? fmtN(n[0]) + " genes up, " + fmtN(n[1]) + " down (q &lt; 0.10 and at least 1.2x)" :
+    "genes moved: not recorded";
+}
+function ddFlags(k) {
+  const f = D.ddf ? D.ddf[k] || 0 : 0, r = flagRow(f);
+  if (!r) return "";
+  return r[1] === 1 ? "<div class='al'>&#9888; " + esc(r[0]) + "</div>" :
+    "<div class='fnote' title='" + esc(flagWords(r[0])) + "'>flags: " + esc(r[0]) + "</div>";
+}
+const lkSpan = (attr, v, text) => "<span class='lk' " + attr + "='" + v + "'>" + esc(text) + "</span>";
+function drugCard(d) {
+  let h = "<h2>" + esc(d.n) + " <span class='note'>drug</span></h2>";
+  h += "<p class='kofn'>" + xLink(xDrug(d.n), "Everything on " + esc(d.n) + " in the explorer") +
+    " <span class='note'>(every gene at every dose, its lines, its arrows, the annotations in full)</span>" +
+    X_WHERE + "</p>";
+  if (d.v) h += "<p class='note'>" + vaultLink(d.v, "its vault note") + "</p>";
+  h += "<h3>Its doses</h3>";
+  for (const k of d.d) {
+    h += "<div class='mcard'><div><b>" + lkSpan("data-xdd", k, ddLabel(k)) + "</b> <span class='note'>" +
+      ddCountTxt(k) + "</span></div>" + ddFlags(k) + nbHtml(k) + resHtml(k) + "</div>";
+  }
+  if (d.pl) h += "<p class='note'>Each dose sits on its own plate: " + esc(d.pl) + ".</p>";
+  h += "<h3>Annotations: Tahoe and ChEMBL</h3>";
+  if (d.al) h += "<p class='al'>&#9888; The two annotations disagree: " + esc(d.al) + "</p>";
+  const ch = v => esc(v || (d.cid ? "not given" : "no record"));
+  h += "<table><tr><th></th><th>Tahoe (never changed)</th><th>ChEMBL" + (d.cid ? " (" + esc(d.cid) + ")" : "") +
+    "</th></tr><tr><td>mechanism</td><td>" + esc(d.moa || "not recorded") + "</td><td>" + ch(d.cm) + "</td></tr>" +
+    "<tr><td>targets</td><td>" + esc(d.tg || "not recorded") + "</td><td>" + ch(d.ct) + "</td></tr></table>";
+  h += "<p class='note'>How they compare: " + esc(d.st || "not recorded in this run") +
+    (d.nt ? ". " + esc(d.nt) : "") + "</p>";
+  h += "<p><b>Mechanism classes the rules use</b>: " + (d.cls ? esc(d.cls) : "none") + "</p>";
+  return h;
+}
+function ddCard(k) {
+  const X = D.ddx || {}, n = X.n ? X.n[k] : null, tu = X.tu ? X.tu[k] : [], td = X.td ? X.td[k] : [];
+  const drug = (D.dd[k] || "").replace(/ \S+ uM$/, "");
+  let h = "<h2>" + esc(ddLabel(k)) + " <span class='note'>drug-dose</span></h2>";
+  h += "<p class='kofn'>" + xLink(xDd(k), "Everything on " + esc(ddLabel(k)) + " in the explorer") +
+    " <span class='note'>(every gene, every line, its wells)</span>" + X_WHERE + "</p>";
+  h += "<p class='note'>" + ddCountTxt(k) + "; drug: " +
+    (DRG_OF.has(drug) ? lkSpan("data-xdrug", DRG_OF.get(drug), drug) : esc(drug)) + "</p>";
+  h += ddFlags(k) + nbHtml(k) + resHtml(k);
+  const nSig = n && n[0] >= 0 ? n[0] + n[1] : tu.length + td.length;
+  const onMap = tu.concat(td).filter(e => e < N).length, off = tu.length + td.length - onMap;
+  h += "<p class='kofn' data-hl-dd='" + k + "'>" + fmtN(tu.length + td.length) + " of " + fmtN(nSig) +
+    " genes named (the strongest raised and lowered), " + fmtN(onMap) + " of them highlighted on the map" +
+    (off ? " (" + off + " not on the map)" : "") + " &middot; " + xLink(xDd(k, "genes"), "all in the explorer") +
+    X_WHERE + "</p>";
+  const names = a => a.map(e => lkSpan("data-g", e, D.sym[e])).join(", ");
+  if (tu.length) h += "<p><b>Raised most</b>: " + names(tu) + "</p>";
+  if (td.length) h += "<p><b>Lowered most</b>: " + names(td) + "</p>";
+  h += "<p class='note'>The other genes are dimmed on the map. Fold changes are against the typical drug well on " +
+    "the same plate, not DMSO.</p>";
+  return h;
+}
+function lineCard(l) {
+  const L = (D.lnx || [])[l] || {}, nm = D.lines[l] || ("line " + l), sel_ = L.sel || [], K = 10;
+  let h = "<h2>" + esc(nm) + " <span class='note'>cell line" + (D.organ[l] ? " &middot; " + esc(D.organ[l]) : "") +
+    "</span></h2>";
+  h += "<p class='kofn'>" + xLink(xLine(nm), "Everything on " + esc(nm) + " in the explorer") +
+    " <span class='note'>(every gene, every drug-dose, its genetics)</span>" + X_WHERE + "</p>";
+  if (L.v) h += "<p class='note'>" + vaultLink(L.v, "its vault note") + "</p>";
+  h += "<p><b>Organ</b>: " + esc(D.organ[l] || "not recorded") + "<br><b>TP53</b>: " + esc(tp53Words(L.tp)) +
+    "<br><b>Drivers</b>: " + esc(L.dr || "none recorded") +
+    (L.ch ? " <span class='note'>(" + esc(L.ch) + ")</span>" : "") + "</p>";
+  if ((D.ddx || {}).has_sel === false) {
+    return h + "<p class='note'>Line-selective drug-doses: not in this run (a tables stage older than version 5).</p>";
+  }
+  h += "<h3>Drug-doses at which it is selective (" + fmtN(sel_.length) + ")</h3>";
+  if (!sel_.length) {
+    return h + "<p class='note'>None: no drug-dose moves this line much more than the others (sel_z &ge; 3 and at " +
+      "least 20 genes beyond the per-line cut).</p>";
+  }
+  const sz = L.sz || [];
+  return h + "<p>" + sel_.slice(0, K).map((k, j) => lkSpan("data-xdd", k, ddLabel(k)) +
+      (sz[j] !== null && sz[j] !== undefined ? " <span class='note'>(sel_z " + sz[j].toFixed(1) + ")</span>" : ""))
+      .join(", ") + "</p>" + "<p class='note'>Highest sel_z first: how far this line's response to the drug-dose " +
+    "(genes beyond the per-line cut, against its typical drug-dose) sits above the other lines', in robust SDs.</p>" +
+    kOfN(Math.min(K, sel_.length), sel_.length, "drug-doses", xLine(nm, "response"));
+}
+function extraCard(x) {
+  return x.kind === "drug" ? drugCard(DRG[x.k]) : x.kind === "dd" ? ddCard(x.k) : lineCard(x.k);
+}
+function showExtra(kind, k) {
+  select(-1, false, "search");
+  extraSel = {kind: kind, k: k};
+  if (kind === "dd") {
+    const X = D.ddx || {};
+    hlSet = new Set([].concat(X.tu ? X.tu[k] : [], X.td ? X.td[k] : []).filter(e => e < N));
+  } else hlSet = null;
+  qi.value = kind === "drug" ? DRG[k].n : kind === "dd" ? ddLabel(k) : D.lines[k];
+  regroup(); renderPanel(); status();
 }
 // the direction rows' sources that are no gene of this page: name -> its rows (in ORDER), built on first use
 let DSRC = null;
@@ -3944,12 +4407,17 @@ function showSource(nm) {
   srcSel = nm; qi.value = nm;
   renderPanel();
 }
+// the grey line of a drug, drug-dose or line in the search list
+const extraSub = r => r.kind === "drug" ? "drug &middot; " + DRG[r.k].d.length + " doses" +
+  (DRG[r.k].moa ? " &middot; " + esc(DRG[r.k].moa) : "") : r.kind === "dd" ? "drug-dose &middot; " +
+  ddCountTxt(r.k) : "cell line" + (D.organ[r.k] ? " &middot; " + esc(D.organ[r.k]) : "");
 let acItems = [], acOn = 0;
 const qi = $("q"), ac = $("ac");
 function acRender() {
   if (!acItems.length) { ac.style.display = "none"; return; }
   ac.innerHTML = acItems.map((r, k) => "<div data-k='" + k + "' class='" + (k === acOn ? "on" : "") + "'>" +
-    (r.src ? "<b>" + esc(r.src) + "</b> <span class='alc'>&#9888; not a measured gene: the source of " + fmtN(r.n) + " probable-direction row" + (r.n === 1 ? "" : "s") + "</span></div>" :
+    (r.kind ? "<b>" + esc(r.name) + "</b> <span class='m'>" + extraSub(r) + "</span></div>" :
+    r.src ? "<b>" + esc(r.src) + "</b> <span class='alc'>&#9888; not a measured gene: the source of " + fmtN(r.n) + " probable-direction row" + (r.n === 1 ? "" : "s") + "</span></div>" :
     (r.via && r.via !== "name" ? "<span class='m'>" + esc(r.via) + " &rarr; </span>" : "") + "<b>" + esc(D.sym[r.i]) + "</b>" +
     (has(D.name) && D.name[r.i] ? " <span class='m'>" + esc(D.name[r.i]) + "</span>" : "") +
     (r.i >= N ? " <span class='alc'>&#9888; not on the map</span>" : "") + "</div>")).join("");
@@ -3973,29 +4441,61 @@ function pick(k) {
   const r = acItems[k];
   if (!r) return;
   if (r.src) { acItems = []; acRender(); showSource(r.src); return; }
+  if (r.kind) { acItems = []; acRender(); showExtra(r.kind, r.k); return; }
   qi.value = D.sym[r.i]; acItems = []; acRender();
   select(r.i, true, "search");
 }
 
 // ---------------------------------------------------------------- help
 const GR = D.grule || {}, gv = (k, d) => GR[k] != null ? GR[k] : d;
+// how much a flat map keeps of each gene's strongest partners (graph/info.json partner_preservation, measured on
+// this run): the share of a gene's top partners among its nearest dots, per layout, and the chance share
+function ppText() {
+  const PP = D.pp;
+  if (!PP || !PP.layouts) {
+    return "<p>How many of a gene's strongest partners sit near it on the map was not measured in this run (a " +
+      "graph stage older than version 6). Near on the map usually means related, but read the partner list or the " +
+      "neighbourhood view for a gene's partners; the distance between two far-apart islands means little.</p>";
+  }
+  const L = PP.layouts, pc = v => v == null ? "?" : Math.round(100 * v) + "%";
+  const ch = PP.chance == null ? "?" : (100 * PP.chance).toFixed(PP.chance < 0.01 ? 2 : 1) + "%";
+  const nod = L["x,y"], use = "use the partner list or the neighbourhood view.";
+  return "<p data-pp='1'>On the nodal map, " + pc(nod) + " of a gene's " + PP.top + " strongest partners are " +
+    "among its " + PP.k + " nearest dots (chance: " + ch + "). " + (nod != null && nod < 0.5 ?
+      "Near on the map usually means related, but most partners sit elsewhere: " + use :
+      "Near on the map usually means related, but not every partner sits near: " + use) +
+    " The signed map keeps " + pc(L["xs,ys"]) + "; the spread layouts keep " + pc(L["xm,ym"]) + " (nodal) and " +
+    pc(L["xsm,ysm"]) + " (signed). The distance between two far-apart islands means little.</p>";
+}
+// the help's words for the tables stage's own tokens (common.FLAG_TEXT via D.flw): the artifact flag 'like a
+// neighbouring well' and the caveats (common.CAVEAT_FLAGS: grey, never an artifact flag)
+function flagHelp() {
+  const W_ = D.flw || {}, cav = (D.cfl || []).filter(t => W_[t]);
+  let h = "";
+  if (W_["like a neighbouring well"]) h += " <i>like a neighbouring well</i>: " + esc(W_["like a neighbouring well"]);
+  if (cav.length) {
+    h += " Caveats are shown in grey next to the value and are no artifact flag: " +
+      cav.map(t => "<i>" + esc(t) + "</i>: " + esc(W_[t])).join(" ");
+  }
+  return h;
+}
 const HOWTO_MAPS = "<div class='howto'><h3>How to read this</h3>" +
   "<p>Each dot is a gene. Its place comes from how it responds to about 1,100 drug-doses (379 drugs &times; 3 doses, 24 h) in each of 50 cancer cell lines (Tahoe-100M): two genes that rise and fall under the same treatments in the same lines are related.</p>" +
   "<h4>Nodal map</h4><p>Genes that respond to the <b>same</b> drugs sit together, <b>whether they move in the same direction or in opposite directions</b>. A pathway whose activated genes go up while the genes it represses go down forms one island. That island is a <b>module</b>. When its two sides move opposite (mean cos between them &le; &minus;0.2, &ge; 5 genes on each side) they are the module's <b>+ arm</b> and <b>&minus; arm</b> (colour by arm to see them); otherwise the module is single-armed and all its genes are +.</p>" +
   "<h4>Signed vector map</h4><p>The same genes, but now genes that move in <b>opposite</b> directions are pushed <b>apart</b>: only genes that go up and down together stay close. An island of the nodal map that splits in two here has two opposite arms. Switching between the two map tabs animates each gene from one place to the other.</p>" +
-  "<h4>Distances</h4><p>Both maps keep each gene's near neighbours faithfully; the distance between two far-apart islands means little.</p>" +
-  "<h4>Spread</h4><p>t-SNE packs the groups against each other, so on both maps the modules look mushed. The <b>Spread</b> slider moves them apart while keeping the map 2D: at 0 the t-SNE layout; at 1 every module is a block that keeps its own t-SNE arrangement, placed by how far apart the modules are in the <b>full vector space</b> (all its dimensions: the distance between the modules' main directions, 1 &minus; |cos| on the nodal map, 1 &minus; cos on the signed map, laid out in 2D by multidimensional scaling) then pushed apart until no two blocks overlap and drawn together until little empty space is left between them. On the signed map each arm of a two-armed module is its own block, because its arms sit apart there. A module that the t-SNE map split into separate islands keeps each island's own arrangement, with its islands packed into one block. A gene without a module moves with one module, the one it is most alike in the vector space among the modules of its nearest module genes, and keeps its place next to them. In between, every gene moves along a straight line; <i>Spread &#8644;</i> animates the whole way, and a selected gene stays where it is on the screen while the others move. Neighbouring blocks are similar modules; how far apart two dissimilar blocks are means little.</p>" +
-  "<h4>How the modules are made</h4><p>Every gene is linked to its " + gv("k_edges", 15) + " strongest partners with |cos| &ge; " + gv("min_edge", 0.3) + " whose relation is replicated (the same sign with fdr &le; 0.10 in both random halves of the compounds) or very strong in one half (|cos| &ge; " + gv("one_half_edge", 0.5) + "); each link is weighted by |cos|, so genes that move opposite are linked as strongly as genes that move together. Louvain community detection on that graph gives the modules. A module of more than " + gv("max_module", 300) + " genes, or whose members' mean |cos| is below " + gv("loose_cos", 0.3) + ", is split again by Louvain on its own links (up to " + gv("split_depth", 4) + " times); pieces of fewer than " + gv("min_module", 5) + " genes are left without a module. Inside a module, the first principal axis of its genes' vectors splits it into a + side and a &minus; side; they are two arms only when the &minus; side has &ge; " + gv("min_module", 5) + " genes and the two sides anti-correlate (mean cos &le; " + gv("arms_opposite_cos", -0.2) + "). Modules are numbered by size; their labels are the best-matching gene set (validation stage), else their top genes.</p>" +
-  "<h4>Alerts (&#9888;)</h4><p>Nothing is left out of a list because of a reason for doubt: such an item keeps its ranked place and carries <span class='alc'>&#9888;</span> with the reason in plain words. Drug-doses: an artifact flag for this gene (toxic, transcription drop, cell-cycle shift, unreliable plate only, position not correctable, position correction uncertain, wells disagree); for a cell-cycle shift, how much of this change the drug-dose's shift would explain (from the gene's own slopes on the S-phase and G2/M modules; a shift that explains little is no artifact flag and is noted in grey). Partners: a relation not replicated in both halves, two neighbouring genes, or a partner in the vector space only through flagged drug-doses. Genes: not in the vector space (no partners, no module), or in it only through flagged drug-doses. Counts say how many there are in all and how many carry an alert. A list capped at <i>N</i> shows the <i>N</i> strongest, flagged or not, and also any of the <i>N</i> strongest without an alert that come after them, all in one ranking. What is computed from the data can still leave out what is technically broken: the vector space (and with it the maps, partners and modules) is fitted on trustworthy drug-doses only, without those whose only wells are on an unreliable plate, whose position effect could not be corrected, or whose wells disagree (embed stage).</p>" +
+  "<h4>Distances</h4>" + ppText() +
+  "<h4>Spread</h4><p>t-SNE packs the groups against each other, so on both maps the modules look mushed. The map opens with the modules spread apart (Spread 1); the <b>Spread</b> slider goes back to 0, the t-SNE layout: at 1 every module is a block that keeps its own t-SNE arrangement, placed by how far apart the modules are in the <b>full vector space</b> (all its dimensions: the distance between the modules' main directions, 1 &minus; |cos| on the nodal map, 1 &minus; cos on the signed map, laid out in 2D by multidimensional scaling) then pushed apart until no two blocks overlap and drawn together until little empty space is left between them. On the signed map each arm of a two-armed module is its own block, because its arms sit apart there. A module that the t-SNE map split into separate islands keeps each island's own arrangement, with its islands packed into one block. A gene without a module moves with one module, the one it is most alike in the vector space among the modules of its nearest module genes, and keeps its place next to them. In between, every gene moves along a straight line; <i>Spread &#8644;</i> animates the whole way, and a selected gene stays where it is on the screen while the others move. Neighbouring blocks are similar modules; how far apart two dissimilar blocks are means little.</p>" +
+  "<h4>How the modules are made</h4><p>Every gene is linked to its " + gv("k_edges", 15) + " strongest partners with |cos| &ge; " + gv("min_edge", 0.3) + " whose relation has the same sign in both halves of the compounds (with fdr &le; 0.10) or very strong in one half (|cos| &ge; " + gv("one_half_edge", 0.5) + "); each link is weighted by |cos|, so genes that move opposite are linked as strongly as genes that move together. Louvain community detection on that graph gives the modules. A module of more than " + gv("max_module", 300) + " genes, or whose members' mean |cos| is below " + gv("loose_cos", 0.3) + ", is split again by Louvain on its own links (up to " + gv("split_depth", 4) + " times); pieces of fewer than " + gv("min_module", 5) + " genes are left without a module. Inside a module, the first principal axis of its genes' vectors splits it into a + side and a &minus; side; they are two arms only when the &minus; side has &ge; " + gv("min_module", 5) + " genes and the two sides anti-correlate (mean cos &le; " + gv("arms_opposite_cos", -0.2) + "). Modules are numbered by size; their labels are the best-matching gene set (validation stage), else their top genes.</p>" +
+  "<h4>Alerts (&#9888;)</h4><p>Nothing is left out of a list because of a reason for doubt: such an item keeps its ranked place and carries <span class='alc'>&#9888;</span> with the reason in plain words. Drug-doses: an artifact flag for this gene (" + esc((D.afl || []).join(", ")) + "); for a cell-cycle shift, how much of this change the drug-dose's shift would explain (from the gene's own slopes on the S-phase and G2/M modules; a shift that explains little is no artifact flag and is noted in grey)." + flagHelp() + " Partners: a relation without the same sign in both halves of the compounds, two neighbouring genes, a lineage pair (both genes expressed in few, mostly the same lines), read-sharing copies (paralogues, pseudogenes, read-through), or a partner in the vector space only through flagged drug-doses. Genes: not in the vector space (no partners, no module), or in it only through flagged drug-doses. Counts say how many there are in all and how many carry an alert. A list capped at <i>N</i> shows the <i>N</i> strongest, flagged or not, and also any of the <i>N</i> strongest without an alert that come after them, all in one ranking. What is computed from the data can still leave out what is technically broken: the vector space (and with it the maps, partners and modules) is fitted on trustworthy drug-doses only, without those whose only wells are on an unreliable plate, whose position effect could not be corrected, or whose wells disagree (embed stage).</p>" +
   "<h4>A selected gene</h4><ul><li><b style='color:" + WITH + "'>Green lines</b>: genes that move <b>with</b> it; <b style='color:" + OPP + "'>red lines</b>: genes that move <b>opposite</b> to it.</li>" +
   "<li><b>cos</b>: similarity of the two genes' responses across every drug-dose &times; cell line, from +1 (always together) to &minus;1 (always opposite).</li>" +
-  "<li><b>halves</b>: the compounds were split at random into two halves (a hash of the compound name) and the space fitted on each; <i>both</i> = the same sign in both halves with fdr &le; 0.10; <i>one</i> = strong in one of the two random halves only: not replicated, no error estimate (&#9888;); <i>none</i> = neither (&#9888;). <b>fdr</b>: the estimated share of false relations among pairs at least this strong in both halves.</li>" +
+  "<li><b>halves</b>: the compounds were split at random into two halves (a hash of the compound name) and the space fitted on each; <i>both</i> = the same sign in both halves with fdr &le; 0.10; <i>one</i> = strong in one of the two random halves only: not the same sign in both, no error estimate (&#9888;); <i>none</i> = neither (&#9888;). <b>fdr</b>: the estimated share of false relations among pairs at least this strong in both halves.</li>" +
   "<li><b>same locus</b> / <b>read-through risk</b> (&#9888;): neighbouring genes can correlate for genomic reasons. <b>known</b>: shared pathway, gene family or STRING interaction; <b>novel?</b>: a strong relation seen in both halves (fdr &le; 0.05) and not found in those references; shown only when the references needed to rule out known links loaded.</li>" +
   "<li><b>Drug-doses</b>: fold change and z of the gene, pooled over the cell lines (median: a response in fewer than about half of the lines does not show here), against the same line's typical treated well on the plate (not DMSO); every drug-dose, those with an artifact flag marked &#9888; with the flag. <b>lines</b> = number of cell lines moving the same way.</li>" +
   "<li><b>Probable direction</b>: which genes probably act on it (upstream), which it probably acts on (downstream), and how it probably acts on the cells' numbers under a drug; see <i>Probable direction</i> in the help.</li>" +
-  "<li><b>Cell lines</b>: where the gene responds most: how many drug-doses raise (&uarr;) or lower (&darr;) it at least 1.5&times; in that line at the per-line |z| cut calibrated on this run, how many of them carry an artifact flag, and the strongest one, flagged or not; when that one carries an alert, the line's strongest drug-dose without one follows ('no alert:'). Lines that do not express the gene, or read only ambient RNA for it, are not measured.</li></ul>" +
-  "<h4>Using the map</h4><p>Drag to pan, scroll or pinch to zoom, double-click to zoom in, click a gene to select it (Esc clears), click a module in the legend to highlight it. Search finds symbols, aliases, previous symbols and names; genes that are not on the map (&#9888;, too few responses) still open their drug and cell-line tables. A link ending in <code>#SYMBOL</code> opens that gene. The selected gene is the same on every tab.</p></div>";
-const KTXT = D.k_edges ? "each gene's " + D.k_edges + " strongest replicated partners" : "each gene's strongest replicated partners";
+  "<li><b>Cell lines</b>: where the gene responds most: how many drug-doses raise (&uarr;) or lower (&darr;) it at least 1.5&times; in that line at the per-line |z| cut calibrated on this run, how many of them carry an artifact flag, and the strongest one, flagged or not; when that one carries an alert, the line's strongest drug-dose without an artifact flag follows ('without an artifact flag:'). A caveat in grey next to a value is no artifact flag (for example a rise under a translation inhibitor, read from that line's own change). Lines that do not express the gene, or read only ambient RNA for it, are not measured.</li></ul>" +
+  "<h4>Using the map</h4><p>Drag to pan, scroll or pinch to zoom, double-click to zoom in, click a gene to select it (Esc clears), click a module in the legend to highlight it. Search finds genes (symbols, aliases, previous symbols and names), drugs, drug-doses (e.g. <i>Trametinib 0.5</i>) and cell lines; a drug, a drug-dose or a line opens its own card (its annotations, its genes, the drug-doses at which a line is selective). Genes that are not on the map (&#9888;, too few responses) still open their drug and cell-line tables. A link ending in <code>#SYMBOL</code> opens that gene. The selected gene is the same on every tab.</p></div>";
+const KTXT = D.k_edges ? "each gene's " + D.k_edges + " strongest partners with the same sign in both halves of the compounds" : "each gene's strongest partners with the same sign in both halves of the compounds";
 const TK = D.tour && D.tour.k ? D.tour.k : "k";
 const HOWTO_PHYS = "<div class='howto'><h3>The tabs</h3><ul>" +
   "<li><b>Nodal map</b>: the t-SNE layout of 1 &minus; |cos|: opposite genes together.</li>" +
@@ -4016,7 +4516,7 @@ const HOWTO_PHYS = "<div class='howto'><h3>The tabs</h3><ul>" +
   "<h4>All genes</h4><p>Every gene on the map, starting from its place on the nodal map, with every kNN-graph edge as a spring. Edges are drawn for the selected gene only (while the layout moves, 177,000 lines would hide everything). Each frame runs as many simulation steps as fit in about 13 ms (at most 120 a second in every tab, so a re-heat or the sign switch plays out over about two seconds), so the page stays responsive at any size; the status line shows frames per second.</p>" +
   "<h4>Controls</h4><ul><li><b>Drag a gene</b> to move it: its partners follow. <b>Double-click</b> a gene to pin or unpin it (a slow double-click works too: it pins the gene you clicked first). <b>Click</b> a gene to select it (after a short pause, in case a second click follows). Drag the background to pan; wheel or pinch to zoom.</li>" +
   "<li><b>Pause / Resume</b> (space bar), <b>Re-heat</b> (let it move again), <b>Reset</b> (start the layout again and unpin everything), <b>Fit</b> (show every gene).</li>" +
-  "<li><b>Repulsion</b> and <b>Springs</b>: the strengths of the two forces. <b>Min |cos|</b>: weaker relations are not springs. <b>Evidence</b>: only relations replicated in both random halves of the compounds, also those strong in one half (the default), or every relation; a spring that is not replicated says so (&#9888;) in the tooltip.</li>" +
+  "<li><b>Repulsion</b> and <b>Springs</b>: the strengths of the two forces. <b>Min |cos|</b>: weaker relations are not springs. <b>Evidence</b>: only relations with the same sign in both halves of the compounds, also those strong in one half (the default), or every relation; a spring without the same sign in both halves says so (&#9888;) in the tooltip.</li>" +
   "<li>Labels: the selected gene, its springs' partners and pinned genes; everyone when zoomed in (labels that would overlap are left out).</li></ul></div>";
 // the probable direction (direction stage): its words are direction_view's (grades, caveat, order), embedded in D.dir
 const HOWTO_DIR = "<div class='howto' id='help-dir'><h3>Probable direction: which gene probably acts on which</h3>" + (!HAS_DIR ?
@@ -4096,9 +4596,11 @@ $("c0").addEventListener("click", () => setColour(0));
 $("c1").addEventListener("click", () => setColour(1));
 $("fitb").addEventListener("click", () => fit(false));
 if (HAS_SPREAD) {
+  $("spr").value = Math.round(spread * 100); $("spro").textContent = spread.toFixed(2);
   $("spr").addEventListener("input", () => setSpread(+$("spr").value / 100, 160));
   $("sprb").addEventListener("click", () => setSpread(spread < 0.5 ? 1 : 0, 900));
 } else {
+  $("spr").value = 0; $("spro").textContent = "0.00";
   $("spr").disabled = true; $("sprb").disabled = true;
   $("sprl").title = $("sprb").title = "Not available: this map's graph stage made no spread layouts (re-run the graph stage)";
 }
@@ -4133,6 +4635,10 @@ window.TAHOE_MAP = {select: i => select(i, true, "api"), search: search, data: D
   // the Spread slider (0 = t-SNE, 1 = modules apart; no argument: the current value) and the map's drawn positions
   spread: v => { if (v != null) setSpread(v, 0); return spread; },
   hasSpread: () => HAS_SPREAD,
+  searchItems: q => search(String(q || "")).map(r => r.kind ? {kind: r.kind, k: r.k, name: r.name} :
+    r.src ? {kind: "source", name: r.src} : {kind: "gene", i: r.i, name: D.sym[r.i]}),
+  extra: (kind, k) => showExtra(kind, k),
+  highlighted: () => hlSet ? Array.from(hlSet) : [],
   positions: () => ({x: Array.from(PX), y: Array.from(PY), animating: !!anim}),
   mapScreen: i => ({x: sx(i), y: sy(i)}),          // where gene i is drawn on the map canvas (CSS pixels)
   // the vector-space tour: its state, projected positions, a gene's decoded vector, axis mode (0-based axes),

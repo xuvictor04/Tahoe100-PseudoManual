@@ -8,7 +8,8 @@ What is copied from OUT to DEST (same relative paths):
     map/          gene_map.html, the self-contained interactive map
     tables/ validation/ direction/ graph/ relations/ embed/ stages/        every file
     reference/    the derived tables and the record of the sources: the files directly in reference/ (annotations,
-                  gene sets, STRING pairs, sources.json); not reference/downloads/ (the raw downloaded sources)
+                  gene sets, STRING pairs, gene coordinates, paralogues, the drugs' ChEMBL annotations, mechanisms
+                  and mechanism classes, sources.json); not reference/downloads/ (the raw downloaded sources)
     review/       the literature reviews, when there are any: reviews/, notes/, history/, ledger.jsonl, the queue and
                   the connection / finding tables, review.log; never cache/, dry_run/, keys_state.json,
                   ledger.unwritten.jsonl, .run.lock or .stop
@@ -22,9 +23,17 @@ Never: atlas/pseudobulk (the build), tensor/ (the per-line arrays), hf/ (streame
 GitHub refuses files over 100 MB, so a file over --max-file-mb (95 MiB) is not copied; the command's output and
 DEST/README.md list every such file. DEST also gets:
     README.md        what each folder holds, the provenance (tahoemap version, code commit, date, stage stamps), the
-                     sizes, what was left out and why, how to open the vault and the map
+                     sizes, what was left out and why, how to open the vault and the map, how to cite the dataset
+                     (Tahoe-100M, licence CC0-1.0, doi:10.1101/2025.02.20.639398); the output folder is named
+                     `<out>`, never by its path on this computer
     MANIFEST.tsv     one line per copied file (and README.md, .gitattributes): path (relative, '/'), bytes, sha256
     .gitattributes   '* -text': git stores every file byte for byte (no line-ending conversion, e.g. on Windows)
+
+Local folder names: a few text files of OUT name the folders of the computer that made the run (stages/*.json,
+reference/sources.json, direction/info.json, run.log, vault/Home.md). Their copies in DEST say `<out>` (the output
+folder), `<data>` (the Tahoe-100M data folder, stages/build.json) and `<cache>` (the reference cache,
+stages/reference.json) instead (local_roots); every other byte is the same, the files in OUT are not changed, and
+README.md lists every file so changed. MANIFEST.tsv holds the copy's size and sha256.
 
 Safety: DEST must lie outside OUT and must not contain it (compared as the file system does: case-insensitive on
 Windows, links resolved). A DEST that is not empty needs --force, and --force replaces and removes only files that
@@ -83,8 +92,9 @@ LEFT_OUT = {
     "explorer.tmp": "an explorer build in progress, or one the size guard stopped (not published)",
     "explorer.old": "an explorer being replaced (not published)",
     "hf": "streamed input files (Tahoe-100M itself, from Hugging Face)",
-    "reference/downloads": "the raw downloaded sources (public files; reference/sources.json says where each came "
-                           "from and when)",
+    "reference/downloads": "the raw downloaded sources (public files: HGNC, the Ensembl GTF, UniProt, NCBI, Reactome, "
+                           "Hallmark, STRING, the ChEMBL records of the drugs, the Ensembl Compara paralogues; "
+                           "reference/sources.json says where each came from and when)",
     "pipeline_console.log": "the console of the background job (run.log holds the pipeline's log)",
     "duplicated_from.json": "where this output folder was copied from (paths on this computer)",
     ".not_tahoe_input": "a marker that keeps the old scripts from reading the output as input data",
@@ -95,18 +105,28 @@ DESCRIBE = {
              "vault/Home.md)",
     "map": "gene_map.html: the interactive gene map, one self-contained HTML file (works offline)",
     "tables": "the fold-change tables: which drug-doses raise / lower each gene, pooled and line by line, with "
-              "flags (parquet; tables/README.md documents every column)",
-    "validation": "does the vector space recover known biology, and what in it is new (start at "
-                  "validation/report.md; README.md there documents the columns)",
+              "flags and alerts (neighbouring wells, translation inhibitors); each drug-dose in each line (growth, "
+              "response strength, line selectivity: drug_line_response.parquet); the drugs with Tahoe's and ChEMBL's "
+              "annotations side by side; every drug-dose's up / down gene sets (drugdose_signatures.gmt) (parquet; "
+              "tables/README.md documents every column)",
+    "validation": "does the vector space recover known biology, and what in it is new: control programmes, the "
+                  "drug check by Tahoe's and ChEMBL's classes, neighbouring wells, module labels with their alerts, "
+                  "novel candidate relations, line-selective positive controls, the direction stage's controls (start "
+                  "at validation/report.md; README.md there documents the columns)",
     "direction": "probable direction between genes, from the cell lines (which gene acts on which, or on the "
                  "cells' growth under a drug): edges with p, q, an evidence grade A / B / C and their alerts, the "
-                 "groups compared and the controls (direction/README.md documents every column; a probable "
+                 "groups compared and the controls, the line-selectivity table (selectivity.parquet) and every "
+                 "gene's tests (gene_tests.parquet) (direction/README.md documents every column; a probable "
                  "direction, not proof of direct regulation)",
-    "graph": "the nodal map: nodes (map coordinates, module, arm), edges and modules (parquet)",
-    "relations": "gene x gene: each gene's 100 strongest partners, how reproducible, known or new (parquet)",
-    "embed": "the vector space: gene, drug-dose, drug and cell-line vectors (numpy .npy) and their tables",
-    "reference": "public annotation reduced to Tahoe's genes (annotations, gene sets, STRING pairs; parquet) and "
-                 "sources.json (where each source came from)",
+    "graph": "the nodal map: nodes (map coordinates, module, arm), edges and modules with their covariates "
+             "(parquet), the module gene sets (modules.gmt)",
+    "relations": "gene x gene: each gene's 100 strongest partners, whether they have the same sign in both halves "
+                 "of the compounds, known or new, lineage pairs and read-sharing copies marked (parquet)",
+    "embed": "the vector space: gene, drug-dose, drug and cell-line vectors (numpy .npy) and their tables; each "
+             "drug-dose's 50 most similar drug-doses (drug_similarity.parquet)",
+    "reference": "public annotation reduced to Tahoe's genes (annotations, gene sets, STRING pairs, gene "
+                 "coordinates, paralogues), the drugs' ChEMBL annotations, mechanisms and mechanism classes "
+                 "(parquet), and sources.json (where each source came from)",
     "stages": "one stamp per finished stage: its method version, when it finished, its counts and options",
     "review": "the literature reviews by AI agents: reviews/, notes/, the histories, ledger.jsonl, the connection and "
               "finding tables",
@@ -299,6 +319,60 @@ def _copy(src, dst):
     return h.hexdigest()
 
 
+# text files whose copies name the run's local folders by placeholders (module docstring)
+SCRUB_SUFFIX = (".json", ".md", ".log", ".txt", ".tsv", ".csv")
+SCRUB_MAX_BYTES = 64 * 2 ** 20
+
+
+def local_roots(out, stamps):
+    """[(text, placeholder)] that export replaces in the copies of text files, longest first: the output folder
+    ('<out>'), the data folder of stages/build.json ('<data>') and the reference cache of stages/reference.json
+    ('<cache>'), each as written, with '/' and with '\\' separators, and JSON-escaped (doubled backslashes)."""
+    roots = [(out, "<out>"), (os.path.realpath(out), "<out>")]
+    data = ((stamps.get("build") or {}).get("info") or {}).get("data")
+    cache = ((stamps.get("reference") or {}).get("info") or {}).get("cache_dir")
+    roots += [(data, "<data>")] if data else []
+    roots += [(cache, "<cache>")] if cache else []
+    pairs = set()
+    for path, ph in roots:
+        path = str(path).rstrip("/\\")
+        if len(path) < 4:                                  # never a bare drive or '/'
+            continue
+        for v in (path, path.replace("\\", "/"), path.replace("/", "\\"), path.replace("\\", "\\\\"),
+                  path.replace("/", "\\\\")):
+            pairs.add((v, ph))
+    return sorted(pairs, key=lambda x: (-len(x[0]), x[0]))
+
+
+def _scrubbed(src, rel, roots):
+    """The bytes of a text file's copy with the local folders replaced (local_roots); None when the file is not one
+    of SCRUB_SUFFIX, is larger than SCRUB_MAX_BYTES, is not UTF-8 or names none of them (then it is copied as it is)."""
+    if not roots or not rel.lower().endswith(SCRUB_SUFFIX) or os.path.getsize(_lp(src)) > SCRUB_MAX_BYTES:
+        return None
+    try:
+        with open(_lp(src), "rb") as fh:
+            t = fh.read().decode("utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
+    t2 = t
+    for v, ph in roots:
+        if v in t2:                                        # the whole folder name only (not '/a/out' in '/a/out2')
+            t2 = re.sub(re.escape(v) + r"(?=[\\/\"'`\s,;:)\]}]|\.(?:\s|$)|$)", lambda _m, ph=ph: ph, t2)
+    return t2.encode("utf-8") if t2 != t else None
+
+
+def _write_copy(src, dst, data):
+    """Write `data` (a changed copy of src) to dst through dst.tmp; dst gets src's modification time. Returns the
+    sha256."""
+    tmp = dst + ".tmp"
+    with open(_lp(tmp), "wb") as fo:
+        fo.write(data)
+    st = os.stat(_lp(src))
+    os.utime(_lp(tmp), ns=(st.st_atime_ns, st.st_mtime_ns))
+    replace_file(_lp(tmp), _lp(dst))
+    return hashlib.sha256(data).hexdigest()
+
+
 def _sha256(path):
     h = hashlib.sha256()
     with open(_lp(path), "rb") as fh:
@@ -406,7 +480,8 @@ def export(out, dest, with_effects=False, include=(), force=False, max_mb=MAX_MB
     log(f"Exporting {out} -> {dest}: {len(files):,} files, {_mb(total)}"
         + (f"; {len(pl['too_large'])} file(s) over {max_mb:g} MiB not copied" if pl["too_large"] else ""))
     os.makedirs(_lp(dest), exist_ok=True)
-    rows, copied, kept = [], 0, 0
+    rows, copied, kept, scrubbed = [], 0, 0, []
+    roots = local_roots(out, stamps)
     for k, (src, rel, n) in enumerate(files):
         dst = os.path.join(dest, *rel.split("/"))
         old = owned.get(_key(rel))
@@ -416,12 +491,20 @@ def export(out, dest, with_effects=False, include=(), force=False, max_mb=MAX_MB
                 ds = os.stat(_lp(dst))
             except OSError:
                 pass
-        if old and ds is not None and old[1] == n == ds.st_size and ds.st_mtime_ns == st.st_mtime_ns and old[2]:
-            rows.append((rel, n, old[2]))                  # unchanged since the earlier export
+        new = _scrubbed(src, rel, roots)                   # the local folder names replaced (module docstring)
+        want_n = n if new is None else len(new)
+        if old and ds is not None and old[1] == want_n == ds.st_size and ds.st_mtime_ns == st.st_mtime_ns and old[2]:
+            rows.append((rel, want_n, old[2]))             # unchanged since the earlier export
             kept += 1
+            if new is not None:
+                scrubbed.append(rel)
             continue
         os.makedirs(_lp(os.path.dirname(dst)), exist_ok=True)
-        rows.append((rel, n, _copy(src, dst)))
+        if new is None:
+            rows.append((rel, n, _copy(src, dst)))
+        else:                                              # the local folders replaced (module docstring)
+            rows.append((rel, len(new), _write_copy(src, dst, new)))
+            scrubbed.append(rel)
         copied += 1
         if (k + 1) % 5000 == 0:
             log(f"  {k + 1:,} of {len(files):,} files ...")
@@ -445,7 +528,7 @@ def export(out, dest, with_effects=False, include=(), force=False, max_mb=MAX_MB
            "copied": copied, "unchanged": kept, "removed": removed, "too_large": pl["too_large"],
            "left_out": pl["left_out"], "folders": pl["folders"], "with_effects": bool(with_effects),
            "include": [os.path.abspath(i) for i in include or ()], "max_mb": float(max_mb),
-           "explorer": _explorer_where(out, site_url, github)}
+           "explorer": _explorer_where(out, site_url, github), "local_names_replaced": scrubbed}
     rec["sizes"] = _sizes(rows, pl["folders"])
     rec["stage_state"], rec["stale"] = _stage_states(stamps, pl["folders"])
     rec["large_warn"] = [(r, n) for r, n, _ in rows if n > WARN_MB * 2 ** 20]
@@ -509,8 +592,9 @@ def _sizes(rows, folders):
 def readme(rec):
     c = rec["code"]
     L = ["# Tahoe-100M gene map: results", "",
-         f"Exported by `tahoemap export` on {rec['date']} from the output folder `{rec['source']}`. Everything here "
-         "was computed by tahoemap from the Tahoe-100M single-cell drug screen and public annotation sources "
+         f"Exported by `tahoemap export` on {rec['date']} from an output folder of `tahoe run` (called `<out>` "
+         "here; its place on the computer that made the run is not recorded in this file). Everything here was "
+         "computed by tahoemap from the Tahoe-100M single-cell drug screen and public annotation sources "
          "(reference/sources.json names them); the code is the tahoemap repository named under Provenance.", "",
          "## What each folder holds", "",
          "| folder / file | files | size | what it is |", "|---|---|---|---|"]
@@ -520,7 +604,14 @@ def readme(rec):
                  + (f" **⚠ {st}**" if st else "") + " |")
     L += ["", f"In all: {rec['files']:,} files, {_mb(rec['bytes'])}. `MANIFEST.tsv` lists every file with its size "
           "and sha256 (README.md and .gitattributes included; the manifest itself not); `.gitattributes` (`* -text`) "
-          "makes git store every file byte for byte.", "",
+          "makes git store every file byte for byte."]
+    rn = rec.get("local_names_replaced") or []
+    if rn:
+        L += ["", f"Local folder names: {len(rn)} text file(s) of the output folder name the folders of the computer "
+              "that made the run. Their copies here say `<out>` (the output folder), `<data>` (the Tahoe-100M data "
+              "folder) and `<cache>` (the reference cache) instead; every other byte is the same, and MANIFEST.tsv "
+              "holds the copies' sha256: " + ", ".join(f"`{r}`" for r in rn) + "."]
+    L += ["",
           "## How to open them", "",
           "- **The vault**: get the files (clone the repository, or GitHub's *Code - Download ZIP*), then in "
           "[Obsidian](https://obsidian.md) choose *Open folder as vault* and pick the `vault` folder. Start at "
@@ -535,8 +626,9 @@ def readme(rec):
     L += _explorer_lines(rec.get("explorer") or {})
     L += ["",
           "Flags: nothing is left out of a table for a flag; an item with a reason for doubt keeps its ranked place "
-          "and carries an alert (⚠ and the reason in plain words).", "",
-          "## Provenance", "",
+          "and carries an alert (⚠ and the reason in plain words).", ""]
+    L += cite_lines()
+    L += ["## Provenance", "",
           f"- tahoemap version {c['version']}; code commit `{c['commit'] or 'unknown (git not found)'}`"
           + (f" on branch `{c['branch']}`" if c.get("branch") else "")
           + (f" of {c['remote']}" if c.get("remote") else "")
@@ -564,6 +656,34 @@ def readme(rec):
           "encoding='utf-8')][1:]; bad = [p for p, n, h in rows if hashlib.sha256(open(p, 'rb').read())"
           ".hexdigest() != h]; print(len(rows), 'files,', len(bad), 'differ:', bad[:10])\"", "```", ""]
     return "\n".join(L)
+
+
+# the dataset these results come from: its licence and the paper to cite (the same words as the explorer's
+# 'How to cite', tahoemap/explorer.py CITATION)
+CITE = {"dataset": "Tahoe-100M (Hugging Face tahoebio/Tahoe-100M)", "licence": "CC0-1.0",
+        "url": "https://huggingface.co/datasets/tahoebio/Tahoe-100M",
+        "paper": "Zhang J, Ubas AA, de Borja R, Svensson V, Thomas N, Thakar N, Lai I, Winters A, Khan U, Jones MG, et "
+                 "al. Tahoe-100M: A Giga-Scale Single-Cell Perturbation Atlas for Context-Dependent Gene Function and "
+                 "Cellular Modeling. bioRxiv 2025. doi:10.1101/2025.02.20.639398",
+        "doi": "10.1101/2025.02.20.639398"}
+
+
+def cite_lines():
+    """README.md lines 'How to cite': the dataset, its licence and the paper (the explorer's CITATION when it can be
+    read, else CITE: the same words)."""
+    c = CITE
+    try:
+        from .explorer import CITATION
+        c = {**CITE, **CITATION}
+    except Exception:  # noqa: BLE001  (the explorer module cannot be imported here: the copy above)
+        pass
+    return ["## How to cite", "",
+            f"These results are derived from the {c['dataset']} dataset ({c['url']}), released under the licence "
+            f"{c['licence']} (public domain dedication: no permission needed). When you use them, please cite the "
+            "paper that describes the dataset:", "",
+            f"> {c['paper']} (https://doi.org/{c['doi']})", "",
+            "and name the tahoemap code (the repository and commit under Provenance) that computed them. The "
+            "public annotation sources each have their own terms: reference/sources.json names them.", ""]
 
 
 def next_steps(dest, total, long_paths=False):

@@ -1,0 +1,7427 @@
+{
+"source": "ChEMBL web services (molecules, mechanisms, targets); PubChem (PubChem id -> InChIKey)",
+"chembl_release": "ChEMBL_37",
+"chembl_release_date": "2026-05-01",
+"fetched": "2026-11-10T02:15:18Z",
+"structure_route": "InChIKeys of 376 of 376 PubChem ids",
+"note": "offline test fixture: the ChEMBL records of the synthetic test drugs and of the real drugs in tahoe_rows (unit tests only), cut from a live fetch by make_fixture2.py",
+"drugs": [
+{
+"drug": "5-Azacytidine",
+"pubchem_cid": "9444",
+"inchikey": "NMUSYJAQQFHJEW-KVTDHHQDSA-N",
+"structure_ids": [
+"CHEMBL1489"
+],
+"names": [],
+"parts": []
+},
+{
+"drug": "5-Fluorouracil",
+"pubchem_cid": "3385",
+"inchikey": "GHASVSINZRGABV-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL185"
+],
+"names": [
+{
+"field": "synonym",
+"ids": [
+"CHEMBL185"
+],
+"rule": "name",
+"text": "5-Fluorouracil"
+}
+],
+"parts": []
+},
+{
+"drug": "8-Hydroxyquinoline",
+"pubchem_cid": "1923",
+"inchikey": "MCJGNVYPOGVAJF-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL310555"
+],
+"names": [
+{
+"field": "synonym",
+"ids": [
+"CHEMBL310555"
+],
+"rule": "name",
+"text": "8-Hydroxyquinoline"
+}
+],
+"parts": []
+},
+{
+"drug": "AT7519",
+"pubchem_cid": "11338033",
+"inchikey": "OVPNQJVDAFNBDN-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL445813"
+],
+"names": [
+{
+"field": "synonym",
+"ids": [
+"CHEMBL445813"
+],
+"rule": "name",
+"text": "AT7519"
+}
+],
+"parts": []
+},
+{
+"drug": "AZD-8055",
+"pubchem_cid": "25262965",
+"inchikey": "KVLFRAWTRWDEDF-IRXDYDNUSA-N",
+"structure_ids": [
+"CHEMBL1801204"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1801204"
+],
+"rule": "name",
+"text": "AZD-8055"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1801204"
+],
+"rule": "name",
+"text": "AZD-8055"
+}
+],
+"parts": []
+},
+{
+"drug": "AZD1390",
+"pubchem_cid": "126689157",
+"inchikey": "VQSZIPCGAGVRRP-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL4594429"
+],
+"names": [
+{
+"field": "synonym",
+"ids": [
+"CHEMBL4594429"
+],
+"rule": "name",
+"text": "AZD1390"
+}
+],
+"parts": []
+},
+{
+"drug": "Abemaciclib",
+"pubchem_cid": "46220502",
+"inchikey": "UZWDCWONPYILKI-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL3301610"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL3301610"
+],
+"rule": "name",
+"text": "Abemaciclib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL3301610"
+],
+"rule": "name",
+"text": "Abemaciclib"
+}
+],
+"parts": []
+},
+{
+"drug": "Acetohexamide",
+"pubchem_cid": "1989",
+"inchikey": "VGZSUPCWNCWDAN-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL1589"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1589"
+],
+"rule": "name",
+"text": "Acetohexamide"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1589"
+],
+"rule": "name",
+"text": "Acetohexamide"
+}
+],
+"parts": []
+},
+{
+"drug": "Afatinib",
+"pubchem_cid": "10184653",
+"inchikey": "ULXXDDBFHOBEHA-CWDCEQMOSA-N",
+"structure_ids": [
+"CHEMBL1173655"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1173655"
+],
+"rule": "name",
+"text": "Afatinib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1173655"
+],
+"rule": "name",
+"text": "Afatinib"
+}
+],
+"parts": []
+},
+{
+"drug": "Allantoin",
+"pubchem_cid": "204",
+"inchikey": "POJWUDADGALRAB-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL593429"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL593429"
+],
+"rule": "name",
+"text": "Allantoin"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL593429"
+],
+"rule": "name",
+"text": "Allantoin"
+}
+],
+"parts": []
+},
+{
+"drug": "Amsacrine",
+"pubchem_cid": "2179",
+"inchikey": "XCPGHVQEEXUHNC-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL43"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL43"
+],
+"rule": "name",
+"text": "Amsacrine"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL43"
+],
+"rule": "name",
+"text": "Amsacrine"
+}
+],
+"parts": []
+},
+{
+"drug": "Artesunate",
+"pubchem_cid": "6917864",
+"inchikey": "FIHJKUPKCHIPAT-AHIGJZGOSA-N",
+"structure_ids": [
+"CHEMBL361497"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL361497"
+],
+"rule": "name",
+"text": "Artesunate"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL361497"
+],
+"rule": "name",
+"text": "Artesunate"
+}
+],
+"parts": []
+},
+{
+"drug": "Aspirin",
+"pubchem_cid": "2244",
+"inchikey": "BSYNRYMUTXBXSQ-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL25"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL25"
+],
+"rule": "name",
+"text": "Aspirin"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL25"
+],
+"rule": "name",
+"text": "Aspirin"
+}
+],
+"parts": []
+},
+{
+"drug": "Auranofin",
+"pubchem_cid": "24199313",
+"inchikey": "AUJRCFUBUPVWSZ-UHFFFAOYSA-M",
+"structure_ids": [],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1366"
+],
+"rule": "name",
+"text": "Auranofin"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1366"
+],
+"rule": "name",
+"text": "Auranofin"
+}
+],
+"parts": []
+},
+{
+"drug": "Belinostat",
+"pubchem_cid": "6918638",
+"inchikey": "NCNRHFGMJRPRSK-MDZDMXLPSA-N",
+"structure_ids": [
+"CHEMBL408513"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL408513"
+],
+"rule": "name",
+"text": "Belinostat"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL408513"
+],
+"rule": "name",
+"text": "Belinostat"
+}
+],
+"parts": []
+},
+{
+"drug": "Bentamapimod",
+"pubchem_cid": "10195250",
+"inchikey": "XCPPIJCBCWUBNT-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL3545213"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL3545213"
+],
+"rule": "name",
+"text": "Bentamapimod"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL3545213"
+],
+"rule": "name",
+"text": "Bentamapimod"
+}
+],
+"parts": []
+},
+{
+"drug": "Berbamine",
+"pubchem_cid": "275182",
+"inchikey": "DFOCUWZXJBAUSQ-URLMMPGGSA-N",
+"structure_ids": [
+"CHEMBL504323"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL504323"
+],
+"rule": "name",
+"text": "Berbamine"
+}
+],
+"parts": []
+},
+{
+"drug": "Bergenin",
+"pubchem_cid": "66065",
+"inchikey": "YWJXCIXBAKGUKZ-HJJNZUOJSA-N",
+"structure_ids": [
+"CHEMBL273019"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL273019"
+],
+"rule": "name",
+"text": "Bergenin"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL273019"
+],
+"rule": "name",
+"text": "Bergenin"
+}
+],
+"parts": []
+},
+{
+"drug": "Bestatin",
+"pubchem_cid": "72172",
+"inchikey": "VGGGPCQERPFHOB-RDBSUJKOSA-N",
+"structure_ids": [
+"CHEMBL29292"
+],
+"names": [
+{
+"field": "synonym",
+"ids": [
+"CHEMBL29292"
+],
+"rule": "name",
+"text": "Bestatin"
+}
+],
+"parts": []
+},
+{
+"drug": "Betamethasone dipropionate",
+"pubchem_cid": "21800",
+"inchikey": "CIWBQSYVNNPZIQ-XYWKZLDCSA-N",
+"structure_ids": [
+"CHEMBL1200384"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1200384"
+],
+"rule": "name",
+"text": "Betamethasone dipropionate"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1200384"
+],
+"rule": "name",
+"text": "Betamethasone dipropionate"
+}
+],
+"parts": []
+},
+{
+"drug": "Bimatoprost",
+"pubchem_cid": "5311027",
+"inchikey": "AQOKCDNYWBIDND-FTOWTWDKSA-N",
+"structure_ids": [
+"CHEMBL1200963"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1200963"
+],
+"rule": "name",
+"text": "Bimatoprost"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1200963"
+],
+"rule": "name",
+"text": "Bimatoprost"
+}
+],
+"parts": []
+},
+{
+"drug": "Bisoprolol (hemifumarate)",
+"pubchem_cid": "168312271",
+"inchikey": "UWNAFIQLILKMCZ-JITBQSAISA-N",
+"structure_ids": [],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL645"
+],
+"rule": "salt_base",
+"text": "Bisoprolol"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL645"
+],
+"rule": "salt_base",
+"text": "Bisoprolol"
+}
+],
+"parts": []
+},
+{
+"drug": "Bortezomib",
+"pubchem_cid": "387447",
+"inchikey": "GXJABQQUPOEUTA-RDJZCZTQSA-N",
+"structure_ids": [
+"CHEMBL325041"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL325041"
+],
+"rule": "name",
+"text": "Bortezomib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL325041"
+],
+"rule": "name",
+"text": "Bortezomib"
+}
+],
+"parts": []
+},
+{
+"drug": "Budesonide",
+"pubchem_cid": "5281004",
+"inchikey": "VOVIALXJUBGFJZ-KWVAZRHASA-N",
+"structure_ids": [
+"CHEMBL1370"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1370"
+],
+"rule": "name",
+"text": "Budesonide"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1370"
+],
+"rule": "name",
+"text": "Budesonide"
+}
+],
+"parts": []
+},
+{
+"drug": "Carbamazepine",
+"pubchem_cid": "2554",
+"inchikey": "FFGPTBGBLSHEPO-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL108"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL108"
+],
+"rule": "name",
+"text": "Carbamazepine"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL108"
+],
+"rule": "name",
+"text": "Carbamazepine"
+}
+],
+"parts": []
+},
+{
+"drug": "Carbidopa (monohydrate)",
+"pubchem_cid": "2563",
+"inchikey": "TZFNLOMSOLWIDK-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL1179357"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1200748"
+],
+"rule": "salt_base",
+"text": "Carbidopa"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1200748"
+],
+"rule": "salt_base",
+"text": "Carbidopa"
+}
+],
+"parts": []
+},
+{
+"drug": "Celecoxib",
+"pubchem_cid": "2662",
+"inchikey": "RZEKVGVHFLEQIL-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL118"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL118"
+],
+"rule": "name",
+"text": "Celecoxib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL118"
+],
+"rule": "name",
+"text": "Celecoxib"
+}
+],
+"parts": []
+},
+{
+"drug": "Chlorhexidine (diacetate)",
+"pubchem_cid": "9562059",
+"inchikey": "WDRFFJWBUDTUCA-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL486819"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL790"
+],
+"rule": "salt_base",
+"text": "Chlorhexidine"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL790"
+],
+"rule": "salt_base",
+"text": "Chlorhexidine"
+}
+],
+"parts": []
+},
+{
+"drug": "Ciclopirox",
+"pubchem_cid": "2749",
+"inchikey": "SCKYRAXSEDYPSA-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL1413"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1413"
+],
+"rule": "name",
+"text": "Ciclopirox"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1413"
+],
+"rule": "name",
+"text": "Ciclopirox"
+}
+],
+"parts": []
+},
+{
+"drug": "Clobetasol propionate",
+"pubchem_cid": "32798",
+"inchikey": "CBGUOGMQLZIXBE-XGQKBEPLSA-N",
+"structure_ids": [
+"CHEMBL1159650"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1159650"
+],
+"rule": "name",
+"text": "Clobetasol propionate"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1159650"
+],
+"rule": "name",
+"text": "Clobetasol propionate"
+}
+],
+"parts": []
+},
+{
+"drug": "Cyclosporin A",
+"pubchem_cid": "5284373",
+"inchikey": "PMATZTZNYRCHOR-CGLBZJNRSA-N",
+"structure_ids": [
+"CHEMBL160"
+],
+"names": [
+{
+"field": "synonym",
+"ids": [
+"CHEMBL160"
+],
+"rule": "name",
+"text": "Cyclosporin A"
+}
+],
+"parts": []
+},
+{
+"drug": "Cysteamine (hydrochloride)",
+"pubchem_cid": "9082",
+"inchikey": "OGMADIBCHLQMIP-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL1256137"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL602"
+],
+"rule": "salt_base",
+"text": "Cysteamine"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL602"
+],
+"rule": "salt_base",
+"text": "Cysteamine"
+}
+],
+"parts": []
+},
+{
+"drug": "Cytarabine",
+"pubchem_cid": "6253",
+"inchikey": "UHDGCWIWMRVCDJ-CCXZUQQUSA-N",
+"structure_ids": [
+"CHEMBL803"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL803"
+],
+"rule": "name",
+"text": "Cytarabine"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL803"
+],
+"rule": "name",
+"text": "Cytarabine"
+}
+],
+"parts": []
+},
+{
+"drug": "DTP3",
+"pubchem_cid": "86295191",
+"inchikey": "AOUZPXZGMZUQQS-YPAWHYETSA-N",
+"structure_ids": [],
+"names": [],
+"parts": []
+},
+{
+"drug": "Daptomycin",
+"pubchem_cid": "21585658",
+"inchikey": "DOAKLVKFURWEDJ-QCMAZARJSA-N",
+"structure_ids": [
+"CHEMBL4744444"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL387675"
+],
+"rule": "name",
+"text": "Daptomycin"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL387675"
+],
+"rule": "name",
+"text": "Daptomycin"
+}
+],
+"parts": []
+},
+{
+"drug": "Darinaparsin",
+"pubchem_cid": "11683005",
+"inchikey": "JGDXFQORBMPJGR-YUMQZZPRSA-N",
+"structure_ids": [
+"CHEMBL3247378"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL3247378"
+],
+"rule": "name",
+"text": "Darinaparsin"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL3247378"
+],
+"rule": "name",
+"text": "Darinaparsin"
+}
+],
+"parts": []
+},
+{
+"drug": "Decitabine",
+"pubchem_cid": "451668",
+"inchikey": "XAUDJQYHKZQPEU-KVQBGUIXSA-N",
+"structure_ids": [
+"CHEMBL1201129"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1201129"
+],
+"rule": "name",
+"text": "Decitabine"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1201129"
+],
+"rule": "name",
+"text": "Decitabine"
+}
+],
+"parts": []
+},
+{
+"drug": "Dexamethasone",
+"pubchem_cid": "5743",
+"inchikey": "UREBDLICKHMUKA-CXSFZGCWSA-N",
+"structure_ids": [
+"CHEMBL384467"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL384467"
+],
+"rule": "name",
+"text": "Dexamethasone"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL384467"
+],
+"rule": "name",
+"text": "Dexamethasone"
+}
+],
+"parts": []
+},
+{
+"drug": "Dihydroartemisinin",
+"pubchem_cid": "3000518",
+"inchikey": "BJDCWCLMFKKGEE-ISOSDAIHSA-N",
+"structure_ids": [
+"CHEMBL307261"
+],
+"names": [
+{
+"field": "synonym",
+"ids": [
+"CHEMBL307261"
+],
+"rule": "name",
+"text": "Dihydroartemisinin"
+}
+],
+"parts": []
+},
+{
+"drug": "Dimethyl fumarate",
+"pubchem_cid": "637568",
+"inchikey": "LDCRTTXIJACKKU-ONEGZZNKSA-N",
+"structure_ids": [
+"CHEMBL2107333"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL2107333"
+],
+"rule": "name",
+"text": "Dimethyl fumarate"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL2107333"
+],
+"rule": "name",
+"text": "Dimethyl fumarate"
+}
+],
+"parts": []
+},
+{
+"drug": "Dinaciclib",
+"pubchem_cid": "46926350",
+"inchikey": "PIMQWRZWLQKKBJ-SFHVURJKSA-N",
+"structure_ids": [
+"CHEMBL2103840"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL2103840"
+],
+"rule": "name",
+"text": "Dinaciclib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL2103840"
+],
+"rule": "name",
+"text": "Dinaciclib"
+}
+],
+"parts": []
+},
+{
+"drug": "Docetaxel",
+"pubchem_cid": "148124",
+"inchikey": "ZDZOTLJHXYCWBA-VCVYQWHSSA-N",
+"structure_ids": [
+"CHEMBL92"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL3545252"
+],
+"rule": "name",
+"text": "Docetaxel"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL3545252"
+],
+"rule": "name",
+"text": "Docetaxel"
+}
+],
+"parts": []
+},
+{
+"drug": "Doxorubicin (hydrochloride)",
+"pubchem_cid": "443939",
+"inchikey": "MWWSFMDVAYGXBV-RUELKSSGSA-N",
+"structure_ids": [
+"CHEMBL359744"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL53463"
+],
+"rule": "salt_base",
+"text": "Doxorubicin"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL53463"
+],
+"rule": "salt_base",
+"text": "Doxorubicin"
+}
+],
+"parts": []
+},
+{
+"drug": "Elimusertib hydrochloride",
+"pubchem_cid": "118869362",
+"inchikey": "YBXRSCXGRPSTMW-CYBMUJFWSA-N",
+"structure_ids": [
+"CHEMBL4647810"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL4647810"
+],
+"rule": "molecule_key",
+"text": "Elimusertib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL4647810"
+],
+"rule": "molecule_key",
+"text": "Elimusertib"
+}
+],
+"parts": []
+},
+{
+"drug": "Epirubicin (hydrochloride)",
+"pubchem_cid": "65348",
+"inchikey": "MWWSFMDVAYGXBV-FGBSZODSSA-N",
+"structure_ids": [
+"CHEMBL1200981"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL417"
+],
+"rule": "salt_base",
+"text": "Epirubicin"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL417"
+],
+"rule": "salt_base",
+"text": "Epirubicin"
+}
+],
+"parts": []
+},
+{
+"drug": "Erdafitinib",
+"pubchem_cid": "67462786",
+"inchikey": "OLAHOMJCDNXHFI-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL3545376"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL3545376"
+],
+"rule": "name",
+"text": "Erdafitinib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL3545376"
+],
+"rule": "name",
+"text": "Erdafitinib"
+}
+],
+"parts": []
+},
+{
+"drug": "Estrone sulfate (potassium)",
+"pubchem_cid": "23674502",
+"inchikey": "CUQHOFAEIPGLBH-ZFINNJDLSA-M",
+"structure_ids": [
+"CHEMBL1546237"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1405"
+],
+"rule": "molecule_key",
+"text": "Estrone"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1405"
+],
+"rule": "molecule_key",
+"text": "Estrone"
+}
+],
+"parts": []
+},
+{
+"drug": "Everolimus",
+"pubchem_cid": "6442177",
+"inchikey": "HKVAMNSJSFKALM-GKUWKFKPSA-N",
+"structure_ids": [
+"CHEMBL1908360"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1908360"
+],
+"rule": "name",
+"text": "Everolimus"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1908360"
+],
+"rule": "name",
+"text": "Everolimus"
+}
+],
+"parts": []
+},
+{
+"drug": "GSK1059615",
+"pubchem_cid": "23582824",
+"inchikey": "QDITZBLZQQZVEE-YBEGLDIGSA-N",
+"structure_ids": [
+"CHEMBL3544966"
+],
+"names": [
+{
+"field": "synonym",
+"ids": [
+"CHEMBL3544966"
+],
+"rule": "name",
+"text": "GSK1059615"
+}
+],
+"parts": []
+},
+{
+"drug": "Gallic acid",
+"pubchem_cid": "370",
+"inchikey": "LNTHITQWFMADLM-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL288114"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL288114"
+],
+"rule": "name",
+"text": "Gallic acid"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL288114"
+],
+"rule": "name",
+"text": "Gallic acid"
+}
+],
+"parts": []
+},
+{
+"drug": "Gemcitabine",
+"pubchem_cid": "60750",
+"inchikey": "SDUQYLNIPVEERB-QPPQHZFASA-N",
+"structure_ids": [
+"CHEMBL888"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL888"
+],
+"rule": "name",
+"text": "Gemcitabine"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL888"
+],
+"rule": "name",
+"text": "Gemcitabine"
+}
+],
+"parts": []
+},
+{
+"drug": "HI-TOPK-032",
+"pubchem_cid": "1936439",
+"inchikey": "BCSBXWKRZUPFHW-UHFFFAOYSA-N",
+"structure_ids": [],
+"names": [],
+"parts": []
+},
+{
+"drug": "Harringtonine",
+"pubchem_cid": "276389",
+"inchikey": "HAVJATCHLFRDHY-KSZYUSJVSA-N",
+"structure_ids": [
+"CHEMBL433257"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL433257"
+],
+"rule": "name",
+"text": "Harringtonine"
+}
+],
+"parts": []
+},
+{
+"drug": "Homoharringtonine",
+"pubchem_cid": "285033",
+"inchikey": "HYFHYPWGAURHIV-JFIAXGOJSA-N",
+"structure_ids": [
+"CHEMBL46286"
+],
+"names": [
+{
+"field": "synonym",
+"ids": [
+"CHEMBL46286"
+],
+"rule": "name",
+"text": "Homoharringtonine"
+}
+],
+"parts": []
+},
+{
+"drug": "Hydroxyurea",
+"pubchem_cid": "3657",
+"inchikey": "VSNHCAURESNICA-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL467"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL467"
+],
+"rule": "name",
+"text": "Hydroxyurea"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL467"
+],
+"rule": "name",
+"text": "Hydroxyurea"
+}
+],
+"parts": []
+},
+{
+"drug": "Idarubicin (hydrochloride)",
+"pubchem_cid": "636362",
+"inchikey": "JVHPTYWUBOQMBP-RVFAQHLVSA-N",
+"structure_ids": [
+"CHEMBL1200976"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1117"
+],
+"rule": "salt_base",
+"text": "Idarubicin"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1117"
+],
+"rule": "salt_base",
+"text": "Idarubicin"
+}
+],
+"parts": []
+},
+{
+"drug": "Imiquimod (maleate)",
+"pubchem_cid": "11595577",
+"inchikey": "KYQFLNAOJRNEDV-BTJKTKAUSA-N",
+"structure_ids": [],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1282"
+],
+"rule": "salt_base",
+"text": "Imiquimod"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1282"
+],
+"rule": "salt_base",
+"text": "Imiquimod"
+}
+],
+"parts": []
+},
+{
+"drug": "Infigratinib",
+"pubchem_cid": "53235510",
+"inchikey": "QADPYRIHXKWUSV-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL1852688"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1852688"
+],
+"rule": "name",
+"text": "Infigratinib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1852688"
+],
+"rule": "name",
+"text": "Infigratinib"
+}
+],
+"parts": []
+},
+{
+"drug": "Irinotecan",
+"pubchem_cid": "60838",
+"inchikey": "UWKQSNNFCGGAFS-XIFFEERXSA-N",
+"structure_ids": [
+"CHEMBL481"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL481"
+],
+"rule": "name",
+"text": "Irinotecan"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL481"
+],
+"rule": "name",
+"text": "Irinotecan"
+}
+],
+"parts": []
+},
+{
+"drug": "Ixazomib",
+"pubchem_cid": "25183872",
+"inchikey": "MXAYKZJJDUDWDS-LBPRGKRZSA-N",
+"structure_ids": [
+"CHEMBL2141296"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL2141296"
+],
+"rule": "name",
+"text": "Ixazomib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL2141296"
+],
+"rule": "name",
+"text": "Ixazomib"
+}
+],
+"parts": []
+},
+{
+"drug": "Lactate (calcium)",
+"pubchem_cid": "168311648",
+"inchikey": "HPWUZBSOVQMJHM-UHFFFAOYSA-M",
+"structure_ids": [],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL2106111"
+],
+"rule": "cation_first",
+"text": "calcium Lactate"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL2106111"
+],
+"rule": "cation_first",
+"text": "calcium Lactate"
+}
+],
+"parts": []
+},
+{
+"drug": "Lenalidomide (hemihydrate)",
+"pubchem_cid": "46220375",
+"inchikey": "OTJHSDXKMBRCMM-UHFFFAOYSA-N",
+"structure_ids": [],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL848"
+],
+"rule": "salt_base",
+"text": "Lenalidomide"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL848"
+],
+"rule": "salt_base",
+"text": "Lenalidomide"
+}
+],
+"parts": []
+},
+{
+"drug": "Levobupivacaine (hydrochloride)",
+"pubchem_cid": "117965",
+"inchikey": "SIEYLFHKZGLBNX-NTISSMGPSA-N",
+"structure_ids": [
+"CHEMBL1200749"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1201193"
+],
+"rule": "salt_base",
+"text": "Levobupivacaine"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1201193"
+],
+"rule": "salt_base",
+"text": "Levobupivacaine"
+}
+],
+"parts": []
+},
+{
+"drug": "Lonafarnib",
+"pubchem_cid": "148195",
+"inchikey": "DHMTURDWPRKSOA-RUZDIDTESA-N",
+"structure_ids": [
+"CHEMBL298734"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL298734"
+],
+"rule": "name",
+"text": "Lonafarnib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL298734"
+],
+"rule": "name",
+"text": "Lonafarnib"
+}
+],
+"parts": []
+},
+{
+"drug": "Malotilate",
+"pubchem_cid": "4006",
+"inchikey": "YPIQVCUJEKAZCP-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL1697754"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1697754"
+],
+"rule": "name",
+"text": "Malotilate"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1697754"
+],
+"rule": "name",
+"text": "Malotilate"
+}
+],
+"parts": []
+},
+{
+"drug": "Mebendazole",
+"pubchem_cid": "4030",
+"inchikey": "OPXLLQIJSORQAM-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL685"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL685"
+],
+"rule": "name",
+"text": "Mebendazole"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL685"
+],
+"rule": "name",
+"text": "Mebendazole"
+}
+],
+"parts": []
+},
+{
+"drug": "Medroxyprogesterone acetate",
+"pubchem_cid": "6279",
+"inchikey": "PSGAAPLEWMOORI-PEINSRQWSA-N",
+"structure_ids": [
+"CHEMBL717"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL717"
+],
+"rule": "name",
+"text": "Medroxyprogesterone acetate"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL717"
+],
+"rule": "name",
+"text": "Medroxyprogesterone acetate"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL717"
+],
+"rule": "molecule_key",
+"text": "Medroxyprogesterone"
+}
+],
+"parts": []
+},
+{
+"drug": "Megestrol",
+"pubchem_cid": "19090",
+"inchikey": "VXIMPSPISRVBPZ-NWUMPJBXSA-N",
+"structure_ids": [
+"CHEMBL4071215"
+],
+"names": [
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1201139"
+],
+"rule": "name",
+"text": "Megestrol"
+}
+],
+"parts": []
+},
+{
+"drug": "Meloxicam",
+"pubchem_cid": "54677470",
+"inchikey": "ZRVUJXDFFKFLMG-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL599"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL599"
+],
+"rule": "name",
+"text": "Meloxicam"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL599"
+],
+"rule": "name",
+"text": "Meloxicam"
+}
+],
+"parts": []
+},
+{
+"drug": "Methotrexate",
+"pubchem_cid": "126941",
+"inchikey": "FBOZXECLQNJBKD-ZDUSSCGKSA-N",
+"structure_ids": [
+"CHEMBL34259"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL34259"
+],
+"rule": "name",
+"text": "Methotrexate"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL34259"
+],
+"rule": "name",
+"text": "Methotrexate"
+}
+],
+"parts": []
+},
+{
+"drug": "Methylprednisolone succinate",
+"pubchem_cid": "16923",
+"inchikey": "IMBXEJJVJRTNOW-XYMSELFBSA-N",
+"structure_ids": [
+"CHEMBL1201265"
+],
+"names": [
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1201265"
+],
+"rule": "name",
+"text": "Methylprednisolone succinate"
+},
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL650"
+],
+"rule": "molecule_key",
+"text": "Methylprednisolone"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL650"
+],
+"rule": "molecule_key",
+"text": "Methylprednisolone"
+}
+],
+"parts": []
+},
+{
+"drug": "Mitoxantrone (dihydrochloride)",
+"pubchem_cid": "51082",
+"inchikey": "ZAHQPTJLOCWVPG-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL1417019"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL58"
+],
+"rule": "salt_base",
+"text": "Mitoxantrone"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL58"
+],
+"rule": "salt_base",
+"text": "Mitoxantrone"
+}
+],
+"parts": []
+},
+{
+"drug": "NG25",
+"pubchem_cid": "53340664",
+"inchikey": "SMPGEBOIKULBCT-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL4125960"
+],
+"names": [],
+"parts": []
+},
+{
+"drug": "Naproxen",
+"pubchem_cid": "156391",
+"inchikey": "CMWTZPSULFXXJA-VIFPVBQESA-N",
+"structure_ids": [
+"CHEMBL154"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL154"
+],
+"rule": "name",
+"text": "Naproxen"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL154"
+],
+"rule": "name",
+"text": "Naproxen"
+}
+],
+"parts": []
+},
+{
+"drug": "Nimesulide",
+"pubchem_cid": "4495",
+"inchikey": "HYWYRSMBCFDLJT-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL56367"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL56367"
+],
+"rule": "name",
+"text": "Nimesulide"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL56367"
+],
+"rule": "name",
+"text": "Nimesulide"
+}
+],
+"parts": []
+},
+{
+"drug": "Oxaliplatin",
+"pubchem_cid": "9887053",
+"inchikey": "DRMCATBEKSVAPL-BNTLRKBRSA-N",
+"structure_ids": [],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL414804"
+],
+"rule": "name",
+"text": "Oxaliplatin"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL414804"
+],
+"rule": "name",
+"text": "Oxaliplatin"
+}
+],
+"parts": []
+},
+{
+"drug": "Paclitaxel",
+"pubchem_cid": "36314",
+"inchikey": "RCINICONZNJXQF-MZXODVADSA-N",
+"structure_ids": [
+"CHEMBL428647"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL428647"
+],
+"rule": "name",
+"text": "Paclitaxel"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL428647"
+],
+"rule": "name",
+"text": "Paclitaxel"
+}
+],
+"parts": []
+},
+{
+"drug": "Palmatine (chloride)",
+"pubchem_cid": "73442",
+"inchikey": "RLQYRXCUPVKSAW-UHFFFAOYSA-M",
+"structure_ids": [
+"CHEMBL274189"
+],
+"names": [],
+"parts": []
+},
+{
+"drug": "Panobinostat",
+"pubchem_cid": "6918837",
+"inchikey": "FPOHNWQLNRZRFC-ZHACJKMWSA-N",
+"structure_ids": [
+"CHEMBL483254"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL483254"
+],
+"rule": "name",
+"text": "Panobinostat"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL483254"
+],
+"rule": "name",
+"text": "Panobinostat"
+}
+],
+"parts": []
+},
+{
+"drug": "Pasireotide (acetate)",
+"pubchem_cid": "72205932",
+"inchikey": "WFKFNBBHVLMWQH-QKXVGOHISA-N",
+"structure_ids": [],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL3349607"
+],
+"rule": "salt_base",
+"text": "Pasireotide"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL3349607"
+],
+"rule": "salt_base",
+"text": "Pasireotide"
+}
+],
+"parts": []
+},
+{
+"drug": "Pemetrexed",
+"pubchem_cid": "135410875",
+"inchikey": "WBXPDJSOTKVWSJ-ZDUSSCGKSA-N",
+"structure_ids": [
+"CHEMBL225072"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL225072"
+],
+"rule": "name",
+"text": "Pemetrexed"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL225072"
+],
+"rule": "name",
+"text": "Pemetrexed"
+}
+],
+"parts": []
+},
+{
+"drug": "Pimitespib",
+"pubchem_cid": "67501411",
+"inchikey": "NVVPMZUGELHVMH-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL3661115"
+],
+"names": [
+{
+"field": "synonym",
+"ids": [
+"CHEMBL3661115"
+],
+"rule": "name",
+"text": "Pimitespib"
+}
+],
+"parts": []
+},
+{
+"drug": "Pitavastatin (Calcium)",
+"pubchem_cid": "5282451",
+"inchikey": "RHGYHLPFVJEAOC-FFNUKLMVSA-L",
+"structure_ids": [
+"CHEMBL1237061"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1201753"
+],
+"rule": "salt_base",
+"text": "Pitavastatin"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1201753"
+],
+"rule": "salt_base",
+"text": "Pitavastatin"
+}
+],
+"parts": []
+},
+{
+"drug": "Pravastatin (sodium)",
+"pubchem_cid": "16759173",
+"inchikey": "VWBQYTRBTXKKOG-IYNICTALSA-M",
+"structure_ids": [
+"CHEMBL690"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1144"
+],
+"rule": "salt_base",
+"text": "Pravastatin"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1144"
+],
+"rule": "salt_base",
+"text": "Pravastatin"
+}
+],
+"parts": []
+},
+{
+"drug": "Procainamide (hydrochloride)",
+"pubchem_cid": "66068",
+"inchikey": "ABTXGJFUQRCPNH-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL605"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL640"
+],
+"rule": "salt_base",
+"text": "Procainamide"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL640"
+],
+"rule": "salt_base",
+"text": "Procainamide"
+}
+],
+"parts": []
+},
+{
+"drug": "Pyridoxine",
+"pubchem_cid": "1054",
+"inchikey": "LXNHXLLTXMVWPM-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL1364"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1364"
+],
+"rule": "name",
+"text": "Pyridoxine"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1364"
+],
+"rule": "name",
+"text": "Pyridoxine"
+}
+],
+"parts": []
+},
+{
+"drug": "Ranolazine",
+"pubchem_cid": "56959",
+"inchikey": "XKLMZUWKNUAPSZ-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL1404"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1404"
+],
+"rule": "name",
+"text": "Ranolazine"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1404"
+],
+"rule": "name",
+"text": "Ranolazine"
+}
+],
+"parts": []
+},
+{
+"drug": "Rapamycin",
+"pubchem_cid": "5284616",
+"inchikey": "QFJCIRLUMZQUOT-HPLJOQBZSA-N",
+"structure_ids": [
+"CHEMBL413"
+],
+"names": [
+{
+"field": "synonym",
+"ids": [
+"CHEMBL413"
+],
+"rule": "name",
+"text": "Rapamycin"
+}
+],
+"parts": []
+},
+{
+"drug": "Retinoic acid",
+"pubchem_cid": "444795",
+"inchikey": "SHGAZHPCJJPHSC-YCNIQYBTSA-N",
+"structure_ids": [
+"CHEMBL38"
+],
+"names": [
+{
+"field": "synonym",
+"ids": [
+"CHEMBL38"
+],
+"rule": "name",
+"text": "Retinoic acid"
+}
+],
+"parts": []
+},
+{
+"drug": "Ribociclib",
+"pubchem_cid": "44631912",
+"inchikey": "RHXHGRAEPCAFML-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL3545110"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL3545110"
+],
+"rule": "name",
+"text": "Ribociclib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL3545110"
+],
+"rule": "name",
+"text": "Ribociclib"
+}
+],
+"parts": []
+},
+{
+"drug": "Riluzole hydrochloride",
+"pubchem_cid": "6419992",
+"inchikey": "QEAOELIJQRYJJS-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL1531817"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL744"
+],
+"rule": "molecule_key",
+"text": "Riluzole"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL744"
+],
+"rule": "molecule_key",
+"text": "Riluzole"
+}
+],
+"parts": []
+},
+{
+"drug": "Rimonabant",
+"pubchem_cid": "104850",
+"inchikey": "JZCPYUJPEARBJL-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL111"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL111"
+],
+"rule": "name",
+"text": "Rimonabant"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL111"
+],
+"rule": "name",
+"text": "Rimonabant"
+}
+],
+"parts": []
+},
+{
+"drug": "Rucaparib (phosphate)",
+"pubchem_cid": "9931953",
+"inchikey": "FCCGJTKEKXUBFZ-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL2105733"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1173055"
+],
+"rule": "salt_base",
+"text": "Rucaparib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1173055"
+],
+"rule": "salt_base",
+"text": "Rucaparib"
+}
+],
+"parts": []
+},
+{
+"drug": "Sacubitril/Valsartan",
+"pubchem_cid": "",
+"inchikey": "",
+"structure_ids": [],
+"names": [],
+"parts": [
+{
+"text": "Sacubitril",
+"hits": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL3137301"
+]
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL3137301"
+]
+}
+]
+},
+{
+"text": "Valsartan",
+"hits": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1069"
+]
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1069"
+]
+}
+]
+}
+]
+},
+{
+"drug": "Sapanisertib",
+"pubchem_cid": "45375953",
+"inchikey": "GYLDXIAOMVERTK-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL3545097"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL3545097"
+],
+"rule": "name",
+"text": "Sapanisertib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL3545097"
+],
+"rule": "name",
+"text": "Sapanisertib"
+}
+],
+"parts": []
+},
+{
+"drug": "Simotinib",
+"pubchem_cid": "16735117",
+"inchikey": "OXWUWXCJDBRCCG-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL3545235"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL3545235"
+],
+"rule": "name",
+"text": "Simotinib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL3545235"
+],
+"rule": "name",
+"text": "Simotinib"
+}
+],
+"parts": []
+},
+{
+"drug": "Temsirolimus",
+"pubchem_cid": "6918289",
+"inchikey": "CBPNZQVSJQDFBE-FUXHJELOSA-N",
+"structure_ids": [
+"CHEMBL1201182"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1201182"
+],
+"rule": "name",
+"text": "Temsirolimus"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1201182"
+],
+"rule": "name",
+"text": "Temsirolimus"
+}
+],
+"parts": []
+},
+{
+"drug": "Tomivosertib",
+"pubchem_cid": "118598754",
+"inchikey": "HKTBYUWLRDZAJK-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL4073443"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL4073443"
+],
+"rule": "name",
+"text": "Tomivosertib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL4073443"
+],
+"rule": "name",
+"text": "Tomivosertib"
+}
+],
+"parts": []
+},
+{
+"drug": "Topotecan (hydrochloride)",
+"pubchem_cid": "60699",
+"inchikey": "DGHHQBMTXTWTJV-BQAIUKQQSA-N",
+"structure_ids": [
+"CHEMBL1607"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL84"
+],
+"rule": "salt_base",
+"text": "Topotecan"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL84"
+],
+"rule": "salt_base",
+"text": "Topotecan"
+}
+],
+"parts": []
+},
+{
+"drug": "Trametinib (DMSO_TF solvate)",
+"pubchem_cid": "11707110",
+"inchikey": "LIRYPHYGHXZJBZ-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL2103875"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL2103875"
+],
+"rule": "salt_base",
+"text": "Trametinib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL2103875"
+],
+"rule": "salt_base",
+"text": "Trametinib"
+}
+],
+"parts": []
+},
+{
+"drug": "Triamcinolone",
+"pubchem_cid": "31307",
+"inchikey": "GFNANZIMVAIWHM-OBYCQNJPSA-N",
+"structure_ids": [
+"CHEMBL1451"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1451"
+],
+"rule": "name",
+"text": "Triamcinolone"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1451"
+],
+"rule": "name",
+"text": "Triamcinolone"
+}
+],
+"parts": []
+},
+{
+"drug": "Triclosan",
+"pubchem_cid": "5564",
+"inchikey": "XEFQLINVKFYRCS-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL849"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL849"
+],
+"rule": "name",
+"text": "Triclosan"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL849"
+],
+"rule": "name",
+"text": "Triclosan"
+}
+],
+"parts": []
+},
+{
+"drug": "Trifluridine",
+"pubchem_cid": "6256",
+"inchikey": "VSQQQLOSPVPRAZ-RRKCRQDMSA-N",
+"structure_ids": [
+"CHEMBL1129"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL1129"
+],
+"rule": "name",
+"text": "Trifluridine"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL1129"
+],
+"rule": "name",
+"text": "Trifluridine"
+}
+],
+"parts": []
+},
+{
+"drug": "Tucidinostat",
+"pubchem_cid": "12136798",
+"inchikey": "SZMJVTADHFNAIS-BJMVGYQFSA-N",
+"structure_ids": [
+"CHEMBL3621988"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL3621988"
+],
+"rule": "name",
+"text": "Tucidinostat"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL3621988"
+],
+"rule": "name",
+"text": "Tucidinostat"
+}
+],
+"parts": []
+},
+{
+"drug": "Vinblastine (sulfate)",
+"pubchem_cid": "5388983",
+"inchikey": "KDQAABAKXDWYSZ-PNYVAJAMSA-N",
+"structure_ids": [
+"CHEMBL378544"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL159"
+],
+"rule": "salt_base",
+"text": "Vinblastine"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL159"
+],
+"rule": "salt_base",
+"text": "Vinblastine"
+}
+],
+"parts": []
+},
+{
+"drug": "XRK3F2",
+"pubchem_cid": "135397144",
+"inchikey": "OKFZPRHMUQRCLJ-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL4643149"
+],
+"names": [],
+"parts": []
+},
+{
+"drug": "Zileuton",
+"pubchem_cid": "60490",
+"inchikey": "MWLSOWXNZPKENC-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL93"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL93"
+],
+"rule": "name",
+"text": "Zileuton"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL93"
+],
+"rule": "name",
+"text": "Zileuton"
+}
+],
+"parts": []
+},
+{
+"drug": "olaparib",
+"pubchem_cid": "23725625",
+"inchikey": "FDLYAMZZIXQODN-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL521686"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL521686"
+],
+"rule": "name",
+"text": "olaparib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL521686"
+],
+"rule": "name",
+"text": "olaparib"
+}
+],
+"parts": []
+},
+{
+"drug": "palbociclib",
+"pubchem_cid": "5330286",
+"inchikey": "AHJRHEGDXFFMBM-UHFFFAOYSA-N",
+"structure_ids": [
+"CHEMBL189963"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL189963"
+],
+"rule": "name",
+"text": "palbociclib"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL189963"
+],
+"rule": "name",
+"text": "palbociclib"
+}
+],
+"parts": []
+},
+{
+"drug": "vincristine",
+"pubchem_cid": "249332",
+"inchikey": "AQTQHPDCURKLKT-JKDPCDLQSA-N",
+"structure_ids": [
+"CHEMBL501867"
+],
+"names": [
+{
+"field": "pref_name",
+"ids": [
+"CHEMBL90555"
+],
+"rule": "name",
+"text": "vincristine"
+},
+{
+"field": "synonym",
+"ids": [
+"CHEMBL90555"
+],
+"rule": "name",
+"text": "vincristine"
+}
+],
+"parts": []
+}
+],
+"molecules": {
+"CHEMBL1069": {
+"id": "CHEMBL1069",
+"pref_name": "VALSARTAN",
+"parent": "CHEMBL1069",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"C09CA03"
+],
+"inchikey": "ACWBQPMHZXGDFX-QFIPXVFZSA-N"
+},
+"CHEMBL108": {
+"id": "CHEMBL108",
+"pref_name": "CARBAMAZEPINE",
+"parent": "CHEMBL108",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"N03AF01"
+],
+"inchikey": "FFGPTBGBLSHEPO-UHFFFAOYSA-N"
+},
+"CHEMBL111": {
+"id": "CHEMBL111",
+"pref_name": "RIMONABANT",
+"parent": "CHEMBL111",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"A08AX01"
+],
+"inchikey": "JZCPYUJPEARBJL-UHFFFAOYSA-N"
+},
+"CHEMBL1117": {
+"id": "CHEMBL1117",
+"pref_name": "IDARUBICIN",
+"parent": "CHEMBL1117",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01DB06"
+],
+"inchikey": "XDXDZDZNSLXDNA-TZNDIEGXSA-N"
+},
+"CHEMBL1129": {
+"id": "CHEMBL1129",
+"pref_name": "TRIFLURIDINE",
+"parent": "CHEMBL1129",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01BC59",
+"S01AD02"
+],
+"inchikey": "VSQQQLOSPVPRAZ-RRKCRQDMSA-N"
+},
+"CHEMBL1144": {
+"id": "CHEMBL1144",
+"pref_name": "PRAVASTATIN",
+"parent": "CHEMBL1144",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"C10AA03"
+],
+"inchikey": "TUZYXOIXSAXUGO-PZAWKZKUSA-N"
+},
+"CHEMBL1159650": {
+"id": "CHEMBL1159650",
+"pref_name": "CLOBETASOL PROPIONATE",
+"parent": "CHEMBL1159650",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"D07AD01"
+],
+"inchikey": "CBGUOGMQLZIXBE-XGQKBEPLSA-N"
+},
+"CHEMBL1173055": {
+"id": "CHEMBL1173055",
+"pref_name": "RUCAPARIB",
+"parent": "CHEMBL1173055",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01XK03"
+],
+"inchikey": "HMABYWSNWIZPAG-UHFFFAOYSA-N"
+},
+"CHEMBL1173655": {
+"id": "CHEMBL1173655",
+"pref_name": "AFATINIB",
+"parent": "CHEMBL1173655",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01EB03"
+],
+"inchikey": "ULXXDDBFHOBEHA-CWDCEQMOSA-N"
+},
+"CHEMBL1179357": {
+"id": "CHEMBL1179357",
+"pref_name": "",
+"parent": "CHEMBL1179357",
+"max_phase": null,
+"type": "Small molecule",
+"atc": [],
+"inchikey": "TZFNLOMSOLWIDK-UHFFFAOYSA-N"
+},
+"CHEMBL118": {
+"id": "CHEMBL118",
+"pref_name": "CELECOXIB",
+"parent": "CHEMBL118",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"M01AH01",
+"L01XX33"
+],
+"inchikey": "RZEKVGVHFLEQIL-UHFFFAOYSA-N"
+},
+"CHEMBL1200384": {
+"id": "CHEMBL1200384",
+"pref_name": "BETAMETHASONE DIPROPIONATE",
+"parent": "CHEMBL1200384",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "CIWBQSYVNNPZIQ-XYWKZLDCSA-N"
+},
+"CHEMBL1200748": {
+"id": "CHEMBL1200748",
+"pref_name": "CARBIDOPA",
+"parent": "CHEMBL1201236",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "QTAOMKOIBXZKND-PPHPATTJSA-N"
+},
+"CHEMBL1200749": {
+"id": "CHEMBL1200749",
+"pref_name": "LEVOBUPIVACAINE HYDROCHLORIDE",
+"parent": "CHEMBL1201193",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "SIEYLFHKZGLBNX-NTISSMGPSA-N"
+},
+"CHEMBL1200963": {
+"id": "CHEMBL1200963",
+"pref_name": "BIMATOPROST",
+"parent": "CHEMBL1200963",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"S01EE03"
+],
+"inchikey": "AQOKCDNYWBIDND-FTOWTWDKSA-N"
+},
+"CHEMBL1200976": {
+"id": "CHEMBL1200976",
+"pref_name": "IDARUBICIN HYDROCHLORIDE",
+"parent": "CHEMBL1117",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "JVHPTYWUBOQMBP-RVFAQHLVSA-N"
+},
+"CHEMBL1200981": {
+"id": "CHEMBL1200981",
+"pref_name": "EPIRUBICIN HYDROCHLORIDE",
+"parent": "CHEMBL417",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "MWWSFMDVAYGXBV-FGBSZODSSA-N"
+},
+"CHEMBL1201129": {
+"id": "CHEMBL1201129",
+"pref_name": "DECITABINE",
+"parent": "CHEMBL1201129",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01BC08"
+],
+"inchikey": "XAUDJQYHKZQPEU-KVQBGUIXSA-N"
+},
+"CHEMBL1201139": {
+"id": "CHEMBL1201139",
+"pref_name": "MEGESTROL ACETATE",
+"parent": "CHEMBL1201139",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L02AB01",
+"G03DB02",
+"G03AC05"
+],
+"inchikey": "RQZAXGRLVPAYTJ-GQFGMJRRSA-N"
+},
+"CHEMBL1201182": {
+"id": "CHEMBL1201182",
+"pref_name": "TEMSIROLIMUS",
+"parent": "CHEMBL1201182",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01EG01"
+],
+"inchikey": "CBPNZQVSJQDFBE-FUXHJELOSA-N"
+},
+"CHEMBL1201193": {
+"id": "CHEMBL1201193",
+"pref_name": "LEVOBUPIVACAINE",
+"parent": "CHEMBL1201193",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"N01BB10"
+],
+"inchikey": "LEBVLXFERQHONN-INIZCTEOSA-N"
+},
+"CHEMBL1201236": {
+"id": "CHEMBL1201236",
+"pref_name": "CARBIDOPA ANHYDROUS",
+"parent": "CHEMBL1201236",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "TZFNLOMSOLWIDK-JTQLQIEISA-N"
+},
+"CHEMBL1201265": {
+"id": "CHEMBL1201265",
+"pref_name": "METHYLPREDNISOLONE HEMISUCCINATE",
+"parent": "CHEMBL1201265",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "IMBXEJJVJRTNOW-XYMSELFBSA-N"
+},
+"CHEMBL1201753": {
+"id": "CHEMBL1201753",
+"pref_name": "PITAVASTATIN",
+"parent": "CHEMBL1201753",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"C10AA08"
+],
+"inchikey": "VGYFMXBACGZSIL-MCBHFWOFSA-N"
+},
+"CHEMBL1237061": {
+"id": "CHEMBL1237061",
+"pref_name": "PITAVASTATIN CALCIUM",
+"parent": "CHEMBL1201753",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "RHGYHLPFVJEAOC-FFNUKLMVSA-L"
+},
+"CHEMBL1256137": {
+"id": "CHEMBL1256137",
+"pref_name": "CYSTEAMINE HYDROCHLORIDE",
+"parent": "CHEMBL602",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "OGMADIBCHLQMIP-UHFFFAOYSA-N"
+},
+"CHEMBL1282": {
+"id": "CHEMBL1282",
+"pref_name": "IMIQUIMOD",
+"parent": "CHEMBL1282",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"D06BB10"
+],
+"inchikey": "DOUYETYNHWVLEO-UHFFFAOYSA-N"
+},
+"CHEMBL1364": {
+"id": "CHEMBL1364",
+"pref_name": "PYRIDOXINE",
+"parent": "CHEMBL1364",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"A11HA02"
+],
+"inchikey": "LXNHXLLTXMVWPM-UHFFFAOYSA-N"
+},
+"CHEMBL1366": {
+"id": "CHEMBL1366",
+"pref_name": "AURANOFIN",
+"parent": "CHEMBL1366",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"M01CB03"
+],
+"inchikey": ""
+},
+"CHEMBL1370": {
+"id": "CHEMBL1370",
+"pref_name": "BUDESONIDE",
+"parent": "CHEMBL1370",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"A07EA06",
+"R03BA02",
+"D07AC09",
+"R01AD05"
+],
+"inchikey": "VOVIALXJUBGFJZ-KWVAZRHASA-N"
+},
+"CHEMBL1404": {
+"id": "CHEMBL1404",
+"pref_name": "RANOLAZINE",
+"parent": "CHEMBL1404",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"C01EB18"
+],
+"inchikey": "XKLMZUWKNUAPSZ-UHFFFAOYSA-N"
+},
+"CHEMBL1405": {
+"id": "CHEMBL1405",
+"pref_name": "ESTRONE",
+"parent": "CHEMBL1405",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"G03CC04",
+"G03CA07"
+],
+"inchikey": "DNXHEGUUPJUMQT-CBZIJGRNSA-N"
+},
+"CHEMBL1413": {
+"id": "CHEMBL1413",
+"pref_name": "CICLOPIROX",
+"parent": "CHEMBL1413",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"D01AE14",
+"G01AX12"
+],
+"inchikey": "SCKYRAXSEDYPSA-UHFFFAOYSA-N"
+},
+"CHEMBL1417019": {
+"id": "CHEMBL1417019",
+"pref_name": "MITOXANTRONE HYDROCHLORIDE",
+"parent": "CHEMBL58",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "ZAHQPTJLOCWVPG-UHFFFAOYSA-N"
+},
+"CHEMBL1451": {
+"id": "CHEMBL1451",
+"pref_name": "TRIAMCINOLONE",
+"parent": "CHEMBL1451",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"H02AB08",
+"R03BA06",
+"R01AD11",
+"D07XB02",
+"S01BA05",
+"C05AA12",
+"D07AB09",
+"A01AC01"
+],
+"inchikey": "GFNANZIMVAIWHM-OBYCQNJPSA-N"
+},
+"CHEMBL1489": {
+"id": "CHEMBL1489",
+"pref_name": "AZACITIDINE",
+"parent": "CHEMBL1489",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01BC07"
+],
+"inchikey": "NMUSYJAQQFHJEW-KVTDHHQDSA-N"
+},
+"CHEMBL1531817": {
+"id": "CHEMBL1531817",
+"pref_name": "",
+"parent": "CHEMBL744",
+"max_phase": null,
+"type": "Small molecule",
+"atc": [],
+"inchikey": "QEAOELIJQRYJJS-UHFFFAOYSA-N"
+},
+"CHEMBL154": {
+"id": "CHEMBL154",
+"pref_name": "NAPROXEN",
+"parent": "CHEMBL154",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"G02CC02",
+"M01AE02",
+"M02AA12"
+],
+"inchikey": "CMWTZPSULFXXJA-VIFPVBQESA-N"
+},
+"CHEMBL1546237": {
+"id": "CHEMBL1546237",
+"pref_name": "",
+"parent": "CHEMBL494753",
+"max_phase": null,
+"type": "Small molecule",
+"atc": [],
+"inchikey": "CUQHOFAEIPGLBH-ZFINNJDLSA-M"
+},
+"CHEMBL1589": {
+"id": "CHEMBL1589",
+"pref_name": "ACETOHEXAMIDE",
+"parent": "CHEMBL1589",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"A10BB31"
+],
+"inchikey": "VGZSUPCWNCWDAN-UHFFFAOYSA-N"
+},
+"CHEMBL159": {
+"id": "CHEMBL159",
+"pref_name": "VINBLASTINE",
+"parent": "CHEMBL159",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01CA01"
+],
+"inchikey": "JXLYSJRDGCGARV-CFWMRBGOSA-N"
+},
+"CHEMBL160": {
+"id": "CHEMBL160",
+"pref_name": "CYCLOSPORINE",
+"parent": "CHEMBL160",
+"max_phase": "4.0",
+"type": "Protein",
+"atc": [
+"S01XA18",
+"L04AD01"
+],
+"inchikey": "PMATZTZNYRCHOR-CGLBZJNRSA-N"
+},
+"CHEMBL1607": {
+"id": "CHEMBL1607",
+"pref_name": "TOPOTECAN HYDROCHLORIDE",
+"parent": "CHEMBL84",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "DGHHQBMTXTWTJV-BQAIUKQQSA-N"
+},
+"CHEMBL1697754": {
+"id": "CHEMBL1697754",
+"pref_name": "MALOTILATE",
+"parent": "CHEMBL1697754",
+"max_phase": "2.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "YPIQVCUJEKAZCP-UHFFFAOYSA-N"
+},
+"CHEMBL1801204": {
+"id": "CHEMBL1801204",
+"pref_name": "AZD-8055",
+"parent": "CHEMBL1801204",
+"max_phase": "1.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "KVLFRAWTRWDEDF-IRXDYDNUSA-N"
+},
+"CHEMBL185": {
+"id": "CHEMBL185",
+"pref_name": "FLUOROURACIL",
+"parent": "CHEMBL185",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01BC02",
+"L01BC52"
+],
+"inchikey": "GHASVSINZRGABV-UHFFFAOYSA-N"
+},
+"CHEMBL1852688": {
+"id": "CHEMBL1852688",
+"pref_name": "INFIGRATINIB",
+"parent": "CHEMBL1852688",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01EN03"
+],
+"inchikey": "QADPYRIHXKWUSV-UHFFFAOYSA-N"
+},
+"CHEMBL189963": {
+"id": "CHEMBL189963",
+"pref_name": "PALBOCICLIB",
+"parent": "CHEMBL189963",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01EF01"
+],
+"inchikey": "AHJRHEGDXFFMBM-UHFFFAOYSA-N"
+},
+"CHEMBL1908360": {
+"id": "CHEMBL1908360",
+"pref_name": "EVEROLIMUS",
+"parent": "CHEMBL1908360",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01EG02",
+"L04AH02"
+],
+"inchikey": "HKVAMNSJSFKALM-GKUWKFKPSA-N"
+},
+"CHEMBL206106": {
+"id": "CHEMBL206106",
+"pref_name": "PALMITINE",
+"parent": "CHEMBL206106",
+"max_phase": null,
+"type": "Small molecule",
+"atc": [],
+"inchikey": "QUCQEUCGKKTEBI-UHFFFAOYSA-N"
+},
+"CHEMBL2103840": {
+"id": "CHEMBL2103840",
+"pref_name": "DINACICLIB",
+"parent": "CHEMBL2103840",
+"max_phase": "3.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "PIMQWRZWLQKKBJ-SFHVURJKSA-N"
+},
+"CHEMBL2103875": {
+"id": "CHEMBL2103875",
+"pref_name": "TRAMETINIB",
+"parent": "CHEMBL2103875",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01EE01"
+],
+"inchikey": "LIRYPHYGHXZJBZ-UHFFFAOYSA-N"
+},
+"CHEMBL2105733": {
+"id": "CHEMBL2105733",
+"pref_name": "RUCAPARIB PHOSPHATE",
+"parent": "CHEMBL1173055",
+"max_phase": "1.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "FCCGJTKEKXUBFZ-UHFFFAOYSA-N"
+},
+"CHEMBL2106111": {
+"id": "CHEMBL2106111",
+"pref_name": "CALCIUM LACTATE",
+"parent": "CHEMBL2106111",
+"max_phase": "1.0",
+"type": "Small molecule",
+"atc": [
+"A12AA05"
+],
+"inchikey": "MKJXYGKVIBWPFZ-UHFFFAOYSA-L"
+},
+"CHEMBL2107333": {
+"id": "CHEMBL2107333",
+"pref_name": "DIMETHYL FUMARATE",
+"parent": "CHEMBL2107333",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L04AX07"
+],
+"inchikey": "LDCRTTXIJACKKU-ONEGZZNKSA-N"
+},
+"CHEMBL2141296": {
+"id": "CHEMBL2141296",
+"pref_name": "IXAZOMIB",
+"parent": "CHEMBL2141296",
+"max_phase": "3.0",
+"type": "Small molecule",
+"atc": [
+"L01XG03"
+],
+"inchikey": "MXAYKZJJDUDWDS-LBPRGKRZSA-N"
+},
+"CHEMBL225072": {
+"id": "CHEMBL225072",
+"pref_name": "PEMETREXED",
+"parent": "CHEMBL225072",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01BA04"
+],
+"inchikey": "WBXPDJSOTKVWSJ-ZDUSSCGKSA-N"
+},
+"CHEMBL25": {
+"id": "CHEMBL25",
+"pref_name": "ASPIRIN",
+"parent": "CHEMBL25",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"B01AC06",
+"N02BA01",
+"N02BA51",
+"A01AD05",
+"N02BA71"
+],
+"inchikey": "BSYNRYMUTXBXSQ-UHFFFAOYSA-N"
+},
+"CHEMBL273019": {
+"id": "CHEMBL273019",
+"pref_name": "BERGENIN",
+"parent": "CHEMBL273019",
+"max_phase": "-1.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "YWJXCIXBAKGUKZ-HJJNZUOJSA-N"
+},
+"CHEMBL274189": {
+"id": "CHEMBL274189",
+"pref_name": "PALMATINE CHLORIDE",
+"parent": "CHEMBL206106",
+"max_phase": null,
+"type": "Small molecule",
+"atc": [],
+"inchikey": "RLQYRXCUPVKSAW-UHFFFAOYSA-M"
+},
+"CHEMBL288114": {
+"id": "CHEMBL288114",
+"pref_name": "GALLIC ACID",
+"parent": "CHEMBL288114",
+"max_phase": "2.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "LNTHITQWFMADLM-UHFFFAOYSA-N"
+},
+"CHEMBL29292": {
+"id": "CHEMBL29292",
+"pref_name": "UBENIMEX",
+"parent": "CHEMBL29292",
+"max_phase": "2.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "VGGGPCQERPFHOB-RDBSUJKOSA-N"
+},
+"CHEMBL298734": {
+"id": "CHEMBL298734",
+"pref_name": "LONAFARNIB",
+"parent": "CHEMBL298734",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"A16AX20"
+],
+"inchikey": "DHMTURDWPRKSOA-RUZDIDTESA-N"
+},
+"CHEMBL307261": {
+"id": "CHEMBL307261",
+"pref_name": "ARTENIMOL",
+"parent": "CHEMBL307261",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"P01BE05"
+],
+"inchikey": "BJDCWCLMFKKGEE-ISOSDAIHSA-N"
+},
+"CHEMBL310555": {
+"id": "CHEMBL310555",
+"pref_name": "OXYQUINOLINE",
+"parent": "CHEMBL310555",
+"max_phase": "-1.0",
+"type": "Small molecule",
+"atc": [
+"R02AA14",
+"D08AH03",
+"G01AC30",
+"A01AB07"
+],
+"inchikey": "MCJGNVYPOGVAJF-UHFFFAOYSA-N"
+},
+"CHEMBL3137301": {
+"id": "CHEMBL3137301",
+"pref_name": "SACUBITRIL",
+"parent": "CHEMBL3137301",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "PYNXFZCZUAOOQC-UTKZUKDTSA-N"
+},
+"CHEMBL3247378": {
+"id": "CHEMBL3247378",
+"pref_name": "DARINAPARSIN",
+"parent": "CHEMBL3247378",
+"max_phase": "2.0",
+"type": "Small molecule",
+"atc": [
+"L01XX82"
+],
+"inchikey": "JGDXFQORBMPJGR-YUMQZZPRSA-N"
+},
+"CHEMBL325041": {
+"id": "CHEMBL325041",
+"pref_name": "BORTEZOMIB",
+"parent": "CHEMBL325041",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01XG01"
+],
+"inchikey": "GXJABQQUPOEUTA-RDJZCZTQSA-N"
+},
+"CHEMBL3301610": {
+"id": "CHEMBL3301610",
+"pref_name": "ABEMACICLIB",
+"parent": "CHEMBL3301610",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01EF03"
+],
+"inchikey": "UZWDCWONPYILKI-UHFFFAOYSA-N"
+},
+"CHEMBL3349607": {
+"id": "CHEMBL3349607",
+"pref_name": "PASIREOTIDE",
+"parent": "CHEMBL3349607",
+"max_phase": "4.0",
+"type": "Protein",
+"atc": [
+"H01CB05"
+],
+"inchikey": "VMZMNAABQBOLAK-DBILLSOUSA-N"
+},
+"CHEMBL34259": {
+"id": "CHEMBL34259",
+"pref_name": "METHOTREXATE",
+"parent": "CHEMBL34259",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L04AX03",
+"L01BA01"
+],
+"inchikey": "FBOZXECLQNJBKD-ZDUSSCGKSA-N"
+},
+"CHEMBL3544966": {
+"id": "CHEMBL3544966",
+"pref_name": "GSK-1059615",
+"parent": "CHEMBL3544966",
+"max_phase": "1.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "QDITZBLZQQZVEE-YBEGLDIGSA-N"
+},
+"CHEMBL3545097": {
+"id": "CHEMBL3545097",
+"pref_name": "SAPANISERTIB",
+"parent": "CHEMBL3545097",
+"max_phase": "2.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "GYLDXIAOMVERTK-UHFFFAOYSA-N"
+},
+"CHEMBL3545110": {
+"id": "CHEMBL3545110",
+"pref_name": "RIBOCICLIB",
+"parent": "CHEMBL3545110",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "RHXHGRAEPCAFML-UHFFFAOYSA-N"
+},
+"CHEMBL3545213": {
+"id": "CHEMBL3545213",
+"pref_name": "BENTAMAPIMOD",
+"parent": "CHEMBL3545213",
+"max_phase": "2.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "XCPPIJCBCWUBNT-UHFFFAOYSA-N"
+},
+"CHEMBL3545235": {
+"id": "CHEMBL3545235",
+"pref_name": "SIMOTINIB",
+"parent": "CHEMBL3545235",
+"max_phase": "3.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "OXWUWXCJDBRCCG-UHFFFAOYSA-N"
+},
+"CHEMBL3545252": {
+"id": "CHEMBL3545252",
+"pref_name": "DOCETAXEL",
+"parent": "CHEMBL92",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01CD02"
+],
+"inchikey": "XCDIRYDKECHIPE-QHEQPUDQSA-N"
+},
+"CHEMBL3545376": {
+"id": "CHEMBL3545376",
+"pref_name": "ERDAFITINIB",
+"parent": "CHEMBL3545376",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01EN01"
+],
+"inchikey": "OLAHOMJCDNXHFI-UHFFFAOYSA-N"
+},
+"CHEMBL359744": {
+"id": "CHEMBL359744",
+"pref_name": "DOXORUBICIN HYDROCHLORIDE",
+"parent": "CHEMBL53463",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "MWWSFMDVAYGXBV-RUELKSSGSA-N"
+},
+"CHEMBL361497": {
+"id": "CHEMBL361497",
+"pref_name": "ARTESUNATE",
+"parent": "CHEMBL361497",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"P01BE03"
+],
+"inchikey": "FIHJKUPKCHIPAT-AHIGJZGOSA-N"
+},
+"CHEMBL3621988": {
+"id": "CHEMBL3621988",
+"pref_name": "TUCIDINOSTAT",
+"parent": "CHEMBL3621988",
+"max_phase": "3.0",
+"type": "Small molecule",
+"atc": [
+"L01XH06"
+],
+"inchikey": "SZMJVTADHFNAIS-BJMVGYQFSA-N"
+},
+"CHEMBL3661115": {
+"id": "CHEMBL3661115",
+"pref_name": "TAS-116",
+"parent": "CHEMBL3661115",
+"max_phase": "2.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "NVVPMZUGELHVMH-UHFFFAOYSA-N"
+},
+"CHEMBL378544": {
+"id": "CHEMBL378544",
+"pref_name": "VINBLASTINE SULFATE",
+"parent": "CHEMBL159",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "KDQAABAKXDWYSZ-PNYVAJAMSA-N"
+},
+"CHEMBL38": {
+"id": "CHEMBL38",
+"pref_name": "TRETINOIN",
+"parent": "CHEMBL38",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"D10AD51",
+"L01XF01",
+"D10AD01"
+],
+"inchikey": "SHGAZHPCJJPHSC-YCNIQYBTSA-N"
+},
+"CHEMBL384467": {
+"id": "CHEMBL384467",
+"pref_name": "DEXAMETHASONE",
+"parent": "CHEMBL384467",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"A01AC02",
+"R01AD03",
+"S02BA06",
+"S03BA01",
+"D07AB19",
+"D10AA03",
+"S01CB01",
+"C05AA09",
+"D07XB05",
+"H02AB02",
+"S01BA01"
+],
+"inchikey": "UREBDLICKHMUKA-CXSFZGCWSA-N"
+},
+"CHEMBL387675": {
+"id": "CHEMBL387675",
+"pref_name": "DAPTOMYCIN",
+"parent": "CHEMBL387675",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"J01XX09"
+],
+"inchikey": "DOAKLVKFURWEDJ-RWDRXURGSA-N"
+},
+"CHEMBL4071215": {
+"id": "CHEMBL4071215",
+"pref_name": "",
+"parent": "CHEMBL4071215",
+"max_phase": null,
+"type": "Small molecule",
+"atc": [],
+"inchikey": "VXIMPSPISRVBPZ-NWUMPJBXSA-N"
+},
+"CHEMBL4073443": {
+"id": "CHEMBL4073443",
+"pref_name": "TOMIVOSERTIB",
+"parent": "CHEMBL4073443",
+"max_phase": "2.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "HKTBYUWLRDZAJK-UHFFFAOYSA-N"
+},
+"CHEMBL408513": {
+"id": "CHEMBL408513",
+"pref_name": "BELINOSTAT",
+"parent": "CHEMBL408513",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01XH04"
+],
+"inchikey": "NCNRHFGMJRPRSK-MDZDMXLPSA-N"
+},
+"CHEMBL4125960": {
+"id": "CHEMBL4125960",
+"pref_name": "",
+"parent": "CHEMBL4125960",
+"max_phase": null,
+"type": "Small molecule",
+"atc": [],
+"inchikey": "SMPGEBOIKULBCT-UHFFFAOYSA-N"
+},
+"CHEMBL413": {
+"id": "CHEMBL413",
+"pref_name": "SIROLIMUS",
+"parent": "CHEMBL413",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"S01XA23",
+"L04AH01",
+"L01EG04"
+],
+"inchikey": "QFJCIRLUMZQUOT-HPLJOQBZSA-N"
+},
+"CHEMBL414804": {
+"id": "CHEMBL414804",
+"pref_name": "OXALIPLATIN",
+"parent": "CHEMBL414804",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01XA03"
+],
+"inchikey": ""
+},
+"CHEMBL417": {
+"id": "CHEMBL417",
+"pref_name": "EPIRUBICIN",
+"parent": "CHEMBL417",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01DB03"
+],
+"inchikey": "AOJJSUZBOXZQNB-VTZDEGQISA-N"
+},
+"CHEMBL428647": {
+"id": "CHEMBL428647",
+"pref_name": "PACLITAXEL",
+"parent": "CHEMBL428647",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01CD01"
+],
+"inchikey": "RCINICONZNJXQF-MZXODVADSA-N"
+},
+"CHEMBL43": {
+"id": "CHEMBL43",
+"pref_name": "AMSACRINE",
+"parent": "CHEMBL43",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01XX01"
+],
+"inchikey": "XCPGHVQEEXUHNC-UHFFFAOYSA-N"
+},
+"CHEMBL433257": {
+"id": "CHEMBL433257",
+"pref_name": "HARRINGTONINE",
+"parent": "CHEMBL433257",
+"max_phase": null,
+"type": "Small molecule",
+"atc": [],
+"inchikey": "HAVJATCHLFRDHY-KSZYUSJVSA-N"
+},
+"CHEMBL445813": {
+"id": "CHEMBL445813",
+"pref_name": "AT-7519",
+"parent": "CHEMBL445813",
+"max_phase": "2.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "OVPNQJVDAFNBDN-UHFFFAOYSA-N"
+},
+"CHEMBL4594429": {
+"id": "CHEMBL4594429",
+"pref_name": "AZD-1390",
+"parent": "CHEMBL4594429",
+"max_phase": "1.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "VQSZIPCGAGVRRP-UHFFFAOYSA-N"
+},
+"CHEMBL46286": {
+"id": "CHEMBL46286",
+"pref_name": "OMACETAXINE MEPESUCCINATE",
+"parent": "CHEMBL46286",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01XX40"
+],
+"inchikey": "HYFHYPWGAURHIV-JFIAXGOJSA-N"
+},
+"CHEMBL4643149": {
+"id": "CHEMBL4643149",
+"pref_name": "",
+"parent": "CHEMBL4651196",
+"max_phase": null,
+"type": "Unknown",
+"atc": [],
+"inchikey": "OKFZPRHMUQRCLJ-UHFFFAOYSA-N"
+},
+"CHEMBL4647810": {
+"id": "CHEMBL4647810",
+"pref_name": "ELIMUSERTIB",
+"parent": "CHEMBL4647810",
+"max_phase": "1.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "YBXRSCXGRPSTMW-CYBMUJFWSA-N"
+},
+"CHEMBL4651196": {
+"id": "CHEMBL4651196",
+"pref_name": "",
+"parent": "CHEMBL4651196",
+"max_phase": null,
+"type": "Unknown",
+"atc": [],
+"inchikey": "VZUKTQVJGAPOKJ-UHFFFAOYSA-N"
+},
+"CHEMBL467": {
+"id": "CHEMBL467",
+"pref_name": "HYDROXYUREA",
+"parent": "CHEMBL467",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01XX05"
+],
+"inchikey": "VSNHCAURESNICA-UHFFFAOYSA-N"
+},
+"CHEMBL4744444": {
+"id": "CHEMBL4744444",
+"pref_name": "",
+"parent": "CHEMBL4744444",
+"max_phase": null,
+"type": "Unknown",
+"atc": [],
+"inchikey": "DOAKLVKFURWEDJ-QCMAZARJSA-N"
+},
+"CHEMBL481": {
+"id": "CHEMBL481",
+"pref_name": "IRINOTECAN",
+"parent": "CHEMBL481",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01CE02"
+],
+"inchikey": "UWKQSNNFCGGAFS-XIFFEERXSA-N"
+},
+"CHEMBL483254": {
+"id": "CHEMBL483254",
+"pref_name": "PANOBINOSTAT",
+"parent": "CHEMBL483254",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01XH03"
+],
+"inchikey": "FPOHNWQLNRZRFC-ZHACJKMWSA-N"
+},
+"CHEMBL486819": {
+"id": "CHEMBL486819",
+"pref_name": "CHLORHEXIDINE DIACETATE",
+"parent": "CHEMBL790",
+"max_phase": "3.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "WDRFFJWBUDTUCA-UHFFFAOYSA-N"
+},
+"CHEMBL494753": {
+"id": "CHEMBL494753",
+"pref_name": "ESTRONE SULFURIC ACID",
+"parent": "CHEMBL494753",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "JKKFKPJIXZFSSB-CBZIJGRNSA-N"
+},
+"CHEMBL501867": {
+"id": "CHEMBL501867",
+"pref_name": "VINCRISTINE SULFATE",
+"parent": "CHEMBL90555",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "AQTQHPDCURKLKT-JKDPCDLQSA-N"
+},
+"CHEMBL504323": {
+"id": "CHEMBL504323",
+"pref_name": "BERBAMINE",
+"parent": "CHEMBL504323",
+"max_phase": null,
+"type": "Small molecule",
+"atc": [],
+"inchikey": "DFOCUWZXJBAUSQ-URLMMPGGSA-N"
+},
+"CHEMBL521686": {
+"id": "CHEMBL521686",
+"pref_name": "OLAPARIB",
+"parent": "CHEMBL521686",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01XK01"
+],
+"inchikey": "FDLYAMZZIXQODN-UHFFFAOYSA-N"
+},
+"CHEMBL53463": {
+"id": "CHEMBL53463",
+"pref_name": "DOXORUBICIN",
+"parent": "CHEMBL53463",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01DB01"
+],
+"inchikey": "AOJJSUZBOXZQNB-TZSSRYMLSA-N"
+},
+"CHEMBL56367": {
+"id": "CHEMBL56367",
+"pref_name": "NIMESULIDE",
+"parent": "CHEMBL56367",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"M01AX17",
+"M02AA26"
+],
+"inchikey": "HYWYRSMBCFDLJT-UHFFFAOYSA-N"
+},
+"CHEMBL58": {
+"id": "CHEMBL58",
+"pref_name": "MITOXANTRONE",
+"parent": "CHEMBL58",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01DB07"
+],
+"inchikey": "KKZJGLLVHKMTCM-UHFFFAOYSA-N"
+},
+"CHEMBL593429": {
+"id": "CHEMBL593429",
+"pref_name": "ALLANTOIN",
+"parent": "CHEMBL593429",
+"max_phase": "2.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "POJWUDADGALRAB-UHFFFAOYSA-N"
+},
+"CHEMBL599": {
+"id": "CHEMBL599",
+"pref_name": "MELOXICAM",
+"parent": "CHEMBL599",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"M01AC56",
+"M01AC06"
+],
+"inchikey": "ZRVUJXDFFKFLMG-UHFFFAOYSA-N"
+},
+"CHEMBL602": {
+"id": "CHEMBL602",
+"pref_name": "CYSTEAMINE",
+"parent": "CHEMBL602",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"A16AA04",
+"S01XA21"
+],
+"inchikey": "UFULAYFCSOUIOV-UHFFFAOYSA-N"
+},
+"CHEMBL605": {
+"id": "CHEMBL605",
+"pref_name": "PROCAINAMIDE HYDROCHLORIDE",
+"parent": "CHEMBL640",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "ABTXGJFUQRCPNH-UHFFFAOYSA-N"
+},
+"CHEMBL640": {
+"id": "CHEMBL640",
+"pref_name": "PROCAINAMIDE",
+"parent": "CHEMBL640",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"C01BA02"
+],
+"inchikey": "REQCZEXYDRLIBE-UHFFFAOYSA-N"
+},
+"CHEMBL645": {
+"id": "CHEMBL645",
+"pref_name": "BISOPROLOL",
+"parent": "CHEMBL645",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"C07AB07"
+],
+"inchikey": "VHYCDWMUTMEGQY-UHFFFAOYSA-N"
+},
+"CHEMBL650": {
+"id": "CHEMBL650",
+"pref_name": "METHYLPREDNISOLONE",
+"parent": "CHEMBL650",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"H02BX01",
+"D07AA01",
+"D10AA02",
+"H02AB04"
+],
+"inchikey": "VHRSUDSXCMQTMA-PJHHCJLFSA-N"
+},
+"CHEMBL685": {
+"id": "CHEMBL685",
+"pref_name": "MEBENDAZOLE",
+"parent": "CHEMBL685",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"P02CA51",
+"P02CA01"
+],
+"inchikey": "OPXLLQIJSORQAM-UHFFFAOYSA-N"
+},
+"CHEMBL690": {
+"id": "CHEMBL690",
+"pref_name": "PRAVASTATIN SODIUM",
+"parent": "CHEMBL1144",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "VWBQYTRBTXKKOG-IYNICTALSA-M"
+},
+"CHEMBL717": {
+"id": "CHEMBL717",
+"pref_name": "MEDROXYPROGESTERONE ACETATE",
+"parent": "CHEMBL717",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L02AB02",
+"G03AC06",
+"G03DA02"
+],
+"inchikey": "PSGAAPLEWMOORI-PEINSRQWSA-N"
+},
+"CHEMBL744": {
+"id": "CHEMBL744",
+"pref_name": "RILUZOLE",
+"parent": "CHEMBL744",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"N07XX02"
+],
+"inchikey": "FTALBRSUTCGOEG-UHFFFAOYSA-N"
+},
+"CHEMBL790": {
+"id": "CHEMBL790",
+"pref_name": "CHLORHEXIDINE",
+"parent": "CHEMBL790",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"D08AC02",
+"D09AA12",
+"S01AX09",
+"B05CA02",
+"D08AC52",
+"A01AB03",
+"R02AA05",
+"S02AA09",
+"S03AA04"
+],
+"inchikey": "GHXZTYHSJHQHIJ-UHFFFAOYSA-N"
+},
+"CHEMBL803": {
+"id": "CHEMBL803",
+"pref_name": "CYTARABINE",
+"parent": "CHEMBL803",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01BC01"
+],
+"inchikey": "UHDGCWIWMRVCDJ-CCXZUQQUSA-N"
+},
+"CHEMBL84": {
+"id": "CHEMBL84",
+"pref_name": "TOPOTECAN",
+"parent": "CHEMBL84",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01CE01"
+],
+"inchikey": "UCFGDBYHRUNTLO-QHCPKHFHSA-N"
+},
+"CHEMBL848": {
+"id": "CHEMBL848",
+"pref_name": "LENALIDOMIDE",
+"parent": "CHEMBL848",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L04AX04"
+],
+"inchikey": "GOTYRUGSSMKFNF-UHFFFAOYSA-N"
+},
+"CHEMBL849": {
+"id": "CHEMBL849",
+"pref_name": "TRICLOSAN",
+"parent": "CHEMBL849",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"D08AE04",
+"D09AA06"
+],
+"inchikey": "XEFQLINVKFYRCS-UHFFFAOYSA-N"
+},
+"CHEMBL888": {
+"id": "CHEMBL888",
+"pref_name": "GEMCITABINE",
+"parent": "CHEMBL888",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01BC05"
+],
+"inchikey": "SDUQYLNIPVEERB-QPPQHZFASA-N"
+},
+"CHEMBL90555": {
+"id": "CHEMBL90555",
+"pref_name": "VINCRISTINE",
+"parent": "CHEMBL90555",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [
+"L01CA02"
+],
+"inchikey": "OGWKCGZFUXNPDA-XQKSVPLYSA-N"
+},
+"CHEMBL92": {
+"id": "CHEMBL92",
+"pref_name": "DOCETAXEL ANHYDROUS",
+"parent": "CHEMBL92",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "ZDZOTLJHXYCWBA-VCVYQWHSSA-N"
+},
+"CHEMBL93": {
+"id": "CHEMBL93",
+"pref_name": "ZILEUTON",
+"parent": "CHEMBL93",
+"max_phase": "4.0",
+"type": "Small molecule",
+"atc": [],
+"inchikey": "MWLSOWXNZPKENC-UHFFFAOYSA-N"
+}
+},
+"mechanisms": [
+{
+"parent": "CHEMBL1117",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA topoisomerase II alpha inhibitor",
+"target": "CHEMBL1806",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=0a5a6d93-cc1e-4d7f-8da1-446c134503b3",
+"Wikipedia: http://en.wikipedia.org/wiki/Type_II_topoisomerase"
+]
+},
+{
+"parent": "CHEMBL1069",
+"action_type": "ANTAGONIST",
+"mechanism_of_action": "Type-1 angiotensin II receptor antagonist",
+"target": "CHEMBL227",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2015/021283s046lbl.pdf"
+]
+},
+{
+"parent": "CHEMBL1201236",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DOPA decarboxylase inhibitor",
+"target": "CHEMBL1843",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=ff8e105b-7415-42d4-bbb2-b36cfb8945a5#nlm34090-1",
+"PubMed: http://europepmc.org/abstract/MED/11106255"
+]
+},
+{
+"parent": "CHEMBL1201182",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "FK506-binding protein 1A inhibitor",
+"target": "CHEMBL1902",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=95b7dc92-2180-42f1-8699-3c28f609e674#section-13"
+]
+},
+{
+"parent": "CHEMBL1200963",
+"action_type": "AGONIST",
+"mechanism_of_action": "Prostanoid FP receptor agonist",
+"target": "CHEMBL1987",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"KEGG: http://www.kegg.jp/dbget-bin/www_bget?dr:D02724",
+"PubMed: http://europepmc.org/abstract/MED/11740958",
+"PubMed: http://europepmc.org/abstract/MED/12222762",
+"PubMed: http://europepmc.org/abstract/MED/14733708",
+"PubMed: http://europepmc.org/abstract/MED/19627411"
+]
+},
+{
+"parent": "CHEMBL1201129",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA (cytosine-5)-methyltransferase 3A inhibitor",
+"target": "CHEMBL1992",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=acaf6e50-7cd3-4431-98ef-d1c07e3ed8c2#section-13",
+"Wikipedia: http://en.wikipedia.org/wiki/DNA_methylation"
+]
+},
+{
+"parent": "CHEMBL1201129",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA (cytosine-5)-methyltransferase 1 inhibitor",
+"target": "CHEMBL1993",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=acaf6e50-7cd3-4431-98ef-d1c07e3ed8c2#section-13",
+"Wikipedia: http://en.wikipedia.org/wiki/DNA_methylation"
+]
+},
+{
+"parent": "CHEMBL1159650",
+"action_type": "AGONIST",
+"mechanism_of_action": "Glucocorticoid receptor agonist",
+"target": "CHEMBL2034",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/9891987"
+]
+},
+{
+"parent": "CHEMBL1200384",
+"action_type": "AGONIST",
+"mechanism_of_action": "Glucocorticoid receptor agonist",
+"target": "CHEMBL2034",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=892bf494-0b95-4314-a253-79350fdd7238#nlm34090-1",
+"PubMed: http://europepmc.org/abstract/MED/12188035",
+"Wikipedia: http://en.wikipedia.org/wiki/Betamethasone"
+]
+},
+{
+"parent": "CHEMBL1201265",
+"action_type": "AGONIST",
+"mechanism_of_action": "Glucocorticoid receptor agonist",
+"target": "CHEMBL2034",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2014/011856s123lbl.pdf"
+]
+},
+{
+"parent": "CHEMBL1201193",
+"action_type": "BLOCKER",
+"mechanism_of_action": "Sodium channel protein type IV alpha subunit blocker",
+"target": "CHEMBL2072",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/12761351"
+]
+},
+{
+"parent": "CHEMBL1201139",
+"action_type": "AGONIST",
+"mechanism_of_action": "Progesterone receptor agonist",
+"target": "CHEMBL208",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/16291771",
+"PubMed: http://europepmc.org/abstract/MED/23395103",
+"Wikipedia: http://en.wikipedia.org/wiki/Megestrol_acetate"
+]
+},
+{
+"parent": "CHEMBL1201753",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "HMG-CoA reductase inhibitor",
+"target": "CHEMBL402",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2013/022363s012lbl.pdf"
+]
+},
+{
+"parent": "CHEMBL1144",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "HMG-CoA reductase inhibitor",
+"target": "CHEMBL402",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=897ad8b7-921d-eb02-a61c-3419e662a2da"
+]
+},
+{
+"parent": "CHEMBL118",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cyclooxygenase-2 inhibitor",
+"target": "CHEMBL230",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=90f074fa-f205-4039-822e-d09049812237"
+]
+},
+{
+"parent": "CHEMBL1201129",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA inhibitor",
+"target": "CHEMBL2311221",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=acaf6e50-7cd3-4431-98ef-d1c07e3ed8c2#section-13",
+"Wikipedia: http://en.wikipedia.org/wiki/DNA_methylation"
+]
+},
+{
+"parent": "CHEMBL1117",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA inhibitor",
+"target": "CHEMBL2311221",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=0a5a6d93-cc1e-4d7f-8da1-446c134503b3",
+"Wikipedia: http://en.wikipedia.org/wiki/Type_II_topoisomerase"
+]
+},
+{
+"parent": "CHEMBL1129",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA inhibitor",
+"target": "CHEMBL2366042",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"ISBN: http://www.isbnsearch.org/isbn/0865778434",
+"PubMed: http://europepmc.org/abstract/MED/1377898",
+"PubMed: http://europepmc.org/abstract/MED/18600528",
+"PubMed: http://europepmc.org/abstract/MED/6436227",
+"PubMed: http://europepmc.org/abstract/MED/8032338"
+]
+},
+{
+"parent": "CHEMBL108",
+"action_type": "BLOCKER",
+"mechanism_of_action": "Sodium channel alpha subunit blocker",
+"target": "CHEMBL2331043",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/15208697",
+"PubMed: http://europepmc.org/abstract/MED/23205958"
+]
+},
+{
+"parent": "CHEMBL1173655",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Epidermal growth factor receptor erbB1 inhibitor",
+"target": "CHEMBL203",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=fd638e5e-8032-e7ca-0179-95e96ab5d387"
+]
+},
+{
+"parent": "CHEMBL1173655",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Receptor protein-tyrosine kinase erbB-2 inhibitor",
+"target": "CHEMBL1824",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=fd638e5e-8032-e7ca-0179-95e96ab5d387"
+]
+},
+{
+"parent": "CHEMBL1173655",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Receptor protein-tyrosine kinase erbB-4 inhibitor",
+"target": "CHEMBL3009",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=fd638e5e-8032-e7ca-0179-95e96ab5d387"
+]
+},
+{
+"parent": "CHEMBL1173055",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "PARP 1, 2 and 3 inhibitor",
+"target": "CHEMBL3390820",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/19047122"
+]
+},
+{
+"parent": "CHEMBL111",
+"action_type": "ANTAGONIST",
+"mechanism_of_action": "Cannabinoid CB1 receptor antagonist",
+"target": "CHEMBL218",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/16503766",
+"PubMed: http://europepmc.org/abstract/MED/17462824",
+"PubMed: http://europepmc.org/abstract/MED/19578688"
+]
+},
+{
+"parent": "CHEMBL160",
+"action_type": "MODULATOR",
+"mechanism_of_action": "Cyclophilin A modulator",
+"target": "CHEMBL1949",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2013/050573s039,050574s047,050625s053lbl.pdf",
+"PubMed: http://europepmc.org/abstract/MED/15879096",
+"PubMed: http://europepmc.org/abstract/MED/18385230",
+"PubMed: http://europepmc.org/abstract/MED/22642569"
+]
+},
+{
+"parent": "CHEMBL1404",
+"action_type": "BLOCKER",
+"mechanism_of_action": "Sodium channel protein type V alpha subunit blocker",
+"target": "CHEMBL1980",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/18462746"
+]
+},
+{
+"parent": "CHEMBL1489",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA (cytosine-5)-methyltransferase 3A inhibitor",
+"target": "CHEMBL1992",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=3495a71a-cc04-4776-851f-f185956f32af#section-12",
+"Wikipedia: http://en.wikipedia.org/wiki/Azacitidine",
+"Wikipedia: http://en.wikipedia.org/wiki/DNA_methylation"
+]
+},
+{
+"parent": "CHEMBL1489",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA (cytosine-5)-methyltransferase 1 inhibitor",
+"target": "CHEMBL1993",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=3495a71a-cc04-4776-851f-f185956f32af#section-12",
+"Wikipedia: http://en.wikipedia.org/wiki/Azacitidine",
+"Wikipedia: http://en.wikipedia.org/wiki/DNA_methylation"
+]
+},
+{
+"parent": "CHEMBL1451",
+"action_type": "AGONIST",
+"mechanism_of_action": "Glucocorticoid receptor agonist",
+"target": "CHEMBL2034",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/15976447",
+"PubMed: http://europepmc.org/abstract/MED/16507850",
+"PubMed: http://europepmc.org/abstract/MED/19744340"
+]
+},
+{
+"parent": "CHEMBL1370",
+"action_type": "AGONIST",
+"mechanism_of_action": "Glucocorticoid receptor agonist",
+"target": "CHEMBL2034",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"KEGG: http://www.kegg.jp/dbget-bin/www_bget?dr:D00246",
+"PubMed: http://europepmc.org/abstract/MED/11730731",
+"PubMed: http://europepmc.org/abstract/MED/12601049",
+"PubMed: http://europepmc.org/abstract/MED/12920235"
+]
+},
+{
+"parent": "CHEMBL1405",
+"action_type": "AGONIST",
+"mechanism_of_action": "Estrogen receptor alpha agonist",
+"target": "CHEMBL206",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/6863279"
+]
+},
+{
+"parent": "CHEMBL1404",
+"action_type": "BLOCKER",
+"mechanism_of_action": "Sodium channel protein type IV alpha subunit blocker",
+"target": "CHEMBL2072",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/18462746"
+]
+},
+{
+"parent": "CHEMBL159",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Tubulin inhibitor",
+"target": "CHEMBL2095182",
+"direct_interaction": 1,
+"binding_site_comment": "Binds to beta tubulin, vinca site (PMID: 15057285)",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=f073b58e-56d6-4c8d-a2ce-b37719402d77",
+"Wikipedia: http://en.wikipedia.org/wiki/Microtubules"
+]
+},
+{
+"parent": "CHEMBL154",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cyclooxygenase inhibitor",
+"target": "CHEMBL2094253",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/17521299",
+"PubMed: http://europepmc.org/abstract/MED/17604186",
+"PubMed: http://europepmc.org/abstract/MED/17607546",
+"PubMed: http://europepmc.org/abstract/MED/17612049"
+]
+},
+{
+"parent": "CHEMBL1589",
+"action_type": "BLOCKER",
+"mechanism_of_action": "Sulfonylurea receptor 1, Kir6.2 blocker",
+"target": "CHEMBL2096972",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/10194514",
+"PubMed: http://europepmc.org/abstract/MED/22260657",
+"Wikipedia: http://en.wikipedia.org/wiki/Acetohexamide"
+]
+},
+{
+"parent": "CHEMBL1282",
+"action_type": "AGONIST",
+"mechanism_of_action": "Toll-like receptor 7 agonist",
+"target": "CHEMBL5936",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2010/020723s022lbl.pdf",
+"PubMed: http://europepmc.org/abstract/MED/14616337"
+]
+},
+{
+"parent": "CHEMBL1489",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA inhibitor",
+"target": "CHEMBL2311221",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=3495a71a-cc04-4776-851f-f185956f32af#section-12",
+"Wikipedia: http://en.wikipedia.org/wiki/Azacitidine",
+"Wikipedia: http://en.wikipedia.org/wiki/DNA_methylation"
+]
+},
+{
+"parent": "CHEMBL1489",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "RNA inhibitor",
+"target": "CHEMBL2311222",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=3495a71a-cc04-4776-851f-f185956f32af#section-12",
+"Wikipedia: http://en.wikipedia.org/wiki/Azacitidine",
+"Wikipedia: http://en.wikipedia.org/wiki/DNA_methylation"
+]
+},
+{
+"parent": "CHEMBL1413",
+"action_type": "CHELATING AGENT",
+"mechanism_of_action": "Iron chelating agent",
+"target": "CHEMBL2363058",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/20964457",
+"PubMed: http://europepmc.org/abstract/MED/23416050",
+"Wikipedia: http://en.wikipedia.org/wiki/Ciclopirox#cite_note-pmid12760852-4"
+]
+},
+{
+"parent": "CHEMBL1366",
+"action_type": "",
+"mechanism_of_action": "Unknown",
+"target": "",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/12754408",
+"PubMed: http://europepmc.org/abstract/MED/17034761"
+]
+},
+{
+"parent": "CHEMBL1413",
+"action_type": "CHELATING AGENT",
+"mechanism_of_action": "Aluminium chelating agent",
+"target": "CHEMBL2366381",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/20964457",
+"PubMed: http://europepmc.org/abstract/MED/23416050",
+"Wikipedia: http://en.wikipedia.org/wiki/Ciclopirox#cite_note-pmid12760852-4"
+]
+},
+{
+"parent": "CHEMBL1364",
+"action_type": "",
+"mechanism_of_action": "Supplement",
+"target": "",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"BNF: https://bnf.nice.org.uk/drug/pyridoxine-hydrochloride.html",
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=a56d11c0-b033-4201-85ff-fc710506481a",
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=cca3c335-f43c-4053-b757-5ec48cf103c5"
+]
+},
+{
+"parent": "CHEMBL1908360",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "FK506-binding protein 1A inhibitor",
+"target": "CHEMBL1902",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=2150f73a-179b-4afc-b8ce-67c85cc72f04#section-13"
+]
+},
+{
+"parent": "CHEMBL225072",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Thymidylate synthase inhibitor",
+"target": "CHEMBL1952",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=f5a860f3-37ec-429c-ae04-9c88d7c55c08#section-13"
+]
+},
+{
+"parent": "CHEMBL185",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Thymidylate synthase inhibitor",
+"target": "CHEMBL1952",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=b90e0da7-f702-4f09-9488-74f2bb20e9ac"
+]
+},
+{
+"parent": "CHEMBL225072",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Dihydrofolate reductase inhibitor",
+"target": "CHEMBL202",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=f5a860f3-37ec-429c-ae04-9c88d7c55c08#section-13"
+]
+},
+{
+"parent": "CHEMBL2103875",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Dual specificity mitogen-activated protein kinase kinase 2 inhibitor",
+"target": "CHEMBL2964",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2015/204114s004lbl.pdf"
+]
+},
+{
+"parent": "CHEMBL2103875",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Dual specificity mitogen-activated protein kinase kinase 1 inhibitor",
+"target": "CHEMBL3587",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2015/204114s004lbl.pdf"
+]
+},
+{
+"parent": "CHEMBL225072",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "GAR transformylase inhibitor",
+"target": "CHEMBL3972",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=f5a860f3-37ec-429c-ae04-9c88d7c55c08#section-13"
+]
+},
+{
+"parent": "CHEMBL2107333",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Kelch-like ECH-associated protein 1 inhibitor",
+"target": "CHEMBL2069156",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=665d7e74-036c-5f68-5b67-ab84b9b49151#nlm34090-1",
+"PubMed: http://europepmc.org/abstract/MED/18618599",
+"PubMed: http://europepmc.org/abstract/MED/22732183",
+"PubMed: http://europepmc.org/abstract/MED/23709213"
+]
+},
+{
+"parent": "CHEMBL185",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA inhibitor",
+"target": "CHEMBL2311221",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/12724731"
+]
+},
+{
+"parent": "CHEMBL185",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "RNA inhibitor",
+"target": "CHEMBL2311222",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/12724731"
+]
+},
+{
+"parent": "CHEMBL189963",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "CDK6/cyclin D1 inhibitor",
+"target": "CHEMBL2111455",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2015/207103s000lbl.pdf"
+]
+},
+{
+"parent": "CHEMBL189963",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cyclin-dependent kinase 4/cyclin D1 inhibitor",
+"target": "CHEMBL1907601",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2015/207103s000lbl.pdf"
+]
+},
+{
+"parent": "CHEMBL1801204",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Serine/threonine-protein kinase mTOR inhibitor",
+"target": "CHEMBL2842",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/20028854"
+]
+},
+{
+"parent": "CHEMBL1852688",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Fibroblast growth factor receptor inhibitor",
+"target": "CHEMBL2095217",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"Other: http://www.novartisoncology.com/ct/pipelineDetails?compound=BGJ398&diseaseAcr=GBM",
+"PubMed: http://europepmc.org/abstract/MED/21936542"
+]
+},
+{
+"parent": "CHEMBL2103840",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cyclin-dependent kinase 1 inhibitor",
+"target": "CHEMBL308",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/25215591"
+]
+},
+{
+"parent": "CHEMBL2103840",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cyclin-dependent kinase 2 inhibitor",
+"target": "CHEMBL301",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/25215591"
+]
+},
+{
+"parent": "CHEMBL2103840",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cyclin-dependent kinase 5 inhibitor",
+"target": "CHEMBL4036",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/25215591"
+]
+},
+{
+"parent": "CHEMBL2103840",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cyclin-dependent kinase 9 inhibitor",
+"target": "CHEMBL3116",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/25215591"
+]
+},
+{
+"parent": "CHEMBL2103875",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Dual specificity mitogen-activated protein kinase kinase; MEK1/2 inhibitor",
+"target": "CHEMBL2111289",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: https://www.accessdata.fda.gov/drugsatfda_docs/label/2018/204114s007lbl.pdf",
+"FDA: https://www.accessdata.fda.gov/drugsatfda_docs/nda/2013/204114Orig1s000ClinPharmR.pdf",
+"Other: https://www.ema.europa.eu/en/documents/product-information/mekinist-epar-product-information_en.pdf"
+]
+},
+{
+"parent": "CHEMBL2141296",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "26S proteasome inhibitor",
+"target": "CHEMBL2364701",
+"direct_interaction": 1,
+"binding_site_comment": "Beta-5 subunit",
+"refs": [
+"EMA: https://www.ema.europa.eu/en/documents/assessment-report/ninlaro-epar-public-assessment-report_en.pdf",
+"PubMed: http://europepmc.org/abstract/MED/23995855",
+"PubMed: http://europepmc.org/abstract/MED/30867233"
+]
+},
+{
+"parent": "CHEMBL225072",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Thymidylate synthase inhibitor",
+"target": "CHEMBL2555",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=dfd19e67-54cb-c062-e053-2995a90a294a"
+]
+},
+{
+"parent": "CHEMBL3349607",
+"action_type": "AGONIST",
+"mechanism_of_action": "Somatostatin receptor 5 agonist",
+"target": "CHEMBL1792",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=442f0d9d-5c7d-4b81-b329-d71be8cf2be2",
+"PubMed: http://europepmc.org/abstract/MED/11980628",
+"PubMed: http://europepmc.org/abstract/MED/22397653"
+]
+},
+{
+"parent": "CHEMBL3349607",
+"action_type": "AGONIST",
+"mechanism_of_action": "Somatostatin receptor 2 agonist",
+"target": "CHEMBL1804",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=442f0d9d-5c7d-4b81-b329-d71be8cf2be2",
+"PubMed: http://europepmc.org/abstract/MED/11980628",
+"PubMed: http://europepmc.org/abstract/MED/22397653"
+]
+},
+{
+"parent": "CHEMBL3349607",
+"action_type": "AGONIST",
+"mechanism_of_action": "Somatostatin receptor 1 agonist",
+"target": "CHEMBL1917",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=442f0d9d-5c7d-4b81-b329-d71be8cf2be2",
+"PubMed: http://europepmc.org/abstract/MED/11980628",
+"PubMed: http://europepmc.org/abstract/MED/22397653"
+]
+},
+{
+"parent": "CHEMBL3349607",
+"action_type": "AGONIST",
+"mechanism_of_action": "Somatostatin receptor 3 agonist",
+"target": "CHEMBL2028",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=442f0d9d-5c7d-4b81-b329-d71be8cf2be2",
+"PubMed: http://europepmc.org/abstract/MED/11980628",
+"PubMed: http://europepmc.org/abstract/MED/22397653"
+]
+},
+{
+"parent": "CHEMBL34259",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Dihydrofolate reductase inhibitor",
+"target": "CHEMBL202",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=ec476b11-0b3c-4139-b1eb-a3daa76bc271"
+]
+},
+{
+"parent": "CHEMBL25",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cyclooxygenase inhibitor",
+"target": "CHEMBL2094253",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/17131625",
+"PubMed: http://europepmc.org/abstract/MED/17258197",
+"Wikipedia: http://en.wikipedia.org/wiki/Aspirin#Mechanism_of_action"
+]
+},
+{
+"parent": "CHEMBL325041",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "26S proteasome inhibitor",
+"target": "CHEMBL2364701",
+"direct_interaction": 1,
+"binding_site_comment": "MB1 (P28074) is binding site",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=1521d321-e724-4ffc-adad-34bf4f44fac7#section-13",
+"PubMed: http://europepmc.org/abstract/MED/21606441"
+]
+},
+{
+"parent": "CHEMBL3137301",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Neprilysin inhibitor",
+"target": "CHEMBL1944",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2015/207620Orig1s000lbl.pdf"
+]
+},
+{
+"parent": "CHEMBL3301610",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cyclin-dependent kinase 4 inhibitor",
+"target": "CHEMBL331",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/24919854"
+]
+},
+{
+"parent": "CHEMBL3301610",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cyclin-dependent kinase 6 inhibitor",
+"target": "CHEMBL2508",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/24919854"
+]
+},
+{
+"parent": "CHEMBL298734",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Protein farnesyltransferase inhibitor",
+"target": "CHEMBL2094108",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/9810004"
+]
+},
+{
+"parent": "CHEMBL3247378",
+"action_type": "",
+"mechanism_of_action": "Unknown",
+"target": "",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: https://pubmed.ncbi.nlm.nih.gov/33051668/"
+]
+},
+{
+"parent": "CHEMBL307261",
+"action_type": "BINDING AGENT",
+"mechanism_of_action": "Ferriprotoporphyrin IX binding agent",
+"target": "CHEMBL613897",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"EMA: https://www.ema.europa.eu/en/documents/product-information/eurartesim-epar-product-information_en.pdf"
+]
+},
+{
+"parent": "CHEMBL413",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "FK506-binding protein 1A inhibitor",
+"target": "CHEMBL1902",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=3275b824-3f82-4151-2ab2-0036a9ba0acc#section-14"
+]
+},
+{
+"parent": "CHEMBL384467",
+"action_type": "AGONIST",
+"mechanism_of_action": "Glucocorticoid receptor agonist",
+"target": "CHEMBL2034",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/16891588",
+"PubMed: http://europepmc.org/abstract/MED/16956592",
+"PubMed: http://europepmc.org/abstract/MED/16971495"
+]
+},
+{
+"parent": "CHEMBL428647",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Tubulin inhibitor",
+"target": "CHEMBL2095182",
+"direct_interaction": 1,
+"binding_site_comment": "Binds to beta tubulin",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=24d10449-2936-4cd3-b7db-a7683db721e4#section-15",
+"Wikipedia: http://en.wikipedia.org/wiki/Microtubule"
+]
+},
+{
+"parent": "CHEMBL38",
+"action_type": "AGONIST",
+"mechanism_of_action": "Retinoic acid receptor agonist",
+"target": "CHEMBL2363069",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=b6b45969-a64a-4ce3-b3b6-157d2568a301"
+]
+},
+{
+"parent": "CHEMBL387675",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cell membrane inhibitor",
+"target": "CHEMBL2364031",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=a7975871-46a6-4e9b-a8b5-38bfcb465f0e#S12.4",
+"Wikipedia: http://en.wikipedia.org/wiki/Daptomycin#Mechanism_of_action"
+]
+},
+{
+"parent": "CHEMBL417",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA inhibitor",
+"target": "CHEMBL2311221",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=0a03c798-a652-4895-b29c-3b521a89ba42#section-14"
+]
+},
+{
+"parent": "CHEMBL414804",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA inhibitor",
+"target": "CHEMBL2311221",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=3c740b43-f396-4998-bc66-6964a21f7161#section-14"
+]
+},
+{
+"parent": "CHEMBL361497",
+"action_type": "",
+"mechanism_of_action": "Unknown",
+"target": "",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: https://www.accessdata.fda.gov/drugsatfda_docs/label/2020/213036s000lbl.pdf"
+]
+},
+{
+"parent": "CHEMBL408513",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Histone deacetylase inhibitor",
+"target": "CHEMBL2093865",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2014/206256lbl.pdf"
+]
+},
+{
+"parent": "CHEMBL3545097",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Serine/threonine-protein kinase mTOR inhibitor",
+"target": "CHEMBL2842",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/23085766",
+"PubMed: http://europepmc.org/abstract/MED/25519700"
+]
+},
+{
+"parent": "CHEMBL3544966",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "PI3-kinase class I inhibitor",
+"target": "CHEMBL3559703",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/19713247"
+]
+},
+{
+"parent": "CHEMBL3545213",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "c-Jun N-terminal kinase, JNK inhibitor",
+"target": "CHEMBL2096667",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/20855355"
+]
+},
+{
+"parent": "CHEMBL3545110",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cyclin-dependent kinase 4 inhibitor",
+"target": "CHEMBL331",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"Other: http://mct.aacrjournals.org/content/12/11_Supplement/PR02",
+"PubMed: http://europepmc.org/abstract/MED/24045179"
+]
+},
+{
+"parent": "CHEMBL3545110",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cyclin-dependent kinase 6 inhibitor",
+"target": "CHEMBL2508",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"Other: http://mct.aacrjournals.org/content/12/11_Supplement/PR02",
+"PubMed: http://europepmc.org/abstract/MED/24045179"
+]
+},
+{
+"parent": "CHEMBL3545235",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Epidermal growth factor receptor erbB1 inhibitor",
+"target": "CHEMBL203",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/24440798",
+"PubMed: http://europepmc.org/abstract/MED/24522198"
+]
+},
+{
+"parent": "CHEMBL3545376",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Fibroblast growth factor receptor inhibitor",
+"target": "CHEMBL2095217",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: https://www.accessdata.fda.gov/drugsatfda_docs/label/2019/212018s000lbl.pdf"
+]
+},
+{
+"parent": "CHEMBL4073443",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "MAP kinase-interacting serine/threonine-protein kinase 1/2 inhibitor",
+"target": "CHEMBL3883293",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"ClinicalTrials: https://www.clinicaltrials.gov/ct2/show/NCT04261218",
+"Other: https://ascopubs.org/doi/abs/10.1200/JCO.2019.37.15_suppl.e14145",
+"Other: https://ascopubs.org/doi/abs/10.1200/JCO.2020.38.15_suppl.3112",
+"Other: https://effector.com/pipeline/"
+]
+},
+{
+"parent": "CHEMBL481",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA topoisomerase I inhibitor",
+"target": "CHEMBL1781",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=80f3b79c-a399-45b3-b755-8535457719af"
+]
+},
+{
+"parent": "CHEMBL494753",
+"action_type": "AGONIST",
+"mechanism_of_action": "Estrogen receptor alpha agonist",
+"target": "CHEMBL206",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2005/083220s041lbl.pdf"
+]
+},
+{
+"parent": "CHEMBL467",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Ribonucleoside-diphosphate reductase RR1 inhibitor",
+"target": "CHEMBL2095215",
+"direct_interaction": 1,
+"binding_site_comment": "M2 subunit is binding site",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=740e054b-faac-7c27-f06d-a56efb699355",
+"PubMed: http://europepmc.org/abstract/MED/23115527"
+]
+},
+{
+"parent": "CHEMBL46286",
+"action_type": "",
+"mechanism_of_action": "Protein synthesis inhibitor",
+"target": "",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"Expert: http://chembl.blogspot.co.uk/search?q=BOSUTINIB",
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2012/203585lbl.pdf",
+"PubMed: http://europepmc.org/abstract/MED/22289991"
+]
+},
+{
+"parent": "CHEMBL483254",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Histone deacetylase inhibitor",
+"target": "CHEMBL2093865",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2015/205353s000lbl.pdf"
+]
+},
+{
+"parent": "CHEMBL445813",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cyclin-dependent kinase inhibitor",
+"target": "CHEMBL3559691",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/19174555",
+"PubMed: http://europepmc.org/abstract/MED/25914884"
+]
+},
+{
+"parent": "CHEMBL43",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA topoisomerase II inhibitor",
+"target": "CHEMBL2094255",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/1317259",
+"PubMed: http://europepmc.org/abstract/MED/15148258",
+"PubMed: http://europepmc.org/abstract/MED/22304499",
+"PubMed: http://europepmc.org/abstract/MED/23922861",
+"PubMed: http://europepmc.org/abstract/MED/7971998"
+]
+},
+{
+"parent": "CHEMBL4647810",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Serine-protein kinase ATR inhibitor",
+"target": "CHEMBL5024",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"ClinicalTrials: https://www.clinicaltrials.gov/ct2/show/NCT04616534",
+"Other: https://cancerres.aacrjournals.org/content/77/13_Supplement/836",
+"PubMed: http://europepmc.org/abstract/MED/31582533"
+]
+},
+{
+"parent": "CHEMBL53463",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA topoisomerase II alpha inhibitor",
+"target": "CHEMBL1806",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2015/050718s048lbl.pdf",
+"Wikipedia: http://en.wikipedia.org/wiki/Type_II_topoisomerase"
+]
+},
+{
+"parent": "CHEMBL58",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA topoisomerase II alpha inhibitor",
+"target": "CHEMBL1806",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=4d0f0f1a-31af-40fa-9c64-e90891fa6ce4",
+"Wikipedia: http://en.wikipedia.org/wiki/Type_II_topoisomerase"
+]
+},
+{
+"parent": "CHEMBL645",
+"action_type": "ANTAGONIST",
+"mechanism_of_action": "Beta-1 adrenergic receptor antagonist",
+"target": "CHEMBL213",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=621d9058-804a-4f46-a047-ea6e432eee49"
+]
+},
+{
+"parent": "CHEMBL650",
+"action_type": "AGONIST",
+"mechanism_of_action": "Glucocorticoid receptor agonist",
+"target": "CHEMBL2034",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/17016711",
+"PubMed: http://europepmc.org/abstract/MED/17068119",
+"PubMed: http://europepmc.org/abstract/MED/17251323"
+]
+},
+{
+"parent": "CHEMBL717",
+"action_type": "AGONIST",
+"mechanism_of_action": "Progesterone receptor agonist",
+"target": "CHEMBL208",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=199cf13e-0859-4a73-9b45-e700d0cd1049#nlm34090-1"
+]
+},
+{
+"parent": "CHEMBL685",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Tubulin inhibitor",
+"target": "CHEMBL2364704",
+"direct_interaction": 1,
+"binding_site_comment": "Binds to beta tubulin",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=c338415f-41e0-071d-8c51-a80a02ebf2cd",
+"ISBN: http://www.isbnsearch.org/isbn/9780702034718",
+"PubMed: http://europepmc.org/abstract/MED/13678839",
+"Wikipedia: http://en.wikipedia.org/wiki/Mebendazole"
+]
+},
+{
+"parent": "CHEMBL685",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Tubulin inhibitor",
+"target": "CHEMBL2364705",
+"direct_interaction": 1,
+"binding_site_comment": "Binds to beta tubulin",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=c338415f-41e0-071d-8c51-a80a02ebf2cd",
+"ISBN: http://www.isbnsearch.org/isbn/9780702034718",
+"PubMed: http://europepmc.org/abstract/MED/13678839",
+"Wikipedia: http://en.wikipedia.org/wiki/Mebendazole"
+]
+},
+{
+"parent": "CHEMBL599",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cyclooxygenase-2 inhibitor",
+"target": "CHEMBL230",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/8882380"
+]
+},
+{
+"parent": "CHEMBL602",
+"action_type": "REDUCING AGENT",
+"mechanism_of_action": "Cystine reducing agent",
+"target": "CHEMBL2364039",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=f495b76d-96c6-48e5-8fa3-30a4336628eb#nlm34090-1"
+]
+},
+{
+"parent": "CHEMBL53463",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA inhibitor",
+"target": "CHEMBL2311221",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2015/050718s048lbl.pdf",
+"Wikipedia: http://en.wikipedia.org/wiki/Type_II_topoisomerase"
+]
+},
+{
+"parent": "CHEMBL58",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA inhibitor",
+"target": "CHEMBL2311221",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=4d0f0f1a-31af-40fa-9c64-e90891fa6ce4"
+]
+},
+{
+"parent": "CHEMBL744",
+"action_type": "BLOCKER",
+"mechanism_of_action": "Sodium channel alpha subunit blocker",
+"target": "CHEMBL2331043",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=e49d207d-8e32-4183-94ba-cd264f124090#nlm34090-1",
+"PubMed: http://europepmc.org/abstract/MED/9262334"
+]
+},
+{
+"parent": "CHEMBL640",
+"action_type": "BLOCKER",
+"mechanism_of_action": "Sodium channel alpha subunit blocker",
+"target": "CHEMBL2331043",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"ISBN: http://www.isbnsearch.org/isbn/9780702034718"
+]
+},
+{
+"parent": "CHEMBL521686",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "PARP 1, 2 and 3 inhibitor",
+"target": "CHEMBL3390820",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2014/206162lbl.pdf"
+]
+},
+{
+"parent": "CHEMBL93",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Arachidonate 5-lipoxygenase inhibitor",
+"target": "CHEMBL215",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=9bc08d7b-13da-444f-ac8a-3714a05176cc"
+]
+},
+{
+"parent": "CHEMBL92",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Tubulin inhibitor",
+"target": "CHEMBL2095182",
+"direct_interaction": 1,
+"binding_site_comment": "Binds to beta tubulin",
+"refs": [
+"FDA: http://www.accessdata.fda.gov/drugsatfda_docs/label/2014/201195s006lbl.pdf",
+"Wikipedia: http://en.wikipedia.org/wiki/Microtubule"
+]
+},
+{
+"parent": "CHEMBL90555",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Tubulin inhibitor",
+"target": "CHEMBL2095182",
+"direct_interaction": 1,
+"binding_site_comment": "Binds to beta tubulin, vinca site (PMID: 15057285)",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=01cee93f-3ab9-44fa-8c9a-dd5958fd2db9",
+"PubMed: http://europepmc.org/abstract/MED/22044006"
+]
+},
+{
+"parent": "CHEMBL888",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Ribonucleoside-diphosphate reductase RR1 inhibitor",
+"target": "CHEMBL2095215",
+"direct_interaction": 1,
+"binding_site_comment": "M1 subunit is binding site",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=a625c92b-c569-4b98-8d2e-2b3f5e12b34f#section-12",
+"PubMed: http://europepmc.org/abstract/MED/23115527"
+]
+},
+{
+"parent": "CHEMBL849",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Bacterial enoyl-[acyl-carrier-protein] reductase inhibitor",
+"target": "CHEMBL2364678",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/10196195"
+]
+},
+{
+"parent": "CHEMBL84",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA topoisomerase I inhibitor",
+"target": "CHEMBL1781",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=140399d0-4b28-4100-b792-3d1aa3c3e29c#section-14"
+]
+},
+{
+"parent": "CHEMBL790",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "Cell membrane inhibitor",
+"target": "CHEMBL2364031",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/1335944",
+"Wikipedia: http://en.wikipedia.org/wiki/Chlorhexidine_gluconate"
+]
+},
+{
+"parent": "CHEMBL803",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA inhibitor",
+"target": "CHEMBL2311221",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=1315f89d-f530-4dff-98e5-27d51617d4a1"
+]
+},
+{
+"parent": "CHEMBL803",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "RNA inhibitor",
+"target": "CHEMBL2311222",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=1315f89d-f530-4dff-98e5-27d51617d4a1"
+]
+},
+{
+"parent": "CHEMBL803",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA polymerase (alpha/delta/epsilon) inhibitor",
+"target": "CHEMBL2363042",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=1315f89d-f530-4dff-98e5-27d51617d4a1"
+]
+},
+{
+"parent": "CHEMBL888",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "DNA polymerase (alpha/delta/epsilon) inhibitor",
+"target": "CHEMBL2363042",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"DailyMed: http://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=a625c92b-c569-4b98-8d2e-2b3f5e12b34f#section-12"
+]
+},
+{
+"parent": "CHEMBL848",
+"action_type": "INHIBITOR",
+"mechanism_of_action": "CRL4(CRBN) E3 ubiquitin ligase inhibitor",
+"target": "CHEMBL3833061",
+"direct_interaction": 1,
+"binding_site_comment": "Cereblon",
+"refs": [
+"PubMed: http://europepmc.org/abstract/MED/22552008",
+"PubMed: http://europepmc.org/abstract/MED/25043012"
+]
+},
+{
+"parent": "CHEMBL92",
+"action_type": "STABILISER",
+"mechanism_of_action": "Tubulin stabiliser",
+"target": "CHEMBL2095182",
+"direct_interaction": 1,
+"binding_site_comment": "",
+"refs": [
+"EMA: https://www.ema.europa.eu/en/medicines/human/EPAR/docetaxel-kabi"
+]
+},
+{
+"parent": "CHEMBL848",
+"action_type": "MODULATOR",
+"mechanism_of_action": "CRL4(CRBN) E3 ubiquitin ligase modulator",
+"target": "CHEMBL3833061",
+"direct_interaction": 1,
+"binding_site_comment": "Cereblon",
+"refs": [
+"EMA: https://www.ema.europa.eu/en/medicines/human/EPAR/lenalidomide-krka-dd-novo-mesto"
+]
+}
+],
+"targets": {
+"CHEMBL1781": {
+"pref_name": "DNA topoisomerase 1",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P11387",
+"type": "PROTEIN",
+"gene_symbol": "TOP1"
+}
+]
+},
+"CHEMBL1792": {
+"pref_name": "Somatostatin receptor type 5",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P35346",
+"type": "PROTEIN",
+"gene_symbol": "SSTR5"
+}
+]
+},
+"CHEMBL1804": {
+"pref_name": "Somatostatin receptor type 2",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P30874",
+"type": "PROTEIN",
+"gene_symbol": "SSTR2"
+}
+]
+},
+"CHEMBL1806": {
+"pref_name": "DNA topoisomerase 2-alpha",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P11388",
+"type": "PROTEIN",
+"gene_symbol": "TOP2A"
+}
+]
+},
+"CHEMBL1824": {
+"pref_name": "Receptor tyrosine-protein kinase erbB-2",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P04626",
+"type": "PROTEIN",
+"gene_symbol": "ERBB2"
+}
+]
+},
+"CHEMBL1843": {
+"pref_name": "Aromatic-L-amino-acid decarboxylase",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P20711",
+"type": "PROTEIN",
+"gene_symbol": "DDC"
+}
+]
+},
+"CHEMBL1902": {
+"pref_name": "Peptidyl-prolyl cis-trans isomerase FKBP1A",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P62942",
+"type": "PROTEIN",
+"gene_symbol": "FKBP1A"
+}
+]
+},
+"CHEMBL1907601": {
+"pref_name": "Cyclin-dependent kinase 4/cyclin D1",
+"type": "PROTEIN COMPLEX",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P11802",
+"type": "PROTEIN",
+"gene_symbol": "CDK4"
+},
+{
+"accession": "P24385",
+"type": "PROTEIN",
+"gene_symbol": "CCND1"
+}
+]
+},
+"CHEMBL1917": {
+"pref_name": "Somatostatin receptor type 1",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P30872",
+"type": "PROTEIN",
+"gene_symbol": "SSTR1"
+}
+]
+},
+"CHEMBL1944": {
+"pref_name": "Neprilysin",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P08473",
+"type": "PROTEIN",
+"gene_symbol": "MME"
+}
+]
+},
+"CHEMBL1949": {
+"pref_name": "Peptidyl-prolyl cis-trans isomerase A",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P62937",
+"type": "PROTEIN",
+"gene_symbol": "PPIA"
+}
+]
+},
+"CHEMBL1952": {
+"pref_name": "Thymidylate synthase",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P04818",
+"type": "PROTEIN",
+"gene_symbol": "TYMS"
+}
+]
+},
+"CHEMBL1980": {
+"pref_name": "Sodium channel protein type 5 subunit alpha",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "Q14524",
+"type": "PROTEIN",
+"gene_symbol": "SCN5A"
+}
+]
+},
+"CHEMBL1987": {
+"pref_name": "Prostaglandin F2-alpha receptor",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P43088",
+"type": "PROTEIN",
+"gene_symbol": "PTGFR"
+}
+]
+},
+"CHEMBL1992": {
+"pref_name": "DNA (cytosine-5)-methyltransferase 3A",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "Q9Y6K1",
+"type": "PROTEIN",
+"gene_symbol": "DNMT3A"
+}
+]
+},
+"CHEMBL1993": {
+"pref_name": "DNA (cytosine-5)-methyltransferase 1",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P26358",
+"type": "PROTEIN",
+"gene_symbol": "DNMT1"
+}
+]
+},
+"CHEMBL202": {
+"pref_name": "Dihydrofolate reductase",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P00374",
+"type": "PROTEIN",
+"gene_symbol": "DHFR"
+}
+]
+},
+"CHEMBL2028": {
+"pref_name": "Somatostatin receptor type 3",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P32745",
+"type": "PROTEIN",
+"gene_symbol": "SSTR3"
+}
+]
+},
+"CHEMBL203": {
+"pref_name": "Epidermal growth factor receptor",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P00533",
+"type": "PROTEIN",
+"gene_symbol": "EGFR"
+}
+]
+},
+"CHEMBL2034": {
+"pref_name": "Glucocorticoid receptor",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P04150",
+"type": "PROTEIN",
+"gene_symbol": "NR3C1"
+}
+]
+},
+"CHEMBL206": {
+"pref_name": "Estrogen receptor",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P03372",
+"type": "PROTEIN",
+"gene_symbol": "ESR1"
+}
+]
+},
+"CHEMBL2069156": {
+"pref_name": "Kelch-like ECH-associated protein 1",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "Q14145",
+"type": "PROTEIN",
+"gene_symbol": "KEAP1"
+}
+]
+},
+"CHEMBL2072": {
+"pref_name": "Sodium channel protein type 4 subunit alpha",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P35499",
+"type": "PROTEIN",
+"gene_symbol": "SCN4A"
+}
+]
+},
+"CHEMBL208": {
+"pref_name": "Progesterone receptor",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P06401",
+"type": "PROTEIN",
+"gene_symbol": "PGR"
+}
+]
+},
+"CHEMBL2093865": {
+"pref_name": "Histone deacetylase",
+"type": "PROTEIN FAMILY",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "Q13547",
+"type": "PROTEIN",
+"gene_symbol": "HDAC1"
+},
+{
+"accession": "O15379",
+"type": "PROTEIN",
+"gene_symbol": "HDAC3"
+},
+{
+"accession": "Q9UBN7",
+"type": "PROTEIN",
+"gene_symbol": "HDAC6"
+},
+{
+"accession": "Q92769",
+"type": "PROTEIN",
+"gene_symbol": "HDAC2"
+},
+{
+"accession": "Q9UQL6",
+"type": "PROTEIN",
+"gene_symbol": "HDAC5"
+},
+{
+"accession": "Q8WUI4",
+"type": "PROTEIN",
+"gene_symbol": "HDAC7"
+},
+{
+"accession": "Q9BY41",
+"type": "PROTEIN",
+"gene_symbol": "HDAC8"
+},
+{
+"accession": "Q96DB2",
+"type": "PROTEIN",
+"gene_symbol": "HDAC11"
+},
+{
+"accession": "P56524",
+"type": "PROTEIN",
+"gene_symbol": "HDAC4"
+},
+{
+"accession": "Q9UKV0",
+"type": "PROTEIN",
+"gene_symbol": "HDAC9"
+},
+{
+"accession": "Q969S8",
+"type": "PROTEIN",
+"gene_symbol": "HDAC10"
+}
+]
+},
+"CHEMBL2094108": {
+"pref_name": "Protein farnesyltransferase",
+"type": "PROTEIN COMPLEX",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P49354",
+"type": "PROTEIN",
+"gene_symbol": "FNTA"
+},
+{
+"accession": "P49356",
+"type": "PROTEIN",
+"gene_symbol": "FNTB"
+}
+]
+},
+"CHEMBL2094253": {
+"pref_name": "Cyclooxygenase",
+"type": "PROTEIN FAMILY",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P35354",
+"type": "PROTEIN",
+"gene_symbol": "PTGS2"
+},
+{
+"accession": "P23219",
+"type": "PROTEIN",
+"gene_symbol": "PTGS1"
+}
+]
+},
+"CHEMBL2094255": {
+"pref_name": "DNA topoisomerase II",
+"type": "PROTEIN FAMILY",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P11388",
+"type": "PROTEIN",
+"gene_symbol": "TOP2A"
+},
+{
+"accession": "Q02880",
+"type": "PROTEIN",
+"gene_symbol": "TOP2B"
+}
+]
+},
+"CHEMBL2095182": {
+"pref_name": "Tubulin",
+"type": "PROTEIN COMPLEX GROUP",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P68371",
+"type": "PROTEIN",
+"gene_symbol": "TUBB4B"
+},
+{
+"accession": "Q9H4B7",
+"type": "PROTEIN",
+"gene_symbol": "TUBB1"
+},
+{
+"accession": "P0DPH7",
+"type": "PROTEIN",
+"gene_symbol": "TUBA3C"
+},
+{
+"accession": "P68366",
+"type": "PROTEIN",
+"gene_symbol": "TUBA4A"
+},
+{
+"accession": "Q13509",
+"type": "PROTEIN",
+"gene_symbol": "TUBB3"
+},
+{
+"accession": "Q71U36",
+"type": "PROTEIN",
+"gene_symbol": "TUBA1A"
+},
+{
+"accession": "P04350",
+"type": "PROTEIN",
+"gene_symbol": "TUBB4A"
+},
+{
+"accession": "Q3ZCM7",
+"type": "PROTEIN",
+"gene_symbol": "TUBB8"
+},
+{
+"accession": "P07437",
+"type": "PROTEIN",
+"gene_symbol": "TUBB"
+},
+{
+"accession": "P68363",
+"type": "PROTEIN",
+"gene_symbol": "TUBA1B"
+},
+{
+"accession": "Q9BQE3",
+"type": "PROTEIN",
+"gene_symbol": "TUBA1C"
+},
+{
+"accession": "Q6PEY2",
+"type": "PROTEIN",
+"gene_symbol": "TUBA3E"
+},
+{
+"accession": "Q13885",
+"type": "PROTEIN",
+"gene_symbol": "TUBB2A"
+},
+{
+"accession": "Q9BVA1",
+"type": "PROTEIN",
+"gene_symbol": "TUBB2B"
+},
+{
+"accession": "Q9BUF5",
+"type": "PROTEIN",
+"gene_symbol": "TUBB6"
+}
+]
+},
+"CHEMBL2095215": {
+"pref_name": "Ribonucleoside-diphosphate reductase RR1",
+"type": "PROTEIN COMPLEX GROUP",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P23921",
+"type": "PROTEIN",
+"gene_symbol": "RRM1"
+},
+{
+"accession": "Q7LG56",
+"type": "PROTEIN",
+"gene_symbol": "RRM2B"
+},
+{
+"accession": "P31350",
+"type": "PROTEIN",
+"gene_symbol": "RRM2"
+}
+]
+},
+"CHEMBL2095217": {
+"pref_name": "Fibroblast growth factor receptor",
+"type": "PROTEIN FAMILY",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P22607",
+"type": "PROTEIN",
+"gene_symbol": "FGFR3"
+},
+{
+"accession": "P11362",
+"type": "PROTEIN",
+"gene_symbol": "FGFR1"
+},
+{
+"accession": "P22455",
+"type": "PROTEIN",
+"gene_symbol": "FGFR4"
+},
+{
+"accession": "P21802",
+"type": "PROTEIN",
+"gene_symbol": "FGFR2"
+}
+]
+},
+"CHEMBL2096667": {
+"pref_name": "c-Jun N-terminal kinase, JNK",
+"type": "PROTEIN FAMILY",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P45983",
+"type": "PROTEIN",
+"gene_symbol": "MAPK8"
+},
+{
+"accession": "P53779",
+"type": "PROTEIN",
+"gene_symbol": "MAPK10"
+},
+{
+"accession": "P45984",
+"type": "PROTEIN",
+"gene_symbol": "MAPK9"
+}
+]
+},
+"CHEMBL2096972": {
+"pref_name": "Sulfonylurea receptor 1, Kir6.2",
+"type": "PROTEIN COMPLEX",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "Q14654",
+"type": "PROTEIN",
+"gene_symbol": "KCNJ11"
+},
+{
+"accession": "Q09428",
+"type": "PROTEIN",
+"gene_symbol": "ABCC8"
+}
+]
+},
+"CHEMBL2111289": {
+"pref_name": "Dual specificity mitogen-activated protein kinase kinase; MEK1/2",
+"type": "PROTEIN FAMILY",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P36507",
+"type": "PROTEIN",
+"gene_symbol": "MAP2K2"
+},
+{
+"accession": "Q02750",
+"type": "PROTEIN",
+"gene_symbol": "MAP2K1"
+}
+]
+},
+"CHEMBL2111455": {
+"pref_name": "CDK6/cyclin D1",
+"type": "PROTEIN COMPLEX",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P24385",
+"type": "PROTEIN",
+"gene_symbol": "CCND1"
+},
+{
+"accession": "Q00534",
+"type": "PROTEIN",
+"gene_symbol": "CDK6"
+}
+]
+},
+"CHEMBL213": {
+"pref_name": "Beta-1 adrenergic receptor",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P08588",
+"type": "PROTEIN",
+"gene_symbol": "ADRB1"
+}
+]
+},
+"CHEMBL215": {
+"pref_name": "Polyunsaturated fatty acid 5-lipoxygenase",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P09917",
+"type": "PROTEIN",
+"gene_symbol": "ALOX5"
+}
+]
+},
+"CHEMBL218": {
+"pref_name": "Cannabinoid receptor 1",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P21554",
+"type": "PROTEIN",
+"gene_symbol": "CNR1"
+}
+]
+},
+"CHEMBL227": {
+"pref_name": "Type-1 angiotensin II receptor",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P30556",
+"type": "PROTEIN",
+"gene_symbol": "AGTR1"
+}
+]
+},
+"CHEMBL230": {
+"pref_name": "Prostaglandin G/H synthase 2",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P35354",
+"type": "PROTEIN",
+"gene_symbol": "PTGS2"
+}
+]
+},
+"CHEMBL2311221": {
+"pref_name": "DNA",
+"type": "NUCLEIC-ACID",
+"organism": "Homo sapiens",
+"components": []
+},
+"CHEMBL2311222": {
+"pref_name": "RNA",
+"type": "NUCLEIC-ACID",
+"organism": "Homo sapiens",
+"components": []
+},
+"CHEMBL2331043": {
+"pref_name": "Sodium channel alpha subunit",
+"type": "PROTEIN FAMILY",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P35498",
+"type": "PROTEIN",
+"gene_symbol": "SCN1A"
+},
+{
+"accession": "Q14524",
+"type": "PROTEIN",
+"gene_symbol": "SCN5A"
+},
+{
+"accession": "P35499",
+"type": "PROTEIN",
+"gene_symbol": "SCN4A"
+},
+{
+"accession": "Q01118",
+"type": "PROTEIN",
+"gene_symbol": "SCN7A"
+},
+{
+"accession": "Q99250",
+"type": "PROTEIN",
+"gene_symbol": "SCN2A"
+},
+{
+"accession": "Q15858",
+"type": "PROTEIN",
+"gene_symbol": "SCN9A"
+},
+{
+"accession": "Q9NY46",
+"type": "PROTEIN",
+"gene_symbol": "SCN3A"
+},
+{
+"accession": "Q9UI33",
+"type": "PROTEIN",
+"gene_symbol": "SCN11A"
+},
+{
+"accession": "Q9UQD0",
+"type": "PROTEIN",
+"gene_symbol": "SCN8A"
+},
+{
+"accession": "Q9Y5Y9",
+"type": "PROTEIN",
+"gene_symbol": "SCN10A"
+}
+]
+},
+"CHEMBL2363042": {
+"pref_name": "DNA polymerase (alpha/delta/epsilon)",
+"type": "PROTEIN FAMILY",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P09884",
+"type": "PROTEIN",
+"gene_symbol": "POLA1"
+},
+{
+"accession": "Q9HCU8",
+"type": "PROTEIN",
+"gene_symbol": "POLD4"
+},
+{
+"accession": "Q15054",
+"type": "PROTEIN",
+"gene_symbol": "POLD3"
+},
+{
+"accession": "P28340",
+"type": "PROTEIN",
+"gene_symbol": "POLD1"
+},
+{
+"accession": "P49005",
+"type": "PROTEIN",
+"gene_symbol": "POLD2"
+},
+{
+"accession": "Q07864",
+"type": "PROTEIN",
+"gene_symbol": "POLE"
+},
+{
+"accession": "Q14181",
+"type": "PROTEIN",
+"gene_symbol": "POLA2"
+},
+{
+"accession": "P49642",
+"type": "PROTEIN",
+"gene_symbol": "PRIM1"
+},
+{
+"accession": "P49643",
+"type": "PROTEIN",
+"gene_symbol": "PRIM2"
+},
+{
+"accession": "P56282",
+"type": "PROTEIN",
+"gene_symbol": "POLE2"
+},
+{
+"accession": "Q9NRF9",
+"type": "PROTEIN",
+"gene_symbol": "POLE3"
+}
+]
+},
+"CHEMBL2363058": {
+"pref_name": "Iron",
+"type": "METAL",
+"organism": "",
+"components": []
+},
+"CHEMBL2363069": {
+"pref_name": "Retinoic acid receptor",
+"type": "PROTEIN FAMILY",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P13631",
+"type": "PROTEIN",
+"gene_symbol": "RARG"
+},
+{
+"accession": "P10826",
+"type": "PROTEIN",
+"gene_symbol": "RARB"
+},
+{
+"accession": "P10276",
+"type": "PROTEIN",
+"gene_symbol": "RARA"
+}
+]
+},
+"CHEMBL2364031": {
+"pref_name": "Cell membrane",
+"type": "SUBCELLULAR",
+"organism": "Bacteria",
+"components": []
+},
+"CHEMBL2364039": {
+"pref_name": "Cystine",
+"type": "SMALL MOLECULE",
+"organism": "Homo sapiens",
+"components": []
+},
+"CHEMBL2364678": {
+"pref_name": "Enoyl-[acyl-carrier-protein] reductase [NADH] FabI",
+"type": "SINGLE PROTEIN",
+"organism": "Bacteria",
+"components": [
+{
+"accession": "P0AEK4",
+"type": "PROTEIN",
+"gene_symbol": "fabI"
+}
+]
+},
+"CHEMBL2364701": {
+"pref_name": "26S proteasome",
+"type": "PROTEIN COMPLEX",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "Q99460",
+"type": "PROTEIN",
+"gene_symbol": "PSMD1"
+},
+{
+"accession": "P49721",
+"type": "PROTEIN",
+"gene_symbol": "PSMB2"
+},
+{
+"accession": "P20618",
+"type": "PROTEIN",
+"gene_symbol": "PSMB1"
+},
+{
+"accession": "P28074",
+"type": "PROTEIN",
+"gene_symbol": "PSMB5"
+},
+{
+"accession": "P28062",
+"type": "PROTEIN",
+"gene_symbol": "PSMB8"
+},
+{
+"accession": "P28065",
+"type": "PROTEIN",
+"gene_symbol": "PSMB9"
+},
+{
+"accession": "P28072",
+"type": "PROTEIN",
+"gene_symbol": "PSMB6"
+},
+{
+"accession": "O00487",
+"type": "PROTEIN",
+"gene_symbol": "PSMD14"
+},
+{
+"accession": "P25786",
+"type": "PROTEIN",
+"gene_symbol": "PSMA1"
+},
+{
+"accession": "P25787",
+"type": "PROTEIN",
+"gene_symbol": "PSMA2"
+},
+{
+"accession": "P25788",
+"type": "PROTEIN",
+"gene_symbol": "PSMA3"
+},
+{
+"accession": "P25789",
+"type": "PROTEIN",
+"gene_symbol": "PSMA4"
+},
+{
+"accession": "P28066",
+"type": "PROTEIN",
+"gene_symbol": "PSMA5"
+},
+{
+"accession": "P60900",
+"type": "PROTEIN",
+"gene_symbol": "PSMA6"
+},
+{
+"accession": "O14818",
+"type": "PROTEIN",
+"gene_symbol": "PSMA7"
+},
+{
+"accession": "Q8TAA3",
+"type": "PROTEIN",
+"gene_symbol": "PSMA8"
+},
+{
+"accession": "P40306",
+"type": "PROTEIN",
+"gene_symbol": "PSMB10"
+},
+{
+"accession": "A5LHX3",
+"type": "PROTEIN",
+"gene_symbol": "PSMB11"
+},
+{
+"accession": "P49720",
+"type": "PROTEIN",
+"gene_symbol": "PSMB3"
+},
+{
+"accession": "P28070",
+"type": "PROTEIN",
+"gene_symbol": "PSMB4"
+},
+{
+"accession": "Q99436",
+"type": "PROTEIN",
+"gene_symbol": "PSMB7"
+},
+{
+"accession": "Q16186",
+"type": "PROTEIN",
+"gene_symbol": "ADRM1"
+},
+{
+"accession": "P35998",
+"type": "PROTEIN",
+"gene_symbol": "PSMC2"
+},
+{
+"accession": "P62191",
+"type": "PROTEIN",
+"gene_symbol": "PSMC1"
+},
+{
+"accession": "P43686",
+"type": "PROTEIN",
+"gene_symbol": "PSMC4"
+},
+{
+"accession": "P62333",
+"type": "PROTEIN",
+"gene_symbol": "PSMC6"
+},
+{
+"accession": "P17980",
+"type": "PROTEIN",
+"gene_symbol": "PSMC3"
+},
+{
+"accession": "P62195",
+"type": "PROTEIN",
+"gene_symbol": "PSMC5"
+},
+{
+"accession": "Q13200",
+"type": "PROTEIN",
+"gene_symbol": "PSMD2"
+},
+{
+"accession": "O43242",
+"type": "PROTEIN",
+"gene_symbol": "PSMD3"
+},
+{
+"accession": "O00232",
+"type": "PROTEIN",
+"gene_symbol": "PSMD12"
+},
+{
+"accession": "O00231",
+"type": "PROTEIN",
+"gene_symbol": "PSMD11"
+},
+{
+"accession": "Q15008",
+"type": "PROTEIN",
+"gene_symbol": "PSMD6"
+},
+{
+"accession": "P51665",
+"type": "PROTEIN",
+"gene_symbol": "PSMD7"
+},
+{
+"accession": "Q9UNM6",
+"type": "PROTEIN",
+"gene_symbol": "PSMD13"
+},
+{
+"accession": "P55036",
+"type": "PROTEIN",
+"gene_symbol": "PSMD4"
+},
+{
+"accession": "P48556",
+"type": "PROTEIN",
+"gene_symbol": "PSMD8"
+},
+{
+"accession": "P60896",
+"type": "PROTEIN",
+"gene_symbol": "SEM1"
+}
+]
+},
+"CHEMBL2364704": {
+"pref_name": "Tubulin",
+"type": "PROTEIN COMPLEX GROUP",
+"organism": "Taeniidae",
+"components": [
+{
+"accession": "C4PKY4",
+"type": "PROTEIN",
+"gene_symbol": ""
+},
+{
+"accession": "C4PKZ2",
+"type": "PROTEIN",
+"gene_symbol": ""
+},
+{
+"accession": "C4PKZ6",
+"type": "PROTEIN",
+"gene_symbol": ""
+}
+]
+},
+"CHEMBL2364705": {
+"pref_name": "Tubulin",
+"type": "PROTEIN COMPLEX GROUP",
+"organism": "Nematoda",
+"components": [
+{
+"accession": "F1L5G6",
+"type": "PROTEIN",
+"gene_symbol": ""
+},
+{
+"accession": "F1L7Y0",
+"type": "PROTEIN",
+"gene_symbol": ""
+},
+{
+"accession": "F1L005",
+"type": "PROTEIN",
+"gene_symbol": ""
+},
+{
+"accession": "F1LCS0",
+"type": "PROTEIN",
+"gene_symbol": ""
+},
+{
+"accession": "F1L4P8",
+"type": "PROTEIN",
+"gene_symbol": ""
+},
+{
+"accession": "F1L7U3",
+"type": "PROTEIN",
+"gene_symbol": ""
+},
+{
+"accession": "F1L8A5",
+"type": "PROTEIN",
+"gene_symbol": ""
+}
+]
+},
+"CHEMBL2366042": {
+"pref_name": "DNA",
+"type": "NUCLEIC-ACID",
+"organism": "Human alphaherpesvirus 1",
+"components": []
+},
+"CHEMBL2366381": {
+"pref_name": "Aluminium",
+"type": "METAL",
+"organism": "",
+"components": []
+},
+"CHEMBL2508": {
+"pref_name": "Cyclin-dependent kinase 6",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "Q00534",
+"type": "PROTEIN",
+"gene_symbol": "CDK6"
+}
+]
+},
+"CHEMBL2555": {
+"pref_name": "Thymidylate synthase",
+"type": "SINGLE PROTEIN",
+"organism": "Escherichia coli K-12",
+"components": [
+{
+"accession": "P0A884",
+"type": "PROTEIN",
+"gene_symbol": "thyA"
+}
+]
+},
+"CHEMBL2842": {
+"pref_name": "Serine/threonine-protein kinase mTOR",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P42345",
+"type": "PROTEIN",
+"gene_symbol": "MTOR"
+}
+]
+},
+"CHEMBL2964": {
+"pref_name": "Dual specificity mitogen-activated protein kinase kinase 2",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P36507",
+"type": "PROTEIN",
+"gene_symbol": "MAP2K2"
+}
+]
+},
+"CHEMBL3009": {
+"pref_name": "Receptor tyrosine-protein kinase erbB-4",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "Q15303",
+"type": "PROTEIN",
+"gene_symbol": "ERBB4"
+}
+]
+},
+"CHEMBL301": {
+"pref_name": "Cyclin-dependent kinase 2",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P24941",
+"type": "PROTEIN",
+"gene_symbol": "CDK2"
+}
+]
+},
+"CHEMBL308": {
+"pref_name": "Cyclin-dependent kinase 1",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P06493",
+"type": "PROTEIN",
+"gene_symbol": "CDK1"
+}
+]
+},
+"CHEMBL3116": {
+"pref_name": "Cyclin-dependent kinase 9",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P50750",
+"type": "PROTEIN",
+"gene_symbol": "CDK9"
+}
+]
+},
+"CHEMBL331": {
+"pref_name": "Cyclin-dependent kinase 4",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P11802",
+"type": "PROTEIN",
+"gene_symbol": "CDK4"
+}
+]
+},
+"CHEMBL3390820": {
+"pref_name": "PARP 1, 2 and 3",
+"type": "PROTEIN FAMILY",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P09874",
+"type": "PROTEIN",
+"gene_symbol": "PARP1"
+},
+{
+"accession": "Q9Y6F1",
+"type": "PROTEIN",
+"gene_symbol": "PARP3"
+},
+{
+"accession": "Q9UGN5",
+"type": "PROTEIN",
+"gene_symbol": "PARP2"
+}
+]
+},
+"CHEMBL3559691": {
+"pref_name": "Cyclin-dependent kinase",
+"type": "PROTEIN FAMILY",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P06493",
+"type": "PROTEIN",
+"gene_symbol": "CDK1"
+},
+{
+"accession": "P11802",
+"type": "PROTEIN",
+"gene_symbol": "CDK4"
+},
+{
+"accession": "P24941",
+"type": "PROTEIN",
+"gene_symbol": "CDK2"
+},
+{
+"accession": "Q00535",
+"type": "PROTEIN",
+"gene_symbol": "CDK5"
+},
+{
+"accession": "Q00534",
+"type": "PROTEIN",
+"gene_symbol": "CDK6"
+},
+{
+"accession": "P50613",
+"type": "PROTEIN",
+"gene_symbol": "CDK7"
+},
+{
+"accession": "Q00526",
+"type": "PROTEIN",
+"gene_symbol": "CDK3"
+},
+{
+"accession": "Q00536",
+"type": "PROTEIN",
+"gene_symbol": "CDK16"
+},
+{
+"accession": "Q07002",
+"type": "PROTEIN",
+"gene_symbol": "CDK18"
+},
+{
+"accession": "P49336",
+"type": "PROTEIN",
+"gene_symbol": "CDK8"
+},
+{
+"accession": "Q00537",
+"type": "PROTEIN",
+"gene_symbol": "CDK17"
+},
+{
+"accession": "P21127",
+"type": "PROTEIN",
+"gene_symbol": "CDK11B"
+},
+{
+"accession": "Q96Q40",
+"type": "PROTEIN",
+"gene_symbol": "CDK15"
+},
+{
+"accession": "Q9BWU1",
+"type": "PROTEIN",
+"gene_symbol": "CDK19"
+},
+{
+"accession": "O94921",
+"type": "PROTEIN",
+"gene_symbol": "CDK14"
+},
+{
+"accession": "P50750",
+"type": "PROTEIN",
+"gene_symbol": "CDK9"
+},
+{
+"accession": "Q15131",
+"type": "PROTEIN",
+"gene_symbol": "CDK10"
+},
+{
+"accession": "Q14004",
+"type": "PROTEIN",
+"gene_symbol": "CDK13"
+},
+{
+"accession": "Q8IZL9",
+"type": "PROTEIN",
+"gene_symbol": "CDK20"
+},
+{
+"accession": "Q9NYV4",
+"type": "PROTEIN",
+"gene_symbol": "CDK12"
+}
+]
+},
+"CHEMBL3559703": {
+"pref_name": "PI3-kinase class I",
+"type": "PROTEIN COMPLEX GROUP",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P27986",
+"type": "PROTEIN",
+"gene_symbol": "PIK3R1"
+},
+{
+"accession": "P42338",
+"type": "PROTEIN",
+"gene_symbol": "PIK3CB"
+},
+{
+"accession": "P48736",
+"type": "PROTEIN",
+"gene_symbol": "PIK3CG"
+},
+{
+"accession": "P42336",
+"type": "PROTEIN",
+"gene_symbol": "PIK3CA"
+},
+{
+"accession": "O00459",
+"type": "PROTEIN",
+"gene_symbol": "PIK3R2"
+},
+{
+"accession": "O00329",
+"type": "PROTEIN",
+"gene_symbol": "PIK3CD"
+},
+{
+"accession": "Q8WYR1",
+"type": "PROTEIN",
+"gene_symbol": "PIK3R5"
+},
+{
+"accession": "Q92569",
+"type": "PROTEIN",
+"gene_symbol": "PIK3R3"
+}
+]
+},
+"CHEMBL3587": {
+"pref_name": "Dual specificity mitogen-activated protein kinase kinase 1",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "Q02750",
+"type": "PROTEIN",
+"gene_symbol": "MAP2K1"
+}
+]
+},
+"CHEMBL3833061": {
+"pref_name": "CRL4(CRBN) E3 ubiquitin ligase",
+"type": "PROTEIN COMPLEX",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "Q96SW2",
+"type": "PROTEIN",
+"gene_symbol": "CRBN"
+},
+{
+"accession": "Q16531",
+"type": "PROTEIN",
+"gene_symbol": "DDB1"
+},
+{
+"accession": "Q13619",
+"type": "PROTEIN",
+"gene_symbol": "CUL4A"
+},
+{
+"accession": "P62877",
+"type": "PROTEIN",
+"gene_symbol": "RBX1"
+}
+]
+},
+"CHEMBL3883293": {
+"pref_name": "MAP kinase-interacting serine/threonine-protein kinase 1/2",
+"type": "PROTEIN FAMILY",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "Q9HBH9",
+"type": "PROTEIN",
+"gene_symbol": "MKNK2"
+},
+{
+"accession": "Q9BUB5",
+"type": "PROTEIN",
+"gene_symbol": "MKNK1"
+}
+]
+},
+"CHEMBL3972": {
+"pref_name": "Trifunctional purine biosynthetic protein adenosine-3",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P22102",
+"type": "PROTEIN",
+"gene_symbol": "GART"
+}
+]
+},
+"CHEMBL402": {
+"pref_name": "3-hydroxy-3-methylglutaryl-coenzyme A reductase",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "P04035",
+"type": "PROTEIN",
+"gene_symbol": "HMGCR"
+}
+]
+},
+"CHEMBL4036": {
+"pref_name": "Cyclin-dependent kinase 5",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "Q00535",
+"type": "PROTEIN",
+"gene_symbol": "CDK5"
+}
+]
+},
+"CHEMBL5024": {
+"pref_name": "Serine/threonine-protein kinase ATR",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "Q13535",
+"type": "PROTEIN",
+"gene_symbol": "ATR"
+}
+]
+},
+"CHEMBL5936": {
+"pref_name": "Toll-like receptor 7",
+"type": "SINGLE PROTEIN",
+"organism": "Homo sapiens",
+"components": [
+{
+"accession": "Q9NYK1",
+"type": "PROTEIN",
+"gene_symbol": "TLR7"
+}
+]
+},
+"CHEMBL613897": {
+"pref_name": "Ferriprotoporphyrin IX",
+"type": "SMALL MOLECULE",
+"organism": "Plasmodium falciparum",
+"components": []
+}
+},
+"tahoe_rows": [
+{
+"drug": "Lactate (calcium)",
+"targets": null,
+"moa-broad": "unclear",
+"moa-fine": "unclear",
+"human-approved": "yes",
+"canonical_smiles": "C.CC(C(=O)[O-])O.[Ca+2]",
+"pubchem_cid": 168311648.0
+},
+{
+"drug": "Bisoprolol (hemifumarate)",
+"targets": "ADRB1",
+"moa-broad": "inhibitor/antagonist",
+"moa-fine": "Adrenoceptor agonist",
+"human-approved": "yes",
+"canonical_smiles": "C.CC(C)NCC(COC1=CC=C(C=C1)COCCOC(C)C)O.C(=CC(=O)O)C(=O)O",
+"pubchem_cid": 168312271.0
+},
+{
+"drug": "Lonafarnib",
+"targets": "HRAS, KRAS, NRAS",
+"moa-broad": "inhibitor/antagonist",
+"moa-fine": "RAS inhibitor",
+"human-approved": "yes",
+"canonical_smiles": "C1CN(CCC1CC(=O)N2CCC(CC2)C3C4=C(CCC5=C3N=CC(=C5)Br)C=C(C=C4Br)Cl)C(=O)N",
+"pubchem_cid": 148195.0
+},
+{
+"drug": "Acetohexamide",
+"targets": null,
+"moa-broad": "activator/agonist",
+"moa-fine": "unclear",
+"human-approved": "yes",
+"canonical_smiles": "CC(=O)C1=CC=C(C=C1)S(=O)(=O)NC(=O)NC2CCCCC2",
+"pubchem_cid": 1989.0
+},
+{
+"drug": "DTP3",
+"targets": null,
+"moa-broad": "inhibitor/antagonist",
+"moa-fine": "unclear",
+"human-approved": "no",
+"canonical_smiles": "CC(=O)NC(CC1=CC=C(C=C1)O)C(=O)NC(CCCN=C(N)N)C(=O)NC(CC2=CC=CC=C2)C(=O)N",
+"pubchem_cid": 86295191.0
+},
+{
+"drug": "Homoharringtonine",
+"targets": null,
+"moa-broad": "inhibitor/antagonist",
+"moa-fine": "Protein synthesis inhibitor",
+"human-approved": "yes",
+"canonical_smiles": "CC(C)(CCCC(CC(=O)OC)(C(=O)OC1C2C3=CC4=C(C=C3CCN5C2(CCC5)C=C1OC)OCO4)O)O",
+"pubchem_cid": 285033.0
+},
+{
+"drug": "Carbidopa (monohydrate)",
+"targets": "AHR",
+"moa-broad": "inhibitor/antagonist",
+"moa-fine": "unclear",
+"human-approved": "yes",
+"canonical_smiles": "CC(CC1=CC(=C(C=C1)O)O)(C(=O)O)NN",
+"pubchem_cid": 2563.0
+},
+{
+"drug": "Tomivosertib",
+"targets": null,
+"moa-broad": "inhibitor/antagonist",
+"moa-fine": "Protein synthesis inhibitor",
+"human-approved": "no",
+"canonical_smiles": "CC1=C2C(=O)NC3(N2C(=O)C(=C1)NC4=NC=NC(=C4)N)CCCCC3",
+"pubchem_cid": 118598754.0
+},
+{
+"drug": "Megestrol",
+"targets": null,
+"moa-broad": "unclear",
+"moa-fine": "unclear",
+"human-approved": "yes",
+"canonical_smiles": "CC1=CC2C(CCC3(C2CCC3(C(=O)C)O)C)C4(C1=CC(=O)CC4)C",
+"pubchem_cid": 19090.0
+},
+{
+"drug": "Estrone sulfate (potassium)",
+"targets": null,
+"moa-broad": "unclear",
+"moa-fine": "unclear",
+"human-approved": "no",
+"canonical_smiles": "CC12CCC3C(C1CCC2=O)CCC4=C3C=CC(=C4)OS(=O)(=O)[O-].[K+]",
+"pubchem_cid": 23674502.0
+},
+{
+"drug": "Medroxyprogesterone acetate",
+"targets": "PGR",
+"moa-broad": "unclear",
+"moa-fine": "unclear",
+"human-approved": "yes",
+"canonical_smiles": "CC1CC2C(CCC3(C2CCC3(C(=O)C)OC(=O)C)C)C4(C1=CC(=O)CC4)C",
+"pubchem_cid": 6279.0
+},
+{
+"drug": "Methylprednisolone succinate",
+"targets": "NR3C1",
+"moa-broad": "unclear",
+"moa-fine": "Glucocorticoid receptor agonist",
+"human-approved": "yes",
+"canonical_smiles": "CC1CC2C3CCC(C3(CC(C2C4(C1=CC(=O)C=C4)C)O)C)(C(=O)COC(=O)CCC(=O)O)O",
+"pubchem_cid": 16923.0
+},
+{
+"drug": "Clobetasol propionate",
+"targets": "CYP3A5,CYP3A4",
+"moa-broad": "inhibitor/antagonist",
+"moa-fine": "unclear",
+"human-approved": "yes",
+"canonical_smiles": "CCC(=O)OC1(C(CC2C1(CC(C3(C2CCC4=CC(=O)C=CC43C)F)O)C)C)C(=O)CCl",
+"pubchem_cid": 32798.0
+},
+{
+"drug": "Cyclosporin A",
+"targets": "PPP3CA, PPP3CB, PPP3CC",
+"moa-broad": "inhibitor/antagonist",
+"moa-fine": "unclear",
+"human-approved": "yes",
+"canonical_smiles": "CCC1C(=O)N(CC(=O)N(C(C(=O)NC(C(=O)N(C(C(=O)NC(C(=O)NC(C(=O)N(C(C(=O)N(C(C(=O)N(C(C(=O)N(C(C(=O)N1)C(C(C)CC=CC)O)C)C(C)C)C)CC(C)C)C)CC(C)C)C)C)C)CC(C)C)C)C(C)C)CC(C)C)C)C",
+"pubchem_cid": 5284373.0
+},
+{
+"drug": "Levobupivacaine (hydrochloride)",
+"targets": "SCN5A",
+"moa-broad": "inhibitor/antagonist",
+"moa-fine": "unclear",
+"human-approved": "yes",
+"canonical_smiles": "CCCCN1CCCCC1C(=O)NC2=C(C=CC=C2C)C.Cl",
+"pubchem_cid": 117965.0
+},
+{
+"drug": "Sacubitril/Valsartan",
+"targets": "AGTR1",
+"moa-broad": "inhibitor/antagonist",
+"moa-fine": "unclear",
+"human-approved": "yes",
+"canonical_smiles": null,
+"pubchem_cid": null
+}
+],
+"requests": {
+"pubchem InChIKeys": 1,
+"chembl by InChIKey": 8,
+"chembl by name": 26,
+"chembl parents": 1,
+"chembl structures": 2,
+"chembl mechanisms": 8,
+"chembl targets": 5,
+"chembl status": 1,
+"seconds": 147.1
+}
+}

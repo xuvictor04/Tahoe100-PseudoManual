@@ -412,6 +412,9 @@ tahoe - every gene, drug and cell line of Tahoe-100M in one map
   gene SYMBOL           drugs that raise / lower it, in which lines, genes that move with / opposite it,
                         what probably acts on it and what it probably acts on (probable direction)
   drug NAME | line NAME | pair GENE1 GENE2 | module N        the same for a drug, a cell line, two genes
+  similar DRUG [DOSE]   the drug-doses with the most similar signature (--top N or --top all)
+  signature --up A,B[,...] [--down C,D] [--lines]     which drug-doses mimic or reverse a gene signature
+                        (--up @FILE reads the names from a file; p values from random gene sets)
   open                  the explorer in a browser (searchable pages: every gene, drug, drug-dose and cell
                         line, every value exact); also says where the map, the vault and the report are
   explorer              build the explorer again now, in the foreground (tahoe run does it after the map)
@@ -433,7 +436,7 @@ tahoe - every gene, drug and cell line of Tahoe-100M in one map
                         PUBLISH.md (the one-time GitHub steps). It never pushes; publish.sh does
   test                  the whole pipeline on synthetic data with planted answers (a few minutes)
   update                newest scripts (git pull)
-  <stage> [options]     one stage now, in the foreground: build effects tensor tables embed reference
+  <stage> [options]     one stage now, in the foreground: build effects tensor reference tables embed
                         relations graph direction validate vault map explorer
 Folders: data $DATA   output $OUT
   (change them with --data DIR / --out DIR on every command, or set TAHOE_DATA / TAHOE_OUT)
@@ -455,7 +458,7 @@ main() {
     test) cmd_test "$@" ;;
     update) cmd_update ;;
     help|-h|--help) cmd_help ;;
-    gene|drug|line|pair|module) need_packages; tm "$c" "$@" ;;
+    gene|drug|line|pair|module|similar|signature) need_packages; tm "$c" "$@" ;;
     review) cmd_review "$@" ;;
     duplicate) cmd_duplicate "$@" ;;
     export) cmd_export "$@" ;;

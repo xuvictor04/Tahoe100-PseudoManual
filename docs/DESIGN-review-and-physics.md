@@ -12,7 +12,7 @@ probable direction) and the search box are shared by all tabs, and selecting a g
 
 | Tab | What it shows |
 |---|---|
-| Nodal map | the t-SNE layout of 1 − \|cos\| (opposite genes together); a Spread slider moves it to the modules-apart layout (`graph/nodes.parquet` xm, ym) |
+| Nodal map | the t-SNE layout of 1 − \|cos\| (opposite genes together); a Spread slider moves it to the modules-apart layout (`graph/nodes.parquet` xm, ym); the page opens at Spread 1 (the modules apart) when the graph stage made the spread layouts (html_map version 9) |
 | Signed vector map | the t-SNE layout of 1 − cos (opposite genes apart); Spread moves it to xsm, ysm (each arm of a two-armed module its own group) |
 | k-D tour | the genes' unit vectors (`embed/gene_unit.npy`, all dimensions) projected onto a 2-D plane that turns smoothly (a grand tour); axis mode shows component i against component j exactly |
 | Physics: neighbourhood | a live force simulation of the selected gene, its partners and their partners, to depth 1-4, with the probable-direction arrows between them |
@@ -37,12 +37,22 @@ probable direction) and the search box are shared by all tabs, and selecting a g
 - **Neighbourhood tab**: depth 1 to 4 (default 2; built one depth at a time, strongest partners first), at most N
   nodes (a slider from 20 to 2,000, default 300); evidence filter both halves / also one half / every relation (the
   info box counts the selected gene's listed partners the filter leaves out); edges green (moves with) / red (moves
-  opposite), thickness ∝ |cos|, ⚠ in a spring's tooltip when the relation is not replicated; the centre gene is
-  pinned at the start.
+  opposite), thickness ∝ |cos|, ⚠ in a spring's tooltip when the relation does not have the same sign in both
+  halves of the compounds (or is a lineage pair or a read-sharing copy); the centre gene is pinned at the start.
 - **Spread** (nodal and signed maps): each module keeps its own t-SNE arrangement as one block; the blocks are placed
   by the modules' directions in the full vector space (1 − |cos| nodal, 1 − cos signed; classical MDS refined by
   SMACOF), overlapping blocks are pushed apart, genes without a module move with their 5 nearest module genes. No
-  random draws. The slider (0 to 1) interpolates between the t-SNE and the spread positions.
+  random draws. The slider (0 to 1) interpolates between the t-SNE and the spread positions; it starts at 1 (map
+  version 9; before, at 0), so the modules open apart and the slider goes back to the t-SNE layout.
+- **The help** says how much a flat map keeps, from `graph/info.json` partner_preservation (the share of a gene's 15
+  strongest partners among its 50 nearest dots on each layout; on the published tables 36% on the nodal and signed
+  maps, 31% spread; chance 0.33%), instead of the earlier claim that the maps keep near neighbours faithfully (map
+  version 9: the measure showed most partners sit elsewhere). Without the measure the help says it was not measured.
+- **Search** (map version 9) finds genes, drugs, drug-doses and cell lines: a drug's card shows its doses, both
+  annotations with the alert, its classes with their sources and links to the explorer and the vault note; a
+  drug-dose highlights its strongest raised and lowered genes; a line shows its organ, drivers, TP53 status ('not
+  recorded (presumed wild type)') and selective drug-doses ('k of N'). The tour's axes are named by the drug-doses at
+  their two ends.
 - **Module tab**: a module picker (dropdown + "module of the selected gene"), its label and arms; nodes coloured by
   arm; optional dimmed ring of 1-hop outside genes.
 - **All-genes tab**: nodes start at the nodal-map coordinates; edges hidden while moving (drawn for the selected
@@ -91,7 +101,8 @@ API keys can run out mid-run and be switched; the run resumes where it stopped.
 The Anthropic Python SDK (`anthropic`; every request streamed: `client.beta.messages.stream(...)` as a context manager,
 then `get_final_message()`), our own agent loop (so every turn is logged and
 every error is typed), custom tools we execute locally, and Anthropic's server tools for the web. Model: every agent
-defaults to `claude-opus-5-5` (the user can choose per agent: `--model`, or the agent file). Effort via
+uses the default model of `tahoemap/review/definitions.py` DEFAULT_MODEL unless its agent file or `--model` names
+another. Effort via
 `output_config={"effort": ...}` (reviewers `high`, checker `medium` by default); adaptive thinking (omit `thinking`);
 refusal fallback opted in by default: `betas=["server-side-fallback-2026-07-01"]`, `fallbacks="default"`; prompt
 caching: the system prompt (agent + skills) carries `cache_control`, and top-level `cache_control={"type":
@@ -103,10 +114,8 @@ at `xhigh` / `max`. `stop_reason`: `tool_use` → run our tools, return all resu
 `max_tokens` → a nudge (two cut-offs in a row end the attempt); `end_turn` without a submitted review → a nudge (two in
 a row: status `no_review`). Each user message after the first ends with a budget line (spend and requests so far; near
 the cap or `max_turns`: submit now), appended and never edited, so the cached prefix stays stable.
-Before writing SDK calls, read (do not guess):
-`/tmp/claude-0/bundled-skills/2.1.319/80c569fdc02ccc03f6aacbfd35f8757c/claude-api/` → `python/claude-api/README.md`,
-`python/claude-api/tool-use.md`, `shared/tool-use-concepts.md`, `shared/error-codes.md`, `shared/prompt-caching.md`,
-`shared/model-migration.md` (search "fallbacks" and "Claude Opus 5.5"). Installed: `anthropic` 2.6.0.
+Before writing SDK calls, read the SDK's own documentation (do not guess): tool use, error codes, prompt caching and
+the model fallbacks. Installed: `anthropic` 2.6.0.
 
 ### Files and interfaces
 
@@ -126,9 +135,9 @@ tahoemap/review/
   fake.py            a scripted fake client for tests (no network, no key)
 ```
 
-**Agent and skill files** use Claude Code's markdown format, so they also work if copied into `.claude/agents/` and
-`.claude/skills/`:
-- agent: YAML frontmatter `name`, `description`, `model` (default `claude-opus-5-5`), `effort`, `tools` (list of tool
+**Agent and skill files** are markdown with YAML front matter, the common format of agent tools (docs/review.md says
+how to use them in such a tool):
+- agent: YAML frontmatter `name`, `description`, `model` (default: definitions.DEFAULT_MODEL), `effort`, `tools` (list of tool
   names: custom + `web_search` / `web_fetch`), `skills` (list), `max_turns`, `max_usd`; body = system prompt.
 - skill: `skills/<name>/SKILL.md`, frontmatter `name`, `description`; body = instructions. The runner appends the
   bodies of the agent's skills to its system prompt (stable order → cacheable).
@@ -221,8 +230,8 @@ is refused without being shown.
   retractions were recorded). The vault and the map mark a verdict that cites a retracted paper "(cites a retracted
   paper)" and show one whose only papers are retracted as unverified (a retracted paper is no support).
 
-**Cost**: price table per model (USD / MTok: input, output, cache write 1.25× input, cache read 0.1× input ...
-`claude-opus-5-5` 4 / 20, `claude-sonnet-5-5` 2 / 10, `claude-haiku-5-5` 0.10 / 0.50; web search $0.01 each); cost
+**Cost**: a price table per model in the code (`tahoemap/review/runner.py` PRICES; USD per million tokens: input,
+output, cache write 1.25× input, cache read 0.1× input; web search $0.01 each); cost
 from `response.usage` (per `usage.iterations` entry when present, at that entry's model). Per-entity cap
 (`--per-entity-usd`, default from the agent file, e.g. 3.00): exceeding it ends the attempt (`over_budget`, the
 partial history kept). Total cap `--max-usd` (no default: unlimited only when the user says so; the runner refuses to

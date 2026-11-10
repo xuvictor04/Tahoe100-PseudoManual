@@ -24,7 +24,11 @@ TM.drug = (function () {
     ['Plate factor', ['plate_scale']],
     ['Cell cycle and proteasome (the 3 summed modules, pooled)', ['S_PHASE_lfc', 'S_PHASE_z', 'G2M_PHASE_lfc',
       'G2M_PHASE_z', 'PROTEASOME_lfc', 'PROTEASOME_z']],
-    ['Flags', ['flags']],
+    ['Flags (of record, and the atlas\u2019s own)', ['flags', 'atlas_flags']],
+    ['Neighbouring wells (a signal like that of the well next to it)', ['nb_tier', 'nb_alert', 'nb_partner',
+      'nb_partner_dd', 'nb_where', 'nb_partners', 'nb_n_sig', 'nb_shared', 'nb_share', 'nb_top_share',
+      'nb_other_doses_share', 'nb_partner_own_share', 'nb_genes']],
+    ['Mechanism classes and selective lines', ['mechanism_classes', 'n_selective_lines', 'selective_lines']],
     ['Genes it moves', ['n_genes_up', 'n_genes_down', 'n_sig_genes', 'top_up', 'top_down', 'replicate_r']]];
   function ddGroups() {
     var t = D().core.t.drugdoses, seen = {}, out = [];
@@ -56,9 +60,81 @@ TM.drug = (function () {
   function ddValue(src, name, k) {
     var d = D(), t = src === 'edd' ? d.core.t.edd : d.core.t.drugdoses, r = src === 'edd' ? eddRow(k) : d.dd.row[k];
     if (!t || r < 0 || r === undefined || !t.c[name]) return '';
-    if (name === 'flags') return TM.gene.flagText(t.c.flags.get(r)) || TM.h('span', {class: 'muted'}, 'none');
+    if (name === 'flags' || name === 'atlas_flags') {
+      return TM.gene.flagText(t.c[name].get(r)) || TM.h('span', {class: 'muted'}, 'none');
+    }
+    if (name === 'nb_partner_dd') {
+      var pd = t.c.nb_partner_dd.get(r);
+      return pd !== null && pd >= 0 ? TM.ddLink(pd, d.dd.label[pd] + ' (drug-dose ' + pd + ')') :
+        TM.h('span', {class: 'muted'}, 'none (-1)');
+    }
+    if (name === 'nb_alert') {
+      var al = t.c.nb_alert.get(r);
+      var mk = nbMark((nbOf(k) || {}).tier);
+      return al ? TM.h('span', {class: mk.cls}, mk.sign + al) : '';
+    }
     if (name === 'top_up' || name === 'top_down') return TM.valText(t.c[name], r);
     return TM.valText(t.c[name], r);
+  }
+  // the neighbouring-well reading of drug-dose k (tables/drugdoses nb_*): {tier, alert, partner, where, ...} or null
+  function nbOf(k) {
+    var d = D(), t = d.core.t.drugdoses, r = d.dd.row[k];
+    if (!t || !t.c.nb_tier || r === undefined) return null;
+    var v = function (n) { return t.c[n] ? t.c[n].get(r) : null; };
+    return {tier: v('nb_tier') || '', alert: v('nb_alert') || '', partner: v('nb_partner') || '',
+      partnerDd: v('nb_partner_dd'), where: v('nb_where') || '', nGenes: v('nb_genes'), share: v('nb_share')};
+  }
+  // tier 'artifact' carries the artifact token (like a neighbouring well, red with \u26a0); 'top dose' is an alert, not
+  // an artifact flag (the tables stage: "an alert, not an artifact flag"; amber with \u25b3, never red); 'same
+  // mechanism' is a note (muted). One word per tier on every surface of the explorer.
+  function nbIsArtifact(k) { var nb = nbOf(k); return !!nb && nb.tier === 'artifact'; }
+  var NB_TOP_SIGN = '\u25b3 ';
+  function nbMark(tier) {
+    if (tier === 'artifact') {
+      return {cls: 'alert-text', badge: 'warnb', sign: '\u26a0 ', word: 'artifact flag "' + (TM.data.K.NB_FLAG ||
+        'like a neighbouring well') + '"'};
+    }
+    if (tier === 'top dose') return {cls: 'nbtop-text', badge: 'topb', sign: NB_TOP_SIGN, word: 'alert, not an ' +
+      'artifact flag'};
+    return {cls: 'notes-text', badge: '', sign: '', word: 'note, not an artifact flag'};
+  }
+  // the header badge of a drug-dose's neighbouring-well tier (null without a tier); prefix: text before it
+  function nbBadge(k, prefix) {
+    var nb = nbOf(k);
+    if (!nb || !nb.tier) return null;
+    var m = nbMark(nb.tier);
+    return TM.h('span', {class: 'badge' + (m.badge ? ' ' + m.badge : ''), title: nb.alert, dataset: {nbTier: nb.tier}},
+      (prefix || '') + m.sign + 'neighbouring well: ' + nb.tier + (nb.tier === 'artifact' ? '' : ' (' + m.word + ')'));
+  }
+  // a block with the neighbouring-well reading of drug-dose k, for its QC tab and the drug page
+  function nbBlock(k, short) {
+    var d = D(), nb = nbOf(k);
+    var box = TM.h('div', {class: 'nbblock', dataset: {nb: nb ? nb.tier || 'none' : 'not recorded'}});
+    if (!nb) {
+      box.appendChild(TM.p({class: 'muted'}, 'Neighbouring wells: not judged in this run (tables/drugdoses has no ' +
+        'nb_tier column: a tables stage older than version 5).'));
+      return box;
+    }
+    if (!nb.tier) {
+      box.appendChild(TM.p({class: 'muted'}, 'Neighbouring wells: no well next to ' + d.dd.label[k] + ' shows its ' +
+        'signal (tier none).'));
+      return box;
+    }
+    var art = nb.tier === 'artifact', m = nbMark(nb.tier);
+    box.appendChild(TM.h('p', {class: art ? 'callout warnbox' : nb.tier === 'top dose' ? 'callout topbox' :
+      'callout'}, m.sign + 'Neighbouring wells, tier "' + nb.tier + '" (' + (art ? '' : nb.tier === 'top dose' ? 'an ' :
+      'a ') + m.word + '): ',
+      nb.alert));
+    var parts = [];
+    if (nb.partnerDd !== null && nb.partnerDd >= 0) parts.push(['Partner: ', TM.ddLink(nb.partnerDd, nb.partner ||
+      d.dd.label[nb.partnerDd])]);
+    else if (nb.partner) parts.push(['Partner: ' + nb.partner]);
+    if (nb.where) parts.push(['Where: ' + nb.where]);
+    if (!short && nb.nGenes !== null) parts.push(['Genes carrying the token: ' + TM.fmt.int(nb.nGenes)]);
+    if (parts.length) {
+      box.appendChild(TM.p({class: 'small'}, parts.map(function (x, j) { return [j ? ' \u00b7 ' : ''].concat(x); })));
+    }
+    return box;
   }
   function ddDoc(src, name) {
     if (src === 'edd') {
@@ -98,6 +174,51 @@ TM.drug = (function () {
     return TM.frag(wrap, TM.h('h3', null, 'What the flags of these doses mean'), TM.flagWordsList(fl.join('; ')));
   }
 
+  // ------------------------------------------------------------------- the two annotations, on every surface
+  // Tahoe's annotation (tables/drugs moa_fine, moa_broad, targets: as recorded, never changed) and ChEMBL's
+  // (tables/drugs chembl_*, from reference/drug_annotations), with the alert where they disagree (annotation_alert).
+  // di: the drug's index (its row of tables/drugs). has: this run has the ChEMBL columns (reference stage 2 or later).
+  function annOf(di) {
+    var c = D().core.t.drugs.c;
+    var v = function (n) { return c[n] && di !== undefined && di !== null && di >= 0 ? c[n].get(di) : null; };
+    return {tahoe: v('moa_fine') || '', tahoeBroad: v('moa_broad') || '', targets: v('targets') || '',
+      chembl: v('chembl_mechanisms') || '', chemblId: v('chembl_id') || '', status: v('annotation_status') || '',
+      alert: v('annotation_alert') || '', classes: v('mechanism_classes') || '', has: !!c.annotation_status};
+  }
+  // the address of a drug's Annotations section (its Overview tab, scrolled to the section)
+  function annHref(name) { return TM.href.drug(name) + '?at=annotations'; }
+  // ChEMBL's mechanism as text, or why there is none
+  function chemblText(a) {
+    if (!a.has) return 'not in this run (a reference stage older than version 2)';
+    if (a.chembl) return a.chembl;
+    return a.chemblId ? 'no curated mechanism (' + a.chemblId + ')' : 'no ChEMBL record' + (a.status ? ' (' +
+      a.status + ')' : '');
+  }
+  // "Tahoe: X · ChEMBL: Y": each mechanism labelled with its source
+  function annText(di) {
+    var a = annOf(di);
+    return 'Tahoe: ' + (a.tahoe || 'mechanism not recorded') + (a.tahoeBroad && a.tahoeBroad !== a.tahoe ? ' (' +
+      a.tahoeBroad + ')' : '') + ' \u00b7 ChEMBL: ' + chemblText(a);
+  }
+  // the badge "\u26a0 Tahoe and ChEMBL disagree", a link to the drug's Annotations section (null when they agree)
+  function annBadge(di, name) {
+    var a = annOf(di);
+    if (!a.alert) return null;
+    return TM.h('span', {class: 'badge warnb', title: a.alert, dataset: {annAlert: 1}}, TM.a(annHref(name),
+      '\u26a0 Tahoe and ChEMBL disagree'), ': ' + a.alert);
+  }
+  // the class labels of a mechanism_classes text ("label (source); label (source)": the source may hold "; ")
+  function classLabels(s) {
+    var out = [], depth = 0, cur = '';
+    String(s || '').split('').forEach(function (ch) {
+      if (ch === '(') depth++;
+      if (ch === ')') depth = Math.max(0, depth - 1);
+      if (ch === ';' && depth === 0) { out.push(cur); cur = ''; } else cur += ch;
+    });
+    out.push(cur);
+    return TM.uniq(out.map(function (x) { return x.split(' (')[0].trim(); }).filter(function (x) { return x; }));
+  }
+
   // ------------------------------------------------------------------- page
   function page(ctx) {
     var d = D(), arg = ctx.segs[1] || '', i = d.drugByName(arg), main = ctx.main;
@@ -127,6 +248,12 @@ TM.drug = (function () {
             'tables/drug_effects rows, its direction rows and its mechanism-class row.'}));
         }
         var dir = x.dr ? x.dr.t.dir : null, M = d.core.t.modules ? d.core.t.modules.n : 0;
+        if (ctx.params.get('at') === 'annotations') {
+          x.atAnn = function () {
+            var sec = main.querySelector('[data-annotations]');
+            if (sec && sec.scrollIntoView) sec.scrollIntoView({block: 'start'});
+          };
+        }
         return TM.tabbed(ctx, {kind: 'drug', title: name, tabs: TABS, cur: ctx.segs[2] || 'overview',
           href: function (t) { return TM.href.drug(name, t === 'overview' ? null : t); },
           counts: {genes: TM.fmt.int(d.G) + ' \u00d7 ' + ds.length, lines: d.L + ' \u00d7 ' + ds.length,
@@ -142,10 +269,12 @@ TM.drug = (function () {
     var d = D(), t = d.core.t.drugs, i = x.i, c = t.c;
     var box = TM.h('div', {class: 'ghead', dataset: {drug: x.name}});
     var v = function (n) { return c[n] ? c[n].get(i) : null; };
-    box.appendChild(TM.h('div', null, TM.h('h1', null, x.name), TM.h('span', {class: 'sym-sub'}, [
+    var an = annOf(i);
+    box.appendChild(TM.h('div', null, TM.h('h1', null, x.name), TM.h('span', {class: 'sym-sub', dataset: {ann: 1}}, [
       v('salt_base') && v('salt_base') !== x.name ? 'compound ' + v('salt_base') : null,
-      v('moa_fine') ? 'mechanism: ' + v('moa_fine') + (v('moa_broad') ? ' (' + v('moa_broad') + ')' : '') : null,
-      v('targets') ? 'targets: ' + v('targets') : null, v('approved') ? 'approved: ' + v('approved') : null]
+      'mechanism (Tahoe): ' + (an.tahoe || 'not recorded') + (an.tahoeBroad ? ' (' + an.tahoeBroad + ')' : ''),
+      an.targets ? 'targets (Tahoe): ' + an.targets : null, 'mechanism (ChEMBL): ' + chemblText(an),
+      v('approved') ? 'approved: ' + v('approved') : null]
       .filter(function (s) { return s; }).join(' \u00b7 '))));
     var badges = TM.h('div', {class: 'badges'});
     badges.appendChild(TM.h('span', {class: 'badge'}, x.ds.length + ' dose' + (x.ds.length === 1 ? '' : 's') + ': ',
@@ -156,7 +285,15 @@ TM.drug = (function () {
         badges.appendChild(TM.h('span', {class: 'badge' + (TM.gene.flagText(f).className.indexOf('has-art') >= 0 ?
           ' warnb' : '')}, d.dd.dose[k] + ' \u00b5M: ', TM.gene.flagText(f)));
       }
+      var nbb = nbBadge(k, d.dd.dose[k] + ' \u00b5M: ');
+      if (nbb) badges.appendChild(nbb);
     });
+    if (v('mechanism_classes')) {
+      badges.appendChild(TM.h('span', {class: 'badge', dataset: {classes: 1}}, 'mechanism classes: ' +
+        v('mechanism_classes')));
+    }
+    var ab = annBadge(i, x.name);
+    if (ab) badges.appendChild(ab);
     box.appendChild(badges);
     var L = TM.h('div', {class: 'extlinks'});
     var vp = x.dr && x.dr.meta.vault ? TM.vaultUrl(x.dr.meta.vault) : null;
@@ -169,6 +306,104 @@ TM.drug = (function () {
     return box;
   }
 
+  // the neighbouring-well cell of a dose in the glance table
+  function nbCell(k) {
+    var nb = nbOf(k);
+    if (!nb) return TM.h('span', {class: 'muted'}, 'not judged');
+    if (!nb.tier) return TM.h('span', {class: 'muted'}, 'none');
+    var m = nbMark(nb.tier);
+    return TM.h('span', {class: m.cls, title: nb.alert}, m.sign + nb.tier + (nb.tier === 'artifact' ? '' : ' (' +
+      m.word + ')') + (nb.partner ? ': like ' : ''), nb.partnerDd !== null && nb.partnerDd >= 0 ?
+      TM.ddLink(nb.partnerDd, nb.partner || null) : nb.partner || '');
+  }
+  // "Annotations": Tahoe's and ChEMBL's annotation side by side (reference/drug_annotations), the alert where they
+  // disagree, the mechanism classes the rules use with their sources (drug_classes), every ChEMBL mechanism row
+  // (drug_mechanisms). Tahoe's annotation is never changed; a class never comes from it.
+  function annotationsSection(x) {
+    var d = D(), dr = x.dr, t = d.core.t.drugs, i = x.i;
+    var sec = TM.section('Annotations: Tahoe and ChEMBL', 'annotations');
+    sec.dataset.annotations = 1;
+    var ann = dr && dr.t.ann && dr.t.ann.n ? dr.t.ann : null, cls = dr && dr.t.cls ? dr.t.cls : null;
+    var mech = dr && dr.t.mech ? dr.t.mech : null;
+    function tv(n) { return t.c[n] ? t.c[n].get(i) : null; }
+    function av(n) { return ann && ann.c[n] ? ann.c[n].get(0) : tv(n); }
+    if (!dr) {
+      sec.appendChild(TM.p('The drug\u2019s own file could not be loaded, so its annotation tables are not shown; ' +
+        'Tahoe\u2019s annotation is in the record below.'));
+      return sec;
+    }
+    if (!ann && !t.c.annotation_status) {
+      sec.appendChild(TM.p('This run has no ChEMBL annotation (reference/drug_annotations.parquet is missing: a ' +
+        'reference stage older than version 2). Tahoe\u2019s annotation is in the record below.'));
+      return sec;
+    }
+    var alert = av('annotation_alert');
+    if (alert) {
+      sec.appendChild(TM.h('p', {class: 'callout warnbox', dataset: {annDisagree: 1}}, '\u26a0 The two annotations ' +
+        'disagree: ' + alert));
+    }
+    var tab = TM.h('table', {class: 'grid annside'}, TM.h('thead', null, TM.h('tr', null, TM.h('th', null, ''),
+      TM.h('th', null, 'Tahoe (as recorded; never changed)'), TM.h('th', null, 'ChEMBL' + (av('chembl_id') ? ' (' +
+        av('chembl_id') + ')' : '')))));
+    var body = TM.h('tbody');
+    function row(label, a, b) {
+      body.appendChild(TM.h('tr', null, TM.h('td', {class: 'fname'}, label), TM.h('td', {class: 'long'}, a || TM.h(
+        'span', {class: 'muted'}, 'not recorded')), TM.h('td', {class: 'long'}, b || TM.h('span', {class: 'muted'},
+        av('chembl_id') ? 'not given' : 'no ChEMBL record'))));
+    }
+    var phase = av('chembl_max_phase');
+    row('Name', x.name + (tv('salt_base') && tv('salt_base') !== x.name ? ' (compound ' + tv('salt_base') + ')' : ''),
+      (av('chembl_name') || '') + (phase !== null && phase !== undefined && !isNaN(phase) ? ', max phase ' + phase :
+        ''));
+    row('Targets', av('tahoe_targets') || tv('targets'), av('chembl_targets'));
+    row('Mechanism', [av('tahoe_moa_fine') || tv('moa_fine'), av('tahoe_moa_broad') || tv('moa_broad')]
+      .filter(function (s) { return s; }).join(' (broad: ') + ((av('tahoe_moa_broad') || tv('moa_broad')) &&
+      (av('tahoe_moa_fine') || tv('moa_fine')) ? ')' : ''), av('chembl_mechanisms'));
+    row('Action', '', av('chembl_actions'));
+    row('WHO ATC', '', av('chembl_atc'));
+    row('How matched', 'PubChem ' + (av('pubchem_cid') || 'id not recorded'), av('chembl_matched_by'));
+    tab.appendChild(body);
+    sec.appendChild(TM.h('div', {class: 'tbl-scroll'}, tab));
+    sec.appendChild(TM.p({class: 'small'}, 'How they compare: ' + (av('annotation_status') || 'not recorded') +
+      (alert ? '' : ' (no alert)') + '.'));
+    var note = av('annotation_note');
+    if (note) {
+      sec.appendChild(TM.h('ul', {class: 'small'}, note.split(' | ').map(function (s) {
+        return TM.h('li', null, s);
+      })));
+    }
+    var h3 = TM.h('h3', null, 'Mechanism classes the rules use (reference/drug_classes: ' + (cls ? cls.n : 0) + ')');
+    sec.appendChild(h3);
+    if (cls && cls.n) {
+      var ul = TM.h('ul', {class: 'classlines', dataset: {classes: cls.n}});
+      for (var r = 0; r < cls.n; r++) {
+        ul.appendChild(TM.h('li', null, TM.h('strong', null, cls.c.label.get(r)), ' (' + cls.c['class'].get(r) +
+          (cls.c.effect && cls.c.effect.get(r) && cls.c.effect.get(r) !== 'none' ? '; effect: ' +
+            cls.c.effect.get(r) : '') + '). Source: ' + (cls.c.source.get(r) || 'not recorded')));
+      }
+      sec.appendChild(ul);
+    } else {
+      sec.appendChild(TM.p('None: no rule puts ' + x.name + ' in a class. Classes come from cited code constants, ' +
+        'ChEMBL mechanisms and WHO ATC codes (tahoemap/data/drug_classes.json); Tahoe\u2019s annotation never ' +
+        'makes a class.'));
+    }
+    sec.appendChild(TM.h('h3', null, 'ChEMBL mechanism rows (reference/drug_mechanisms: ' + (mech ? mech.n : 0) +
+      ')'));
+    if (mech && mech.n) {
+      sec.appendChild(TM.table({key: 'mech', n: mech.n, id: 'drug-mech', csv: x.name + '_chembl_mechanisms',
+        cols: TM.tableCols(mech, docsOf('reference/drug_mechanisms.parquet'), {simple: ['mechanism_of_action',
+          'action_type', 'direction', 'target_name', 'target_genes', 'classes']})}).el);
+    } else {
+      sec.appendChild(TM.p(av('chembl_id') ? 'ChEMBL has this molecule but no curated mechanism for it.' :
+        'No ChEMBL record (' + (av('annotation_status') || 'not matched') + ').'));
+    }
+    if (ann) {
+      sec.appendChild(TM.details('Every column of reference/drug_annotations for ' + x.name,
+        TM.recordOf(ann, 0, docsOf('reference/drug_annotations.parquet'))));
+    }
+    return sec;
+  }
+
   // ------------------------------------------------------------------- Overview
   function tOverview(pane, x) {
     var d = D(), t = d.core.t.drugs;
@@ -178,7 +413,7 @@ TM.drug = (function () {
     var g0 = TM.section('Its doses at a glance');
     var dt = d.core.t.drugdoses, ed = d.core.t.edd;
     var gl = TM.h('table', {class: 'mini', dataset: {glance: x.ds.length}}, TM.h('tr', null, ['dose', 'genes up',
-      'genes down', 'wells used / all', 'replicate r', 'vector space', 'flags'].map(function (h) {
+      'genes down', 'wells used / all', 'replicate r', 'vector space', 'flags', 'neighbouring well'].map(function (h) {
       return TM.h('th', null, h);
     })));
     x.ds.forEach(function (k) {
@@ -190,13 +425,19 @@ TM.drug = (function () {
         TM.h('td', {class: 'num'}, TM.fmt.int(v('n_wells')) + ' / ' + TM.fmt.int(v('n_wells_all'))),
         TM.h('td', {class: 'num'}, TM.fmt.num(v('replicate_r'), 'f64')),
         TM.h('td', null, ed && er >= 0 ? ed.c.fit_status.get(er) || '' : ''),
-        TM.h('td', null, TM.gene.flagText(d.dd.flags[k]) || TM.h('span', {class: 'muted'}, 'none'))));
+        TM.h('td', null, TM.gene.flagText(d.dd.flags[k]) || TM.h('span', {class: 'muted'}, 'none')),
+        TM.h('td', {class: 'long small'}, nbCell(k))));
     });
     g0.appendChild(TM.h('div', {class: 'tbl-scroll'}, gl));
     g0.appendChild(TM.note('Genes up / down: q < ' + d.K.Q_CUT +
         ' and at least 1.2\u00d7. Every gene at each dose is ' +
-      'in the Genes \u00d7 doses tab; every quality column is in "Its doses side by side" below.'));
+      'in the Genes \u00d7 doses tab; every quality column is in "Its doses side by side" below. Each dose sits ' +
+      'on its own plate: ' + (t.c.dose_plates ? t.c.dose_plates.get(x.i) || 'not recorded' : 'not recorded in this ' +
+        'run') + (t.c.doses_share_a_plate && t.c.doses_share_a_plate.get(x.i) ? ' (some doses share a plate)' : '') +
+      '. A dose on one well rests on that one well.'));
     pane.appendChild(g0);
+    pane.appendChild(annotationsSection(x));
+    if (x.atAnn) TM.nextFrame().then(x.atAnn);
     var s1 = TM.section('The drug (tables/drugs, every column)');
     s1.appendChild(TM.recordOf(t, x.i, docsOf('tables/drugs.parquet'),
       {best_dd: function (v) { return v >= 0 ? TM.href.dd(v) : null; }}));
@@ -212,6 +453,8 @@ TM.drug = (function () {
     if (dr.t.edrug && dr.t.edrug.n) {
       s3.appendChild(TM.note('A drug\u2019s vector is the vector of its best trustworthy dose; the Similar drugs tab ' +
         'compares it with every other drug.'));
+      var sfa = dr.t.edrug.c.salt_form_alert ? dr.t.edrug.c.salt_form_alert.get(0) : '';
+      if (sfa) s3.appendChild(TM.h('p', {class: 'callout', dataset: {saltForm: 1}}, '\u26a0 Salt forms: ' + sfa));
       s3.appendChild(TM.recordOf(dr.t.edrug, 0, {alert: 'why this drug\u2019s vector may be weak (empty: no alert)',
         trusted: 'the vector dose has no untrusted flag', n_sig_genes: 'significant genes at the vector dose'},
       {dd: function (v) { return v >= 0 ? TM.href.dd(v) : null; }}));
@@ -219,12 +462,18 @@ TM.drug = (function () {
       s3.appendChild(TM.p(x.name + ' has no row in embed/drugs (no vector).'));
     }
     pane.appendChild(s3);
-    var s4 = TM.section('Its mechanism class (validation/drug_moa)');
+    var s4 = TM.section('Its mechanism classes (validation/drug_moa: ' + (dr.t.moa ? dr.t.moa.n : 0) + ')');
     if (dr.t.moa && dr.t.moa.n) {
       s4.appendChild(TM.note('Do drugs of the same mechanism class sit together in the vector space? One row per ' +
-        'class.'));
-      s4.appendChild(TM.recordOf(dr.t.moa, 0, {drugs: 'the class\u2019s drugs as the validation table lists them ' +
-        '(an output older than validate version 5 lists at most 12; every drug of the class is just below)'}, null));
+        'class: Tahoe\u2019s class (by its moa_fine) and the mechanism classes of ChEMBL or the code constants ' +
+        '(class_source), each with its own test.'));
+      var mdocs = docsOf('validation/drug_moa.csv');
+      mdocs.drugs = (mdocs.drugs || '') + ' (an output older than validate version 5 lists at most 12; every drug ' +
+        'of Tahoe\u2019s class is just below)';
+      for (var mi = 0; mi < dr.t.moa.n; mi++) {
+        if (mi) s4.appendChild(TM.h('hr', {class: 'thin'}));
+        s4.appendChild(TM.recordOf(dr.t.moa, mi, mdocs, null));
+      }
     } else {
       s4.appendChild(TM.p('No validation/drug_moa row for its mechanism (' + (t.c.moa_fine ?
         t.c.moa_fine.get(x.i) || 'not recorded' : 'not recorded') + ').'));
@@ -270,6 +519,17 @@ TM.drug = (function () {
         missing: why('fold'), doc: '2^log2 FC at ' + dose + ', computed in the page'},
       {key: 'lfc' + key, label: 'log2 FC' + sfx, type: 'f32', cls: 'num', simple: simple, get: L, missing: why('lfc'),
         doc: (cd.lfc || 'pooled log2 fold change') + ' (at ' + dose + '; DD_lfc, exact float32)'},
+      {key: 'lvd' + key, label: 'vs DMSO (rough)' + sfx, type: 'f32', cls: 'num', simple: simple,
+        get: function (r) { return a.lvd ? a.lvd.v[r] : NaN; },
+        missing: function (r) {
+          if (!a.lvd) return 'not in this run\u2019s drug-dose file (an explorer older than version 3)';
+          return isNaN(L(r)) ? why('lfc')(r) : r >= d.G ? 'a summed module, not a gene: no DMSO value' :
+            'the plates have no usable DMSO value for this gene';
+        },
+        doc: (cd.lfc_vs_dmso || 'a rough DMSO-referenced log2 fold change: log2 FC + the mean plate offset of ' +
+          'the drug-dose\u2019s used wells') + ' (at ' + dose + '). A sign check, not a second estimate: log2 FC ' +
+          'is against the typical drug well of the same plate, not DMSO. From the drug-dose file (p/ lvd, the same ' +
+          'float32 as tables/drug_effects lfc_vs_dmso).'},
       {key: 'z' + key, label: 'z' + sfx, type: 'f32', cls: 'num', simple: simple,
         get: function (r) { return a.z.v[r]; }, missing: why('z'),
         doc: (cd.z || 'pooled z') + ' (at ' + dose + ')'},
@@ -368,7 +628,9 @@ TM.drug = (function () {
         if (s) c.show = function (r) { return s(rows[r]); };
         if (sv) c.sortv = function (r) { return sv(rows[r]); };
         if (ms) c.missing = function (r) { return ms(rows[r]); };
-        if (['fold', 'call'].indexOf(c.key.split('_')[0]) >= 0 && (ds.length > 1 && j !== hi)) c.simple = false;
+        if (['fold', 'call', 'lvd'].indexOf(c.key.split('_')[0]) >= 0 && (ds.length > 1 && j !== hi)) {
+          c.simple = false;
+        }
         cols.push(c);
       });
     });
@@ -497,9 +759,8 @@ TM.drug = (function () {
     var docs = (d.docs['tables/drug_effects.parquet'] || {}).cols || {};
     var cols = TM.tableCols(de, docs,
       {links: {symbol: function (v, r) { return TM.href.gene(d.labelOf[de.c.col.get(r)] ||
-      v); }, dd: function (v) { return TM.href.dd(v); }}, simple: ['symbol', 'dose', 'fold', 'lfc', 'z', 'q_up',
-          'q_down',
-      'flags', 'n_lines_up', 'n_lines_down', 'pattern_up', 'pattern_down']});
+      v); }, dd: function (v) { return TM.href.dd(v); }}, simple: ['symbol', 'dose', 'fold', 'lfc', 'lfc_vs_dmso',
+          'z', 'q_up', 'q_down', 'flags', 'n_lines_up', 'n_lines_down', 'n_wells', 'pattern_up', 'pattern_down']});
     cols.forEach(function (c) {
       if (c.key === 'flags') c.show = function (r) { return TM.gene.flagText(de.c.flags.get(r)); };
     });
@@ -614,9 +875,11 @@ TM.drug = (function () {
   }
 
   // ------------------------------------------------------------------- Modules
+  // module -> its label as shown: label_display (the label with its alert tags, validate 7) when present, else label
   function moduleLabels() {
     var t = TM.data.core.t.mlabels, out = {};
-    for (var i = 0; t && i < t.n; i++) out[t.c.module.get(i)] = t.c.label.get(i) || '';
+    var c = t && (t.c.label_display || t.c.label);
+    for (var i = 0; t && i < t.n; i++) out[t.c.module.get(i)] = (c.get(i) || (t.c.label ? t.c.label.get(i) : '')) || '';
     return out;
   }
   function moduleCols(pz, ds, moduleNums) {
@@ -825,7 +1088,9 @@ TM.drug = (function () {
   }
 
   return {page: page, ddGroups: ddGroups, ddValue: ddValue, ddDoc: ddDoc, pCols: pCols, geneCols: geneCols,
-    betaWhy: betaWhy, emptyNote: emptyNote,
+    nbOf: nbOf, nbIsArtifact: nbIsArtifact, nbBlock: nbBlock, nbMark: nbMark, nbBadge: nbBadge, annOf: annOf,
+    annHref: annHref, annText: annText, annBadge: annBadge, chemblText: chemblText, classLabels: classLabels,
+    annotationsSection: annotationsSection, betaWhy: betaWhy, emptyNote: emptyNote,
     abundanceCols: abundanceCols, moduleLabels: moduleLabels, untrusted: untrusted, similar: similar,
     patText: patText, eddRow: eddRow, TABS: TABS};
 })();

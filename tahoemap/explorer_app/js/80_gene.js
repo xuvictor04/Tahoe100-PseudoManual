@@ -20,8 +20,9 @@ TM.gene = (function () {
     cos_half2: 'the same cosine in the space fitted on the second half',
     fdr: 'sign-concordance false discovery rate, read at t = min(|cos_half1|, |cos_half2|) on the fdr curve (1 when ' +
       'the halves disagree in sign)',
-    evidence: '"both halves": same sign in the full space and both halves, min |half cos| >= 0.2 and fdr <= 0.10; ' +
-      '"one half": |cos| >= 0.5 in one half only (not replicated); otherwise "not reproduced"',
+    evidence: '"both halves": the same sign in both halves of the compounds (and in the full space), min |half ' +
+      'cos| >= 0.2 and fdr <= 0.10; "one half": |cos| >= 0.5 in one half of the compounds only; otherwise "not ' +
+      'reproduced"',
     reproducible: 'evidence is "both halves"', coords_known: 'both genes have coordinates',
     same_chrom: 'same chromosome', distance_bp: 'gap between the two genes in base pairs',
     same_strand: 'same strand', locus: 'the two genes are 50 kb or less apart',
@@ -296,6 +297,8 @@ TM.gene = (function () {
     function pwhy(what) { return function (k) { return TM.pooled.why(k, G.col, G.lfc[k], what); }; }
     var docs = (d.docs['tables/drug_effects.parquet'] || {}).cols || {};
     var drugIdxOf = function (k) { return d.drugOf ? d.drugOf[k] : d.drugIdx.get(d.dd.drug[k]); };
+    var annMemo = {};                  // the drug's two annotations (Tahoe, ChEMBL) and their alert, once per drug
+    function ann(k) { var di = drugIdxOf(k); return annMemo[di] || (annMemo[di] = TM.drug.annOf(di)); }
     var nl = function (k, w) { return G.nl[k * 5 + w]; };
     function xv(name) { return function (k) { return G.x && G.x.a[name] ? G.x.a[name].v[k] : NaN; }; }
     function xmiss() { return G.x ? 'no value' : G.xerr ? 'per-line data not reachable (data volume)' :
@@ -311,6 +314,17 @@ TM.gene = (function () {
         doc: '2^lfc, computed in the page from the stored log2 fold change (1 = no change; 2 = doubled; 0.5 = halved)'},
       {key: 'lfc', label: 'log2 FC', type: 'f32', simple: true, cls: 'num', get: function (k) { return G.lfc[k]; },
         missing: pwhy('lfc'), doc: docs.lfc || 'pooled log2 fold change'},
+      {key: 'lfc_vs_dmso', label: 'vs DMSO (rough)', type: 'f32', cls: 'num', simple: true, get: xv('lvd'),
+        missing: function (k) {
+          if (G.x && !G.x.a.lvd) return 'not in this run\u2019s gene file (an explorer older than version 3)';
+          if (G.x) return isNaN(G.lfc[k]) ? TM.pooled.why(k, G.col, G.lfc[k], 'lfc') : 'the plate has no usable ' +
+            'DMSO value for this gene';
+          return xmiss();
+        },
+        doc: (docs.lfc_vs_dmso || 'a rough DMSO-referenced log2 fold change: lfc + the mean plate offset of the ' +
+          'drug-dose\u2019s plates') + ' A sign check, not a second estimate: the fold change of this table is ' +
+          'against the typical drug well of the same plate, not DMSO. From the per-line data file (x/ lvd, the same ' +
+          'float32 as tables/drug_effects).'},
       {key: 'z', label: 'z', type: 'f32', simple: true, cls: 'num', get: function (k) { return G.z[k]; },
         missing: pwhy('z'), doc: docs.z || 'pooled z'},
       {key: 'q_up', label: 'q rise', type: 'f32', simple: true, cls: 'num', get: function (k) { return G.qup[k]; },
@@ -367,12 +381,33 @@ TM.gene = (function () {
           'pipeline wrote to tables/drug_effects. This column shows that storage cut; nothing here is filtered by it.'},
       {key: 'poseff', label: 'Position effect removed', type: 'f32', cls: 'num', get: xv('poseff'), missing: xmiss,
         doc: 'the well-position effect removed from this value (DD_poseff; log2), from the per-line data file'},
+      {key: 'n_wells', label: 'wells', type: 'int', cls: 'num', simple: true, get: ddcol('n_wells'),
+        doc: (docs.n_wells || 'the used wells of the drug-dose (tables/drugdoses n_wells)') + ' Each dose of a ' +
+          'drug sits on its own plate; 1 = the value rests on one well.'},
       {key: 'predicted_z', label: 'Predicted z (space)', type: 'f64', cls: 'num', computed: true,
         get: function (k) { return predicted ? predicted[k] : NaN; },
         missing: function () { return !G.egene.included ? 'not in the vector space' : predWhy; },
         doc: predictedDoc()},
-      {key: 'moa', label: 'MoA', type: 'str', get: ddcol('moa_fine'), doc: 'fine mechanism of action of the drug'},
-      {key: 'targets', label: 'Targets', type: 'str', get: ddcol('targets'), doc: 'the drug\u2019s listed targets'},
+      {key: 'moa', label: 'MoA (Tahoe)', type: 'str', get: ddcol('moa_fine'), show: function (k) {
+        var m = ddcol('moa_fine')(k), a = ann(k);
+        return m || a.alert ? [m || TM.h('span', {class: 'na'}, 'not recorded'), a.alert ? TM.h('span',
+          {class: 'alert-text', title: a.alert}, ' \u26a0 ChEMBL disagrees') : ''] : '';
+      }, doc: 'Tahoe\u2019s fine mechanism of action of the drug (tables/drugdoses moa_fine, as recorded; never ' +
+        'changed). "\u26a0 ChEMBL disagrees": ChEMBL\u2019s annotation differs (the column "Tahoe and ChEMBL" ' +
+        'says how; the drug page has both side by side).'},
+      {key: 'chembl_mechanisms', label: 'Mechanism (ChEMBL)', type: 'str', get: function (k) { return ann(k).chembl; },
+        missing: function (k) { return TM.drug.chemblText(ann(k)); },
+        doc: 'ChEMBL\u2019s mechanisms of the drug (tables/drugs chembl_mechanisms, from reference/drug_annotations)'},
+      {key: 'annotation_alert', label: 'Tahoe and ChEMBL', type: 'str', long: true,
+        get: function (k) { return ann(k).alert; },
+        show: function (k) { var a = ann(k).alert; return a ? TM.h('span', {class: 'alert-text'}, '\u26a0 ' + a) :
+          ''; },
+        missing: function (k) { var a = ann(k); return a.has ? 'no disagreement (' + (a.status || 'not compared') +
+          ')' : 'not compared in this run (a reference stage older than version 2)'; },
+        doc: 'where Tahoe\u2019s and ChEMBL\u2019s annotations of the drug disagree (tables/drugs ' +
+          'annotation_alert); Tahoe\u2019s annotation is never changed'},
+      {key: 'targets', label: 'Targets (Tahoe)', type: 'str', get: ddcol('targets'),
+        doc: 'the drug\u2019s targets as Tahoe lists them (ChEMBL\u2019s are on the drug page)'},
       {key: 'approved', label: 'Approved', type: 'str', get: ddcol('approved'), doc: 'approved drug (yes / no)'},
       {key: 'dd_flags', label: 'Drug-dose flags', type: 'str', long: true, get: function (k) { return d.dd.flags[k]; },
         doc: 'the drug-dose\u2019s own flags (tables/drugdoses flags): the same for every gene'},
@@ -393,6 +428,20 @@ TM.gene = (function () {
     doses.sort(function (a, b) { return a[1] - b[1]; });
     var moas = TM.uniq(Array.from({length: n}, function (_,
           k) { return ddcol('moa_fine')(k) || ''; })).filter(function (x) { return x; }).sort();
+    // per Tahoe class, the drugs whose ChEMBL annotation disagrees (named in the filter option, so a count of a
+    // class never hides them)
+    var disOf = {}, clsSet = {}, chSet = {};
+    for (var k3 = 0; k3 < n; k3++) {
+      var a3 = ann(k3), m3 = ddcol('moa_fine')(k3) || '';
+      if (a3.alert && m3) (disOf[m3] = disOf[m3] || new Set()).add(d.dd.drug[k3]);
+      TM.drug.classLabels(a3.classes).forEach(function (c3) { clsSet[c3] = 1; });
+      TM.split(a3.chembl, ';').forEach(function (c3) { chSet[c3] = 1; });
+    }
+    function moaLabel(x) {
+      var s = disOf[x] ? Array.from(disOf[x]).sort() : [];
+      return s.length ? x + ' \u2014 \u26a0 ChEMBL disagrees for ' + (s.length <= 3 ? s.join(', ') :
+        s.length + ' of its drugs') : x;
+    }
     var filters = [
       {key: 'sigup', label: 'significant up', test: function (k) { return G.call[k] === 1; },
         doc: 'q rise < ' + K.Q_CUT + ' and fold \u2265 1.2'},
@@ -405,8 +454,16 @@ TM.gene = (function () {
       {key: 'dose', label: 'dose', kind: 'select',
         options: doses.map(function (x) { return [x[0], x[0] + ' \u00b5M']; }),
         test: function (k, v) { return d.dd.dose[k] === v; }},
-      {key: 'moa', label: 'MoA', kind: 'select', options: moas.map(function (x) { return [x, x]; }),
+      {key: 'moa', label: 'MoA (Tahoe)', kind: 'select', options: moas.map(function (x) { return [x, moaLabel(x)]; }),
         test: function (k, v) { return ddcol('moa_fine')(k) === v; }},
+      {key: 'mclass', label: 'Mechanism class (ChEMBL, WHO ATC or a cited constant)', kind: 'select',
+        options: Object.keys(clsSet).sort().map(function (x) { return [x, x]; }),
+        test: function (k, v) { return TM.drug.classLabels(ann(k).classes).indexOf(v) >= 0; }},
+      {key: 'chembl', label: 'Mechanism (ChEMBL)', kind: 'select',
+        options: Object.keys(chSet).sort().map(function (x) { return [x, x]; }),
+        test: function (k, v) { return TM.split(ann(k).chembl, ';').indexOf(v) >= 0; }},
+      {key: 'anndis', label: '\u26a0 Tahoe and ChEMBL disagree', test: function (k) { return !!ann(k).alert; },
+        doc: 'drugs whose two annotations disagree (tables/drugs annotation_alert)'},
       {key: 'minfold', label: 'fold at least', kind: 'min', unit: '\u00d7 either way', placeholder: 'e.g. 1.5',
         test: function (k, v) {
         var t = Math.log2(Math.max(1, +v)); return Math.abs(G.lfc[k]) >= t;
@@ -629,7 +686,7 @@ TM.gene = (function () {
       var ul = TM.h('ul', {class: 'small'});
       b.forEach(function (r) {
         ul.appendChild(TM.h('li', null, TM.h('strong', null, dir.c.source.get(r) + ' \u2192 ' + dir.c.target.get(r)),
-          ' grade ' + dir.c.grade.get(r) + ', ' + dir.c.kind.get(r) + ', q ' + TM.fmt.num(dir.c.q.get(r), 'f64') +
+          ' grade ' + dir.c.grade.get(r) + ', ' + dir.c.kind.get(r) + ', q ' + TM.fmt.qText(dir.c.q.get(r), 'f64') +
               ': ' +
           dir.c.reading.get(r) + ' ', dir.c.n_alerts && dir.c.n_alerts.get(r) ? TM.h('span', {class: 'alert-text'},
             '\u26a0 ' + dir.c.n_alerts.get(r) + ' alert(s)') : TM.h('span', {class: 'muted'}, 'no \u26a0 alert'),
@@ -678,7 +735,7 @@ TM.gene = (function () {
       tb.appendChild(TM.h('tr', {class: flagClean(G.flag[k]) ? null : 'art-row', dataset: {dd: k}},
         TM.h('td', null, TM.a(TM.href.gene(G.label, null, 'dd', k), d.dd.label[k])),
         TM.h('td', {class: 'num'}, TM.fmt.fold(G.lfc[k])), TM.h('td', {class: 'num'}, TM.fmt.num(G.z[k], 'f32')),
-        TM.h('td', {class: 'num'}, TM.fmt.num(q, 'f32')),
+        TM.h('td', {class: 'num'}, TM.fmt.q(q, 'f32')),
         TM.h('td', null, TM.plot.spark({values: ds.map(function (x) { return G.lfc[x]; }), cur: ds.indexOf(k),
           labels: ds.map(function (x) { return d.dd.dose[x] + ' \u00b5M'; })})),
         TM.h('td', {class: 'flagcell'}, TM.flagNode(G.flag[k]))));
@@ -864,8 +921,10 @@ TM.gene = (function () {
         var A = [], B = [], la = '', lb = '';
         for (var l = 0; l < L; l++) {
           if (extra === 'tp53') {
-            if (d.line.tp53[l] === 'altered') A.push(l); else if (d.line.tp53[l] === 'wild type') B.push(l);
-            la = 'TP53-altered'; lb = 'TP53 wild type';
+            // tables 5: 'not recorded' (no TP53 alteration in the metadata: presumed wild type); older: 'wild type'
+            if (d.line.tp53[l] === 'altered') A.push(l);
+            else if (d.line.tp53[l] === 'not recorded' || d.line.tp53[l] === 'wild type') B.push(l);
+            la = 'TP53-altered'; lb = 'TP53 not recorded (presumed wild type)';
           } else if (extra.indexOf('organ:') === 0) {
             var og = extra.slice(6);
             if (d.line.organ[l] === og) A.push(l); else B.push(l);
@@ -923,7 +982,8 @@ TM.gene = (function () {
       for (var l = 0; l < L; l++) organs[d.line.organ[l]] = (organs[d.line.organ[l]] || 0) + 1;
       var selExtra = TM.h('select', {'aria-label': 'group contrast rows',
           onchange: function () { extra = selExtra.value; hm.setTop(tops()); }},
-        TM.h('option', {value: ''}, 'no group rows'), TM.h('option', {value: 'tp53'}, 'add: TP53-altered vs wild type'),
+        TM.h('option', {value: ''}, 'no group rows'), TM.h('option', {value: 'tp53'},
+          'add: TP53-altered vs TP53 not recorded (presumed wild type)'),
         Object.keys(organs).sort().filter(function (o) { return organs[o] >= 2; }).map(function (o) {
           return TM.h('option', {value: 'organ:' + o}, 'add: ' + o + ' vs other organs');
         }),
@@ -938,7 +998,7 @@ TM.gene = (function () {
         reasons: reasons, mark: function (l, k) { return passes(LF.v[k * L + l], LZ.v[k * L + l]); },
         markText: 'passes the calibrated per-line cut (|z| \u2265 ' + K.line_z_threshold + ' and at least 1.5\u00d7)',
         rowLabel: function (l) { return d.line.name[l]; }, rowSub: function (l) { return d.line.organ[l] + ', TP53 ' +
-          d.line.tp53[l]; },
+          TM.tp53Text(d.line.tp53[l]); },
         rowHref: function (l) { return TM.href.gene(G.label, null, 'line', d.line.name[l]); },
         colLabel: function (k) { return d.dd.label[k]; },
             colHref: function (k) { return TM.href.gene(G.label, null, 'dd', k); },
@@ -992,7 +1052,8 @@ TM.gene = (function () {
           show: function (i) { return TM.a(TM.href.gene(G.label, null, 'line', d.line.name[ln(i)]),
               d.line.name[ln(i)]); }},
         {key: 'organ', label: 'Organ', type: 'str', get: function (i) { return d.line.organ[ln(i)]; }},
-        {key: 'tp53', label: 'TP53', type: 'str', get: function (i) { return d.line.tp53[ln(i)]; }},
+        {key: 'tp53', label: 'TP53', type: 'str', get: function (i) { return d.line.tp53[ln(i)]; },
+          doc: TM.TP53_DOC},
         {key: 'lfc', label: 'per-line log2 FC', type: 'f16', cls: 'num', get: function (i) { return LF.v[i]; },
           text: function (i) { return TM.csv.f16(LF.v[i], LF.raw[i]); },
           doc: 'per-line log2 fold change (tensor DDL_lfc, exact float16; when empty, see Missing reason)'},
@@ -1373,7 +1434,19 @@ TM.gene = (function () {
     } else {
       pane.appendChild(tableOf(G.t.rel, REL_FILE, 'rel', 'Partners (relations: ' + G.t.rel.n + ' rows)',
         G.label + '_partners', relLinks, ['symbol_b', 'rank', 'cos', 'z_gene', 'cos_half1', 'cos_half2', 'fdr',
-          'evidence', 'known', 'novel_candidate', 'alert']));
+          'evidence', 'known', 'novel_candidate', 'lineage_pair', 'read_sharing', 'alert']));
+      var nl = 0, nr = 0, rl = G.t.rel;
+      for (var ri = 0; ri < rl.n; ri++) {
+        if (rl.c.lineage_pair && rl.c.lineage_pair.get(ri)) nl++;
+        if (rl.c.read_sharing_risk && rl.c.read_sharing_risk.get(ri)) nr++;
+      }
+      if (rl.c.lineage_pair || rl.c.read_sharing_risk) {
+        pane.appendChild(TM.note({dataset: {partnerAlerts: nl + ',' + nr}}, nl + ' of the ' + rl.n + ' partners are ' +
+          'lineage pairs (both genes measured in few, mostly the same lines: the pair can reflect the lines, not ' +
+          'the drugs) and ' + nr + ' are read-sharing copies (paralogues, pseudogenes or read-through: reads can ' +
+          'map to both). Each keeps its ranked place; the alert column says why (columns lineage_pair, lineage_p, ' +
+          'read_sharing, lines_jaccard).'));
+      }
     }
     var relb = G.t.relb, rbCols = [{key: 'gene', label: 'Gene', type: 'str', csv: false,
       get: function (i) { return d.symbolOf[relb.c.col_a.get(i)]; },
@@ -1474,7 +1547,7 @@ TM.gene = (function () {
     [/^another gene's alterations sit on the other side/, 'other side'],
     [/^other genes are absent from most of these lines too/, 'also absent'],
     [/^(\S+) itself is not expressed in/, 'source not expressed in some altered lines'],
-    [/are absent from exactly the same lines/, 'co-absent genes'],
+    [/are absent from exactly (the same|these) lines/, 'co-absent genes'],
         [/carry a recorded loss of/, 'deletion recorded too'],
     [/x its pooled level \(maybe low/, 'maybe low, not absent'],
         [/^the difference exists only relative to/, 'rests on the correction'],
@@ -1496,7 +1569,17 @@ TM.gene = (function () {
         [/^consistent across (\d+) compounds/, 'consistent across compounds'],
     [/targets named share these compounds/, 'shared targets'],
         [/^the supporting compounds also share/, 'shared targets'],
-    [/mechanism \(inhibitor or activator\) is not recorded/, 'sign not inferred']];
+    [/mechanism \(inhibitor or activator\) is not recorded/, 'sign not inferred'],
+    // the reasons that start with a compound's name: named by the reason, not by the compound
+    [/^[^:]+: Tahoe lists .*ChEMBL lists /, 'targets differ (Tahoe vs ChEMBL)'],
+    [/^[^:]+: Tahoe and ChEMBL give different actions on /, 'actions differ (Tahoe vs ChEMBL)'],
+    [/ also acts? on DNA directly/, 'compounds also act on DNA'],
+    [/^the compounds are (\S+ )?(poisons|trappers|stabilisers)/, 'the compounds trap their target'],
+    [/^supported by 2 compounds only/, 'supported by 2 compounds only'],
+    [/^drug-doses of translation inhibitors carry/, 'translation inhibitors carry the evidence'],
+    [/^random comparison groups give about/, 'random groups give such arrows too'],
+    [/^the mean over all \d+ of its drug-doses goes the other way/, 'the mean over its drug-doses goes the other way'],
+    [/ is also absent from most of the .* lines: a shared deletion/, 'another gene absent there (shared deletion?)']];
   var GRADE_SHORT = {A: 'strong', B: 'read its alerts', C: 'a glimpse'};
   function reasons(s) {
     if (!s) return [];
@@ -1504,7 +1587,7 @@ TM.gene = (function () {
   }
   function shortLabel(reason) {
     for (var i = 0; i < SHORT.length; i++) if (SHORT[i][0].test(reason)) return SHORT[i][1];
-    return reason.split(/[:(]/)[0].split(' ').slice(0, 6).join(' ');
+    return reason.split(/[:(]/)[0].split(' ').slice(0, 6).join(' ').trim();
   }
   function caveatsOf(dir, rows) {
     var byKind = {};
@@ -1546,6 +1629,29 @@ TM.gene = (function () {
     function groupHref(i) {
       var g = c.group.get(i);
       return groupsBy && groupsBy[g] ? groupsBy[g] : null;
+    }
+    // arrows of this list that share a test (direction test_id: one test, several sources or targets)
+    var byTest = {};
+    for (var ti = 0; c.test_id && ti < tab.n; ti++) {
+      (byTest[c.test_id.get(ti)] = byTest[c.test_id.get(ti)] || []).push(ti);
+    }
+    function sameTest(i) {
+      if (!c.test_id || !c.n_same_test) return null;
+      var n = c.n_same_test.get(i);
+      if (!(n > 1)) return null;
+      var here = (byTest[c.test_id.get(i)] || []).filter(function (j) { return j !== i; });
+      return {n: n - 1, here: here, away: n - 1 - here.length};
+    }
+    function pctText(x) { return isNaN(x) || x === null ? '' : (x > 0 && x < 0.01 ? 'under 1%' : TM.fmt.pct(x)); }
+    function falseText(i) {
+      var fs = c.false_share ? c.false_share.get(i) : NaN, fu = c.false_share_upper ? c.false_share_upper.get(i) : NaN;
+      if (fs !== null && !isNaN(fs)) {
+        return pctText(fs) + (fu !== null && !isNaN(fu) ? ' (up to ' + pctText(fu) + ')' : '') +
+          (c.group_edges && c.group_edges.get(i) >= 0 ? ' of ' + c.group_edges.get(i) + ' arrows' : '');
+      }
+      var ns = c.nonspecific_share ? c.nonspecific_share.get(i) : NaN;
+      if (ns !== null && !isNaN(ns)) return 'non-specific ' + pctText(ns);
+      return '';
     }
     var main = [
       {key: 'arrow', label: 'Arrow', type: 'str', simple: true,
@@ -1592,6 +1698,42 @@ TM.gene = (function () {
         get: function (i) { return c.drugdoses_all ? c.drugdoses_all.get(i) : c.top_drugdoses ?
           c.top_drugdoses.get(i) : ''; },
         doc: docs.drugdoses_all || ''},
+      {key: 'false_w', label: 'false (group)', type: 'str', simple: true, get: falseText,
+        sortv: function (i) { var v = c.false_share ? c.false_share.get(i) : NaN;
+          return v === null || isNaN(v) ? (c.nonspecific_share ? c.nonspecific_share.get(i) : NaN) : v; },
+        sortNum: true, missing: function (i) {
+          return /^genotype/.test(c.kind.get(i)) ? 'no random-group control in this run' : /^null/.test(c.kind.get(i)) ?
+            'no random control for this arrow' : 'not measured for this kind (only genotype comparisons: the share ' +
+            'of the group\u2019s arrows random groups give too; natural knockouts: the non-specific share)';
+        },
+        doc: 'genotype kinds: the share of this group\u2019s arrows of the kind that may be false, from random ' +
+          'comparison groups (false_share, up to false_share_upper; ' + (docs.false_share || '') + '); natural ' +
+          'knockouts: the share random genes or line sets give as well (nonspecific_share)'},
+      {key: 'same_w', label: 'Same test as', type: 'str', long: true,
+        get: function (i) {
+          var s = sameTest(i);
+          if (!s) return '';
+          return 'same test as ' + s.n + ' other arrow' + (s.n === 1 ? '' : 's') + (s.here.length ? ': ' +
+            s.here.map(function (j) { return c.source.get(j) + ' \u2192 ' + c.target.get(j); }).join(', ') : '') +
+            (s.away ? (s.here.length ? '; ' : ' (') + s.away + ' on other genes\u2019 pages' + (s.here.length ? '' :
+              ')') : '');
+        },
+        show: function (i) {
+          var s = sameTest(i);
+          if (!s) return '';
+          var parts = ['same test as ' + s.n + ' other arrow' + (s.n === 1 ? '' : 's') + (s.here.length ? ': ' : '')];
+          s.here.forEach(function (j, q) {
+            var sc = c.source_col.get(j), tc = c.target_col.get(j);
+            parts.push(q ? ', ' : '', sc >= 0 ? TM.geneLink(sc, c.source.get(j)) : c.source.get(j), ' \u2192 ',
+              tc >= 0 ? TM.geneLink(tc, c.target.get(j)) : c.target.get(j));
+          });
+          if (s.away) parts.push((s.here.length ? '; ' : '(') + s.away + ' on other genes\u2019 pages' +
+            (s.here.length ? '' : ')'));
+          return TM.h('span', {class: 'sametest'}, parts);
+        },
+        doc: 'arrows with the same test_id are one test giving one result for several sources or targets (drug ' +
+          'targets that share compounds, genes absent from the same lines): the same evidence, counted once ' +
+          '(n_same_test). The ones in this list are linked.'},
       {key: 'group_w', label: 'Comparison', type: 'str', simple: true, long: true,
         get: function (i) { return c.group.get(i); },
         show: function (i) { var h = groupHref(i), g = c.group.get(i); return h ? TM.a(h, g) : g || ''; },
@@ -1613,20 +1755,28 @@ TM.gene = (function () {
   }
   // how many tests the direction stage ran (direction/info.json), and how many involved this gene when the gene's
   // file has them (table dtest: col, kind, role, n_tests)
-  function testsText(G) {
-    var T = G.sh.t.dtest, sym = G.symbol;
-    if (T && T.n && T.c.n_tests) {
-      var src = 0, tgt = 0, parts = [];
-      for (var i = 0; i < T.n; i++) {
-        if (T.c.col.get(i) !== G.col) continue;
-        var nn = T.c.n_tests.get(i), role = T.c.role.get(i);
-        if (role === 'source') src += nn; else tgt += nn;
-        parts.push(T.c.kind.get(i) + ' as the ' + role + ' ' + TM.fmt.int(nn));
-      }
-      return sym + ' took part in ' + TM.fmt.int(src + tgt) + ' tests: ' + TM.fmt.int(src) + ' as the source and ' +
-        TM.fmt.int(tgt) + ' as the target (' + (parts.join(', ') || 'none') + '); ' +
-        TM.fmt.plural(G.t.dir.n, 'arrow') + ' passed q < 0.10.';
+  // the gene's rows of direction/gene_tests.parquet (bucket table dtest; null without it)
+  function testRows(G) {
+    var T = G.sh.t.dtest;
+    return T && T.c.n_tests ? TM.subTable(T, TM.rowsWhere(T, colIs(T, 'col', G.col))) : null;
+  }
+  // "tested in N comparisons (by kind)": the gene's tests per kind and role (direction/gene_tests.parquet)
+  function testedText(sym, T, nArrows) {
+    var tot = 0, by = {}, kinds = [];
+    for (var i = 0; i < T.n; i++) {
+      var nn = T.c.n_tests.get(i), k = T.c.kind.get(i), role = T.c.role.get(i);
+      tot += nn;
+      if (!by[k]) { by[k] = []; kinds.push(k); }
+      by[k].push((role === 'source' ? 'as the source ' : 'as the target ') + TM.fmt.int(nn));
     }
+    return sym + ' was tested in ' + TM.fmt.int(tot) + ' comparison' + (tot === 1 ? '' : 's') + ' (by kind: ' +
+      (kinds.map(function (k) { return k + ' ' + by[k].join(', '); }).join('; ') || 'none') + '); ' +
+      TM.fmt.plural(nArrows, 'arrow') + ' passed q < 0.10. Every row of direction/gene_tests for it is in the ' +
+      'table below.';
+  }
+  function testsText(G) {
+    var T = testRows(G), sym = G.symbol;
+    if (T) return testedText(sym, T, G.t.dir.n);
     var tests = (((TM.data.meta || {}).info || {})['direction/info.json'] || {}).tests;
     if (!tests) return 'The direction stage recorded no test counts in this run.';
     var all = 0, parts2 = [];
@@ -1661,6 +1811,13 @@ TM.gene = (function () {
           ' (as the ' +
       'altered or lacking gene) and ' + TM.fmt.plural(dir.n, 'arrow') + ' touch' + (dir.n === 1 ? 'es' : '') + ' it.'));
     pane.appendChild(TM.p({class: 'small', dataset: {tested: 1}}, testsText(G)));
+    var TR = testRows(G);
+    if (TR) {
+      pane.appendChild(TM.table({key: 'dtest', n: TR.n, id: 'gene-dtest', csv: G.label + '_direction_tests',
+        title: 'Tests ' + G.symbol + ' took part in, per kind and role (direction/gene_tests: ' + TR.n + ' rows)',
+        cols: TM.tableCols(TR, (d.docs['direction/gene_tests.parquet'] || {}).cols || {}),
+        sort: [['n_tests', 'desc']]}).el);
+    }
     return TM.dirGroupHrefs().then(function (byDesc) {
       pane.appendChild(dirTable(dir, ups, 'up', 'Upstream: arrows into ' + G.symbol + ' (' + ups.length + ')',
           byDesc, G.label).el);
@@ -1703,7 +1860,8 @@ TM.gene = (function () {
         {key: 'line', label: 'Line', type: 'str', get: function (l) { return labs[l]; },
           show: function (l) { return TM.a(TM.href.gene(G.label, null, 'line', labs[l]), labs[l]); }},
         {key: 'organ', label: 'Organ', type: 'str', get: function (l) { return d.line.organ[l]; }},
-        {key: 'tp53', label: 'TP53', type: 'str', get: function (l) { return d.line.tp53[l]; }},
+        {key: 'tp53', label: 'TP53', type: 'str', get: function (l) { return d.line.tp53[l]; },
+          doc: TM.TP53_DOC},
         {key: 'line_cpm', label: 'CPM', type: 'f32', cls: 'num', get: cpm,
           doc: 'the line\u2019s level of the gene over all its wells (atlas line_cpm)'},
         {key: 'expr_mask', label: 'expressed (atlas rule)', type: 'bool', get: em,
@@ -1993,7 +2151,7 @@ TM.gene = (function () {
     var d = D(), n = d.D, L = d.L, nm = d.line.name[l];
     main.appendChild(crumbs(G, 'in ' + nm));
     main.appendChild(TM.h('h2', null,
-        G.symbol + ' in ' + nm + ' (' + d.line.organ[l] + ', TP53 ' + d.line.tp53[l] + ')'));
+        G.symbol + ' in ' + nm + ' (' + d.line.organ[l] + ', TP53 ' + TM.tp53Text(d.line.tp53[l]) + ')'));
     main.appendChild(TM.p('Every drug-dose (' + TM.fmt.int(n) +
         ') for this one line: per-line values (exact float16), ' +
       'the pooled values, the flags and the line\u2019s relative cell number (DD_Az) at each drug-dose. ',
@@ -2069,8 +2227,8 @@ TM.gene = (function () {
         var cells = isNaN(G.lfc[k]) ? [TM.h('td', {colspan: 5, class: 'na'}, '\u2013 ' + TM.pooled.why(k, G.col,
           G.lfc[k], 'lfc'))] : [TM.h('td', {class: 'num'}, TM.fmt.fold(G.lfc[k])), TM.h('td', {class: 'num'},
           TM.fmt.num(G.lfc[k], 'f32')), TM.h('td', {class: 'num'}, TM.fmt.num(G.z[k], 'f32') ||
-          TM.pooled.why(k, G.col, G.lfc[k], 'z')), TM.h('td', {class: 'num'}, TM.fmt.num(G.qup[k], 'f32') ||
-          TM.pooled.why(k, G.col, G.lfc[k], 'q')), TM.h('td', {class: 'num'}, TM.fmt.num(G.qdn[k], 'f32') ||
+          TM.pooled.why(k, G.col, G.lfc[k], 'z')), TM.h('td', {class: 'num'}, TM.fmt.q(G.qup[k], 'f32') ||
+          TM.pooled.why(k, G.col, G.lfc[k], 'q')), TM.h('td', {class: 'num'}, TM.fmt.q(G.qdn[k], 'f32') ||
           TM.pooled.why(k, G.col, G.lfc[k], 'q'))];
         pooled.appendChild(TM.h('tr', {class: flagClean(G.flag[k]) ? null : 'art-row'},
           TM.h('td', null, TM.a(TM.href.gene(G.label, null, 'dd', k), d.dd.dose[k] + ' \u00b5M')), cells,
@@ -2103,7 +2261,8 @@ TM.gene = (function () {
       var cols = [{key: 'line', label: 'Line', type: 'str', get: function (l) { return d.line.name[l]; },
         show: function (l) { return TM.a(TM.href.gene(G.label, null, 'line', d.line.name[l]), d.line.name[l]); }},
       {key: 'organ', label: 'Organ', type: 'str', get: function (l) { return d.line.organ[l]; }},
-      {key: 'tp53', label: 'TP53', type: 'str', get: function (l) { return d.line.tp53[l]; }}];
+      {key: 'tp53', label: 'TP53', type: 'str', get: function (l) { return d.line.tp53[l]; },
+          doc: TM.TP53_DOC}];
       ds.forEach(function (k) {
         var dose = d.dd.dose[k];
         cols.push({key: 'lfc_' + k, label: 'lfc ' + dose + ' \u00b5M', type: 'f16', cls: 'num',
@@ -2128,7 +2287,7 @@ TM.gene = (function () {
     function pooledText() {
       TM.clear(pooledP);
       var v = function (x, what) { return isNaN(x) ? 'empty (' + TM.pooled.why(k, G.col, G.lfc[k], what) + ')' :
-        TM.csv.f32(x); };
+        what === 'q' && x === 0 ? TM.Q_ZERO_EXACT : TM.csv.f32(x); };
       TM.append(pooledP, [isNaN(G.lfc[k]) ? 'Pooled: no value. ' + TM.pooled.why(k, G.col, G.lfc[k], 'lfc') + '. ' :
         'Pooled: fold ' + TM.fmt.fold(G.lfc[k]) + ' (log2 FC ' + TM.csv.f32(G.lfc[k]) + '), z ' + v(G.z[k], 'z') +
         ', q rise ' + v(G.qup[k], 'q') + ', q fall ' + v(G.qdn[k], 'q') + '. ', 'Flags: ',
@@ -2155,7 +2314,8 @@ TM.gene = (function () {
           {key: 'line', label: 'Line', type: 'str', get: function (l) { return d.line.name[l]; },
             show: function (l) { return TM.a(TM.href.gene(G.label, null, 'line', d.line.name[l]), d.line.name[l]); }},
           {key: 'organ', label: 'Organ', type: 'str', get: function (l) { return d.line.organ[l]; }},
-          {key: 'tp53', label: 'TP53', type: 'str', get: function (l) { return d.line.tp53[l]; }},
+          {key: 'tp53', label: 'TP53', type: 'str', get: function (l) { return d.line.tp53[l]; },
+          doc: TM.TP53_DOC},
           {key: 'lfc', label: 'per-line log2 FC', type: 'f16', cls: 'num',
             get: function (l) { return LF.v[k * L + l]; },
             text: function (l) { return TM.csv.f16(LF.v[k * L + l], LF.raw[k * L + l]); },
@@ -2215,6 +2375,7 @@ TM.gene = (function () {
     });
   };
   TM.dirTable = dirTable;
+  TM.dirTestedText = testedText;
   // {comparison text of an arrow: href of its group page}: every direction group by its description, and every
   // comparison only arrows name (drug targets, gene levels) as group cmp:<n>
   TM.dirGroupHrefs = function () {

@@ -37,9 +37,31 @@ Outputs in <out>/reference/:
     gene_sets.parquet      source (hallmark | reactome | hgnc_group), set, col, symbol, set_id, set_size (genes in
                            the set at the source), n_present (its genes among Tahoe genes; only sets with 3..1000)
     string_pairs.parquet   col_a < col_b, score (STRING combined score, best over the genes' proteins)
-    sources.json           per source: url, file, status, date, last_modified, bytes, n_rows (+ error)
+    gene_coords.parquet    every 'gene' row of the GTF on the primary chromosomes (~62,000 genes, measured or not):
+                           ensembl_id, symbol (GTF gene_name), chrom, start, end, strand, biotype; direction places
+                           genes that Tahoe does not measure (driver genes) with it. No rows without the GTF.
+    paralogues.parquet     Ensembl Compara r112 human paralogue pairs among Tahoe's genes: col_a < col_b, symbol_a,
+                           symbol_b, identity (% of gene a's protein identical to gene b's), homology_identity (the
+                           reverse), both float32 (the highest over repeated rows), homology_type. Written only when
+                           the Compara file is there (downloaded or cached).
+    drug_annotations.parquet, drug_mechanisms.parquet, drug_classes.parquet
+                           each drug's mechanisms and targets from ChEMBL next to Tahoe's own annotation, and its
+                           mechanism classes (tahoemap/mechanisms.py, tahoemap/data/drug_classes.json: the columns
+                           are described there). Without ChEMBL (offline and not cached) they still hold every drug,
+                           with the classes of the code constants only and annotation_status 'ChEMBL not loaded'.
+    sources.json           per source: url, file, status, date, last_modified, bytes, n_rows (+ error); 'chembl' also
+                           chembl_release and requests (the web requests of the fetch that made the cached file)
     downloads/             the raw files (default cache; cache_dir moves it), each with a .meta.json (url, date,
-                           Last-Modified), and the GTF reduced to two parquet files (re-read in seconds)
+                           Last-Modified), and the GTF reduced to two parquet files (re-read in seconds);
+                           chembl_drugs.json (the reduced ChEMBL records of the screen's drugs) and
+                           compara_human_paralogues.tsv.gz (the human paralogue rows of the Compara file only: the
+                           ~140 MB file is streamed and never kept)
+
+Further sources (stage version 2; the stage runs right after tensor, before tables, as it reads atlas/ only):
+    ChEMBL (web services)      each drug's molecule, curated mechanisms (action type, target), targets and ATC codes,
+                               matched by structure (PubChem id -> InChIKey via PubChem) and by name; ~52 requests,
+                               ~2.5 min for the 379 real drugs, then cached (downloads/chembl_drugs.json)
+    Ensembl Compara r112       human paralogues (protein_default homologies of homo_sapiens)
 """
 
 import datetime
@@ -51,18 +73,27 @@ import os
 import re
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
+import zlib
 
 import numpy as np
 import pandas as pd
 
+from . import mechanisms as MECH
+from . import tlib as T
 from .common import (_cert_failure, describe_url_error, folder, log, read_effects_index, replace_file, stamp_stage,
                      urlopen, write_json, write_parquet)
 
-VERSION = 1
+VERSION = 3          # 2: ChEMBL drug annotations, Compara paralogues, gene_coords; runs before tables
+#                      3: Tahoe's drug annotation from the build's drugdose.csv when the metadata file is gone (said
+#                         so); a ChEMBL fetch without PubChem is 'failed (PubChem not reached ...)' and retried; a
+#                         ChEMBL mechanism 'Unknown' is no mechanism (mechanisms.py); progress lines for ChEMBL and
+#                         Compara
 
 UA = "tahoemap-reference/1 (research pipeline; Python urllib)"
+PROGRESS_STEP = 10 << 20     # the Compara stream logs its progress every this many compressed bytes
 UNIPROT_FIELDS = "accession,reviewed,gene_primary,protein_name,cc_function,xref_hgnc,xref_geneid"
 UNIPROT_QUERY = "organism_id:9606%20AND%20reviewed:true"
 SOURCES = [
@@ -93,6 +124,13 @@ ANN_COLUMNS = ["col", "symbol", "ensembl_id", "hgnc_id", "hgnc_symbol", "name", 
                "location", "chrom", "start", "end", "strand", "biotype", "aliases", "prev_symbols", "gene_groups",
                "entrez_id", "uniprot", "protein_name", "function", "ncbi_summary", "matched_by"]
 SET_COLUMNS = ["source", "set", "col", "symbol", "set_id", "set_size", "n_present"]
+COORD_COLUMNS = ["ensembl_id", "symbol", "chrom", "start", "end", "strand", "biotype"]
+PARALOGUE_COLUMNS = ["col_a", "col_b", "symbol_a", "symbol_b", "identity", "homology_identity", "homology_type"]
+# Ensembl Compara: the human genes' homologies (all species); only the human paralogue rows are kept, streamed
+COMPARA = {"key": "compara", "file": "compara_human_paralogues.tsv.gz",
+           "url": "https://ftp.ensembl.org/pub/release-112/tsv/ensembl-compara/homologies/homo_sapiens/"
+                  "Compara.112.protein_default.homologies.tsv.gz"}
+COMPARA_KEEP = ("gene_stable_id", "homology_gene_stable_id", "homology_type", "identity", "homology_identity")
 _NO_RETRY = (400, 401, 403, 404, 405, 410)
 
 
@@ -678,6 +716,498 @@ def string_pairs(links_path, info_path, ann, prots, symmap, min_score=400):
     return d, stats
 
 
+# ----------------------------------------------------------------------------- gene coordinates (all GTF genes)
+def gene_coords(gtf):
+    """Every 'gene' row of the GTF (read_gtf) on the primary chromosomes: COORD_COLUMNS, GTF order."""
+    if gtf is None or not len(gtf):
+        return pd.DataFrame({"ensembl_id": pd.Series(dtype=str), "symbol": pd.Series(dtype=str),
+                             "chrom": pd.Series(dtype=str), "start": pd.Series(dtype=np.int64),
+                             "end": pd.Series(dtype=np.int64), "strand": pd.Series(dtype=str),
+                             "biotype": pd.Series(dtype=str)})
+    g = gtf[gtf["seqname"].isin(PRIMARY_CHROMS)]
+    return pd.DataFrame({"ensembl_id": g["gene_id"].astype(str).to_numpy(),
+                         "symbol": g["gene_name"].fillna("").astype(str).to_numpy(),
+                         "chrom": g["seqname"].astype(str).to_numpy(),
+                         "start": g["start"].astype(np.int64).to_numpy(), "end": g["end"].astype(np.int64).to_numpy(),
+                         "strand": g["strand"].astype(str).to_numpy(),
+                         "biotype": g["gene_biotype"].fillna("").astype(str).to_numpy()})
+
+
+# ----------------------------------------------------------------------------- paralogues (Ensembl Compara)
+def _compara_rows(lines):
+    """(header kept, rows kept, rows read) over an iterator of the lines of a Compara homologies TSV: the human
+    paralogue rows (homology_species 'homo_sapiens', homology_type containing 'paralog'), COMPARA_KEEP columns."""
+    it = iter(lines)
+    head = next(it, "").rstrip("\n").split("\t")
+    ix = {c: i for i, c in enumerate(head)}
+    miss = [c for c in COMPARA_KEEP if c not in ix]
+    if miss:
+        raise ValueError(f"not a Compara homologies table (no column {', '.join(miss)})")
+    sp = ix.get("homology_species")
+    ty = ix["homology_type"]
+    keep = [ix[c] for c in COMPARA_KEEP]
+    need = max(keep + ([sp] if sp is not None else []))
+    rows, n = [], 0
+    for line in it:
+        n += 1
+        p = line.rstrip("\n").split("\t")
+        if len(p) <= need or "paralog" not in p[ty] or (sp is not None and p[sp] != "homo_sapiens"):
+            continue
+        rows.append([p[i] for i in keep])
+    return list(COMPARA_KEEP), rows, n
+
+
+def read_compara(path):
+    """The human paralogue rows of a Compara homologies TSV - the whole file, or the filtered cache this stage
+    keeps; gzipped or plain - as a DataFrame of COMPARA_KEEP (identity and homology_identity float32), streamed."""
+    opener = gzip.open if path.endswith(".gz") else open
+    with opener(path, "rt", encoding="utf-8", errors="replace") as fh:
+        cols, rows, _n = _compara_rows(fh)
+    d = pd.DataFrame(rows, columns=cols)
+    for c in ("identity", "homology_identity"):
+        d[c] = pd.to_numeric(d[c], errors="coerce").astype(np.float32)
+    return d
+
+
+class _Counted:
+    """A response read through it logs the compressed bytes read so far every `step` bytes: 'compara: 30 MB of 140
+    (95 s)', so a slow link shows progress (the GTF download, _stream_to, does the same every 50 MB)."""
+
+    def __init__(self, r, what, total=None, step=None):
+        self.r, self.what, self.total, self.step = r, what, total, step or PROGRESS_STEP
+        self.n, self.nxt, self.t0 = 0, self.step, time.time()
+
+    def read(self, size=-1):
+        b = self.r.read(size)
+        self.n += len(b)
+        if self.n >= self.nxt:
+            log(f"      {self.what}: {self.n / 1e6:,.0f} MB" + (f" of {self.total / 1e6:,.0f}" if self.total else "")
+                + f" ({time.time() - self.t0:.0f} s)")
+            while self.nxt <= self.n:
+                self.nxt += self.step
+        return b
+
+
+def _compara_stream(url, tmp, timeout):
+    """One GET of the Compara file, decompressed and filtered on the fly (never kept whole): the human paralogue
+    rows go gzipped to tmp. Logs the compressed MB read every PROGRESS_STEP bytes (_Counted). Returns (bytes written,
+    Last-Modified)."""
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    t0 = time.time()
+    try:
+        with urlopen(req, timeout) as r, gzip.open(tmp, "wt", encoding="utf-8") as out:
+            lm = r.headers.get("Last-Modified", "") or ""
+            cl = r.headers.get("Content-Length", "") or ""
+            src = _Counted(r, "compara", int(cl) if cl.isdigit() else None)
+            text = io.TextIOWrapper(gzip.GzipFile(fileobj=src), encoding="utf-8", errors="replace")
+            cols, rows, n = _compara_rows(text)
+            out.write("\t".join(cols) + "\n")
+            for x in rows:
+                out.write("\t".join(x) + "\n")
+    except (EOFError, zlib.error) as e:                        # a cut-off transfer: retried like any other
+        raise ValueError(f"the download ended early ({type(e).__name__}: {e})") from e
+    if not rows:
+        raise ValueError("no human paralogue rows in the file")
+    log(f"    compara: {n:,} rows read, {len(rows):,} human paralogue rows kept ({time.time() - t0:.0f} s)")
+    return os.path.getsize(tmp), lm
+
+
+def fetch_compara(cache_dir, offline=False, refresh=False, tries=4, timeout=120):
+    """(path of the filtered cache file or None, its sources.json record): cached unless refresh; offline and not
+    cached: None ('offline, not cached'); a failed download keeps an older cache file."""
+    dest = os.path.join(cache_dir, COMPARA["file"])
+    rec = {"url": COMPARA["url"], "file": dest}
+    have = os.path.exists(dest) and os.path.getsize(dest) > 0
+    if have and not refresh:
+        meta = _read_sidecar(dest)
+        rec.update(status="cached", date=meta.get("downloaded", ""), last_modified=meta.get("last_modified", ""),
+                   bytes=os.path.getsize(dest))
+        return dest, rec
+    if offline:
+        rec.update(status="offline, not cached")
+        return None, rec
+    tmp = dest + ".part"
+    t0 = time.time()
+    log(f"  compara: streaming {COMPARA['url']} (~140 MB; only the human paralogue rows are kept; about 2 min on a "
+        "fast link, up to 30 min on a slow one; progress every 10 MB)")
+    res, err = _retry(lambda: _compara_stream(COMPARA["url"], tmp, timeout), tries, "compara")
+    if res is None:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        log(f"  compara: download FAILED ({err}); " + ("the older copy is used" if have else "continuing without it"))
+        rec.update(status="failed" + (" (an older copy used)" if have else ""), error=err)
+        return (dest if have else None), rec
+    n, lm = res
+    replace_file(tmp, dest)
+    meta = {"url": COMPARA["url"], "downloaded": _now(), "last_modified": lm, "bytes": n,
+            "kept": "rows with homology_species homo_sapiens and a homology_type containing 'paralog'; columns "
+                    + ", ".join(COMPARA_KEEP)}
+    with open(dest + ".meta.json", "w", encoding="utf-8") as fh:
+        json.dump(meta, fh, indent=1)
+    log(f"  compara: {_mb(n)} kept in {time.time() - t0:.0f} s")
+    rec.update(status="downloaded", date=meta["downloaded"], last_modified=lm, bytes=n)
+    return dest, rec
+
+
+def paralogue_pairs(par, ann):
+    """Compara rows (read_compara) -> one row per pair of Tahoe gene cols (PARALOGUE_COLUMNS): both genes placed by
+    Ensembl id (HGNC's id, Tahoe's own winning); identity is gene a's side (the rows of the reverse direction are
+    swapped), the highest over repeated rows; homology_type of the row with the highest identity."""
+    ens2col = {}
+    for key in ("hgnc_ensembl", "ensembl_id"):
+        if key in ann:
+            ens2col.update({e: int(c) for e, c in zip(ann[key], ann["col"]) if e})
+    a = par["gene_stable_id"].map(ens2col)
+    b = par["homology_gene_stable_id"].map(ens2col)
+    ok = (a.notna() & b.notna()).to_numpy()
+    a, b = a[ok].astype(np.int64).to_numpy(), b[ok].astype(np.int64).to_numpy()
+    i1 = par["identity"].to_numpy()[ok].astype(np.float32)
+    i2 = par["homology_identity"].to_numpy()[ok].astype(np.float32)
+    ty = par["homology_type"].astype(str).to_numpy()[ok]
+    sw = a > b
+    d = pd.DataFrame({"col_a": np.where(sw, b, a), "col_b": np.where(sw, a, b), "identity": np.where(sw, i2, i1),
+                      "homology_identity": np.where(sw, i1, i2), "homology_type": ty})
+    d = d[d["col_a"] != d["col_b"]]
+    if not len(d):
+        return pd.DataFrame({"col_a": pd.Series(dtype=np.int64), "col_b": pd.Series(dtype=np.int64),
+                             "symbol_a": pd.Series(dtype=str), "symbol_b": pd.Series(dtype=str),
+                             "identity": pd.Series(dtype=np.float32),
+                             "homology_identity": pd.Series(dtype=np.float32),
+                             "homology_type": pd.Series(dtype=str)})
+    d = d.sort_values(["col_a", "col_b", "identity"], ascending=[True, True, False], kind="stable")
+    g = d.groupby(["col_a", "col_b"], sort=True)
+    res = g.agg(identity=("identity", "max"), homology_identity=("homology_identity", "max"),
+                homology_type=("homology_type", "first")).reset_index()
+    sym = pd.Series(ann["symbol"].astype(str).to_numpy(), index=ann["col"].astype(np.int64).to_numpy())
+    res["symbol_a"] = res["col_a"].map(sym).fillna("").astype(str)
+    res["symbol_b"] = res["col_b"].map(sym).fillna("").astype(str)
+    res["identity"] = res["identity"].astype(np.float32)
+    res["homology_identity"] = res["homology_identity"].astype(np.float32)
+    res["col_a"] = res["col_a"].astype(np.int64)
+    res["col_b"] = res["col_b"].astype(np.int64)
+    return res[PARALOGUE_COLUMNS].reset_index(drop=True)
+
+
+# ----------------------------------------------------------------------------- drug annotations (ChEMBL)
+CHEMBL_API = "https://www.ebi.ac.uk/chembl/api/data"
+PUBCHEM_INCHIKEY = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/property/InChIKey/JSON"
+CHEMBL_FILE = "chembl_drugs.json"              # the cache: the reduced ChEMBL records of the screen's drugs
+CHEMBL_BATCH = 50                              # ids or InChIKeys per ChEMBL request
+CHEMBL_NAME_BATCH = 40                         # names per ChEMBL name request (URL length)
+CHEMBL_MOL_ONLY = ("molecule_chembl_id,pref_name,molecule_hierarchy,max_phase,molecule_synonyms,molecule_type,"
+                   "atc_classifications")
+
+
+TAHOE_FROM_DRUGDOSE = ("Tahoe annotation from the build's drugdose.csv (the drug metadata file was not found); PubChem "
+                       "id not available, so ChEMBL matched this drug by name only")
+
+
+def tahoe_drugs(out, info=None):
+    """One row per drug of the screen (atlas/effects drugdose.csv): drug, targets, moa_fine, moa_broad (Tahoe's drug
+    metadata, verbatim), pubchem_cid ('' when unknown) and tahoe_note. The metadata file comes from
+    atlas/file_index.json. When no listed metadata file exists any more (the data folder was moved or deleted after the
+    build, or the build was reused from another folder), targets, moa_fine and moa_broad come from drugdose.csv (the
+    atlas copied them from the same metadata; the first row per drug), pubchem_cid stays '' and tahoe_note says so
+    (TAHOE_FROM_DRUGDOSE); this is logged. info (a dict): filled with 'source' and 'missing' (the files not found)."""
+    dd = read_effects_index(os.path.join(out, "atlas", "effects"))["drugdose"]
+    names = sorted(set(dd["drug"].astype(str)))
+    d = pd.DataFrame({"drug": names})
+    fi = os.path.join(out, "atlas", "file_index.json")
+    listed = []
+    if os.path.exists(fi):
+        with open(fi, encoding="utf-8") as fh:
+            listed = list(json.load(fh).get("drug") or [])
+    paths = [p for p in listed if os.path.exists(p)]
+    missing = [p for p in listed if not os.path.exists(p)]
+    note = ""
+    if paths:
+        m = pd.concat([pd.read_parquet(p) for p in paths], ignore_index=True).drop_duplicates("drug")
+        m["drug"] = m["drug"].astype(str)
+        d = d.merge(m, on="drug", how="left")
+        source = "drug metadata file (" + "; ".join(paths) + ")"
+    else:
+        cols = [c for c in ("targets", "moa_fine", "moa_broad") if c in dd]
+        if cols:
+            first = dd.assign(drug=dd["drug"].astype(str)).drop_duplicates("drug")[["drug"] + cols]
+            first = first.rename(columns={"moa_fine": "moa-fine", "moa_broad": "moa-broad"})
+            d = d.merge(first, on="drug", how="left")
+        note = TAHOE_FROM_DRUGDOSE
+        source = ("atlas/effects/drugdose.csv (no drug metadata file " + ("found: " + "; ".join(missing) if missing
+                                                                        else "listed in atlas/file_index.json") + ")")
+        log(f"  drugs: the drug metadata file was not found ({'; '.join(missing) or 'none listed'}); Tahoe's "
+            "annotation (targets, moa_fine, moa_broad) is taken from the build's drugdose.csv; PubChem ids are not "
+            "available, so ChEMBL matches by name only")
+    for src, dst in (("targets", "targets"), ("moa-fine", "moa_fine"), ("moa-broad", "moa_broad")):
+        d[dst] = d[src].fillna("").astype(str) if src in d else ""
+    cid = pd.to_numeric(d["pubchem_cid"], errors="coerce") if "pubchem_cid" in d else pd.Series(np.nan, index=d.index)
+    d["pubchem_cid"] = [str(int(c)) if np.isfinite(c) else "" for c in cid]
+    d["tahoe_note"] = note
+    if info is not None:
+        info.update(source=source, missing=missing, from_drugdose=bool(note))
+    return d[["drug", "targets", "moa_fine", "moa_broad", "pubchem_cid", "tahoe_note"]]
+
+
+def _name_key(name):
+    """The name without its bracketed salt and trailing salt words, case kept (mechanisms.molecule_key, not folded)."""
+    w = T.salt_base(name).split()
+    while len(w) > 1 and w[-1].lower().strip(",.") in MECH.SALT_WORDS:
+        w.pop()
+    return " ".join(w)
+
+
+def name_variants(drug):
+    """[(rule, text)] to look up in ChEMBL, mechanisms.NAME_RULES order, each then Greek-spelt; repeats dropped."""
+    m = re.match(r"^(.*\S)\s*\(([^()]+)\)\s*$", str(drug))
+    cand = [("name", drug), ("salt_base", T.salt_base(drug))]
+    if m and m.group(2).strip().lower() in MECH.CATIONS:            # 'Lactate (calcium)' -> 'calcium lactate'
+        cand.append(("cation_first", f"{m.group(2).strip()} {m.group(1).strip()}"))
+    cand.append(("molecule_key", _name_key(drug)))
+    out, seen = [], set()
+    for rule, nm in cand:
+        for v in (nm, "".join(MECH.GREEK.get(c, c) for c in nm)):
+            v = v.strip()
+            if v and v.upper() not in seen:
+                seen.add(v.upper())
+                out.append((rule, v))
+    return out
+
+
+def combination_parts(drug):
+    """'Sacubitril/Valsartan' -> ['Sacubitril', 'Valsartan']; [] for a single compound."""
+    parts = [p.strip() for p in T.salt_base(drug).split("/") if p.strip()]
+    return parts if len(parts) > 1 else []
+
+
+class _Req:
+    """JSON GETs / form POSTs with _retry; counts requests; raises OSError on a final failure. Logs one line per
+    request ('chembl: chembl by name 12, request 30 of about 52 (95 s)'), so a slow server is visible."""
+
+    def __init__(self, tries, timeout, expected=None):
+        self.tries, self.timeout, self.n, self.t, self.expected = tries, timeout, {}, time.time(), expected
+
+    def json(self, what, url, form=None):
+        def go():
+            data = urllib.parse.urlencode(form, safe=",").encode() if form is not None else None
+            hdr = {"User-Agent": UA, "Accept": "application/json"}
+            if data is not None:
+                hdr["Content-Type"] = "application/x-www-form-urlencoded"
+            with urlopen(urllib.request.Request(url, data=data, headers=hdr), self.timeout) as r:
+                return json.loads(r.read().decode("utf-8"))
+        res, err = _retry(go, self.tries, what)
+        self.n[what] = self.n.get(what, 0) + 1
+        tot = sum(self.n.values())
+        log(f"    {what} {self.n[what]}, request {tot}" + (f" of about {self.expected}" if self.expected else "")
+            + f" ({time.time() - self.t:.0f} s)" + ("" if res is not None else f": FAILED ({err})"))
+        if res is None:
+            raise OSError(f"{what}: {err}")
+        return res
+
+    def chembl(self, what, resource, params):
+        q = dict(params, limit=1000, offset=0, format="json")
+        out = []
+        while True:
+            d = self.json(what, f"{CHEMBL_API}/{resource}.json?" + urllib.parse.urlencode(q, safe=","))
+            out.extend(next((v for k, v in d.items() if k != "page_meta"), []))
+            if not (d.get("page_meta") or {}).get("next"):
+                return out
+            q["offset"] += q["limit"]
+
+
+def _mol(m):
+    h = m.get("molecule_hierarchy") or {}
+    return {"id": m["molecule_chembl_id"], "pref_name": m.get("pref_name") or "",
+            "parent": h.get("parent_chembl_id") or m["molecule_chembl_id"], "max_phase": m.get("max_phase"),
+            "type": m.get("molecule_type") or "", "atc": m.get("atc_classifications") or [],
+            "synonyms": sorted({(s.get("molecule_synonym") or "").strip().upper()
+                                for s in m.get("molecule_synonyms") or []} - {""})}
+
+
+def _fetch(drugs, R):
+    """The ChEMBL records of the drugs: molecules by structure (PubChem id -> InChIKey) and by name (pref_name and
+    synonyms, NAME_RULES variants; combinations by part), their parents, the parents' mechanisms and the mechanisms'
+    targets (~52 requests for the 379 real drugs)."""
+    mols = {}
+    cids = sorted({c for c in drugs["pubchem_cid"] if c}, key=int)
+    ikey, structure = {}, "no PubChem ids"
+    if cids:
+        try:
+            r = R.json("pubchem InChIKeys", PUBCHEM_INCHIKEY, form={"cid": ",".join(cids)})
+            ikey = {str(p["CID"]): p["InChIKey"] for p in (r.get("PropertyTable") or {}).get("Properties") or []
+                    if p.get("InChIKey")}
+            structure = f"InChIKeys of {len(ikey)} of {len(cids)} PubChem ids"
+        except OSError as e:                          # names still match; the structure check is skipped
+            structure = f"PubChem not reached ({e}): matched by name only"
+            log(f"    chembl: {structure}")
+    by_key = {}
+    keys = sorted(set(ikey.values()))
+    for i in range(0, len(keys), CHEMBL_BATCH):
+        for m in R.chembl("chembl by InChIKey", "molecule", {"molecule_structures__standard_inchi_key__in":
+                                                              ",".join(keys[i:i + CHEMBL_BATCH]),
+                                                              "only": CHEMBL_MOL_ONLY + ",molecule_structures"}):
+            k = (m.get("molecule_structures") or {}).get("standard_inchi_key") or ""
+            by_key.setdefault(k, set()).add(m["molecule_chembl_id"])
+            mols[m["molecule_chembl_id"]] = dict(_mol(m), inchikey=k)
+    variants = {d: name_variants(d) for d in drugs["drug"]}
+    parts = {d: combination_parts(d) for d in drugs["drug"]}
+    allnames = sorted({v.upper() for d in variants for _, v in variants[d]} | {p.upper() for d in parts
+                                                                               for p in parts[d]})
+    plain, comma = [n for n in allnames if "," not in n], [n for n in allnames if "," in n]
+    for field in ("pref_name__in", "molecule_synonyms__synonyms__in"):
+        for i in range(0, len(plain), CHEMBL_NAME_BATCH):
+            for m in R.chembl("chembl by name", "molecule", {field: ",".join(plain[i:i + CHEMBL_NAME_BATCH]),
+                                                             "only": CHEMBL_MOL_ONLY}):
+                mols.setdefault(m["molecule_chembl_id"], _mol(m))
+    for n_ in comma:                                  # a comma would split the __in list
+        for field in ("pref_name__iexact", "molecule_synonyms__molecule_synonym__iexact"):
+            for m in R.chembl("chembl by name", "molecule", {field: n_, "only": CHEMBL_MOL_ONLY}):
+                mols.setdefault(m["molecule_chembl_id"], _mol(m))
+    by_pref, by_syn = {}, {}
+    for m in mols.values():
+        if m["pref_name"]:
+            by_pref.setdefault(m["pref_name"].upper(), set()).add(m["id"])
+        for s in m["synonyms"]:
+            by_syn.setdefault(s, set()).add(m["id"])
+
+    def lookup(text):
+        return [{"field": f, "ids": sorted(ix[text.upper()])} for f, ix in (("pref_name", by_pref),
+                                                                           ("synonym", by_syn)) if text.upper() in ix]
+    need = sorted({m["parent"] for m in mols.values()} - set(mols))
+    for i in range(0, len(need), CHEMBL_BATCH):
+        for m in R.chembl("chembl parents", "molecule", {"molecule_chembl_id__in": ",".join(need[i:i + CHEMBL_BATCH]),
+                                                         "only": CHEMBL_MOL_ONLY}):
+            mols[m["molecule_chembl_id"]] = _mol(m)
+    need = sorted(i for i, m in mols.items() if "inchikey" not in m)      # to tell another stereo form apart
+    for i in range(0, len(need), CHEMBL_BATCH):
+        ids = ",".join(need[i:i + CHEMBL_BATCH])
+        for m in R.chembl("chembl structures", "molecule", {"molecule_chembl_id__in": ids,
+                                                            "only": "molecule_chembl_id,molecule_structures"}):
+            mols[m["molecule_chembl_id"]]["inchikey"] = (m.get("molecule_structures") or {}).get(
+                "standard_inchi_key") or ""
+    parents = sorted({m["parent"] for m in mols.values()})
+    mech, seen = [], set()
+    for i in range(0, len(parents), CHEMBL_BATCH):
+        for x in R.chembl("chembl mechanisms", "mechanism", {"parent_molecule_chembl_id__in":
+                                                             ",".join(parents[i:i + CHEMBL_BATCH])}):
+            k = (x.get("parent_molecule_chembl_id"), x.get("action_type"), x.get("mechanism_of_action"),
+                 x.get("target_chembl_id"))
+            if k in seen:                             # salt forms repeat their parent's records
+                continue
+            seen.add(k)
+            mech.append({"parent": k[0], "action_type": k[1] or "", "mechanism_of_action": k[2] or "",
+                         "target": k[3] or "", "direct_interaction": x.get("direct_interaction"),
+                         "binding_site_comment": x.get("binding_site_comment") or "",
+                         "refs": [f"{r.get('ref_type')}: {r.get('ref_url') or r.get('ref_id')}"
+                                  for r in x.get("mechanism_refs") or []][:5]})
+    tids = sorted({m["target"] for m in mech if m["target"]})
+    targets = {}
+    for i in range(0, len(tids), CHEMBL_BATCH):
+        for t in R.chembl("chembl targets", "target", {"target_chembl_id__in": ",".join(tids[i:i + CHEMBL_BATCH])}):
+            targets[t["target_chembl_id"]] = {
+                "pref_name": t.get("pref_name") or "", "type": t.get("target_type") or "",
+                "organism": t.get("organism") or "",
+                "components": [{"accession": c.get("accession") or "", "type": c.get("component_type") or "",
+                                "gene_symbol": next((s["component_synonym"] for s in c.get("target_component_synonyms")
+                                                     or [] if s.get("syn_type") == "GENE_SYMBOL"), "")}
+                               for c in t.get("target_components") or []]}
+    st = R.json("chembl status", f"{CHEMBL_API}/status.json")
+    for m in mols.values():
+        m.pop("synonyms", None)
+    rows = [{"drug": d, "pubchem_cid": c, "inchikey": ikey.get(c, ""),
+             "structure_ids": sorted(by_key.get(ikey.get(c, ""), ())),
+             "names": [dict(h, rule=r, text=v) for r, v in variants[d] for h in lookup(v)],
+             "parts": [{"text": p, "hits": lookup(p)} for p in parts[d]]}
+            for d, c in zip(drugs["drug"], drugs["pubchem_cid"])]
+    return {"source": "ChEMBL web services (molecules, mechanisms, targets); PubChem (PubChem id -> InChIKey)",
+            "chembl_release": st.get("chembl_db_version", ""), "chembl_release_date": st.get("chembl_release_date", ""),
+            "fetched": _now(), "structure_route": structure, "drugs": rows, "molecules": mols, "mechanisms": mech,
+            "targets": targets, "requests": dict(R.n, seconds=round(time.time() - R.t, 1))}
+
+
+NAME_ONLY = "PubChem not reached"     # the start of a snapshot's structure_route when PubChem failed (_fetch)
+
+
+def _name_only(snap):
+    """True when a ChEMBL snapshot was made without PubChem (matched by name only, no structure check)."""
+    return str((snap or {}).get("structure_route", "")).startswith(NAME_ONLY)
+
+
+def _covers(snap, drugs):
+    have = {(d["drug"], d.get("pubchem_cid", "")) for d in (snap or {}).get("drugs") or []}
+    want = list(zip(drugs["drug"], drugs["pubchem_cid"]))
+    return sum(1 for w in want if w in have), len(want)
+
+
+def fetch_chembl(drugs, cache_dir, offline=False, refresh=False, tries=4, timeout=120):
+    """(snapshot or None, sources.json record). The cache file holds the reduced records of the drugs it was made for;
+    it is used when it covers every drug (same name and PubChem id) unless refresh. Offline, a cache that covers only
+    some drugs is used for those ('offline, partly cached'). A failed fetch keeps an older cache (used where it
+    covers) and is retried by the next run with network (status 'failed ...'). The record's 'requests' are those of
+    the fetch that made the snapshot."""
+    path = os.path.join(cache_dir, CHEMBL_FILE)
+    rec = {"url": CHEMBL_API, "file": path}
+    old = None
+    if os.path.exists(path):
+        try:
+            with open(path, encoding="utf-8") as fh:
+                old = json.load(fh)
+        except (OSError, ValueError):
+            old = None
+    k, n = _covers(old, drugs)
+    if old is not None and k == n and not refresh and (not _name_only(old) or offline):
+        # a snapshot made without PubChem is used offline, but its status starts with 'offline' so that the next
+        # run with network fetches it again (cli.reference_missing)
+        rec.update(status="cached" if not _name_only(old) else
+                   "offline, cached without the PubChem structure check (matched by name only)",
+                   date=old.get("fetched", ""), chembl_release=old.get("chembl_release", ""),
+                   chembl_release_date=old.get("chembl_release_date", ""), bytes=os.path.getsize(path),
+                   requests=old.get("requests", {}), structure_route=old.get("structure_route", ""))
+        return old, rec
+    if old is not None and k == n and _name_only(old) and not refresh:
+        log("  chembl: the cached snapshot was made without PubChem (matched by name only): fetching it again")
+    if offline:
+        if old is not None and k:
+            rec.update(status=f"offline, partly cached ({k} of {n} drugs)", date=old.get("fetched", ""),
+                       chembl_release=old.get("chembl_release", ""), requests=old.get("requests", {}),
+                       structure_route=old.get("structure_route", ""))
+            return old, rec
+        rec.update(status="offline, not cached")
+        return None, rec
+    est = 8 + 2 * n // CHEMBL_NAME_BATCH + 25
+    log(f"  chembl: fetching the mechanisms of {n} drugs from {CHEMBL_API} (~{est} requests; 2.5 to 10 min, "
+        "depending on how fast the server answers; one line per request)")
+    try:
+        snap = _fetch(drugs, _Req(tries, timeout, est))
+    except OSError as e:
+        log(f"  chembl: download FAILED ({e}); " + ("an older copy is used where it covers" if old else
+                                                    "continuing without it"))
+        rec.update(status="failed" + (f" (an older copy used: {k} of {n} drugs)" if old is not None and k else ""),
+                   error=str(e))
+        if old is not None and k:
+            rec.update(chembl_release=old.get("chembl_release", ""), requests=old.get("requests", {}))
+        return (old if old is not None and k else None), rec
+    tmp = path + ".part"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump(snap, fh, ensure_ascii=False)
+    replace_file(tmp, path)
+    with open(path + ".meta.json", "w", encoding="utf-8") as fh:
+        json.dump({"url": CHEMBL_API, "downloaded": snap["fetched"], "chembl_release": snap["chembl_release"],
+                   "requests": snap["requests"]}, fh, indent=1)
+    nreq = sum(v for k_, v in snap["requests"].items() if k_ != "seconds")
+    log(f"  chembl: {snap['chembl_release']} ({snap['chembl_release_date']}); {nreq} requests in "
+        f"{snap['requests']['seconds']:.0f} s; {snap['structure_route']}")
+    # PubChem not reached: the snapshot is kept and used, but the source reads 'failed (...)' so that the next run
+    # with network fetches it again (cli.reference_missing retries 'failed' and 'offline' statuses)
+    st = "downloaded" if not _name_only(snap) else (f"failed ({NAME_ONLY}: matched by name only; this snapshot is "
+                                                   "used until a run reaches PubChem)")
+    if _name_only(snap):
+        log(f"  chembl: {NAME_ONLY}: every drug was matched by name only, without the structure check; the next run "
+            "with network fetches ChEMBL again")
+    rec.update(status=st, date=snap["fetched"], chembl_release=snap["chembl_release"],
+               chembl_release_date=snap["chembl_release_date"], bytes=os.path.getsize(path),
+               requests=snap["requests"], structure_route=snap["structure_route"])
+    return snap, rec
+
+
 # ----------------------------------------------------------------------------- the stage
 def _add_hgnc(ann, t, path):
     """Match to HGNC and fill the HGNC fields of ann; returns the HGNC table."""
@@ -741,10 +1271,11 @@ def _guard(key, recs, fn, *args):
 
 def run(out, offline=False, cache_dir=None, refresh=False, sources=None, min_string_score=400, tries=4,
         timeout=120):
-    """out = the tahoemap output folder. Writes out/reference/.
+    """out = the tahoemap output folder. Writes out/reference/. Reads atlas/ only (so it runs before tables).
     offline: use only cached files; cache_dir: download cache (default out/reference/downloads); refresh: download
-    again even if cached; sources: subset of SOURCES keys (default all); min_string_score: STRING cut (400 = medium
-    confidence); tries / timeout: per download (seconds per socket read)."""
+    again even if cached; sources: subset of the SOURCES keys and 'compara', 'chembl' (default all);
+    min_string_score: STRING cut (400 = medium confidence); tries / timeout: per download (seconds per socket
+    read)."""
     t0 = time.time()
     rd = folder(out, "reference")
     cache_dir = cache_dir or os.path.join(rd, "downloads")
@@ -755,8 +1286,11 @@ def run(out, offline=False, cache_dir=None, refresh=False, sources=None, min_str
         + (" (offline)" if offline else ""))
 
     todo = [s for s in SOURCES if not sources or s["key"] in sources]
-    need = [s for s in todo if refresh or not (os.path.exists(os.path.join(cache_dir, s["file"]))
-                                               and os.path.getsize(os.path.join(cache_dir, s["file"])) > 0)]
+    want_compara = not sources or "compara" in sources
+    want_chembl = not sources or "chembl" in sources
+    need = [s for s in todo + ([COMPARA] if want_compara else [])
+            if refresh or not (os.path.exists(os.path.join(cache_dir, s["file"]))
+                               and os.path.getsize(os.path.join(cache_dir, s["file"])) > 0)]
     probes = {}
     if need and not offline:
         log(f"  sizes of the {len(need)} file(s) to download:")
@@ -775,6 +1309,23 @@ def run(out, offline=False, cache_dir=None, refresh=False, sources=None, min_str
             log(f"  {s['key']}: cached ({_mb(recs[s['key']]['bytes'])}, {recs[s['key']]['date'][:10]})")
         elif recs[s["key"]]["status"].startswith("offline"):
             log(f"  {s['key']}: not cached; skipped (offline)")
+    if want_compara:
+        files["compara"], recs["compara"] = fetch_compara(cache_dir, offline=offline, refresh=refresh, tries=tries,
+                                                          timeout=timeout)
+        if recs["compara"]["status"] == "cached":
+            log(f"  compara: cached ({_mb(recs['compara']['bytes'])}, {recs['compara']['date'][:10]})")
+        elif recs["compara"]["status"].startswith("offline"):
+            log("  compara: not cached; skipped (offline)")
+    tinfo = {}
+    drugs = tahoe_drugs(out, tinfo)
+    snap = None
+    if want_chembl:
+        snap, recs["chembl"] = fetch_chembl(drugs, cache_dir, offline=offline, refresh=refresh, tries=tries,
+                                            timeout=timeout)
+        rc = recs["chembl"]
+        log(f"  chembl: {rc['status']}" + (f" ({rc.get('chembl_release', '')}, {rc.get('date', '')[:10]})"
+                                           if snap is not None else
+                                           "; the drug classes come from the code constants only"))
 
     def rows(key, k):
         if key in recs and k is not None:
@@ -851,6 +1402,33 @@ def run(out, offline=False, cache_dir=None, refresh=False, sources=None, min_str
     elif files.get("string_links") or files.get("string_info"):
         log("  STRING: needs both protein.links and protein.info; skipped")
 
+    # ---- every GTF gene's coordinates; paralogues (Compara)
+    gc = gene_coords(gtf)
+    pp, n_par = None, None
+    if files.get("compara"):
+        par = _guard("compara", recs, read_compara, files["compara"])
+        if par is not None:
+            n_par = len(par)
+            rows("compara", n_par)
+            pp = _guard("compara", recs, paralogue_pairs, par, ann)
+    if pp is not None:
+        nk = len(set(pp["col_a"]) | set(pp["col_b"]))
+        log(f"  Compara: {n_par:,} human paralogue rows; {len(pp):,} pairs of Tahoe genes over {nk:,} genes")
+
+    # ---- the drugs: Tahoe's and ChEMBL's annotations, mechanism classes (tahoemap/mechanisms.py)
+    try:
+        dA, dM, dK, cst = MECH.assign_classes(drugs, snap, hgnc=h)
+    except Exception as e:  # noqa: BLE001 - a damaged snapshot must not stop the pipeline: constants only
+        msg = f"{type(e).__name__}: {e}"
+        log(f"  chembl: could not be used ({msg}); the drug classes come from the code constants only")
+        recs.setdefault("chembl", {}).update(status="unusable", error=msg)
+        dA, dM, dK, cst = MECH.assign_classes(drugs, None)
+    if snap is not None:
+        rows("chembl", len(snap.get("drugs") or []))
+    log(f"  drugs: {cst['drugs']} ({cst['chembl_matched']} matched in ChEMBL, {cst['chembl_with_mechanism']} with a "
+        f"mechanism, {cst['annotation_alerts']} with an annotation alert); classes: "
+        + (", ".join(f"{k} {v}" for k, v in cst["mechanism_classes"].items()) or "none"))
+
     ann = ann[ANN_COLUMNS].copy()
     for c in ANN_COLUMNS:
         if c not in ("col", "start", "end", "entrez_id"):
@@ -858,8 +1436,17 @@ def run(out, offline=False, cache_dir=None, refresh=False, sources=None, min_str
     write_parquet(ann, os.path.join(rd, "annotations.parquet"))
     write_parquet(gs, os.path.join(rd, "gene_sets.parquet"))
     write_parquet(sp, os.path.join(rd, "string_pairs.parquet"))
-    for s in todo:
-        recs[s["key"]].setdefault("n_rows", None)
+    write_parquet(gc, os.path.join(rd, "gene_coords.parquet"))
+    ppath = os.path.join(rd, "paralogues.parquet")
+    if pp is not None:
+        write_parquet(pp, ppath)
+    elif os.path.exists(ppath):
+        os.remove(ppath)                    # an earlier run's file: this run has no Compara data
+    write_parquet(dA, os.path.join(rd, MECH.FILES["annotations"]))
+    write_parquet(dM, os.path.join(rd, MECH.FILES["mechanisms"]))
+    write_parquet(dK, os.path.join(rd, MECH.FILES["classes"]))
+    for k_ in [s["key"] for s in todo] + [k for k in ("compara", "chembl") if k in recs]:
+        recs[k_].setdefault("n_rows", None)
     vc = ann["matched_by"].value_counts()
     info = {"version": VERSION, "genes": n, "offline": bool(offline), "cache_dir": cache_dir,
             "hgnc_matched": int((ann["matched_by"] != "none").sum()),
@@ -869,9 +1456,15 @@ def run(out, offline=False, cache_dir=None, refresh=False, sources=None, min_str
             "with_ncbi_summary": int((ann["ncbi_summary"] != "").sum()),
             "gene_sets": {k: int(v) for k, v in gs.groupby("source")["set"].nunique().items()},
             "gene_set_memberships": int(len(gs)), "string_pairs": int(len(sp)), "string": sstats,
+            "gene_coords": int(len(gc)), "paralogue_pairs": None if pp is None else int(len(pp)),
+            "drugs": cst["drugs"], "chembl_matched": cst["chembl_matched"],
+            "chembl_with_mechanism": cst["chembl_with_mechanism"], "annotation_alerts": cst["annotation_alerts"],
+            "annotation_status": cst["annotation_status"], "mechanism_classes": cst["mechanism_classes"],
             "sources": {k: v.get("status") for k, v in recs.items()},
+            "tahoe_annotation": tinfo,
             "minutes": round((time.time() - t0) / 60, 2)}
-    write_json({"written": _now(), "cache_dir": cache_dir, "sources": recs, "summary": info},
+    write_json({"written": _now(), "cache_dir": cache_dir, "sources": recs, "tahoe_annotation": tinfo,
+                "summary": info},
                os.path.join(rd, "sources.json"))
     stamp_stage(out, "reference", VERSION, info)
     log(f"Reference done: {info['hgnc_matched']:,}/{n:,} genes matched to HGNC, {len(gs):,} set memberships, "

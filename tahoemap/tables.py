@@ -41,10 +41,35 @@ line's plate median, minus the profile's composition (library) shift, minus the 
 used wells; per-line values (tensor DDL_lfc, DDL_z) skip the median over lines. fold = 2 ** lfc.
 
 Rules reused verbatim from the atlas: significance (up = q_up < 0.10 and lfc >= log2 1.2; down symmetric), the flag
-strings (drug-dose flags + atlas_core.gene_flags per gene), "clean" = no atlas_core.ARTIFACT_FLAGS flag (for a gene:
-the drug-dose's flags plus 'position correction uncertain' for that gene; atlas_core.has_artifact), dose patterns
-(atlas_core.dose_shape, here vectorised by dose_shape_codes and checked against it), noise-class RNAs
-(atlas_core.NOISE_RNA_RE) and salt forms (tlib.salt_base). One refinement: the cell-cycle shift.
+strings (drug-dose flags + atlas_core.gene_flags per gene), dose patterns (atlas_core.dose_shape, here vectorised by
+dose_shape_codes and checked against it), noise-class RNAs (atlas_core.NOISE_RNA_RE) and salt forms (tlib.salt_base).
+"clean" = no common.ARTIFACT_FLAGS flag (the atlas's seven plus 'like a neighbouring well'; common.has_artifact) in
+the drug-dose's flags of record plus the gene's own flags. Refinements: the cell-cycle shift, the neighbouring wells
+and the translation-inhibitor caveat (below).
+
+Flags of record (tables version 5): drugdose.csv's flags (drugdoses.parquet atlas_flags), then 'like a neighbouring
+well' or 'like a neighbouring well (top dose)' (neighbour_wells), then 'translation inhibitor' for a drug in a class
+whose effect is 'translation' (tahoemap/data/drug_classes.json via mechanisms.py). Every table here, and every later
+stage (dd_flags_of_record), uses them. Per gene, flag_strings reads them: the neighbouring-well tokens read 'like a
+neighbouring well (not this gene)' where no partner moves the gene the same way (nb_gene_mask), and 'translation
+inhibitor' reads 'rise under a translation inhibitor' where the gene rises and is left out where it does not: the
+pooled change (DD_lfc > 0) for the pooled tables, the cell's own per-line change for a per-line cell (drug_line_top,
+line_effects best_*). Old rule (version 5): every per-line cell read the pooled sign, so a per-line fall under a
+translation inhibitor could read 'rise under a translation inhibitor' and a per-line rise could lose it. New rule
+(version 6): each cell reads its own sign.
+
+Neighbouring wells (neighbour_wells; README 'Neighbouring wells'). Touching wells share signatures 3.5 to 4 times more
+often than wells 3 or more apart on the real plates (e.g. Citalopram 0.05 uM next to Clobetasol propionate on
+plate10). A drug-dose whose significant genes are mostly moved the same way by a touching well of another compound,
+while its own higher doses do not move them, gets the artifact flag 'like a neighbouring well' for the genes that
+neighbour moves; at the drug's top dose (no higher dose to check) it gets the caveat 'like a neighbouring well (top
+dose)', or a note when the two share an annotated mechanism. Old rule (version 4): clean = no atlas artifact flag.
+New rule: also not like a neighbouring well for that gene.
+
+Dose and plate. Each dose of a drug sits on its own plate (for most drugs the same well on three plates) and most
+drug-doses are one well, so a dose pattern compares plates as much as doses, and the lines of a drug-dose are not
+replicate treatments (drugs.parquet dose_plates, drug_effects n_wells). drug_effects lfc_vs_dmso adds the plate's DMSO
+offset (atlas plate_offset) to lfc: a sign check against DMSO, not a replacement baseline.
 
 Cell-cycle shift. The atlas flags a drug-dose 'cell-cycle shift' when its S_PHASE or G2M_PHASE module moved: its cells
 moved into or out of S or G2/M. Whether that explains one gene's change depends on how much the gene goes with the
@@ -66,22 +91,30 @@ Outputs in OUT/tables/ (README.md there documents every column, its units and it
                            clean), specificity (z gap to the next compound), correlation with the S / G2M modules,
                            cell-cycle slopes (cc_slope_S / cc_slope_G2M)
     drug_effects.parquet   gene x drug-dose rows with |z| >= 3 or q_up / q_down < 0.1, flagged ones included: pooled
-                           fold change, z, q, flags, clean, how many / which lines move, dose pattern, cc_share
+                           fold change, z, q, flags, clean, how many / which lines move, dose pattern, cc_share,
+                           the drug-dose's used wells (n_wells), a rough DMSO-referenced lfc (lfc_vs_dmso)
     line_effects.parquet   gene x line: baseline level, whether the line expresses it, spread of the line's
                            responses, drug-doses moving the gene >= 1.5x at per-line |z| >= t (calibrated, >= 4) and
                            the strongest of them up / down in that line, over the clean drug-doses and (*_all, with
                            the flags) over all drug-doses
     drug_line_top.parquet  per gene: the 15 strongest (drug-dose, line) cells up and down over all drug-doses (with
                            flags and clean), plus any of the 15 strongest clean ones beyond them (per-line |z| >= t)
-    drugdoses.parquet      drugdose.csv + dd, salt_base, top 15 significant genes up / down
+    drugdoses.parquet      drugdose.csv + dd, salt_base, top 15 significant genes up / down, the flags of record
+                           (atlas_flags = drugdose.csv's), the neighbouring-well rule (nb_*), mechanism classes and
+                           the lines where the drug-dose is selective
     drugs.parquet          per drug: doses, significant genes by dose, best dose, lowest active dose, flags, signature
-                           similarity between doses
-    lines.parquet          lines.csv + TP53 status, drug-doses that deplete the line (-1 = not measured), median
-                           response strength
+                           similarity between doses, where each dose sits (dose_plates), Tahoe's and ChEMBL's
+                           annotations side by side, mechanism classes
+    lines.parquet          lines.csv + TP53 status ('altered' / 'not recorded' / 'unknown'), drug-doses that deplete
+                           the line (-1 = not measured), median response strength
+    drug_line_response.parquet  one row per drug-dose x line: genes beyond the per-line cut, rms z, line selectivity
+                           (rel_log2, sel_z, selective), relative abundance and response strength from the atlas
+    drugdose_signatures.gmt  every drug-dose's up and down call sets (no cap), for gene-set tools
     plates.parquet         per plate: wells, doses, reliability, plate factor, DMSO and failed wells, cells per well
     wells.parquet          wells.csv + total UMI per well (per-gene counts stay in tensor/well_counts.npy)
-    info.json              row counts, the per-line |z| calibration (line_z_threshold, line_fold_min, ...) and the
-                           cell-cycle rule's counts (cell_cycle_rule)
+    info.json              row counts, the per-line |z| calibration (line_z_threshold, line_fold_min, ...), the
+                           cell-cycle rule's counts (cell_cycle_rule), neighbour_rule, translation_inhibitors,
+                           dmso_sign_changes, dose_and_plate, annotations, drug_line_response, gmt
 
 Memory: the pooled drug-dose x gene matrices are held in memory (~75 MB each at full scale); the per-line tensor
 (~1.9 GB per array in float16) is read in gene chunks sized by mem_gb, and drug_effects.parquet is streamed to disk
@@ -101,12 +134,21 @@ import pyarrow.parquet as pq
 import scipy.sparse as sp
 
 from . import atlas_core as A
+from . import mechanisms as M
 from . import tlib as T
-from .common import log, read_effects_index, replace_file, stamp_stage, write_json, write_parquet
+from .common import (ARTIFACT_FLAGS, FLAG_TEXT, NB_CLEARED, NB_FLAG, NB_TOP, TL_DD, TL_RISE, has_artifact, log,
+                     read_effects_index, read_stamp, replace_file, stamp_stage, write_json, write_parquet)
 from .tensor import AMB_FRAC, measured_mask
 
-VERSION = 4                         # 3: a cell-cycle shift blocks a gene only when it explains its change;
-#                                     4: each cell-cycle-flagged drug-dose is judged with slopes fitted without it
+VERSION = 6                         # 3: a cell-cycle shift blocks a gene only when it explains its change;
+#                                     4: each cell-cycle-flagged drug-dose is judged with slopes fitted without it;
+#                                     5: neighbouring wells; flags of record; translation-inhibitor caveat;
+#                                        annotations; drug_line_response; lfc_vs_dmso; n_wells; dose_plates;
+#                                        TP53 'not recorded'
+#                                     6: per-line cells (drug_line_top, line_effects best_*) read the translation-
+#                                        inhibitor token from their own per-line sign, not the pooled one; line_effects
+#                                        best_up_flags / best_down_flags (the clean best's caveats); neighbouring
+#                                        wells: tier 'dose response' and the chance rate in the top-dose alert
 
 LFC_MIN = A.LFC_MIN                 # log2(1.2): smallest change the atlas counts
 Q_CUT = A.Q_CUT                     # 0.10: the atlas FDR cut
@@ -141,6 +183,36 @@ PATTERNS = ("none", "single dose", "all doses, stronger at high dose", "all dose
             "rises with dose", "two highest doses", "inconsistent across doses")   # atlas_core.dose_shape outcomes
 _PAT = np.array(PATTERNS, dtype=object)
 
+# Neighbouring wells (neighbour_wells; README 'Neighbouring wells'). A drug-dose whose signature is mostly that of a
+# well right next to it on the same plate (another compound) may carry that well's signal.
+NB_MIN_SIG = 30                     # a judged drug-dose needs >= this many significant genes (noise RNAs left out);
+#                                     below this the hits were weak drug-doses next to neighbours with > 1,800 genes
+NB_Z = 3.0                          # 'moves a gene the same way': pooled |z| >= this, with the same sign
+NB_SHARE = 0.5                      # J: share of its significant genes the neighbour moves the same way, >= this
+NB_TOPK = 30                        # the neighbour's strongest significant genes (largest |z|) ...
+NB_TOP_SHARE = 0.3                  # ... of which the judged drug-dose moves >= this share the same way (T)
+NB_MIN_SHARED = 10                  # and >= this many shared genes
+NB_OTHER = 0.2                      # its other doses move < this share of the shared genes (the gap 0.13 -> 0.39
+#                                     between carry-over and true class neighbours on the real data)
+NB_GENE_Z = 2.0                     # per gene: the token holds where a partner moves the gene the same way at |z| >=
+NB_DOSE_TOPK = 10                   # at a top dose: the judged drug-dose's strongest shared genes (largest |z|) ...
+NB_DOSE_MIN = 3                     # ... of which >= this many move the same way at |z| >= NB_Z at one of its lower
+#                                     doses: a dose response of the drug's own effect (tier 'dose response', no token).
+#                                     Version 5 had no such tier: RMC-6236 5 uM (next to Trametinib 5 uM) carried the
+#                                     top-dose caveat on 498 genes although ETV5, SPRY4 and EGR1 already fell at 0.5 uM
+NB_TIERS = ("artifact", "top dose", "same mechanism", "dose response")   # strongest first; the first two carry a
+#                                     token
+NB_TOKEN = {"artifact": NB_FLAG, "top dose": NB_TOP}
+NB_ORIENT = ("side by side", "above/below", "diagonal", "two apart", "3+ apart")
+WELL_ROWS = "ABCDEFGH"
+# drug_line_response.parquet: how strongly each line responds to each drug-dose, and in which lines it is selective
+SEL_Z = 3.0                         # selective: sel_z >= this ...
+SEL_MIN_GENES = 20                  # ... and n_genes >= this
+SEL_MAD_FLOOR = 0.25                # sel_z divides by max(1.4826 x MAD over the drug-dose's lines, this)
+RMS_CLIP = 10.0                     # rms_z clips each per-line z at +-this
+T_UNREL = "unreliable plate only"   # the atlas flag of a drug-dose whose every well is on an unreliable plate
+UM = "µM"
+
 
 # ----------------------------------------------------------------------------- vectorised atlas rules
 def dose_shape_codes(V, thr=2.0):
@@ -173,12 +245,20 @@ def dose_shape_codes(V, thr=2.0):
     return np.select(conds, list(range(7)), 7).astype(np.int8)
 
 
-def flag_strings(base, d, posunc, poseff, pscale, cc_pct=None):
+def flag_strings(base, d, posunc, poseff, pscale, cc_pct=None, nb=None, rise=None):
     """Per (drug-dose d, gene) item: atlas_core.gene_flags(base[d], posunc, poseff, pscale=pscale) and whether it is
-    clean (no artifact flag). cc_pct (int per item; -1 = no change): where the drug-dose's 'cell-cycle shift' is not
-    the explanation of this gene's change (cell_cycle_share), the percentage of the change it explains; the token
-    then reads CC_CLEARED, which is no artifact flag. gene_flags only thresholds its inputs, so each distinct
-    (d, cc_pct, noisy, uncertain, removed) combination is formatted once."""
+    clean (no artifact flag: common.has_artifact). base = the drug-doses' flags of record (dd_flags_of_record).
+    Then three per-gene readings of drug-dose tokens, in this order:
+    cc_pct (int per item; -1 = no change): where the drug-dose's 'cell-cycle shift' is not the explanation of this
+        gene's change (cell_cycle_share), the percentage of the change it explains; the token then reads CC_CLEARED,
+        which is no artifact flag.
+    nb (bool per item, or None = no per-gene reading): where False, the neighbouring-well tokens (NB_FLAG and NB_TOP)
+        read NB_CLEARED: no partner moves this gene the same way (nb_gene_mask), so this value is not under that
+        suspicion.
+    rise (bool per item, or None): the translation-inhibitor token TL_DD reads TL_RISE where True (the gene rises:
+        DD_lfc > 0) and is dropped where False.
+    gene_flags only thresholds its inputs, so each distinct (d, cc_pct, noisy, uncertain, removed, nb, rise)
+    combination is formatted once."""
     d = np.asarray(d, dtype=np.int64)
     if d.size == 0:
         return np.array([], dtype=object), np.array([], dtype=bool)
@@ -186,17 +266,29 @@ def flag_strings(base, d, posunc, poseff, pscale, cc_pct=None):
     poseff = np.asarray(poseff, dtype=np.float64)
     pscale = np.asarray(pscale, dtype=np.float64)
     pct = np.full(d.size, -1, dtype=np.int64) if cc_pct is None else np.clip(np.asarray(cc_pct, np.int64), -1, 100)
+    # 0 = no per-gene reading, 1 = False, 2 = True
+    nbv = np.zeros(d.size, np.int64) if nb is None else np.asarray(nb, dtype=bool).astype(np.int64) + 1
+    rsv = np.zeros(d.size, np.int64) if rise is None else np.asarray(rise, dtype=bool).astype(np.int64) + 1
     noisy = np.isfinite(pscale) & (pscale > A.PLATE_SCALE_FLAG)
     moved = np.isfinite(poseff) & (np.abs(poseff) > 0.2)
-    key = (d * 102 + pct + 1) * 8 + noisy * 4 + posunc * 2 + moved
+    key = ((((d * 102 + pct + 1) * 8 + noisy * 4 + posunc * 2 + moved) * 3 + nbv) * 3 + rsv)
     _, first, inv = np.unique(key, return_index=True, return_inverse=True)
     strs = []
     for i in first:
         f = A.gene_flags(base[d[i]], bool(posunc[i]), float(poseff[i]), pscale=float(pscale[i]))
-        if pct[i] >= 0:
-            f = "; ".join(CC_CLEARED.format(pct=int(pct[i])) if x == CC_FLAG else x for x in f.split("; "))
+        if f:
+            toks = f.split("; ")
+            if pct[i] >= 0:
+                toks = [CC_CLEARED.format(pct=int(pct[i])) if x == CC_FLAG else x for x in toks]
+            if nbv[i] == 1:
+                toks = [NB_CLEARED if x in (NB_FLAG, NB_TOP) else x for x in toks]
+            if rsv[i] == 2:
+                toks = [TL_RISE if x == TL_DD else x for x in toks]
+            elif rsv[i] == 1:
+                toks = [x for x in toks if x != TL_DD]
+            f = "; ".join(toks)
         strs.append(f)
-    clean = np.array([not A.has_artifact(s) for s in strs], dtype=bool)
+    clean = np.array([not has_artifact(s) for s in strs], dtype=bool)
     return np.array(strs, dtype=object)[inv.ravel()], clean[inv.ravel()]
 
 
@@ -247,7 +339,7 @@ def cell_cycle_share(lfc, s_lfc, g_lfc, dd_flags, posunc=None, chunk=4096):
     cc = np.array([CC_FLAG in t for t in toks], dtype=bool)
     S = np.asarray(s_lfc, dtype=np.float64)
     G = np.asarray(g_lfc, dtype=np.float64)
-    fit = np.array([(t & set(A.ARTIFACT_FLAGS)) <= {CC_FLAG} for t in toks], dtype=bool) & np.isfinite(S) \
+    fit = np.array([(t & set(ARTIFACT_FLAGS)) <= {CC_FLAG} for t in toks], dtype=bool) & np.isfinite(S) \
         & np.isfinite(G)
     share = np.full((Dn, gK), np.nan, dtype=np.float32)
     cleared = np.zeros((Dn, gK), dtype=bool)
@@ -307,6 +399,445 @@ def cell_cycle_share(lfc, s_lfc, g_lfc, dd_flags, posunc=None, chunk=4096):
             share[rows, g0:g1] = sh
             cleared[rows, g0:g1] = cl
     return cc, share, cleared, bS, bG, nf
+
+
+# ----------------------------------------------------------------------------- neighbouring wells
+def _as_bool(s):
+    """A table column as a bool array (True / 'True' / 1 -> True)."""
+    s = pd.Series(s)
+    if s.dtype == bool:
+        return s.to_numpy()
+    return s.astype(str).str.strip().str.lower().isin(["true", "1", "1.0"]).to_numpy()
+
+
+def well_rc(well):
+    """(row, column) of a well name, 0-based: 'F1' -> (5, 0); (-1, -1) when it is not a plate well."""
+    w = str(well or "").strip()
+    if len(w) < 2 or w[0].upper() not in WELL_ROWS or not w[1:].isdigit():
+        return -1, -1
+    return WELL_ROWS.index(w[0].upper()), int(w[1:]) - 1
+
+
+def _orient(dr, dc):
+    """NB_ORIENT index of two wells dr rows and dc columns apart."""
+    m = max(dr, dc)
+    if m >= 3:
+        return 4
+    if m == 2:
+        return 3
+    return 0 if dr == 0 else (1 if dc == 0 else 2)
+
+
+def well_pairs(wells, salt, plate_order=None):
+    """Ordered pairs (a, b) of drug-doses whose wells sit on the same plate. Wells: not DMSO, used in their drug-dose
+    (drugdose_row >= 0), not on an unreliable plate; a and b of different compounds (salt[a] != salt[b], salt =
+    the salt_base per drug-dose). Per pair the closest placement over the plates they share: cheb (Chebyshev
+    distance; 1 = touching: side by side, above/below or at a corner), orient (index into NB_ORIENT) and places: every
+    touching placement as 'plate10 F1 next to G1' (a's well first; plates in plate_order, then by name).
+    Returns a DataFrame with a, b, cheb, orient, places (list of str), plates (list of str)."""
+    w = wells
+    ok = ~_as_bool(w["is_dmso"]) & _as_bool(w["used_in_drugdose"]) & (pd.to_numeric(
+        w["drugdose_row"], errors="coerce").fillna(-1).to_numpy(np.int64) >= 0)
+    if "unreliable_plate" in w:
+        ok &= ~_as_bool(w["unreliable_plate"])
+    w = w[ok]
+    rc = np.array([well_rc(x) for x in w["well"].astype(str)], dtype=np.int64).reshape(-1, 2)
+    keep = rc[:, 0] >= 0
+    w, rc = w[keep], rc[keep]
+    d = w["drugdose_row"].to_numpy(dtype=np.int64)
+    pl = w["plate"].astype(str).to_numpy()
+    wl = w["well"].astype(str).to_numpy()
+    order = {p: i for i, p in enumerate(plate_order or [])}
+    plates = sorted(set(pl), key=lambda p: (order.get(p, len(order)), len(p), p))
+    parts = []
+    for pi, p in enumerate(plates):
+        i = np.flatnonzero(pl == p)
+        if i.size < 2:
+            continue
+        x, y = np.meshgrid(i, i, indexing="ij")
+        x, y = x.ravel(), y.ravel()
+        m = (d[x] != d[y]) & (np.asarray(salt, dtype=object)[d[x]] != np.asarray(salt, dtype=object)[d[y]])
+        x, y = x[m], y[m]
+        dr = np.abs(rc[x, 0] - rc[y, 0])
+        dc = np.abs(rc[x, 1] - rc[y, 1])
+        parts.append(pd.DataFrame({"a": d[x], "b": d[y], "cheb": np.maximum(dr, dc),
+                                   "orient": [_orient(u, v) for u, v in zip(dr, dc)], "pi": pi,
+                                   "place": [f"{p} {wl[u]} next to {wl[v]}" for u, v in zip(x, y)], "plate": p}))
+    if not parts:
+        return pd.DataFrame({"a": np.zeros(0, np.int64), "b": np.zeros(0, np.int64), "cheb": np.zeros(0, np.int64),
+                             "orient": np.zeros(0, np.int64), "places": [], "plates": []})
+    F = pd.concat(parts, ignore_index=True)
+    F = F.sort_values(["a", "b", "cheb", "orient", "pi"], kind="stable")
+    touch = F[F["cheb"] == 1]
+    places = touch.groupby(["a", "b"], sort=False)["place"].agg(list)
+    tplates = touch.groupby(["a", "b"], sort=False)["plate"].agg(lambda s: list(dict.fromkeys(s)))
+    P = F.drop_duplicates(["a", "b"], keep="first")[["a", "b", "cheb", "orient"]].reset_index(drop=True)
+    key = list(zip(P["a"], P["b"]))
+    P["places"] = [places.get(k, []) for k in key]
+    P["plates"] = [tplates.get(k, []) for k in key]
+    return P
+
+
+def _target_set(t):
+    return {x.strip().upper() for x in str(t or "").replace(";", ",").split(",")
+            if x.strip() and x.strip().upper() not in ("NAN", "NONE", "-")}
+
+
+def same_mechanism(a, b, moa, targets, drug, classes=None):
+    """(what, source) when drug-doses a and b share an annotated mechanism, else None: Tahoe moa_fine (not '' or
+    'unclear'), Tahoe targets (a target in common), or a mechanism class (classes = {drug: [class keys]},
+    mechanisms.classes_by_drug). Checked in that order; the first match is named with its source."""
+    ma, mb = str(moa[a] or "").strip(), str(moa[b] or "").strip()
+    if ma and ma.lower() not in ("unclear", "nan", "none") and ma.lower() == mb.lower():
+        return ma, "Tahoe moa_fine"
+    common = sorted(_target_set(targets[a]) & _target_set(targets[b]))
+    if common:
+        return ", ".join(common), "Tahoe targets"
+    if classes:
+        cb = set(classes.get(str(drug[b]), []))
+        common = [k for k in classes.get(str(drug[a]), []) if k in cb]
+        if common:
+            return ("; ".join(M.class_info(k).get("label", k) for k in common),
+                    "drug class, tahoemap/data/drug_classes.json")
+    return None
+
+
+def parse_partners(partners, n=None):
+    """{drug-dose: [partner drug-doses]} from a mapping, a sequence of lists, or the ','-joined text of
+    drugdoses.parquet nb_partners (one entry per drug-dose; '' = none)."""
+    if isinstance(partners, dict):
+        items = partners.items()
+    else:
+        items = enumerate(partners)
+    out = {}
+    for d, ps in items:
+        if ps is None or (isinstance(ps, float) and not np.isfinite(ps)):
+            continue
+        if isinstance(ps, str):
+            ps = [int(x) for x in ps.split(",") if x.strip().lstrip("-").isdigit()]
+        ps = [int(p) for p in ps if int(p) >= 0 and (n is None or int(p) < n)]
+        if ps:
+            out[int(d)] = ps
+    return out
+
+
+def nb_gene_mask(z, partners, gene_z=NB_GENE_Z):
+    """The genes that carry a drug-dose's neighbouring-well token: gene g of drug-dose d (with partners) is marked
+    when sign(z[d, g]) != 0 and some partner p has the same sign with |z[p, g]| >= gene_z. z = pooled z (drug-doses x
+    genes; any subset of gene columns, e.g. one gene's column); partners: see parse_partners. Returns a bool array of
+    z's shape (False for drug-doses without partners)."""
+    z = np.asarray(z)
+    mask = np.zeros(z.shape, dtype=bool)
+    for d, ps in parse_partners(partners, z.shape[0]).items():
+        sd = np.sign(np.nan_to_num(np.asarray(z[d], dtype=np.float64)))
+        hit = np.zeros(z.shape[1:], dtype=bool)
+        for p in ps:
+            zp = np.nan_to_num(np.asarray(z[p], dtype=np.float64))
+            hit |= (np.sign(zp) == sd) & (np.abs(zp) >= gene_z)
+        mask[d] = hit & (sd != 0)
+    return mask
+
+
+def _pct(x):
+    return f"{int(round(100.0 * float(x)))}"
+
+
+def _dose_list(doses):
+    """'0.5 and 5 µM' ('' for none)."""
+    return _and(doses) + " " + UM if len(doses) else ""
+
+
+def _and(xs):
+    """'a', 'a and b', 'a, b and c' ('' for none)."""
+    xs = [str(x) for x in xs]
+    if len(xs) <= 1:
+        return "".join(xs)
+    return ", ".join(xs[:-1]) + " and " + xs[-1]
+
+
+def _chance_text(chance):
+    """' Pairs 3 or more wells apart pass this test too: ...' for a top-dose alert ('' without far pairs). chance =
+    (expected passes from the far pairs, touching pairs passing at this tier, far pairs judged)."""
+    if not chance or chance[0] is None or not chance[2]:
+        return ""
+    exp, n_pass, _n_far = chance
+    share = f" (about {_pct(exp / n_pass)}%)" if n_pass else ""
+    return (f" Pairs 3 or more wells apart pass this test too: at their rate, about {exp:.1f} of the {n_pass} "
+            f"touching pairs that pass at a top dose are expected by chance{share}.")
+
+
+def nb_alert(rec):
+    """The plain-words alert of one drug-dose's neighbouring-well record (neighbour_wells' per-tier templates; % rounded
+    to integers). rec: tier, role ('judged': the weaker drug-dose of the pair, 'partner': the stronger one, which
+    gets the tier only when its own other doses do not show the shared genes either), k, n, n_b, where, plates,
+    partner, other, own, doses (the other doses compared), top (this is the drug's top dose), has_other (it has other
+    doses to compare), mech ((what, source) or None), g (genes carrying the token), dose_k and dose_at (tier 'dose
+    response': how many of its NB_DOSE_TOPK strongest shared genes its lower dose dose_at moves the same way), chance
+    ((expected passes from the far pairs, touching pairs passing, far pairs judged) of its tier: the top-dose alert
+    states it)."""
+    k, n, partner = rec["k"], rec["n"], rec["partner"]
+    places = rec.get("places") or [p for p in str(rec["where"]).split("; ") if p]
+    head = (f"{k} of its {n} significant genes move the same way in the neighbouring well"
+            f"{'s' if len(places) > 1 else ''} {_and(places)}")
+    tier, role = rec["tier"], rec["role"]
+    if tier == "artifact":
+        if role == "judged" and rec["own"] >= NB_OTHER:
+            return (f"{head} ({partner}, {rec['n_b']} significant genes), which shows them at its other doses too "
+                    f"({_pct(rec['own'])}%). This drug's higher doses ({_dose_list(rec['doses'])}) move "
+                    f"{_pct(rec['other'])}% of them. The signal probably came from the neighbouring well. Flagged on "
+                    f"{rec['g']} genes: those the neighbour moves the same way.")
+        return (f"{head} ({partner}), and neither compound moves them at its other doses ({_pct(rec['other'])}% and "
+                f"{_pct(rec['own'])}%). Probably a local problem on this part of {_and(rec['plates'])}. Flagged on "
+                f"{rec['g']} genes.")
+    if tier == "top dose":
+        ch = _chance_text(rec.get("chance"))
+        if role == "judged":
+            low = (f"and its lower doses move {_pct(rec['other'])}% of them" if rec["has_other"]
+                   else "and it has no lower dose to compare")
+            return (f"This is the drug's top dose. {head} ({partner}), {low}. The data cannot tell a carried-over "
+                    f"signal from a real effect: shown with this alert, not flagged.{ch}")
+        return (f"{head} ({partner}, at that drug's top dose), and neither compound moves them at its other doses "
+                f"({_pct(rec['other'])}% and {_pct(rec['own'])}%). The data cannot tell a carried-over signal from a "
+                f"real effect: shown with this alert, not flagged.{ch}")
+    if tier == "dose response":
+        return (f"This is the drug's top dose. {head} ({partner}), and its lower doses move {_pct(rec['other'])}% "
+                f"of them. But its {rec['dose_at']} {UM} dose already moves {rec['dose_k']} of its "
+                f"{NB_DOSE_TOPK} strongest shared genes the same way (|z| >= {NB_Z:g}): the drug's own effect grows "
+                "with the dose. Probably a real effect, not a carried-over signal. Not flagged.")
+    what, src = rec["mech"] or ("", "")
+    pre = "This is the drug's top dose. " if rec["top"] else ""
+    return (f"{pre}{head} ({partner}), which has the same annotated mechanism ({what}, {src}): probably a real class "
+            "effect. Not flagged.")
+
+
+def neighbour_wells(wells, dd, sig, z, classes=None, plate_order=None, gene_z=NB_GENE_Z):
+    """The neighbouring-well rule (README 'Neighbouring wells'): is a drug-dose's signature mostly that of a well right
+    next to it on the same plate (another compound), which its own other doses do not show?
+
+    a. Wells (well_pairs): not DMSO, used in their drug-dose, not on an unreliable plate. Ordered pairs (a, b) of
+       drug-doses of different compounds with wells on the same plate at Chebyshev distance 1 (side by side,
+       above/below, corner); the place text is kept per plate ('plate10 F1 next to G1').
+    b. sig = +1 / -1 / 0: the atlas significance call (noise RNAs 0); s3 = sign(z) where |z| >= NB_Z; nsig = the
+       significant genes; top_b = b's NB_TOPK significant genes with the largest |z| (stable sort).
+    c. (a, b) is judged when nsig[a] >= NB_MIN_SIG, nsig[b] >= nsig[a] and len(top_b) >= 10. shared = a's
+       significant genes that b moves the same way (s3[b] == sig[a]); J = |shared| / nsig[a]; T = the share of top_b
+       that a moves the same way. It resembles b when |shared| >= NB_MIN_SHARED, J >= NB_SHARE, T >= NB_TOP_SHARE.
+    d. Other doses = the same drug name at another concentration, leaving out drug-doses flagged 'unreliable plate
+       only'. share(y) = the share of the shared genes that y moves the same way. If a has higher doses: r_other =
+       the largest share over them; tier 'artifact' when r_other < NB_OTHER. At the top dose: r_other = the largest
+       share over the lower doses (0 if none); when r_other < NB_OTHER: 'same mechanism' (a note, no token) when a
+       and b share Tahoe moa_fine, Tahoe targets or a mechanism class (same_mechanism); else 'dose response' (a note,
+       no token) when one of a's lower doses already moves >= NB_DOSE_MIN of a's NB_DOSE_TOPK strongest shared genes
+       (largest |z[a]|) the same way at |z| >= NB_Z (the drug's own effect growing with the dose; b then gets no
+       tier from this pair); else 'top dose'. Lower doses are never exempted: a true class member shows the
+       signature at its higher doses.
+    e. r_own = the largest share over b's other doses (0 if none); when r_own < NB_OTHER neither compound shows the
+       genes elsewhere, and b gets the same tier with partner a. A drug-dose keeps its strongest tier (NB_TIERS
+       order) and lists every partner.
+    f. mask = nb_gene_mask(z, partners, gene_z): the genes that carry the token.
+
+    wells: wells.csv; dd: drugdose.csv (drug, dose, conc, flags = the atlas flags; moa_fine, targets when present);
+    sig: drug-doses x genes int8; z: pooled z (DD_z); classes: {drug: [class keys]} (mechanisms.classes_by_drug).
+    Every judged pair at every distance is scored: the far pairs (3+ wells apart) give the chance rate.
+    Returns a dict: per drug-dose arrays tier, partner_dd, partner, where, partners (','-joined dd rows), n_sig,
+    shared, share, top_share, other_share, partner_own_share, genes, alert; mask (drug-doses x genes bool); pairs
+    (the judged pairs with their statistics: a DataFrame); info (tables/info.json 'neighbour_rule')."""
+    sig = np.asarray(sig, dtype=np.int8)
+    Dn, gK = sig.shape
+    drug = dd["drug"].astype(str).to_numpy(dtype=object)
+    dose = dd["dose"].astype(str).to_numpy(dtype=object)
+    conc = pd.to_numeric(dd["conc"], errors="coerce").to_numpy(dtype=np.float64)
+    aflags = dd["flags"].fillna("").astype(str).to_numpy(dtype=object) if "flags" in dd else np.full(Dn, "", object)
+    moa = dd["moa_fine"].fillna("").astype(str).to_numpy(dtype=object) if "moa_fine" in dd else np.full(Dn, "", object)
+    tgt = dd["targets"].fillna("").astype(str).to_numpy(dtype=object) if "targets" in dd else np.full(Dn, "", object)
+    salt = np.array([T.salt_base(x) for x in drug], dtype=object)
+    name = np.array([f"{a} {b} {UM}" for a, b in zip(drug, dose)], dtype=object)
+    P = well_pairs(wells, salt, plate_order)
+
+    zz = np.nan_to_num(np.asarray(z, dtype=np.float32))
+    s3 = (np.sign(zz) * (np.abs(zz) >= NB_Z)).astype(np.int8)
+    nsig = (sig != 0).sum(axis=1).astype(np.int64)
+    idx = np.flatnonzero(nsig >= NB_MIN_SIG)
+    pos = np.full(Dn, -1, dtype=np.int64)
+    pos[idx] = np.arange(idx.size)
+    ntop = np.zeros(Dn, dtype=np.int64)
+    TopP = np.zeros((idx.size, gK), dtype=np.float32)
+    TopN = np.zeros((idx.size, gK), dtype=np.float32)
+    for k, b in enumerate(idx):
+        s = np.flatnonzero(sig[b])
+        t = s[np.argsort(-np.abs(zz[b, s]), kind="stable")][:NB_TOPK]
+        ntop[b] = t.size
+        TopP[k, t[sig[b, t] > 0]] = 1.0
+        TopN[k, t[sig[b, t] < 0]] = 1.0
+    Pf, Nf = (sig[idx] > 0).astype(np.float32), (sig[idx] < 0).astype(np.float32)
+    P3, N3 = (s3[idx] > 0).astype(np.float32), (s3[idx] < 0).astype(np.float32)
+    SH = Pf @ P3.T + Nf @ N3.T                     # SH[a, b]: a's significant genes that b moves the same way
+    TM = P3 @ TopP.T + N3 @ TopN.T                 # TM[a, b]: b's top genes that a moves the same way
+    del Pf, Nf, P3, N3, TopP, TopN
+
+    a_, b_ = P["a"].to_numpy(np.int64), P["b"].to_numpy(np.int64)
+    judged = (nsig[a_] >= NB_MIN_SIG) & (nsig[b_] >= nsig[a_]) & (ntop[b_] >= 10)
+    J = P[judged].reset_index(drop=True)
+    a_, b_ = J["a"].to_numpy(np.int64), J["b"].to_numpy(np.int64)
+    J["shared"] = SH[pos[a_], pos[b_]].astype(np.int64) if a_.size else np.zeros(0, np.int64)
+    J["share"] = J["shared"] / np.maximum(nsig[a_], 1)
+    J["top_share"] = (TM[pos[a_], pos[b_]] / np.maximum(ntop[b_], 1)) if a_.size else np.zeros(0)
+    J["resembles"] = (J["shared"] >= NB_MIN_SHARED) & (J["share"] >= NB_SHARE) & (J["top_share"] >= NB_TOP_SHARE)
+
+    rows_of = {}
+    usable = np.array([T_UNREL not in str(f).split("; ") for f in aflags], dtype=bool)
+    for i, x in enumerate(drug):
+        rows_of.setdefault(x, []).append(i)
+    top_dose = np.array([conc[i] >= max(conc[j] for j in rows_of[drug[i]] if usable[j] or j == i)
+                         for i in range(Dn)], dtype=bool)
+    ext = {c: np.full(len(J), np.nan) for c in ("other_share", "partner_own_share")}
+    tiers = np.full(len(J), "", dtype=object)
+    partner_tier = np.zeros(len(J), dtype=bool)
+    detail = {}
+    for i in np.flatnonzero(J["resembles"].to_numpy()):
+        a, b = int(J.at[i, "a"]), int(J.at[i, "b"])
+        sh = (sig[a] != 0) & (s3[b] == sig[a])
+
+        def share(y):
+            return float(np.mean(s3[y, sh] == sig[a, sh])) if sh.any() else 0.0
+        others = [y for y in rows_of[drug[a]] if y != a and conc[y] != conc[a] and usable[y]]
+        hi = sorted((y for y in others if conc[y] > conc[a]), key=lambda y: conc[y])
+        lo = sorted((y for y in others if conc[y] < conc[a]), key=lambda y: conc[y])
+        comp = hi if hi else lo
+        r_other = max((share(y) for y in comp), default=0.0)
+        own = [y for y in rows_of[drug[b]] if y != b and conc[y] != conc[b] and usable[y]]
+        r_own = max((share(y) for y in own), default=0.0)
+        ext["other_share"][i], ext["partner_own_share"][i] = r_other, r_own
+        mech, dose_k, dose_at = None, 0, ""
+        if r_other < NB_OTHER:
+            if hi:
+                tiers[i] = "artifact"
+            else:
+                mech = same_mechanism(a, b, moa, tgt, drug, classes)
+                if not mech and lo:                    # its strongest shared genes at its lower doses
+                    gs = np.flatnonzero(sh)
+                    top = gs[np.argsort(-np.abs(zz[a, gs]), kind="stable")][:NB_DOSE_TOPK]
+                    for y in lo:
+                        k_ = int(np.sum(s3[y, top] == sig[a, top]))
+                        if k_ > dose_k:
+                            dose_k, dose_at = k_, dose[y]
+                tiers[i] = ("same mechanism" if mech else "dose response" if dose_k >= NB_DOSE_MIN
+                            else "top dose")
+            partner_tier[i] = r_own < NB_OTHER and tiers[i] != "dose response"
+        detail[i] = {"comp": comp, "has_hi": bool(hi), "own": own, "mech": mech, "r_other": r_other, "r_own": r_own,
+                     "dose_k": dose_k, "dose_at": dose_at}
+    J["other_share"], J["partner_own_share"] = ext["other_share"], ext["partner_own_share"]
+    J["tier"] = tiers
+    J["partner_tier"] = partner_tier
+
+    # ---- per drug-dose: every touching pair with a tier gives the judged drug-dose (and, when its own other doses do
+    # not show the genes either, the partner) a record; each keeps its strongest tier and lists every partner
+    recs = {}
+    place_of = {(int(x), int(y)): (pl, pls) for x, y, pl, pls in zip(P["a"], P["b"], P["places"], P["plates"])}
+    for i in np.flatnonzero((J["cheb"].to_numpy() == 1) & (J["tier"].to_numpy() != "")):
+        a, b = int(J.at[i, "a"]), int(J.at[i, "b"])
+        det, tier = detail[i], J.at[i, "tier"]
+        pl_a, plates = place_of.get((a, b), ([], []))
+        recs.setdefault(a, []).append({
+            "tier": tier, "role": "judged", "p": b, "k": int(J.at[i, "shared"]), "n": int(nsig[a]),
+            "n_b": int(nsig[b]), "J": float(J.at[i, "share"]), "T": float(J.at[i, "top_share"]),
+            "other": det["r_other"], "own": det["r_own"], "doses": [dose[y] for y in det["comp"]],
+            "has_other": bool(det["comp"]), "top": bool(not det["has_hi"]), "mech": det["mech"],
+            "where": "; ".join(pl_a), "places": list(pl_a), "plates": plates, "partner": name[b],
+            "dose_k": det["dose_k"], "dose_at": det["dose_at"]})
+        if J.at[i, "partner_tier"]:
+            pl_b, plates_b = place_of.get((b, a), ([], []))
+            kb = int(SH[pos[b], pos[a]]) if pos[b] >= 0 and pos[a] >= 0 else 0
+            tb = float(TM[pos[b], pos[a]] / max(ntop[a], 1)) if pos[b] >= 0 and pos[a] >= 0 else 0.0
+            mech_b = same_mechanism(b, a, moa, tgt, drug, classes) if tier == "same mechanism" else None
+            recs.setdefault(b, []).append({
+                "tier": tier, "role": "partner", "p": a, "k": kb, "n": int(nsig[b]), "n_b": int(nsig[a]),
+                "J": kb / max(int(nsig[b]), 1), "T": tb, "other": det["r_own"], "own": det["r_other"],
+                "doses": [dose[y] for y in det["own"]], "has_other": bool(det["own"]), "top": bool(top_dose[b]),
+                "mech": mech_b, "where": "; ".join(pl_b), "places": list(pl_b), "plates": plates_b,
+                "partner": name[a]})
+    rank = {t: i for i, t in enumerate(NB_TIERS)}
+    res = {"tier": np.full(Dn, "", dtype=object), "partner_dd": np.full(Dn, -1, dtype=np.int32),
+           "partner": np.full(Dn, "", dtype=object), "where": np.full(Dn, "", dtype=object),
+           "partners": np.full(Dn, "", dtype=object), "n_sig": nsig.astype(np.int32),
+           "shared": np.full(Dn, -1, dtype=np.int32), "share": np.full(Dn, np.nan, dtype=np.float32),
+           "top_share": np.full(Dn, np.nan, dtype=np.float32), "other_share": np.full(Dn, np.nan, dtype=np.float32),
+           "partner_own_share": np.full(Dn, np.nan, dtype=np.float32), "genes": np.zeros(Dn, dtype=np.int32),
+           "alert": np.full(Dn, "", dtype=object)}
+    plist = {}
+    for d, rs in recs.items():
+        rs.sort(key=lambda r: (rank[r["tier"]], -r["J"], r["p"]))
+        seen, ps = set(), []
+        for r in rs:
+            if r["p"] not in seen:
+                seen.add(r["p"])
+                ps.append(r["p"])
+        r = rs[0]
+        res["tier"][d] = r["tier"]
+        res["partner_dd"][d] = r["p"]
+        res["partner"][d] = r["partner"]
+        res["where"][d] = r["where"]
+        res["partners"][d] = ",".join(str(p) for p in ps)
+        res["shared"][d] = r["k"]
+        res["share"][d], res["top_share"][d] = r["J"], r["T"]
+        res["other_share"][d], res["partner_own_share"][d] = r["other"], r["own"]
+        plist[d] = ps
+    mask = nb_gene_mask(z, plist, gene_z)
+    # the chance rate (far pairs, 3+ wells apart: the same rule and tiers) x the touching pairs judged, per tier;
+    # the top-dose alert states it
+    cheb, orient = J["cheb"].to_numpy(), J["orient"].to_numpy()
+    near, far = cheb == 1, orient == 4
+    n_near, n_far = int(near.sum()), int(far.sum())
+    tcol = J["tier"].to_numpy()
+    passing = {t: int((near & (tcol == t)).sum()) for t in NB_TIERS}
+    expected = {t: (round(float((far & (tcol == t)).sum()) / n_far * n_near, 2) if n_far else None) for t in NB_TIERS}
+    for d, rs in recs.items():
+        tok = rs[0]["tier"] in NB_TOKEN
+        g = int(mask[d].sum()) if tok else 0
+        res["genes"][d] = g
+        main = dict(rs[0], g=g, chance=(expected.get(rs[0]["tier"]), passing.get(rs[0]["tier"], 0), n_far))
+        txt = nb_alert(main)
+        rest, seen = [], {rs[0]["p"]}
+        for r in rs[1:]:
+            if r["p"] in seen:
+                continue
+            seen.add(r["p"])
+            rest.append(f"{r['partner']} ({r['where']}; {r['tier']})")
+        if rest:
+            more = {"artifact": " The genes they move the same way are flagged too.",
+                    "top dose": " The genes they move the same way carry this alert too."}.get(rs[0]["tier"], "")
+            txt += (f" It is also like {len(rest)} other neighbouring well{'s' if len(rest) > 1 else ''}: "
+                    + "; ".join(rest) + "." + more)
+        res["alert"][d] = txt
+    res["mask"] = mask
+
+    # ---- info.json 'neighbour_rule': counts, the chance rate from the far pairs, and the orientation table
+    resm = J["resembles"].to_numpy()
+    far_share = float(resm[far].mean()) if n_far else float("nan")
+    orient_tab = []
+    for k, o in enumerate(NB_ORIENT):
+        m = orient == k
+        nj, nr = int(m.sum()), int((m & resm).sum())
+        sh = nr / nj if nj else float("nan")
+        orient_tab.append({"orientation": o, "judged": nj, "resembling": nr, "share": round(sh, 4) if nj else None,
+                           "x_far_share": round(sh / far_share, 2) if nj and far_share > 0 else None})
+    dd_counts = {t: int((res["tier"] == t).sum()) for t in NB_TIERS}
+    res["pairs"] = J
+    res["info"] = {
+        "constants": {"NB_MIN_SIG": NB_MIN_SIG, "NB_Z": NB_Z, "NB_SHARE": NB_SHARE, "NB_TOPK": NB_TOPK,
+                      "NB_TOP_SHARE": NB_TOP_SHARE, "NB_MIN_SHARED": NB_MIN_SHARED, "NB_OTHER": NB_OTHER,
+                      "NB_GENE_Z": gene_z, "NB_DOSE_TOPK": NB_DOSE_TOPK, "NB_DOSE_MIN": NB_DOSE_MIN},
+        "pairs_judged": n_near, "pairs_passing": passing, "drugdoses": dd_counts,
+        "expected_passes": expected,
+        "expected_passes_rule": ("pass rate of the judged pairs 3 or more wells apart (same rule, same tiers) x the "
+                                 f"{n_near} touching pairs judged: an upper bound of the chance passes, since far "
+                                 "pairs include real class copies"),
+        "far_pairs_judged": n_far, "orientation": orient_tab,
+        "tier_drugdoses": [{"dd": int(d), "drug": str(drug[d]), "dose": str(dose[d]), "tier": res["tier"][d],
+                            "partner": res["partner"][d], "partner_dd": int(res["partner_dd"][d]),
+                            "where": res["where"][d], "genes": int(res["genes"][d])}
+                           for d in np.flatnonzero(res["tier"] != "")]}
+    return res
 
 
 def _module_cols(genes, fxd, gK):
@@ -439,25 +970,232 @@ def _flag_parts(fxd, wells, dd, gK, lfc, dd_flags):
     return pe, pu, ps, cc
 
 
+def translation_members(out, classes=None):
+    """The drugs in a mechanism class whose effect is 'translation' (they stop protein synthesis): {drug: [class
+    keys]} from mechanisms.classes_by_drug and class_info (tahoemap/data/drug_classes.json)."""
+    classes = M.classes_by_drug(out) if classes is None else classes
+    res = {}
+    for d, ks in classes.items():
+        tl = [k for k in ks if M.class_info(k).get("effect") == "translation"]
+        if tl:
+            res[str(d)] = tl
+    return res
+
+
+def flags_of_record(atlas_flags, nb_tier, tl_dd):
+    """The drug-doses' flags of record: the atlas flags (drugdose.csv, verbatim), then NB_FLAG (tier 'artifact') or
+    NB_TOP (tier 'top dose') of the neighbouring-well rule, then TL_DD for a translation inhibitor; '; '-joined.
+    Every reader uses these (dd_flags_of_record)."""
+    res = []
+    for f, t, tl in zip(atlas_flags, nb_tier, tl_dd):
+        toks = [x for x in str(f or "").split("; ") if x]
+        if t in NB_TOKEN:
+            toks.append(NB_TOKEN[t])
+        if tl:
+            toks.append(TL_DD)
+        res.append("; ".join(toks))
+    return np.array(res, dtype=object)
+
+
+def _tables_v5(out, n):
+    """tables/drugdoses.parquet (flags, nb_partners) when the tables stage's stamp is version >= 5 and the table has
+    one row per drugdose.csv row (n), else None."""
+    st = read_stamp(out, "tables")
+    p = os.path.join(out, "tables", "drugdoses.parquet")
+    try:
+        if not st or int(st.get("version", 0) or 0) < 5 or not os.path.exists(p):
+            return None
+        t = pd.read_parquet(p, columns=["flags", "nb_partners"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    return t if len(t) == n else None
+
+
+def dd_flags_of_record(out):
+    """The drug-doses' flags of record, one string per atlas/effects/drugdose.csv row: tables/drugdoses.parquet
+    'flags' when the tables stage's stamp is version >= 5 and its row count equals drugdose.csv's; else drugdose.csv's
+    flags (an output made before tables version 5, which had no neighbouring-well or translation tokens)."""
+    dd = pd.read_csv(os.path.join(out, "atlas", "effects", "drugdose.csv"), usecols=["flags"], dtype={"flags": str},
+                     keep_default_na=False, na_values=[""])
+    base = dd["flags"].fillna("").astype(str).to_numpy(dtype=object)
+    t = _tables_v5(out, len(base))
+    return base if t is None else t["flags"].fillna("").astype(str).to_numpy(dtype=object)
+
+
 def gene_flag_inputs(out, lfc=None):
     """The inputs of flag_strings for every (drug-dose, gene) of a finished run, computed as the tables stage computes
-    them (same functions, same order): a dict with dd_flags (the drug-doses' flags, object array), posunc (bool,
-    drug-doses x genes), poseff and pscale (float32), cc_share (float32; NaN outside the cell-cycle-flagged
-    drug-doses) and cc_cleared (bool), plus cc_dd (bool per drug-dose: flagged 'cell-cycle shift') and gK.
-    flag_strings(dd_flags, d, posunc[d, g], poseff[d, g], pscale[d, g], cc_pct(cc_share[d, g], cc_cleared[d, g]))
-    is then the 'flags' of drug_effects at (d, g) (and its clean). lfc: DD_lfc[:, :gK] when the caller holds it."""
+    them (same functions, same order): a dict with dd_flags (the drug-doses' flags of record, object array:
+    dd_flags_of_record), posunc (bool, drug-doses x genes), poseff and pscale (float32), cc_share (float32; NaN outside
+    the cell-cycle-flagged drug-doses) and cc_cleared (bool), nb (bool: the genes that carry a drug-dose's
+    neighbouring-well token, nb_gene_mask over drugdoses.parquet nb_partners and DD_z), rise (bool: DD_lfc > 0), plus
+    cc_dd (bool per drug-dose: flagged 'cell-cycle shift' by the atlas) and gK.
+    flag_strings(dd_flags, d, posunc[d, g], poseff[d, g], pscale[d, g], cc_pct(cc_share[d, g], cc_cleared[d, g]),
+    nb[d, g], rise[d, g]) is then the 'flags' of drug_effects at (d, g) (and its clean). lfc: DD_lfc[:, :gK] when the
+    caller holds it."""
     fxd = os.path.join(out, "atlas", "effects")
     ix = read_effects_index(fxd)
     genes, wells, dd = ix["genes"], ix["wells"], ix["drugdose"]
     gK = int((genes["kind"] == "gene").sum())
-    dd_flags = dd["flags"].fillna("").astype(str).to_numpy(dtype=object)
+    Dn = len(dd)
+    atlas_flags = dd["flags"].fillna("").astype(str).to_numpy(dtype=object)
+    t = _tables_v5(out, Dn)
+    dd_flags = atlas_flags if t is None else t["flags"].fillna("").astype(str).to_numpy(dtype=object)
+    partners = {} if t is None else parse_partners(t["nb_partners"].fillna("").astype(str).tolist(), Dn)
     if lfc is None:
         lfc = _load_pooled(fxd, "DD_lfc", gK)
     with warnings.catch_warnings(), np.errstate(invalid="ignore", divide="ignore", over="ignore"):
         warnings.simplefilter("ignore", RuntimeWarning)
-        pe, pu, ps, (cc_dd, share, cleared, _bS, _bG, _nf) = _flag_parts(fxd, wells, dd, gK, lfc, dd_flags)
+        pe, pu, ps, (cc_dd, share, cleared, _bS, _bG, _nf) = _flag_parts(fxd, wells, dd, gK, lfc, atlas_flags)
+        nbm = nb_gene_mask(_load_pooled(fxd, "DD_z", gK), partners) if partners else np.zeros((Dn, gK), bool)
+        rise = np.asarray(lfc[:, :gK]) > 0
     return {"dd_flags": dd_flags, "posunc": pu, "poseff": pe, "pscale": ps, "cc_share": share, "cc_cleared": cleared,
-            "cc_dd": cc_dd, "gK": gK}
+            "nb": nbm, "rise": rise, "cc_dd": cc_dd, "gK": gK}
+
+
+def _used_wells(wells, plates):
+    """The used wells of every drug-dose: (drug-dose row, plate index in plates.csv order, well name) per well that is
+    used in its drug-dose (wells.csv used_in_drugdose, drugdose_row >= 0), as three arrays."""
+    ddr = pd.to_numeric(wells["drugdose_row"], errors="coerce").fillna(-1).to_numpy(np.int64)
+    pix = {p: i for i, p in enumerate(plates["plate"].astype(str))}
+    wp = wells["plate"].astype(str).map(pix).fillna(-1).to_numpy(np.int64)
+    m = _as_bool(wells["used_in_drugdose"]) & (ddr >= 0) & (wp >= 0)
+    return ddr[m], wp[m], wells["well"].astype(str).to_numpy(dtype=object)[m]
+
+
+def _dmso_offset(fxd, wells, plates, dd, gK):
+    """The DMSO sign check's offset: off[d, g] = the mean over drug-dose d's used wells of atlas/effects/
+    plate_offset.npy[plate of the well, g] (how far the plate's DMSO wells sit below its drug-well median; NaN when
+    any of them is NaN, or without plate_offset.npy), so that lfc + off is a rough DMSO-referenced log2 fold change.
+    Returns off (drug-doses x genes float32), the used wells per drug-dose (drugdose.csv n_wells when present) and
+    the plate indices (plates.csv order) of each drug-dose's used wells."""
+    Dn = len(dd)
+    d_, p_, _w = _used_wells(wells, plates)
+    nw = np.bincount(d_, minlength=Dn)
+    n_wells = pd.to_numeric(dd["n_wells"], errors="coerce").fillna(0).to_numpy(np.int64) if "n_wells" in dd else nw
+    dd_plates = [[] for _ in range(Dn)]
+    for d, p in sorted(set(zip(d_.tolist(), p_.tolist()))):
+        dd_plates[d].append(p)
+    off = np.full((Dn, gK), np.nan, dtype=np.float32)
+    path = os.path.join(fxd, "plate_offset.npy")
+    if os.path.exists(path):
+        PO = np.load(path, mmap_mode="r")
+        if PO.shape[0] == len(plates) and d_.size:
+            agg = sp.csr_matrix((1.0 / nw[d_], (d_, p_)), shape=(Dn, len(plates)))
+            off = np.asarray(agg @ np.asarray(PO[:, :gK], dtype=np.float64), dtype=np.float32)
+            off[nw == 0] = np.nan
+        else:
+            log(f"  {path} has {PO.shape[0]} rows, plates.csv {len(plates)}: lfc_vs_dmso left NaN")
+    else:
+        log(f"  {path} not found: lfc_vs_dmso left NaN")
+    return off, n_wells, dd_plates
+
+
+def dose_plates_text(doses, wells_of_dose):
+    """drugs.parquet dose_plates: '0.05: plate10 G1 / 0.5: plate11 G1 / 5: plate12 G1' (ascending dose; per dose its
+    used wells as 'plate well', ', '-joined; 'no used well' when none). wells_of_dose: per dose a list of (plate,
+    well)."""
+    parts = []
+    for dz, ws in zip(doses, wells_of_dose):
+        parts.append(f"{dz}: " + (", ".join(f"{p} {w}" for p, w in ws) if ws else "no used well"))
+    return " / ".join(parts)
+
+
+def line_selectivity(n_genes, measured):
+    """drug_line_response's rel_log2 and sel_z from n_genes (drug-doses x lines; genes with |per-line z| >= the
+    calibrated cut) and measured (bool, the same shape: a per-line profile exists):
+        rel_log2 = log2((n_genes + 1) / (median over the line's measured drug-doses of n_genes + 1)): how many genes
+                   this drug-dose moves in the line, against what the line's typical drug-dose moves there
+        sel_z    = (rel_log2 - median over the drug-dose's measured lines) / max(1.4826 x MAD over those lines,
+                   SEL_MAD_FLOOR): how far the line stands out among the lines of this drug-dose
+    NaN where not measured. Returns (rel_log2, sel_z), float64."""
+    ng = np.where(measured, np.asarray(n_genes, dtype=np.float64), np.nan)
+    with warnings.catch_warnings(), np.errstate(invalid="ignore", divide="ignore"):
+        warnings.simplefilter("ignore", RuntimeWarning)
+        line_med = np.nanmedian(ng, axis=0)
+        rel = np.log2((ng + 1.0) / (line_med[None, :] + 1.0))
+        med = np.nanmedian(rel, axis=1)
+        mad = np.nanmedian(np.abs(rel - med[:, None]), axis=1)
+    sel = (rel - med[:, None]) / np.maximum(1.4826 * np.nan_to_num(mad), SEL_MAD_FLOOR)[:, None]
+    return rel, np.where(measured, sel, np.nan)
+
+
+def selective_mask(sel_z, n_genes):
+    """drug_line_response 'selective': sel_z >= SEL_Z and n_genes >= SEL_MIN_GENES."""
+    with np.errstate(invalid="ignore"):
+        return (np.nan_to_num(np.asarray(sel_z, np.float64), nan=-np.inf) >= SEL_Z) & \
+            (np.asarray(n_genes) >= SEL_MIN_GENES)
+
+
+def chembl_release(out):
+    """'ChEMBL 37' from reference/sources.json (the ChEMBL release the drug annotations came from), else 'ChEMBL'."""
+    p = os.path.join(out, "reference", "sources.json")
+    try:
+        with open(p, encoding="utf-8") as fh:
+            src = json.load(fh)
+    except (OSError, ValueError):
+        return "ChEMBL"
+    rel = str(((src.get("sources") or {}).get("chembl") or {}).get("chembl_release") or "")
+    rel = rel.replace("ChEMBL_", "").replace("chembl_", "").strip()
+    return f"ChEMBL {rel}" if rel else "ChEMBL"
+
+
+def annotation_counts(drugs_df):
+    """README / info.json counts of the drug annotations in drugs.parquet."""
+    def ne(c):
+        return int((drugs_df[c].fillna("").astype(str) != "").sum()) if c in drugs_df else 0
+    st = drugs_df["annotation_status"].fillna("").astype(str).str.split("; ").explode() \
+        if "annotation_status" in drugs_df else pd.Series([], dtype=object)
+    known = int(sum(M.known_mechanism(x) for x in drugs_df["chembl_mechanisms"])) if "chembl_mechanisms" in drugs_df \
+        else 0
+    return {"drugs": int(len(drugs_df)), "chembl_matched": ne("chembl_id"), "with_chembl_mechanism": known,
+            "with_mechanism_class": ne("mechanism_classes"), "alerts": ne("annotation_alert"),
+            "notes": ne("annotation_note"),
+            "status": {str(k): int(v) for k, v in st[st != ""].value_counts().items()}}
+
+
+def _not_members_tl():
+    """{class: {molecule key: reason}} of tahoemap/data/drug_classes.json not_members for the classes whose effect is
+    'translation'."""
+    rules = M.load_rules()
+    nm = rules.get("not_members", {}) or {}
+    return {k: dict(v) for k, v in nm.items() if not k.startswith("_") and isinstance(v, dict)
+            and M.class_info(k).get("effect") == "translation"}
+
+
+def replicate_plates(wells, plate_names):
+    """Replicate plates: pairs of plates that share at least half of the drug-doses (used wells) of one of them:
+    [{'plates': [p, q], 'drugdoses_shared', 'drugdoses': [on p, on q]}] in plate order."""
+    d_, p_, _w = _used_wells(wells, pd.DataFrame({"plate": plate_names}))
+    sets = [set(d_[p_ == i].tolist()) for i in range(len(plate_names))]
+    res = []
+    for i, si in enumerate(sets):
+        for j in range(i + 1, len(sets)):
+            k = len(si & sets[j])
+            if k and k >= 0.5 * min(len(si), len(sets[j])):
+                res.append({"plates": [plate_names[i], plate_names[j]], "drugdoses_shared": int(k),
+                            "drugdoses": [len(si), len(sets[j])]})
+    return res
+
+
+def write_gmt(path, drug, dose, flags, symbol, sig_up, sig_dn):
+    """tables/drugdose_signatures.gmt: per drug-dose two gene sets, '<drug> <dose> µM up' and '... down', holding every
+    gene whose call is up / down (q < Q_CUT and fold >= 1.2 that way; no cap; symbols, each once). The description
+    field gives the drug-dose row, the rule and the flags of record. A set with no gene is not written (an empty line
+    breaks some tools); the counts say how many. Returns the counts for info.json."""
+    rows, n_empty = [], 0
+    for d in range(len(drug)):
+        for word, S, rule in (("up", sig_up, "fold >= 1.2"), ("down", sig_dn, "fold <= 1/1.2")):
+            g = np.flatnonzero(S[d])
+            if not g.size:
+                n_empty += 1
+                continue
+            genes = list(dict.fromkeys(str(symbol[i]) for i in g if str(symbol[i])))
+            desc = (f"dd {d}: {len(genes)} genes with q < {Q_CUT:g} and {rule} (tables/drug_effects.parquet); flags: "
+                    f"{flags[d] or 'none'}")
+            rows.append("\t".join([f"{drug[d]} {dose[d]} {UM} {word}", desc] + genes))
+    _write_text(path, "\n".join(rows) + ("\n" if rows else ""))
+    return {"file": "drugdose_signatures.gmt", "sets": 2 * len(drug), "written": len(rows),
+            "empty_not_written": n_empty}
 
 
 # ----------------------------------------------------------------------------- helpers
@@ -645,18 +1383,25 @@ def _read_meta(fi, key, cols):
         return None
 
 
+TP53_NOT_RECORDED = "not recorded"     # no TP53 alteration in the metadata (driver alterations only): presumed wild
+#                                         type, not confirmed. Before tables version 5 this read 'wild type'.
+
+
 def _tp53_status(lines, fi):
-    """'altered' (a TP53 row in the cell-line metadata), 'wild type' (the line is there without one), 'unknown'."""
+    """'altered' (a TP53 row in the Tahoe cell-line metadata), 'not recorded' (the line is there without one: the
+    metadata lists driver alterations only, so this is presumed wild type, not confirmed), 'unknown' (the line is not
+    in the metadata). Without the metadata file, lines.csv's drivers list is read the same way."""
     cl = _read_meta(fi, "cell_line", ["Cell_ID_Cellosaur", "Driver_Gene_Symbol"])
     ids = lines["cell_line_id"].astype(str)
     if cl is not None and "Cell_ID_Cellosaur" in cl and "Driver_Gene_Symbol" in cl:
         cid = cl["Cell_ID_Cellosaur"].astype(str)
         present = set(cid)
         altered = set(cid[cl["Driver_Gene_Symbol"].astype(str).str.strip().str.upper() == "TP53"])
-        return np.where(ids.isin(altered), "altered", np.where(ids.isin(present), "wild type", "unknown")), "metadata"
+        return (np.where(ids.isin(altered), "altered", np.where(ids.isin(present), TP53_NOT_RECORDED, "unknown")),
+                "metadata")
     drv = lines["drivers"].fillna("").astype(str) if "drivers" in lines else pd.Series([""] * len(lines))
     st = np.where(drv.str.contains(r"(?:^|; )TP53\(", regex=True), "altered",
-                  np.where(drv.str.len() > 0, "wild type", "unknown"))
+                  np.where(drv.str.len() > 0, TP53_NOT_RECORDED, "unknown"))
     return st, "lines.csv drivers"
 
 
@@ -681,7 +1426,8 @@ DRUG_EFFECTS_SCHEMA = pa.schema([
     ("q_up", pa.float32()), ("q_down", pa.float32()), ("flags", pa.string()), ("clean", pa.bool_()),
     ("n_lines_measured", pa.int16()), ("n_lines_up", pa.int16()), ("n_lines_down", pa.int16()),
     ("lines_up", pa.string()), ("lines_down", pa.string()), ("pattern_up", pa.string()),
-    ("pattern_down", pa.string()), ("cc_share", pa.float32())])
+    ("pattern_down", pa.string()), ("cc_share", pa.float32()), ("n_wells", pa.int8()),
+    ("lfc_vs_dmso", pa.float32())])
 
 
 # ----------------------------------------------------------------------------- the stage
@@ -739,28 +1485,63 @@ def _run(out, chunk, mem_gb, t0):
     dd_drug = dd["drug"].astype(str).to_numpy(dtype=object)
     dd_dose = dd["dose"].astype(str).to_numpy(dtype=object)
     dd_conc = dd["conc"].to_numpy(dtype=np.float64)
-    dd_flags = dd["flags"].fillna("").astype(str).to_numpy(dtype=object)
-    art_dd = np.array([A.has_artifact(f) for f in dd_flags], dtype=bool)
+    atlas_flags = dd["flags"].fillna("").astype(str).to_numpy(dtype=object)     # drugdose.csv, verbatim
     drugs, drug_of_dd, rows_of_drug, grid = drug_grid(dd_drug, dd_conc)
     drug_ix = {d: i for i, d in enumerate(drugs)}
     salt = np.array([T.salt_base(d) for d in dd_drug], dtype=object)
     comp_ix = {c: i for i, c in enumerate(dict.fromkeys(salt))}
     comp_of_dd = np.array([comp_ix[c] for c in salt], dtype=np.int64)
+    noise = np.array([bool(A.NOISE_RNA_RE.match(s)) for s in symbol], dtype=bool)
+    plate_names = ix["plates"]["plate"].astype(str).tolist()
+    classes = M.classes_by_drug(out)
 
     # ---- pooled drug-dose x gene matrices (gene columns only)
     lfc, z, qu, qd = (_load_pooled(fxd, n, gK) for n in ("DD_lfc", "DD_z", "DD_qup", "DD_qdn"))
-    pe, pu, ps, (cc_dd, cc_share, cc_clear, cc_bS, cc_bG, cc_fit) = _flag_parts(fxd, wells, dd, gK, lfc, dd_flags)
+    # the cell-cycle rule reads the atlas flags: a neighbouring-well or translation token does not change it
+    pe, pu, ps, (cc_dd, cc_share, cc_clear, cc_bS, cc_bG, cc_fit) = _flag_parts(fxd, wells, dd, gK, lfc, atlas_flags)
     sig_up = (qu < Q_CUT) & (lfc >= LFC_MIN)
     sig_dn = (qd < Q_CUT) & (lfc <= -LFC_MIN)
-    cc_only = np.array([set(f.split("; ")) & set(A.ARTIFACT_FLAGS) == {CC_FLAG} for f in dd_flags], dtype=bool)
-    # clean = no artifact flag for this gene: the drug-dose's flags (its cell-cycle shift only where the shift is the
-    # explanation of this gene's change) + this gene's position flag
-    clean = (~art_dd[:, None] | (cc_only[:, None] & cc_clear)) & ~pu
+
+    # ---- neighbouring wells and the translation-inhibitor caveat: the flags of record
+    sig3 = sig_up.astype(np.int8) - sig_dn.astype(np.int8)
+    sig3[:, noise] = 0
+    nb = neighbour_wells(wells, dd, sig3, z, classes, plate_order=plate_names)
+    del sig3
+    nb_mask = nb["mask"]
+    tl_members = translation_members(out, classes)
+    tl_dd = np.array([d in tl_members for d in dd_drug], dtype=bool)
+    dd_flags = flags_of_record(atlas_flags, nb["tier"], tl_dd)
+    art_dd = np.array([has_artifact(f) for f in dd_flags], dtype=bool)
+    nb_art = nb["tier"] == "artifact"
+    cc_only = np.array([set(f.split("; ")) & set(ARTIFACT_FLAGS) == {CC_FLAG} for f in atlas_flags], dtype=bool)
+    other_art = np.array([bool(set(f.split("; ")) & (set(ARTIFACT_FLAGS) - {CC_FLAG, NB_FLAG})) for f in dd_flags],
+                         dtype=bool)
+    # clean = no artifact flag for this gene: the drug-dose's flags of record (its cell-cycle shift only where the
+    # shift is the explanation of this gene's change; its neighbouring-well flag only where a partner moves this gene
+    # the same way) + this gene's position flag
+    clean = ~pu & ~other_art[:, None] & (~cc_dd[:, None] | cc_clear) & (~nb_art[:, None] | ~nb_mask)
     finz = np.isfinite(z)
+    for t in NB_TIERS:
+        m = nb["tier"] == t
+        if m.any():
+            log(f"  neighbouring wells, {t}: " + "; ".join(f"{dd_drug[d]} {dd_dose[d]} (next to {nb['partner'][d]}, "
+                                                           f"{nb['where'][d]})" for d in np.flatnonzero(m)))
+    log(f"  neighbouring wells: {nb['info']['pairs_judged']:,} touching pairs judged; passing per tier "
+        f"{nb['info']['pairs_passing']}; expected by chance (far pairs) {nb['info']['expected_passes']}")
+    if tl_dd.any():
+        log(f"  translation inhibitors ({TL_DD!r} caveat): {', '.join(sorted(tl_members))} "
+            f"({int(tl_dd.sum())} drug-doses)")
 
     def cc_pct_at(d, g):
         """flag_strings' cc_pct for (drug-dose, gene) items (cc_pct)."""
         return cc_pct(cc_share[d, g], cc_clear[d, g])
+
+    def gflags(d, g, rise=None):
+        """flag_strings for (drug-dose, gene) items: the flags of record read per gene (cell-cycle share,
+        neighbouring-well genes, rise under a translation inhibitor). rise: the sign the translation-inhibitor token
+        reads (None = the pooled change, DD_lfc > 0; a per-line cell passes its own per-line change, lfc > 0)."""
+        return flag_strings(dd_flags, d, pu[d, g], pe[d, g], ps[d, g], cc_pct_at(d, g), nb_mask[d, g],
+                            lfc[d, g] > 0 if rise is None else rise)
 
     cc_info = _cc_summary(ix["genes"], fxd, gK, cc_dd, cc_only, cc_share, cc_clear, lfc, sig_up | sig_dn, cc_bS,
                           cc_bG, cc_fit)
@@ -793,7 +1574,7 @@ def _run(out, chunk, mem_gb, t0):
     for c in ("pooled_cpm", "median_line_cpm"):
         gtab[c] = gsub[c].to_numpy()
     gtab["n_lines_expressing"] = measured.sum(axis=0).astype(np.int32)    # tensor line_measured, not the atlas's
-    gtab["noise_rna"] = [bool(A.NOISE_RNA_RE.match(s)) for s in symbol]
+    gtab["noise_rna"] = noise
     W2 = np.load(os.path.join(fxd, "W2.npy"), mmap_mode="r")
     dw = np.flatnonzero(~wells["is_dmso"].to_numpy(dtype=bool))
     Wd = np.asarray(W2[dw], dtype=np.float32)
@@ -830,8 +1611,7 @@ def _run(out, chunk, mem_gb, t0):
              f"{prefix}_z": np.where(ok, z[bb, cols], np.nan).astype(np.float32),
              f"{prefix}_q": np.where(ok, q[bb, cols], np.nan).astype(np.float32)}
         fl = np.full(gK, None, dtype=object)
-        fl[ok] = flag_strings(dd_flags, b[ok], pu[b[ok], cols[ok]], pe[b[ok], cols[ok]], ps[b[ok], cols[ok]],
-                              cc_pct_at(b[ok], cols[ok]))[0]
+        fl[ok] = gflags(b[ok], cols[ok])[0]
         v[f"{prefix}_flags"] = fl
         return v
 
@@ -853,6 +1633,17 @@ def _run(out, chunk, mem_gb, t0):
     log(f"  drug_effects: {int(keep.sum()):,} gene x drug-dose rows (|z| >= {KEEP_Z:g} or q < {Q_CUT:g}); "
         f"per-line tensor in chunks of {chunk} genes ...")
     sd_l = np.full((gK, L), np.nan, dtype=np.float32)
+    # drug_line_response: per (drug-dose, line) counts of genes beyond the per-line cut, and the sums for rms_z
+    rl_up = np.zeros((Dn, L), dtype=np.int32)
+    rl_dn = np.zeros((Dn, L), dtype=np.int32)
+    rl_n = np.zeros((Dn, L), dtype=np.int64)
+    rl_ss = np.zeros((Dn, L), dtype=np.float64)
+    # the DMSO sign check: lfc_vs_dmso = lfc + the mean plate_offset of the drug-dose's plates
+    off, dd_n_wells, dd_plates = _dmso_offset(fxd, wells, ix["plates"], dd, gK)
+    sc_rows = np.zeros(Dn, dtype=np.int64)
+    sc_flip = np.zeros(Dn, dtype=np.int64)
+    sc_nan = np.zeros(Dn, dtype=np.int64)
+    n_tl_rise = 0
 
     def per_line():                                            # counts and the strongest per (gene, line)
         return {"n": np.zeros((gK, L), dtype=np.int16), "b": np.full((gK, L), -1, dtype=np.int32),
@@ -876,6 +1667,10 @@ def _run(out, chunk, mem_gb, t0):
             n_meas = fin.sum(axis=2).astype(np.int16)
             n_up = upl.sum(axis=2).astype(np.int16)
             n_dn = dnl.sum(axis=2).astype(np.int16)
+            rl_n += fin.sum(axis=0)
+            rl_ss += np.square(np.clip(np.where(fin, Z, 0.0), -RMS_CLIP, RMS_CLIP)).sum(axis=0, dtype=np.float64)
+            rl_up += (Z >= t_line).sum(axis=0, dtype=np.int32)
+            rl_dn += (Z <= -t_line).sum(axis=0, dtype=np.int32)
             del fin
             for b, dst, nn in ((bcu, bcu_nl, n_up), (bcd, bcd_nl, n_dn)):
                 bb = b[g0:g1]
@@ -886,7 +1681,7 @@ def _run(out, chunk, mem_gb, t0):
             gi, di = np.nonzero(keep[:, g0:g1].T)
             if gi.size:
                 g = g0 + gi
-                fl, cl_s = flag_strings(dd_flags, di, pu[di, g], pe[di, g], ps[di, g], cc_pct_at(di, g))
+                fl, cl_s = gflags(di, g)
                 mismatch += int((cl_s != clean[di, g]).sum())
                 Zs = Z[gi, di]
                 order = np.lexsort((-z[di, g], g))
@@ -899,7 +1694,14 @@ def _run(out, chunk, mem_gb, t0):
                     "lines_up": _line_lists(line_name, Zs, upl[gi, di], 1),
                     "lines_down": _line_lists(line_name, Zs, dnl[gi, di], -1),
                     "pattern_up": _PAT[P_up[drug_of_dd[di], g]], "pattern_down": _PAT[P_dn[drug_of_dd[di], g]],
-                    "cc_share": cc_share[di, g]})
+                    "cc_share": cc_share[di, g], "n_wells": dd_n_wells[di].astype(np.int8),
+                    "lfc_vs_dmso": (lf + off[di, g]).astype(np.float32)})
+                vd = part["lfc_vs_dmso"].to_numpy(dtype=np.float64)
+                flip = np.isfinite(vd) & (np.sign(lf) != np.sign(vd)) & (np.abs(vd) >= LFC_MIN)
+                sc_rows += np.bincount(di, minlength=Dn)
+                sc_flip += np.bincount(di[flip], minlength=Dn)
+                sc_nan += np.bincount(di[~np.isfinite(vd)], minlength=Dn)
+                n_tl_rise += int(sum(TL_RISE in str(f).split("; ") for f in fl[tl_dd[di]]))
                 part = part.iloc[order]
                 writer.write_table(pa.Table.from_pandas(part, schema=DRUG_EFFECTS_SCHEMA, preserve_index=False))
                 n_fx += len(part)
@@ -919,16 +1721,16 @@ def _run(out, chunk, mem_gb, t0):
                 sZ = sign * Z
                 passz = sZ >= t_line                                 # per-line z beyond the calibrated cut
                 hit = hit_up if sign > 0 else hit_dn                 # ... and fold >= 1.5 that way (line_counts)
-                for scope, M in (("all", hit), ("clean", hit & cl)):
+                for scope, Mh in (("all", hit), ("clean", hit & cl)):
                     d_ = PL[(scope, sign)]
-                    d_["n"][g0:g1] = M.sum(axis=1)
-                    S = np.where(M, sZ, -np.inf)                     # best_*: the strongest of those counted
+                    d_["n"][g0:g1] = Mh.sum(axis=1)
+                    S = np.where(Mh, sZ, -np.inf)                    # best_*: the strongest of those counted
                     b = S.argmax(axis=1)                             # genes x lines
                     ok = np.isfinite(np.take_along_axis(S, b[:, None, :], axis=1)[:, 0, :])
                     d_["b"][g0:g1] = np.where(ok, b, -1)
                     d_["z"][g0:g1] = np.where(ok, np.take_along_axis(Z, b[:, None, :], axis=1)[:, 0, :], np.nan)
                     d_["x"][g0:g1] = np.where(ok, np.take_along_axis(X, b[:, None, :], axis=1)[:, 0, :], np.nan)
-                    del S, M
+                    del S, Mh
                 del hit
                 # drug_line_top: the strongest (drug-dose, line) cells with per-line |z| >= t over all drug-doses,
                 # plus any of the strongest clean ones that fall outside them (with their rank over all)
@@ -981,11 +1783,17 @@ def _run(out, chunk, mem_gb, t0):
     for prefix, sign in (("best_up", 1), ("best_down", -1)):
         d_ = PL[("clean", sign)]
         b = d_["b"].ravel()
+        x_ = d_["x"].ravel()
+        ok = b >= 0
+        fl = np.full(b.size, None, dtype=object)       # its gene-level flags (caveats only: it is clean), the
+        if ok.any():                                    # translation-inhibitor token read from the per-line sign
+            fl[ok] = gflags(b[ok], gg[ok], np.asarray(x_[ok]) > 0)[0]
         le[f"{prefix}_dd"] = b
         le[f"{prefix}_drug"] = _pick(dd_drug, b)
         le[f"{prefix}_dose"] = _pick(dd_dose, b)
-        le[f"{prefix}_lfc"] = d_["x"].ravel()
+        le[f"{prefix}_lfc"] = x_
         le[f"{prefix}_z"] = d_["z"].ravel()
+        le[f"{prefix}_flags"] = fl
     le["n_dd_up_all"] = PL[("all", 1)]["n"].ravel()
     le["n_dd_down_all"] = PL[("all", -1)]["n"].ravel()
     for prefix, sign in (("best_up", 1), ("best_down", -1)):
@@ -995,7 +1803,7 @@ def _run(out, chunk, mem_gb, t0):
         fl = np.full(b.size, None, dtype=object)
         cl_a = np.zeros(b.size, dtype=bool)
         bo, go = b[ok], gg[ok]
-        fl[ok], cl_a[ok] = flag_strings(dd_flags, bo, pu[bo, go], pe[bo, go], ps[bo, go], cc_pct_at(bo, go))
+        fl[ok], cl_a[ok] = gflags(bo, go, np.asarray(d_["x"].ravel()[ok]) > 0)    # per-line sign (version 6)
         mismatch += int((cl_a[ok] != clean[bo, go]).sum())
         le[f"{prefix}_dd_all"] = b
         le[f"{prefix}_drug_all"] = _pick(dd_drug, b)
@@ -1018,7 +1826,7 @@ def _run(out, chunk, mem_gb, t0):
         tx = tz = np.zeros(0, dtype=np.float32)
     o = np.lexsort((tr, -ts, tg))
     tg, ts, tr, td, tl, tx, tz = (a[o] for a in (tg, ts, tr, td, tl, tx, tz))
-    tf, tc = flag_strings(dd_flags, td, pu[td, tg], pe[td, tg], ps[td, tg], cc_pct_at(td, tg))
+    tf, tc = gflags(td, tg, np.asarray(tx) > 0)          # the cell's own per-line sign (version 6)
     mismatch += int((tc != clean[td, tg]).sum())
     dlt = pd.DataFrame({"col": tg.astype(np.int32), "symbol": symbol[tg],
                         "direction": np.where(ts > 0, "up", "down").astype(object), "rank": tr.astype(np.int32),
@@ -1031,14 +1839,56 @@ def _run(out, chunk, mem_gb, t0):
         raise SystemExit(f"tables: {mismatch} rows whose 'clean' differs between the flag strings and the clean "
                          "matrix (tables.py and atlas_core disagree on the artifact rules)")
 
+    # ---- drug_line_response: per (drug-dose, line) response, growth and selectivity
+    rl_meas = rl_n > 0
+    n_genes = np.where(rl_meas, rl_up + rl_dn, -1).astype(np.int32)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        rms_z = np.where(rl_meas, np.sqrt(rl_ss / np.maximum(rl_n, 1)), np.nan).astype(np.float32)
+    rel_log2, sel_z = line_selectivity(n_genes, rl_meas)
+    selective = selective_mask(sel_z, n_genes) & rl_meas
+
+    def dl_mat(name):                                          # atlas/effects DD_* (drug-doses x lines), else NaN
+        q = os.path.join(fxd, f"{name}.npy")
+        if os.path.exists(q):
+            a = np.load(q)
+            if a.shape == (Dn, L):
+                return np.asarray(a, dtype=np.float32)
+            log(f"  {q} has shape {a.shape}, not ({Dn}, {L}): left NaN")
+        return np.full((Dn, L), np.nan, dtype=np.float32)
+    DA, DAz, DB, DR = (dl_mat(n) for n in ("DD_A", "DD_Az", "DD_beta", "DD_rcor"))
+    in_ga = (_as_bool(lines["in_growth_analysis"]) if "in_growth_analysis" in lines else np.ones(L, dtype=bool))
+    untrusted = np.array([any(u in set(f.split("; ")) for u in ABUNDANCE_UNTRUSTED) for f in dd_flags], dtype=bool)
+    depleted = np.nan_to_num(DAz, nan=np.inf) <= DEPLETE_Z
+
     # ---- drugdoses.parquet
     ddt = dd.copy()
     ddt.insert(0, "dd", np.arange(Dn, dtype=np.int32))
     ddt.insert(3, "salt_base", salt)
+    ddt["atlas_flags"] = atlas_flags
+    ddt["flags"] = dd_flags                                    # the flags of record
     for name, sig, sign in (("top_up", sig_up, 1), ("top_down", sig_dn, -1)):
         idx, vals = _top_k(np.where(sig & finz, sign * z, -np.inf), TOP_GENES)
         ddt[name] = ["; ".join(f"{label[g]} ({2.0 ** float(lfc[d, g]):.2f}x)"
                                for g, v in zip(idx[d], vals[d]) if np.isfinite(v)) for d in range(Dn)]
+    ddt["nb_tier"] = nb["tier"]
+    ddt["nb_partner_dd"] = nb["partner_dd"].astype(np.int32)
+    for k in ("partner", "where", "partners"):
+        ddt[f"nb_{k}"] = nb[k]
+    ddt["nb_n_sig"] = nb["n_sig"].astype(np.int32)
+    ddt["nb_shared"] = nb["shared"].astype(np.int32)
+    for k in ("share", "top_share", "other_share", "partner_own_share"):
+        ddt[f"nb_{k}" if k != "other_share" else "nb_other_doses_share"] = nb[k].astype(np.float32)
+    ddt["nb_genes"] = nb["genes"].astype(np.int32)
+    ddt["nb_alert"] = nb["alert"]
+    cls_text = {d: M.class_text(out, d) for d in drugs}
+    ddt["mechanism_classes"] = [cls_text[d] for d in dd_drug]
+    ddt["n_selective_lines"] = selective.sum(axis=1).astype(np.int32)
+    sel_txt = []
+    for d in range(Dn):
+        ls = np.flatnonzero(selective[d])
+        ls = ls[np.argsort(-sel_z[d, ls], kind="stable")]
+        sel_txt.append(", ".join(f"{line_name[x]} ({sel_z[d, x]:.1f})" for x in ls))
+    ddt["selective_lines"] = sel_txt
     write_parquet(ddt, os.path.join(od, "drugdoses.parquet"))
 
     # ---- drugs.parquet
@@ -1053,12 +1903,26 @@ def _run(out, chunk, mem_gb, t0):
     def meta(col, i):
         return str(dd[col].iloc[i]) if col in dd and pd.notna(dd[col].iloc[i]) else ""
 
+    ann = M.drug_annotations(out)
+    ann = ann.assign(drug=ann["drug"].astype(str)).drop_duplicates("drug").set_index("drug", drop=False)
+    ud, up_, uw = _used_wells(wells, ix["plates"])
+    wells_of_dd = [[] for _ in range(Dn)]
+    for d, p, w in sorted(zip(ud.tolist(), up_.tolist(), uw.tolist()), key=lambda x: (x[0], x[1], _well_key(x[2]))):
+        wells_of_dd[d].append((plate_names[p], w))
     drows = []
+    n_dose_plates = {}
     for name in sorted(drugs):
         r = rows_of_drug[drug_ix[name]]
         ns = nsig[r]
         bi = r[np.lexsort((-dd_conc[r], -ns))[0]]               # most significant genes; tie -> higher dose
         sim = [float(zr[a] @ zr[b] / (nrm[a] * nrm[b])) for a, b in zip(r[:-1], r[1:])]
+        plates_by_dose = [{p for p, _w in wells_of_dd[d]} for d in r]
+        shared = any(plates_by_dose[i] & plates_by_dose[j] for i in range(len(r)) for j in range(i + 1, len(r)))
+        n_dose_plates[name] = (len(r), len(set().union(*plates_by_dose)) if plates_by_dose else 0)
+        a = ann.loc[name] if len(ann) and name in ann.index else None
+
+        def av(col):
+            return "" if a is None or col not in a or pd.isna(a[col]) else str(a[col])
         drows.append({"drug": name, "salt_base": T.salt_base(name), "targets": meta("targets", r[0]),
                       "moa_fine": meta("moa_fine", r[0]), "moa_broad": meta("moa_broad", r[0]),
                       "approved": meta("approved", r[0]), "n_doses": int(len(r)),
@@ -1066,7 +1930,14 @@ def _run(out, chunk, mem_gb, t0):
                       "max_sig": int(ns.max()), "best_dose": dd_dose[bi], "best_dd": int(bi),
                       "lowest_active_dose": _lowest_active(dd_dose[r], ns),
                       "flags_by_dose": " / ".join(f or "-" for f in dd_flags[r]),
-                      "signature_r_between_doses": T.fmt_list(sim)})
+                      "signature_r_between_doses": T.fmt_list(sim),
+                      "dose_plates": dose_plates_text(dd_dose[r], [wells_of_dd[d] for d in r]),
+                      "doses_share_a_plate": bool(shared),
+                      "mechanism_classes": cls_text[name],
+                      **{c: av(c) for c in ("chembl_id", "chembl_name", "chembl_mechanisms", "chembl_actions",
+                                            "chembl_targets", "chembl_matched_by")},
+                      "annotation_status": av("annotation_status") or M.NOT_LOADED,
+                      "annotation_alert": av("annotation_alert"), "annotation_note": av("annotation_note")})
     del zr
     drugs_df = pd.DataFrame(drows)
     write_parquet(drugs_df, os.path.join(od, "drugs.parquet"))
@@ -1076,22 +1947,31 @@ def _run(out, chunk, mem_gb, t0):
     lt = lines.copy()
     lt.insert(0, "line", np.arange(L, dtype=np.int16))
     lt["tp53_status"] = tp53
-    p = os.path.join(fxd, "DD_Az.npy")
-    if os.path.exists(p):
-        Az = np.load(p)                                          # drug-doses x lines (NaN: not measured)
-        in_ga = (lines["in_growth_analysis"].astype(str).str.lower().isin(["true", "1", "1.0"]).to_numpy()
-                 if "in_growth_analysis" in lines else np.ones(L, dtype=bool))
-        meas_l = in_ga & np.isfinite(Az).any(axis=0)
-        dep = Az <= DEPLETE_Z
-        untrusted = np.array([any(u in set(f.split("; ")) for u in ABUNDANCE_UNTRUSTED) for f in dd_flags], dtype=bool)
-        lt["n_dd_depleted"] = np.where(meas_l, (dep & ~untrusted[:, None]).sum(axis=0), -1).astype(np.int32)
-        lt["n_dd_depleted_clean"] = np.where(meas_l, (dep & ~art_dd[:, None]).sum(axis=0), -1).astype(np.int32)
-        del Az, dep
-    else:
-        lt["n_dd_depleted"] = lt["n_dd_depleted_clean"] = np.full(L, -1, dtype=np.int32)
-    p = os.path.join(fxd, "DD_beta.npy")
-    lt["median_response"] = np.nanmedian(np.load(p), axis=0).astype(np.float32) if os.path.exists(p) else np.nan
+    meas_l = in_ga & np.isfinite(DAz).any(axis=0)
+    in_ga_dl = np.broadcast_to(meas_l[None, :], (Dn, L))
+    lt["n_dd_depleted"] = np.where(meas_l, (depleted & ~untrusted[:, None]).sum(axis=0), -1).astype(np.int32)
+    lt["n_dd_depleted_clean"] = np.where(meas_l, (depleted & ~art_dd[:, None]).sum(axis=0), -1).astype(np.int32)
+    lt["median_response"] = np.nanmedian(DB, axis=0).astype(np.float32)
     write_parquet(lt, os.path.join(od, "lines.parquet"))
+
+    # ---- drug_line_response.parquet (one row per drug-dose x line, every row kept)
+    dl_d = np.repeat(np.arange(Dn), L)
+    dl_l = np.tile(np.arange(L), Dn)
+    dlr = pd.DataFrame({
+        "dd": dl_d.astype(np.int32), "drug": dd_drug[dl_d], "dose": dd_dose[dl_d], "conc": dd_conc[dl_d],
+        "line": dl_l.astype(np.int16), "cell_line_id": line_id[dl_l], "cell_name": line_name[dl_l],
+        "measured": rl_meas.ravel(), "n_genes": n_genes.ravel(),
+        "n_up": np.where(rl_meas, rl_up, -1).astype(np.int32).ravel(),
+        "n_down": np.where(rl_meas, rl_dn, -1).astype(np.int32).ravel(), "rms_z": rms_z.ravel(),
+        "rel_log2": rel_log2.astype(np.float32).ravel(), "sel_z": sel_z.astype(np.float32).ravel(),
+        "selective": selective.ravel(), "in_growth_analysis": np.asarray(in_ga_dl).ravel(),
+        "log2_rel_abundance": DA.ravel(), "abundance_z": DAz.ravel(), "depleted": depleted.ravel(),
+        "abundance_trusted": np.repeat(~untrusted, L), "response_strength": DB.ravel(), "response_r": DR.ravel(),
+        "flags": dd_flags[dl_d], "clean": np.repeat(~art_dd, L)})
+    write_parquet(dlr, os.path.join(od, "drug_line_response.parquet"))
+    dlr_cols = list(dlr.columns)
+    n_dlr = len(dlr)
+    del dlr
 
     # ---- plates.parquet
     p = os.path.join(fxd, "plate_scale.csv")
@@ -1124,13 +2004,47 @@ def _run(out, chunk, mem_gb, t0):
     wt["umi_total"] = umi if umi is not None and len(umi) == N else np.nan
     write_parquet(wt, os.path.join(od, "wells.parquet"))
 
+    # ---- drugdose_signatures.gmt: every drug-dose's up and down call sets (no cap)
+    gmt = write_gmt(os.path.join(od, "drugdose_signatures.gmt"), dd_drug, dd_dose, dd_flags, symbol, sig_up, sig_dn)
+
+    # ---- counts for README.md and info.json
+    dmso = {}
+    for pi, pl in enumerate(plate_names):
+        on = np.array([pi in dd_plates[d] for d in range(Dn)], dtype=bool)
+        dmso[pl] = {"rows": int(sc_rows[on].sum()), "sign_changes": int(sc_flip[on].sum()),
+                    "no_dmso_value": int(sc_nan[on].sum())}
+    nw_counts = {str(k): int(v) for k, v in sorted(pd.Series(dd_n_wells).value_counts().items())}
+    three = [v for v in n_dose_plates.values() if v[0] == 3]
+    ann_counts = annotation_counts(drugs_df)
+    counts = {
+        "neighbour_rule": nb["info"],
+        "translation_inhibitors": {
+            "class_effect": "translation", "members": {d: k for d, k in sorted(tl_members.items())},
+            "drugdoses": int(tl_dd.sum()), "drug_effects_rows_rise": n_tl_rise,
+            "class_text": {d: cls_text.get(d, "") for d in sorted(tl_members)},
+            "not_members": _not_members_tl()},
+        "dmso_sign_changes": {"rule": "drug_effects rows with sign(lfc) != sign(lfc_vs_dmso) and |lfc_vs_dmso| >= "
+                                      "log2(1.2); a drug-dose on two plates counts on both",
+                              "plates": dmso, "rows": int(sc_rows.sum()), "sign_changes": int(sc_flip.sum()),
+                              "no_dmso_value": int(sc_nan.sum())},
+        "dose_and_plate": {"n_wells": nw_counts, "drugs": len(drugs), "three_dose_drugs": len(three),
+                           "three_dose_drugs_on_3_plus_plates": int(sum(v[1] >= 3 for v in three)),
+                           "drugs_with_doses_sharing_a_plate": int(drugs_df["doses_share_a_plate"].sum()),
+                           "replicate_plates": replicate_plates(wells, plate_names)},
+        "annotations": ann_counts, "chembl_release": chembl_release(out),
+        "drug_line_response": {"rows": n_dlr, "measured": int(rl_meas.sum()), "selective": int(selective.sum()),
+                               "drugdoses_with_a_selective_line": int((selective.sum(axis=1) > 0).sum()),
+                               "SEL_Z": SEL_Z, "SEL_MIN_GENES": SEL_MIN_GENES, "SEL_MAD_FLOOR": SEL_MAD_FLOOR,
+                               "RMS_CLIP": RMS_CLIP, "line_z_threshold": t_line},
+        "gmt": gmt}
+
     # ---- README.md
     tables = {"genes.parquet": list(gtab.columns), "drug_effects.parquet": DRUG_EFFECTS_SCHEMA.names,
               "line_effects.parquet": le_cols, "drug_line_top.parquet": list(dlt.columns),
               "drugdoses.parquet": list(ddt.columns), "drugs.parquet": list(drugs_df.columns),
-              "lines.parquet": list(lt.columns), "plates.parquet": list(plates_df.columns),
-              "wells.parquet": list(wt.columns)}
-    text, undocumented = readme(tables, cal, cc_info)
+              "lines.parquet": list(lt.columns), "drug_line_response.parquet": dlr_cols,
+              "plates.parquet": list(plates_df.columns), "wells.parquet": list(wt.columns)}
+    text, undocumented = readme(tables, cal, cc_info, counts)
     _write_text(os.path.join(od, "README.md"), text)
     if undocumented:
         log(f"  WARNING: columns without a description in README.md: {', '.join(undocumented)}")
@@ -1138,14 +2052,14 @@ def _run(out, chunk, mem_gb, t0):
     info = {"version": VERSION, "genes": gK, "drugdoses": Dn, "lines": L, "wells": N, "chunk": int(chunk),
             "rows": {"genes": len(gtab), "drug_effects": n_fx, "drug_effects_clean": n_clean_rows,
                      "line_effects": n_le, "drug_line_top": len(dlt), "drugdoses": len(ddt), "drugs": len(drugs_df),
-                     "lines": len(lt), "plates": len(plates_df), "wells": len(wt)},
+                     "lines": len(lt), "drug_line_response": n_dlr, "plates": len(plates_df), "wells": len(wt)},
             "tp53_source": tp53_src, "tp53_counts": {str(k): int(v) for k, v in pd.Series(tp53).value_counts().items()},
             "genes_with_clean_inducer": int(((gtab["best_clean_up_q"] < Q_CUT)
                                              & (gtab["best_clean_up_fold"] >= 2 ** LFC_MIN)).sum()),
             "genes_with_clean_repressor": int(((gtab["best_clean_down_q"] < Q_CUT)
                                                & (gtab["best_clean_down_fold"] <= 2 ** -LFC_MIN)).sum()),
             "n_measured_line_gene_pairs": int(measured.sum()),
-            "cell_cycle_rule": cc_info, **cal,
+            "cell_cycle_rule": cc_info, **cal, **counts,
             "undocumented_columns": undocumented, "minutes": round((time.time() - t0) / 60, 2)}
     write_json(info, os.path.join(od, "info.json"))
     log("  rows: " + ", ".join(f"{k} {v:,}" for k, v in info["rows"].items()))
@@ -1163,12 +2077,36 @@ _DD_COLS = {
     "salt_base": "drug name without the trailing salt / form in brackets (tlib.salt_base): salt forms of one "
                  "compound share it",
 }
+DOSE_PLATE = ("Each dose of a drug sits on its own plate (drugs.parquet dose_plates; for most drugs the same well on "
+              "three plates), so the pattern compares plates as much as doses.")
+ONE_WELL = ("Lines are counted inside the drug-dose's well(s). Most drug-doses are one well (n_wells), so the lines "
+            "are not replicate treatments.")
+DMSO_DOC = ("rough DMSO-referenced log2 fold change: lfc plus how far the plate's two DMSO wells sit below its "
+            "drug-well median (atlas plate_offset; DMSO wells are always H11/H12, plate13 B11/B12, and are not "
+            "corrected for position or composition). A sign check, not a replacement: when most drugs on a plate "
+            "raise a gene, lfc reads lower than lfc_vs_dmso. NaN when the plate has no usable DMSO value for the "
+            "gene.")
+TAHOE_ANN = "Tahoe's annotation, verbatim (Tahoe drug metadata): "
+CHEMBL_ANN = "ChEMBL (reference/drug_annotations.parquet; the release is in reference/sources.json): "
+FLAGS_DOC = ("drug-dose flags of record (drugdoses.parquet flags) + this gene's flags ('noisy plate (z scaled)' from "
+             "its own plate factor, 'position correction uncertain', 'position effect removed'), '; '-joined: the "
+             "exact strings of the atlas and of the tables stage, with three per-gene readings. 'cell-cycle shift' "
+             "reads 'cell-cycle shift (explains ~N% here)' where the shift is not the explanation of this gene's "
+             "change (N = round(100 x cc_share); no artifact flag). 'like a neighbouring well' and 'like a "
+             "neighbouring well (top dose)' read 'like a neighbouring well (not this gene)' where no neighbour moves "
+             "this gene the same way (no artifact flag; see 'Neighbouring wells'). 'translation inhibitor' reads "
+             "'rise under a translation inhibitor' where the gene rises (lfc > 0; a per-line cell: its own per-line "
+             "lfc > 0) and is left out where it does not (a class caveat; see 'Drug classes used by rules')")
+CLEAN_DOC = ("True when flags hold no artifact flag (common.has_artifact: toxic, transcription drop, cell-cycle shift, "
+             "unreliable plate only, position not correctable, position correction uncertain, wells disagree, like a "
+             "neighbouring well). The caveats never change it. Rows that are not clean are kept: read them with their "
+             "flags")
 _BEST = {"dd": "drug-dose row (-1 = none)", "drug": "drug", "dose": "dose key (uM)",
          "fold": "pooled fold change (linear; 2**lfc; " + _FC + ")", "z": "pooled z (DD_z)",
          "q": "BH q-value of the atlas in that direction (q_up for up, q_down for down; within the gene over all "
-              "drug-doses)", "flags": "drug-dose flags + this gene's flags (atlas_core.gene_flags), '; '-joined; "
-              "'cell-cycle shift (explains ~N% here)' where the drug-dose's shift is not the explanation of this "
-              "gene's change (no artifact flag; see 'Cell-cycle shift')"}
+              "drug-doses)", "flags": "the drug-dose's flags of record + this gene's flags, read per gene as in "
+              "drug_effects flags (e.g. 'cell-cycle shift (explains ~N% here)', 'like a neighbouring well (not this "
+              "gene)', 'rise under a translation inhibitor'), '; '-joined"}
 
 
 def _gene_docs():
@@ -1215,10 +2153,12 @@ def _gene_docs():
 
 DOCS = {
     "genes.parquet": ("One row per gene (gene columns of atlas/effects/genes.csv; the S_PHASE, G2M_PHASE and "
-                      "PROTEASOME module columns are not here). 'Clean' = the drug-dose's flags plus this gene's "
-                      "flags hold none of: toxic, transcription drop, cell-cycle shift (only where the shift is the "
-                      "explanation of this gene's change: see 'Cell-cycle shift'), unreliable plate only, position "
-                      "not correctable, position correction uncertain, wells disagree. n_dd_up / n_dd_down and "
+                      "PROTEASOME module columns are not here). 'Clean' = the drug-dose's flags of record plus this "
+                      "gene's flags hold none of: toxic, transcription drop, cell-cycle shift (only where the shift is "
+                      "the explanation of this gene's change: see 'Cell-cycle shift'), unreliable plate only, position "
+                      "not correctable, position correction uncertain, wells disagree, like a neighbouring well (only "
+                      "for the genes a neighbouring well moves the same way: see 'Neighbouring wells'). n_dd_up / "
+                      "n_dd_down and "
                       "best_up_* / best_down_* count and rank every drug-dose (flagged ones included: their flags "
                       "are in best_*_flags); the *_clean columns the clean ones only.", _gene_docs()),
     "drug_effects.parquet": (
@@ -1233,29 +2173,29 @@ DOCS = {
          "fold": "2**lfc (linear fold change; 1 = no change)", "z": "pooled z (DD_z: Stouffer over the used wells of "
          "the robust z of the corrected well effect, divided by the gene's plate factor)", "q_up": "BH q-value for an "
          "increase (within the gene, over all drug-doses)", "q_down": "BH q-value for a decrease",
-         "flags": "drug-dose flags + this gene's flags ('noisy plate (z scaled)' from its own plate factor, 'position "
-         "correction uncertain', 'position effect removed'), '; '-joined, the exact strings of the atlas, except that "
-         "a drug-dose's 'cell-cycle shift' reads 'cell-cycle shift (explains ~N% here)' where the shift is not the "
-         "explanation of this gene's change (N = round(100 x cc_share); no artifact flag)",
-         "clean": "True when flags hold no artifact flag (atlas_core.has_artifact; see genes.parquet). Rows that are "
-         "not clean are kept: read them with their flags", "n_lines_measured": "lines with a "
+         "flags": FLAGS_DOC, "clean": CLEAN_DOC, "n_lines_measured": "lines with a "
          "per-line value (truly expressing the gene, enough cells in the wells, >= 2 expected counts)", "n_lines_up":
          "lines with per-line z >= 2 and fold >= 1.2: where the pooled effect shows up (descriptive; at z >= 2 a "
-         "line also passes by chance, at the rate lines_up_chance_rate of tables/info.json)", "n_lines_down":
-         "lines with per-line z <= -2 and fold <= 1/1.2 (descriptive, as n_lines_up)", "lines_up":
+         "line also passes by chance, at the rate lines_up_chance_rate of tables/info.json). " + ONE_WELL,
+         "n_lines_down": "lines with per-line z <= -2 and fold <= 1/1.2 (descriptive, as n_lines_up). " + ONE_WELL,
+         "lines_up":
          "cell names of those lines, strongest per-line z first, at most 12, ', '-joined", "lines_down":
          "cell names of the lines counted in n_lines_down, most negative per-line z first, at most 12",
          "pattern_up": "how the increase behaves over the drug's "
          "doses (atlas dose_shape over the pooled z by ascending dose; the same for every dose of the drug): none / "
          "single dose / all doses, stronger at high dose / all doses, flat / top dose only / rises with dose / two "
-         "highest doses / inconsistent across doses", "pattern_down": "the same for the decrease (z negated)",
+         "highest doses / inconsistent across doses. " + DOSE_PLATE,
+         "pattern_down": "the same for the decrease (z negated). " + DOSE_PLATE,
          "cc_share": "at a drug-dose whose flags include 'cell-cycle shift': the share of this gene's change that the "
          "shift would explain, |bS x S + bG x G| / |lfc| with the gene's slopes (genes.parquet cc_slope_S, "
          "cc_slope_G2M, here fitted again without this drug-dose when it is in the fit: leave-one-out) and the "
          "drug-dose's S_PHASE_lfc / G2M_PHASE_lfc; 0 when that predicted part "
          "goes the other way; at most 1. NaN for drug-doses without the flag (or genes without slopes). The flag "
          "stays an artifact flag unless 2 x cc_share < 0.5 and |lfc| x (1 - 2 x cc_share) >= log2 1.2 (see "
-         "'Cell-cycle shift')"}),
+         "'Cell-cycle shift')",
+         "n_wells": "the drug-dose's used wells (drugdoses.parquet n_wells). Most drug-doses are one well, so the "
+         "per-line values of one drug-dose come from one treatment",
+         "lfc_vs_dmso": DMSO_DOC}),
     "line_effects.parquet": (
         "Fold change relative to each cell line: one row per gene x cell line (all genes x all lines). Counts and "
         "bests without a suffix use the clean drug-doses for the gene, those ending in '_all' every drug-dose "
@@ -1279,6 +2219,10 @@ DOCS = {
          "none passes)", "best_down_drug":
          "its drug", "best_down_dose": "its dose key (uM)", "best_down_lfc": "its per-line log2 fold change",
          "best_down_z": "its per-line z",
+         "best_up_flags": "best_up_dd's flags for this gene (clean, so only caveats: e.g. 'rise under a translation "
+         "inhibitor', read from the per-line change; 'like a neighbouring well (top dose)'; null = none passes or no "
+         "flag)",
+         "best_down_flags": "best_down_dd's flags for this gene (caveats only; null = none passes or no flag)",
          "n_dd_up_all": "n_dd_up over all drug-doses (flagged ones included). Chance passes grow with the number of "
          "drug-doses: line_z_expected_chance_all of tables/info.json",
          "n_dd_down_all": "n_dd_down over all drug-doses (flagged ones included)",
@@ -1286,13 +2230,15 @@ DOCS = {
          "not (-1 = none passes); equal to best_up_dd when that one is clean",
          "best_up_drug_all": "its drug", "best_up_dose_all": "its dose key (uM)",
          "best_up_lfc_all": "its per-line log2 fold change", "best_up_z_all": "its per-line z",
-         "best_up_flags_all": "its flags for this gene (as drug_effects flags; null = none passes)",
+         "best_up_flags_all": "its flags for this gene (as drug_effects flags, but 'rise under a translation "
+         "inhibitor' read from this per-line change; null = none passes)",
          "best_up_clean_all": "True when those flags hold no artifact flag (False when none passes)",
          "best_up_cc_share_all": "its cc_share for this gene (as drug_effects; NaN without the cell-cycle flag)",
          "best_down_dd_all": "the drug-dose counted in n_dd_down_all with the lowest per-line z in this line, flagged "
          "or not (-1 = none passes)", "best_down_drug_all": "its drug", "best_down_dose_all": "its dose key (uM)",
          "best_down_lfc_all": "its per-line log2 fold change", "best_down_z_all": "its per-line z",
-         "best_down_flags_all": "its flags for this gene (null = none passes)",
+         "best_down_flags_all": "its flags for this gene (the translation-inhibitor token read from this per-line "
+         "change; null = none passes)",
          "best_down_clean_all": "True when those flags hold no artifact flag (False when none passes)",
          "best_down_cc_share_all": "its cc_share for this gene (NaN without the cell-cycle flag)"}),
     "drug_line_top.parquet": (
@@ -1308,12 +2254,16 @@ DOCS = {
          "line": "line index", "cell_name": "cell line name", "lfc": "per-line " + _FC + " (DDL_lfc)",
          "z": "per-line z (DDL_z)", "pooled_lfc": "the drug-dose's pooled log2 fold change for the gene (DD_lfc)",
          "pooled_z": "the drug-dose's pooled z (DD_z)",
-         "flags": "the drug-dose's flags for this gene (as drug_effects flags)",
-         "clean": "True when flags hold no artifact flag; False = read the cell with its flags",
+         "flags": "the drug-dose's flags for this gene (as drug_effects flags, but 'rise under a translation "
+         "inhibitor' read from this cell's own per-line change, lfc > 0, not the pooled one)",
+         "clean": "True when flags hold no artifact flag (as drug_effects clean); False = read the cell with its "
+         "flags",
          "cc_share": "the share of the gene's pooled change the drug-dose's cell-cycle shift would explain (as "
          "drug_effects; NaN without the flag)"}),
     "drugdoses.parquet": (
-        "atlas/effects/drugdose.csv (one row per drug and dose) plus dd, salt_base, top_up and top_down.",
+        "atlas/effects/drugdose.csv (one row per drug and dose) plus dd, salt_base, top_up and top_down, the flags of "
+        "record (flags; drugdose.csv's own are atlas_flags), the neighbouring-well rule (nb_*), the drug's mechanism "
+        "classes and the lines where the drug-dose is selective.",
         {"dd": _DD_COLS["dd"], "drug": _DD_COLS["drug"], "dose": _DD_COLS["dose"], "salt_base": _DD_COLS["salt_base"],
          "conc": _DD_COLS["conc"], "n_wells": "used wells (those on reliable plates; all of them when the drug-dose "
          "sits only on unreliable plates)", "n_wells_all": "all its wells", "wells": "well names of the used wells",
@@ -1333,45 +2283,142 @@ DOCS = {
          "S_PHASE_z": "S-phase module z", "G2M_PHASE_lfc": "G2/M module log2 fold change", "G2M_PHASE_z":
          "G2/M module z", "PROTEASOME_lfc": "proteasome module log2 fold change", "PROTEASOME_z":
          "proteasome module z", "cells_log2_best_higher_dose": "best cells_log2_vs_plate of the same drug at a "
-         "higher dose (NaN: none)", "flags": "drug-dose flags, '; '-joined (artifacts: toxic, transcription drop, "
-         "cell-cycle shift, unreliable plate only, position not correctable, wells disagree; caveats: low cells "
-         "(technical?), plate-row cell shift, composition shift, noisy plate (z scaled))", "n_genes_up":
+         "higher dose (NaN: none)",
+         "flags": "the flags of record, '; '-joined: atlas_flags, then 'like a neighbouring well' (nb_tier "
+         "'artifact': an artifact flag for the nb_genes genes a neighbour moves the same way) or 'like a "
+         "neighbouring well (top dose)' (nb_tier 'top dose': a caveat), then 'translation inhibitor' (a class "
+         "caveat, not a technical or artifact flag: mechanism_classes). Every table and reader uses these "
+         "(tables.dd_flags_of_record)",
+         "atlas_flags": "drugdose.csv's flags, verbatim (artifacts: toxic, transcription drop, cell-cycle shift, "
+         "unreliable plate only, position not correctable, wells disagree; caveats: low cells (technical?), "
+         "plate-row cell shift, composition shift, noisy plate (z scaled))", "n_genes_up":
          "genes raised significantly (q_up < 0.10, fold >= 1.2)", "n_genes_down": "genes lowered significantly",
          "n_sig_genes": "n_genes_up + n_genes_down", "replicate_r": "mean pairwise r of the used wells' z over the "
-         "top 500 genes (wells agree?)", "targets": "drug targets (Tahoe drug metadata)", "moa_fine":
-         "mechanism of action, fine", "moa_broad": "mechanism of action, broad", "approved": "human-approved (Tahoe "
-         "drug metadata)", "top_up": "up to 15 significantly raised genes, highest z first: 'LABEL (fold x)'",
-         "top_down": "up to 15 significantly lowered genes, lowest z first: 'LABEL (fold x)'"}),
+         "top 500 genes (wells agree?)", "targets": TAHOE_ANN + "drug targets", "moa_fine":
+         TAHOE_ANN + "mechanism of action, fine", "moa_broad": TAHOE_ANN + "mechanism of action, broad",
+         "approved": "human-approved (Tahoe drug metadata)", "top_up": "up to 15 significantly raised genes, highest "
+         "z first: 'LABEL (fold x)' (all of them: drug_effects.parquet and drugdose_signatures.gmt)",
+         "top_down": "up to 15 significantly lowered genes, lowest z first: 'LABEL (fold x)' (all of them: "
+         "drug_effects.parquet and drugdose_signatures.gmt)",
+         "nb_tier": "the neighbouring-well rule (see 'Neighbouring wells'): '' = none; 'artifact' (flagged on the "
+         "nb_genes genes); 'top dose' (an alert at the drug's top dose, not flagged); 'same mechanism' (a note: the "
+         "neighbour has the same annotated mechanism, probably a real class effect; not flagged); 'dose response' (a "
+         "note: the drug's lower doses already move its strongest shared genes the same way; not flagged)",
+         "nb_partner_dd": "drug-dose row of the main neighbour (strongest tier, then the largest nb_share; -1 = none)",
+         "nb_partner": "that neighbour: 'drug dose µM' ('' = none)",
+         "nb_where": "where the two wells touch, per plate: 'plate10 F1 next to G1' (this drug-dose's well first), "
+         "'; '-joined",
+         "nb_partners": "every neighbour that gave this drug-dose a tier (drug-dose rows, ','-joined, the main one "
+         "first); the token's genes are those any of them moves the same way",
+         "nb_n_sig": "significant genes of this drug-dose with noise RNAs left out (the rule needs >= 30 to judge it)",
+         "nb_shared": "of those, the genes the main neighbour moves the same way at |z| >= 3 (-1 = no tier)",
+         "nb_share": "nb_shared / nb_n_sig (J; the rule needs >= 0.5; NaN = no tier)",
+         "nb_top_share": "share of the neighbour's 30 strongest significant genes that this drug-dose moves the same "
+         "way at |z| >= 3 (T; the rule needs >= 0.3; NaN = no tier)",
+         "nb_other_doses_share": "the largest share of the shared genes that one of this drug's other doses moves the "
+         "same way at |z| >= 3 (its higher doses; at the top dose the lower ones; for a partner every other dose); "
+         "a tier needs < 0.2 (NaN = no tier)",
+         "nb_partner_own_share": "the same for the neighbour's other doses: >= 0.2 = the neighbour shows these genes "
+         "at its other doses too, so they are its own signature (NaN = no tier)",
+         "nb_genes": "genes carrying the token: this drug-dose moves them and a neighbour moves them the same way at "
+         "|z| >= 2 (0 without a token: no tier or 'same mechanism')",
+         "nb_alert": "the rule's finding in plain words ('' = none)",
+         "mechanism_classes": "the drug's mechanism classes with their sources (tahoemap/mechanisms.py class_text: "
+         "code constants of tahoemap/data/drug_classes.json, ChEMBL mechanisms, WHO ATC codes); '' = none",
+         "n_selective_lines": "lines where this drug-dose is selective (drug_line_response.parquet selective)",
+         "selective_lines": "every selective line by sel_z, highest first: 'NCI-H23 (6.1), HOP62 (5.4)' (never cut; "
+         "'' = none)"}),
     "drugs.parquet": (
-        "One row per drug (all its doses).",
-        {"drug": _DD_COLS["drug"], "salt_base": _DD_COLS["salt_base"], "targets": "drug targets", "moa_fine":
-         "mechanism of action, fine", "moa_broad": "mechanism of action, broad", "approved": "human-approved",
+        "One row per drug (all its doses), with Tahoe's and ChEMBL's annotations side by side (see 'Drug "
+        "annotations: Tahoe and ChEMBL') and where each dose sits (dose_plates; see 'Dose and plate').",
+        {"drug": _DD_COLS["drug"], "salt_base": _DD_COLS["salt_base"], "targets": TAHOE_ANN + "drug targets",
+         "moa_fine": TAHOE_ANN + "mechanism of action, fine", "moa_broad": TAHOE_ANN + "mechanism of action, broad",
+         "approved": "human-approved",
          "n_doses": "number of doses", "doses": "dose keys by ascending concentration (uM), ' / '-joined",
          "n_sig_by_dose": "significant genes (n_sig_genes) per dose, same order", "max_sig": "the largest of them",
          "best_dose": "the dose with the most significant genes (tie -> the higher dose)", "best_dd":
          "its drug-dose row", "lowest_active_dose": "the lowest dose such that it and every higher dose have >= 10 "
-         "significant genes; 'low dose only (noise?)' when only lower doses do; '' when no dose does",
-         "flags_by_dose": "each dose's flags ('-' = none), ' / '-joined by ascending dose",
+         "significant genes; 'low dose only (noise?)' when only lower doses do; '' when no dose does. " + DOSE_PLATE,
+         "flags_by_dose": "each dose's flags of record ('-' = none), ' / '-joined by ascending dose",
          "signature_r_between_doses": "cosine similarity of the pooled z signatures (genes significant in >= 3 "
-         "drug-doses) of consecutive doses (low-mid / mid-high): near 1 = the same response growing with dose"}),
+         "drug-doses) of consecutive doses (low-mid / mid-high): near 1 = the same response growing with dose. "
+         + DOSE_PLATE,
+         "dose_plates": "where each dose sits: '0.05: plate10 G1 / 0.5: plate11 G1 / 5: plate12 G1' (ascending dose; "
+         "each dose's used wells as 'plate well')",
+         "doses_share_a_plate": "True when two doses of the drug have used wells on the same plate (usually False: "
+         "each dose sits on its own plate)",
+         "mechanism_classes": "the drug's mechanism classes with their sources (as drugdoses.parquet)",
+         "chembl_id": CHEMBL_ANN + "molecule id ('' = not matched; ' + '-joined for combinations)",
+         "chembl_name": CHEMBL_ANN + "preferred name",
+         "chembl_mechanisms": CHEMBL_ANN + "curated mechanisms of action, '; '-joined",
+         "chembl_actions": CHEMBL_ANN + "their action types (INHIBITOR, AGONIST, ...), ', '-joined",
+         "chembl_targets": CHEMBL_ANN + "their target genes, ', '-joined",
+         "chembl_matched_by": CHEMBL_ANN + "how the Tahoe drug was matched to the ChEMBL molecule",
+         "annotation_status": "how Tahoe's and ChEMBL's annotations compare, '; '-joined status words ('ChEMBL not "
+         "loaded' when the reference stage had no ChEMBL data)",
+         "annotation_alert": "where Tahoe and ChEMBL disagree ('Targets differ', 'Mechanism differs', 'Action "
+         "differs', 'Identity unsure'), ' | '-joined. Both are shown; Tahoe's annotation is never changed",
+         "annotation_note": "other notes on the two annotations, ' | '-joined"}),
     "lines.parquet": (
         "atlas/effects/lines.csv (one row per cell line, in the order of the line axis) plus line, tp53_status, "
         "n_dd_depleted, n_dd_depleted_clean, median_response.",
         {"line": "line index (last axis of the tensor)", "cell_line_id": "Cellosaurus id", "n_cells_total":
          "cells of the line over all wells", "cell_name": "cell line name", "Cell_ID_DepMap": "DepMap id",
-         "Organ": "organ of origin", "drivers": "driver genes (variant type) from the Tahoe cell-line metadata",
-         "driver_changes": "driver protein changes", "in_growth_analysis": "True when the line has enough cells for "
+         "Organ": "organ of origin", "drivers": "driver genes with their variant type, GENE(Type), '; '-joined (Tahoe "
+         "cell-line metadata)", "driver_changes": "protein changes, GENE p.X123Y, '; '-joined",
+         "in_growth_analysis": "True when the line has enough cells for "
          "the relative-abundance (growth) analysis", "wells_usable": "wells with >= min_cells cells of the line "
          "(usable expression)", "pct_wells_usable": "the same as % of all wells", "tp53_status": "altered (a TP53 "
-         "row in the cell-line metadata) / wild type (the line is in the metadata without one) / unknown",
+         "row in the Tahoe cell-line metadata) / not recorded (no TP53 alteration in the metadata, which lists "
+         "driver alterations only: presumed wild type, not confirmed) / unknown",
          "n_dd_depleted": "drug-doses that deplete the line: relative-abundance z (DD_Az) <= -3, leaving out only "
          "drug-doses whose cell counts are untrustworthy (unreliable plate only, position not correctable, wells "
          "disagree); toxic, transcription drop and cell-cycle shift drug-doses count (depletion is what makes them "
-         "toxic). -1 = not measured: the line is not in the growth analysis (too few cells)",
-         "n_dd_depleted_clean": "the same among clean drug-doses only (no artifact flag at all); -1 = not measured",
+         "toxic). -1 = not measured: the line is not in the growth analysis (too few cells). = the count of "
+         "depleted & abundance_trusted & in_growth_analysis in drug_line_response.parquet",
+         "n_dd_depleted_clean": "the same among clean drug-doses only (no artifact flag of record at all; "
+         "drug_line_response.parquet clean); -1 = not measured",
          "median_response": "median over drug-doses of the line's response strength (DD_beta: "
          "slope of the line's changes on the drug-dose's consensus over its significant genes; 1 = a typical line, "
          "0 = no response; only drug-doses with >= 20 significant genes)"}),
+    "drug_line_response.parquet": (
+        "One row per drug-dose x cell line (every pair, measured or not): how strongly the line responds (genes "
+        "beyond the calibrated per-line |z| cut), whether the drug-dose is selective for the line, and the line's "
+        "growth and response strength from the atlas (DD_A, DD_Az, DD_beta, DD_rcor). Lines are counted inside the "
+        "drug-dose's well(s); most drug-doses are one well (drugdoses.parquet n_wells), so a line's value is one "
+        "treatment, not replicates.",
+        {"dd": _DD_COLS["dd"], "drug": _DD_COLS["drug"], "dose": _DD_COLS["dose"], "conc": _DD_COLS["conc"],
+         "line": "line index (row of lines.parquet)", "cell_line_id": "Cellosaurus id", "cell_name": "cell line name",
+         "measured": "True when the line has a per-line profile for this drug-dose (some gene has a per-line z)",
+         "n_genes": "genes with |per-line z| >= line_z_threshold (the calibrated cut of tables/info.json) in this "
+         "line: n_up + n_down. -1 = not measured in this line",
+         "n_up": "genes with per-line z >= line_z_threshold (-1 = not measured in this line)",
+         "n_down": "genes with per-line z <= -line_z_threshold (-1 = not measured in this line)",
+         "rms_z": "root mean square of the per-line z over the line's measured genes, each z clipped at +-10: the "
+         "overall size of the line's response (NaN = not measured in this line)",
+         "rel_log2": "log2((n_genes + 1) / (median n_genes of the line over its measured drug-doses + 1)): how many "
+         "genes this drug-dose moves in the line against the line's typical drug-dose (NaN = not measured in this "
+         "line)",
+         "sel_z": "(rel_log2 - its median over the drug-dose's measured lines) / max(1.4826 x MAD over those lines, "
+         "0.25): how far this line stands out among the lines of this drug-dose (NaN = not measured in this line)",
+         "selective": "sel_z >= 3 and n_genes >= 20 (False with fewer than 20 significant genes, or not measured "
+         "in this line)",
+         "in_growth_analysis": "the line is in the atlas's growth analysis (lines.parquet in_growth_analysis) and "
+         "has relative-abundance values; False = not in the growth analysis (too few cells)",
+         "log2_rel_abundance": "relative abundance after 24 h (atlas DD_A): the line's share of the well's cells "
+         "against the plate's drug wells, log2; compositional (when one line dies the others rise); short for "
+         "cytostatic drugs. NaN = not in the growth analysis",
+         "abundance_z": "its z (atlas DD_Az; NaN = not in the growth analysis)",
+         "depleted": "abundance_z <= -3 (the line is depleted against the others)",
+         "abundance_trusted": "the drug-dose's cell counts can be trusted: no 'unreliable plate only', 'position not "
+         "correctable' or 'wells disagree' flag. lines.parquet n_dd_depleted = the count of depleted & "
+         "abundance_trusted & in_growth_analysis per line (n_dd_depleted_clean also needs clean)",
+         "response_strength": "how strongly the line shows the drug-dose's consensus response (atlas DD_beta: slope "
+         "on the consensus over its significant genes; 1 = a typical line, 0 = no response; NaN with fewer than 20 "
+         "significant genes, or not measured in this line)",
+         "response_r": "the matching correlation (atlas DD_rcor; NaN as response_strength)",
+         "flags": "the drug-dose's flags of record (drugdoses.parquet flags)",
+         "clean": "True when flags hold no artifact flag (common.has_artifact)"}),
     "plates.parquet": (
         "One row per plate (atlas plate order).",
         {"plate": "plate", "n_wells": "wells analysed (drug + DMSO; failed wells excluded)", "n_drug_wells":
@@ -1489,10 +2536,140 @@ def _cell_cycle_text(cc):
         "slopes as fitted).", ""]
 
 
-def readme(tables, cal=None, cc=None):
+def _n(v):
+    return f"{v:,}" if isinstance(v, (int, np.integer)) else ("?" if v is None else str(v))
+
+
+def _plural(n, word):
+    """'1 drug-dose', '3 drug-doses' ('? drug-doses' when n is unknown)."""
+    return f"{_n(n)} {word}" + ("" if n == 1 else "s")
+
+
+def _neighbour_text(info):
+    """The 'Neighbouring wells' section of README.md (info = neighbour_wells' info)."""
+    info = info or {}
+    pp, dn, ex = info.get("pairs_passing") or {}, info.get("drugdoses") or {}, info.get("expected_passes") or {}
+    orient = "; ".join(f"{o['orientation']} {_n(o['resembling'])} of {_n(o['judged'])}"
+                       + (f" (x{o['x_far_share']:g} the far share)" if o.get("x_far_share") is not None else "")
+                       for o in info.get("orientation") or [])
+    tiers = "; ".join(f"{r['drug']} {r['dose']} {UM}: {r['tier']}, next to {r['partner']} ({r['where']})"
+                      for r in info.get("tier_drugdoses") or []) or "none"
+    return [
+        "## Neighbouring wells", "",
+        "Two wells that touch on a plate (side by side, above/below, or at a corner) can share a signal: liquid "
+        "carried over, or a local problem on that part of the plate. The tables stage checks every pair of touching "
+        "wells of two different compounds (not DMSO, not on an unreliable plate; drugdoses.parquet nb_* columns, "
+        "tahoemap/tables.py neighbour_wells).", "",
+        f"- It judges the weaker drug-dose a of the pair when a has at least {NB_MIN_SIG} significant genes (noise "
+        "RNAs left out) and its neighbour b has at least as many.",
+        f"- a resembles b when b moves at least {NB_SHARE:.0%} of a's significant genes the same way at |z| >= "
+        f"{NB_Z:g} (and at least {NB_MIN_SHARED} genes), and a moves at least {NB_TOP_SHARE:.0%} of b's "
+        f"{NB_TOPK} strongest significant genes the same way at |z| >= {NB_Z:g}.",
+        "- Then a's own other doses decide (doses flagged 'unreliable plate only' are left out). A real drug effect "
+        "shows at the drug's higher doses.",
+        f"- If a has higher doses and none of them moves {NB_OTHER:.0%} or more of the shared genes the same way, "
+        "a gets 'like a neighbouring well'. This is an artifact flag, but only for the genes a neighbour moves the "
+        f"same way at |z| >= {NB_GENE_Z:g}. a's other genes read 'like a neighbouring well (not this gene)', which "
+        "is no artifact flag.",
+        f"- At the drug's top dose there is no higher dose to check. If its lower doses move less than "
+        f"{NB_OTHER:.0%} of the shared genes, a gets 'like a neighbouring well (top dose)': an alert, not an "
+        "artifact flag. Its alert says how many touching pairs would pass at a top dose by chance (the rate of the "
+        "pairs 3 or more wells apart). If the two compounds share an annotated mechanism (Tahoe moa_fine, Tahoe "
+        "targets, or a drug class), it is probably a real class effect: a note in nb_alert, no token. If one of "
+        f"a's lower doses already moves at least {NB_DOSE_MIN} of a's {NB_DOSE_TOPK} strongest shared genes the "
+        f"same way (|z| >= {NB_Z:g}), the drug's own effect grows with the dose: tier 'dose response', a note, no "
+        "token. Lower doses are never exempted.",
+        "- Old rule (version 5): no 'dose response' tier, and no chance rate in the alert. RMC-6236 5 µM (next to "
+        "Trametinib 5 µM) carried the top-dose caveat on 498 genes, although ETV5 (0.85x, 0.67x, 0.18x), SPRY4 and "
+        "EGR1 already fell at its lower doses: a dose response, not a carried-over signal. New rule (version 6): "
+        "the 'dose response' tier above.",
+        f"- If b's own other doses also move less than {NB_OTHER:.0%} of the shared genes, neither compound shows "
+        "them elsewhere. b then gets the same tier, with a as its partner.",
+        "- Nothing is removed: every value stays in the tables, with its flags and the drug-dose's nb_alert.", "",
+        f"This run: {_n(info.get('pairs_judged'))} touching pairs judged. Passing pairs: "
+        + ", ".join(f"{t} {_n(pp.get(t))}" for t in NB_TIERS) + ". Drug-doses: "
+        + ", ".join(f"{t} {_n(dn.get(t))}" for t in NB_TIERS) + ". Expected by chance, from the pairs 3 or more "
+        "wells apart: " + ", ".join(f"{t} {_n(ex.get(t))}" for t in NB_TIERS)
+        + " (an upper bound: far pairs include real class copies). Resembling pairs among the judged ones, by "
+        f"placement: {orient or 'none'}.", "",
+        f"Drug-doses with a tier: {tiers}.", "",
+        "Changed in tables version 5. Old rule: clean = no atlas artifact flag. New rule: also not like a "
+        "neighbouring well for that gene. Reason: touching wells share signatures 3.5 to 4 times more often than "
+        f"wells 3 or more apart (validation report), e.g. Citalopram 0.05 {UM} next to Clobetasol propionate on "
+        "plate10.", ""]
+
+
+def _classes_text(tl):
+    """The 'Drug classes used by rules' section of README.md (tl = info.json translation_inhibitors)."""
+    tl = tl or {}
+    rules = M.load_rules()
+    tl_classes = [k for k, v in (rules.get("classes") or {}).items() if v.get("effect") == "translation"]
+    out = ["## Drug classes used by rules", "",
+           "Some rules need a drug's mechanism class. The classes, their members and their sources are code "
+           "constants in tahoemap/data/drug_classes.json (cited), read with ChEMBL's mechanisms and WHO ATC codes "
+           "by tahoemap/mechanisms.py. Tahoe's own annotation is never a class rule.", ""]
+    for k in tl_classes:
+        ci = M.class_info(k)
+        out.append(f"**{ci.get('label', k)}** (class {k}; effect '{ci.get('effect')}'): {ci.get('why', '')}. Source: "
+                   f"{ci.get('source', '')}.")
+    members = tl.get("class_text") or {}
+    out += ["", "Members in this run: " + ("; ".join(f"{d} ({t})" for d, t in members.items()) or "none") + ".", ""]
+    nm = tl.get("not_members") or {}
+    for k, v in nm.items():
+        out.append(f"Not members of {k}, with the reason: " + "; ".join(f"{m}: {r}" for m, r in v.items()) + ".")
+    out += ["",
+            f"Rule: every drug-dose of a member gets '{TL_DD}' in its flags of record. It is a class caveat, not a "
+            f"technical or artifact flag. Per gene it reads '{TL_RISE}' where the gene rises (lfc > 0) and is left "
+            "out where it does not. A per-line cell (drug_line_top, line_effects best_*) reads its own per-line "
+            "change: a fall in one line never reads as a rise there (version 6; version 5 read the pooled sign). It "
+            "never changes clean. " + FLAG_TEXT[TL_RISE],
+            f"This run: {_n(tl.get('drugdoses'))} drug-doses carry it; {_n(tl.get('drug_effects_rows_rise'))} "
+            f"drug_effects rows read '{TL_RISE}'.", ""]
+    return out
+
+
+def _annotation_text(ann, release):
+    """The 'Drug annotations: Tahoe and ChEMBL' section of README.md (ann = annotation_counts)."""
+    ann = ann or {}
+    st = "; ".join(f"{k} {_n(v)}" for k, v in (ann.get("status") or {}).items()) or "none"
+    return ["## Drug annotations: Tahoe and ChEMBL", "",
+            "drugs.parquet shows two annotations of each drug. targets, moa_fine and moa_broad are Tahoe's annotation, "
+            f"verbatim. The chembl_* columns come from {release} (reference/drug_annotations.parquet; the reference "
+            "stage fetches them and keeps a cached copy). Both are shown. An alert marks where they disagree. Tahoe's "
+            "annotation is never changed.",
+            f"This run: {_n(ann.get('drugs'))} drugs; {_n(ann.get('chembl_matched'))} matched in ChEMBL; "
+            f"{_n(ann.get('with_chembl_mechanism'))} with a ChEMBL mechanism; {_n(ann.get('alerts'))} with an "
+            f"annotation_alert; {_n(ann.get('with_mechanism_class'))} in a mechanism class. Status words: {st}."
+            + (" ChEMBL was not loaded in this run (offline and not cached), so the chembl_* columns are empty and the "
+               "classes come from the code constants only." if (ann.get("status") or {}).get(M.NOT_LOADED) else ""),
+            ""]
+
+
+def _dose_plate_section(dp):
+    """The 'Dose and plate' section of README.md (dp = info.json dose_and_plate)."""
+    dp = dp or {}
+    nw = "; ".join(f"{_plural(v, 'drug-dose')} with {_plural(int(k), 'well')}"
+                   for k, v in (dp.get("n_wells") or {}).items())
+    rep_ = "; ".join(f"{r['plates'][0]} and {r['plates'][1]} ({_n(r['drugdoses_shared'])} drug-doses on both; "
+                     f"{_n(r['drugdoses'][0])} and {_n(r['drugdoses'][1])} on each)"
+                     for r in dp.get("replicate_plates") or []) or "none"
+    return ["## Dose and plate", "",
+            DOSE_PLATE + " A change between doses can be a plate difference. " + ONE_WELL,
+            f"This run: {nw or 'no drug-doses'}. {_n(dp.get('three_dose_drugs_on_3_plus_plates'))} of "
+            f"{_n(dp.get('three_dose_drugs'))} three-dose drugs have their doses on 3 or more plates; "
+            f"{_plural(dp.get('drugs_with_doses_sharing_a_plate'), 'drug')} with two doses on one plate. Replicate "
+            f"plates (two plates that share at least half of one plate's drug-doses): {rep_}.", ""]
+
+
+def readme(tables, cal=None, cc=None, counts=None):
     """README.md text for the written tables ({file: [columns]}) and the columns lacking a description; cal = the
-    per-line |z| calibration (calibrate_line_z) and cc = the cell-cycle rule's counts (_cc_summary), whose numbers
-    the text quotes."""
+    per-line |z| calibration (calibrate_line_z), cc = the cell-cycle rule's counts (_cc_summary) and counts = the
+    tables stage's other counts (neighbour_rule, translation_inhibitors, dmso_sign_changes, dose_and_plate,
+    annotations, drug_line_response, gmt, chembl_release), whose numbers the text quotes."""
+    counts = counts or {}
+    dm = counts.get("dmso_sign_changes") or {}
+    gmt = counts.get("gmt") or {}
+    flag_words = [f"- '{k}': {v}" for k, v in FLAG_TEXT.items()]
     missing = []
     out = ["# tables/ - the fold-change tables", "",
            "Written by `tahoemap tables` (tahoemap/tables.py). Keys: `col` = gene column (0 .. genes-1, the order of "
@@ -1506,17 +2683,37 @@ def readme(tables, cal=None, cc=None):
            "and then the mean (lfc) or Stouffer sum (z) over the drug-dose's used wells; per-line values (tensor "
            "DDL_lfc / DDL_z) keep each line. `lfc` is log2; `fold` = 2**lfc (1 = no change, 2 = doubled, 0.5 = "
            "halved). z is a robust z (median / 1.4826 MAD of the drug wells), widened on noisy plates.", "",
+           "**DMSO sign check**: every fold change here is against the typical drug well on the same plate, not "
+           "against DMSO. drug_effects `lfc_vs_dmso` is a " + DMSO_DOC + f" This run: {_n(dm.get('sign_changes'))} "
+           f"of {_n(dm.get('rows'))} drug_effects rows change sign against DMSO at 1.2x or more "
+           f"({_n(dm.get('no_dmso_value'))} rows have no DMSO value; per plate: tables/info.json dmso_sign_changes).",
+           "",
            f"**Significant** (as the atlas): q_up < {Q_CUT:g} and fold >= 1.2 (up), q_down < {Q_CUT:g} and fold <= "
            "1/1.2 (down); q = Benjamini-Hochberg within each gene over all drug-doses. **Clean** = no artifact flag "
-           "(" + ", ".join(A.ARTIFACT_FLAGS) + ") in the drug-dose's flags plus the gene's own flags (a cell-cycle "
-           "shift counts only where it is the explanation of the gene's change: see below). Soft caveats "
+           "(" + ", ".join(ARTIFACT_FLAGS) + ") in the drug-dose's flags of record plus the gene's own flags (a "
+           "cell-cycle shift counts only where it is the explanation of the gene's change, a neighbouring-well flag "
+           "only for the genes the neighbour moves the same way: see below). The flags of record "
+           "(drugdoses.parquet flags) are the atlas's flags plus the tables stage's neighbouring-well and "
+           "translation-inhibitor tokens; drugdoses.parquet atlas_flags keeps the atlas's own. Soft caveats "
            "that do not make a value unclean: low cells (technical?), plate-row cell shift, composition shift, noisy "
-           "plate (z scaled), position effect removed. **Flagged values are kept**: every table lists flagged "
+           "plate (z scaled), position effect removed, " + ", ".join(f"'{x}'" for x in (NB_TOP, NB_CLEARED, TL_DD,
+                                                                                       TL_RISE)) + ". "
+           "**Flagged values are kept**: every table lists flagged "
            "drug-doses in their ranked place with their flags (and `clean` = False); only estimates (the per-line "
            "|z| calibration, response_sd, the cell-cycle slopes) leave artifact-flagged drug-doses out.", "",
            "Missing values: NaN / null = not measured (line not expressing, too few cells or counts) or no "
-           "candidate; -1 in an index or count column = none / not measured.", ""] + _calibration_text(cal) \
-        + _cell_cycle_text(cc)
+           "candidate; -1 in an index or count column = none / not measured.", "",
+           "**Flags added by the tables stage** (their plain words, common.FLAG_TEXT):"] + flag_words + [""] \
+        + _calibration_text(cal) + _cell_cycle_text(cc) + _neighbour_text(counts.get("neighbour_rule")) \
+        + _classes_text(counts.get("translation_inhibitors")) \
+        + _annotation_text(counts.get("annotations"), counts.get("chembl_release") or "ChEMBL") \
+        + _dose_plate_section(counts.get("dose_and_plate")) \
+        + ["## drugdose_signatures.gmt", "",
+           "For every drug-dose two gene sets, '<drug> <dose> µM up' and '<drug> <dose> µM down', with every gene "
+           "whose call is up / down (q < 0.10 and fold >= 1.2 that way; no cap), for gene-set tools. The description "
+           f"field gives the drug-dose row and its flags of record. This run: {_n(gmt.get('written'))} of "
+           f"{_n(gmt.get('sets'))} sets written (a set with no gene is not written).", ""]
+    release = counts.get("chembl_release")
     for name, cols in tables.items():
         intro, docs = DOCS[name]
         out += [f"## {name}", "", intro, "", "| column | meaning |", "|---|---|"]
@@ -1525,6 +2722,8 @@ def readme(tables, cal=None, cc=None):
             if d is None:
                 missing.append(f"{name}:{c}")
                 d = "(see atlas/effects/README_effects.md)"
+            if release:                                     # name this run's ChEMBL release
+                d = d.replace(CHEMBL_ANN, f"{release} (reference/drug_annotations.parquet): ")
             out.append(f"| `{c}` | {d.replace('|', '/')} |")
         out.append("")
     out += ["The gene x gene table ('relative to each gene') is relations/gene_relations.parquet.", ""]

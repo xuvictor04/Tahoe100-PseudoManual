@@ -5,7 +5,8 @@ Stage `explorer` (after `map`). It writes OUT/explorer/:
     web/        the pages and their data, published as the GitHub Pages branch 'site': the app (index.html, app.js,
                 app.css from tahoemap/explorer_app/), d/ (the data files: core, flags, hosts, search, below, ddarr,
                 genes, space/, linecpm, sets, groups, val, docs, files, the gene buckets g/, the lines l/, the modules
-                m/, the direction groups dg/, the drugs dr/) and map/ (a copy of the gene map)
+                m/, the direction groups dg/, the drugs dr/), map/ (a copy of the gene map), gmt/ (copies of the run's
+                gene-set files) and schema.json (every shown column with its meaning)
     data/       the large files, published as a separate repository: x/ one file per gene (per-line lfc and z,
                 per-well values and raw counts, plate baselines) and p/ one file per drug-dose (every gene's pooled
                 values)
@@ -49,13 +50,22 @@ import numpy as np
 import pandas as pd
 
 from . import atlas_core as A
+from . import common as CM
 from . import tables as TB
 from . import tsf_reader as TR
 from .common import (find_git, git_out, log, read_effects_index, read_stamp, remove_file, replace_file,
                      stamp_stage)
 
-VERSION = 2                       # 2: drug pages find drug_target arrows by salt base (direction_view's rule);
+VERSION = 4                       # 2: drug pages find drug_target arrows by salt base (direction_view's rule);
 #                                   control sets matched by whole drug name; one driver row per gene
+#                                 3: the flags of record (neighbouring-well and translation-inhibitor tokens, read per
+#                                   gene: tables.gene_flag_inputs nb / rise) and common.ARTIFACT_FLAGS; new tables
+#                                   (drug_line_response, drug_similarity, the drug annotations, mechanisms and classes,
+#                                   direction gene_tests and selectivity, validation line_controls); lfc_vs_dmso
+#                                   (x/ and p/ 'lvd'); every column of a shown table documented (the stage stops on an
+#                                   undocumented one); web/schema.json
+#                                 4: per-line cells' flags checked with the translation-inhibitor token read from the
+#                                   cell's own per-line sign (tables version 6); their flag strings join d/flags
 BUCKET = 16                       # genes per gene bucket d/g/NN/BBBB.js
 DG_PER_SHARD = 32                 # direction comparisons per d/dg/KKK.js
 FLAG_CHUNK = 64                   # drug-doses per call of tables.flag_strings
@@ -109,6 +119,12 @@ FLAG_WORDS = {
                                "artifact flag.",
     "wells disagree": "The replicate wells disagree (r < 0.1 over the most changed genes, although many genes "
                       "changed). Artifact flag.",
+    # the tokens the tables stage adds (version 5): their words are common.FLAG_TEXT, the same in every surface
+    CM.NB_FLAG: CM.FLAG_TEXT[CM.NB_FLAG],
+    CM.NB_TOP: CM.FLAG_TEXT[CM.NB_TOP],
+    CM.NB_CLEARED: CM.FLAG_TEXT[CM.NB_CLEARED],
+    CM.TL_DD: CM.FLAG_TEXT[CM.TL_DD],
+    CM.TL_RISE: CM.FLAG_TEXT[CM.TL_RISE],
 }
 CC_CLEARED_RE = re.compile(r"^cell-cycle shift \(explains ~\d+% here\)$")
 
@@ -145,13 +161,18 @@ ARRAY_DOCS = {
           "poff": "per plate: how far the plate's DMSO wells sit below its drug-well median (plate_offset.npy); add "
                   "it to an lfc for a rough DMSO-referenced value",
           "slot": "96 plate positions (A1..H12): median shift of all drugs at that position (slot_median.npy)",
-          "psg": "per plate-and-dose group: the gene's z divisor (plate_scale_gene.npy)"},
+          "psg": "per plate-and-dose group: the gene's z divisor (plate_scale_gene.npy)",
+          "lvd": "per drug-dose: a rough DMSO-referenced log2 fold change, lfc + the mean plate_offset of the "
+                 "drug-dose's used wells (tables/drug_effects lfc_vs_dmso, the same float32 value; a sign check, not "
+                 "a second effect estimate)"},
     "p": {"lfc": "every column's pooled corrected log2 fold change at this drug-dose (DD_lfc row, exact)",
           "z": "pooled z (DD_z row)", "q_up": "BH q for a rise", "q_dn": "BH q for a fall",
           "poseff": "position effect removed (DD_poseff row)", "flag": "index into d/flags.js",
           "nl": "lines counted as in the gene buckets (255 = no per-line values: a summed module)",
           "pat": "the drug's dose pattern for each column, [up, down] (-1 = not computed: a summed module)",
           "cc": "cc_share (only at a cell-cycle-flagged drug-dose)",
+          "lvd": "every gene's rough DMSO-referenced log2 fold change at this drug-dose (drug_effects lfc_vs_dmso; "
+                 "NaN for the 3 summed modules)",
           "ms": "module scores, modules x lines (graph/module_scores.npy at this drug-dose, exact float16)"},
     "y": {"lfc": "per-line lfc of every gene at this drug-dose, genes x lines (tensor/DDL_lfc.npy, exact)",
           "z": "per-line z, genes x lines (tensor/DDL_z.npy, exact)"},
@@ -237,6 +258,11 @@ INVENTORY = [
     ("tables/lines.parquet", "web d/core.js lines", "line", "per line"),
     ("tables/plates.parquet", "web d/core.js plates", "plate", "per plate"),
     ("tables/wells.parquet", "web d/core.js wells", "drug-dose: Wells; plate", "per well"),
+    ("tables/drug_line_response.parquet", "web d/dr/ dlr (by drug-dose) and d/l/ dlr (by line)",
+     "drug-dose: Lines: response and growth; line: Response and growth", "per (drug-dose, line): response "
+     "strength, line selectivity (sel_z) and growth"),
+    ("tables/drugdose_signatures.gmt", "web gmt/drugdose_signatures.gmt (a copy)", "Downloads",
+     "every drug-dose's up / down call sets as gene sets (GMT)"),
     ("tables/README.md", "web d/docs.js", "About", "column documentation"),
     ("tables/info.json", "web d/core.js meta info", "About", "row counts, per-line cut, cell-cycle rule"),
     ("embed/gene_vectors.npy", "web d/g/ gvec", "gene: Correlations", "gene vectors"),
@@ -256,6 +282,8 @@ INVENTORY = [
     ("embed/contexts.parquet", "web d/ddarr.js contexts", "drug-dose: Vector space", "the contexts"),
     ("embed/drugdoses.parquet", "web d/core.js edd", "drug-dose", "fit status"),
     ("embed/drugs.parquet", "web d/core.js edrugs; d/dr/ edrug", "drug", "per drug in the space"),
+    ("embed/drug_similarity.parquet", "web d/dr/ sim", "drug-dose: Similar drug-doses",
+     "each drug-dose's 50 most similar drug-doses"),
     ("embed/components.parquet", "web d/core.js components", "line: Vector space", "components"),
     ("embed/broad_components.csv", "web d/core.js broad", "About", "broad components removed"),
     ("embed/info.json", "web d/core.js meta info", "About", "space settings"),
@@ -270,6 +298,7 @@ INVENTORY = [
     ("graph/module_scores.npy", "web d/l/ ms, d/m/ ms; data p/ ms", "module; line; drug-dose", "per line"),
     ("graph/module_pooled_z.npy", "web d/ddarr.js module_pooled_z; d/m/ pz", "module; drug-dose", "pooled"),
     ("graph/info.json", "web d/core.js meta info", "About", "module rule"),
+    ("graph/modules.gmt", "web gmt/modules.gmt (a copy)", "Downloads", "every module arm as a gene set (GMT)"),
     ("direction/edges.parquet", "web d/g/ dir, d/dg/ edges, d/dr/ dir", "gene: Direction; group; drug",
      "probable direction arrows"),
     ("direction/groups.parquet", "web d/groups.js; d/dg/ groups; d/g/ dgrp; d/l/ grp", "group; line: Genetics",
@@ -277,10 +306,24 @@ INVENTORY = [
     ("direction/controls.json", "web d/val.js meta direction_controls", "About", "controls"),
     ("direction/info.json", "web d/core.js meta info", "About", "counts per kind and grade"),
     ("direction/README.md", "web d/docs.js", "About", "column documentation"),
+    ("direction/gene_tests.parquet", "web d/g/ dtest (measured genes); d/groups.js dtestx (sources that are no "
+     "measured gene)", "gene: Direction; group", "how many tests each gene took part in, per kind and role"),
+    ("direction/selectivity.parquet", "web d/dr/ sel", "drug-dose: Lines: response and growth",
+     "per drug-dose: its selective lines and the genotype groups that explain them"),
     ("reference/annotations.parquet", "web d/g/ ann; d/search.js g", "gene: Annotation", "public annotation"),
     ("reference/gene_sets.parquet", "web d/sets.js; d/g/ sets", "set; gene: Annotation", "gene-set memberships"),
     ("reference/string_pairs.parquet", "web d/g/ string", "gene: Partners", "STRING pairs"),
     ("reference/sources.json", "web d/core.js meta info", "About", "provenance"),
+    ("reference/drug_annotations.parquet", "web d/dr/ ann", "drug: Annotations", "Tahoe's and ChEMBL's "
+     "annotation of each drug, side by side, with the alert where they disagree"),
+    ("reference/drug_mechanisms.parquet", "web d/dr/ mech", "drug: Annotations", "every ChEMBL mechanism row"),
+    ("reference/drug_classes.parquet", "web d/dr/ cls", "drug: Annotations", "the mechanism classes the rules "
+     "use, each with its source"),
+    ("reference/gene_coords.parquet", "not published", "Files", "the position of every gene of the Ensembl GTF "
+     "(the direction stage's same-locus rule reads it); each Tahoe gene's own position is on its page "
+     "(reference/annotations)"),
+    ("reference/paralogues.parquet", "not published", "Files", "Ensembl Compara paralogue pairs of every human "
+     "gene; the pairs among the partners are in the partner rows (read_sharing)"),
     ("reference/downloads/**", "not published", "Files", "the raw public files (download cache)"),
     ("validation/control_sets.csv", "web d/val.js", "set", "control sets"),
     ("validation/drug_moa.csv", "web d/val.js; d/dr/ moa", "drug", "mechanism classes"),
@@ -289,6 +332,8 @@ INVENTORY = [
     ("validation/novel_edges.csv", "web d/val.js; d/g/ nedge", "gene: Partners", "novel pairs"),
     ("validation/novel_members.csv", "web d/val.js; d/g/ nmem; d/m/ nmem", "module", "novel members"),
     ("validation/opposite_pairs.csv", "web d/val.js", "About", "opposite modules"),
+    ("validation/line_controls.csv", "web d/val.js; d/dr/ lctl", "drug-dose: Lines: response and growth; About",
+     "line-selective positive controls"),
     ("validation/metrics.json", "web d/val.js meta metrics", "About", "headline numbers"),
     ("validation/report.md", "web d/val.js meta report", "About", "validation report"),
     ("validation/README.md", "web d/docs.js", "About", "column documentation"),
@@ -1113,16 +1158,19 @@ class Build:
             nd = nodes[["col", "module"] + (["arm"] if "arm" in nodes else [])].drop_duplicates("col")
             tg = tg.merge(nd, on="col", how="left", sort=False)
             tg["module"] = tg["module"].astype("Int32")
-        td = self.drugs[[c for c in ("_row", "drug", "salt_base", "targets", "moa_fine", "moa_broad", "approved")
-                         if c in self.drugs]]
+        td = self.drugs[[c for c in ("_row", "drug", "salt_base", "targets", "moa_fine", "moa_broad", "approved",
+                                     "chembl_name", "chembl_mechanisms", "chembl_targets", "mechanism_classes",
+                                     "annotation_alert") if c in self.drugs]]
         ln = self.load("tables/lines.parquet", cache=True)
         tl = ln[[c for c in ("_row", "line", "cell_name", "cell_line_id", "Cell_ID_DepMap", "Organ", "drivers",
                              "driver_changes", "tp53_status") if c in ln]]
         mods = self.load("graph/modules.parquet", cache=True)
         labs = self.load("validation/module_labels.csv", cache=True)
-        tm = mods[[c for c in ("_row", "module", "n_genes", "top_plus", "top_minus") if c in mods]].copy()
+        tm = mods[[c for c in ("_row", "module", "n_genes", "top_plus", "top_minus", "covariate_tag")
+                   if c in mods]].copy()
         if len(labs) and "label" in labs and "module" in tm:
-            tm = tm.merge(labs[["module", "label"]].drop_duplicates("module"), on="module", how="left", sort=False)
+            lc = [c for c in ("module", "label", "label_display", "label_alert") if c in labs]
+            tm = tm.merge(labs[lc].drop_duplicates("module"), on="module", how="left", sort=False)
         gs = self.load("reference/gene_sets.parquet", cache=True)
         sc = [c for c in ("source", "set", "set_id", "set_size", "n_present") if c in gs]
         ts = gs[sc].drop_duplicates(subset=[c for c in ("source", "set") if c in gs]) if sc else pd.DataFrame()
@@ -1130,9 +1178,10 @@ class Build:
         tq = gr[[c for c in ("_row", "group_id", "kind", "gene", "gene_col", "description") if c in gr]]
         self.web.shard("search", "search", tables={"g": tg, "d": td, "l": tl, "m": tm, "s": ts.reset_index(drop=True),
                                                    "q": tq},
-                       meta={"what": "the fields the search box looks in: genes (g), drugs (d), lines (l), modules "
-                                     "(m), gene sets (s), direction groups (q); genes below the detection cut are in "
-                                     "below.js"})
+                       meta={"what": "the fields the search box looks in: genes (g), drugs (d: also ChEMBL's name, "
+                                     "mechanisms and targets and the mechanism classes), lines (l), modules (m: also "
+                                     "the label with its alert tags and the covariate tag), gene sets (s), direction "
+                                     "groups (q); genes below the detection cut are in below.js"})
 
     def a_below(self):
         from . import tlib as T
@@ -1284,10 +1333,23 @@ class Build:
         g2["_n_edges"] = cnt[cmp_of_group].astype(np.int32) if len(gr) else np.zeros(0, np.int32)
         self.want("direction/groups.parquet", "groups.js")
         self.got("direction/groups.parquet", "groups.js", g2)
-        self.web.shard("groups", "groups", tables={"groups": g2, "cmp": cmp_df},
+        # direction/gene_tests.parquet rows of sources that are no measured gene (col outside the genes; the
+        # gene buckets hold the others): a recorded mutation of a gene the screen does not measure
+        gt = self.load("direction/gene_tests.parquet", cache=True)
+        gcol = pd.to_numeric(gt["col"], errors="coerce").fillna(-1).to_numpy(np.int64) if len(gt) else \
+            np.zeros(0, np.int64)
+        out_g = (gcol < 0) | (gcol >= self.gK)
+        tx = gt.iloc[np.flatnonzero(out_g)]
+        self.want("direction/gene_tests.parquet", "groups.dtestx", int(out_g.sum()))
+        self.got("direction/gene_tests.parquet", "groups.dtestx", tx)
+        self.want("direction/gene_tests.parquet", "g.dtest + groups.dtestx")
+        self.got("direction/gene_tests.parquet", "g.dtest + groups.dtestx", tx)
+        self.web.shard("groups", "groups", tables={"groups": g2, "cmp": cmp_df, "dtestx": tx},
                        meta={"what": "every direction group (every column), with _cmp (its comparison number), _dg "
                                      "(its d/dg/ file) and _n_edges (its arrows); cmp lists the comparisons that "
-                                     "only arrows name (drug targets, gene levels)", "per_shard": DG_PER_SHARD})
+                                     "only arrows name (drug targets, gene levels); dtestx: the rows of "
+                                     "direction/gene_tests.parquet of sources that are no measured gene (the gene "
+                                     "buckets' dtest tables hold the rest)", "per_shard": DG_PER_SHARD})
 
     def a_val(self):
         tabs = {}
@@ -1297,8 +1359,9 @@ class Build:
                           ("novel_edges", "validation/novel_edges.csv"),
                           ("novel_members", "validation/novel_members.csv"),
                           ("opposite_pairs", "validation/opposite_pairs.csv"),
+                          ("line_controls", "validation/line_controls.csv"),
                           ("well_position_check", "atlas/well_position_check.csv")):
-            df = self.load(rel, cache=rel != "atlas/well_position_check.csv")
+            df = self.load(rel, cache=rel not in ("atlas/well_position_check.csv",))
             self.want(rel, "val.js")
             self.got(rel, "val.js", df)
             tabs[name] = df
@@ -1371,6 +1434,7 @@ class Build:
 
     def _step_b(self, S, DL, DZ):
         gK, C, D = self.gK, self.C, self.D
+        self.LVD = lfc_vs_dmso(S)                                          # D x gK float32 (drug_effects' rule)
         meas = np.asarray(S.npy("tensor/line_measured.npy", mmap=False), dtype=bool)
         W1, W2, WZ = (S.npy(f"atlas/effects/{n}.npy") for n in ("W1", "W2", "Z"))
         CNT, PU = S.npy("tensor/well_counts.npy"), S.npy("atlas/effects/posunc.npy")
@@ -1411,6 +1475,8 @@ class Build:
             pb = None if PB is None else np.ascontiguousarray(np.asarray(PB[:, :, g0:g1]).transpose(2, 0, 1))
             for i, col in enumerate(range(g0, g1)):
                 arrays = {"lfc": rl[i], "z": rz[i]}
+                if self.LVD is not None:
+                    arrays["lvd"] = np.ascontiguousarray(self.LVD[:, col])
                 for k in ("poseff", "w1", "w2", "wz", "counts", "wpu"):
                     if w[k] is not None:
                         arrays[k] = w[k][i]
@@ -1456,25 +1522,40 @@ class Build:
             raise SystemExit(f"explorer: tables.gene_flag_inputs gives {F['gK']} genes, the effects {gK}")
         dd_flags = F["dd_flags"]
         pu, pe, ps, sh, cl = F["posunc"], F["poseff"], F["pscale"], F["cc_share"], F["cc_cleared"]
+        nb, rise = F.get("nb"), F.get("rise")             # per-gene readings of the drug-dose tokens (tables v5)
         self.flag_s, self.flag_ix = [""], {"": 0}
         FL = np.zeros((D, C), dtype=np.uint32)
         for d0 in range(0, D, FLAG_CHUNK):
             d1 = min(D, d0 + FLAG_CHUNK)
             d = np.repeat(np.arange(d0, d1), gK)
             g = np.tile(np.arange(gK), d1 - d0)
-            s, _ = TB.flag_strings(dd_flags, d, pu[d, g], pe[d, g], ps[d, g], TB.cc_pct(sh[d, g], cl[d, g]))
+            s, _ = TB.flag_strings(dd_flags, d, pu[d, g], pe[d, g], ps[d, g], TB.cc_pct(sh[d, g], cl[d, g]),
+                                   None if nb is None else nb[d, g], None if rise is None else rise[d, g])
             FL[d0:d1, :gK] = self._codes(s).reshape(d1 - d0, gK)
+        # per-line cells (drug_line_top, line_effects best_*) read the translation-inhibitor token from their own
+        # per-line sign (tables version 6): for each drug-dose that carries the token, the codes with every gene
+        # rising and with every gene falling; d_flag_tables picks one per cell
+        self.FL_TL = {}
+        for dv in np.flatnonzero([CM.TL_DD in str(x).split("; ") for x in dd_flags]):
+            d = np.full(gK, int(dv), dtype=np.int64)
+            g = np.arange(gK)
+            args = (dd_flags, d, pu[d, g], pe[d, g], ps[d, g], TB.cc_pct(sh[d, g], cl[d, g]),
+                    None if nb is None else nb[d, g])
+            self.FL_TL[int(dv)] = tuple(self._codes(TB.flag_strings(*args, np.full(gK, up))[0])
+                                        for up in (True, False))
         if C > gK:                       # the summed modules: the atlas's gene-level rule on the module's column
             pum = np.asarray(np.load(os.path.join(fx, "DD_posunc.npy"), mmap_mode="r")[:, gK:], dtype=bool) \
                 if S.has("atlas/effects/DD_posunc.npy") else np.zeros((D, C - gK), dtype=bool)
             psm = TB._dd_gene_scale(S.ix["wells"], fx, D, C)[:, gK:]
+            nbm, risem = module_readings(self.out, self.Zp[:, gK:], self.LFC[:, gK:])
             d = np.repeat(np.arange(D), C - gK)
             g = np.tile(np.arange(C - gK), D)
-            s, _ = TB.flag_strings(dd_flags, d, pum[d, g], self.PEp[:, gK:][d, g], psm[d, g], None)
+            s, _ = TB.flag_strings(dd_flags, d, pum[d, g], self.PEp[:, gK:][d, g], psm[d, g], None,
+                                   None if nbm is None else nbm[d, g], None if risem is None else risem[d, g])
             FL[:, gK:] = self._codes(s).reshape(D, C - gK)
         n_codes = len(self.flag_s)
         self.FL = FL.astype(np.uint16) if n_codes <= 65536 else FL
-        self.flag_clean = np.array([not A.has_artifact(x) for x in self.flag_s], dtype=bool)
+        self.flag_clean = np.array([not CM.has_artifact(x) for x in self.flag_s], dtype=bool)
         self.CCS = sh                                                      # D x gK float32 (NaN outside cc rows)
         self.cc_dd = np.flatnonzero(F["cc_dd"]).astype(np.int32)
         del F, pu, pe, ps, cl, FL
@@ -1499,6 +1580,10 @@ class Build:
                 pat[:gK] = self.PAT[:, di, :]
             arrays = {"lfc": self.LFC[dd_], "z": self.Zp[dd_], "q_up": self.QU[dd_], "q_dn": self.QD[dd_],
                       "poseff": self.PEp[dd_], "flag": self.FL[dd_], "nl": self.NL[:, dd_, :], "pat": pat}
+            if getattr(self, "LVD", None) is not None:
+                lvd = np.full(C, np.nan, dtype=np.float32)
+                lvd[:gK] = self.LVD[dd_]
+                arrays["lvd"] = lvd
             if dd_ in cc_set:
                 cc = np.full(C, np.nan, dtype=np.float32)
                 cc[:gK] = self.CCS[dd_]
@@ -1531,7 +1616,7 @@ class Build:
 
     def c_flags(self):
         """d/flags.js: the dictionary of every distinct gene-level flag string, its clean bit and its tokens by kind."""
-        art = set(A.ARTIFACT_FLAGS)
+        art = set(CM.ARTIFACT_FLAGS)
         a, c, cc, unknown = [], [], [], set()
         for s in self.flag_s:
             toks = [t for t in s.split("; ") if t]
@@ -1551,7 +1636,7 @@ class Build:
                        meta={"what": "flag code -> the exact gene-level flags string (tables.flag_strings); clean = no "
                                      "artifact flag; art = artifact tokens, cav = other (caveat) tokens, ccc = the "
                                      "cleared cell-cycle token; n = (drug-dose, column) cells with this code",
-                             "words": FLAG_WORDS, "artifact_flags": list(A.ARTIFACT_FLAGS),
+                             "words": FLAG_WORDS, "artifact_flags": list(CM.ARTIFACT_FLAGS),
                              "no_words": self.flag_words_missing, "dtype": "u16" if len(self.flag_s) <= 65536
                              else "u32"})
 
@@ -1578,6 +1663,12 @@ class Build:
             f32("q_down", self.QD[d, c])
             f32("fold", (2.0 ** self.LFC[d, c]).astype(np.float32))
             f32("cc_share", self.CCS[d, c])
+            if "lfc_vs_dmso" in de and getattr(self, "LVD", None) is not None:
+                f32("lfc_vs_dmso", self.LVD[d, c])
+            if "n_wells" in de:
+                nw = pd.to_numeric(self.S.ix["drugdose"]["n_wells"], errors="coerce").fillna(0).to_numpy(np.int64) \
+                    if "n_wells" in self.S.ix["drugdose"] else None
+                bad["n_wells"] = 0 if nw is None else int((nw[d] != de["n_wells"].to_numpy(np.int64)).sum())
             fs = np.array(self.flag_s, dtype=object)[self.FL[d, c]]
             bad["flags"] = int((fs != de["flags"].fillna("").to_numpy(dtype=object)).sum())
             bad["clean"] = int((self.flag_clean[self.FL[d, c]] != de["clean"].to_numpy(dtype=bool)).sum())
@@ -1599,8 +1690,10 @@ class Build:
             pairs = np.unique(d * gK + c)
             bad["notable_pairs"] = int(abs(int(keep.sum()) - n) + (pairs.size != n) + int((~keep[d, c]).sum()))
         self.checks["drug_effects"] = {"rows": n, "different": bad,
-                                       "rule": "every row equals the explorer's arrays (floats bit for bit); the rows "
-                                               "are exactly the pairs with |z| >= 3 or q < 0.10"}
+                                       "rule": "every row equals the explorer's arrays (floats bit for bit; flags and "
+                                               "clean from tables.flag_strings with the per-gene readings nb and rise; "
+                                               "lfc_vs_dmso from x/ and p/ 'lvd'; n_wells from tables/drugdoses); the "
+                                               "rows are exactly the pairs with |z| >= 3 or q < 0.10"}
         wrong = {k: v for k, v in bad.items() if v}
         if wrong:
             raise SystemExit("explorer: tables/drug_effects.parquet is not reproduced exactly by the explorer's arrays "
@@ -1609,6 +1702,66 @@ class Build:
         self.want("tables/drug_effects.parquet", "arrays (verified)")
         self.got("tables/drug_effects.parquet", "arrays (verified)", de)
         log(f"    drug_effects: all {n:,} rows reproduced exactly (flags, clean, counts, patterns, values)")
+        self.d_flag_tables()
+
+    def d_flag_tables(self):
+        """The gene-level flags of tables/drug_line_top (flags, clean at its (dd, col)) and tables/line_effects
+        (best_up / best_down _flags_all and _clean_all at their drug-dose) equal the explorer's flag strings, and
+        tables/drug_line_response flags equal the drug-dose's flags of record; the stage stops on a difference. A
+        per-line cell reads the translation-inhibitor token from its own per-line lfc (tables version 6: FL_TL)."""
+        names = np.array(self.flag_s, dtype=object)
+        res = {}
+
+        tl = getattr(self, "FL_TL", {})
+
+        def cmp(label, dd, col, flags, clean, lfc=None):
+            dd, col = np.asarray(dd, np.int64), np.asarray(col, np.int64)
+            ok = (dd >= 0) & (dd < self.D) & (col >= 0) & (col < self.gK)
+            code = self.FL[np.where(ok, dd, 0), np.where(ok, col, 0)]
+            if lfc is not None and tl:                 # a per-line cell: the token read from its own per-line sign
+                up = np.asarray(lfc, dtype=np.float64) > 0
+                for dv, (c_up, c_dn) in tl.items():
+                    m = ok & (dd == dv)
+                    code[m] = np.where(up[m], c_up[col[m]], c_dn[col[m]])
+            f = np.asarray(flags, dtype=object)
+            bad = int((~ok).sum() + (names[code][ok] != f[ok]).sum())
+            if clean is not None:
+                bad += int((self.flag_clean[code][ok] != np.asarray(clean, dtype=bool)[ok]).sum())
+            res[label] = {"rows": int(ok.sum()), "different": bad}
+
+        dlt = self.load("tables/drug_line_top.parquet", cache=True)
+        if len(dlt) and {"dd", "col", "flags"} <= set(dlt.columns):
+            cmp("drug_line_top", dlt["dd"], dlt["col"], _names(dlt, "flags"),
+                dlt["clean"].to_numpy(dtype=bool) if "clean" in dlt else None,
+                pd.to_numeric(dlt["lfc"], errors="coerce").to_numpy() if "lfc" in dlt else None)
+        le = self.load("tables/line_effects.parquet", cache=True)
+        for side in ("up", "down"):
+            c_dd, c_f, c_c = f"best_{side}_dd_all", f"best_{side}_flags_all", f"best_{side}_clean_all"
+            if len(le) and {c_dd, c_f, "col"} <= set(le.columns):
+                ddv = pd.to_numeric(le[c_dd], errors="coerce").fillna(-1).to_numpy(np.int64)
+                m = ddv >= 0
+                c_x = f"best_{side}_lfc_all"
+                cmp(f"line_effects {side}", ddv[m], le["col"].to_numpy(np.int64)[m], _names(le, c_f)[m],
+                    le[c_c].to_numpy(dtype=bool)[m] if c_c in le else None,
+                    pd.to_numeric(le[c_x], errors="coerce").to_numpy()[m] if c_x in le else None)
+        dlr = self.load("tables/drug_line_response.parquet", cache=True)
+        if len(dlr) and {"dd", "flags"} <= set(dlr.columns):
+            ddf = _names(self.load("tables/drugdoses.parquet", cache=True), "flags")
+            dv = dlr["dd"].to_numpy(np.int64)
+            ok = (dv >= 0) & (dv < len(ddf))
+            res["drug_line_response"] = {"rows": int(ok.sum()), "different": int(
+                (~ok).sum() + (ddf[np.where(ok, dv, 0)][ok] != _names(dlr, "flags")[ok]).sum())}
+        self.checks["flag_tables"] = {**res, "rule": "drug_line_top and line_effects (best drug-doses, all) carry "
+                                                     "the explorer's gene-level flag strings at their (drug-dose, "
+                                                     "gene), the translation-inhibitor token read from the cell's "
+                                                     "own per-line lfc; drug_line_response carries the drug-dose's "
+                                                     "flags of record (tables/drugdoses)"}
+        wrong = {k: v["different"] for k, v in res.items() if v["different"]}
+        if wrong:
+            raise SystemExit("explorer: flag strings of the tables differ from the explorer's (rows differing: "
+                             + ", ".join(f"{k} {v:,}" for k, v in wrong.items()) + "); the explorer is not written")
+        log("    flags of drug_line_top, line_effects and drug_line_response equal the explorer's: "
+            + ", ".join(f"{k} {v['rows']:,} rows" for k, v in res.items()))
 
     def bucket_sources(self):
         """{table name in a gene bucket: (source, Keyed table, key columns)}."""
@@ -1627,6 +1780,7 @@ class Build:
                 ("gedge", "graph/edges.parquet", None, ("col_a", "col_b")),
                 ("dir", "direction/edges.parquet", None, ("source_col", "target_col")),
                 ("dgrp", "direction/groups.parquet", None, ("gene_col",)),
+                ("dtest", "direction/gene_tests.parquet", None, ("col",)),
                 ("nmem", "validation/novel_members.csv", None, ("col",)),
                 ("nedge", "validation/novel_edges.csv", None, ("col_a", "col_b")))
         out = {}
@@ -1635,7 +1789,8 @@ class Build:
                 df = self.load(src, cache=src in ("tables/line_effects.parquet", "graph/nodes.parquet",
                                                   "graph/edges.parquet", "direction/edges.parquet",
                                                   "validation/novel_members.csv", "reference/gene_sets.parquet",
-                                                  "direction/groups.parquet", "reference/annotations.parquet"))
+                                                  "direction/groups.parquet", "reference/annotations.parquet",
+                                                  "direction/gene_tests.parquet"))
             K = Keyed(df, *keys)
             self.want(src, f"g.{name}", len(K.rows(0, self.gK)))
             out[name] = (src, K, keys)
@@ -1671,6 +1826,8 @@ class Build:
                     t = t.assign(_role=np.where(s_in & t_in, "both", np.where(s_in, "source", "target")).astype(object))
                 tables[name] = t
                 self.got(src, f"g.{name}", t)
+                if name == "dtest":
+                    self.got(src, "g.dtest + groups.dtestx", t)
             tables["vault"] = pd.DataFrame({"col": cols.astype(np.int32),
                                             "gene": pd.Series([self.vault_path("gene", c) for c in cols], dtype=object),
                                             "plates": pd.Series([self.vault_path("plates", c) for c in cols],
@@ -1703,6 +1860,7 @@ class Build:
         self.e_drugs()
         self.S.drop("tables/drug_effects.parquet")
         self.e_map()
+        self.e_gmt()
         self.e_app()
 
     def e_lines(self):
@@ -1722,6 +1880,9 @@ class Build:
                         side.setdefault(nm, []).append((r, sd))
         gid = _names(gr, "group_id")
         ms = S.npy("graph/module_scores.npy")
+        dlr = self.load("tables/drug_line_response.parquet", cache=True)
+        Kdlr = Keyed(dlr, "line")
+        self.want("tables/drug_line_response.parquet", "l.dlr", len(Kdlr.rows(0, self.L)))
         for li in range(self.L):
             name = self.line_name[li]
             rows = sorted(side.get(name, []))
@@ -1730,10 +1891,13 @@ class Build:
                                 "side": pd.Series([sd for _, sd in rows], dtype=object)})
             t_le = K.rows(li, li + 1)
             t_comp = comp.iloc[np.flatnonzero(cid == self.line_id[li])]
+            t_dlr = Kdlr.rows(li, li + 1)
+            self.got("tables/drug_line_response.parquet", "l.dlr", t_dlr)
             self.got("tables/line_effects.parquet", "l.le", t_le)
             self.got("atlas/effects/composition_shift.parquet", "l.comp", t_comp)
             arrays = {} if ms is None else {"ms": np.ascontiguousarray(ms[:, :, li])}
-            self.web.shard(l_id(li), "line", arrays=arrays, tables={"le": t_le, "grp": grp, "comp": t_comp},
+            self.web.shard(l_id(li), "line", arrays=arrays, tables={"le": t_le, "grp": grp, "comp": t_comp,
+                                                                    "dlr": t_dlr},
                            meta={"line": li, "cell_name": name, "cell_line_id": self.line_id[li],
                                  "vault": self.vault_path("line", li, name, self.line_id[li])})
 
@@ -1807,11 +1971,37 @@ class Build:
         ctl = self.load("validation/control_sets.csv", cache=True)
         Kde = Keyed(de, "dd")
         Ked = Keyed(ed, "target_dd")
+        # the per-drug-dose tables (rows of the drug's doses) and the per-drug tables (rows naming the drug)
+        by_dd = {}
+        for name, rel in (("dlr", "tables/drug_line_response.parquet"), ("sim", "embed/drug_similarity.parquet"),
+                          ("sel", "direction/selectivity.parquet"), ("lctl", "validation/line_controls.csv")):
+            df = self.load(rel, cache=rel in ("tables/drug_line_response.parquet", "validation/line_controls.csv"))
+            K = Keyed(df, "dd")
+            self.want(rel, f"dr.{name}", len(K.rows(0, self.D)))
+            by_dd[name] = (rel, K)
+        by_drug = {}
+        for name, rel in (("ann", "reference/drug_annotations.parquet"), ("mech", "reference/drug_mechanisms.parquet"),
+                          ("cls", "reference/drug_classes.parquet")):
+            df = self.load(rel)
+            pos = {}
+            for r, dn in enumerate(_names(df, "drug")):
+                pos.setdefault(dn, []).append(r)
+            self.want(rel, f"dr.{name}", int(np.isin(_names(df, "drug"), self.drug_names).sum()))
+            by_drug[name] = (rel, df, pos)
         dt_index = drug_target_index(_names(ed, "kind"), _names(ed, "compounds"))
         ctl_lists = [list(row) for row in ctl[[c for c in ("best_dd_up", "best_dd_down") if c in ctl]].fillna("")
                      .astype(str).itertuples(index=False)]
         edrug_of = {d: i for i, d in enumerate(_names(edr, "drug"))}
-        moa_of = {m: i for i, m in enumerate(_names(moa, "moa_fine"))}
+        # validation/drug_moa.csv: Tahoe's class rows by moa_fine (class_source 'Tahoe'; an older validate stage has
+        # no class_source: every row is Tahoe's), and the mechanism-class rows (ChEMBL / code constants) by the
+        # drug's class labels and ChEMBL mechanism texts (tables/drugs mechanism_classes, chembl_mechanisms)
+        msrc = _names(moa, "class_source") if "class_source" in moa else np.full(len(moa), "Tahoe", dtype=object)
+        moa_of = {m: i for i, (m, so) in enumerate(zip(_names(moa, "moa_fine"), msrc)) if so == "Tahoe" and m}
+        cls_of = {}
+        for i, (c_, so) in enumerate(zip(_names(moa, "class"), msrc)):
+            if so != "Tahoe" and c_:
+                cls_of.setdefault(c_, []).append(i)
+        lab_col, mech_col = _names(self.drugs, "mechanism_classes"), _names(self.drugs, "chembl_mechanisms")
         dd_of = {}
         for i, d in enumerate(self.drug_of_dd):
             dd_of.setdefault(int(d), []).append(i)
@@ -1839,13 +2029,24 @@ class Build:
                 if got != ref["rows"][i]:
                     differ.append(f"{name}: {len(got)} on the page, {len(ref['rows'][i])} by direction_view")
             t_ed = edr.iloc[[edrug_of[name]]] if name in edrug_of else edr.iloc[0:0]
-            t_moa = moa.iloc[[moa_of[moa_col[i]]]] if moa_col[i] in moa_of else moa.iloc[0:0]
+            mrows = [moa_of[moa_col[i]]] if moa_col[i] in moa_of else []
+            for lab in dict.fromkeys([x for x in lab_col[i].split("; ") + mech_col[i].split("; ") if x]):
+                mrows += [r for r in cls_of.get(lab, []) if r not in mrows]
+            t_moa = moa.iloc[mrows]
             t_ctl = ctl.iloc[control_set_rows(ctl_lists, name, sorted({dose_of_dd[d] for d in dds}))]
             self.got("tables/drug_effects.parquet", "dr.de", t_de)
             self.got("direction/edges.parquet", "dr.dir", t_dir)
             self.got("embed/drugs.parquet", "dr.edrug", t_ed)
+            extra = {}
+            for tn, (rel, K) in by_dd.items():
+                p2 = np.concatenate([K.pos("dd", d, d + 1) for d in dds]) if dds else np.zeros(0, np.int64)
+                extra[tn] = K.df.iloc[np.sort(p2)]
+                self.got(rel, f"dr.{tn}", extra[tn])
+            for tn, (rel, df, pos) in by_drug.items():
+                extra[tn] = df.iloc[pos.get(name, [])]
+                self.got(rel, f"dr.{tn}", extra[tn])
             self.web.shard(dr_id(i), "drug", tables={"de": t_de, "dir": t_dir, "edrug": t_ed, "moa": t_moa,
-                                                     "ctl": t_ctl},
+                                                     "ctl": t_ctl, **extra},
                            meta={"drug": name, "drug_index": i, "dds": dds, "vault": self.vault_path("drug", name)})
         # the rows the drug pages must hold in all: by direction_view's rule (else, without it, the pages' own)
         self.want("direction/edges.parquet", "dr.dir",
@@ -1871,10 +2072,48 @@ class Build:
                          "copied as it is (the map has no explorer_base key yet)")
         self.web.copy(None, "map/gene_map.html", text=page)
 
+    def e_gmt(self):
+        """Copies of the run's gene-set files (GMT) in web/gmt/, for the Downloads page."""
+        self.gmt = {}
+        for rel in ("tables/drugdose_signatures.gmt", "graph/modules.gmt"):
+            if self.S.has(rel):
+                dst = "gmt/" + os.path.basename(rel)
+                self.web.copy(self.S.path(rel), dst)
+                self.gmt[rel] = dst
+
     def e_app(self):
         self.assets = assets_sha()
         self.app_note = write_app(self.web.copy)
         self.web.copy(None, ".nojekyll", text="")
+
+
+def lfc_vs_dmso(S):
+    """drug_effects' lfc_vs_dmso for every (drug-dose, gene): DD_lfc + the mean plate_offset over the drug-dose's used
+    wells (tables._dmso_offset, the tables stage's own function), as float32: drug-doses x genes. None when the run has
+    no plate_offset.npy (an atlas without DMSO offsets; the offset is then NaN in the tables too)."""
+    if not S.has("atlas/effects/plate_offset.npy"):
+        return None
+    lfc = np.load(S.path("atlas/effects/DD_lfc.npy"), mmap_mode="r")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        off, _nw, _pl = TB._dmso_offset(S.fx, S.ix["wells"], S.ix["plates"], S.ix["drugdose"], S.gK)
+    return (np.asarray(lfc[:, :S.gK], dtype=np.float32) + off).astype(np.float32)
+
+
+def module_readings(out, z, lfc):
+    """The per-column readings of the drug-dose tokens for the summed atlas modules (columns gK..C-1), by the rule
+    tables.gene_flag_inputs applies to the genes: nb = tables.nb_gene_mask of the module column's pooled z over the
+    drugdoses.parquet nb_partners (the module moves the same way at the neighbouring well), rise = DD_lfc > 0. An
+    output made before tables version 5 has no such tokens: (None, None), the tokens stay as the drug-dose has them."""
+    D = z.shape[0]
+    t = TB._tables_v5(out, D)
+    if t is None:
+        return None, None
+    partners = TB.parse_partners(t["nb_partners"].fillna("").astype(str).tolist(), D)
+    nbm = TB.nb_gene_mask(np.asarray(z), partners) if partners else np.zeros(z.shape, dtype=bool)
+    with np.errstate(invalid="ignore"):
+        rise = np.asarray(lfc) > 0
+    return nbm, rise
 
 
 def drug_target_index(kinds, compounds):
@@ -1988,6 +2227,14 @@ def step_f(B):
 
 
 # ----------------------------------------------------------------------------- step G: core, guard, checks, swap
+# How to cite the data set (the explorer's home page and About page show it).
+CITATION = {
+    "dataset": "Tahoe-100M (Hugging Face tahoebio/Tahoe-100M)", "licence": "CC0-1.0",
+    "url": "https://huggingface.co/datasets/tahoebio/Tahoe-100M",
+    "paper": "Zhang J, Ubas AA, de Borja R, Svensson V, Thomas N, Thakar N, Lai I, Winters A, Khan U, Jones MG, et al. "
+             "Tahoe-100M: A Giga-Scale Single-Cell Perturbation Atlas for Context-Dependent Gene Function and Cellular "
+             "Modeling. bioRxiv 2025. doi:10.1101/2025.02.20.639398",
+    "doi": "10.1101/2025.02.20.639398"}
 BASELINE_NOTE = ("Fold change = this drug-dose vs the same cell line's median over the plate's drug wells, NOT DMSO; "
                  "corrected for library-size (composition) shift and well position. The DMSO offset per plate is on "
                  "the gene's Baseline tab.")
@@ -2009,9 +2256,9 @@ _REL_DOCS = {
     "cos_half2": "the same cosine in the space fitted on the second half",
     "fdr": "sign-concordance false discovery rate, read at t = min(|cos_half1|, |cos_half2|) on "
            "relations/fdr_curve.csv (1 when the two halves disagree in sign)",
-    "evidence": "'both halves': same sign in the full space and in both halves, min |half cos| >= 0.2 and fdr <= "
-                "0.10 (replicated); 'one half': |cos| >= 0.5 in one half only (not replicated); otherwise 'not "
-                "reproduced'",
+    "evidence": "'both halves': the same sign in both halves of the compounds (and in the full space), min |half "
+                "cos| >= 0.2 and fdr <= 0.10; 'one half': |cos| >= 0.5 in one half of the compounds only; otherwise "
+                "'not reproduced'",
     "reproducible": "evidence is 'both halves'", "coords_known": "both genes have genomic coordinates",
     "same_chrom": "the two genes are on the same chromosome",
     "distance_bp": "the gap between the two genes in base pairs (same chromosome only)",
@@ -2054,7 +2301,8 @@ EXTRA_DOCS = {
     "graph/edges.parquet": {
         "col_a": "gene column of one gene", "col_b": "gene column of the other",
         "cos": "their signed cosine in the vector space; an edge links a gene to its 15 strongest partners with "
-               "|cos| >= 0.3 whose relation is replicated (both halves) or strong in one half (|cos| >= 0.5)",
+               "|cos| >= 0.3 whose relation has the same sign in both halves of the compounds (both halves) or is "
+               "strong in one half (|cos| >= 0.5)",
         "sign": "+1: they move together; -1: they move opposite"},
     "graph/modules.parquet": {
         "module": "module number", "n_genes": "its genes", "n_plus": "genes on its + arm",
@@ -2147,6 +2395,87 @@ EXTRA_DOCS = {
         "removed": "removed as a broad axis (global toxicity or shutdown): among the first 3 components and followed "
                    "by >= 5% of the genes (and >= 200)"},
 }
+_TAHOE = "Tahoe's own annotation (tables/drugs; never changed)"
+_CHEMBL = "ChEMBL's curated record of the matched molecule (reference stage; empty when ChEMBL is not loaded)"
+EXTRA_DOCS.update({
+    "reference/drug_annotations.parquet": {
+        "drug": "drug name as in Tahoe", "salt_base": "the name without the salt in brackets",
+        "tahoe_targets": f"the targets in {_TAHOE}", "tahoe_moa_fine": f"the fine mechanism in {_TAHOE}",
+        "tahoe_moa_broad": f"the broad mechanism in {_TAHOE}", "pubchem_cid": "PubChem compound id (Tahoe metadata)",
+        "inchikey": "InChIKey of the PubChem compound (used to find the ChEMBL molecule by structure)",
+        "chembl_id": f"ChEMBL molecule id ({_CHEMBL}); ' + '-joined for a combination",
+        "chembl_name": "ChEMBL's preferred name of the molecule", "chembl_max_phase": "ChEMBL's highest clinical "
+        "phase of the molecule (4 = approved)",
+        "chembl_matched_by": "how the Tahoe drug was matched to the ChEMBL molecule (structure, name, or both; "
+                             "'not found' when no molecule matched)",
+        "chembl_n_mechanisms": "ChEMBL mechanism rows of the molecule (each is a row of drug_mechanisms)",
+        "chembl_mechanisms": "ChEMBL's mechanism texts, '; '-joined", "chembl_actions": "ChEMBL's action types "
+        "(INHIBITOR, AGONIST, ...), ', '-joined", "chembl_targets": "the genes of ChEMBL's mechanism targets, "
+        "', '-joined", "chembl_atc": "WHO ATC codes ChEMBL reports for the molecule",
+        "mechanism_classes": "the mechanism classes the rules use (labels, '; '-joined; drug_classes holds each "
+                             "membership with its source)",
+        "annotation_status": "how Tahoe's and ChEMBL's annotations compare ('agree', 'targets overlap', 'targets "
+                             "differ', 'mechanism differs', 'only ChEMBL gives a mechanism', 'ChEMBL not loaded', "
+                             "...; '; '-joined)",
+        "annotation_alert": "'' or why the two annotations disagree, in words (' | '-joined); shown with ⚠ next to "
+                            "both annotations. Tahoe's annotation is never overwritten",
+        "annotation_note": "other notes on the two annotations (' | '-joined): which targets only one source lists, "
+                           "a molecule without a curated mechanism, a drug documented as not a class member"},
+    "reference/drug_mechanisms.parquet": {
+        "drug": "drug name as in Tahoe", "chembl_id": "ChEMBL molecule id",
+        "mechanism_of_action": "ChEMBL's mechanism text", "action_type": "ChEMBL's action type (INHIBITOR, "
+        "AGONIST, ...)", "direction": "what the action does to the target: 'inhibits', 'activates' or '' "
+        "(tahoemap/data/drug_classes.json action_direction)",
+        "target_chembl_id": "ChEMBL target id", "target_name": "ChEMBL target name",
+        "target_type": "ChEMBL target type (SINGLE PROTEIN, PROTEIN FAMILY, ...)",
+        "target_organism": "the target's organism", "target_genes": "the target's genes (HGNC symbols, ', '-joined)",
+        "n_target_genes": "how many genes the target has", "binding_site": "ChEMBL's binding site name",
+        "direct_interaction": "1 = ChEMBL records a direct interaction with the target",
+        "classes": "the mechanism classes this mechanism row puts the drug in (', '-joined keys)",
+        "refs": "ChEMBL's references for the mechanism ('; '-joined)"},
+    "reference/drug_classes.parquet": {
+        "drug": "drug name as in Tahoe", "class": "the class key (tahoemap/data/drug_classes.json)",
+        "label": "the class in words", "effect": "what the class does that a rule must know: 'trap' (the drug traps "
+        "its target, so the sign of the target's own effect is not inferred), 'dna' (acts on DNA directly), "
+        "'translation' (blocks translation), 'none'",
+        "poison": "the class poisons its target (a trap class)", "targets": "the class's target genes ('; '-joined, "
+        "or one regular expression starting with '^')", "verb": "how the reading names the trap ({target} = the "
+        "target)", "source": "why the drug is in the class: a code constant with its citation, a ChEMBL mechanism "
+        "(release, text, id) or a WHO ATC code via ChEMBL ('; '-joined)"},
+})
+_SAMPLE = {
+    "sample": "Tahoe sample id of the well", "plate": "plate", "drug": "drug name as in Tahoe (DMSO for a control "
+    "well)", "n_cells": "cells of the well (every line)", "is_dmso": "a DMSO control well",
+    "plate_num": "the plate's number", "conc": "concentration (0 for DMSO)", "unit": "unit of the concentration",
+    "mean_gene_count": "Tahoe's mean genes per cell of the well", "mean_tscp_count": "Tahoe's mean transcripts (UMI) "
+    "per cell of the well", "mean_pcnt_mito": "Tahoe's mean share of mitochondrial reads per cell (%)",
+    "slot": "well position on the 96-well plate (A1 = 1 ... H12 = 96), from the barcode field the build chose "
+    "(atlas/well_position_check.csv)", "slot_purity": "share of the well's cells whose barcode gives that position",
+    "well": "the well's name (A1 ... H12)"}
+EXTRA_DOCS.update({
+    "atlas/sample_map.csv": dict(_SAMPLE),
+    "atlas/effects/failed_wells.csv": {**_SAMPLE, "cells_log2_vs_plate": "log2 cells of the well against the "
+                                                                         "plate's median drug well (a failed well "
+                                                                         "kept far fewer)"},
+    "atlas/effects/plate_scale.csv": {
+        "plate": "plate", "dose": "dose", "n_wells": "drug wells of the plate at this dose",
+        "factor_raw": "the group's spread over that of the same dose on the other reliable plates (median over "
+                      "genes)", "factor": "the z divisor = max(1, factor_raw)", "conc": "concentration",
+        "group": "the plate-and-dose group it uses (small groups join the plate's largest)",
+        "group_n_wells": "drug wells of that group", "n_peer_groups": "groups of the same dose on other reliable "
+        "plates it is compared with", "factor_raw_pass1": "factor_raw of the first pass", "factor_pass1": "factor "
+        "of the first pass", "unreliable_plate": "the plate is marked unreliable"},
+    "atlas/effects/composition_shift.parquet": {
+        "sample": "Tahoe sample id of the well", "cell_line_id": "Cellosaurus id of the line",
+        "shift_log2": "the profile's composition (library-size) shift: the median residual of the genes the line "
+                      "expresses at 10 CPM or more (subtracted from every gene and module)"},
+    "atlas/well_position_check.csv": {
+        "barcode_field": "barcode field tried as the well position (1-based)", "median_purity": "median share of a "
+        "well's cells that give its most common value", "min_purity": "the lowest such share",
+        "distinct_values": "distinct values of the field", "max_value": "its largest value",
+        "duplicate_positions_within_plate": "wells of one plate that would share a position (0 for the right "
+                                            "field)"},
+})
 VALIDATION_HEAD_RE = re.compile(r"^## (\S+\.csv) - (.*)$")
 VALIDATION_ROW_RE = re.compile(r"^\| (`[^|]+`) \| (.*) \|\s*$")
 
@@ -2185,9 +2514,34 @@ def _column_docs(S=None):
             d = getattr(Dm, name, None)
             if isinstance(d, dict):
                 docs[k] = {"intro": "", "cols": {str(c): (v if isinstance(v, str) else str(v)) for c, v in d.items()}}
+        for k, name in (("direction/selectivity.parquet", "SELECTIVITY_DOCS"),
+                        ("direction/gene_tests.parquet", "GENE_TESTS_DOCS")):
+            d = getattr(Dm, name, None)
+            if isinstance(d, dict):
+                docs[k] = {"intro": "", "cols": {str(c): (v if isinstance(v, str) else str(v)) for c, v in d.items()}}
     except Exception as e:  # noqa: BLE001  (the docs are optional; the pages say a column has no description)
         log(f"  explorer: direction column docs not read ({type(e).__name__}: {e})")
+    try:                                     # the stages' own words for their columns (relations, embed, graph)
+        from . import embed as EMx, graph as GRx, relations as RLx
+        for mod in (RLx, EMx, GRx):
+            for k, cols in (getattr(mod, "COLUMN_DOCS", None) or {}).items():
+                docs.setdefault(k, {"intro": "", "cols": {}})["cols"].update(
+                    {str(c): (v if isinstance(v, str) else str(v)) for c, v in cols.items()})
+    except Exception as e:  # noqa: BLE001
+        log(f"  explorer: stage column docs not read ({type(e).__name__}: {e})")
     return docs
+
+
+def undocumented(docs, sources):
+    """{source: [columns without a definition]} for the shown source tables (source -> its column names); the stage
+    stops when one is not empty (every column a page shows has its meaning next to it)."""
+    out = {}
+    for rel, cols in sources.items():
+        have = (docs.get(rel) or {}).get("cols") or {}
+        miss = [c for c in cols if c != "_row" and not c.startswith("_") and c not in have]
+        if miss:
+            out[rel] = miss
+    return out
 
 
 def _drivers(ln):
@@ -2226,8 +2580,34 @@ def _drivers(ln):
                          "change": pd.Series([r[3] for r in rows], dtype=object)})
 
 
+def shown_columns(B):
+    """{source table: its columns} of every source table the pages show (TABLE_SOURCES)."""
+    out = {}
+    for rel in sorted(set(TABLE_SOURCES.values())):
+        if rel == "tables/drugs.parquet":
+            df = B.drugs
+        elif rel in B.S._cache:
+            df = B.S._cache[rel]
+        elif B.S.has(rel):
+            p = B.S.path(rel)
+            if rel.endswith(".parquet"):
+                import pyarrow.parquet as pq
+                cols = list(pq.read_schema(p).names)
+            else:
+                cols = list(pd.read_csv(p, nrows=0).columns)
+            out[rel] = [c for c in cols if not c.startswith("__index_level")]
+            continue
+        else:
+            continue
+        out[rel] = list(df.columns)
+    return out
+
+
 def g_core(B):
     S = B.S
+    if not hasattr(B, "column_docs"):
+        B.column_docs = _column_docs(S)
+        B.undocumented = undocumented(B.column_docs, shown_columns(B))
     tabs = {}
     for name, rel in (("drugdoses", "tables/drugdoses.parquet"), ("edd", "embed/drugdoses.parquet"),
                       ("drugs", "tables/drugs.parquet"), ("edrugs", "embed/drugs.parquet"),
@@ -2276,19 +2656,22 @@ def g_core(B):
                       "STRONG_LFC": TB.STRONG_LFC, "line_z_threshold": B.t_line,
                       "min_cells": S.ix["info"].get("min_cells"),
                       "unreliable_plates": S.ix["info"].get("unreliable_plates", []), "DEPLETE_Z": TB.DEPLETE_Z,
-                      "ABUNDANCE_UNTRUSTED": list(TB.ABUNDANCE_UNTRUSTED), "ARTIFACT_FLAGS": list(A.ARTIFACT_FLAGS),
+                      "ABUNDANCE_UNTRUSTED": list(TB.ABUNDANCE_UNTRUSTED),
+                      "ARTIFACT_FLAGS": list(CM.ARTIFACT_FLAGS),
                       "CC_CLEARED": TB.CC_CLEARED, "PATTERNS": list(TB.PATTERNS),
                       "MAX_LINES_LISTED": TB.MAX_LINES_LISTED, "TOP_CELLS": TB.TOP_CELLS,
                       "PLATE_SCALE_FLAG": A.PLATE_SCALE_FLAG, "MIN_LINES": int(A.MIN_LINES),
                       "MIN_SIG_BETA": int(A.MIN_SIG_BETA), "BUCKET": BUCKET, "DG_PER_SHARD": DG_PER_SHARD,
                       "REPRO_MIN": REL.REPRO_MIN, "REPRO_FDR": REL.REPRO_FDR, "ONE_HALF": REL.ONE_HALF,
-                      "REL_TOP": REL.TOP},
-        "FLAG_WORDS": FLAG_WORDS, "column_docs": _column_docs(S), "arrays": ARRAY_DOCS, "paths": PATHS,
+                      "REL_TOP": REL.TOP, "NB_FLAG": CM.NB_FLAG, "CAVEAT_FLAGS": list(CM.CAVEAT_FLAGS),
+                      "Q_ZERO": CM.Q_ZERO, "Q_ZERO_TEXT": CM.Q_ZERO_TEXT},
+        "FLAG_WORDS": FLAG_WORDS, "column_docs": B.column_docs, "arrays": ARRAY_DOCS, "paths": PATHS,
         "where": {m["part"]: "data" for m in B.moves}, "moves": B.moves, "missing": S.missing,
         "stamps": stamps, "info": {rel: S.json(rel) for rel in INFO_FILES if S.has(rel)},
         "vault": {"available": B.vault.get("available"), "home": B.vault.get("home"),
                   "plate": {str(k): B.vault_path("plate", k) for k in (B.vault.get("plate") or {})}},
         "map": getattr(B, "map_note", ""), "app": getattr(B, "app_note", ""), "baseline_note": BASELINE_NOTE,
+        "gmt": getattr(B, "gmt", {}), "citation": CITATION,
         "line_dd": B.line_dd, "pooled_r": B.pooled_r}
     B.web.shard("core", "core", arrays=arrays, tables=tabs, meta=meta)
 
@@ -2475,6 +2858,12 @@ TABLE_SOURCES = {
     ("drug", "de"): "tables/drug_effects.parquet", ("drug", "dir"): "direction/edges.parquet",
     ("drug", "edrug"): "embed/drugs.parquet", ("drug", "moa"): "validation/drug_moa.csv",
     ("drug", "ctl"): "validation/control_sets.csv",
+    ("drug", "dlr"): "tables/drug_line_response.parquet", ("drug", "sim"): "embed/drug_similarity.parquet",
+    ("drug", "sel"): "direction/selectivity.parquet", ("drug", "lctl"): "validation/line_controls.csv",
+    ("drug", "ann"): "reference/drug_annotations.parquet", ("drug", "mech"): "reference/drug_mechanisms.parquet",
+    ("drug", "cls"): "reference/drug_classes.parquet",
+    ("line", "dlr"): "tables/drug_line_response.parquet", ("gene-bucket", "dtest"): "direction/gene_tests.parquet",
+    ("groups", "dtestx"): "direction/gene_tests.parquet", ("val", "line_controls"): "validation/line_controls.csv",
 }
 PROJECTIONS = {("gene-bucket", "relb")}
 
@@ -2493,6 +2882,12 @@ class Expect:
             self.FL, self.NL, self.PAT, self.CCS, self.cc_dd = B.FL, B.NL, B.PAT, B.CCS, B.cc_dd
         else:
             self.LFC = self.Zp = None
+
+    def lvd(self):
+        """drug_effects' lfc_vs_dmso of every (drug-dose, gene) (the Build's, else computed once: lfc_vs_dmso)."""
+        if not hasattr(self, "_lvd"):
+            self._lvd = getattr(self.B, "LVD", None) if self.B is not None else lfc_vs_dmso(self.S)
+        return self._lvd
 
     def npy(self, rel):
         if rel not in self._npy:
@@ -2549,6 +2944,8 @@ class Expect:
                 if a is not None:
                     e[n] = np.asarray(a[:, col])
             e["wpu"] = np.asarray(f("atlas/effects/posunc.npy")[:, col]).astype(np.uint8)
+            if col < gK and self.lvd() is not None:
+                e["lvd"] = np.ascontiguousarray(self.lvd()[:, col])
         elif k == "drugdose":
             dd = int(m["dd"])
             for n, rel in (("lfc", "DD_lfc"), ("z", "DD_z"), ("q_up", "DD_qup"), ("q_dn", "DD_qdn"),
@@ -2556,6 +2953,10 @@ class Expect:
                 e[n] = np.asarray(f(f"atlas/effects/{rel}.npy")[dd])
             if pooled:
                 e.update(flag=self.FL[dd], nl=self.NL[:, dd, :])
+            if self.lvd() is not None:
+                lvd = np.full(self.S.C, np.nan, dtype=np.float32)
+                lvd[:self.S.gK] = self.lvd()[dd]
+                e["lvd"] = lvd
             if f("graph/module_scores.npy") is not None and "ms" in (head.get("arrays") or {}):
                 e["ms"] = np.asarray(f("graph/module_scores.npy")[:, dd, :])
         elif k == "drugdose-lines":
@@ -2640,6 +3041,7 @@ def write_manifest(vol):
 
 def step_g(B):
     g_core(B)
+    B.web.copy(None, "schema.json", text=schema_json(B))      # before the size guard: it counts in the web volume
     B.web.copy(None, "d/hosts.js", text=_hosts_text(B))
     B.web.copy(None, "README.md", text=WEB_README)
     B.data.copy(None, "README.md", text=DATA_README)
@@ -2675,6 +3077,12 @@ def step_g(B):
     if bad:
         raise SystemExit("explorer: some rows of the sources are missing from the explorer (R1): " + "; ".join(bad)
                          + f". Nothing was replaced; the files are in {B.tmp}")
+    if B.undocumented:
+        raise SystemExit("explorer: columns without a definition in explorer._column_docs (every column a page shows "
+                         "has its meaning next to it): " + "; ".join(f"{k}: {', '.join(v)}" for k, v in
+                                                                     B.undocumented.items())
+                         + f". Add their words to the stage's column docs. Nothing was replaced; the files are in "
+                           f"{B.tmp}")
     if problems:
         raise SystemExit("explorer: file limits exceeded: " + "; ".join(problems[:20])
                          + f". Nothing was replaced; the files are in {B.tmp}")
@@ -2688,6 +3096,21 @@ def step_g(B):
             + f". Raise --pages-max-mb, or publish elsewhere. The complete files are in {B.tmp} (manifest.json lists "
               "the moves).")
     swap(B.out, B.tmp)
+
+
+def schema_json(B):
+    """web/schema.json: every column of every table the explorer shows, with its meaning (from _column_docs), as
+    {"run", "explorer_version", "tables": [{"table", "intro", "columns": [{"column", "meaning"}]}]}."""
+    shown = shown_columns(B)
+    docs = B.column_docs
+    tabs = []
+    for rel in sorted(set(shown) | set(docs)):
+        d = docs.get(rel) or {}
+        cols = shown.get(rel) or list((d.get("cols") or {}).keys())
+        tabs.append({"table": rel, "intro": d.get("intro", ""), "shown": rel in shown,
+                     "columns": [{"column": c, "meaning": (d.get("cols") or {}).get(c, "")} for c in cols
+                                 if c != "_row"]})
+    return json.dumps({"run": B.run, "explorer_version": VERSION, "tables": tabs}, ensure_ascii=False, indent=1) + "\n"
 
 
 def g_selfcheck(B):
@@ -2778,7 +3201,8 @@ def run(out, site_url=None, data_url=None, line_dd=False, pages_max_mb=PAGES_MAX
             "parts": {v.name: _parts(v) for v in B.volumes()},
             "complete": B.complete, "complete_ok": not B.complete_bad, "checks": B.checks,
             "warnings": B.warnings, "missing": B.S.missing, "unmapped_files": getattr(B, "unmapped", []),
-            "flag_words_missing": getattr(B, "flag_words_missing", []), "map": getattr(B, "map_note", ""),
+            "flag_words_missing": getattr(B, "flag_words_missing", []),
+            "columns_undocumented": getattr(B, "undocumented", {}), "map": getattr(B, "map_note", ""),
             "app": getattr(B, "app_note", ""), "steps_s": B.times, "peak_rss_mb": _peak_rss_mb(),
             "minutes": round((time.time() - t0) / 60, 2)}
     stamp_stage(out, "explorer", VERSION, info)

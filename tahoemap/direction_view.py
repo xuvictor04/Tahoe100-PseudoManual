@@ -17,8 +17,11 @@ A gene is given by its col (int: genes.csv; exact, the vault's choice) or its sy
 Rows. Every listing is a DataFrame of display rows in ORDER - grade A, B, C, then q (smallest first), then |effect|
 (|contrast|, largest first), then p, kind, source, target: deterministic. A display row is an edge of edges.parquet,
 except that edges which are one and the same test for several sources are one row naming them all: drug_target edges
-of targets that share the same compounds and the same result (e.g. 7 HDAC isoforms x 50 genes, 350 edges, 50 rows),
-and expression-null edges of genes absent from exactly the same lines. Such a row lists every source (`sources`,
+of targets that share the same compounds and the same result (e.g. 6 HDAC isoforms x 44 genes, 264 edges, 44 rows),
+and expression-null edges of genes absent from exactly the same lines (direction version 5: the edges' test_id; an
+older output: the same kind, target, compounds or group, mechanism, effect, sign and p). Rows whose target is a
+drug-dose's phenotype (target_type 'cells' or, version 5, 'response': the lines' response strength) are the 'cells'
+role: dv.cells(gene) and dv.for_drugdose(dd) list them. Such a row lists every source (`sources`,
 `source` = their ', '-joined names) and the edges it stands for (`members`, edge ids = rows of edges.parquet); its
 alerts are the union of theirs. collapse=False gives the edges one by one. Nothing is dropped, ever: a doubtful row
 keeps its place with its alerts (rule 1), and a capped list says how many more there are and how many of those carry
@@ -61,7 +64,7 @@ import numpy as np
 import pandas as pd
 
 from . import tlib as T
-from .common import ALERT, ALERT_ASCII, ARROW, ARROW_ASCII, ascii_signs, cap_keep, printable
+from .common import ALERT, ALERT_ASCII, ARROW, ARROW_ASCII, Q_ZERO, ascii_signs, cap_keep, printable
 
 __all__ = ["ALERT", "ALERT_ASCII", "ARROW", "ARROW_ASCII", "CAVEAT", "CAVEAT_LINES", "CAVEAT_SHORT", "Direction",
            "CONTROLS_CAVEAT", "GRADES", "GRADE_SHORT", "GRADE_WORDS", "KINDS", "KIND_CAVEATS", "KIND_SHORT",
@@ -72,12 +75,15 @@ __all__ = ["ALERT", "ALERT_ASCII", "ARROW", "ARROW_ASCII", "CAVEAT", "CAVEAT_LIN
            "notes_short", "order", "printable", "q_text", "sign_text", "sign_word", "source_text", "support_long",
            "support_reasons", "support_short", "texts"]
 
-KINDS = ("genotype_response", "genotype_baseline", "genotype_sensitivity", "null_response", "null_baseline",
-         "null_sensitivity", "drug_target", "level", "level_sensitivity")       # as direction.KINDS
+KINDS = ("genotype_response", "genotype_baseline", "genotype_sensitivity", "genotype_selectivity", "null_response",
+         "null_baseline", "null_sensitivity", "null_selectivity", "drug_target", "level",
+         "level_sensitivity")                                          # as direction.KINDS
 GRADES = ("A", "B", "C")
 ORDER = "grade A, B, C, then q (smallest first), then |effect| (largest first), then p, kind, source, target"
 SENSITIVITY = ("genotype_sensitivity", "null_sensitivity", "level_sensitivity")
+SELECTIVITY = ("genotype_selectivity", "null_selectivity")          # the target is the lines' response to a drug-dose
 RESPONSE = ("genotype_response", "null_response", "level")          # the target is a gene's drug response
+DRUGDOSE_TARGETS = ("cells", "response")                            # target types that are a drug-dose's phenotype
 MIXED = 0.25        # as direction.MIXED: rise_share between this and 1 - this = the target rises and falls
 TIERS = ("alerts", "notes", "caveats", "support")                    # as direction.TIERS
 # as direction.KIND_CAVEATS, in the words the edges hold them (a '; ' inside one reason is written ', ')
@@ -111,30 +117,38 @@ CAVEAT_LINES = (
     "being measured more precisely, not from it acting first.")
 GRADE_WORDS = {
     "A": "strong: a recorded mutation, at least 5 lines on each side compared within organs, significant over the "
-         "whole table, no other recorded alteration concentrated on either side, and not resting on a correction "
-         "(read any alert or note it still carries)",
+         "whole table, no other recorded alteration and no heavily mutated lines concentrated on a side, fewer than "
+         "20% of the group's arrows expected false, not resting on a correction, the mean over all its drug-doses "
+         "going its way, not a floor, measured in at least half of each side's lines, and for a response strength "
+         "seen at 2 or more doses (read any alert or note it still carries)",
     "B": "worth taking seriously - read its alerts: a mutation result with alerts (another alteration on either "
-         "side, compared across organs, ...) or only 3-4 lines on a side, a natural knockout with at least 5 lines "
-         "lacking the gene, or compounds that target the gene",
+         "side, compared across organs, the mean going the other way, ...) or only 3-4 lines on a side, a natural "
+         "knockout with at least 5 lines lacking the gene, or compounds annotated to act on the gene",
     "C": "a glimpse, a lead to check, not a finding: a gene's natural level, a result significant only within "
-         "its own group, a comparison the tissue can explain (tissue-confounded), or a natural knockout with few "
-         "lines"}
+         "its own group, a comparison the tissue can explain (tissue-confounded), a natural knockout with few lines "
+         "or inside an expression programme (more than 10 other line sets overlap), source and target at the same "
+         "locus, or compounds that trap their target (TOP1 / TOP2 poisons: the sign is not inferred)"}
 GRADE_SHORT = {"A": "strong", "B": "read its alerts", "C": "a glimpse"}
 KIND_SHORT = {
     "genotype_response": "mutation: response", "genotype_baseline": "mutation: level",
-    "genotype_sensitivity": "mutation: cells", "null_response": "not expressed: response",
-    "null_baseline": "not expressed: level", "null_sensitivity": "not expressed: cells",
+    "genotype_sensitivity": "mutation: cells", "genotype_selectivity": "mutation: response strength",
+    "null_response": "not expressed: response", "null_baseline": "not expressed: level",
+    "null_sensitivity": "not expressed: cells", "null_selectivity": "not expressed: response strength",
     "drug_target": "drug target: level", "level": "natural level: response",
     "level_sensitivity": "natural level: cells"}
 KIND_WORDS = {
     "genotype_response": "a recorded mutation of the source and the target's drug response",
     "genotype_baseline": "a recorded mutation of the source and the target's baseline level",
     "genotype_sensitivity": "a recorded mutation of the source and how many cells remain under a drug-dose",
+    "genotype_selectivity": "a recorded mutation of the source and how strongly the lines respond to a drug-dose "
+                            "(genes beyond the per-line cut against the line's typical drug-dose)",
     "null_response": "lines that do not express the source (natural knockouts) and the target's drug response",
     "null_baseline": "lines that do not express the source (natural knockouts) and the target's baseline level",
     "null_sensitivity": "lines that do not express the source (natural knockouts) and how many cells remain under a "
                         "drug-dose",
-    "drug_target": "compounds that target the source and the target's level",
+    "null_selectivity": "lines that do not express the source (natural knockouts) and how strongly the lines respond "
+                        "to a drug-dose",
+    "drug_target": "compounds annotated to act on the source and the target's level",
     "level": "the source's natural level across lines and the target's drug response (a glimpse)",
     "level_sensitivity": "the source's natural level across lines and how many cells remain under a drug-dose (a "
                          "glimpse)"}
@@ -143,6 +157,32 @@ MECH_WORDS = {"loss of function": "loss-of-function mutation", "gain of function
 
 # short labels of the alert reasons direction.py writes (the first pattern that matches a reason labels it)
 _SHORT = [
+    # direction version 5
+    (r"^the compounds are (?:TOP1 poisons|TOP2 poisons|PARP trappers|microtubule stabilisers)",
+     "poison: sign not inferred"),
+    (r" also act on DNA directly \(", "also act on DNA"),
+    (r": Tahoe lists .* ChEMBL lists ", "annotations disagree"),
+    (r": Tahoe and ChEMBL give different actions on ", "annotations disagree"),
+    (r"^supported by 2 compounds only", "2 compounds only"),
+    (r"^one test for (\d+) targets", r"one test for \1 targets"),
+    (r"^one test for (\d+) genes absent", r"one test for \1 genes"),
+    (r"^the mean over all \d+ of its drug-doses goes the other way", "mean goes the other way"),
+    (r" mostly falls under these drugs and is .* lower at baseline", "floor"),
+    (r"^random comparison groups give about .*: (?:about )?(under 1|\d+)% of them may be false",
+     r"expected false \1% (group)"),
+    (r"^over the whole table the controls expect", "controls: expected false (kind)"),
+    (r"^heavily mutated lines: ", "heavily mutated lines"),
+    (r"comparison lines are heavily mutated", "heavily mutated comparison lines"),
+    (r"^loss of function is the metadata's inference", "loss of function inferred (missense)"),
+    (r"^same locus: ", "same locus"),
+    (r"is also absent from most of the ", "co-absent with the target"),
+    (r"^an expression programme: ", "programme: direction not identifiable"),
+    (r"would appear for any gene \((under 1|\d+)%\)", r"non-specific \1%"),
+    (r": (?:about )?(under 1|\d+)% of them would appear for any set of lines", r"non-specific \1%"),
+    (r"^also at ", "also at other doses"),
+    (r"^one dose only: ", "one dose only"),
+    (r"^drug-doses of translation inhibitors carry", "translation inhibitors"),
+    # earlier versions
     (r"^significant within this group", "within its group only (a lead)"),
     (r"^significant among the genes tested for this drug-dose", "within its drug-dose only (a lead)"),
     (r"^few lines \((\d+) vs (\d+)\)", r"few lines (\1 vs \2)"),
@@ -207,10 +247,13 @@ def _num(x):
 
 
 def fmt_q(x, na="-"):
-    """A p or q value: '3e-05' below 0.001, else three decimals."""
+    """A p or q value: '3e-05' below 0.001, else three decimals; an exact 0 (below what float32 holds) reads
+    common.Q_ZERO ('< 1e-45'), as common.fmt_q writes it."""
     x = _num(x)
     if not np.isfinite(x):
         return na
+    if x == 0:
+        return Q_ZERO
     if x < 1e-3:
         return f"{x:.0e}"
     t = f"{x:.3f}"
@@ -259,54 +302,138 @@ SIGN_RESPONSE_NOTE = ("For a drug response the sign says how strongly the target
 
 def sign_word(sign, kind=None):
     """+1 'raises', -1 'lowers', 0 'not inferred'; for a response kind (RESPONSE: the target is a gene's drug response,
-    whose sign is how strongly it responds in its own direction) 'strengthens' / 'weakens'."""
+    whose sign is how strongly it responds in its own direction) or a response strength (SELECTIVITY) 'strengthens' /
+    'weakens'."""
     s = _num(sign)
     s = int(np.sign(s)) if np.isfinite(s) else 0
-    if s and str(kind or "") in RESPONSE:
+    if s and str(kind or "") in RESPONSE + SELECTIVITY:
         return "strengthens" if s > 0 else "weakens"
     return "raises" if s > 0 else ("lowers" if s < 0 else "not inferred")
+
+
+# the trap classes of direction.TRAP_NAMES: mechanism_class -> (plural, what the drugs do to the source)
+TRAP_WORDS = {"TOP1 poison": ("TOP1 poisons", "trap {t} on DNA"), "TOP2 poison": ("TOP2 poisons", "trap {t} on DNA"),
+              "PARP trapper": ("PARP trappers", "trap {t} on DNA"),
+              "microtubule stabiliser": ("microtubule stabilisers", "freeze microtubules (they bind {t})")}
+
+
+def _dd_of(tgt, prefix):
+    return tgt[len(prefix):] if tgt.startswith(prefix) else tgt
 
 
 def _target_object(row):
     kind = str(_g(row, "kind", ""))
     tgt = str(_g(row, "target", ""))
-    if kind in SENSITIVITY or _g(row, "target_type", "gene") == "cells":
-        t = tgt[len("cells under "):] if tgt.startswith("cells under ") else tgt
-        return f"the cells' numbers under {t}"
+    tt = str(_g(row, "target_type", "gene") or "gene")
+    if kind in SELECTIVITY or tt == "response":
+        return f"the response to {_dd_of(tgt, 'response to ')}"
+    if kind in SENSITIVITY or tt == "cells":
+        return f"the cells' numbers under {_dd_of(tgt, 'cells under ')}"
     if kind.endswith("baseline") or kind == "drug_target":
         return f"{tgt}'s level"
     return f"{tgt}'s drug response"
 
 
+def _prog(row):
+    v = _num(_g(row, "programme_sets", -1))
+    return int(v) if np.isfinite(v) else -1
+
+
 def sign_text(row):
-    """What the source does to the target, in words: 'TP53 activity strengthens CDKN1A's drug response' (a response:
-    how strongly the target responds in its own direction - SIGN_RESPONSE_NOTE); 'KEAP1 activity lowers NQO1's level';
-    for the cells: '... lowers the cells' numbers under Doxorubicin 5 µM (makes them more sensitive)'; a level edge:
-    "NFE2L2's natural level strengthens NQO1's drug response"; sign 0: "the direction of TP53's effect on ... is not
-    inferred (the mechanism is not recorded)". The sign is the effect of the SOURCE's activity (for a drug target: an
-    inhibitor that raises the target means the source's activity lowers it)."""
+    """What the source does to the target, in words. A recorded mutation: 'TP53 activity strengthens CDKN1A's drug
+    response' (a response: how strongly the target responds in its own direction - SIGN_RESPONSE_NOTE), 'KEAP1 activity
+    lowers NQO1's level', '... lowers the cells' numbers under Doxorubicin 5 µM (makes them more sensitive)', 'KRAS
+    activity strengthens the response to Trametinib 0.5 µM'. A natural knockout (version 5: not an experiment on the
+    gene, so 'may'): 'lines without MTAP have fewer cells under Pemetrexed 5 µM (MTAP may protect the cells)', 'lines
+    without KRT15 have less SEMA4B (KRT15 may raise it)'; inside an expression programme: 'co-expressed with KRT15
+    across lines: which acts on which is not identifiable'. A drug target: "compounds annotated to inhibit MTOR lower
+    RPL3's level (MTOR's activity may raise it)"; a trap class: "TOP2 poisons raise TP53's level; TOP2A's own effect on
+    it is not inferred (the drugs trap TOP2A on DNA)". A level edge: "NFE2L2's natural level strengthens NQO1's drug
+    response". Same locus: 'CDKN2B and CDKN2A lie at the same locus: which acts on which cannot be told'. The sign is
+    the effect of the SOURCE's activity (for a drug target: an inhibitor that raises the target means the source's
+    activity lowers it)."""
     kind = str(_g(row, "kind", ""))
     src = source_text(row)
-    who = f"{src}'s natural level" if kind.startswith("level") else f"{src} activity"
+    tgt = str(_g(row, "target", ""))
     obj = _target_object(row)
     s = _sign(row)
+    same_locus = str(_g(row, "same_locus", False)).lower() in ("true", "1")
+    if kind == "drug_target":
+        eff = str(_g(row, "drug_effect", "") or "")
+        ev = "raise" if eff == "raises" else ("lower" if eff == "lowers" else "move")
+        mc = str(_g(row, "mechanism_class", "") or "")
+        if mc in TRAP_WORDS:
+            pl, verb = TRAP_WORDS[mc]
+            return (f"{pl} {ev} {tgt}'s level; {src}'s own effect on it is not inferred (the drugs "
+                    f"{verb.format(t=src)})")
+        mech = str(_g(row, "mechanism", "") or "")
+        if s == 0:
+            return (f"compounds annotated to target {src} {ev} {tgt}'s level; the direction of {src}'s own effect is "
+                    "not inferred (the mechanism is not recorded)")
+        act = "activate" if mech == "activator" else "inhibit"
+        whose = "their" if len(list(_g(row, "sources", ()) or ())) > 1 else f"{src}'s"
+        return f"compounds annotated to {act} {src} {ev} {tgt}'s level ({whose} activity may " \
+               f"{'raise' if s > 0 else 'lower'} it)"
     if s == 0:
+        if same_locus:
+            return f"{src} and {tgt} lie at the same locus: which acts on which cannot be told"
+        if kind.startswith("null") and _prog(row) > 10:
+            return f"co-expressed with {src} across lines: which acts on which is not identifiable"
         return f"the direction of {src}'s effect on {obj} is not inferred (the mechanism is not recorded)"
+    if kind.startswith("null"):
+        if kind == "null_baseline":
+            return f"lines without {src} have {'less' if s > 0 else 'more'} {tgt} ({src} may " \
+                   f"{'raise' if s > 0 else 'lower'} it)"
+        if kind == "null_response":
+            return f"lines without {src} show a {'weaker' if s > 0 else 'stronger'} {tgt} drug response ({src} may " \
+                   f"{'strengthen' if s > 0 else 'weaken'} it)"
+        if kind == "null_sensitivity":
+            return f"lines without {src} have {'fewer' if s > 0 else 'more'} cells under " \
+                   f"{_dd_of(tgt, 'cells under ')} ({src} may " \
+                   f"{'protect the cells' if s > 0 else 'make the cells more sensitive'})"
+        return f"lines without {src} respond {'less' if s > 0 else 'more'} strongly to {_dd_of(tgt, 'response to ')} " \
+               f"({src} may {'strengthen' if s > 0 else 'weaken'} the response)"
+    who = f"{src}'s natural level" if kind.startswith("level") else f"{src} activity"
     out = f"{who} {sign_word(s, kind)} {obj}"
     if kind in SENSITIVITY or _g(row, "target_type", "gene") == "cells":
         out += " (protects the cells)" if s > 0 else " (makes them more sensitive)"
     return out
 
 
+_RX_GENO = re.compile(r"^(\S+) (recorded as loss of function|recorded as gain of function|altered \(any record\)) "
+                      r"\((\d+) lines: (.*)\) vs not recorded \((\d+)\)$")
+_RX_ALLELE = re.compile(r"^(\S+) (.*?) \((\d+) lines(?:: (.*?))?\) vs other lines \((\d+); (.*)\)$")
+
+
+def _comp_short(comp):
+    return comp.replace(" with a missense change", " missense").replace(
+        " truncating, splice or deletion only", " truncating, splice or deletion")
+
+
 def kind_text(row):
-    """The evidence of a row in plain words: 'recorded loss-of-function mutation of TP53 in 10 lines vs 8 not
-    recorded'; 'lines that do not express MTAP (5) vs lines expressing it (13)'; "NFE2L2's natural level across 18
-    lines (lineage-adjusted; a glimpse)"; 'compounds that target MTOR: 3 of 6 move it (Rapamycin, ...)'."""
+    """The evidence of a row in plain words: 'TP53 change recorded as loss of function in 10 lines (8 missense, 2
+    truncating, splice or deletion) vs 8 not recorded'; 'KRAS codon G12 recorded in 6 lines (G12C 2, G12D 2, G12S 1,
+    G12V 1) vs 12 other lines (4 of them with another KRAS change)'; 'lines that do not express MTAP (5) vs lines
+    expressing it (13)'; "NFE2L2's natural level across 18 lines (lineage-adjusted; a glimpse)"; 'compounds annotated to
+    inhibit MTOR: 3 of 6 lower it (Rapamycin, ...)'; 'compounds that trap TOP2A on DNA (TOP2 poisons): 3 of 5 raise it
+    (...)'. Older outputs (group words of direction version 4): 'recorded loss-of-function mutation of TP53 in 10 lines
+    vs 8 not recorded'."""
     kind = str(_g(row, "kind", ""))
     src = source_text(row)
     na, ni, nl = (int(_num(_g(row, k, -1))) if np.isfinite(_num(_g(row, k, -1))) else -1
                   for k in ("n_altered", "n_intact", "n_lines"))
+    grp = str(_g(row, "group", "") or "")
     if kind.startswith("genotype"):
+        m = _RX_GENO.match(grp)
+        if m:
+            how = m.group(2).replace("altered (any record)", "recorded as altered (mechanism not recorded for all)")
+            return (f"{m.group(1)} change {how} in {m.group(3)} lines ({_comp_short(m.group(4))}) vs {m.group(5)} not "
+                    "recorded")
+        m = _RX_ALLELE.match(grp)
+        if m:
+            return (f"{m.group(1)} {m.group(2)} recorded in {m.group(3)} lines" + (f" ({m.group(4)})" if m.group(4)
+                                                                                   else "")
+                    + f" vs {m.group(5)} other lines ({m.group(6)})")
         mech = MECH_WORDS.get(str(_g(row, "mechanism", "")), f"{_g(row, 'mechanism', '')} alteration")
         return f"recorded {mech} of {src} in {na} lines vs {ni} not recorded"
     if kind.startswith("null"):
@@ -315,12 +442,23 @@ def kind_text(row):
     if kind.startswith("level"):
         return f"{src}'s natural level across {nl} lines (lineage-adjusted; a glimpse)"
     if kind == "drug_target":
-        sup = [x for x in str(_g(row, "compounds_supporting", "") or "").split("; ") if x]
+        raw = str(_g(row, "compounds_supporting", "") or "")
+        head, _, rest = raw.partition("also significant: ")
+        sup = [x for x in head.split("; ") if x.strip()]
+        rest = rest.strip()
         nc, ns = int(_num(_g(row, "n_compounds", -1))), int(_num(_g(row, "n_supporting", -1)))
         eff = str(_g(row, "drug_effect", "") or "")
         verb = (eff if ns == 1 else eff[:-1]) if eff in ("raises", "lowers") else ("moves" if ns == 1 else "move")
-        what = f"{ns} of {nc} {verb} it"
-        return f"compounds that target {src}: {what}" + (f" ({', '.join(sup)})" if sup else "")
+        mc = str(_g(row, "mechanism_class", "") or "")
+        mech = str(_g(row, "mechanism", "") or "")
+        if mc in TRAP_WORDS:
+            who = f"compounds that {TRAP_WORDS[mc][1].format(t=src)} ({TRAP_WORDS[mc][0]})"
+        elif mech in ("inhibitor", "activator") or mech.startswith("inhibitor"):
+            who = f"compounds annotated to {'activate' if mech == 'activator' else 'inhibit'} {src}"
+        else:
+            who = f"compounds annotated to target {src}"
+        listed = ", ".join(sup) + (f"; also significant: {rest}" if rest else "")
+        return f"{who}: {ns} of {nc} {verb} it" + (f" ({listed})" if listed else "")
     return KIND_WORDS.get(kind, kind)
 
 
@@ -386,15 +524,26 @@ def caveat_header(rows, ascii=False, short=False):
     if rows is None:
         return ""
     kinds = list(rows["kind"].astype(str).unique()) if hasattr(rows, "columns") else [str(k) for k in rows]
+    from_rows = {}
+    if hasattr(rows, "columns") and "caveats" in rows.columns and len(rows):
+        for k_, t_ in zip(rows["kind"].astype(str), rows["caveats"].fillna("").astype(str)):
+            for x in _reasons(t_, "caveats"):
+                lst = from_rows.setdefault(k_, [])
+                if x not in lst:
+                    lst.append(x)
     out = []
     for k in KINDS:
-        if k in kinds and kind_caveats(k):
-            cv = kind_caveats(k)
+        cv = tuple(from_rows.get(k, ())) or kind_caveats(k)
+        if k in kinds and cv:
             if short:
                 out.append(f"{KIND_SHORT.get(k, k)} - " + "; ".join(cv))
-            else:
+            elif tuple(cv) == tuple(kind_caveats(k)):
                 out.append(f"Every arrow of the kind '{KIND_SHORT.get(k, k)}' carries "
                            f"{'this caveat' if len(cv) == 1 else 'these caveats'}: " + "; ".join(cv) + ".")
+            else:                              # from the rows (direction version 5: e.g. each family's controls)
+                out.append(f"The arrows of the kind '{KIND_SHORT.get(k, k)}' carry "
+                           f"{'this caveat' if len(cv) == 1 else 'these caveats (each arrow the ones of its family)'}: "
+                           + "; ".join(cv) + ".")
     return _txt(("; " if short else " ").join(out), ascii)
 
 
@@ -726,17 +875,20 @@ class Direction:
         dt = kind == "drug_target"
         nl = np.array([str(k_).startswith("null") for k_ in kind], dtype=bool)
         if n and (dt | nl).any():
-            keys = pd.DataFrame({
-                "kind": kind, "target": e["target"].astype(str).to_numpy(dtype=object),
-                "tc": e["target_col"].to_numpy(dtype=np.int64), "tdd": e["target_dd"].to_numpy(dtype=np.int64),
-                "group": np.where(nl, e["group"].fillna("").astype(str).to_numpy(dtype=object), ""),
-                "comp": np.where(dt, e["compounds"].fillna("").astype(str).to_numpy(dtype=object), ""),
-                "mech": np.where(dt, e["mechanism"].fillna("").astype(str).to_numpy(dtype=object), ""),
-                "eff": np.where(dt, e["drug_effect"].fillna("").astype(str).to_numpy(dtype=object), ""),
-                "sign": e["sign"].to_numpy(dtype=np.int64),
-                "ns": np.where(dt, e["n_supporting"].to_numpy(dtype=np.int64), -1),
-                "nc": np.where(dt, e["n_compounds"].to_numpy(dtype=np.int64), -1),
-                "p": e["p"].to_numpy(dtype=np.float64)})
+            if "test_id" in e.columns:                                 # direction version 5: one id per test
+                keys = pd.DataFrame({"tid": e["test_id"].to_numpy(dtype=np.int64)})
+            else:
+                keys = pd.DataFrame({
+                    "kind": kind, "target": e["target"].astype(str).to_numpy(dtype=object),
+                    "tc": e["target_col"].to_numpy(dtype=np.int64), "tdd": e["target_dd"].to_numpy(dtype=np.int64),
+                    "group": np.where(nl, e["group"].fillna("").astype(str).to_numpy(dtype=object), ""),
+                    "comp": np.where(dt, e["compounds"].fillna("").astype(str).to_numpy(dtype=object), ""),
+                    "mech": np.where(dt, e["mechanism"].fillna("").astype(str).to_numpy(dtype=object), ""),
+                    "eff": np.where(dt, e["drug_effect"].fillna("").astype(str).to_numpy(dtype=object), ""),
+                    "sign": e["sign"].to_numpy(dtype=np.int64),
+                    "ns": np.where(dt, e["n_supporting"].to_numpy(dtype=np.int64), -1),
+                    "nc": np.where(dt, e["n_compounds"].to_numpy(dtype=np.int64), -1),
+                    "p": e["p"].to_numpy(dtype=np.float64)})
             pos_of = np.flatnonzero(dt | nl)
             for ix in keys.iloc[pos_of].groupby(list(keys.columns), sort=False, dropna=False).indices.values():
                 if len(ix) < 2:
@@ -805,7 +957,8 @@ class Direction:
             if others:
                 reasons.append(f"the supporting compounds also share {', '.join(others)}: any of them could be the "
                                "cause instead")
-            reading = reading.replace(f" {src[i0]} ", f" {joined} ", 1)
+            reading = reading.replace(f" {src[i0]} ", f" {joined} ", 1).replace(
+                f"({src[i0]} activity may", "(their activity may")
             group = re.sub(r"^\S+ ", f"{joined} ", group, count=1)
         elif coabs or len(srcs) > 1:
             # every gene absent from these lines, also those that are not a source of this row (the stage writes a
@@ -848,7 +1001,7 @@ class Direction:
         def add(name, key, i):
             ix[name].setdefault(key, []).append(i)
         r = self.rows
-        cells = (r["target_type"].astype(str) == "cells").to_numpy() if len(r) else np.zeros(0, bool)
+        cells = r["target_type"].astype(str).isin(DRUGDOSE_TARGETS).to_numpy() if len(r) else np.zeros(0, bool)
         for i, (ss, cc, t, tc, dd, drug, kind, comps) in enumerate(zip(
                 r["sources"], r["source_cols"], r["target"], r["target_col"], r["target_dd"], r["target_drug"],
                 r["kind"], r["compounds"])):
@@ -871,7 +1024,7 @@ class Direction:
                         for k in _drug_keys(nm_):
                             add("comp", k, i)
         e = self.edges
-        ecells = (e["target_type"].astype(str) == "cells").to_numpy() if len(e) else np.zeros(0, bool)
+        ecells = e["target_type"].astype(str).isin(DRUGDOSE_TARGETS).to_numpy() if len(e) else np.zeros(0, bool)
         for i, (s_, c_, t, tc) in enumerate(zip(e["source"], e["source_col"], e["target"], e["target_col"])):
             role = "e_cells" if ecells[i] else "e_down"
             add(f"{role}_sym", str(s_).upper(), i)

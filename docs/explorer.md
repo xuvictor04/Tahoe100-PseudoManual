@@ -6,7 +6,11 @@ and follow links. Nothing is hidden:
 
 - every list holds every row of its source table;
 - a flag (for example "toxic" or "cell-cycle shift") never removes a row. It is written in the row, in red with ⚠
-  when it is an artifact flag, and the row keeps its place in the sort;
+  when it is an artifact flag, and the row keeps its place in the sort. The flags are the flags of record of the
+  tables stage: they include "like a neighbouring well" (an artifact flag), "like a neighbouring well (top dose)" (an
+  alert, not an artifact flag: marked △ in amber, never red, wherever the drug-dose's neighbouring-well tier is
+  shown), and "like a neighbouring well (not this gene)", "translation inhibitor" and "rise under a translation
+  inhibitor" (caveats, never artifact flags), each with its plain words;
 - filters are off until you turn one on. A yellow banner then says how many rows they hide;
 - numbers are the stored numbers, and downloads give them back bit for bit;
 - an empty value always says why it is empty.
@@ -42,7 +46,12 @@ data volume names the missing file and where it lives.
 
 - **Fold change** is this drug-dose against the same cell line's median over the plate's drug wells. It is **not**
   against DMSO. It is corrected for the library-size (composition) shift and for the position of the well on the
-  plate. The DMSO offset of each plate is on the gene's "Baseline & wells" tab.
+  plate. The DMSO offset of each plate is on the gene's "Baseline & wells" tab. The gene's Drugs tab also has
+  **vs DMSO (rough)**: the fold change plus the mean DMSO offset of the drug-dose's plates (tables/drug_effects
+  `lfc_vs_dmso`, the same float32 value). It is a sign check, not a second estimate.
+- **Dose and plate.** Each dose of a drug sits on its own plate, and most drug-doses are one well (the column
+  **wells**). So a dose pattern compares plates as much as doses, and the lines inside one well are not replicate
+  treatments.
 - **Pooled** values combine all cell lines: per well, the median over the lines; per drug-dose, the mean over its
   used wells. They are float32 numbers, as stored in `atlas/effects`.
 - **Per-line** values are one cell line at one drug-dose. They are float16 numbers, as stored in `tensor/`.
@@ -51,6 +60,11 @@ data volume names the missing file and where it lives.
 - **Fold** = 2^(log2 fold change). It is computed in the page and marked "(computed)".
 - **Call**: "up" when q rise < 0.10 and the fold is at least 1.2; "down" when q fall < 0.10 and the fold is at most
   1/1.2. This is the rule of `tables/drug_effects`. It is a column, not a filter.
+- **q < 1e-45**: a q below 1e-45, the smallest number a float32 can hold, is stored as 0. Tables write it
+  "< 1e-45" (as the vault, the look-ups and the map do), so the meaning shows without a hover; the row drawer and
+  the records write "0 (< 1e-45)", the title says "q below 1e-45 (stored as 0)", and every CSV keeps the stored 0.
+  Earlier pages wrote "0" in the cell, with the meaning only in the title; a hover is not available on touch
+  screens or in copied tables, so the cell now writes "< 1e-45".
 - **DD_A** is the log2 relative number of cells of a line at a drug-dose, against the other lines in the same wells.
   **DD_Az** is its z. DD_Az ≤ −3 means the line is depleted. Cell counts of a drug-dose flagged "unreliable plate
   only", "position not correctable" or "wells disagree" are less trustworthy; the row says so.
@@ -74,10 +88,13 @@ opens the results page instead, so that none of them is picked for you. The list
 
 - **Genes** are found by symbol, label, Ensembl id, HGNC id and symbol, aliases, previous symbols, words of the
   name, Entrez id, UniProt id and cytoband.
-- **Drugs** by name, salt base, each target, and mechanism of action (fine and broad).
+- **Drugs** by name, salt base, each target, and mechanism of action (fine and broad), and by ChEMBL's name,
+  mechanism texts and targets and the mechanism classes the rules use ("translation inhibitor", "TOP2 poison").
 - **Cell lines** by name (also without punctuation: "NCIH460" finds NCI-H460), Cellosaurus id, DepMap id, organ,
-  driver gene, protein change (for example "R273H") and TP53 status.
-- **Modules, gene sets and direction groups** are searched too.
+  driver gene, protein change (for example "R273H") and TP53 status ("TP53 not recorded" finds the lines without a
+  recorded TP53 alteration, presumed wild type).
+- **Modules** also by their label with its alert tags and their covariate tag; **gene sets and direction groups**
+  are searched too.
 - **Two words** give a combined view: "TRIM72 A549" opens TRIM72 in the line A549; "TRIM72 idarubicin" opens TRIM72
   under every dose of idarubicin, in every line. The first word must be a gene (exact symbol, id or alias). When the
   rest matches several lines or drugs (an organ, a mechanism, a target, a word of a name), the results page lists one
@@ -103,12 +120,24 @@ Every page of a kind has the same tabs in the same order, and every tab label ca
 ### Home (`#/`)
 
 The search box, example searches, what the run holds (counts and method), the Browse lists (with every cell line by
-organ), and links to the map, the vault, the documents, "What is where" and Downloads.
+organ), links to the map, the vault, the documents, "What is where" and Downloads, and **How to cite**: the data
+set (Tahoe-100M, Hugging Face tahoebio/Tahoe-100M, licence CC0-1.0) and its paper (Zhang et al., bioRxiv 2025,
+doi:10.1101/2025.02.20.639398).
 
 ### Browse (`#/browse/<list>`)
 
 Complete, sortable tables: genes, drugs, drug-doses, cell lines (by organ), modules, direction groups, and every
-probable-direction arrow (built from the direction files when the list is opened).
+probable-direction arrow (built from the direction files when the list is opened). Tahoe's annotation columns are
+labelled "(Tahoe)"; the drugs list shows ChEMBL's mechanism and the disagreement alert, and the drug-doses list adds
+both from `tables/drugs` ("chembl_mechanisms (from tables/drugs)", "annotation_alert (from tables/drugs)"), with a
+filter for the drugs whose annotations disagree. The neighbouring-well tier is marked as on the drug-dose page.
+(Earlier pages showed Tahoe's mechanism alone and unlabelled outside the drug page.)
+
+Above each list of arrows, "Alert reasons over this list" counts the arrows by a short label of each reason. A reason
+that starts with a compound's name is labelled by what it says, never by the name: "targets differ (Tahoe vs
+ChEMBL)" (the two annotations list other targets), "actions differ (Tahoe vs ChEMBL)", "compounds also act on DNA",
+"the compounds trap their target". Every reason is written in full in its row. (Earlier pages cut every reason at
+its first ":", so these reasons were counted under a compound's name, for example "Belinostat 530".)
 
 ### Gene (`#/gene/<symbol>`)
 
@@ -119,11 +148,11 @@ HGNC, Ensembl, UniProt, NCBI, GeneCards).
 | Tab | What it holds |
 |---|---|
 | Overview | Four short answers: what moves the gene (with the strongest rises and falls; a flagged row keeps its place with ⚠ and its flags), in which lines, what moves with it, and what probably acts on it. Each preview says "k of N shown" and links to the full list. |
-| Drugs | Every drug-dose (1,132 on the real data): fold, log2 fold change, z, q rise, q fall, call, flags in full, line counts, dose patterns, whether the row is in `tables/drug_effects`, the position effect removed, the z the vector space predicts (on the z scale: row mean + row scale × gene vector · drug-dose vector, the inverse of the standardisation the space was fitted on; z beyond ±8 is not reproduced), the drug's mechanism, targets and flags. The list starts with the strongest rise, so a flagged strongest raiser is the first row. A drug-dose with no pooled value for the gene keeps its row, and each empty cell says why (see section 7). Click a row for every field and the per-line values. |
-| Cell lines | The per-line block: a heatmap of every line at every drug-dose (never averaged), a long table with one row per (drug-dose, line), and the pipeline tables `line_effects` and `drug_line_top`. Rows can be ordered by organ, TP53 status, a driver gene or response; columns by pooled z, drug or mechanism. Group rows (for example "mean of the TP53-altered lines") can be added; they are computed in the page and labelled so. |
+| Drugs | Every drug-dose (1,132 on the real data): fold, log2 fold change, the rough DMSO-referenced value (**vs DMSO (rough)**, next to the log2 fold change, from the data volume), z, q rise, q fall, call, flags in full, line counts, the used wells (**wells**: 1 = the value rests on one well); these are the Simple columns. Also: dose patterns, whether the row is in `tables/drug_effects`, the position effect removed, the z the vector space predicts (on the z scale: row mean + row scale × gene vector · drug-dose vector, the inverse of the standardisation the space was fitted on; z beyond ±8 is not reproduced), the drug's mechanism as Tahoe gives it (**MoA (Tahoe)**, with "⚠ ChEMBL disagrees" when the two annotations differ), ChEMBL's mechanism, the disagreement in full (**Tahoe and ChEMBL**), Tahoe's targets and the flags. The filter on Tahoe's class names the drugs ChEMBL disagrees with ("HDAC inhibitor — ⚠ ChEMBL disagrees for Carbamazepine"); other filters choose a mechanism class (from ChEMBL, WHO ATC or a cited constant), a ChEMBL mechanism, or the drugs whose annotations disagree. The list starts with the strongest rise, so a flagged strongest raiser is the first row. A drug-dose with no pooled value for the gene keeps its row, and each empty cell says why (see section 7). Click a row for every field and the per-line values. |
+| Cell lines | The per-line block: a heatmap of every line at every drug-dose (never averaged), a long table with one row per (drug-dose, line), and the pipeline tables `line_effects` and `drug_line_top`. Rows can be ordered by organ, TP53 status, a driver gene or response; columns by pooled z, drug or mechanism. Group rows (for example "TP53-altered" vs "TP53 not recorded (presumed wild type)") can be added; they are computed in the page and labelled so. |
 | Correlations | (a) the cosine with every other gene of the vector space, with both halves, z, fdr and evidence (the 100 stored partners show the pipeline's own values; the rest are computed in the page with the same formulas); (b) baseline co-expression across the lines; (c) pooled-profile r for one partner through the pair page. |
-| Partners & module | The stored partners with every column and alert, the genes that list this one, STRING partners, gene sets, graph edges, and the module: every member, its pooled z at every drug-dose and its per-line scores. |
-| Direction | Every probable-direction arrow into the gene, from it to other genes, and from it to how many cells remain, with every alert (⚠, in full), note (muted, in full), support reason and the drug-doses behind it. The caveat every arrow of a kind carries is written once above each list. The tab label counts the arrows in words: "Direction (0 into · 13 from · 0 to cell numbers)". The tab also gives how many tests the direction stage ran over all genes (an arrow is written only at q < 0.10); the stage does not record how many of them involved one gene. |
+| Partners & module | The stored partners with every column and alert (also the lineage columns n_lines_a, n_lines_b, lines_shared, lines_jaccard, lineage_pair, lineage_p and the read-sharing columns read_sharing, read_sharing_risk; a line above the table counts the lineage pairs and read-sharing copies), the genes that list this one, STRING partners, gene sets, graph edges, and the module: every member, its pooled z at every drug-dose and its per-line scores. |
+| Direction | Every probable-direction arrow into the gene, from it to other genes, and from it to how many cells remain, with every alert (⚠, in full), note (muted, in full), support reason and the drug-doses behind it. The caveat every arrow of a kind carries is written once above each list. The tab label counts the arrows in words: "Direction (0 into · 13 from · 0 to cell numbers)". A line says in how many comparisons the gene was tested, by kind and role ("CDKN1A was tested in 421 comparisons (by kind: ...)", direction/gene_tests), with a table of every such row; an arrow is written only at q < 0.10. Each arrow table has the column **false (group)** (the share of the group's arrows of the kind that random groups give too, or for natural knockouts the share random genes or line sets give) and **Same test as** (arrows that are one test for several sources or targets, linked), and every other column of direction/edges (mechanism class and its source, n_top, m_top, class_size, test_id, distance_bp, same_locus, ...). |
 | Baseline & wells | The level in each line, the line centre and scale (the per-line z divisor), the plate baselines that every fold change is relative to, the DMSO offset per plate, the well-position medians as a 96-well grid, the gene's z divisor in each plate-and-dose group with the group's name and its `plate_scale` rows, and every well with W1, W2, Z, raw counts and raw CPM. |
 | Annotation | Every annotation field in full, gene sets and STRING partners. |
 | Downloads | CSV files of the drug-doses, the drug-dose × line table, the wells and the correlations, and the raw data files of the gene. |
@@ -133,13 +162,16 @@ drug's doses in every line), `#/gene/X/dd/<dd>` (every line and every well at on
 
 ### Drug (`#/drug/<name>`)
 
-The top of the page gives the compound, mechanism, targets, its doses with their flags, and links (vault note,
-PubChem, DrugBank).
+The top of the page gives the compound, the mechanism and targets as Tahoe records them and the mechanism ChEMBL
+gives, each labelled with its source ("mechanism (Tahoe): ...", "mechanism (ChEMBL): ..."), its doses with their
+flags and their neighbouring-well tier, "⚠ Tahoe and ChEMBL disagree: ..." with a link to the Annotations section
+(`#/drug/<name>?at=annotations` opens the Overview scrolled there) when the two annotations disagree, and links
+(vault note, PubChem, DrugBank).
 
 | Tab | What it holds |
 |---|---|
-| Overview | Every column of `tables/drugs`; the doses side by side (one column per dose: every column of `tables/drugdoses` and `embed/drugdoses`, in groups, with the meaning of each); what each flag of the doses means; the drug's row of `embed/drugs`; its mechanism class (`validation/drug_moa`) and every drug of the same class; the control gene sets that name it. |
-| Genes × doses | Every gene at each dose, exact: fold, log2 fold change, z, q rise, q fall, call, flags, line counts, position effect, and the dose patterns. "Strongest rise: max z" and "Strongest fall: min z" sum up the doses; the list starts with the strongest rise. Sort by any column, for example "z at 5 µM". The 3 summed modules are listed below the genes. When the data volume cannot be reached, the list shows the drug's rows of `tables/drug_effects` with a yellow banner that says so and why. |
+| Overview | Its doses at a glance (genes up and down, wells, replicate r, fit status, flags, and the **neighbouring well** reading of each dose with a link to the partner), the plates of its doses; **Annotations: Tahoe and ChEMBL**: the two annotations side by side (name, targets, mechanism, action, WHO ATC, how the ChEMBL molecule was matched), "⚠ The two annotations disagree: ..." where they do, how they compare (annotation_status) and the notes, the **mechanism classes** the rules use, each with its source (reference/drug_classes), and every ChEMBL mechanism row (reference/drug_mechanisms); every column of `tables/drugs`; the doses side by side (every column of `tables/drugdoses` and `embed/drugdoses`, in groups: flags of record and atlas flags, neighbouring wells, mechanism classes and selective lines, ...); what each flag means; the drug's row of `embed/drugs` (with the salt-form alert); its mechanism classes (every `validation/drug_moa` row of the drug: Tahoe's class and the ChEMBL classes) and every drug of Tahoe's class; the control gene sets that name it. Tahoe's annotation is never changed. |
+| Genes × doses | Every gene at each dose, exact: fold, log2 fold change, the rough DMSO-referenced value (**vs DMSO (rough)**, from the drug-dose files `p/` `lvd`: the same float32 as `tables/drug_effects` `lfc_vs_dmso`; shown for the top dose, chosen for the others), z, q rise, q fall, call, flags, line counts, position effect, and the dose patterns. "Strongest rise: max z" and "Strongest fall: min z" sum up the doses; the list starts with the strongest rise. Sort by any column, for example "z at 5 µM". The 3 summed modules are listed below the genes. When the data volume cannot be reached, the list shows the drug's rows of `tables/drug_effects` with a yellow banner that says so and why. |
 | Cell lines | A heatmap and a table of DD_A, DD_Az (depleted marked), response beta and r, and the S-phase, G2/M and proteasome effects, for every line at every dose. |
 | Modules | Every module's pooled score at each dose. |
 | Similar drugs | The cosine of the drug's vector with every other drug, highest first. A drug whose vector may be weak (few significant genes at its vector dose, an artifact flag there, or an untrusted dose) keeps its place with the reason written out. |
@@ -148,30 +180,40 @@ PubChem, DrugBank).
 
 ### Drug-dose (`#/dd/<number>`, also `#/dd/<drug>/<dose>`)
 
-This is the drug's raw corrected information at one dose.
+This is the drug's raw corrected information at one dose. Its top names the drug's mechanism with its source
+("mechanism (Tahoe): HDAC inhibitor · mechanism (ChEMBL): Sodium channel alpha subunit blocker") and, when the two
+annotations disagree, carries "⚠ Tahoe and ChEMBL disagree: ..." with a link to the drug's Annotations section. Its
+neighbouring-well tier is a badge: "⚠ neighbouring well: artifact" in red (an artifact flag), "△ neighbouring well:
+top dose (alert, not an artifact flag)" in amber, or "neighbouring well: same mechanism (note, not an artifact flag)".
+Earlier pages called the top-dose tier "a note" in its block and gave it no marker in the header, while its own text
+said "shown with this alert". The tables stage records it as an alert, not an artifact flag (the data cannot tell a
+carried-over signal from a real effect at the top dose), so every page now calls it an alert and marks it △.
 
 | Tab | What it holds |
 |---|---|
-| QC | A one-line summary, then every column of `tables/drugdoses` and `embed/drugdoses` in groups (the drug-dose; wells and plates; cells, UMI and genes per cell; composition shift; well position; plate factor; cell cycle and proteasome; flags with their meaning; genes it moves; the vector space), each with its definition. Then a volcano plot of every gene (flagged genes ringed in red). |
-| All genes | Every gene, exact float32: fold, log2 fold change, z, q rise, q fall, call, flags, clean, cell-cycle share, line counts, whether it is in `tables/drug_effects`, the position effect removed, dose patterns, noise RNA, in the vector space, module (from the search index; an older explorer without it shows a "Load the module of every gene" button) and the predicted z. Click a row for the gene's value in each line. The 3 summed modules are listed apart. "CSV: all genes and the 3 modules (exact float32)" saves every row. |
+| QC | A one-line summary; the **neighbouring-well** block (its tier: artifact (an artifact flag, ⚠), top dose (an alert, not an artifact flag, △) or same mechanism (a note), the alert in full, a link to the partner drug-dose and where the wells sit); then every column of `tables/drugdoses` and `embed/drugdoses` in groups (the drug-dose; wells and plates; cells, UMI and genes per cell; composition shift; well position; plate factor; cell cycle and proteasome; flags of record and the atlas's own flags, with their meaning; neighbouring wells; mechanism classes and selective lines; genes it moves; the vector space), each with its definition. Then a volcano plot of every gene (flagged genes ringed in red). |
+| All genes | Every gene, exact float32: fold, log2 fold change, the rough DMSO-referenced value (**vs DMSO (rough)**, `p/` `lvd`, the same float32 as `tables/drug_effects` `lfc_vs_dmso`; a sign check, not a second estimate), z, q rise, q fall, call, flags, clean, cell-cycle share, line counts, whether it is in `tables/drug_effects`, the position effect removed, dose patterns, noise RNA, in the vector space, module (from the search index; an older explorer without it shows a "Load the module of every gene" button) and the predicted z. Click a row for the gene's value in each line. The 3 summed modules are listed apart. "CSV: all genes and the 3 modules (exact float32)" saves every row. |
 | Cell lines | Every line: DD_A, DD_Az, depleted, whether the cell counts are trustworthy, response beta and r, S / G2M / proteasome effects, usable wells, its cells in the used wells and in every well. |
+| Lines: response and growth | Every line's row of `tables/drug_line_response`: genes it moves on its own beyond the per-line cut, rel_log2 and the line selectivity sel_z (sorted by it, most selective first), whether the line is selective (marked ★, a marker, not a filter), response strength and r, relative cell number (growth) and its z, depleted, flags. Above it the drug-dose's `direction/selectivity` row (its selective lines, organs, the genotype groups that explain them); below it the line-selective positive controls (`validation/line_controls`) that test it. |
 | Wells | Every well of the drug-dose (used or left out) with every column of `tables/wells`; its failed wells; each well × line (cells, UMI, relative abundance A2 and zA, response); and one gene's W1, W2, Z, raw counts and raw CPM in each well. |
 | Modules | Every module's pooled score, and each module's score in each line (heatmap and table). |
 | Per-line values | Every gene in every line at this drug-dose. With the optional data_dd volume: a heatmap of every gene (in the order of the All genes tab) and the long table of every gene × line. Without it: the page says so, a row's drawer shows one gene's values, and the button "Load the per-line values of the genes on this page of the list" loads a page of genes with a progress line. That is a batch you start, not a cap. |
 | Direction | Every arrow to how many cells remain at this drug-dose. |
 | Vector space | Its fit status, the cosine with every other drug-dose, and its (drug-dose, line) contexts. |
+| Similar drug-doses | The unexpected-resemblance note of `embed/drugdoses` (⚠, when there is one) above every stored row of `embed/drug_similarity` for it (the 50 most similar of the other drug-doses: "50 of 1,131", with a link to the Vector space tab for all of them): the cosine of the pooled signatures and of the contexts, the genes both move, same salt base, the other drug-dose's mechanism, classes and flags. A drug-dose that moves no gene at \|z\| ≥ 3 or q < 0.10 has no pooled signature, so every cosine with it is undefined: the tab label says "none: no pooled signature", a box says "No similarity ranking", and that its 50 stored rows are the first other drug-doses in row order (rank is that order), not the most similar; each empty cos_pooled says why. The rows stay listed as stored. (Earlier pages called these rows "the 50 drug-doses most like" it and left cos_pooled empty without a reason.) |
 | Downloads | CSV files and the raw data files. |
 
 ### Cell line (`#/line/<name>`, also by Cellosaurus or DepMap id)
 
-The top of the page gives the organ, ids, TP53 status, every driver (a gene link and its variant), how many
-drug-doses deplete it, and links (vault note, Cellosaurus, DepMap).
+The top of the page gives the organ, ids, TP53 status ("altered", or "not recorded (presumed wild type)"), every
+driver (a gene link and its variant), how many drug-doses deplete it, and links (vault note, Cellosaurus, DepMap).
 
 | Tab | What it holds |
 |---|---|
 | Identity | A notice that the line's gene × drug-dose block is reached gene by gene or drug-dose by drug-dose and is never cut; a box to open any gene in this line; every column of `tables/lines`; its drivers. |
 | Genetics | Every direction group that holds the line, by kind: genotype groups (a recorded mutation or loss), natural-knockout line sets (lines without a gene; `genes_same_lines` lists every gene absent from exactly the same lines), and the random pseudo-groups. Each row is the full group row, and says whether the line is on the altered side. |
 | Sensitivity | Every drug-dose: DD_A, DD_Az, depleted, trustworthy cell counts, response beta and r, S / G2M / proteasome effects, usable wells and the drug-dose's flags, from the most depleted. |
+| Response and growth | Every drug-dose's row of `tables/drug_line_response` for the line (sorted by sel_z; the drug-doses at which the line is selective marked ★). |
 | Genes | Every `line_effects` row of the line: baseline, truly expressed, response spread, drug-doses up and down at the calibrated cut, and the strongest of them with their flags. |
 | Baseline | Every gene's level in the line: CPM, expressed (atlas rule), truly expressed, the median line's CPM, the ratio to it, in how many lines the gene is truly expressed, and whether it is a natural knockout here. |
 | Modules | Every module at every drug-dose in this line (heatmap and table). |
@@ -183,14 +225,14 @@ drug-doses deplete it, and links (vault note, Cellosaurus, DepMap).
 
 | Page | What it holds |
 |---|---|
-| Module (`#/module/<n>`) | Tabs: the module and label records; every member (arm, axis projection, degree); its pooled score at every drug-dose; its score in each line (heatmap and table); enrichment and novel members; edges within the module. Module 0 lists the genes of the space that no module took. `#/module/S_PHASE`, `G2M_PHASE` and `PROTEASOME` show the 3 summed atlas modules at every drug-dose. |
-| Direction group (`#/group/<id>`) | The group's description, its lines on each side (links), its alerts and notes, every column, and all of its arrows. `#/group/cmp:<n>` is a comparison that only arrows name (drug targets, gene levels). |
+| Module (`#/module/<n>`) | Its label as shown (label_display, with its ⚠ tags), badges for its label alert, a weak label, its covariate tag (graph covariate_kinds: technical, cell cycle) and its driving drugs; tabs: the module and label records (every column, with the meaning of each); every member (arm, axis projection, degree); its pooled score at every drug-dose; its score in each line (heatmap and table); enrichment and novel members; edges within the module. Module 0 lists the genes of the space that no module took. `#/module/S_PHASE`, `G2M_PHASE` and `PROTEASOME` show the 3 summed atlas modules at every drug-dose. |
+| Direction group (`#/group/<id>`) | The group's description, its lines on each side (links), its alerts and notes, every column (also allele and the heavily mutated lines on each side), and all of its arrows. For a gene the screen does not measure (a recorded driver), the line "tested in N comparisons" and every direction/gene_tests row of it. `#/group/cmp:<n>` is a comparison that only arrows name (drug targets, gene levels). |
 | Pair (`#/pair/<A>/<B>`) | How two genes relate in the vector space (their stored partner rows, or the cosine, halves, fdr and evidence computed here); their pooled profiles over every drug-dose (scatter, Pearson and Spearman r over the active, trustworthy drug-doses and over all); every drug-dose with both genes' values; the per-line r in each line (from both genes' per-line files, at least 5 shared drug-doses); the arrows between them. |
 | Gene set (`#/set/<source>/<set>`) | Its control-set row, every member with its mean and largest cosine to the other members, and the module enrichment rows that name it. |
 | Plate (`#/plate/<plate>`) | The 96 wells as an 8 × 12 grid (drug, dose, cells; DMSO, left-out and failed wells marked), the plate record, every well, the plate factors and the failed wells. |
 | What is where (`#/files`) | Every file pattern of the output folder: where it is in the explorer (web or data volume), or why it is not published, the page that shows it, and its files and bytes in this run. |
-| About (`#/about`) | How the numbers were made, exactness, every cut and constant of the run, what each flag means, provenance, and the documents. |
-| Downloads (`#/downloads`) | The data file format and the Python reader, where each volume is, a finder that gives the file of any gene, drug, drug-dose, line or module, and the raw URL of every pipeline file on the results branch. |
+| About (`#/about`) | How the numbers were made, exactness, every cut and constant of the run, what each flag means, the partner counts in both units (rows and pairs, relations/info.json) and how much a flat map keeps of each gene's partners (graph/info.json partner_preservation), provenance, how to cite, and the documents. |
+| Downloads (`#/downloads`) | The data file format and the Python reader, `schema.json` (every column of every shown table with its meaning), the gene-set files (`gmt/drugdose_signatures.gmt`, `gmt/modules.gmt`), where each volume is, a finder that gives the file of any gene, drug, drug-dose, line or module, and the raw URL of every pipeline file on the results branch. |
 | Documents (`#/doc/<path>`) | The READMEs of the tables, direction and validation, the validation report and these documents, as text. |
 
 ## 5. Tables
@@ -266,7 +308,7 @@ Every empty cell says why, in the page and in the `missing_reason` column of its
 - **No response beta or r**: the drug-dose has fewer than 20 significant genes (atlas `MIN_SIG_BETA`), the well is
   left out, or the line has too few cells there.
 - **Group rows** of the Cell lines heatmap average only the lines with a value; the detail box says "mean of 7 of 8
-  TP53 wild type lines".
+  TP53 not recorded (presumed wild type) lines".
 
 ## 8. For developers
 
@@ -275,17 +317,17 @@ The page is plain JavaScript in `tahoemap/explorer_app/` (`index.html`, `app.css
 
 | File | What it does |
 |---|---|
-| `00_util.js` | `TM.h` (make an element), `TM.href.*` (links), `TM.fmt.*` (numbers), `TM.ready`, the error banner, `TM.errorBox` |
+| `00_util.js` | `TM.h` (make an element), `TM.href.*` (links), `TM.fmt.*` (numbers; `TM.fmt.q` / `TM.fmt.qNode` a q of 0 as "< 1e-45" with its title), `TM.tp53Text`, `TM.ready`, the error banner, `TM.errorBox` |
 | `10_tsf.js` | `TM.tsf.decode` / `parse`: the TSF1 decoder (float16 through a lookup table) |
 | `20_load.js` | `TM.load.web(id)`, `TM.load.data(id, volume)`: sources in order, one load per file, run-id check, cache; `TM.ids.*` |
 | `30_table.js` | `TM.table(opts)`: the one table component; `TM.tableCols`, `TM.subTable`, `TM.record`, `TM.recordOf`, `TM.tabBar`, `TM.tabbed` (pages with tabs), `TM.fileLinks` |
 | `40_heat.js` | `TM.heat(opts)`: the canvas heatmap |
 | `50_plot.js` | `TM.plot.spark / strip / bars / scatter / plate96` |
 | `60_search.js` | `TM.search`: the index, ranking, two-word views, the results page |
-| `70_route.js` | `TM.data` (the shared model), `TM.route`, the home page, the footer, `TM.boot` |
+| `70_route.js` | `TM.data` (the shared model), `TM.route`, the home page, `TM.citeSection` (how to cite), the footer, `TM.boot` |
 | `80_gene.js` | the gene page and its sub-pages; `TM.dirTable` (any list of arrows) |
-| `81_drug.js` | `TM.drug`: the drug page; the drug-dose QC groups and the cell-number columns shared with the other pages |
-| `82_dd.js` | `TM.dd`: the drug-dose page, with the per-line batch loader |
+| `81_drug.js` | `TM.drug`: the drug page (the Annotations block); the two annotations on every surface (`TM.drug.annOf`, `annBadge`, `chemblText`, `classLabels`); the drug-dose QC groups, the neighbouring-well block and marks (`TM.drug.nbBlock`, `nbMark`, `nbBadge`) and the cell-number columns shared with the other pages |
+| `82_dd.js` | `TM.dd`: the drug-dose page, with the per-line batch loader; `TM.dd.dlrTable` (the drug_line_response table, also on the line page) |
 | `83_line.js` | `TM.line`: the cell-line page |
 | `84_misc.js` | module, group, pair, set, plate, browse, files, about, downloads and documents |
 | `90_csv.js` | `TM.csv`: exact number text and CSV files |

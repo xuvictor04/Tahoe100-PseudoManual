@@ -33,6 +33,15 @@ the NRF2 activators (dimethyl fumarate, auranofin, bortezomib): level edges NFE2
 direction (NFE2L2 rises a little with them, in every line alike), and a co-activator of the glucocorticoid
 programme (the first GLUCO SYNTH gene) is absent - ambient RNA only - from 6 lines spread over the four organs,
 where the other GLUCO genes respond 0.25x as strongly (log scale): a natural knockout with partner effects.
+Second-wave plants (PLANT_STREAM; each from its own random stream, on the counts of its own genes, so every earlier
+plant reads as before; ground_truth.json says what each should give): a neighbouring-well copy ('neighbour_copy': an
+inert filler's signature copied into the adjacent wells of two other inert fillers at 0.5 and 5 uM), a translation
+inhibitor ('translation_inhibitor': Harringtonine), the other TOP2 poisons' p53 response at 5 uM, a promiscuous
+glucocorticoid gene, KRAS codon-12 selectivity of Trametinib, a one-dose line-selective response (Bergenin), a tissue
+programme of genes absent from overlapping line sets, a falling p53 target (TIGAR) (all under 'direction'), lineage
+genes made by 3 lines only ('lineage_plant') and their broadly expressed twins ('broad_twin'). The drugs given a role
+leave method_v3.inert_drugs and are listed in method_v3.drugs_with_a_role; the new SYNTH sets are in 'synthetic gene
+sets'.
 Self-contained: the real metadata rows it needs are in tahoe_meta_snapshot.py next to this file.
 Deterministic for a given --seed. Needs numpy and pyarrow only.
 """
@@ -206,6 +215,67 @@ ROW_LOSS_ROW, ROW_LOSS_X = "E", 0.33
 LOWDOSE_LOSS_DRUG, LOWDOSE_LOSS_X = "Ranolazine", 0.35   # both 0.05 uM wells low, 0.5 / 5 uM fine: not 'toxic'
 RESERVED = [COLOC_Y, REF_DRUG, COMP_DRUG, LOWDOSE_LOSS_DRUG]   # fillers with a role: no private signature
 
+# ----------------------------------------------------------------------------- second-wave plants (extra_plants)
+# Each plant draws from its own random stream (PLANT_STREAM, per well) and puts its effect on the counts of its genes
+# in its wells after the main draw: binomial thinning lowers a count, Poisson addition raises it, and the genes whose
+# expression pattern a plant changes (the programme and lineage genes) are drawn afresh, ambient RNA included. So the
+# genes of every earlier plant, and every cell number, read as before. Their SYNTH genes are fillers that no other plant
+# moves, taken in a fixed order from the generator's free fillers (Design.new_plants). A drug given a role leaves
+# method_v3.inert_drugs and is listed in method_v3.drugs_with_a_role.
+PLANT_STREAM = {"neighbour": 1101, "translation": 1102, "top2": 1103, "promiscuous_gr": 1104, "kras_g12": 1105,
+                "one_dose": 1106, "programme": 1107, "p53_fall": 1108, "lineage": 1109, "broad_twin": 1110}
+# a. a neighbouring-well copy (the tables' neighbour rule): NB_SRC (an inert filler) gets its own SYNTH genes at full
+#    strength at every dose (no dose scale); the 0.5 uM wells of NB_DST (an inert filler) that sit right next to
+#    NB_SRC's (side, above / below or corner) on the same plate get NB_COPY x NB_SRC's ln effect in every line
+#    (NB_COPY_ONE when only one plate of the dose has them next to each other), and NB_TOP_DST the same at 5 uM.
+#    NB_DST's 0.05 and 5 uM doses and NB_TOP_DST's lower doses stay unplanted: the rule calls the first an artifact
+#    (a higher dose that does not share it) and the second 'top dose' (no higher dose to check)
+NB_UP, NB_DOWN = (40, 2.5), (20, 0.4)          # NB_SRC's own genes: (number, fold)
+NB_COPY, NB_COPY_ONE = 0.7, 1.0
+NB_DOSE, NB_TOP_DOSE = 0.5, 5.0
+# b. a translation inhibitor (superinduction of short-lived mRNAs): Harringtonine at every dose (full strength, every
+#    line) raises TL_UP genes and lowers TL_DOWN; at TL_TP53WT_DOSES it also raises TL_TP53WT genes in tp53_wt lines
+TL_DRUG = "Harringtonine"
+TL_UP, TL_DOWN, TL_TP53WT = (12, 2.0), (6, 0.6), (3, 2.0)
+TL_TP53WT_DOSES = (0.5, 5.0)
+# c. the other TOP2 poisons at 5 uM raise the P53_ACTIVITY genes TOP2_FOLD x in tp53_wt lines and TOP2_FOLD_ALT x in
+#    the others (expression only). The other lines move too because the direction stage's drug-target test reads the
+#    pooled effect (the median line) and only 8 of the 18 lines are tp53_wt: with the tp53_wt lines alone no planted
+#    gene was significant for >= 2 poisons, so the class could not be seen (fold 1.8 in tp53_wt lines only before)
+TOP2_DRUGS = ["Amsacrine", "Epirubicin (hydrochloride)", "Idarubicin (hydrochloride)",
+              "Mitoxantrone (dihydrochloride)"]
+TOP2_FOLD, TOP2_FOLD_ALT, TOP2_DOSE = 3.0, 2.0, 5.0
+# d. a promiscuous glucocorticoid gene: x PROMISC_GC_FOLD at every dose (full strength) under the GLUCO drugs, and
+#    x PROMISC_WEAK_FOLD at one dose each under PROMISC_N other drugs (drugs with a private signature already)
+PROMISC_GC_FOLD, PROMISC_WEAK_FOLD, PROMISC_N = 6.0, 1.3, 20
+# e. KRAS codon-12 selectivity: KRAS_DRUG at KRAS_DOSES (full strength) lowers KRAS_N MAPK_OUT genes x KRAS_FOLD in the
+#    lines with a KRAS codon-12 record (driver metadata) and x KRAS_OTHER in every other line. The tables call a line
+#    selective when >= tables.SEL_MIN_GENES (20) genes pass the line's per-line cut: with 25 genes x 0.3 (before) only
+#    5-19 did, so KRAS_N and KRAS_FOLD are larger. The doses are Trametinib's two lower ones (it acts at nanomolar
+#    doses): its 5 uM dose sits on the plate-row cell loss on seed 0 (one low-cells well, few lines with a profile)
+KRAS_DRUG, KRAS_DOSES, KRAS_N, KRAS_FOLD, KRAS_OTHER = "Trametinib (DMSO_TF solvate)", (0.05, 0.5), 70, 0.15, 0.9
+# f. a one-dose, line-selective response: ONE_DRUG at ONE_DOSE only raises ONE_N genes x ONE_FOLD in tp53_wt lines only.
+#    Large enough that the tp53_wt lines move >= 20 genes past the per-line cut, so the direction stage tests the
+#    drug-dose (20 genes x 2.5 before moved at most 15: no line was selective, and the 'one dose only' alert had no
+#    arrow to go on)
+ONE_DRUG, ONE_DOSE, ONE_N, ONE_FOLD = "Bergenin", 5.0, 60, 6.0
+# g. a tissue programme: PROG_N genes, each not expressed (ambient only) in its own PROG_ABSENT-line subset of one
+#    PROG_POOL-line pool (any two subsets share >= 4 lines), expressed elsewhere, raised x PROG_FOLD by the same 3 drugs
+PROG_N, PROG_POOL, PROG_ABSENT, PROG_FOLD = 12, 8, 6, 2.5
+# h. a p53 target that falls and is not induced by DNA damage (direction's p53 control counts it:
+#    direction.P53_TARGETS): x P53_FALL_WT under the HDAC inhibitors P53_FALL_DRUGS in tp53_wt lines, x P53_FALL_ALT
+#    in the others (dose-scaled)
+P53_FALL_GENE, P53_FALL_DRUGS, P53_FALL_WT, P53_FALL_ALT = "TIGAR", ("Panobinostat", "Belinostat"), 0.5, 0.85
+# i. lineage genes: LINEAGE_N genes expressed only in LINEAGE_LINES_N lines that form no recorded group (LINEAGE_CPM in
+#    each of them, the counting regime of the other fillers: about 40 CPM pooled over all lines), ambient only
+#    elsewhere, raised there by 3 inert drugs (ln effect LINEAGE_LN x the dose scale); j. their broad twins: TWIN_N
+#    genes at their own level in every line, raised alike in every line by the same 3 drugs
+LINEAGE_N, LINEAGE_LINES_N, LINEAGE_CPM, LINEAGE_LN = 6, 3, 240.0, 3.0
+TWIN_N = 6
+# Genes added to a plant after its first version come after every plant's first block (PLANT_GENES_FIRST), so no other
+# plant's genes move: MAPK_OUT's first 25 and ONE_DOSE's first 20 genes are where they were
+PLANT_GENES_FIRST = {"MAPK_OUT": 25, "ONE_DOSE": 20}
+
 # ----------------------------------------------------------------------------- baseline levels
 # Synthetic counts per million in the median line (G1 cells), and the spread across lines (sd of ln level).
 # The ordering is realistic (FTL/FTH1/BAX high, inflammasome sensors absent, TRIM72 zero); the range is
@@ -350,6 +420,7 @@ class Design:
         self.effects(rng)
         self.direction_design()
         self.make_layout(rng)
+        self.new_plants()                                      # no random draw (see PLANT_STREAM)
 
     # ------------------------------------------------------------------ plates and well positions
     def make_layout(self, rng):
@@ -711,6 +782,175 @@ class Design:
         self.gluco_partners = [g[x] for x in self.synth_sets["GLUCO"][1:]]
         self.gluco_null_idx = np.array([li[n] for n in self.gluco_null], dtype=np.int64)
 
+    # ------------------------------------------------------------------ second-wave plants (no random draw)
+    def new_plants(self):
+        """The second-wave plants (PLANT_STREAM): their genes, drugs, wells and lines, chosen by fixed rules (no
+        random number of the main draw is used, so every earlier plant reads as before)."""
+        gi = self.gi
+        special = set(PLANTED_DRUGS) | set(HDAC) | set(MTORI) | set(GLUCO) | set(STATINS) | set(CDK46) | \
+            {FAILED_DRUG, "Carbamazepine"}
+        inert = [d for d in self.drugs if d not in special and d not in self.private and d not in RESERVED
+                 and d not in (self.coloc2_x, self.coloc2_y)]
+        # ---- genes: free fillers (moved by no other plant) in a fixed order
+        pool = [c for c in self.coloc2_genes if c not in self.coloc2_sig]
+        first = PLANT_GENES_FIRST
+        sizes = [("NB_UP", NB_UP[0]), ("NB_DOWN", NB_DOWN[0]), ("TL_UP", TL_UP[0]), ("TL_DOWN", TL_DOWN[0]),
+                 ("TL_TP53WT", TL_TP53WT[0]), ("PROMISCUOUS_GR", 1), ("MAPK_OUT", min(KRAS_N, first["MAPK_OUT"])),
+                 ("ONE_DOSE", min(ONE_N, first["ONE_DOSE"])), ("PROGRAMME", PROG_N), ("LINEAGE", LINEAGE_N),
+                 ("BROAD_TWIN", TWIN_N)]
+        # the genes added later (PLANT_GENES_FIRST): after every first block
+        sizes += [("MAPK_OUT", max(0, KRAS_N - first["MAPK_OUT"])), ("ONE_DOSE", max(0, ONE_N - first["ONE_DOSE"]))]
+        if len(pool) < sum(n for _, n in sizes):
+            sys.exit(f"--genes too small for the second-wave plants ({len(pool)} free fillers, "
+                     f"{sum(n for _, n in sizes)} needed)")
+        self.plant_genes, a = {}, 0
+        for name, n in sizes:
+            self.plant_genes.setdefault(name, []).extend(int(c) for c in pool[a:a + n])
+            self.synth_sets[name] = [self.genes[c] for c in self.plant_genes[name]]
+            a += n
+        G = self.plant_genes
+        self.nb_fold = {**{c: NB_UP[1] for c in G["NB_UP"]}, **{c: NB_DOWN[1] for c in G["NB_DOWN"]}}
+        wt = np.array([n in set(self.tp53_wt) for n in self.lines])
+        self.wt_mask = wt
+        # ---- drugs with a role
+        self.top2_drugs = [d for d in TOP2_DRUGS if d in self.drugs]
+        fixed = set(self.top2_drugs) | {TL_DRUG, KRAS_DRUG, ONE_DRUG}
+        free = [d for d in inert if d not in fixed]
+        pure = [d for d in free if d not in self.row_drugs and d not in self.dup_drugs]
+        self.nb_src, self.nb_dst, self.nb_top_dst, self.nb_wells = self.neighbour_trio(pure, free)
+        used = {self.nb_src, self.nb_dst, self.nb_top_dst}
+        moa = {d: str((self.drug_meta.get(d) or {}).get("moa-fine") or "unclear") for d in self.drugs}
+        rest = sorted((d for d in free if d not in used and d not in self.row_drugs),
+                      key=lambda d: (moa[d] != "unclear", d not in pure, d))
+        self.lineage_drugs, self.prog_drugs = sorted(rest[:3]), sorted(rest[3:6])
+        weak = [d for d in sorted(self.private) if d not in (TL_DRUG, ONE_DRUG)]
+        weak += [d for d in sorted(set(MTORI) | set(STATINS) | set(CDK46)) if d not in weak]
+        self.promisc_weak = {str(d): DOSES[i % len(DOSES)] for i, d in enumerate(weak[:PROMISC_N])}
+        self.role_drugs = {d for d in fixed | used | set(self.lineage_drugs) | set(self.prog_drugs)}
+        # ---- lines: KRAS codon 12, the programme pool, the lineage lines
+        self.kras_g12 = sorted({r["cell_name"] for r in self.cl_rows if r["Driver_Gene_Symbol"] == "KRAS" and
+                                re.match(r"p\.G12", str(r["Driver_ProtEffect_or_CdnaEffect"] or ""))},
+                               key=self.lines.index)
+        refs = self.reference_line_sets()
+        self.prog_pool, self.prog_absent = self.programme_sets(refs)
+        self.lineage_lines = self.lineage_set(refs)
+        self.prog_absent_mask = {c: np.array([n in set(ls) for n in self.lines])
+                                 for c, ls in zip(G["PROGRAMME"], self.prog_absent)}
+        self.lineage_mask = np.array([n in set(self.lineage_lines) for n in self.lines])
+        # the lineage genes' share in each line's G1 profile (their level is set to LINEAGE_CPM where expressed)
+        W = np.exp(np.where(np.isfinite(self.B), self.B, -np.inf))
+        share0 = W / W.sum(axis=1, keepdims=True)
+        self.lineage_x = {c: np.where(self.lineage_mask, LINEAGE_CPM * 1e-6 / np.maximum(share0[:, c], 1e-12), 0.0)
+                          for c in G["LINEAGE"]}
+        self.kras_mask = np.array([n in set(self.kras_g12) for n in self.lines])
+        self.p53_fall_col = gi.get(P53_FALL_GENE)
+
+    def neighbour_trio(self, pure, free):
+        """(NB_SRC, NB_DST, NB_TOP_DST, {(plate, slot): copy factor}): inert fillers whose wells sit right next to
+        each other (Chebyshev distance 1) on the 0.5 uM (NB_DST) and 5 uM (NB_TOP_DST) plates; pairs that are
+        neighbours on both plates of a dose first, fillers without another role (pure) first, then by name."""
+        def slots(p, d):
+            return [s for s, v in self.layout[p].items() if v[0] == d]
+
+        def rc(s):
+            return (s - 1) // 12, (s - 1) % 12
+
+        def near(p, a, b):
+            return [y for y in slots(p, b) if any(max(abs(rc(x)[0] - rc(y)[0]), abs(rc(x)[1] - rc(y)[1])) == 1
+                                                 for x in slots(p, a))]
+        plates = {dose: [p for p in range(self.P) if self.plate_dose[p] == dose] for dose in (NB_DOSE, NB_TOP_DOSE)}
+
+        def score(a, b, dose):
+            hit = [(p, y) for p in plates[dose] for y in near(p, a, b)]
+            return len({p for p, _ in hit}), hit
+        best = None
+        for tier, srcs in ((0, pure), (1, free)):
+            for a in sorted(srcs):
+                for b in sorted(pure if tier == 0 else free):
+                    for c in sorted(pure if tier == 0 else free):
+                        if len({a, b, c}) < 3:
+                            continue
+                        nb, hb = score(a, b, NB_DOSE)
+                        nc, hc = score(a, c, NB_TOP_DOSE)
+                        if not nb or not nc:
+                            continue
+                        key = (tier, -nb, -nc, a, b, c)
+                        if best is None or key < best[0]:
+                            best = (key, a, b, c, hb, hc, nb, nc)
+            if best is not None:
+                break
+        if best is None:
+            raise RuntimeError("no inert fillers that are neighbours on the 0.5 and 5 uM plates (neighbour plant)")
+        _k, a, b, c, hb, hc, nb, nc = best
+        wells = {}
+        for hit, n in ((hb, nb), (hc, nc)):
+            for p, y in hit:
+                wells[(p, y)] = NB_COPY if n == len(plates[NB_DOSE]) else NB_COPY_ONE
+        return a, b, c, wells
+
+    def reference_line_sets(self):
+        """The recorded line sets a new expression pattern must not resemble: the planted groups and every driver
+        gene's lines (any record, and loss / gain of function apart), as boolean masks over the lines."""
+        L = self.lines
+        sets = [self.mtap_null, self.gsdme_sil, self.casp1_abs, self.cdkn2a_del, self.cdkn2b_del, self.tp53_deleted,
+                self.tp53_alt, self.tp53_wt, self.gluco_null, self.abcb1_high, self.abcg2_high, self.il1b_expr]
+        drv = {}
+        for r in self.cl_rows:
+            g = r["Driver_Gene_Symbol"]
+            if not g:
+                continue
+            drv.setdefault((g, "any"), set()).add(r["cell_name"])
+            if r.get("Driver_Mech_InferDM"):
+                drv.setdefault((g, r["Driver_Mech_InferDM"]), set()).add(r["cell_name"])
+        sets += [sorted(v) for v in drv.values() if 2 <= len(v) <= len(L) - 2]
+        return np.array([[n in set(x) for n in L] for x in sets if x], dtype=bool).reshape(-1, len(L))
+
+    @staticmethod
+    def _max_jaccard(m, refs):
+        """The largest Jaccard overlap of line set m (boolean mask) with any of refs (a 2-D boolean array)."""
+        if not len(refs):
+            return 0.0
+        inter = refs[:, m].sum(axis=1)
+        return float(np.max(inter / np.maximum(1, refs.sum(axis=1) + int(m.sum()) - inter)))
+
+    def programme_sets(self, refs):
+        """(pool of PROG_POOL lines, PROG_N subsets of PROG_ABSENT of them): the pool whose PROG_N best subsets
+        overlap the recorded line sets least (Jaccard; ties: the earlier pool), each subset's lines in line order."""
+        import itertools
+        L = self.L
+        memo = {}
+
+        def mj(sub):
+            if sub not in memo:
+                m = np.zeros(L, dtype=bool)
+                m[list(sub)] = True
+                memo[sub] = self._max_jaccard(m, refs)
+            return memo[sub]
+        best = None
+        for pool in itertools.combinations(range(L), PROG_POOL):
+            subs = sorted(itertools.combinations(pool, PROG_ABSENT), key=lambda x: (mj(x), x))[:PROG_N]
+            v = [mj(x) for x in subs]
+            key = (sum(x >= 0.5 for x in v), max(v), round(sum(v), 9), pool)
+            if best is None or key < best[0]:
+                best = (key, pool, subs)
+        _k, pool, subs = best
+        return [self.lines[i] for i in pool], [[self.lines[i] for i in x] for x in subs]
+
+    def lineage_set(self, refs):
+        """LINEAGE_LINES_N lines outside the small recorded groups (tp53_deleted, il1b_expressing, abcb1_high,
+        abcg2_high) whose set overlaps every recorded line set least (Jaccard; ties: the earlier lines)."""
+        import itertools
+        skip = set(self.tp53_deleted) | set(self.il1b_expr) | set(self.abcb1_high) | set(self.abcg2_high)
+        cand = [i for i, n in enumerate(self.lines) if n not in skip]
+        best = None
+        for t in itertools.combinations(cand, LINEAGE_LINES_N):
+            m = np.zeros(self.L, dtype=bool)
+            m[list(t)] = True
+            key = (self._max_jaccard(m, refs), t)
+            if best is None or key < best:
+                best = key
+        return [self.lines[i] for i in best[1]]
+
     def phase_profiles(self, Bw):
         """ln weights per line for G1, S and G2M cells (L, 3, G), each normalised to sum 1 (returned linear)."""
         P = np.empty((self.L, 3, self.G))
@@ -763,6 +1003,82 @@ def direction_plants(ds, p, slot, k, s, C, line_of_cell, lib, amb_frac, amb):
     cells = np.flatnonzero(np.isin(line_of_cell, ds.gluco_null_idx))
     if cells.size:                                                  # the co-activator's null lines: ambient RNA only
         C[cells, ds.gluco_x] = rng.poisson(lib[cells] * amb_frac[cells] * amb[ds.gluco_x])
+    return C
+
+
+def extra_plants(ds, p, slot, k, s, conc, C, line_of_cell, lib, amb_frac, Pc):
+    """The second-wave plants (PLANT_STREAM) on one well's counts C (cells x genes), each from its own random stream:
+    binomial thinning lowers a count, Poisson addition raises it; the programme and lineage genes are drawn afresh
+    (their own expression x a factor per line, 0 = not expressed, plus ambient RNA from the well's new average). k:
+    the well's biology (drug index) or None, s: its dose scale, conc: its dose, Pc: each cell's expression shares."""
+    drug = ds.drugs[k] if k is not None else None
+    G = ds.plant_genes
+    L = ds.L
+    one = np.ones(L)
+
+    def rng(name):
+        return np.random.default_rng([ds.args.seed, PLANT_STREAM[name], p, slot])
+
+    def scale(name, fac):                                  # {col: factor per line}
+        if not fac:
+            return
+        r = rng(name)
+        for c in sorted(fac):
+            m = np.asarray(fac[c], dtype=np.float64)[line_of_cell]
+            x = C[:, c].astype(np.int64)
+            down = m < 1.0
+            y = x.copy()
+            y[down] = r.binomial(x[down], m[down])
+            y[~down] = x[~down] + r.poisson(x[~down] * (m[~down] - 1.0))
+            C[:, c] = y
+
+    def redraw(name, fac):                                 # {col: factor on its own expression, per line}
+        r = rng(name)
+        for c in sorted(fac):
+            own = Pc[:, c] * np.asarray(fac[c], dtype=np.float64)[line_of_cell]
+            ambg = float((lib * own).sum() / lib.sum()) if lib.size else 0.0
+            C[:, c] = r.poisson(lib * ((1.0 - amb_frac) * own + amb_frac * ambg))
+    # a. neighbouring-well copy: NB_SRC's own genes (full strength, every dose); the copies in its neighbours' wells
+    fac = {}
+    if drug == ds.nb_src:
+        fac = {c: one * f for c, f in ds.nb_fold.items()}
+    x = ds.nb_wells.get((p, slot))
+    if x is not None and drug in (ds.nb_dst, ds.nb_top_dst):
+        fac = {c: one * f ** x for c, f in ds.nb_fold.items()}
+    scale("neighbour", fac)
+    # b. translation inhibitor
+    fac = {}
+    if drug == TL_DRUG:
+        fac = {**{c: one * TL_UP[1] for c in G["TL_UP"]}, **{c: one * TL_DOWN[1] for c in G["TL_DOWN"]}}
+        if conc in TL_TP53WT_DOSES:
+            fac.update({c: np.where(ds.wt_mask, TL_TP53WT[1], 1.0) for c in G["TL_TP53WT"]})
+    scale("translation", fac)
+    # c. the other TOP2 poisons at 5 uM: the p53 programme (x TOP2_FOLD in tp53_wt lines, x TOP2_FOLD_ALT elsewhere)
+    if drug in ds.top2_drugs and conc == TOP2_DOSE:
+        scale("top2", {ds.gi[g]: np.where(ds.wt_mask, TOP2_FOLD, TOP2_FOLD_ALT) for g in ds.sets["P53_ACTIVITY"]})
+    # d. the promiscuous glucocorticoid gene
+    c0 = G["PROMISCUOUS_GR"][0]
+    if drug in GLUCO:
+        scale("promiscuous_gr", {c0: one * PROMISC_GC_FOLD})
+    elif drug in ds.promisc_weak and conc == ds.promisc_weak[drug]:
+        scale("promiscuous_gr", {c0: one * PROMISC_WEAK_FOLD})
+    # e. KRAS codon-12 selectivity
+    if drug == KRAS_DRUG and conc in KRAS_DOSES:
+        scale("kras_g12", {c: np.where(ds.kras_mask, KRAS_FOLD, KRAS_OTHER) for c in G["MAPK_OUT"]})
+    # f. one dose, tp53_wt lines only
+    if drug == ONE_DRUG and conc == ONE_DOSE:
+        scale("one_dose", {c: np.where(ds.wt_mask, ONE_FOLD, 1.0) for c in G["ONE_DOSE"]})
+    # g. the programme: not expressed in its own lines; raised by its drugs where expressed (every well)
+    up = PROG_FOLD ** s if drug in ds.prog_drugs else 1.0
+    redraw("programme", {c: np.where(ds.prog_absent_mask[c], 0.0, up) for c in G["PROGRAMME"]})
+    # h. the falling p53 target
+    if drug in P53_FALL_DRUGS and ds.p53_fall_col is not None and s > 0:
+        scale("p53_fall", {ds.p53_fall_col: np.where(ds.wt_mask, P53_FALL_WT ** s, P53_FALL_ALT ** s)})
+    # i. lineage genes (every well) and j. their broad twins
+    up = math.exp(s * LINEAGE_LN) if drug in ds.lineage_drugs else 1.0
+    redraw("lineage", {c: ds.lineage_x[c] * up for c in G["LINEAGE"]})
+    if drug in ds.lineage_drugs and s > 0:
+        scale("broad_twin", {c: one * math.exp(s * LINEAGE_LN) for c in G["BROAD_TWIN"]})
     return C
 
 
@@ -842,6 +1158,7 @@ def simulate_plate(ds, p, de_cols):
                 C[:, c] = r2.binomial(C[:, c].astype(np.int64), m) if m < 1 else \
                     C[:, c] + r2.poisson(C[:, c] * (m - 1.0))
         C = direction_plants(ds, p, slot, k, s, C, line_of_cell, lib, amb_frac, amb)
+        C = extra_plants(ds, p, slot, k, s, conc, C, line_of_cell, lib, amb_frac, Pc)
         del rate, Pc
         # ---- barcodes: round-1 well = this slot; rounds 2-3 unique within the well; two sublibraries per plate
         code = np.sort(rng.choice(192 * 192, size=n, replace=False)) if n else np.zeros(0, dtype=np.int64)
@@ -1113,7 +1430,7 @@ def method_v3_truth(ds, layout):
     special = set(PLANTED_DRUGS) | set(HDAC) | set(MTORI) | set(GLUCO) | set(STATINS) | set(CDK46) | \
         {FAILED_DRUG, "Carbamazepine"}
     inert = [d for d in ds.drugs if d not in special and d not in ds.private and d not in RESERVED
-             and d not in (ds.coloc2_x, ds.coloc2_y)]
+             and d not in (ds.coloc2_x, ds.coloc2_y) and d not in ds.role_drugs]
     return {
         "noisy_plate": {"plate": names[ds.noisy_plate] if ds.noisy_plate is not None else None,
                         "dose": 5.0, "noise_multiplier": NOISY_MULT,
@@ -1164,8 +1481,88 @@ def method_v3_truth(ds, layout):
         "inert_drugs": inert,
         "drugs_with_a_role": {"coloc_strong": COLOC_X, "coloc_inert": COLOC_Y, "reference": REF_DRUG,
                               "composition": COMP_DRUG, "low_dose_cell_loss": LOWDOSE_LOSS_DRUG,
-                              "coloc_clean_strong": ds.coloc2_x, "coloc_clean_inert": ds.coloc2_y},
+                              "coloc_clean_strong": ds.coloc2_x, "coloc_clean_inert": ds.coloc2_y,
+                              "neighbour_source": ds.nb_src, "neighbour_copy": ds.nb_dst,
+                              "neighbour_copy_top": ds.nb_top_dst, "translation_inhibitor": TL_DRUG,
+                              "top2_poisons": list(ds.top2_drugs), "kras_g12_selectivity": KRAS_DRUG,
+                              "one_dose_selective": ONE_DRUG, "lineage_and_twin": list(ds.lineage_drugs),
+                              "programme": list(ds.prog_drugs)},
     }
+
+
+def second_wave_truth(ds):
+    """The second-wave plants (PLANT_STREAM): (top-level records, records for the 'direction' section)."""
+    G = {k: [ds.genes[c] for c in v] for k, v in ds.plant_genes.items()}
+    names = ds.plate_names
+    wells = [{"plate": names[p], "well": well_name(sl), "drug": ds.layout[p][sl][0], "dose": ds.plate_dose[p],
+              "copy_x": x, "next_to": [well_name(t) for t, v in ds.layout[p].items() if v[0] == ds.nb_src]}
+             for (p, sl), x in sorted(ds.nb_wells.items())]
+    top = {
+        "neighbour_copy": {
+            "src": ds.nb_src, "dst": ds.nb_dst, "top_dst": ds.nb_top_dst, "dose_dst": NB_DOSE, "dose_top": NB_TOP_DOSE,
+            "wells": wells, "plates": sorted({w["plate"] for w in wells}), "genes_up": G["NB_UP"],
+            "genes_down": G["NB_DOWN"], "src_fold_up": NB_UP[1], "src_fold_down": NB_DOWN[1],
+            "copy_x_both_plates": NB_COPY, "copy_x_one_plate": NB_COPY_ONE,
+            "expected": f"{ds.nb_src} changes its own genes at full strength at every dose. The wells of "
+                        f"{ds.nb_dst} at {NB_DOSE:g} uM and of {ds.nb_top_dst} at {NB_TOP_DOSE:g} uM that sit next to "
+                        f"{ds.nb_src}'s wells carry copy_x times its ln effect; their other doses do not. The tables "
+                        f"stage's neighbour rule calls ({ds.nb_dst}, {NB_DOSE:g}) an artifact with partner "
+                        f"({ds.nb_src}, {NB_DOSE:g}), and ({ds.nb_top_dst}, {NB_TOP_DOSE:g}) 'top dose'; no other "
+                        "pair passes"},
+        "translation_inhibitor": {
+            "drug": TL_DRUG, "genes_up": G["TL_UP"], "genes_down": G["TL_DOWN"], "tp53_wt_genes": G["TL_TP53WT"],
+            "fold_up": TL_UP[1], "fold_down": TL_DOWN[1], "fold_tp53_wt": TL_TP53WT[1],
+            "tp53_wt_doses": list(TL_TP53WT_DOSES), "tp53_wt_lines": ds.tp53_wt,
+            "expected": f"{TL_DRUG} raises genes_up and lowers genes_down at every dose (full strength, every line); "
+                        "at 0.5 and 5 uM it also raises tp53_wt_genes in the TP53-wild-type lines only. Its rises "
+                        "carry the translation-inhibitor caveat"},
+        "lineage_plant": {
+            "genes": G["LINEAGE"], "lines": ds.lineage_lines, "drugs": list(ds.lineage_drugs),
+            "cpm_in_lines": LINEAGE_CPM, "ln_effect_top_dose": LINEAGE_LN,
+            "expected": f"the genes are expressed only in {', '.join(ds.lineage_lines)} (about {LINEAGE_CPM:g} CPM "
+                        "there, about 40 CPM pooled over all lines; ambient RNA only elsewhere), lines that form no "
+                        "recorded group; the drugs raise them there (ln effect x the dose scale). They move together "
+                        "because they are made in the same few lines"},
+        "broad_twin": {
+            "genes": G["BROAD_TWIN"], "drugs": list(ds.lineage_drugs), "ln_effect_top_dose": LINEAGE_LN,
+            "expected": "expressed in every line at their own level and raised alike in every line by the lineage "
+                        "plant's drugs: partners for a reason other than lineage"},
+    }
+    prog = {"genes": G["PROGRAMME"], "line_pool": ds.prog_pool,
+            "absent_lines": {g: ls for g, ls in zip(G["PROGRAMME"], ds.prog_absent)},
+            "drugs": list(ds.prog_drugs), "fold_top_dose": PROG_FOLD,
+            "expected": f"each gene is not expressed (ambient RNA only) in its own {PROG_ABSENT} lines of the "
+                        f"{PROG_POOL}-line pool and expressed elsewhere; any two of these line sets share >= 4 lines "
+                        "(Jaccard >= 0.5), so each overlaps the 11 others: a tissue programme, not a co-deletion. "
+                        "The genes rise together under the drugs where expressed, so they are each other's partners"}
+    direction = {
+        "top2_poisons": {"drugs": list(ds.top2_drugs), "dose": TOP2_DOSE, "genes": list(ds.sets["P53_ACTIVITY"]),
+                         "fold": TOP2_FOLD, "other_fold": TOP2_FOLD_ALT, "lines": ds.tp53_wt,
+                         "expected": f"the P53_ACTIVITY genes rise x{TOP2_FOLD:g} in the TP53-wild-type lines at 5 uM "
+                                     f"and x{TOP2_FOLD_ALT:g} in the others, so the median line moves too "
+                                     "(expression only; no growth effect)"},
+        "promiscuous_gr_gene": {"gene": G["PROMISCUOUS_GR"][0], "gc_drugs": list(GLUCO),
+                                "weak_drugs": [{"drug": d, "dose": x} for d, x in ds.promisc_weak.items()],
+                                "gc_fold": PROMISC_GC_FOLD, "weak_fold": PROMISC_WEAK_FOLD,
+                                "expected": "raised strongly at every dose by the glucocorticoids and weakly (at one "
+                                            "dose each) by many other drugs"},
+        "kras_g12_selectivity": {"drug": KRAS_DRUG, "doses": list(KRAS_DOSES), "lines": ds.kras_g12,
+                                 "genes": G["MAPK_OUT"], "fold": KRAS_FOLD, "other_fold": KRAS_OTHER,
+                                 "expected": "the MAPK_OUT genes fall strongly in the lines with a KRAS codon-12 "
+                                             "record (driver metadata) and a little elsewhere"},
+        "one_dose_selective": {"drug": ONE_DRUG, "dose": ONE_DOSE, "lines": ds.tp53_wt, "genes": G["ONE_DOSE"],
+                               "fold": ONE_FOLD,
+                               "expected": f"{ONE_DRUG} raises the genes at {ONE_DOSE:g} uM only, in the "
+                                           "TP53-wild-type lines only"},
+        "programme": prog,
+        "p53_fall_target": {"gene": P53_FALL_GENE, "drugs": list(P53_FALL_DRUGS), "fold_tp53_wt": P53_FALL_WT,
+                            "fold_altered": P53_FALL_ALT, "lines": ds.tp53_wt,
+                            "expected": f"{P53_FALL_GENE} is a p53 target the direction stage's p53 control counts "
+                                        "(direction.P53_TARGETS); no drug induces it, and it falls under the HDAC "
+                                        "inhibitors more in the TP53-wild-type lines (x the dose scale): a fall, "
+                                        "not a recovered p53 target"},
+    }
+    return top, direction
 
 
 def ground_truth(ds, results, n_cells, files, de_rows, outdir):
@@ -1198,6 +1595,7 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
                            "slot": slot, "drug": d, "conc": res["conc_of"][slot],
                            **({"biology": bio} if bio not in (None, d) else {})})
     v3 = method_v3_truth(ds, layout)
+    second, second_dir = second_wave_truth(ds)
     fp = ds.failed_plate
     fslot = next(s for s, v in ds.layout[fp].items() if v[0] == FAILED_DRUG)
     gt = {
@@ -1303,7 +1701,9 @@ def ground_truth(ds, results, n_cells, files, de_rows, outdir):
                 "partner_response_x": GLUCO_NULL_X,
                 "expected": "null_response edges from it to the other GLUCO genes (sign +1: they respond less to the "
                             "glucocorticoids where it is absent), compared within organs, grade B (6 lines lack it, "
-                            "12 express it)"}},
+                            "12 express it)"},
+            **second_dir},
+        **second,
         "layout": layout,
     }
     with open(os.path.join(outdir, "ground_truth.json"), "w", encoding="utf-8") as fh:

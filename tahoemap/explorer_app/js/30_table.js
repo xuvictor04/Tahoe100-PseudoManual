@@ -174,7 +174,10 @@ TM.table = function (opts) {
       return s;
     }
     if (typeof v === 'boolean') return v ? 'yes' : 'no';
-    if (typeof v === 'number') return TM.fmt.num(v, c.type === 'int' ? 'int' : c.type || 'f64');
+    if (typeof v === 'number') {
+      var tx = TM.fmt.num(v, c.type === 'int' ? 'int' : c.type || 'f64');
+      return v === 0 && TM.isQName(c.key) ? TM.fmt.qNode(v) : tx;
+    }
     if (c.long && st.compact) return compact(String(v));
     return String(v);
   }
@@ -453,6 +456,7 @@ TM.table = function (opts) {
     cols.forEach(function (c) {
       var v = rawv(c, i), full;
       if (c.show) full = c.show(i, {compact: false});
+      else if (v === 0 && TM.isQName(c.key)) full = TM.fmt.qNode(0, TM.Q_ZERO_EXACT);
       else full = textOf(c, i);
       var why = isMissing(v) && c.missing ? c.missing(i) : '';
       dl.appendChild(TM.h('dt', null, c.label, c.computed ? ' (computed)' : ''));
@@ -626,7 +630,8 @@ TM.recordOf = function (tab, r, docs, links, why, only) {
   var cols = only ? only.map(function (n) { return tab.c[n]; }).filter(function (c) { return c; }) : tab.cols;
   return TM.record(cols.map(function (c) {
     var t = TM.valText(c, r), h = links && links[c.name] && t !== '' ? links[c.name](c.get(r), r) : null;
-    return [c.name, h ? TM.a(h, t) : t, docs ? docs[c.name] : '', why ? why[c.name] : ''];
+    var node = h ? TM.a(h, t) : c.get(r) === 0 && TM.isQName(c.name) ? TM.fmt.qNode(0, TM.Q_ZERO_EXACT) : t;
+    return [c.name, node, docs ? docs[c.name] : '', why ? why[c.name] : ''];
   }));
 };
 // The sticky title and tab bar of an entity page. o: {title, name, tabs: [[key, label]], counts: {key: text},
