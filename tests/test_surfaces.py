@@ -45,6 +45,18 @@ What is checked:
              map: no '0e+00'; TP53 values; 'wild type' only in the caveat; the flag words; partner preservation;
              in a browser: Spread 1 at load, search of drugs, drug-doses and lines with their panels, the help and
              the tour's axis names
+  third wave (query, vault 9, map 11; 'warn' on an output without the tables of version 5)
+             look-ups: a drug-dose with no pooled signature (every stored cos_pooled empty) prints 'no similarity
+             ranking: ...' and where its stored rows are, never a ranking (`similar`, `similar --top 3`, `drug`);
+             rows of others without one are counted and named; noise-class rows named; TOP GENES with 'vs DMSO'
+             (query._dmso of lfc_vs_dmso) and its legend, side by side or one under the other (toy rows)
+             vault: the same for a drug note ('(k of 50 stored; N other drug-doses, all in the explorer's Vector
+             space tab: ...)'), Vault.similar_block on emptied rows; every gene of a drug note's lists with 'vs DMSO
+             (rough)'
+             map: upd / dnd decode to each row's rough DMSO-referenced fold; labels and module drug lists in µM;
+             the drug records' annotation alert; in a browser: the 'vs DMSO (rough)' column of a gene's drug
+             table, the search's line under a drug ('(Tahoe) <moa>', '⚠ annotations disagree'), 'uM' and 'µm' typed
+             find the drug-dose, one ⚠ on a module card
 """
 
 import argparse
@@ -671,8 +683,12 @@ def vault_nosite_checks(out):
 # ----------------------------------------------------------------------------- look-ups
 def _run_lookup(out, data, *args):
     cmd = [sys.executable, "-m", "tahoemap", *args, "--out", out] + (["--data", data] if data else [])
-    r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True, encoding="utf-8",
-                       env=dict(os.environ, PYTHONIOENCODING="utf-8", COLUMNS="120"))
+    try:
+        r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True, encoding="utf-8", timeout=600,
+                           env=dict(os.environ, PYTHONIOENCODING="utf-8", COLUMNS="120"))
+    except subprocess.TimeoutExpired as e:   # a stuck look-up fails its check instead of stalling the suite
+        out_ = e.stdout.decode("utf-8", "replace") if isinstance(e.stdout, bytes) else (e.stdout or "")
+        return 124, out_, f"timed out after 600 s: {' '.join(cmd)}"
     return r.returncode, r.stdout, r.stderr
 
 
@@ -997,6 +1013,413 @@ def map_wave2_checks(out):
                                   f"{res}; problems {bad[:4]}; script errors {errs[:2]}")
 
 
+# ----------------------------------------------------------------------------- third wave (tables VERSION 7 on)
+def _sim_no_signature(out):
+    """(embed/drug_similarity.parquet, the drug-doses whose every stored cos_pooled is NaN: no pooled signature);
+    (None, []) without the table."""
+    p = os.path.join(out, "embed", "drug_similarity.parquet")
+    if not os.path.exists(p):
+        return None, []
+    sim = pd.read_parquet(p)
+    nos = sim.groupby("dd")["cos_pooled"].apply(lambda x: bool(x.isna().all()))
+    return sim, sorted(int(x) for x in nos[nos].index)
+
+
+def _flat(txt):
+    """The text with every run of white space one space (a wrapped sentence reads whole)."""
+    return " ".join(str(txt).split())
+
+
+def _with_signature(sim, nos, dd):
+    """The drug-dose with the most rows in tables/drug_effects that has a pooled signature (and similarity rows)."""
+    have = set(sim["dd"].astype(int)) - set(nos)
+    for k in dd["dd"].value_counts().index:
+        if int(k) in have:
+            return int(k)
+    return min(have) if have else -1
+
+
+def lookup_wave3_checks(out, data=None):
+    """The look-ups after the third wave. `similar` of a drug-dose with no pooled signature (every stored cos_pooled
+    NaN) prints 'no similarity ranking: <drug-dose> moves no gene at |z| >= 3 or q < 0.10 (no pooled signature); the
+    50 stored rows are the first other drug-doses in row order, not a ranking', says where the rows are (the table,
+    the explorer's Similar drug-doses and Vector space tabs) and lists none of them; with --top 3 it lists 3 under
+    'row' with '3 of the 50 stored rows shown, as stored'. `drug` of a drug whose best dose has none says so in its
+    MOST SIMILAR block. A drug-dose with a signature keeps its ranking. Rows whose other drug-dose has no pooled
+    signature (made so here: the stored rows with their last 3 cos_pooled emptied) are counted and named; a drug-dose
+    whose only rows of tables/drug_effects are noise-class RNAs (made so here) says 'other than noise-class RNAs'.
+    `drug`'s TOP GENES tables carry 'vs DMSO' (query._dmso of tables/drug_effects lfc_vs_dmso, '*' = the other
+    sign) next to fold and z, with its legend (only when a table is printed), within 120 characters;
+    query._top_genes_table puts the raised and lowered tables side by side when they fit and one under the other when
+    not, never cutting a column."""
+    sw = _second_wave(out)
+    sim, nos = _sim_no_signature(out)
+    if sw is None or sim is None:
+        return "warn", "an older output (no tables VERSION 5 or no embed/drug_similarity.parquet): not checked"
+    dd, drugs, _info = sw
+    from tahoemap import query as Q
+    bad, res = [], {}
+    o = Q.Out(out)
+    lab = o.drugdoses()["label"]
+    by = dd.set_index("dd")
+    de = pd.read_parquet(os.path.join(out, "tables", "drug_effects.parquet"))
+    cut = "|z| >= 3 or q < 0.10"
+    # a drug-dose with no pooled signature
+    if nos:
+        k = nos[0]
+        n_k = int((sim["dd"] == k).sum())
+        args = (str(by.at[k, "drug"]), str(by.at[k, "dose"]))
+        want = (f"no similarity ranking: {lab[k]} uM moves no gene at {cut} (no pooled signature); the {n_k} stored "
+                "rows are the first other drug-doses in row order, not a ranking")
+        code, txt, err = _run_lookup(out, None, "similar", *args)
+        f = _flat(txt)
+        ok = (code == 0 and want in f and "SIMILAR DRUG-DOSES - no ranking: it has no pooled signature" in txt
+              and f"embed/drug_similarity.parquet (dd == {k})" in f and f"#/dd/{k}/similar" in f
+              and f"#/dd/{k}/space" in f and "drug uM" not in txt and "most similar" not in f)
+        res["similar (no signature)"] = ok
+        if not ok:
+            bad.append(f"similar {' '.join(args)}: {code} {f[:300]} {err[-200:]}")
+        code, txt, err = _run_lookup(out, None, "similar", *args, "--top", "3")
+        f = _flat(txt)
+        rows = re.findall(r"^\s+(\d+)\s+\S", txt.split("row  drug uM", 1)[-1], re.M)
+        ok = (code == 0 and want in f and "row  drug uM" in txt and rows[:3] == ["1", "2", "3"]
+              and f"3 of the {n_k} stored rows shown, as stored (row = the order of the stored rows, not a ranking"
+              in f)
+        res["similar --top 3 (no signature)"] = ok
+        if not ok:
+            bad.append(f"similar {' '.join(args)} --top 3: {code} rows {rows[:4]} {f[:300]} {err[-200:]}")
+        bd = drugs[pd.to_numeric(drugs["best_dd"], errors="coerce").isin(nos)]
+        if len(bd):
+            name = str(bd["drug"].iloc[0])
+            code, txt, err = _run_lookup(out, None, "drug", name)
+            f = _flat(txt)
+            # the vs DMSO legend only under a TOP GENES table (a drug with no significant gene at any dose has none)
+            tab_ = bool(re.search(r"^\s+#\s+(?:raised|lowered)\s", txt, re.M))
+            ok = (code == 0 and "MOST SIMILAR DRUG-DOSES - of its best dose: no ranking (it has no pooled signature)"
+                  in txt and "no similarity ranking: " in f and "not a ranking" in f
+                  and ("vs DMSO = the rough DMSO-referenced fold" in f) == tab_)
+            res[f"drug {name} (best dose without a signature)"] = ok
+            if not ok:
+                bad.append(f"drug {name}: MOST SIMILAR block {code} {err[-200:]}")
+        # its rows of tables/drug_effects, were they noise-class RNAs (made so: two rows); query._dd_row_count counts
+        # a drug-dose's rows as tables/drug_effects has them
+        real_count = Q._dd_row_count
+        cnt_ok = all(real_count(o, "tables/drug_effects.parquet", d_) == int((de["dd"] == d_).sum())
+                     for d_ in [k] + [int(x) for x in de["dd"].value_counts().index[:3]])
+        Q._dd_row_count = lambda o_, rel_, dd_: 2 if rel_ == "tables/drug_effects.parquet" and dd_ == k else 0
+        P = []
+        try:
+            Q._similar_rows(o, P, k, 10)
+        finally:
+            Q._dd_row_count = real_count
+        ok = cnt_ok and (f"moves no gene at {cut} other than noise-class RNAs (its 2 rows of tables/drug_effects, "
+                         "which the signature leaves out) (no pooled signature)" in _flat("\n".join(P)))
+        res["noise-class rows named"] = ok
+        if not ok:
+            bad.append(f"noise-class rows: {_flat(chr(10).join(P))[:200]}")
+    else:
+        res["no signature"] = "none in this run (not exercised)"
+    # a drug-dose with a signature keeps its ranking; rows of others without one are counted and named
+    k2 = _with_signature(sim, nos, dd)
+    n2 = int((sim["dd"] == k2).sum())
+    code, txt, err = _run_lookup(out, None, "similar", str(by.at[k2, "drug"]), str(by.at[k2, "dose"]))
+    f = _flat(txt)
+    ok = (code == 0 and "MOST SIMILAR DRUG-DOSES - by the cosine of the pooled signatures" in txt
+          and f"of {n2} shown (the {n2} most similar to {lab[k2]} uM" in f and "no similarity ranking" not in f)
+    res["similar (with a signature)"] = ok
+    if not ok:
+        bad.append(f"similar {lab[k2]}: {code} {f[:200]} {err[-200:]}")
+    real_pq = o.pq
+
+    def pq_nan(rel, columns=None, filters=None):
+        t = real_pq(rel, columns=columns, filters=filters)
+        if rel == "embed/drug_similarity.parquet":
+            t = t.sort_values("rank").copy()
+            t.loc[t.index[-3:], "cos_pooled"] = np.nan
+        return t
+    o.pq = pq_nan
+    P10, Pall = [], []
+    Q._similar_rows(o, P10, k2, 10)
+    Q._similar_rows(o, Pall, k2, n2)
+    o.pq = real_pq
+    head = (f"3 of the {n2} stored rows (rank {n2 - 2} on) have no cos: those other drug-doses have no pooled "
+            f"signature (they move no gene at {cut}), so they come last, in row order, not ranked; ")
+    ok = head + "0 of them shown" in _flat("\n".join(P10)) and head + "3 of them shown" in _flat("\n".join(Pall))
+    res["rows without a signature counted"] = ok
+    if not ok:
+        bad.append(f"partly NaN: {_flat(chr(10).join(P10))[-400:]}")
+    # TOP GENES: vs DMSO next to fold and z
+    if "lfc_vs_dmso" in de:
+        kd = int(de["dd"].value_counts().index[0])
+        name, dose = str(by.at[kd, "drug"]), str(by.at[kd, "dose"])
+        code, txt, err = _run_lookup(out, None, "drug", name)
+        wide = max((len(x) for x in txt.splitlines()), default=0)
+        sec = txt.split(f"TOP GENES at {dose} uM", 1)[-1].split("\n\n", 1)[0] if f"TOP GENES at {dose} uM" in txt \
+            else ""
+        g = pd.read_parquet(os.path.join(out, "tables", "genes.parquet"), columns=["col", "label"])
+        col_of = dict(zip(g["label"].astype(str), g["col"].astype(int)))
+        sub = de[de["dd"] == kd].set_index("col")
+        got = re.findall(r"^\s+\d+\s+(\S+)\s+(\d+\.\d+x)\s+(\S+)\s+([+-]\d+\.\d)\s", sec, re.M)
+        wrong = [(gl, v) for gl, _fo, v, _z in got
+                 if col_of.get(gl) not in sub.index
+                 or v != Q._dmso(sub.at[col_of[gl], "lfc_vs_dmso"], sub.at[col_of[gl], "lfc"], short=True)]
+        heads = [x for x in sec.splitlines() if x.strip().startswith("#")]
+        ok = (code == 0 and wide <= 120 and len(got) > 0 and not wrong and heads
+              and all("fold  vs DMSO" in h for h in heads)
+              and "vs DMSO = the rough DMSO-referenced fold (tables/drug_effects lfc_vs_dmso: a sign check"
+              in _flat(txt))
+        res["TOP GENES vs DMSO"] = (name, dose, len(got), ok)
+        if not ok:
+            bad.append(f"drug {name} TOP GENES at {dose}: {len(got)} rows, wrong {wrong[:3]}, widest {wide}, heads "
+                       f"{heads[:2]} {err[-200:]}")
+    u = (Q._dmso(np.log2(1.5), -np.log2(1.5), short=True) == "1.50x*" and Q._dmso(np.nan, 1.0, short=True) == "none"
+         and Q._dmso(np.log2(1.5), np.log2(1.4)) == "1.50x"
+         and Q._dmso(np.log2(1.1), -1.0, short=True) == "1.10x")
+    r1 = [["1", "GENEA", "2.00x", "2.10x", "+5.0", "3/18 · one well", ""]]
+    r2 = [["1", "GENEB", "0.50x", "0.45x*", "-5.0", "3/18 · one well", ""]]
+    one = Q._top_genes_table([r1, r2], True)
+    al = "⚠ cell cycle ~40%, position uncertain"       # too wide side by side, whole one under the other
+    two = Q._top_genes_table([[r1[0][:6] + [al]], r2], True)
+    old = Q._top_genes_table([[r1[0][:3] + [""] + r1[0][4:]], [r2[0][:3] + [""] + r2[0][4:]]], False)
+    u &= (len(one) == 1 and sum(x.count("vs DMSO") for x in one[0]) == 2 and len(two) == 2
+          and al.strip() in "\n".join(two[0]) and "vs DMSO" in "\n".join(two[1])
+          and len(old) == 1 and "vs DMSO" not in "\n".join(old[0]))
+    res["_dmso and _top_genes_table (toy rows)"] = u
+    if not u:
+        bad.append(f"toy rows: one {one} two {two} old {old}")
+    return not bad, f"look-ups {res}; problems {bad[:4]}"
+
+
+def vault_wave3_checks(out):
+    """The vault after the third wave. A drug whose best dose has no pooled signature reads 'No similarity ranking:
+    ... moves no gene at |z| ≥ 3 or q < 0.10 (no pooled signature); the 50 stored rows are the first other
+    drug-doses in row order, not a ranking' and lists none of them, with '(0 of 50 stored; N other drug-doses, all in
+    the explorer's Vector space tab: ...)'; every other drug note with similarity rows has its table and '(k of 50
+    stored; N other drug-doses, all in the explorer's Vector space tab: ...)' with links to both tabs. Vault.
+    similar_block on stored rows with their last 3 cos_pooled emptied counts and names them, and names noise-class
+    rows of a dose without a signature. Every gene of a drug note's gene lists carries 'vs DMSO (rough)' (vault.fdmso
+    of its tables/drug_effects row)."""
+    from types import SimpleNamespace
+    from tahoemap import vault as V
+    sw = _second_wave(out)
+    sim, nos = _sim_no_signature(out)
+    vt = os.path.join(out, "vault")
+    if sw is None or sim is None or not os.path.isdir(vt):
+        return "warn", "an older output (no tables VERSION 5, no drug similarity or no vault): not checked"
+    dd, drugs, _info = sw
+    n_other = len(dd) - 1
+    bad, res = [], {}
+    tail = f"stored; {n_other:,} other drug-doses, all in the explorer's Vector space tab: "
+    n_nos, n_rank, n_items, n_dmso = 0, 0, 0, 0
+    item_re = re.compile(r"\]\](?: ⚠)? \d+\.\d\d× \(z ")
+    dmso_re = re.compile(r"\]\](?: ⚠)? \d+\.\d\d× \(z [^,]+, (?:vs DMSO \(rough\) \d+\.\d\d×(?: · other sign against "
+                         r"DMSO)?|no DMSO value), ")
+    # each item's value against vault.fdmso of its own tables/drug_effects row (gene by its note name, dose by the
+    # paragraph's '**<dose> µM**')
+    val_re = re.compile(r"\[\[([^\]|]+)(?:\|[^\]]*)?\]\](?: ⚠)? \d+\.\d\d× \(z [^,]+, (?:vs DMSO \(rough\) ([^,]+)|"
+                        r"(no DMSO value)), ")
+    de_ = pd.read_parquet(os.path.join(out, "tables", "drug_effects.parquet"),
+                          columns=["col", "dd", "lfc", "lfc_vs_dmso"])
+    row_of = {(int(c_), int(d_)): (x_, l_) for c_, d_, x_, l_ in zip(de_["col"], de_["dd"], de_["lfc_vs_dmso"],
+                                                                      de_["lfc"])}
+    gl = pd.read_parquet(os.path.join(out, "tables", "genes.parquet"), columns=["col", "label"])
+    n_lab = gl["label"].astype(str).value_counts()
+    col_of = {str(l_): int(c_) for c_, l_ in zip(gl["col"], gl["label"]) if n_lab[str(l_)] == 1}
+    dd_of = {(str(a_), str(b_)): int(k_) for a_, b_, k_ in zip(dd["drug"], dd["dose"], dd["dd"])}
+    n_val, wrong_val = 0, []
+    for r in drugs.to_dict("records"):
+        p = os.path.join(vt, "Drugs", f"{r['drug']} (drug).md")
+        if not os.path.exists(p):
+            continue
+        t = open(p, encoding="utf-8").read()
+        sec = t.split("## Most similar drug-doses", 1)[1].split("\n## ", 1)[0] if "## Most similar drug-doses" in t \
+            else ""
+        bdd = int(r["best_dd"]) if pd.notna(r.get("best_dd")) and int(r["best_dd"]) >= 0 else -1
+        n_b = int((sim["dd"] == bdd).sum())
+        if bdd in nos:
+            n_nos += 1
+            ok = (f"(its best dose) moves no gene at |z| ≥ 3 or q < 0.10 (no pooled signature); the {n_b} stored rows "
+                  "are the first other drug-doses in row order, not a ranking. None of them is listed here as "
+                  "similar." in sec and f"(0 of {n_b} {tail}" in sec and "| # |" not in sec
+                  and f"#/dd/{bdd}/similar" in sec and f"#/dd/{bdd}/space" in sec)
+        elif n_b:
+            n_rank += 1
+            k_ = min(V.N_SIMILAR, n_b)
+            ok = (f"({k_} of {n_b} {tail}" in sec and "| # |" in sec and "No similarity ranking" not in sec
+                  and f"#/dd/{bdd}/similar" in sec and f"#/dd/{bdd}/space" in sec)
+        else:
+            ok = True
+        if not ok:
+            bad.append(f"{r['drug']}: {sec.strip()[:200]}")
+        for s_ in ("## Genes it raises", "## Genes it lowers"):
+            part = t.split(s_, 1)[1].split("\n## ", 1)[0] if s_ in t else ""
+            n_items += len(item_re.findall(part))
+            n_dmso += len(dmso_re.findall(part))
+            for para in part.split("\n\n"):
+                m_ = re.match(r"\*\*(\S+) µM\*\*", para.strip())
+                k_ = dd_of.get((str(r["drug"]), m_.group(1))) if m_ else None
+                for nm_, v_, none_ in val_re.findall(para) if m_ else []:
+                    g_ = re.match(r"^.* \(gene (\d+)\)$", nm_)
+                    c_ = int(g_.group(1)) if g_ else col_of.get(nm_)
+                    x_ = row_of.get((c_, k_)) if c_ is not None and k_ is not None else None
+                    n_val += 1
+                    if x_ is None or (v_ or none_) != V.fdmso(*x_):
+                        wrong_val.append((r["drug"], m_.group(1), nm_, v_ or none_,
+                                          V.fdmso(*x_) if x_ is not None else "no row"))
+    res["drug notes"] = (n_nos, n_rank)
+    if n_items == 0 or n_dmso != n_items or n_val != n_items or wrong_val:
+        bad.append(f"gene list items {n_items}, with vs DMSO (rough) {n_dmso}, values checked {n_val}, wrong "
+                   f"{wrong_val[:3]}")
+    res["gene list items with vs DMSO (rough)"] = (f"{n_dmso} of {n_items}; {n_val - len(wrong_val)} of {n_items} "
+                                                   "equal vault.fdmso of their tables/drug_effects row")
+    k2 = _with_signature(sim, nos, dd)
+    s2 = sim[sim["dd"] == k2].sort_values("rank").copy()
+    s2.loc[s2.index[-3:], "cos_pooled"] = np.nan
+    n2 = len(s2)
+    fake = SimpleNamespace(R=SimpleNamespace(Dn=len(dd)), similar={k2: s2}, xl=lambda u_: f"<{u_}>",
+                           xdd=lambda d_, tab=None: f"#/dd/{d_}/{tab}", ddlink=lambda d_: f"[[DD {d_}]]",
+                           classes_short=lambda d_, c_: c_)
+    L = "\n".join(V.Vault.similar_block(fake, "X", pd.Series({"best_dd": k2})))
+    ok = (f"3 of the {n2} stored rows (#{n2 - 2} on; 0 of them above) have no cos pooled: those other drug-doses have "
+          "no pooled signature (they move no gene at |z| ≥ 3 or q < 0.10), so they come last, in row order, not "
+          "ranked." in L and f"({min(V.N_SIMILAR, n2)} of {n2} {tail}" in L)
+    s3 = s2.copy()
+    s3["cos_pooled"] = np.nan
+    fake.similar = {k2: s3}
+    fake._dd_rows = (None, np.array([0] * (k2 + 1) + [2] * (len(dd) - k2)))
+    L3 = "\n".join(V.Vault.similar_block(fake, "X", pd.Series({"best_dd": k2})))
+    ok &= ("moves no gene at |z| ≥ 3 or q < 0.10 other than noise-class RNAs (its 2 rows of "
+           "`tables/drug_effects.parquet`, which the signature leaves out) (no pooled signature)" in L3
+           and f"(0 of {n2} {tail}" in L3)
+    res["similar_block (rows emptied)"] = ok
+    if not ok:
+        bad.append(f"similar_block: {L[-300:]} / {L3[:300]}")
+    return not bad, f"vault {res}; problems {bad[:4]}"
+
+
+def map_wave3_checks(out):
+    """The map after the third wave. upd / dnd hold one code per row of up / dn, each the row's rough DMSO-referenced
+    fold (tables/drug_effects lfc_vs_dmso: 2^x x100 rounded from the 2-decimal text; -(that) - 2 when it is at least
+    1.2x the other way, the vault's rule; -1 = no DMSO value); every drug-dose label ends in ' µM' (as the tables,
+    explorer, vault and report) and so does every item of the graph's module drug lists; each drug record carries
+    tables/drugs annotation_alert. In a browser: a gene's 'Drug-doses that raise it' table has the 'vs DMSO (rough)'
+    column and its legend; the search's line under a drug reads '(Tahoe) <moa>' and, for a drug whose annotations
+    disagree, '⚠ annotations disagree'; 'Drug 5 uM' and 'drug 5 µm' both find the drug-dose first; a module card
+    with an alert shows one ⚠ before it."""
+    sw = _second_wave(out)
+    if sw is None:
+        return "warn", "an older output (no tables VERSION 5): not checked"
+    dd, drugs, _info = sw
+    txt, D = map_data(out)
+    bad, res = [], {}
+    de = pd.read_parquet(os.path.join(out, "tables", "drug_effects.parquet"))
+    if "lfc_vs_dmso" in de:
+        by = {(int(c), int(d)): (float(x), float(lf)) for c, d, x, lf in zip(de["col"], de["dd"], de["lfc_vs_dmso"],
+                                                                             de["lfc"])}
+        n_rows, wrong = 0, []
+        for key, dkey in (("up", "upd"), ("dn", "dnd")):
+            if dkey not in D:
+                wrong.append(f"no {dkey}")
+                continue
+            for e, (a, m) in enumerate(zip(D[key], D[dkey])):
+                if len(m) * 5 != len(a):
+                    wrong.append((D["sym"][e], key, len(a) // 5, len(m)))
+                    continue
+                for t, v in enumerate(m):
+                    x, lf = by[(int(D["col"][e]), int(a[5 * t]))]
+                    if not np.isfinite(x):
+                        want = -1
+                    else:
+                        f = int(round(float(f"{2.0 ** x:.2f}") * 100))
+                        other = abs(x) >= np.log2(1.2) and np.isfinite(lf) and lf != 0 and np.sign(x) != np.sign(lf)
+                        want = -f - 2 if other else f
+                    n_rows += 1
+                    if v != want:
+                        wrong.append((D["sym"][e], key, int(a[5 * t]), v, want))
+        res["upd / dnd rows"] = (n_rows, len(wrong))
+        if wrong or not n_rows:
+            bad.append(f"vs DMSO codes: {wrong[:4]}")
+    labs = [str(x) for x in D.get("dd") or []]
+    if not labs or not all(x.endswith(" µM") for x in labs if x):
+        bad.append(f"drug-dose labels {[x for x in labs if not x.endswith(' µM')][:3]}")
+    mods = pd.read_parquet(os.path.join(out, "graph", "modules.parquet"), columns=["drugs_up", "drugs_down"])
+    lists = [str(x) for c_ in ("drugs_up", "drugs_down") for x in mods[c_].fillna("")]
+    n_mu = sum(len(re.findall(r" µM \([+-]\d", x)) for x in lists)
+    nu = [x for x in lists if re.search(r" uM \(", x)]
+    res["module drug-list items in µM"] = n_mu
+    if not n_mu or nu:
+        bad.append(f"module drug lists with 'uM': {nu[:2]}")
+    al = drugs.set_index("drug")["annotation_alert"].fillna("").astype(str)
+    drg = D.get("drg") or []
+    if not drg or any(x.get("al", None) != al.get(x["n"], "") for x in drg):
+        bad.append("drug records' al differ from tables/drugs annotation_alert")
+    sp = _browser()
+    if sp is None:
+        return ("warn" if not bad else False), (f"Playwright not installed: browser part skipped; {res}; problems "
+                                                f"{bad[:3]}")
+    import pathlib
+    dis = drugs[drugs["annotation_alert"].fillna("") != ""]
+    agree = drugs[(drugs["annotation_alert"].fillna("") == "") & (drugs["moa_fine"].fillna("") != "")]
+    k5 = dd.dropna(subset=["drug"]).iloc[0]
+    errs = []
+    try:
+        with sp() as p:
+            b = p.chromium.launch()
+            try:
+                pg = b.new_page(viewport={"width": 1300, "height": 850})
+                pg.on("pageerror", lambda e_: errs.append(str(e_)))
+                pg.goto(pathlib.Path(os.path.join(out, "map", "gene_map.html")).resolve().as_uri())
+                pg.wait_for_function("() => !!window.TAHOE_MAP")
+
+                def sub(name):
+                    items_ = pg.evaluate(f"TAHOE_MAP.searchItems({json.dumps(name)})")
+                    return next((x.get("sub", "") for x in items_ if x["kind"] == "drug" and x["name"] == name), None)
+                if len(dis):
+                    r = dis.iloc[0]
+                    s_ = sub(str(r["drug"])) or ""
+                    res["search: a drug whose annotations disagree"] = s_
+                    if not (f"(Tahoe) {r['moa_fine']}" in s_ and s_.endswith("⚠ annotations disagree")):
+                        bad.append(f"search line of {r['drug']}: '{s_}'")
+                if len(agree):
+                    r = agree.iloc[0]
+                    s_ = sub(str(r["drug"])) or ""
+                    if not (f"(Tahoe) {r['moa_fine']}" in s_ and "annotations disagree" not in s_):
+                        bad.append(f"search line of {r['drug']}: '{s_}'")
+                want = f"{k5['drug']} {k5['dose']} µM"
+                for q in (f"{k5['drug']} {k5['dose']} uM", f"{str(k5['drug']).lower()} {k5['dose']} µm"):
+                    it = [x for x in pg.evaluate(f"TAHOE_MAP.searchItems({json.dumps(q)})") if x["kind"] == "dd"]
+                    if not it or it[0]["name"] != want:
+                        bad.append(f"search '{q}': {[x['name'] for x in it[:2]]}")
+                e = next((i for i, a in enumerate(D["up"]) if len(a) >= 5), None)
+                if e is not None:
+                    pg.evaluate(f"TAHOE_MAP.select({e})")
+                    t = pg.evaluate("TAHOE_MAP.panel()")
+                    blk = t.split("Drug-doses that raise it", 1)[-1]
+                    x = by[(int(D["col"][e]), int(D["up"][e][0]))][0]
+                    ok = ("vs DMSO (rough)" in blk.split("\n", 2)[1] and f"{2.0 ** x:.2f}×" in blk
+                          and "a sign check, not a replacement" in blk)
+                    res[f"panel of {D['sym'][e]}: vs DMSO column"] = ok
+                    if not ok:
+                        bad.append(f"panel of {D['sym'][e]}: {blk[:300]}")
+                m = next((i for i, x in enumerate(D.get("mods") or []) if x.get("lal")), None)
+                if m is not None:
+                    mid = D["mods"][m]["id"]
+                    pg.evaluate(f"(() => {{ const li = document.querySelector(\"#lgbody .li[data-m='{mid}']\"); "
+                                "if (li) li.click(); })()")
+                    h = pg.evaluate("(() => { const e = document.querySelector('.mcard .row.al'); "
+                                    "return e ? e.textContent : null; })()")
+                    res["module card alert"] = (h or "")[:40]
+                    if not h or not h.startswith("⚠ ") or h.startswith("⚠ ⚠"):
+                        bad.append(f"module card alert '{(h or '')[:40]}'")
+            finally:
+                b.close()
+    except Exception as ex:  # noqa: BLE001
+        if "Executable doesn't exist" in str(ex) or "playwright install" in str(ex):
+            return "warn", "Playwright's Chromium is not installed: browser part skipped"
+        raise
+    return not bad and not errs, f"map {res}; problems {bad[:4]}; script errors {errs[:2]}"
+
+
 # ----------------------------------------------------------------------------- driver
 def check(out, data=None):
     """Every check of this file on a finished output: [(name, ok, detail)], ok True, False or 'warn'."""
@@ -1025,7 +1448,13 @@ def check(out, data=None):
              ("look-ups: second-wave texts (classes, TP53 not recorded, no '0e+00'), similar and signature",
               lambda: lookup_wave2_checks(out, data)),
              ("map: second-wave data and panels (q, TP53, flag words, partner preservation, search of drugs, "
-              "drug-doses and lines, help, tour axes; browser)", lambda: map_wave2_checks(out))]
+              "drug-doses and lines, help, tour axes; browser)", lambda: map_wave2_checks(out)),
+             ("look-ups: no similarity ranking without a pooled signature; vs DMSO in TOP GENES",
+              lambda: lookup_wave3_checks(out, data)),
+             ("vault: no similarity ranking without a pooled signature, 'k of 50 stored'; vs DMSO in drug notes",
+              lambda: vault_wave3_checks(out)),
+             ("map: vs DMSO in the drug-dose tables, µM labels, the search's drug lines, one ⚠ on a module card "
+              "(browser)", lambda: map_wave3_checks(out))]
     res = []
     try:
         for name, fn in tests:

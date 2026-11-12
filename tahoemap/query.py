@@ -8,7 +8,9 @@
                           probably acts on it, what it probably acts on, how it probably sets the cells' growth under
                           drug-doses), and where the full tables are. A name that is no gene of the run but the
                           source of direction arrows (a drug target the screen does not measure) gets those arrows
-    tahoe drug NAME       targets and mechanism; per dose: wells, flags, genes up / down, top genes up / down; the
+    tahoe drug NAME       targets and mechanism; per dose: wells, flags, genes up / down, top genes up / down
+                          (fold, the rough DMSO-referenced fold as a sign check, z, lines, alert); the drug-doses
+                          most similar to its best dose (none as a ranking when it has no pooled signature); the
                           drugs with the most similar vector, the modules it moves, the lines it depletes and the
                           lines that show its response most; the genes that probably set how the cells fare under it
                           and what acting on its targets probably does. NAME is case-insensitive; a salt form can be
@@ -25,7 +27,9 @@
                           that drives it, its lineage; what it moves with), top genes per arm, top drug-doses up / down
                           and the lines where it responds most
     tahoe similar DRUG [DOSE]   the drug-doses most similar to one drug-dose (embed/drug_similarity.parquet: cos of
-                          the pooled signatures and over the per-line contexts, shared genes, classes, flags)
+                          the pooled signatures and over the per-line contexts, shared genes, classes, flags); a
+                          drug-dose that moves no gene at |z| >= 3 or q < 0.10 has no pooled signature, hence no
+                          ranking: it says so, and where its stored rows are (--top N lists them in row order)
     tahoe signature --up A,B [--down C,D] [--lines]   which drug-doses mimic or reverse a gene signature: score =
                           mean z of the up genes minus the down genes (atlas DD_z; else the drug_effects rows, z = 0
                           elsewhere), p from 1,000 random gene sets of the same sizes matched by expression level
@@ -353,16 +357,43 @@ def _wells(n):
     return " · one well" if int(n) == 1 else f" · {int(n)} wells"
 
 
-def _dmso(x, lfc):
-    """The rough DMSO-referenced fold of a row ('1.23x'; ' (other sign)' when it is at least 1.2x the other way;
-    'none' when the plate has no DMSO value)."""
+def _dmso(x, lfc, short=False):
+    """The rough DMSO-referenced fold of a row ('1.23x'; ' (other sign)', short: '*', when it is at least 1.2x the
+    other way; 'none' when the plate has no DMSO value)."""
     x, lfc = _num(x), _num(lfc)
     if not np.isfinite(x):
         return "none"
     t = _fold(2 ** x)
     if abs(x) >= DMSO_MIN and np.isfinite(lfc) and lfc != 0 and np.sign(x) != np.sign(lfc):
-        t += " (other sign)"
+        t += "*" if short else " (other sign)"
     return t
+
+
+def _top_genes_table(side_rows, has_dmso):
+    """The drug look-up's TOP GENES table: [raised rows, lowered rows], each row [#, gene, fold, vs DMSO, z, lines,
+    alert]. [one table side by side] when that fits within WIDTH with every column at its full width; else (a long
+    alert, long lines counts) [the raised table, the lowered one] (an empty side: []), so that no column is left out
+    and no alert is cut more. has_dmso False (tables older than version 5): no vs DMSO column, side by side as
+    before."""
+    keep = [k for k in range(7) if has_dmso or k != 3]
+    head = [["#", "raised", "fold", "vs DMSO", "z", "lines", "alert"],
+            ["#", "lowered", "fold", "vs DMSO", "z", "lines", "alert"]]
+    al = "rlrrrrl"
+    sides = [[[r_[k] for k in keep] for r_ in rr] for rr in side_rows]
+    hd = [[h[k] for k in keep] for h in head]
+    a1 = "".join(al[k] for k in keep)
+    n1 = len(keep)
+    gene_i, alert_i = keep.index(1), keep.index(6)
+    n = max(len(sides[0]), len(sides[1]))
+    rows = [(sides[0][i] if i < len(sides[0]) else [""] * n1) + ["|"]
+            + (sides[1][i] if i < len(sides[1]) else [""] * n1) for i in range(n)]
+    full = [max([len(x)] + [len(r_[i]) for r_ in rows]) for i, x in enumerate(hd[0] + ["|"] + hd[1])]
+    if 2 + sum(full) + 2 * (len(full) - 1) <= WIDTH or not has_dmso:
+        return [_table(hd[0] + ["|"] + hd[1], rows, a1 + "l" + a1,
+                       flex=(gene_i, alert_i, n1 + 1 + gene_i, n1 + 1 + alert_i),
+                       mins={gene_i: 8, alert_i: 5, n1 + 1 + gene_i: 8, n1 + 1 + alert_i: 5})]
+    return [_table(h, rr, a1, flex=(gene_i, alert_i), mins={gene_i: 10, alert_i: 12}) if rr else []
+            for h, rr in zip(hd, sides)]
 
 
 def _share_plate(o):
@@ -1670,12 +1701,14 @@ def drug_report(o, drug, top):
 
     # top genes per dose
     cols = ["col", "symbol", "dd", "lfc", "fold", "z", "q_up", "q_down", "flags", "clean", "n_lines_measured",
-            "n_lines_up", "n_lines_down", "cc_share", "n_wells"]
+            "n_lines_up", "n_lines_down", "cc_share", "n_wells", "lfc_vs_dmso"]
     de = o.pq("tables/drug_effects.parquet", columns=cols, filters=[("dd", "in", dds)])
     if "cc_share" not in de:                     # an older tables stage
         de["cc_share"] = np.nan
+    has_dmso = "lfc_vs_dmso" in de               # tables version 5: the rough DMSO-referenced lfc (a sign check)
     de["flags"] = de["flags"].fillna("").astype(str) if "flags" in de else ""
     g = o.genes()
+    n_tabs = 0                                   # doses with a TOP GENES table (the vs DMSO legend follows them)
     for _, r in rows_dd.iterrows():
         d = int(r["dd"])
         x = de[de["dd"] == d]
@@ -1704,27 +1737,30 @@ def drug_report(o, drug, top):
         for part in (up, dn):
             ok = part["clean"].astype(bool).to_numpy()
             sides.append((part, _capped(len(part), top, ok)))
-        rows = []
-        for i in range(max(len(sides[0][1]), len(sides[1][1]))):
-            row = []
-            for (part, show), key in zip(sides, ("n_lines_up", "n_lines_down")):
-                if i < len(show):
-                    j = show[i]
-                    y = part.iloc[j]
-                    row += [str(j + 1), g.at[int(y["col"]), "label"], _fold(y["fold"]), _z(y["z"]),
-                            f"{int(y[key])}/{int(y['n_lines_measured'])}{_wells(y.get('n_wells', r.get('n_wells')))}",
-                            gene_alert(y)]
-                else:
-                    row += ["", "", "", "", "", ""]
-            rows.append(row[:6] + ["|"] + row[6:])
-        P += _table(["#", "raised", "fold", "z", "lines", "alert", "|", "#", "lowered", "fold", "z", "lines", "alert"],
-                    rows, "rlrrrllrlrrrl", flex=(1, 5, 8, 12), mins={1: 8, 5: 5, 8: 8, 12: 5})
-        for (part, show), word in zip(sides, ("raised", "lowered")):
+        side_rows = []
+        for (part, show), key in zip(sides, ("n_lines_up", "n_lines_down")):
+            rr = []
+            for j in show:
+                y = part.iloc[j]
+                rr.append([str(j + 1), g.at[int(y["col"]), "label"], _fold(y["fold"]),
+                           _dmso(y.get("lfc_vs_dmso"), y["lfc"], short=True) if has_dmso else "", _z(y["z"]),
+                           f"{int(y[key])}/{int(y['n_lines_measured'])}{_wells(y.get('n_wells', r.get('n_wells')))}",
+                           gene_alert(y)])
+            side_rows.append(rr)
+        tabs = _top_genes_table(side_rows, has_dmso)       # one table side by side, or [raised, lowered]
+        n_tabs += 1
+        for k, ((part, show), word) in enumerate(zip(sides, ("raised", "lowered"))):
+            if len(tabs) == 2 or k == 0:
+                P += tabs[k]
             al = ~part["clean"].astype(bool).to_numpy()
             more = _more(len(part), len(show), int(al.sum()) - int(al[show].sum()), word, url=_xu(LK.dd, d))
             if more:
                 P += _wrap(more.strip(), 2, 6)
         P += _wrap(f"every gene at {r['dose']} uM (pooled and per line, exact): {_xu(LK.dd, d)}", 2, 6)
+    if has_dmso and n_tabs:
+        P += _wrap("vs DMSO = the rough DMSO-referenced fold (tables/drug_effects lfc_vs_dmso: a sign check against "
+                   "the plate's two DMSO wells, not a replacement); * = at least 1.2x the other way (other sign); "
+                   "none = the plate has no DMSO value", 2, 4)
 
     _similar(o, P, drug, dr, top)
     _line_controls(o, P, drug)
@@ -2007,18 +2043,26 @@ def _per_dose_notes(o, P, rows_dd):
 def _similar(o, P, drug, dr, top):
     """MOST SIMILAR DRUG-DOSES of the drug's best dose (embed/drug_similarity.parquet: the 50 most similar, rank
     order): cos of the pooled signatures and of the per-line contexts, shared significant genes, same compound, the
-    other's classes and flags; --top N rows (default N_SIMILAR), '{k} of 50 shown'."""
-    _title(P, "MOST SIMILAR DRUG-DOSES - of its best dose, by the cosine of the pooled signatures",
-           "embed/drug_similarity.parquet; shared = genes significant in both; class = the other's mechanism classes; "
-           "alert = the other's artifact flags")
+    other's classes and flags; --top N rows (default N_SIMILAR), '{k} of 50 shown'. A best dose with no pooled
+    signature (every cos_pooled NaN) has no ranking: _similar_rows says so."""
+    note = ("embed/drug_similarity.parquet; shared = genes significant in both; class = the other's mechanism classes; "
+            "alert = the other's artifact flags")
     if not o.has("embed/drug_similarity.parquet"):
+        _title(P, "MOST SIMILAR DRUG-DOSES - of its best dose, by the cosine of the pooled signatures", note)
         P += _wrap(_older(o, "embed", "drug-dose similarity", 5), 2, 4)
         return
     bdd = int(_num(dr.get("best_dd"))) if dr is not None and np.isfinite(_num(dr.get("best_dd"))) else -1
     if bdd < 0:
+        _title(P, "MOST SIMILAR DRUG-DOSES - of its best dose, by the cosine of the pooled signatures", note)
         P.append("  no best dose (no dose with significant genes)")
         return
-    _similar_rows(o, P, bdd, top if TOP_GIVEN else N_SIMILAR)
+    sim = _sim_rows_of(o, bdd)                          # read once: the title and the rows
+    if _sim_no_signature(sim):
+        _title(P, "MOST SIMILAR DRUG-DOSES - of its best dose: no ranking (it has no pooled signature)",
+               "embed/drug_similarity.parquet")
+    else:
+        _title(P, "MOST SIMILAR DRUG-DOSES - of its best dose, by the cosine of the pooled signatures", note)
+    _similar_rows(o, P, bdd, top if TOP_GIVEN else N_SIMILAR, sim)
 
 
 def _line_controls(o, P, drug):
@@ -2062,12 +2106,72 @@ def _class_labels(o):
     return o._cached("class_labels", load)
 
 
-def _similar_rows(o, P, dd, n):
-    """The rows of embed/drug_similarity.parquet for drug-dose dd, the n first (TOP_ALL: all), with the counts."""
-    sim = o.pq("embed/drug_similarity.parquet", filters=[("dd", "==", int(dd))]).sort_values("rank")
+def _sim_rows_of(o, dd):
+    """The rows of embed/drug_similarity.parquet for drug-dose dd, in rank order."""
+    return o.pq("embed/drug_similarity.parquet", filters=[("dd", "==", int(dd))]).sort_values("rank")
+
+
+def _sim_nan(sim):
+    """True per row where cos_pooled is NaN: one of the two drug-doses has no pooled signature."""
+    return ~np.isfinite(pd.to_numeric(sim["cos_pooled"], errors="coerce").to_numpy(float)) if len(sim) else \
+        np.zeros(0, bool)
+
+
+def _sim_no_signature(sim):
+    """True when every stored cos_pooled of the drug-dose is NaN: it moves no gene at |z| >= KEEP_Z or q < Q_CUT
+    (embed's pooled signature), so every cosine with it is undefined and the embed stage's 50 rows are the first
+    other drug-doses in row order, not a ranking (the explorer's Similar drug-doses tab says the same)."""
+    return bool(len(sim)) and bool(_sim_nan(sim).all())
+
+
+def _sim_cut():
+    return f"|z| >= {TB.KEEP_Z:g} or q < {Q_CUT:.2f}"
+
+
+def _dd_row_count(o, rel, dd):
+    """The rows of drug-dose dd in the parquet table rel, from its dd column read by one thread with the file reader
+    (pyarrow ParquetFile.read). A threaded read of that one column after other reads left the look-up hanging at its
+    exit (in pyarrow's thread pools) in about 1 run in 10 on the test machine; with this read, 0 of 200 runs hung."""
+    import pyarrow.parquet as pq
+    t = pq.ParquetFile(o.p(rel)).read(columns=["dd"], use_threads=False)
+    return int((t.column("dd").to_numpy() == int(dd)).sum())
+
+
+def _sim_noise(o, dd):
+    """'' or, when drug-dose dd has rows in tables/drug_effects although it has no pooled signature (they are all
+    noise-class RNAs, which the signature leaves out), ' other than noise-class RNAs (its N rows of ...)'."""
+    try:
+        n = _dd_row_count(o, "tables/drug_effects.parquet", dd)
+    except Exception:  # noqa: BLE001  (an output without the table: the plain words)
+        n = 0
+    return (f" other than noise-class RNAs (its {n} row{'s' if n != 1 else ''} of tables/drug_effects, which the "
+            "signature leaves out)" if n else "")
+
+
+def _similar_rows(o, P, dd, n, sim=None):
+    """The rows of embed/drug_similarity.parquet for drug-dose dd, the n first (TOP_ALL: all), with the counts. A
+    drug-dose with no pooled signature (every cos_pooled NaN): 'no similarity ranking: ...', where the stored rows
+    are, and the rows (as stored, in row order) only when --top is given. Rows whose other drug-dose has no pooled
+    signature (cos_pooled NaN, last in rank order) are counted and named as such."""
+    sim = _sim_rows_of(o, dd) if sim is None else sim    # sim: the rows already read (_sim_rows_of)
     if not len(sim):
         P.append("  no row in embed/drug_similarity.parquet for this drug-dose")
         return
+    dl = o.drugdoses()
+    nm = f"{dl.at[int(dd), 'label']} uM" if int(dd) in dl.index else f"drug-dose {dd}"
+    nan = _sim_nan(sim)
+    if nan.all():
+        P += _wrap(f"no similarity ranking: {nm} moves no gene at {_sim_cut()}{_sim_noise(o, dd)} (no pooled "
+                   f"signature); the {len(sim)} stored rows are the first other drug-doses in row order, not a ranking",
+                   2, 4)
+        suf = "" if SITE else " (this output's explorer, once the explorer stage has run)"
+        P += _wrap(f"the {len(sim)} stored rows: embed/drug_similarity.parquet (dd == {int(dd)}) and the explorer's "
+                   f"Similar drug-doses tab: {_xu(LK.dd, int(dd), 'similar')}; the cosine of its vector with all "
+                   f"{len(dl) - 1:,} other drug-doses: the explorer's Vector space tab: "
+                   f"{_xu(LK.dd, int(dd), 'space')}{suf}"
+                   + ("" if TOP_GIVEN else "; --top N or --top all lists the stored rows here, in row order"), 2, 4)
+        if not TOP_GIVEN:
+            return
     lab = _class_labels(o)
     shown = sim.head(n)
     rows, cavs, fls = [], [], []
@@ -2075,20 +2179,31 @@ def _similar_rows(o, P, dd, n):
         fl = _text(r.get("other_flags"))
         fls.append(fl)
         if _caveats(fl):
-            cavs.append(f"#{int(r['rank'])} {_caveats(fl)}")
+            cavs.append(f"{'row ' if nan.all() else '#'}{int(r['rank'])} {_caveats(fl)}")
         rows.append([str(int(r["rank"])), f"{_text(r['other_drug'])} {_text(r['other_dose'])}",
                      _cos(r.get("cos_pooled")), _cos(r.get("cos_contexts")), _int(r.get("n_shared_sig")),
                      "yes" if _yes(r.get("same_salt_base")) else "",
                      lab.get(_text(r["other_drug"]), "") or "-", _alert_cell(fl)])
     al_any = any(x[-1] for x in rows)
-    P += _table(["#", "drug uM", "cos", "lines", "shared", "same", "class"] + (["alert"] if al_any else []),
+    P += _table(["#" if not nan.all() else "row", "drug uM", "cos", "lines", "shared", "same", "class"]
+                + (["alert"] if al_any else []),
                 [x if al_any else x[:-1] for x in rows], "rlrrrlll"[:8 if al_any else 7],
                 flex=(1, 6) + ((7,) if al_any else ()), mins={1: 16, 6: 14, 7: 14})
     if cavs:
         P += _wrap("caveats (no alert): " + "; ".join(cavs), 2, 4)
     _flag_legend(P, fls)
-    dl = o.drugdoses()
-    nm = f"{dl.at[int(dd), 'label']} uM" if int(dd) in dl.index else f"drug-dose {dd}"
+    if nan.all():
+        P += _wrap(f"{len(shown)} of the {len(sim)} stored rows shown, as stored (row = the order of the stored rows, "
+                   f"not a ranking; cos '-': {nm} has no pooled signature)"
+                   + (f"; {_all_at(len(sim), _xu(LK.dd, int(dd), 'similar'))}" if len(shown) < len(sim) else ""),
+                   2, 4)
+        return
+    if nan.any():
+        k_nan = int(nan.sum())
+        P += _wrap(f"{k_nan} of the {len(sim)} stored rows (rank {int(sim['rank'].iloc[int(np.argmax(nan))])} on) have "
+                   f"no cos: those other drug-doses have no pooled signature (they move no gene at {_sim_cut()}), so "
+                   "they come last, in row order, not ranked; "
+                   f"{int(nan[:len(shown)].sum())} of them shown", 2, 4)
     P += _wrap(f"{len(shown)} of {len(sim)} shown (the {len(sim)} most similar to {nm}; cos = of the pooled "
                "signatures, lines = over the per-line contexts ('-' where they share too few); same = another dose or "
                "salt form of the same compound)"
@@ -3149,10 +3264,14 @@ def cmd_similar(o, names, top):
     fl = o.drugdoses().at[dd, "flags"]
     if _alert(fl):
         P += _wrap(f"{ALERT} this drug-dose: {_alert(fl)}: read its neighbours with that in mind", 2, 4)
-    _title(P, "MOST SIMILAR DRUG-DOSES - by the cosine of the pooled signatures (each clipped at +-10)",
-           "embed/drug_similarity.parquet; shared = genes significant in both; class = the other's mechanism classes "
-           "(tahoemap/data/drug_classes.json); alert = the other's artifact flags")
-    _similar_rows(o, P, dd, top)
+    sim = _sim_rows_of(o, dd)                           # read once: the title and the rows
+    if _sim_no_signature(sim):
+        _title(P, "SIMILAR DRUG-DOSES - no ranking: it has no pooled signature", "embed/drug_similarity.parquet")
+    else:
+        _title(P, "MOST SIMILAR DRUG-DOSES - by the cosine of the pooled signatures (each clipped at +-10)",
+               "embed/drug_similarity.parquet; shared = genes significant in both; class = the other's mechanism "
+               "classes (tahoemap/data/drug_classes.json); alert = the other's artifact flags")
+    _similar_rows(o, P, dd, top, sim)
     tb = [["similarity", o.p("embed", "drug_similarity.parquet"), f"dd == {dd}"]]
     _where(o, P, tb)
     return P

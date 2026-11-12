@@ -86,11 +86,13 @@ import pandas as pd
 from .common import folder, has_artifact, log, read_effects_index, replace_file, save_npy, stable_seed, \
     stamp_stage, write_json, write_parquet
 
-VERSION = 6                # 4: spread layouts (xm, ym, xsm, ysm); flagged drug-doses marked in the module drug lists
+VERSION = 7                # 4: spread layouts (xm, ym, xsm, ysm); flagged drug-doses marked in the module drug lists
 #                            5: genes without a module move with one group; top_plus / top_minus marked and capped
 #                            6: the drug lists read the flags of record (common.has_artifact); module covariates
 #                               (cov_<k>_r / _rho, covariate_kinds, covariate_tag); info.json partner_preservation;
 #                               graph/modules.gmt
+#                            7: the module drug lists write doses in µM ('Trametinib 5 µM (+3.2)'), as the tables,
+#                               the explorer, the vault and the report do (was 'uM')
 K_EDGES = 15
 K_LAYOUT = 90
 MIN_MODULE = 5
@@ -631,7 +633,7 @@ def run(out, k_edges=K_EDGES, resolution=1.0):
     nm = len(comms)
     scores = np.zeros((nm, Dn, L), dtype=np.float32)
     pooled = np.zeros((nm, Dn), dtype=np.float32)
-    dlabel = (dd["drug"].astype(str) + " " + dd["dose"].astype(str) + " uM").to_numpy()
+    dlabel = (dd["drug"].astype(str) + " " + dd["dose"].astype(str) + " µM").to_numpy()   # as tables, explorer, vault
     from .tables import dd_flags_of_record                # the flags of record (+ neighbouring-well, translation)
     dflags = np.asarray(dd_flags_of_record(out), dtype=object) if "flags" in dd else np.array([""] * Dn, dtype=object)
     dalert = np.array([has_artifact(f) for f in dflags], dtype=bool)

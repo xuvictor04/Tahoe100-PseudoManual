@@ -73,8 +73,10 @@
       var bd = TM.h('div', {class: 'badges'}, TM.h('span', {class: 'badge'}, TM.fmt.int(sh.t.members.n) +
         ' members' + (mr.n_plus !== undefined ? ' (' + mr.n_plus + ' on the + arm, ' + mr.n_minus + ' on the \u2212 ' +
         'arm)' : '')));
-      if (lr.label_alert) {
-        bd.appendChild(TM.h('span', {class: 'badge warnb', dataset: {labelAlert: 1}}, '\u26a0 ' + lr.label_alert));
+      if (lr.label_alert) {                       // validation/module_labels label_alert already starts with '\u26a0 '
+        var la = String(lr.label_alert);
+        bd.appendChild(TM.h('span', {class: 'badge warnb', dataset: {labelAlert: 1}},
+          la.charAt(0) === '\u26a0' ? la : '\u26a0 ' + la));
       }
       if (lr.label_weak) bd.appendChild(TM.h('span', {class: 'badge'}, 'weak label: ' + (lr.label_weak_why || 'yes')));
       if (mr.covariate_tag) {
@@ -749,8 +751,14 @@
         }
       });
       if (more) {
+        // more.move: the table's own columns of these keys go after more.after; more.cols: columns added there
+        var moved = (more.move || []).map(function (k) {
+          var j = cols.findIndex(function (cc) { return cc.key === k; });
+          return j < 0 ? null : cols.splice(j, 1)[0];
+        }).filter(Boolean);
+        if (more.tweak) more.tweak(moved);
         var at = cols.findIndex(function (cc) { return cc.key === more.after; });
-        Array.prototype.splice.apply(cols, [at < 0 ? cols.length : at + 1, 0].concat(more.cols));
+        Array.prototype.splice.apply(cols, [at < 0 ? cols.length : at + 1, 0].concat(moved, more.cols || []));
       }
       var o = Object.assign({key: '', n: tab.n, csv: csv || kind, cols: cols, id: 'browse-' + kind}, extra || {});
       pane.appendChild(TM.table(o).el);
@@ -780,7 +788,9 @@
           test: function (i) { return !!c.drugs.c.annotation_alert.get(i); }}] : []});
     }
     if (kind === 'drugdoses') {
-      // the drug's ChEMBL mechanism and the disagreement alert, from tables/drugs (the same for each dose)
+      // the drug's ChEMBL mechanism and the disagreement alert (the same for each dose): tables/drugdoses carries
+      // both itself since tables version 7 (copied from tables/drugs by drug); an older run's are read from
+      // tables/drugs here
       var dcol = function (name) {
         var cc = c.drugs.c[name];
         return function (i) {
@@ -788,25 +798,36 @@
           return cc && di !== undefined && di >= 0 ? cc.get(di) : null;
         };
       };
-      var dds = c.drugdoses, more = [];
-      if (c.drugs.c.chembl_mechanisms) {
+      var dds = c.drugdoses, more = [], own = !!(dds.c.chembl_mechanisms && dds.c.annotation_alert);
+      var chemblWhy = function (i) {
+        var k = dds.c.dd.get(i);
+        return TM.drug.chemblText(TM.drug.annOf(d.drugOf ? d.drugOf[k] : d.drugIdx.get(d.dd.drug[k])));
+      };
+      if (!own && c.drugs.c.chembl_mechanisms) {
         var am = dcol('annotation_alert');
         more = [{key: 'chembl_mechanisms', label: 'chembl_mechanisms (from tables/drugs)', type: 'str', simple: true,
-          get: dcol('chembl_mechanisms'), missing: function (i) {
-            var k = dds.c.dd.get(i);
-            return TM.drug.chemblText(TM.drug.annOf(d.drugOf ? d.drugOf[k] : d.drugIdx.get(d.dd.drug[k])));
-          }, doc: 'ChEMBL\u2019s mechanisms of the drug (tables/drugs chembl_mechanisms, from ' +
-            'reference/drug_annotations); the same for each of its doses'},
+          get: dcol('chembl_mechanisms'), missing: chemblWhy, doc: 'ChEMBL\u2019s mechanisms of the drug ' +
+            '(tables/drugs chembl_mechanisms, from reference/drug_annotations); the same for each of its doses'},
         {key: 'annotation_alert', label: 'annotation_alert (from tables/drugs)', type: 'str', simple: true, long: true,
           get: am, show: function (i) { var a = am(i); return a ? TM.h('span', {class: 'alert-text'}, '\u26a0 ' +
             a) : ''; }, doc: 'where Tahoe\u2019s and ChEMBL\u2019s annotations of the drug disagree (tables/drugs ' +
             'annotation_alert); empty: they do not disagree. Tahoe\u2019s annotation is never changed.'}];
       }
+      var alertOf = own ? function (i) { return dds.c.annotation_alert.get(i); } : (more.length ? more[1].get : null);
       return show(dds, 'tables/drugdoses.parquet', {dd: dd, drug: drug, nb_partner_dd: dd}, ['dd', 'drug',
         'dose', 'moa_fine', 'n_wells', 'n_genes_up', 'n_genes_down', 'replicate_r', 'flags', 'nb_tier',
-        'selective_lines', 'top_up', 'top_down'], 'drugdoses',
-      {filters: more.length ? [{key: 'anndis', label: '\u26a0 Tahoe and ChEMBL disagree', test: function (i) {
-        return !!more[1].get(i); }}] : []}, {after: 'moa_fine', cols: more});
+        'selective_lines', 'top_up', 'top_down'].concat(own ? ['chembl_mechanisms', 'annotation_alert'] : []),
+      'drugdoses', {filters: alertOf ? [{key: 'anndis', label: '\u26a0 Tahoe and ChEMBL disagree',
+        test: function (i) { return !!alertOf(i); }}] : []},
+      {after: 'moa_fine', cols: more, move: own ? ['chembl_mechanisms', 'annotation_alert'] : [],
+        tweak: function (mv) {
+          mv.forEach(function (cc) {            // the same words as an older run's columns read from tables/drugs
+            cc.label = cc.key + ' (from tables/drugs)';
+            cc.simple = true;
+            if (cc.key === 'chembl_mechanisms') cc.missing = chemblWhy;
+            if (cc.key === 'annotation_alert') cc.long = true;
+          });
+        }});
     }
     if (kind === 'lines') {
       var og = {};

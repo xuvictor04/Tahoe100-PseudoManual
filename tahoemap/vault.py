@@ -90,11 +90,13 @@ lfc_vs_dmso: a sign check); At a glance's count rule (called: q < 0.10 and >= 1.
 lineage-pair and read-sharing partners with their numbers; in a drug note both annotations (Tahoe verbatim, ChEMBL
 with its release), an alert where they disagree, the mechanism classes with their sources, the salt-form note, each
 dose's plate and well (drugs.parquet dose_plates), its neighbouring-well reading, unexpected similarity and selective
-lines, the 10 most similar drug-doses of its best dose (of 50), the line-selective controls; in a line note the
+lines, the 10 most similar drug-doses of its best dose (of 50; version 9: none as a ranking when that dose has no
+pooled signature, which the note says), the line-selective controls; in a line note the
 drug-doses where it responds out of proportion (tables/drug_line_response.parquet) and its selectivity arrows; in a
 module note the label as validate version 7 chose it, part by part, with its alerts and covariates; in the direction
 tables 'false (group)', each family's caveat once, and how often a gene was tested (direction/gene_tests.parquet);
-the counts on Home and the words in How to read this vault.
+the counts on Home and the words in How to read this vault. Version 9 also puts 'vs DMSO (rough)' (a sign check) in
+the gene lists of a drug note.
 
 Literature reviews (optional; tahoemap/review, docs/review.md): when OUT/review holds reviews (review/notes/<kind>/,
 review/reviews/<kind>/, review/connections.parquet), the note of every reviewed gene, drug or cell line gets a section
@@ -142,7 +144,7 @@ from .common import cap_keep as _cap_keep, folder, log, read_effects_index, repl
 # the sentence-level rule the runner applies to the notes it stores (verify imports only the standard library)
 from .review.verify import ITEM_SECTIONS, drop_self_check as _verify_drop_self_check
 
-VERSION = 8                          # 3: nothing is left out for a flag; flagged items carry an alert (ALERT);
+VERSION = 9                          # 3: nothing is left out for a flag; flagged items carry an alert (ALERT);
 #                                      4: the direction stage's arrows (gene, drug and line notes, Probable direction)
 #                                      5: links into the explorer; every capped list says 'k of N shown' with a link
 #                                         to all N; .tahoemap-paths.json; direction notes and kind caveats
@@ -155,6 +157,10 @@ VERSION = 8                          # 3: nothing is left out for a flag; flagge
 #                                         lineage and read-sharing partners; false (group); gene tests
 #                                      8: every named value (At a glance, In single lines, In which cell lines, the
 #                                         predicted z) carries its caveats next to its alert; 'without an artifact flag'
+#                                      9: a drug's best dose with no pooled signature has no similarity ranking (said
+#                                         so; the stored rows are not listed as similar); '(k of 50 stored; N other
+#                                         drug-doses, all in the explorer's Vector space tab)'; vs DMSO (rough) in
+#                                         the drug notes' gene lists
 GEN = "tahoemap"
 SEED_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vault_seed")
 MANIFEST = ".tahoemap-manifest.json"
@@ -4102,8 +4108,11 @@ class Vault:
     def similar_block(self, d, info):
         """'## Most similar drug-doses': for the drug's best dose, the most similar drug-doses of
         embed/drug_similarity.parquet (cosine of the pooled signatures, and of the per-line contexts; genes significant
-        in both; same compound; the other's classes and flags, its alert first): the N_SIMILAR strongest, '10 of 50;
-        all 50 in the explorer'."""
+        in both; same compound; the other's classes and flags, its alert first): the N_SIMILAR strongest, '(10 of 50
+        stored; N other drug-doses, all in the explorer's Vector space tab: ...)'. A best dose with no pooled signature
+        (every cos_pooled NaN: it moves no gene at |z| >= 3 or q < 0.10) has no ranking: the note says so and where
+        the stored rows are, and lists none of them as most similar (the explorer's Similar drug-doses tab words). Rows
+        whose other drug-dose has no pooled signature (NaN, last) are counted and named."""
         R = self.R
         g = (lambda k: sval(info.get(k)) if info is not None else "")
         bdd = int(float(g("best_dd"))) if _finite(g("best_dd")) else -1
@@ -4111,6 +4120,23 @@ class Vault:
         if sim is None or not len(sim):
             return []
         n_all = len(sim)
+        n_other = max(int(R.Dn) - 1, 0)
+        nan = ~np.isfinite(pd.to_numeric(sim["cos_pooled"], errors="coerce").to_numpy(float))
+        where = (f"{n_other:,} other drug-doses, all in the explorer's Vector space tab: "
+                 f"{self.xl(self.xdd(bdd, 'space'))}; the {n_all} stored rows: its Similar drug-doses tab: "
+                 f"{self.xl(self.xdd(bdd, 'similar'))}")
+        cut = f"|z| ≥ {TB.KEEP_Z:g} or q < {Q_CUT:.2f}"
+        if nan.all():
+            # its rows of tables/drug_effects, if any, are noise-class RNAs (the signature leaves them out)
+            dds_ = getattr(self, "_dd_rows", (None, None))[1]
+            n_de = int(dds_[bdd + 1] - dds_[bdd]) if dds_ is not None and bdd + 1 < len(dds_) else 0
+            noise = (f" other than noise-class RNAs (its {n_de} row{'s' if n_de != 1 else ''} of "
+                     "`tables/drug_effects.parquet`, which the signature leaves out)" if n_de else "")
+            return ["## Most similar drug-doses", "",
+                    f"No similarity ranking: {self.ddlink(bdd)} (its best dose) moves no gene at {cut}{noise} (no "
+                    f"pooled signature); the {n_all} stored rows are the first other drug-doses in row order, not a "
+                    "ranking. None of them is listed here as similar.", "",
+                    f"(0 of {n_all} stored; {where})", ""]
         top = sim.head(N_SIMILAR)
         body = []
         for r_ in top.to_dict("records"):
@@ -4129,7 +4155,12 @@ class Vault:
              f"(sources in its note). Flags: the other's flags of record, {ALERT} first.*", ""]
         L += table(["#", "Drug-dose", "cos pooled", "cos lines", "Shared", "Same compound", "Class", "Flags"],
                    body) + [""]
-        L += [self.kofn(len(top), n_all, self.xdd(bdd), "drug-doses"), ""]
+        if nan.any():
+            first = int(sim["rank"].iloc[int(np.argmax(nan))])
+            L += [f"{int(nan.sum())} of the {n_all} stored rows (#{first} on; {int(nan[:len(top)].sum())} of them "
+                  f"above) have no cos pooled: those other drug-doses have no pooled signature (they move no gene at "
+                  f"{cut}), so they come last, in row order, not ranked.", ""]
+        L += [f"({len(top):,} of {n_all} stored; {where})", ""]
         return L
 
     def line_controls_block(self, d, rows=()):
@@ -4300,7 +4331,9 @@ class Vault:
                   "out; its reasons are the dose's own alert, named once after the dose, unless they are given in "
                   "the gene's brackets. For a `cell-cycle shift` each gene says how much of its change the shift "
                   "explains; a gene without the alert at such a dose is one whose change the shift does not "
-                  "explain.*", ""]
+                  "explain."
+                  + (" vs DMSO (rough) = the same change measured against the plate's two DMSO wells "
+                     "(`lfc_vs_dmso`): a sign check, not a replacement." if R.has_dmso else "") + "*", ""]
             anyrow = False
             for i in rows:
                 rr = o[dds[i]:dds[i + 1]]
@@ -4327,8 +4360,11 @@ class Vault:
                     cav_ = caveat_text(de["flags"][r]).split("; ")
                     cc_ = [x for x in cav_ if x.startswith(CC_FLAG)]
                     nbc = ["the neighbour does not move this gene"] if CM.NB_CLEARED in cav_ else []
+                    dm = fdmso(de["lfc_vs_dmso"][r], de["lfc"][r]) if R.has_dmso else ""
+                    dm = (dm if dm == "no DMSO value" else f"vs DMSO (rough) {dm}") if dm else ""
                     items.append(f"{self.glink(de['col'][r])}{f' {ALERT}' if a else ''} {ffold(de['fold'][r])} "
-                                 f"(z {fz(de['z'][r])}, {int(nl)}/{int(de['n_lines_measured'][r])} lines"
+                                 f"(z {fz(de['z'][r])}, {dm + ', ' if dm else ''}"
+                                 f"{int(nl)}/{int(de['n_lines_measured'][r])} lines"
                                  + fwells_of(de["n_wells"][r])
                                  + "".join(f"; {x}" for x in [why] + cc_[:1] + nbc if x) + ")")
                 n_all, n_al = len(rr), sum(1 for a in als if a)
@@ -5682,10 +5718,12 @@ seen.
   classes with their sources; doses (plate and well, significant genes, replicate agreement, cell loss, cell-cycle
   and proteasome module z, flags with ⚠ before the artifact flags); notes per dose (a neighbouring well, an unexpected
   similarity to another class, the lines that respond out of proportion); the 10 most similar drug-doses of its best
-  dose (of 50); the genes each dose raises and lowers (every significant gene counts;
-  those with an alert are marked, a bare ⚠ standing for the dose's own alert named after the dose), the modules it
-  moves, the lines it depletes and the lines that respond most, the nearest drugs in the vector space, and (Direction
-  (probable)) the genes that set how the cells fare under it and the drug-target arrows of its compound classes.
+  dose (of 50; a dose that moves no gene at |z| ≥ 3 or q < 0.10 has no pooled signature and so no ranking, which the
+  note says instead); the genes each dose raises and lowers (every significant gene counts, each with its fold, z and
+  vs DMSO (rough), a sign check; those with an alert are marked, a bare ⚠ standing for the dose's own alert named
+  after the dose), the modules it moves, the lines it depletes and the lines that respond most, the nearest drugs in
+  the vector space, and (Direction (probable)) the genes that set how the cells fare under it and the drug-target
+  arrows of its compound classes.
 - **Cell line** — organ, TP53 status, drivers, the drug-doses that deplete it, how strongly it responds (both over
   all drug-doses, flagged ones marked ⚠), the drug-doses where it responds out of proportion (selective), the genes
   it moves most, the genes it has unusually high or lacks, and the
@@ -5737,8 +5775,9 @@ def words_section():
         "Tier `artifact`: most of its significant genes move the same way, more strongly, in a neighbouring well of "
         f"another compound, and its higher doses do not move them: {ALERT} on the genes the neighbour moves "
         "(`like a neighbouring well`), not on the others (`... (not this gene)`). Tier `top dose`: the same at a "
-        "drug's top dose, where no higher dose can tell (a caveat; its alert gives the rate at which pairs 3 or more "
-        "wells apart pass the same test). Tier `same mechanism`: the two compounds share a mechanism, so a shared "
+        "drug's top dose, where no higher dose can tell (an alert, not an artifact flag: the row stays clean; "
+        "it gives the rate at which pairs 3 or more wells apart pass the same test). Tier `same mechanism`: the two "
+        "compounds share a mechanism, so a shared "
         "signature is expected (a note). Tier `dose response`: at the top dose, but the drug's lower doses already "
         "move its strongest shared genes the same way, so its own effect grows with the dose (a note). A drug note "
         "names the neighbour and the wells.",

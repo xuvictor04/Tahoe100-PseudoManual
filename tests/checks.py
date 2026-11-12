@@ -10,7 +10,8 @@ common.py and tests/test_port.py use atlas_core's flag list (a syntax-tree scan)
 every table; the neighbouring-well tiers and their per-gene reading (W2 (a)-(f)), with the validation section, the
 module drug lists and the direction drug-dose lists; the translation-inhibitor caveat (g), with the drug note's class
 line and the validation words; the DMSO sign check (h), drug_line_response and selectivity (i), TP53 'not recorded'
-(j), dose = plate (k), the annotations and classes (l), the tables README (m); the direction VERSION 5 rules D1-D17
+(j), dose = plate (k), the annotations and classes (l), the tables README (m), the drug's annotation columns on
+drugdoses.parquet and the validation README's word for the top-dose tier (n); the direction VERSION 5 rules D1-D17
 (tests/test_direction.py v5_checks), the drug-target classes and the stage order; lineage pairs, counts in two units,
 drug-dose similarity, covariates, partner preservation; the module labels and the report's new sections. A planted
 effect the synthetic data make too small for its rule is a WARN that names it (a request to make the plant
@@ -1991,6 +1992,33 @@ def wave2_checks(out, data, truth, check, col, gK):
             f"{miss or 'none'}; drugdose_signatures.gmt {n_sets} sets (info.json {info.get('gmt')})")
     check("tables", "(m) tables/README.md documents every column and the new rules; the GMT of call sets", readme)
 
+    def dd_annotations():
+        """tables VERSION 7: drugdoses.parquet carries the drug's chembl_mechanisms and annotation_alert, equal to
+        drugs.parquet by drug on every row (the same for each dose), documented in the drugdoses section of the README;
+        the validation README calls the top-dose tier 'an alert, not an artifact flag' and 'translation inhibitor' a
+        caveat (validate VERSION 9)."""
+        st = json.load(open(os.path.join(out, "stages", "tables.json"), encoding="utf-8"))
+        cols = [c for c in TB.DD_FROM_DRUGS if c in dd]
+        ref = drugs.set_index("drug")
+        diff = {c: int((dd[c].fillna("").astype(str).to_numpy()
+                        != ref.loc[dd["drug"], c].fillna("").astype(str).to_numpy()).sum()) for c in cols}
+        txt = open(os.path.join(tb, "README.md"), encoding="utf-8").read()
+        sec = txt.split("## drugdoses.parquet", 1)[-1].split("## drugs.parquet", 1)[0]
+        doc = all(f"| `{c}` | " in sec and "copied from drugs.parquet" in sec for c in TB.DD_FROM_DRUGS)
+        vr = os.path.join(out, "validation", "README.md")
+        vtxt = " ".join(open(vr, encoding="utf-8").read().split()) if os.path.exists(vr) else ""
+        vok = ("'like a neighbouring well (top dose)', is an alert, not an artifact flag" in vtxt
+               and "'translation inhibitor' is a caveat" in vtxt)
+        ok = (int(st.get("version", 0)) >= 7 and cols == list(TB.DD_FROM_DRUGS) and not any(diff.values()) and doc
+              and vok)
+        n_al = int((dd["annotation_alert"].fillna("") != "").sum()) if "annotation_alert" in dd else 0
+        return ok, (f"tables version {st.get('version')}; drugdoses columns {cols}; rows that differ from "
+                    f"drugs.parquet {diff} (of {len(dd)}; {n_al} drug-doses with an annotation alert); documented in "
+                    f"the drugdoses section: {doc}; validation README: top-dose tier an alert, not an artifact flag, "
+                    f"'translation inhibitor' a caveat: {vok}")
+    check("tables", "(n) drugdoses carries the drug's chembl_mechanisms and annotation_alert (= tables/drugs by "
+                    "drug), documented; the validation README's words for the top-dose tier", dd_annotations)
+
     # ------------------------------------------------ direction VERSION 5 (D1-D17 of tests/test_direction.py)
     dr = os.path.join(out, "direction")
     if os.path.exists(os.path.join(dr, "edges.parquet")):
@@ -2136,6 +2164,7 @@ def wave2_checks(out, data, truth, check, col, gK):
     gr = os.path.join(out, "graph")
     if os.path.exists(os.path.join(gr, "modules.parquet")):
         def graph_new():
+            from tahoemap import embed as EM, graph as GR, relations as RL   # the versions this code writes
             mods = pd.read_parquet(os.path.join(gr, "modules.parquet"))
             gi = json.load(open(os.path.join(gr, "info.json"), encoding="utf-8"))
             ei = json.load(open(os.path.join(ed, "info.json"), encoding="utf-8"))
@@ -2146,7 +2175,8 @@ def wave2_checks(out, data, truth, check, col, gK):
             ok = (all(c_ in mods for c_ in covc + ["covariate_kinds", "covariate_tag"])
                   and len(pp.get("layouts", {})) == 4 and all(0 <= v <= 1 for v in pp["layouts"].values())
                   and os.path.exists(os.path.join(gr, "modules.gmt"))
-                  and (ei["version"], ri["version"], gi["version"]) == (5, 5, 6))
+                  and (ei["version"], ri["version"], gi["version"]) == (EM.VERSION, RL.VERSION, GR.VERSION)
+                  and (ei["version"], ri["version"], gi["version"]) >= (5, 5, 6))
             return ok, (f"modules covariate columns and tags ({int((mods['covariate_tag'] != '').sum())} tagged); "
                         f"partner preservation {pp.get('layouts')} (chance {pp.get('chance')}); modules.gmt "
                         f"{gi.get('gmt')}; versions embed {ei['version']}, relations {ri['version']}, graph "

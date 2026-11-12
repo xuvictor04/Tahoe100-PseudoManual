@@ -129,8 +129,10 @@ doi:10.1101/2025.02.20.639398).
 Complete, sortable tables: genes, drugs, drug-doses, cell lines (by organ), modules, direction groups, and every
 probable-direction arrow (built from the direction files when the list is opened). Tahoe's annotation columns are
 labelled "(Tahoe)"; the drugs list shows ChEMBL's mechanism and the disagreement alert, and the drug-doses list adds
-both from `tables/drugs` ("chembl_mechanisms (from tables/drugs)", "annotation_alert (from tables/drugs)"), with a
-filter for the drugs whose annotations disagree. The neighbouring-well tier is marked as on the drug-dose page.
+both ("chembl_mechanisms (from tables/drugs)", "annotation_alert (from tables/drugs)"), with a filter for the drugs
+whose annotations disagree. Since tables version 7 `tables/drugdoses` carries the two columns itself (copied from
+`tables/drugs` by drug, the same for each dose), and the list shows them; an older run's are read from `tables/drugs`.
+The neighbouring-well tier is marked as on the drug-dose page.
 (Earlier pages showed Tahoe's mechanism alone and unlabelled outside the drug page.)
 
 Above each list of arrows, "Alert reasons over this list" counts the arrows by a short label of each reason. A reason
@@ -184,14 +186,16 @@ This is the drug's raw corrected information at one dose. Its top names the drug
 ("mechanism (Tahoe): HDAC inhibitor · mechanism (ChEMBL): Sodium channel alpha subunit blocker") and, when the two
 annotations disagree, carries "⚠ Tahoe and ChEMBL disagree: ..." with a link to the drug's Annotations section. Its
 neighbouring-well tier is a badge: "⚠ neighbouring well: artifact" in red (an artifact flag), "△ neighbouring well:
-top dose (alert, not an artifact flag)" in amber, or "neighbouring well: same mechanism (note, not an artifact flag)".
+top dose (alert, not an artifact flag)" in amber, or "neighbouring well: same mechanism (note, not an artifact flag)"
+or "neighbouring well: dose response (note, not an artifact flag)" (the drug's lower doses already move its strongest
+shared genes the same way: its own effect grows with the dose).
 Earlier pages called the top-dose tier "a note" in its block and gave it no marker in the header, while its own text
 said "shown with this alert". The tables stage records it as an alert, not an artifact flag (the data cannot tell a
 carried-over signal from a real effect at the top dose), so every page now calls it an alert and marks it △.
 
 | Tab | What it holds |
 |---|---|
-| QC | A one-line summary; the **neighbouring-well** block (its tier: artifact (an artifact flag, ⚠), top dose (an alert, not an artifact flag, △) or same mechanism (a note), the alert in full, a link to the partner drug-dose and where the wells sit); then every column of `tables/drugdoses` and `embed/drugdoses` in groups (the drug-dose; wells and plates; cells, UMI and genes per cell; composition shift; well position; plate factor; cell cycle and proteasome; flags of record and the atlas's own flags, with their meaning; neighbouring wells; mechanism classes and selective lines; genes it moves; the vector space), each with its definition. Then a volcano plot of every gene (flagged genes ringed in red). |
+| QC | A one-line summary; the **neighbouring-well** block (its tier: artifact (an artifact flag, ⚠), top dose (an alert, not an artifact flag, △), same mechanism (a note) or dose response (a note), the alert in full, a link to the partner drug-dose and where the wells sit); then every column of `tables/drugdoses` and `embed/drugdoses` in groups (the drug-dose; wells and plates; cells, UMI and genes per cell; composition shift; well position; plate factor; cell cycle and proteasome; flags of record and the atlas's own flags, with their meaning; neighbouring wells; mechanism classes and selective lines; genes it moves; the vector space), each with its definition. Then a volcano plot of every gene (flagged genes ringed in red). |
 | All genes | Every gene, exact float32: fold, log2 fold change, the rough DMSO-referenced value (**vs DMSO (rough)**, `p/` `lvd`, the same float32 as `tables/drug_effects` `lfc_vs_dmso`; a sign check, not a second estimate), z, q rise, q fall, call, flags, clean, cell-cycle share, line counts, whether it is in `tables/drug_effects`, the position effect removed, dose patterns, noise RNA, in the vector space, module (from the search index; an older explorer without it shows a "Load the module of every gene" button) and the predicted z. Click a row for the gene's value in each line. The 3 summed modules are listed apart. "CSV: all genes and the 3 modules (exact float32)" saves every row. |
 | Cell lines | Every line: DD_A, DD_Az, depleted, whether the cell counts are trustworthy, response beta and r, S / G2M / proteasome effects, usable wells, its cells in the used wells and in every well. |
 | Lines: response and growth | Every line's row of `tables/drug_line_response`: genes it moves on its own beyond the per-line cut, rel_log2 and the line selectivity sel_z (sorted by it, most selective first), whether the line is selective (marked ★, a marker, not a filter), response strength and r, relative cell number (growth) and its z, depleted, flags. Above it the drug-dose's `direction/selectivity` row (its selective lines, organs, the genotype groups that explain them); below it the line-selective positive controls (`validation/line_controls`) that test it. |

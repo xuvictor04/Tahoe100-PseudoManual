@@ -44,6 +44,8 @@ STAGE_MODULE = {"tensor": "tensor", "tables": "tables", "embed": "embed", "refer
                 "relations": "relations", "graph": "graph", "direction": "direction", "validate": "validate",
                 "vault": "vault", "map": "html_map", "explorer": "explorer"}
 LOOKUPS = ("gene", "drug", "line", "pair", "module", "similar", "signature")
+# set when a look-up has finished: `python -m tahoemap` then ends the process at once (tahoemap/__main__.py)
+LOOKUP_DONE = False
 EXTRA_COMMANDS = ("review", "duplicate", "export")   # not stages: they read a finished output (never run the
                                                      # pipeline)
 
@@ -839,7 +841,10 @@ def main(argv=None):
     T.safe_console()
     if a.command in LOOKUPS:
         from . import query
-        return query.main(a)
+        global LOOKUP_DONE
+        rc = query.main(a)
+        LOOKUP_DONE = True
+        return rc
     if a.command == "status":
         return cmd_status(a)
     if a.command == "review":

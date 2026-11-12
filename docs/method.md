@@ -139,8 +139,11 @@ different compounds (not DMSO, not on an unreliable plate; `tables.neighbour_wel
   of them moves 20% or more of the shared genes, a gets `like a neighbouring well`: an artifact flag, but only for the
   genes the neighbour moves the same way at |z| ≥ 2. Its other genes read `like a neighbouring well (not this gene)`.
 - At the drug's top dose there is no higher dose to check: when its lower doses move less than 20% of the shared
-  genes, a gets `like a neighbouring well (top dose)`, a caveat. When the two compounds share a mechanism (Tahoe's
-  moa_fine, Tahoe's targets or a drug class), it is probably a real class effect: a note, no token.
+  genes, a gets `like a neighbouring well (top dose)`: an alert, not an artifact flag (the row stays clean). When one of its lower doses already moves at least 3
+  of its 10 strongest shared genes the same way (|z| ≥ 3), the drug's own effect grows with the dose: tier 'dose
+  response', a note, no token (tables version 6; before, RMC-6236 5 µM carried the top-dose caveat on 498 genes). The
+  top-dose alert also gives the rate at which pairs 3 or more wells apart pass. When the two compounds share a
+  mechanism (Tahoe's moa_fine, Tahoe's targets or a drug class), it is probably a real class effect: a note, no token.
 - If b's own other doses also show less than 20% of the shared genes, b gets the same tier with a as its partner.
 - `drugdoses.parquet` nb_tier, nb_partner, nb_where (the plates and wells), nb_alert (the reasons in words) and the
   counts in `tables/info.json` neighbour_rule. The rate of resembling pairs 3 or more wells apart gives the passes
@@ -158,8 +161,9 @@ A drug that stops protein synthesis raises many short-lived mRNAs whatever their
 their genes off or break them down are no longer made (Edwards and Mahadevan 1992, doi:10.1002/j.1460-2075.1992.tb05306.x).
 The class TRANSLATION_ELONGATION of `tahoemap/data/drug_classes.json` (harringtonine, homoharringtonine and other
 ribosome blockers, by cited code constants and ChEMBL's mechanisms) is read by `tahoemap/mechanisms.py`. Every
-drug-dose of a member carries `translation inhibitor`; each gene that rises there (lfc > 0) reads `rise under a
-translation inhibitor`, and a gene that falls carries neither. Both are caveats: they never change clean. Tahoe's
+drug-dose of a member carries `translation inhibitor`; each gene that rises there (lfc > 0; a per-line cell reads its
+own per-line change, tables version 6) reads `rise under a translation inhibitor`, and a gene that falls carries
+neither. Both are caveats: they never change clean. Tahoe's
 label 'Protein synthesis inhibitor' is not a class rule: it also covers four MNK / eIF4E inhibitors (Tomivosertib,
 ETC-206, 4EGI-1, SBI-0640756) that do not stop protein synthesis (listed under 'not_members' with the reason). On the
 published tables 25,534 drug_effects rows of Homoharringtonine and Harringtonine read 'rise under a translation
@@ -331,7 +335,8 @@ tensor (it reads only atlas/), so the tables and every later stage can use it. I
 direction stage places driver genes Tahoe does not measure), `reference/paralogues.parquet` (human paralogue pairs
 among Tahoe's genes from Ensembl Compara r112, both identities and the homology type) and each drug's ChEMBL record
 (`drug_annotations.parquet`, `drug_mechanisms.parquet`, `drug_classes.parquet`: matched by structure, PubChem id →
-InChIKey, and by name; on the real data 377 of 379 drugs matched, 287 with a curated mechanism, 19 with an alert).
+InChIKey, and by name; on the real data 377 of 379 drugs matched, 284 with a curated mechanism (3 more have only
+ChEMBL's Unknown, which counts as no mechanism), 19 with an alert).
 Validation scores the space against curated control programmes that were not derived from Tahoe
 (`tahoemap/data/control_sets.json`) and against Hallmark and Reactome, tests the opposite-arm prediction, labels
 modules by enrichment, by the drug class that drives them, or as lineage-restricted (with alerts for near-identical

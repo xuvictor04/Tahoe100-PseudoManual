@@ -175,7 +175,7 @@ tahoe run --reuse-atlas ~/Tahoe-100M/atlas
 `& "C:\tahoe\mingit\cmd\git.exe" -C C:\tahoe\repo pull` (or `git -C C:\tahoe\repo pull` when git is on PATH).
 Then `tahoe run` (Windows: the same `python -m tahoemap run --out ...` as before, from `C:\tahoe\repo`) redoes only
 the stages whose method changed, and the stages after them. `tahoe` alone shows the plan first. **After this update**
-(reference version 3, tables 6, embed 5, relations 5, graph 6, direction 6, validate 8, vault 8, map 10, explorer 4)
+(reference version 3, tables 7, embed 5, relations 5, graph 7, direction 6, validate 9, vault 9, map 11, explorer 4)
 any output made before it, including one made before the explorer or the direction stage existed, redoes reference
 and every stage after it: `next: reference -> tables -> embed -> relations -> graph -> direction -> validate -> vault
 -> map -> explorer`. The build, the effects and the tensor are kept. The reference stage runs right after tensor
@@ -269,8 +269,8 @@ C:\tahoe\.venv\Scripts\python.exe tests\test_windows.py
 C:\tahoe\.venv\Scripts\python.exe tests\test_review.py --out C:\tahoe\test\out_seed0   # the review agents, fake API
 ```
 
-- `run_tests.py` (about 7 minutes) should end with "165 passed, 8 warnings, 0 failed" when Playwright is not
-  installed, or "189 passed, 1 warnings, 0 failed" with it (the one warning with Playwright: the 'lowered by mTOR
+- `run_tests.py` (about 7 minutes) should end with "168 passed, 9 warnings, 0 failed" when Playwright is not
+  installed, or "193 passed, 1 warnings, 0 failed" with it (the one warning with Playwright: the 'lowered by mTOR
   inhibitors' module label, a planted effect below what its rule can call on seed 0); `test_review.py` (a few
   minutes, offline, no key) with "0 failed". It works in a folder of its own in the temp folder and only reads
   `--out`.
@@ -425,5 +425,5 @@ is killed for lack of memory the build stops and says so (finished plates are ke
 ## Test it first (about 7 minutes, no download)
 
 ```bash
-tahoe test             # synthetic Tahoe-100M with planted answers, the whole pipeline, and 190 checks
+tahoe test             # synthetic Tahoe-100M with planted answers, the whole pipeline, and 194 checks
 ```

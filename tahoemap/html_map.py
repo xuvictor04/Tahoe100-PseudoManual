@@ -167,6 +167,9 @@ decimals in Python as the vault and the look-ups round it: _fold100), z x10.
     up, dn                         per entry: flat [dd, fold, z, lines moving, flag code] x top drug-doses (every
                                    row of tables/drug_effects, strongest first, cut by cap_keep at n_drugs); in dn z
                                    is stored NEGATED (positive, saves the sign); fold is the fold itself (below 1)
+    upd, dnd                       (tables version 5 on) per entry: one int per row of up / dn, the row's rough
+                                   DMSO-referenced fold (drug_effects lfc_vs_dmso, a sign check): fold x100;
+                                   -(fold x100) - 2 = at least 1.2x the other way ('other sign'); -1 = no DMSO value
     dct                            per entry: flat [rows up, of them with an alert, rows down, with an alert]
     ln                             per entry: flat [line, n dd up, of them flagged, n dd down, of them flagged,
                                    up dd, up fold, up z, up flag code, up clean dd, up clean fold, up clean z,
@@ -201,7 +204,7 @@ decimals in Python as the vault and the look-ups round it: _fold100), z x10.
                                    (genes up / down, the neighbouring-well tier and alert, the resemblance note, the
                                    entries of top_up / top_down) and lines (drivers, TP53, selective drug-doses, vault
                                    note); vault_base = the results branch's address of the notes ('' = this folder)
-    dd, ddf, lines, organ          labels: drug-dose by dd row ("Drug dose uM") and its own flags (flag code),
+    dd, ddf, lines, organ          labels: drug-dose by dd row ("Drug dose µM") and its own flags (flag code),
                                    cell line by line index, organ
     mods                           per module: id, n, np, nm, label, genes (top-gene label), plus, minus, opp
                                    (arms_opposite), cb (mean cos between the sides), disp, lal (module_labels
@@ -290,7 +293,7 @@ from . import links as LK
 from . import vault as V
 from .common import ALERT, cap_keep as cap_rule, folder, log, marked_names, replace_file, stamp_stage
 
-VERSION = 10                   # 3: tabs, the physics simulations, graph/edges.parquet embedded; 4: a slow
+VERSION = 11                   # 3: tabs, the physics simulations, graph/edges.parquet embedded; 4: a slow
                                # double-click pins, at most 120 steps a second, literature badges with their check;
                                # 5: alerts instead of removal, the Spread slider, the k-D tour, neighbourhood depth 4;
                                # 6: probable direction (direction stage): side-panel lists and arrows;
@@ -305,6 +308,9 @@ VERSION = 10                   # 3: tabs, the physics simulations, graph/edges.p
                                # 10: a line card lists the drug-doses at which the line is selective (tables
                                # drug_line_response; version 9 read none); the strongest per-line value without an
                                # artifact flag shows its caveats (lnc); the help names every flag word from the code
+                               # 11: vs DMSO (rough), a sign check, in a gene's drug-dose tables (upd / dnd); doses
+                               # in µM; a drug in the search reads '(Tahoe) <moa>' and '⚠ annotations disagree'; a
+                               # module card's alert keeps one ⚠
 N_PARTNERS = 15
 N_DRUGS = 8
 N_LINES = 5
@@ -361,6 +367,18 @@ def _scaled(x, scale, fill=0):
     x = np.asarray(x, dtype=np.float64) * scale
     ok = np.isfinite(x)
     return np.where(ok, np.rint(np.where(ok, x, 0.0)), fill).astype(np.int64)
+
+
+def _dmso_codes(lfc_vs_dmso, lfc):
+    """The rough DMSO-referenced fold of drug_effects rows (lfc_vs_dmso: a sign check, not a replacement) as the map's
+    upd / dnd ints: its fold x100 (_fold100); -(fold x100) - 2 when it is at least 1.2x the other way from lfc ('other
+    sign against DMSO', the vault's rule); -1 = the plate has no DMSO value."""
+    x, l_ = np.asarray(lfc_vs_dmso, dtype=np.float64), np.asarray(lfc, dtype=np.float64)
+    f = _fold100(x, fill=-1)
+    with np.errstate(invalid="ignore"):
+        other = np.isfinite(x) & np.isfinite(l_) & (l_ != 0) & (np.abs(x) >= np.log2(1.2)) & \
+            (np.sign(x) != np.sign(l_))
+    return np.where(other, -f - 2, f).astype(np.int64)
 
 
 def _fold100(lfc, fill=0):
@@ -1065,13 +1083,15 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
     # ---- drug-doses up / down: every row of the fold-change table, flagged ones in their ranked place with an alert
     ft = FlagTable()
     de = _read(os.path.join(td, "drug_effects.parquet"),
-               ["col", "dd", "lfc", "z", "clean", "flags", "cc_share", "n_lines_up", "n_lines_down"])
+               ["col", "dd", "lfc", "z", "clean", "flags", "cc_share", "n_lines_up", "n_lines_down", "lfc_vs_dmso"])
+    has_dmso = "lfc_vs_dmso" in de                          # tables version 5: the rough DMSO-referenced lfc
     dc = de["col"].to_numpy(dtype=np.int64)
     de_ent = np.where((dc >= 0) & (dc < gK), ent[np.clip(dc, 0, gK - 1)], -1)
     z = _num(de, "z")
     de_flags = de["flags"].map(_str).to_numpy() if "flags" in de else np.array([""] * len(de), dtype=object)
     de_alert = ~_bool(de, "clean") if "clean" in de else np.array([CM.has_artifact(f) for f in de_flags], dtype=bool)
     up_lists, dn_lists, dct = [], [], np.zeros((na, 4), dtype=np.int64)
+    dm_lists = {1: [], -1: []}                                # upd / dnd: the rows' vs DMSO (rough) codes
     for t, (sign, nl_col, store) in enumerate(((1, "n_lines_up", up_lists), (-1, "n_lines_down", dn_lists))):
         m = (de_ent >= 0) & np.isfinite(z) & (sign * z > 0)
         e, zz = de_ent[m], sign * z[m]
@@ -1087,6 +1107,8 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
         mat = np.column_stack([_num(sub, "dd").astype(np.int64), _fold100(_num(sub, "lfc")),
                                _scaled(sign * _num(sub, "z"), 10), _scaled(_num(sub, nl_col), 1), f])
         store.extend(_lists(e, mat, na))
+        if has_dmso:
+            dm_lists[sign].extend(_lists(e, _dmso_codes(_num(sub, "lfc_vs_dmso"), _num(sub, "lfc"))[:, None], na))
     log(f"  drug-doses: {len(de):,} rows ({int(de_alert.sum()):,} with an artifact flag) -> the {drugs} strongest up / "
         f"down per gene, plus unflagged ones of the first {drugs} beyond them")
     del de
@@ -1180,7 +1202,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
         dart, ddf = [False] * len(dlab), [0] * len(dlab)
         fl = dd["flags"].map(_str) if "flags" in dd else pd.Series([""] * len(dd))
         for i, d_, s_, f_ in zip(ddi.tolist(), dd["drug"].map(_str), dd["dose"].map(_str), fl):
-            dlab[i] = f"{d_} {s_} uM".strip()
+            dlab[i] = f"{d_} {s_} µM".strip()           # as the tables, the explorer, the vault and the report
             dart[i] = CM.has_artifact(f_)
             ddf[i] = ft.code(f_, dart[i])                     # the drug-dose's own flags (module card)
     llab, organ = [], []
@@ -1259,6 +1281,7 @@ def build_data(out, partners=N_PARTNERS, drugs=N_DRUGS, lines=N_LINES, fn_chars=
         "cpm": cpm, "nup": nup, "nupa": nupa, "ndn": ndn, "ndna": ndna, "nlx": nlx, "why": why, "efo": efo,
         "rel": rel_lists, "reln": reln.ravel().tolist(), "pw": [str(p) for p in pw],
         "up": up_lists, "dn": dn_lists, "dct": dct.ravel().tolist(), "ln": ln_lists, "lnw": LN_WIDTH,
+        **({"upd": dm_lists[1], "dnd": dm_lists[-1]} if has_dmso else {}),
         "lnn": lnn.ravel().tolist(), "lnc": lnc_lists,
         "ln_all": bool(ln_all),
         "fl": ft.rows, "dd": dlab, "ddf": ddf, "lines": llab, "organ": organ, "mods": mods,
@@ -3890,7 +3913,8 @@ function moduleCard(m) {
     "<span class='note'>" + md.n + " genes: " + arms + "</span>" +
     " <span class='lk' data-hl='-1' style='float:right'>clear</span></div>" +
     "<div class='row'><b>" + esc(md.disp || md.label) + "</b> <span class='lk' data-mtab='" + m + "'>simulate</span></div>" +
-    (md.lal ? "<div class='row al'>&#9888; " + esc(md.lal) + "</div>" : "") +
+    (md.lal ? "<div class='row al'>" + (md.lal.charAt(0) === "\u26a0" ? "" : "&#9888; ") + esc(md.lal) + "</div>" :
+      "") +
     (md.cov ? "<div class='row note' data-cov='" + esc(md.covk || 1) + "'><span class='bd'>" + esc(md.covk || "covariate") + "</span> " + esc(md.cov) + "</div>" : "") +
     (md.plus ? "<div class='row'><span class='lbl'>" + (md.opp ? "+ arm" : "genes") + ":</span> " + esc(md.plus) +
       armKofN(md.plus, md.np, m) + "</div>" : "") +
@@ -3907,17 +3931,32 @@ function moduleCard(m) {
       " in the explorer: every member, every drug-dose and every line") + X_WHERE + "</div>" +
     "</div>";
 }
+// the rough DMSO-referenced fold of a drug list row (upd / dnd codes, module docstring): a sign check
+function dmsoCell(v) {
+  if (v == null) return "";
+  if (v === -1) return "<td class='r note' title='the plate has no DMSO value'>no DMSO value</td>";
+  const other = v < -1, f = foldOf(other ? -v - 2 : v).toFixed(2) + "&times;";
+  return "<td class='r'" + (other ? " title='at least 1.2x the other way against the plate&#39;s two DMSO " +
+    "wells: read with care, not as a wrong value'" : "") + ">" + f +
+    (other ? " <span class='note'>&middot; other sign</span>" : "") + "</td>";
+}
 function drugTable(i, dir) {
   const a = dir > 0 ? D.up[i] : D.dn[i], c = D.dct ? D.dct.slice(4 * i + (dir > 0 ? 0 : 2), 4 * i + (dir > 0 ? 2 : 4)) : [0, 0];
+  const dm = (dir > 0 ? D.upd : D.dnd) ? (dir > 0 ? D.upd : D.dnd)[i] : null;
   if (!has(a)) return "<p class='note'>No drug-dose " + (dir > 0 ? "raises" : "lowers") + " it pooled over the cell lines (median; |z| &ge; 3 or q &lt; 0.1). A response in fewer than about half of the lines does not reach the pooled data: see the cell lines below.</p>";
-  let h = "<table><tr><th>Drug-dose</th><th class='r' title='fold change pooled over the cell lines (median)'>fold</th><th class='r'>z</th><th class='r' title='cell lines that move the same way (per-line z &ge; 2 and &ge; 1.2x), counted inside the drug-dose&#39;s well(s): most drug-doses are one well, so the lines are not replicate treatments'>lines</th></tr>";
+  let h = "<table><tr><th>Drug-dose</th><th class='r' title='fold change pooled over the cell lines " +
+    "(median)'>fold</th>" + (dm ? "<th class='r' data-dmso='1' title='the same change against the plate&#39;s " +
+    "two DMSO wells (tables/drug_effects lfc_vs_dmso): a sign check, not a replacement'>vs DMSO (rough)</th>" : "") +
+    "<th class='r'>z</th><th class='r' title='cell lines that move the same way (per-line z &ge; 2 and &ge; " +
+    "1.2x), counted inside the drug-dose&#39;s well(s): most drug-doses are one well, so the lines are not " +
+    "replicate treatments'>lines</th></tr>";
   let rows = 0;
   for (let t = 0; t + 4 < a.length; t += 5) {
     const f = a[t + 4];
-    rows++;
     h += "<tr" + flagTitle(f) + "><td>" + esc(ddLabel(a[t])) + flagHtml(f) + "</td><td class='r'>" +
-      foldOf(a[t + 1]).toFixed(2) + "&times;</td><td class='r'>" +
+      foldOf(a[t + 1]).toFixed(2) + "&times;</td>" + (dm ? dmsoCell(dm[rows]) : "") + "<td class='r'>" +
       (dir * a[t + 2] / 10).toFixed(1) + "</td><td class='r'>" + a[t + 3] + "</td></tr>";
+    rows++;
   }
   // the explorer's Drugs tab with the rows of tables/drug_effects only ('in tables/drug_effects', the rows this
   // list draws from), sorted by z the list's way: the N drug-doses of this list are its first N rows
@@ -3928,7 +3967,11 @@ function drugTable(i, dir) {
       " (q &lt; 0.10 and at least 1.2x; " + fmtN(kCall) + " with &#9888;). The list holds " + fmtN(c[0]) + " drug-doses (|z| &ge; 3 or q &lt; 0.10), " + fmtN(c[1]) + " with &#9888;" +
     capNote(rows, c[1], D.n_drugs || 8) +
       ". &#9888; = the drug-dose carries an artifact flag for this gene (named under it): it keeps its place in the " +
-      "ranking; read it with that in mind. The explorer's Drugs tab lists every one of the " + fmtN(D.dd.length) +
+      "ranking; read it with that in mind." + (dm ? " vs DMSO (rough) = the same change against the plate's two " +
+      "DMSO wells (tables/drug_effects lfc_vs_dmso): a sign check, not a replacement; '&middot; other sign' = at " +
+      "least 1.2x the other way." : " vs DMSO (rough), a sign check, is not shown: this run's tables/drug_effects " +
+      "has no lfc_vs_dmso (tables older than version 5).") + " The explorer's Drugs tab lists every one of the " +
+      fmtN(D.dd.length) +
       " drug-doses, with the exact fold, z and q. The link opens it on the rows of tables/drug_effects, sorted by z " +
       "so that these " + fmtN(c[0]) + " come first; clear its filter to see all " + fmtN(D.dd.length) + ".</p>";
 }
@@ -4221,14 +4264,14 @@ function search(q) {
 }
 // ---------------------------------------------------------------- drugs, drug-doses and cell lines (search extras)
 const DRG = D.drg || [], DRG_L = DRG.map(x => x.n.toLowerCase());
-const DD_L = (D.dd || []).map(x => String(x).toLowerCase());
+const DD_L = (D.dd || []).map(x => String(x).toLowerCase().replace(/µ/g, "u"));   // typed 'uM' finds 'µM' too
 const LN_L = (D.lines || []).map(x => String(x).toLowerCase());
 const LN_C = LN_L.map(x => x.replace(/[^a-z0-9]/g, ""));
 const DRG_OF = new Map(DRG.map((x, t) => [x.n, t]));
 const KIND_RANK = {drug: 0, line: 1, dd: 2};
 function extraMatches(q) {
   // a drug by name (exact, start, or a piece of 3+ letters), a line by name (also without punctuation), a
-  // drug-dose by its label ('Trametinib 5' finds 'Trametinib 5 uM'); exact names first
+  // drug-dose by its label ('Trametinib 5' and 'Trametinib 5 uM' find 'Trametinib 5 µM'); exact names first
   const out = [], qc = q.replace(/[^a-z0-9]/g, "");
   const add = (kind, k, name, ex) => out.push({i: -1, kind: kind, k: k, name: name, ex: ex});
   DRG_L.forEach((l, t) => {
@@ -4241,11 +4284,11 @@ function extraMatches(q) {
     else if (q.length >= 2 && l.startsWith(q)) add("line", t, D.lines[t], false);
   });
   if (q.length >= 3) {
-    const q0 = q.replace(/\s*(µm|um)$/, "");
+    const qu = q.replace(/µ/g, "u"), q0 = qu.replace(/\s*um$/, "");
     DD_L.forEach((l, t) => {
       if (!l) return;
-      const ex = l === q || l === q0 + " um";
-      if (ex || l.startsWith(q)) add("dd", t, D.dd[t], ex);
+      const ex = l === qu || l === q0 + " um";
+      if (ex || l.startsWith(qu)) add("dd", t, D.dd[t], ex);
     });
   }
   out.sort((a, b) => (b.ex - a.ex) || (KIND_RANK[a.kind] - KIND_RANK[b.kind]) || (a.name.length - b.name.length) ||
@@ -4312,7 +4355,7 @@ function drugCard(d) {
 }
 function ddCard(k) {
   const X = D.ddx || {}, n = X.n ? X.n[k] : null, tu = X.tu ? X.tu[k] : [], td = X.td ? X.td[k] : [];
-  const drug = (D.dd[k] || "").replace(/ \S+ uM$/, "");
+  const drug = (D.dd[k] || "").replace(/ \S+ [µu]M$/, "");
   let h = "<h2>" + esc(ddLabel(k)) + " <span class='note'>drug-dose</span></h2>";
   h += "<p class='kofn'>" + xLink(xDd(k), "Everything on " + esc(ddLabel(k)) + " in the explorer") +
     " <span class='note'>(every gene, every line, its wells)</span>" + X_WHERE + "</p>";
@@ -4408,9 +4451,12 @@ function showSource(nm) {
   renderPanel();
 }
 // the grey line of a drug, drug-dose or line in the search list
+// (a drug: Tahoe's mechanism, labelled as Tahoe's, and the explorer search's words when Tahoe and ChEMBL disagree)
 const extraSub = r => r.kind === "drug" ? "drug &middot; " + DRG[r.k].d.length + " doses" +
-  (DRG[r.k].moa ? " &middot; " + esc(DRG[r.k].moa) : "") : r.kind === "dd" ? "drug-dose &middot; " +
+  (DRG[r.k].moa ? " &middot; (Tahoe) " + esc(DRG[r.k].moa) : "") +
+  (DRG[r.k].al ? " &middot; &#9888; annotations disagree" : "") : r.kind === "dd" ? "drug-dose &middot; " +
   ddCountTxt(r.k) : "cell line" + (D.organ[r.k] ? " &middot; " + esc(D.organ[r.k]) : "");
+const subText = r => { const e = document.createElement("span"); e.innerHTML = extraSub(r); return e.textContent; };
 let acItems = [], acOn = 0;
 const qi = $("q"), ac = $("ac");
 function acRender() {
@@ -4635,7 +4681,8 @@ window.TAHOE_MAP = {select: i => select(i, true, "api"), search: search, data: D
   // the Spread slider (0 = t-SNE, 1 = modules apart; no argument: the current value) and the map's drawn positions
   spread: v => { if (v != null) setSpread(v, 0); return spread; },
   hasSpread: () => HAS_SPREAD,
-  searchItems: q => search(String(q || "")).map(r => r.kind ? {kind: r.kind, k: r.k, name: r.name} :
+  // (sub: the grey line under a drug, drug-dose or line in the search list, as text)
+  searchItems: q => search(String(q || "")).map(r => r.kind ? {kind: r.kind, k: r.k, name: r.name, sub: subText(r)} :
     r.src ? {kind: "source", name: r.src} : {kind: "gene", i: r.i, name: D.sym[r.i]}),
   extra: (kind, k) => showExtra(kind, k),
   highlighted: () => hlSet ? Array.from(hlSet) : [],

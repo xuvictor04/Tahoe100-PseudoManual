@@ -26,14 +26,15 @@
    tests/test_surfaces.py and tests/test_explorer.py on the same output, the explorer's browser test
    (tests/test_explorer_browser.py) when that file is there and Playwright is installed (else a WARN: skipped), and
    the offline unit scripts (tests/test_mechanisms.py, test_tables_rules.py, test_relations_rules.py,
-   test_validate_rules.py: one check each, exit code 0 = PASS). Every check prints PASS / FAIL / WARN with its
+   test_validate_rules.py: one check each, exit code 0 = PASS); tests/checks.py also runs tests/test_fix_back.py (its
+   unit checks on toy inputs and its checks of this output). Every check prints PASS / FAIL / WARN with its
    numbers; the exit code is 1 if anything FAILs. Thresholds are set inside what seed 0 (the default) gives, so a
    FAIL there means a regression. One planted effect is below what its rule can call on seed 0 and is a WARN that
    says so: the 'lowered by mTOR' module label (a stronger planted fall makes the ribosome genes join the proteasome
-   genes' module, which the curated proteasome set then names). The direction edges of a version 5 output are
-   compared with tests/fixtures/direction_v5_seed0.tsv (test_direction.py --write-fixture; other seeds are not
-   compared). Other seeds draw other data, and with 18 lines a few planted effects sit near what can be detected:
-   seed 1 fails three such checks (CDKN1A rising in one TP53-mutant line, NCI-H1299; TP53 -> cells under the
+   genes' module, which the curated proteasome set then names). The direction edges of a version N output (N >= 5)
+   are compared with tests/fixtures/direction_v<VERSION>_seed0.tsv (now v6; test_direction.py --write-fixture; other
+   seeds are not compared). Other seeds draw other data, and with 18 lines a few planted effects sit near what can be
+   detected: seed 1 fails three such checks (CDKN1A rising in one TP53-mutant line, NCI-H1299; TP53 -> cells under the
    DNA-damaging drugs significant only within the TP53 group; the map's HDAC arms parting by 0.7 arm spreads, under
    the 1.5 asked) and warns that the one-dose plant gave no selectivity arrow there. The planted natural knockout and
    the failed well are read from ground_truth.json (and atlas/effects/failed_wells.csv), so no check names seed 0's.

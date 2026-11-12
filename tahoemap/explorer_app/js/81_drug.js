@@ -14,7 +14,8 @@ TM.drug = (function () {
   // ------------------------------------------------------------------- drug-dose QC groups (shared with 82_dd.js)
   // Every column of tables/drugdoses in a group; columns not named here go to "Other columns" (nothing is left out).
   var DD_GROUPS = [
-    ['The drug-dose', ['dd', 'drug', 'dose', 'conc', 'salt_base', 'targets', 'moa_fine', 'moa_broad', 'approved']],
+    ['The drug-dose', ['dd', 'drug', 'dose', 'conc', 'salt_base', 'targets', 'moa_fine', 'moa_broad', 'approved',
+      'chembl_mechanisms', 'annotation_alert']],
     ['Wells and plates', ['n_wells', 'n_wells_all', 'wells', 'wells_left_out', 'plates', 'unreliable_plate_only']],
     ['Cells, UMI and genes per cell (log2; against the plate, and against the plate row)',
       ['cells_log2_vs_plate', 'umi_per_cell_log2_vs_plate', 'genes_per_cell_log2_vs_plate', 'row_cells_log2',
@@ -73,6 +74,11 @@ TM.drug = (function () {
       var mk = nbMark((nbOf(k) || {}).tier);
       return al ? TM.h('span', {class: mk.cls}, mk.sign + al) : '';
     }
+    if (name === 'annotation_alert') {          // tables version 7: the drug's, copied from tables/drugs
+      var aa = t.c.annotation_alert.get(r);
+      return aa ? TM.h('span', {class: 'alert-text'}, '\u26a0 ' + aa) : TM.h('span', {class: 'muted'},
+        'none (Tahoe and ChEMBL do not disagree)');
+    }
     if (name === 'top_up' || name === 'top_down') return TM.valText(t.c[name], r);
     return TM.valText(t.c[name], r);
   }
@@ -86,7 +92,8 @@ TM.drug = (function () {
   }
   // tier 'artifact' carries the artifact token (like a neighbouring well, red with \u26a0); 'top dose' is an alert, not
   // an artifact flag (the tables stage: "an alert, not an artifact flag"; amber with \u25b3, never red); 'same
-  // mechanism' is a note (muted). One word per tier on every surface of the explorer.
+  // mechanism' and 'dose response' (the drug's own lower doses already move its strongest shared genes the same
+  // way) are notes (muted). One word per tier on every surface of the explorer.
   function nbIsArtifact(k) { var nb = nbOf(k); return !!nb && nb.tier === 'artifact'; }
   var NB_TOP_SIGN = '\u25b3 ';
   function nbMark(tier) {

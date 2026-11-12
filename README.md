@@ -101,7 +101,7 @@ kept); the direction stage's on the user's PC at direction version 2; the explor
 outputs of the full size (it has not yet run on the real data); see
 [docs/quick-start.md](docs/quick-start.md#resources) for disk and memory. After this update any earlier output,
 including one made before the explorer existed, redoes reference and every stage after it (each of their methods
-changed: reference 3, tables 6, embed 5, relations 5, graph 6, direction 6, validate 8, vault 8, map 10, explorer 4);
+changed: reference 3, tables 7, embed 5, relations 5, graph 7, direction 6, validate 9, vault 9, map 11, explorer 4);
 the build, the effects and the tensor are kept. That is about 45–60 minutes on the full data, plus the first ChEMBL
 and Compara downloads (`tahoe` shows the plan first).
 [docs/method.md](docs/method.md) explains every step and every flag.
@@ -242,8 +242,8 @@ synthesis (the file lists them under 'not_members', with the reason).
 The tables stage compares every pair of touching wells of two compounds. When a drug-dose shares most of its genes
 with its neighbour and the drug's higher doses do not move them, it gets 'like a neighbouring well': an artifact flag,
 but only for the genes the neighbour moves the same way (its other genes read '... (not this gene)'). At a drug's top
-dose there is no higher dose to check: the tier is 'top dose', a caveat. The validation report lists every such
-drug-dose with its neighbour and wells. Rule changed in tables version 5. Old rule: clean = no atlas artifact flag.
+dose there is no higher dose to check: the tier is 'top dose', an alert that is not an artifact flag (the row stays
+clean). The validation report lists every such drug-dose with its neighbour and wells. Rule changed in tables version 5. Old rule: clean = no atlas artifact flag.
 New rule: also not 'like a neighbouring well' for that gene. Reason: touching wells share signatures 3.5 to 4 times
 more often than wells 3 or more apart (e.g. Citalopram 0.05 µM next to Clobetasol propionate on plate10). On the
 published tables (an earlier version) the rule marks 13 drug-doses 'artifact' and 11 'top dose'; the full run gives
@@ -335,11 +335,12 @@ glucocorticoid gene, KRAS codon-12 and one-dose selectivity, an expression progr
 and its broad twin, and a p53 target that falls. `run_tests.py` runs the reference stage offline on a fixture
 (`tests/fixtures/reference_cache`: the ChEMBL records of the 94 synthetic drugs and the Ensembl GTF genes of the
 panel), so drug annotations, mechanism classes and gene coordinates are tested without network. The tests check each
-stage against them (190 checks with Playwright installed, the four offline unit scripts and the 19 checks of
-`tests/test_fix_back.py` included: 189 pass on seed 0 and 1 is a warning: the 'lowered by mTOR inhibitors' module label, whose planted fall is below what the label rule
-can call; a stronger fall makes the ribosome genes join the proteasome genes' module, which the curated proteasome
-set then names. The direction edges are compared with the version 6 fixture of seed 0. Without Playwright the
-browser checks are skipped with a warning: 165 passed, 8 warnings): the tensor
+stage against them (194 checks with Playwright installed, the four offline unit scripts and the 19 checks of
+`tests/test_fix_back.py` included: 193 pass on seed 0 and 1 is a warning: the 'lowered by mTOR inhibitors' module
+label, whose planted fall is below what the label rule can call; a stronger fall makes the ribosome genes join the
+proteasome genes' module, which the curated proteasome set then names. The direction edges are compared with the
+version 6 fixture of seed 0. Without Playwright the browser checks are skipped with a warning: 168 passed, 9
+warnings): the tensor
 reproduces the atlas exactly, ambient-only lines and uncountable profiles are masked, per-line effects appear only
 where planted (e.g. p53 targets in TP53-wild-type lines only), the per-line cut is calibrated, planted modules are
 tight in the space, opposite modules point opposite ways and share a nodal-map island on opposite arms, un-moved
@@ -367,7 +368,7 @@ the look-ups, the map and the explorer (never '0e+00', never TP53 'wild type').
   plate** (each dose on its own plate). Fold changes are against the same line's median drug well on the same plate,
   not DMSO; `lfc_vs_dmso` is a rough sign check against the plate's DMSO wells.
 - **Neighbouring wells** can share a signal. 'like a neighbouring well' marks the genes a touching well moves the same
-  way; at a drug's top dose the data cannot tell a carried-over signal from a real effect ('top dose', a caveat).
+  way; at a drug's top dose the data cannot tell a carried-over signal from a real effect ('top dose': an alert, not an artifact flag).
 - **Translation inhibitors** (Homoharringtonine, Harringtonine) raise short-lived mRNAs whatever their pathway: a rise
   there may be mRNA stabilisation, not activation. Read 'rise under a translation inhibitor' that way.
 - **Two annotations.** Tahoe's annotation and ChEMBL's are shown side by side; where they disagree an alert says so.

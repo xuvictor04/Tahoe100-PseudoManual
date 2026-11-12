@@ -168,10 +168,11 @@ flag, and the row can be clean. Otherwise the plain artifact token 'cell-cycle s
    direction, rank (over all), drug, dose, cell_name, lfc, z, pooled_lfc, pooled_z, flags, clean, cc_share.
 5. `drugdoses.parquet` — drugdose.csv + dd (row), salt_base, top_up, top_down (≤ 15 significant genes by z,
    "SYM (fold)"); `flags` = the flags of record, `atlas_flags` (drugdose.csv's own); the neighbouring-well columns
-   nb_tier ('' / 'artifact' / 'top dose' / 'same mechanism'), nb_partner_dd (int32, -1), nb_partner, nb_where
-   ('plate3 G8 next to H8; ...'), nb_partners (every partner), nb_n_sig, nb_shared (-1 none), nb_share, nb_top_share,
-   nb_other_doses_share, nb_partner_own_share (float32, NaN none), nb_genes, nb_alert (the reasons in words);
-   mechanism_classes; n_selective_lines, selective_lines.
+   nb_tier ('' / 'artifact' / 'top dose' / 'same mechanism' / 'dose response'), nb_partner_dd (int32, -1),
+   nb_partner, nb_where ('plate3 G8 next to H8; ...'), nb_partners (every partner), nb_n_sig, nb_shared (-1 none),
+   nb_share, nb_top_share, nb_other_doses_share, nb_partner_own_share (float32, NaN none), nb_genes, nb_alert (the
+   reasons in words); mechanism_classes; n_selective_lines, selective_lines; chembl_mechanisms and annotation_alert
+   (tables version 7: the drug's, copied from drugs.parquet by drug, the same for each dose).
 6. `drugs.parquet` — per drug: drug, salt_base, targets, moa_fine, moa_broad (Tahoe's, verbatim), approved, doses,
    n_sig_by_dose, best_dose (most significant genes; tie → higher), lowest_active_dose, flags_by_dose (flags of
    record), signature_r_between_doses; dose_plates ('0.05: plate1 D2, plate2 E7 / 0.5: ...'), doses_share_a_plate,
@@ -324,7 +325,7 @@ Files: `nodes.parquet` (col, symbol, module, arm, axis_proj, x, y, xs, ys, xm, y
 `modules.parquet` (module, n_genes, n_plus, n_minus, top_plus, top_minus (15 per arm by |projection|, capped the same
 way; a member in the vector space only through flagged drug-doses reads "SYMBOL ⚠"), centroids, drugs_up/down
 (capped: the strongest plus any of the strongest without an alert beyond them; a flagged drug-dose reads "(⚠
-flags)"),
+flags)"; 'Trametinib 5 µM (+3.2)': doses in µM since graph version 7, 'uM' before),
 responsive_lines, mean_cos_within_plus/minus, mean_cos_between_arms, arms_opposite), `module_scores.npy`
 (modules × drug-doses × lines), `module_pooled_z.npy` (modules × drug-doses), `info.json`.
 
@@ -475,6 +476,11 @@ drugdoses.parquet plates and wells each sorted on its own, so a 2-well dose coul
 notes per dose (the neighbouring-well reading with the neighbour linked, the resemblance note, selective lines), the
 10 most similar drug-doses (of 50), line-selective controls. Line notes: the heavy-mutation alert, every selective
 drug-dose and its selectivity arrows. Module notes: label_display, label_alert, the label parts, covariates.
+VERSION 9: a drug whose best dose has no pooled signature (every stored cos_pooled NaN: it moves no gene at |z| ≥ 3
+or q < 0.10) reads 'No similarity ranking: ...; the 50 stored rows are the first other drug-doses in row order, not a
+ranking' and lists none of them as similar; rows of other drug-doses without a signature are counted and named; the
+count line reads '(k of 50 stored; N other drug-doses, all in the explorer's Vector space tab: ...)'. The gene lists
+of a drug note give each gene's 'vs DMSO (rough)' (a sign check) next to its fold and z.
 
 ## map (OUT/map/gene_map.html)
 
@@ -500,6 +506,10 @@ reading, a drug-dose's top genes highlighted, a line's TP53 status and selective
 and the vault note); tour axes named by the drug-doses at their two ends; partner flags: 128 lineage pair, 32768 ×
 read-sharing kind, 131072 × (pathway + 1); flag kind 3 = a caveat token (`flw`: its words); 'false (group)' on arrow
 rows; one count rule per drug list; q of 0 '< 1e-45'.
+VERSION 11: a gene's 'Drug-doses that raise it / lower it' tables give each row's 'vs DMSO (rough)' (`upd` / `dnd`:
+tables/drug_effects lfc_vs_dmso, a sign check) next to fold and z; drug-dose labels in µM (search also takes 'uM');
+a drug in the search reads '(Tahoe) <moa>' and '⚠ annotations disagree' (the explorer search's words); a module
+card's alert keeps one ⚠.
 
 ## explorer (OUT/explorer/) — searchable pages with every value
 

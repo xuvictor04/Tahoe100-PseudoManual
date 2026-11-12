@@ -62,9 +62,9 @@ Neighbouring wells (neighbour_wells; README 'Neighbouring wells'). Touching well
 often than wells 3 or more apart on the real plates (e.g. Citalopram 0.05 uM next to Clobetasol propionate on
 plate10). A drug-dose whose significant genes are mostly moved the same way by a touching well of another compound,
 while its own higher doses do not move them, gets the artifact flag 'like a neighbouring well' for the genes that
-neighbour moves; at the drug's top dose (no higher dose to check) it gets the caveat 'like a neighbouring well (top
-dose)', or a note when the two share an annotated mechanism. Old rule (version 4): clean = no atlas artifact flag.
-New rule: also not like a neighbouring well for that gene.
+neighbour moves; at the drug's top dose (no higher dose to check) it gets 'like a neighbouring well (top dose)',
+an alert that is not an artifact flag (the row stays clean), or a note when the two share an annotated mechanism.
+Old rule (version 4): clean = no atlas artifact flag. New rule: also not like a neighbouring well for that gene.
 
 Dose and plate. Each dose of a drug sits on its own plate (for most drugs the same well on three plates) and most
 drug-doses are one well, so a dose pattern compares plates as much as doses, and the lines of a drug-dose are not
@@ -100,8 +100,9 @@ Outputs in OUT/tables/ (README.md there documents every column, its units and it
     drug_line_top.parquet  per gene: the 15 strongest (drug-dose, line) cells up and down over all drug-doses (with
                            flags and clean), plus any of the 15 strongest clean ones beyond them (per-line |z| >= t)
     drugdoses.parquet      drugdose.csv + dd, salt_base, top 15 significant genes up / down, the flags of record
-                           (atlas_flags = drugdose.csv's), the neighbouring-well rule (nb_*), mechanism classes and
-                           the lines where the drug-dose is selective
+                           (atlas_flags = drugdose.csv's), the neighbouring-well rule (nb_*), mechanism classes, the
+                           lines where the drug-dose is selective, and (version 7) the drug's chembl_mechanisms and
+                           annotation_alert, copied from drugs.parquet by drug
     drugs.parquet          per drug: doses, significant genes by dose, best dose, lowest active dose, flags, signature
                            similarity between doses, where each dose sits (dose_plates), Tahoe's and ChEMBL's
                            annotations side by side, mechanism classes
@@ -140,7 +141,7 @@ from .common import (ARTIFACT_FLAGS, FLAG_TEXT, NB_CLEARED, NB_FLAG, NB_TOP, TL_
                      read_effects_index, read_stamp, replace_file, stamp_stage, write_json, write_parquet)
 from .tensor import AMB_FRAC, measured_mask
 
-VERSION = 6                         # 3: a cell-cycle shift blocks a gene only when it explains its change;
+VERSION = 7                         # 3: a cell-cycle shift blocks a gene only when it explains its change;
 #                                     4: each cell-cycle-flagged drug-dose is judged with slopes fitted without it;
 #                                     5: neighbouring wells; flags of record; translation-inhibitor caveat;
 #                                        annotations; drug_line_response; lfc_vs_dmso; n_wells; dose_plates;
@@ -149,6 +150,9 @@ VERSION = 6                         # 3: a cell-cycle shift blocks a gene only w
 #                                        inhibitor token from their own per-line sign, not the pooled one; line_effects
 #                                        best_up_flags / best_down_flags (the clean best's caveats); neighbouring
 #                                        wells: tier 'dose response' and the chance rate in the top-dose alert
+#                                     7: drugdoses.parquet chembl_mechanisms and annotation_alert (from drugs.parquet,
+#                                        by drug)
+DD_FROM_DRUGS = ("chembl_mechanisms", "annotation_alert")   # drugs.parquet columns copied onto each drug-dose
 
 LFC_MIN = A.LFC_MIN                 # log2(1.2): smallest change the atlas counts
 Q_CUT = A.Q_CUT                     # 0.10: the atlas FDR cut
@@ -1889,7 +1893,6 @@ def _run(out, chunk, mem_gb, t0):
         ls = ls[np.argsort(-sel_z[d, ls], kind="stable")]
         sel_txt.append(", ".join(f"{line_name[x]} ({sel_z[d, x]:.1f})" for x in ls))
     ddt["selective_lines"] = sel_txt
-    write_parquet(ddt, os.path.join(od, "drugdoses.parquet"))
 
     # ---- drugs.parquet
     nsig = dd["n_sig_genes"].to_numpy(dtype=np.int64) if "n_sig_genes" in dd else (sig_up | sig_dn).sum(axis=1)
@@ -1941,6 +1944,12 @@ def _run(out, chunk, mem_gb, t0):
     del zr
     drugs_df = pd.DataFrame(drows)
     write_parquet(drugs_df, os.path.join(od, "drugs.parquet"))
+    # tables version 7: the drug's ChEMBL mechanisms and the Tahoe / ChEMBL disagreement on each of its drug-doses,
+    # copied from drugs.parquet by drug (the same for each dose), so that a drug-dose list shows them without a join
+    for c in DD_FROM_DRUGS:
+        by = dict(zip(drugs_df["drug"].astype(str), drugs_df[c].astype(str)))
+        ddt[c] = [by.get(str(x), "") for x in dd_drug]
+    write_parquet(ddt, os.path.join(od, "drugdoses.parquet"))
 
     # ---- lines.parquet
     tp53, tp53_src = _tp53_status(lines, fi)
@@ -2263,7 +2272,8 @@ DOCS = {
     "drugdoses.parquet": (
         "atlas/effects/drugdose.csv (one row per drug and dose) plus dd, salt_base, top_up and top_down, the flags of "
         "record (flags; drugdose.csv's own are atlas_flags), the neighbouring-well rule (nb_*), the drug's mechanism "
-        "classes and the lines where the drug-dose is selective.",
+        "classes, the lines where the drug-dose is selective, and the drug's ChEMBL mechanisms and annotation alert "
+        "(from drugs.parquet).",
         {"dd": _DD_COLS["dd"], "drug": _DD_COLS["drug"], "dose": _DD_COLS["dose"], "salt_base": _DD_COLS["salt_base"],
          "conc": _DD_COLS["conc"], "n_wells": "used wells (those on reliable plates; all of them when the drug-dose "
          "sits only on unreliable plates)", "n_wells_all": "all its wells", "wells": "well names of the used wells",
@@ -2286,9 +2296,9 @@ DOCS = {
          "higher dose (NaN: none)",
          "flags": "the flags of record, '; '-joined: atlas_flags, then 'like a neighbouring well' (nb_tier "
          "'artifact': an artifact flag for the nb_genes genes a neighbour moves the same way) or 'like a "
-         "neighbouring well (top dose)' (nb_tier 'top dose': a caveat), then 'translation inhibitor' (a class "
-         "caveat, not a technical or artifact flag: mechanism_classes). Every table and reader uses these "
-         "(tables.dd_flags_of_record)",
+         "neighbouring well (top dose)' (nb_tier 'top dose': an alert, not an artifact flag), then "
+         "'translation inhibitor' (a class caveat, not a technical or artifact flag: mechanism_classes). Every "
+         "table and reader uses these (tables.dd_flags_of_record)",
          "atlas_flags": "drugdose.csv's flags, verbatim (artifacts: toxic, transcription drop, cell-cycle shift, "
          "unreliable plate only, position not correctable, wells disagree; caveats: low cells (technical?), "
          "plate-row cell shift, composition shift, noisy plate (z scaled))", "n_genes_up":
@@ -2327,7 +2337,12 @@ DOCS = {
          "code constants of tahoemap/data/drug_classes.json, ChEMBL mechanisms, WHO ATC codes); '' = none",
          "n_selective_lines": "lines where this drug-dose is selective (drug_line_response.parquet selective)",
          "selective_lines": "every selective line by sel_z, highest first: 'NCI-H23 (6.1), HOP62 (5.4)' (never cut; "
-         "'' = none)"}),
+         "'' = none)",
+         "chembl_mechanisms": "the drug's ChEMBL mechanisms, copied from drugs.parquet chembl_mechanisms by drug (the "
+         "same for each of its doses; tables version 7): " + CHEMBL_ANN + "curated mechanisms of action, '; '-joined",
+         "annotation_alert": "where Tahoe's and ChEMBL's annotations of the drug disagree, copied from drugs.parquet "
+         "annotation_alert by drug (the same for each of its doses; tables version 7; '' = they do not disagree). "
+         "An alert, not an artifact flag: Tahoe's annotation is never changed"}),
     "drugs.parquet": (
         "One row per drug (all its doses), with Tahoe's and ChEMBL's annotations side by side (see 'Drug "
         "annotations: Tahoe and ChEMBL') and where each dose sits (dose_plates; see 'Dose and plate').",
@@ -2636,7 +2651,8 @@ def _annotation_text(ann, release):
             "drugs.parquet shows two annotations of each drug. targets, moa_fine and moa_broad are Tahoe's annotation, "
             f"verbatim. The chembl_* columns come from {release} (reference/drug_annotations.parquet; the reference "
             "stage fetches them and keeps a cached copy). Both are shown. An alert marks where they disagree. Tahoe's "
-            "annotation is never changed.",
+            "annotation is never changed. drugdoses.parquet carries the drug's chembl_mechanisms and annotation_alert "
+            "on each of its doses (copied from drugs.parquet by drug; the same for each dose).",
             f"This run: {_n(ann.get('drugs'))} drugs; {_n(ann.get('chembl_matched'))} matched in ChEMBL; "
             f"{_n(ann.get('with_chembl_mechanism'))} with a ChEMBL mechanism; {_n(ann.get('alerts'))} with an "
             f"annotation_alert; {_n(ann.get('with_mechanism_class'))} in a mechanism class. Status words: {st}."

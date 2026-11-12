@@ -80,7 +80,7 @@ from .common import (ARTIFACT_FLAGS, NB_TOP, TL_DD, fmt_q, folder, has_artifact,
                      read_effects_index, replace_file, stable_seed, stamp_stage, write_csv, write_json)
 from .embed import capped
 
-VERSION = 8                 # 3: flagged items stay in their ranked place, with an alert; 4: the direction section;
+VERSION = 9                 # 3: flagged items stay in their ranked place, with an alert; 4: the direction section;
 #                             5: drug_moa.csv lists every drug of a class (was the first 12); 6: module_enrichment.csv
 #                             lists every overlapping gene (was the first 25); report.md marks every cut name ('…');
 #                             7: label priority, weak labels, drug-class and lineage labels, module alerts, neighbouring
@@ -89,6 +89,8 @@ VERSION = 8                 # 3: flagged items stay in their ranked place, with 
 #                             8: drug-class labels as plural noun phrases ('raised by glucocorticoid receptor
 #                             agonists'); report wording (a gene not measured, an assessment not run, the run's
 #                             line count, µM)
+#                             9: README and report call the neighbouring-well top-dose tier 'an alert, not an artifact
+#                             flag' (as tables and the explorer do); 'translation inhibitor' stays a caveat
 N_RANDOM = 20_000           # random gene pairs: the background of every AUROC
 N_NULL = 200                # random gene sets per set size for the empirical p of a set's AUROC
 NULL_SOURCES = ("control", "hallmark", "synthetic")
@@ -492,8 +494,9 @@ def _best_drugdoses(out, gK, sets):
     (common.ARTIFACT_FLAGS, technically untrustworthy ones and 'like a neighbouring well' included) is followed by '⚠'
     and its flags in plain words; for a cell-cycle shift also the share of the set's mean change that the shift would
     explain (_cc_shares), and a shift that is not the explanation by the tables stage's rule is named without '⚠'.
-    Caveats are named without '⚠': 'like a neighbouring well (top dose)', and in the raise lists a member of the
-    translation-inhibitor class reads '(translation inhibitor: rise may be mRNA stabilisation)'. When the TOP_DD
+    Named without '⚠': the top-dose alert 'like a neighbouring well (top dose)' (an alert, not an artifact flag),
+    and in the raise lists the caveat of a member of the translation-inhibitor class, '(translation inhibitor: rise
+    may be mRNA stabilisation)'. When the TOP_DD
     strongest include drug-doses with an alert, the TOP_DD strongest without one are listed too, all in ranked order
     (embed.capped). When a translation inhibitor is among the TOP_DD strongest raisers, the list 'without translation
     inhibitors' (the TOP_DD strongest other drug-doses, same rule and format) is returned too. Returns the lists up
@@ -1626,7 +1629,8 @@ def _neighbour_section(out, site=None):
           f"judged; {int(info.get('far_pairs_judged') or 0):,} pairs 3 or more wells apart give the chance rate). "
           "'artifact': the drug's higher doses do not show the shared genes (flagged 'like a neighbouring well' on "
           "the genes the neighbour moves the same way); 'top dose': the drug's top dose, so the data cannot tell a "
-          "carried-over signal from a real effect (an alert, not a flag); 'same mechanism': the two compounds share "
+          "carried-over signal from a real effect (an alert, not an artifact flag); 'same mechanism': the two "
+          "compounds share "
           "an annotated mechanism (a note); 'dose response': the drug's lower doses already move its strongest "
           "shared genes the same way, so its own effect grows with the dose (a note).", "",
           _md_table(["tier", "adjacent pairs passing",
@@ -2720,8 +2724,10 @@ relations, 7 novel module members, 8 line-selective responses (known positive co
 (synthetic data only), 10 direction; then caveats and files.
 
 Flags are the flags of record of the tables stage (tables.dd_flags_of_record: the atlas flags plus 'like a
-neighbouring well' and 'translation inhibitor'); an artifact flag is one of common.ARTIFACT_FLAGS. 'like a
-neighbouring well (top dose)' and 'translation inhibitor' are caveats: named, never an alert.
+neighbouring well' and 'translation inhibitor'); an artifact flag is one of common.ARTIFACT_FLAGS. The
+neighbouring-well top-dose tier, 'like a neighbouring well (top dose)', is an alert, not an artifact flag (as the
+tables stage and the explorer call it): named in words, without ⚠, and it never changes clean. 'translation
+inhibitor' is a caveat: named, never an alert.
 
 ## control_sets.csv - one row per tested gene set
 | column | meaning |
@@ -2746,11 +2752,11 @@ genes, every drug-dose in its ranked place ('drug dose uM (mean z)'). One with a
 only, position not correctable, wells disagree, toxic, like a neighbouring well, ...) reads 'drug dose uM (mean z, ⚠ \
 its flags)'; for a cell-cycle shift with the share of the set's mean change the shift would explain ('cell-cycle \
 shift, explains ~N% of this change': the tables stage's rule on the members' mean lfc and mean cell-cycle slopes; a \
-shift that does not explain the change is named without ⚠). Caveats are named without ⚠: 'like a neighbouring well \
-(top dose)', and in best_dd_up a member of the translation-inhibitor class reads '(..., translation inhibitor: rise \
-may be mRNA stabilisation)': blocking translation stabilises short-lived mRNAs, so a rise there may not be more \
-transcription. When the 5 strongest hold drug-doses with an alert, the 5 strongest without one follow in their ranked \
-place too |
+shift that does not explain the change is named without ⚠). Named without ⚠ too: the top-dose alert 'like a \
+neighbouring well (top dose)' (an alert, not an artifact flag), and the caveat of a member of the \
+translation-inhibitor class in best_dd_up, '(..., translation inhibitor: rise may be mRNA stabilisation)': blocking \
+translation stabilises short-lived mRNAs, so a rise there may not be more transcription. When the 5 strongest \
+hold drug-doses with an alert, the 5 strongest without one follow in their ranked place too |
 | `best_dd_up_n_alert`, `best_dd_down_n_alert` | how many drug-doses of each list carry an alert |
 | `best_dd_up_without_tl` | when a translation inhibitor is among the 5 strongest raisers: the 5 strongest raisers \
 that are not (same rule and format); '' otherwise. The report prints it as a second line of the cell: 'without \

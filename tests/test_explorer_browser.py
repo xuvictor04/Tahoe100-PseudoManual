@@ -1479,7 +1479,10 @@ def t_review(c):
     rough DMSO-referenced value is a shown column of the drug-dose, drug and gene gene tables, and the drug-dose CSV
     equals tables/drug_effects lfc_vs_dmso bit for bit. R8: no alert-reason label of the arrow lists is a compound's
     name. R10: the top-dose neighbouring-well tier is an alert (not an artifact flag) with a non-red marker on the
-    drug-dose and drug headers and in its block; the artifact tier keeps the red sign."""
+    drug-dose and drug headers and in its block; the artifact tier keeps the red sign. A module's label alert badge
+    carries one ⚠ (module_labels label_alert already starts with it). Tables version 7: the browse drug-doses list
+    shows tables/drugdoses' own chembl_mechanisms and annotation_alert once each (CSV equal to the table), and a
+    drug-dose's QC page shows both."""
     out, ok = [], True
     S = c.out
     dds = c.core[2]["drugdoses"]
@@ -1660,6 +1663,49 @@ def t_review(c):
             ok &= t_ok
             out.append(f"R10 tier {tier} at drug-dose {k}: header '{bt}', block '{blk[:60]}...', drug header badge "
                        f"{db is not None}: {t_ok}")
+    # ---- a module's label alert: one ⚠ (validation/module_labels label_alert already starts with it)
+    mlp = os.path.join(S, "validation", "module_labels.csv")
+    if os.path.exists(mlp):
+        ml = pd.read_csv(mlp).fillna("")
+        ml = ml[ml["label_alert"].astype(str) != ""] if "label_alert" in ml else ml.iloc[:0]
+        for r in ml.head(2).to_dict("records"):
+            m = int(r["module"])
+            c.go(pg, f"#/module/{m}", "module/overview")
+            b = txt(".badges [data-label-alert]")
+            want = str(r["label_alert"])
+            want = want if want.startswith("⚠") else "⚠ " + want
+            a_ok = b == want and not b.startswith("⚠ ⚠")
+            ok &= a_ok
+            out.append(f"module {m} label alert badge '{b[:50]}...' (one ⚠): {a_ok}")
+        if not len(ml):
+            out.append("module label alerts: none in this run (not exercised)")
+    # ---- tables version 7: drugdoses carries the drug's chembl_mechanisms and annotation_alert itself
+    tdd = pd.read_parquet(os.path.join(S, "tables", "drugdoses.parquet"))
+    if {"chembl_mechanisms", "annotation_alert"} <= set(tdd.columns):
+        c.go(pg, "#/browse/drugdoses", "browse/drugdoses")
+        heads = pg.evaluate(HEADS_JS, "#browse-drugdoses")
+        b = _csv_of(c, pg, "#browse-drugdoses").set_index("dd")
+        t7 = tdd.set_index("dd")
+        idx = [str(x) for x in t7.index]
+        d_ok = (sum(h.startswith("annotation_alert") for h in heads) == 1
+                and sum(h.startswith("chembl_mechanisms") for h in heads) == 1
+                and [str(x) for x in b.loc[idx, "chembl_mechanisms"]] == t7["chembl_mechanisms"].fillna("").astype(str)
+                .tolist()
+                and [str(x) for x in b.loc[idx, "annotation_alert"]] == t7["annotation_alert"].fillna("").astype(str)
+                .tolist())
+        has_al = t7["annotation_alert"].fillna("") != ""
+        k = int(t7.index[has_al][0]) if has_al.any() else int(t7.index[0])
+        c.go(pg, f"#/dd/{k}", "dd/qc")
+        q = pg.inner_text("#main")
+        d_ok &= "annotation_alert" in q and "chembl_mechanisms" in q and (
+            str(t7.at[k, "annotation_alert"]) in q if t7.at[k, "annotation_alert"] else
+            "none (Tahoe and ChEMBL do not disagree)" in q)
+        ok &= d_ok
+        out.append(f"tables/drugdoses chembl_mechanisms and annotation_alert: one column each in the browse list, "
+                   f"its CSV equal to tables/drugdoses on all {len(t7)} rows, drug-dose {k}'s QC page shows them: "
+                   f"{d_ok}")
+    else:
+        out.append("tables/drugdoses without chembl_mechanisms / annotation_alert (tables older than version 7)")
     bad = c.unexpected(pg)
     pg.close()
     return ok and not bad, "; ".join(out) + (f"; console {bad[:3]}" if bad else "")
